@@ -21,7 +21,7 @@ move = (meta_window, x, y) => {
     let y_offset = frame.y - buffer.y;
     Tweener.addTween(actor, {x: x - x_offset
                              , y: y - y_offset
-                             , time: 1
+                             , time: 0.5
                              , onComplete: () => {
                                  actor.meta_window.move_frame(true, x, y);
                              }})
