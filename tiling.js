@@ -36,17 +36,20 @@ rect = (meta_window) => {
     frame = meta_window.get_frame_rect()
     return [frame.x, frame.x + frame.width]
 }
+
+overlap = 20
+
 ensure_viewport = (meta_window) => {
     let [start, end] = rect(meta_window)
 
     let index = pages.indexOf(meta_window)
     if (end > global.screen_width) {
-        let delta = start - (end - global.screen_width) - 10
+        let delta = start - (end - global.screen_width) - overlap
         propogate_forward(index + 1, global.screen_width)
-        propogate_backward(index, global.screen_width - 10)
+        propogate_backward(index, global.screen_width - overlap)
     }
     else if (start < 0) {
-        propogate_forward(index, 10)
+        propogate_forward(index, overlap)
         propogate_backward(index - 1, -global.screen_width)
     }
 }
@@ -65,7 +68,7 @@ propogate_forward = (n, x) => {
     print("positioning " + n)
     let meta_window = pages[n]
     move(meta_window, x, meta_window.get_frame_rect().y)
-    propogate_forward(n+1, x+meta_window.get_frame_rect().width + 10)
+    propogate_forward(n+1, x+meta_window.get_frame_rect().width + overlap)
 }
 propogate_backward = (n, x) => {
     if (n < 0 || n >= pages.length)
@@ -74,7 +77,7 @@ propogate_backward = (n, x) => {
     let meta_window = pages[n]
     x = x - meta_window.get_frame_rect().width
     move(meta_window, x, meta_window.get_frame_rect().y)
-    propogate_backward(n-1, x - 10)
+    propogate_backward(n-1, x - overlap)
 }
 
 focus_wrapper = (meta_window, user_data) => {
