@@ -6,7 +6,7 @@
  */
 
 
-overlap = 20
+overlap = 10
 
 glib = imports.gi.GLib
 
@@ -47,12 +47,11 @@ ensure_viewport = (meta_window) => {
 
     let index = pages.indexOf(meta_window)
     if (end > global.screen_width) {
-        let delta = start - (end - global.screen_width) - overlap
         propogate_forward(index + 1, global.screen_width)
-        propogate_backward(index, global.screen_width - overlap)
+        propogate_backward(index, global.screen_width - overlap*2)
     }
     else if (start < 0) {
-        propogate_forward(index, overlap)
+        propogate_forward(index, overlap*2)
         propogate_backward(index - 1, -global.screen_width)
     }
 }
