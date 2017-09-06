@@ -6,6 +6,8 @@
  */
 
 
+overlap = 20
+
 glib = imports.gi.GLib
 
 Tweener = imports.ui.tweener;
@@ -13,6 +15,8 @@ move = (meta_window, x, y) => {
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
     let frame = actor.meta_window.get_frame_rect();
+    x = Math.min(global.screen_width - overlap*2, x)
+    x = Math.max(0 - frame.width + overlap*2, x)
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
     Tweener.addTween(actor, {x: x - x_offset
@@ -37,7 +41,6 @@ rect = (meta_window) => {
     return [frame.x, frame.x + frame.width]
 }
 
-overlap = 20
 
 ensure_viewport = (meta_window) => {
     let [start, end] = rect(meta_window)
