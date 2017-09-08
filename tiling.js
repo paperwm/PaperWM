@@ -74,11 +74,11 @@ ensure_viewport = (meta_window) => {
     let margin = overlap*2
     if (index == pages.length - 1 || index == 0)
         margin = 0
-    if (end > global.screen_width) {
+    if (end >= global.screen_width - margin) {
         propogate_forward(index + 1, global.screen_width, true)
         propogate_backward(index, global.screen_width - margin, false)
     }
-    else if (start < 0) {
+    else if (start <= margin) {
         propogate_forward(index, margin, false)
         propogate_backward(index - 1, -global.screen_width, false)
     }
