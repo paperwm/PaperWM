@@ -131,6 +131,15 @@ add_handler = (ws, meta_window) => {
 
 add_wrapper = (ws, meta_window) => {
     add_handler(ws, meta_window)
+add_all_from_workspace = (workspace) => {
+    workspace = workspace || global.screen.get_active_workspace();
+    workspace.list_windows().forEach((meta_window, i) => {
+        if(pages.indexOf(meta_window) < 0) {
+            add_handler(workspace, meta_window)
+        }
+    })
+}
+
 }
 
 // Initialize workspaces
