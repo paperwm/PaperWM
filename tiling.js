@@ -62,12 +62,12 @@ ensure_viewport = (meta_window) => {
     if (index == pages.length - 1 || index == 0)
         margin = 0
     if (end > global.screen_width) {
-        propogate_forward(index + 1, global.screen_width)
-        propogate_backward(index, global.screen_width - margin)
+        propogate_forward(index + 1, global.screen_width, true)
+        propogate_backward(index, global.screen_width - margin, false)
     }
     else if (start < 0) {
-        propogate_forward(index, margin)
-        propogate_backward(index - 1, -global.screen_width)
+        propogate_forward(index, margin, false)
+        propogate_backward(index - 1, -global.screen_width, false)
     }
 }
 
@@ -79,22 +79,26 @@ focus_handler = (meta_window, user_data) => {
     focus = pages.indexOf(meta_window)
 }
 
-propogate_forward = (n, x) => {
+propogate_forward = (n, x, lower) => {
     if (n < 0 || n >= pages.length)
         return
     print("positioning " + n)
     let meta_window = pages[n]
+    if (lower)
+        meta_window.lower()
     move(meta_window, x, meta_window.get_frame_rect().y)
-    propogate_forward(n+1, x+meta_window.get_frame_rect().width + overlap)
+    propogate_forward(n+1, x+meta_window.get_frame_rect().width + overlap, true)
 }
-propogate_backward = (n, x) => {
+propogate_backward = (n, x, lower) => {
     if (n < 0 || n >= pages.length)
         return
     print("positioning " + n)
     let meta_window = pages[n]
     x = x - meta_window.get_frame_rect().width
+    if (lower)
+        meta_window.lower()
     move(meta_window, x, meta_window.get_frame_rect().y)
-    propogate_backward(n-1, x - overlap)
+    propogate_backward(n-1, x - overlap, true)
 }
 
 focus_wrapper = (meta_window, user_data) => {
