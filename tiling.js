@@ -1,6 +1,8 @@
 /* Signals: */
 
 function _repl() {
+    add_all_from_workspace()
+
     meta_window = pages[0]
 //: [object instance proxy GType:MetaWindowX11 jsobj@0x7f8c39e52f70 native@0x3d43880]
     workspace = meta_window.get_workspace()
@@ -23,6 +25,19 @@ function _repl() {
         meta_window.move_resize_frame(true, length, 25, width, global.screen_height - 30)
         length += width + overlap
     })
+}
+
+function log() {
+    function zeropad(x) {
+        x = x.toString();
+        if(x.length == 1) return "0"+x;
+        else return x;
+    }
+    let now = new Date();
+    let timeString = zeropad(now.getHours())
+        + ":" + zeropad(now.getMinutes())
+        + ":" + zeropad(now.getSeconds())
+    print(timeString + " | " + Array.prototype.join.call(arguments, " "));
 }
 
 
@@ -85,6 +100,7 @@ ensure_viewport = (meta_window) => {
 }
 
 focus_handler = (meta_window, user_data) => {
+    log("focus", meta_window)
 
     ensure_viewport(meta_window)
     meta_window.activate(timestamp())
@@ -119,6 +135,7 @@ focus_wrapper = (meta_window, user_data) => {
 }
 
 add_handler = (ws, meta_window) => {
+    log("window-added", meta_window);
     pages.splice(focus + 1, 0, meta_window)
     let frame = pages[focus].get_frame_rect()
     print("position: " + (frame.x + frame.width))
@@ -129,8 +146,27 @@ add_handler = (ws, meta_window) => {
     ensure_viewport(meta_window)
 }
 
-add_wrapper = (ws, meta_window) => {
-    add_handler(ws, meta_window)
+remove_handler = (ws, meta_window) => {
+    log("window-removed", meta_window);
+    // Note: If `meta_window` was closed and had focus at the time, the next
+    // window has already received the `focus` signal at this point.
+
+    let removed_i = pages.indexOf(meta_window)
+    pages.splice(removed_i, 1)
+
+    // At this point the `focus` index might be invalid so we correct it:
+    if(removed_i < focus) {
+        focus--;
+    }
+    // Remove our signal handlers: Needed for non-closed windows.
+    // (closing a window seems to clean out it's signal handlers)
+    meta_window.disconnect(focus_wrapper);
+
+    // Re-layout: Needed if the removed window didn't have focus.
+    // Not sure if we can check if that was the case or not?
+    focus_handler(pages[focus])
+}
+
 add_all_from_workspace = (workspace) => {
     workspace = workspace || global.screen.get_active_workspace();
     workspace.list_windows().forEach((meta_window, i) => {
@@ -140,6 +176,16 @@ add_all_from_workspace = (workspace) => {
     })
 }
 
+/**
+ * Look up the signal handler by name so the handler can be redefined without
+ * re-registering to the signal.
+ * (generic name? bind_to_name? named_function? dynamic_function_reference?)
+ */
+wrapped_signal_handler = (handler_name, owner_obj) => {
+    owner_obj = owner_obj || window;
+    return function() {
+        owner_obj[handler_name].apply(owner_obj, arguments);
+    }
 }
 
 // Initialize workspaces
@@ -148,10 +194,8 @@ for (let i=0; i < global.screen.n_workspaces; i++) {
     workspaces[i] = []
     let workspace = global.screen.get_workspace_by_index(i)
     print("workspace: " + workspace)
-    workspace.connect("window-added", add_wrapper)
-    workspace.connect("window-removed", (ws, meta_window) => {
-        pages.splice(pages.indexOf(meta_window), 1)
-    })
+    workspace.connect("window-added", wrapped_signal_handler("add_handler"))
+    workspace.connect("window-removed", wrapped_signal_handler("remove_handler"));
 }
 
 next = () => {
