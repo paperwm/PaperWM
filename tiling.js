@@ -118,18 +118,29 @@ focus_wrapper = (meta_window, user_data) => {
     focus_handler(meta_window, user_data)
 }
 
-// Run on new windows
-// global.display.connect("window-created", (display, meta_window) => {
-//     pages.splice(focus + 1, 0, meta_window)
-//     meta_window.connect("focus", focus_wrapper)
-// })
-
-workspace = global.screen.get_active_workspace()
-workspace.connect("window-added", (ws, meta_window) => {
+add_handler = (ws, meta_window) => {
     pages.splice(focus + 1, 0, meta_window)
+    let frame = pages[focus].get_frame_rect()
+    print("position: " + (frame.x + frame.width))
+    print("before resize")
+    meta_window.move_resize_frame(true, frame.x + frame.width + overlap, 20, meta_window.get_frame_rect().width, global.screen_height - 20)
+    print("after resize")
     meta_window.connect("focus", focus_wrapper)
-})
+    ensure_viewport(meta_window)
+}
 
-workspace.connect("window-removed", (ws, meta_window) => {
-    pages.splice(pages.indexOf(meta_window), 1)
-})
+add_wrapper = (ws, meta_window) => {
+    add_handler(ws, meta_window)
+}
+
+// Initialize workspaces
+workspaces = []
+for (let i=0; i < global.screen.n_workspaces; i++) {
+    workspaces[i] = []
+    let workspace = global.screen.get_workspace_by_index(i)
+    print("workspace: " + workspace)
+    workspace.connect("window-added", add_wrapper)
+    workspace.connect("window-removed", (ws, meta_window) => {
+        pages.splice(pages.indexOf(meta_window), 1)
+    })
+}
