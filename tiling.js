@@ -1,13 +1,26 @@
-// Some notes:
-/* Signals:
-   "window-added" (workspace)
-   "window-removed" (workspace)
+/* Signals: */
 
- */
+function _repl() {
+    meta_window = pages[0]
+//: [object instance proxy GType:MetaWindowX11 jsobj@0x7f8c39e52f70 native@0x3d43880]
+    workspace = meta_window.get_workspace()
+//: [object instance proxy GIName:Meta.Workspace jsobj@0x7f8c47166790 native@0x23b5360]
+
+    actor = meta_window.get_compositor_private()
+
+    actor.z_position
+
+    meta = imports.gi.Meta
+    meta_window.get_layer()
+
+    // Use to control the stack level
+    meta_window.raise()
+    meta_window.lower()
+
+}
 
 
 overlap = 10
-
 glib = imports.gi.GLib
 
 Tweener = imports.ui.tweener;
