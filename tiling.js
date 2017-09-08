@@ -144,3 +144,17 @@ for (let i=0; i < global.screen.n_workspaces; i++) {
         pages.splice(pages.indexOf(meta_window), 1)
     })
 }
+
+next = () => {
+    pages[focus+1].activate(timestamp)
+}
+previous = () => {
+    pages[focus-1].activate(timestamp)
+}
+
+settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
+settings.set_strv("cycle-windows", ["<alt>period"])
+settings.set_strv("cycle-windows-backward", ["<alt>comma"])
+settings.set_strv("switch-windows", [])
+Meta.keybindings_set_custom_handler("cycle-windows", next);
+Meta.keybindings_set_custom_handler("cycle-windows-backward", previous);
