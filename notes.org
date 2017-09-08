@@ -1,0 +1,5 @@
+* Mutter signal order 
+** When window A is closed
+  - The next window, B, receives 'focus' (but the actor of A seems to be gone?)
+  - Workspace receives 'window-removed'. ('A' seems to have been stripped of signal handlers)
+  
