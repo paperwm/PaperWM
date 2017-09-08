@@ -17,6 +17,12 @@ function _repl() {
     meta_window.raise()
     meta_window.lower()
 
+    let length = 0
+    pages.map((meta_window) => {
+        let width = meta_window.get_frame_rect().width
+        meta_window.move_resize_frame(true, length, 25, width, global.screen_height - 30)
+        length += width + overlap
+    })
 }
 
 
@@ -121,49 +127,3 @@ workspace.connect("window-added", (ws, meta_window) => {
 workspace.connect("window-removed", (ws, meta_window) => {
     pages.splice(pages.indexOf(meta_window), 1)
 })
-
-
-// pages[1].move_frame(true, 0, 0)
-
-// let length = 0
-// pages.map((meta_window) => {
-//     let width = meta_window.get_frame_rect().width
-//     meta_window.move_resize_frame(true, length, 0, width, global.screen_height)
-//     length += width + 10
-// })
-
-
-
-// // web = global.window_group.get_children()[3].meta_window
-
-// web.get_frame_rect().height
-// //: 707
-
-// web.move_resize_frame(true, -500, 20, web.get_frame_rect().width, web.get_frame_rect().height)
-
-// // Example to move a frame
-// win = global.window_group.get_children()[2]
-// metawin = win.get_meta_window()
-// metawin.move_resize_frame(false, global.screen_width + 20,30, 400, 700)
-
-// //: t
-
-
-// global.screen_width
-// //: 1346
-
-
-
-// nth_window
-// ensure_in_viewport()
-// goto_next
-// goto_prev
-
-// add_at_nth
-// destroy
-
-
-// move(meta_window, x)
-// resize
-
-
