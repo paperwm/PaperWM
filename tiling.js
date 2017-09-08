@@ -41,9 +41,15 @@ move = (meta_window, x, y) => {
     x = Math.max(margin - frame.width, x)
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
+    let scale = 1
+    if (x >= global.screen_width - margin || x <= margin - frame.width)
+        scale = 0.95
+    actor.scale_center_y = frame.height/2
     Tweener.addTween(actor, {x: x - x_offset
                              , y: y - y_offset
                              , time: 0.5
+                             , scale_x: scale
+                             , scale_y: scale
                              , onComplete: () => {
                                  actor.meta_window.move_frame(true, x, y);
                              }})
