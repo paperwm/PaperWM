@@ -20,6 +20,8 @@ function _repl() {
 }
 
 
+pages = []
+focus = 0
 overlap = 10
 glib = imports.gi.GLib
 
@@ -44,9 +46,6 @@ move = (meta_window, x, y) => {
 timestamp = () => {
     return glib.get_monotonic_time()/1000
 }
-
-pages = []
-focus = 0
 
 
 rect = (meta_window) => {
