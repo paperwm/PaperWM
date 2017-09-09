@@ -45,6 +45,10 @@ pages = []
 focus = () => {
     return pages.indexOf(global.display.focus_window)
 }
+
+window_gap = 10
+margin_lr = 20
+margin_tb = 4
 overlap = 10
 glib = imports.gi.GLib
 
