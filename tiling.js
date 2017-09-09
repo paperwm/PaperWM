@@ -173,17 +173,13 @@ remove_handler = (ws, meta_window) => {
         return
     pages.splice(removed_i, 1)
 
-    // At this point the `focus` index might be invalid so we correct it:
-    if(removed_i < focus) {
-        focus--;
-    }
     // Remove our signal handlers: Needed for non-closed windows.
     // (closing a window seems to clean out it's signal handlers)
     meta_window.disconnect(focus_wrapper);
 
     // Re-layout: Needed if the removed window didn't have focus.
     // Not sure if we can check if that was the case or not?
-    focus_handler(pages[focus])
+    focus_handler(pages[focus()])
 }
 
 add_all_from_workspace = (workspace) => {
