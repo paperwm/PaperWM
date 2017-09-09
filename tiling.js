@@ -99,8 +99,12 @@ ensure_viewport = (meta_window) => {
     }
 }
 
+framestr = (rect) => {
+    return "[ x:"+rect.x + ", y:" + rect.y + " w:" + rect.width + " h:"+rect.height + " ]";
+}
+
 focus_handler = (meta_window, user_data) => {
-    log("focus", meta_window)
+    log("focus", meta_window, framestr(meta_window.get_frame_rect()));
 
     ensure_viewport(meta_window)
     meta_window.activate(timestamp())
