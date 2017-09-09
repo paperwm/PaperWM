@@ -48,6 +48,11 @@ focus = () => {
 
 window_gap = 10
 margin_lr = 20
+statusbar_height = 20
+global.stage.get_first_child().get_children().forEach((actor) => {
+    if ("panelBox" == actor.name)
+        statusbar_height = actor.height;
+        })
 margin_tb = 4
 overlap = 10
 glib = imports.gi.GLib
@@ -134,7 +139,7 @@ propogate_forward = (n, x, lower) => {
     let meta_window = pages[n]
     if (lower)
         meta_window.lower()
-    move(meta_window, x, 20 + margin_tb)
+    move(meta_window, x, statusbar_height + margin_tb)
     propogate_forward(n+1, x+meta_window.get_frame_rect().width + overlap, true)
 }
 propogate_backward = (n, x, lower) => {
@@ -145,7 +150,7 @@ propogate_backward = (n, x, lower) => {
     x = x - meta_window.get_frame_rect().width
     if (lower)
         meta_window.lower()
-    move(meta_window, x, 20 + margin_tb)
+    move(meta_window, x, statusbar_height + margin_tb)
     propogate_backward(n-1, x - overlap, true)
 }
 
@@ -162,11 +167,11 @@ add_handler = (ws, meta_window) => {
 
     if (focus_i > -1) {
         let frame = pages[focus_i].get_frame_rect()
-        meta_window.scrollwm_initial_position = {x:frame.x + frame.width + overlap, y:20};
+        meta_window.scrollwm_initial_position = {x:frame.x + frame.width + overlap, y:statusbar_height};
 
         // Maxmize height. Setting position here doesn't work... 
         meta_window.move_resize_frame(true, 0, 0,
-                                      meta_window.get_frame_rect().width, global.screen_height - 20 - margin_tb*2)
+                                      meta_window.get_frame_rect().width, global.screen_height - statusbar_height - margin_tb*2)
     }
     meta_window.connect("focus", focus_wrapper)
 }
