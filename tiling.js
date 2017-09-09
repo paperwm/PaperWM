@@ -54,7 +54,7 @@ glib = imports.gi.GLib
 
 Tweener = imports.ui.tweener;
 margin = 75
-move = (meta_window, x, y) => {
+move = (meta_window, x, y, onComplete) => {
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
     let frame = actor.meta_window.get_frame_rect();
@@ -73,6 +73,7 @@ move = (meta_window, x, y) => {
                              , scale_y: scale
                              , onComplete: () => {
                                  actor.meta_window.move_frame(true, x, y);
+                                 onComplete && onComplete();
                              }})
 
 }
@@ -112,10 +113,18 @@ framestr = (rect) => {
 focus_handler = (meta_window, user_data) => {
     log("focus", meta_window, framestr(meta_window.get_frame_rect()));
 
-    ensure_viewport(meta_window)
-    meta_window.activate(timestamp())
-
-    // focus = pages.indexOf(meta_window)
+    if(meta_window.scrollwm_initial_position) {
+        log("setting initial position", meta_window.scrollwm_initial_position)
+        move(meta_window, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, () => {
+            log("initial postition complete")
+            ensure_viewport(meta_window);
+        })
+        propogate_forward(pages.indexOf(meta_window)+1,
+                          meta_window.scrollwm_initial_position.x + meta_window.get_frame_rect().width + window_gap);
+        delete meta_window.scrollwm_initial_position;
+    } else {
+        ensure_viewport(meta_window)
+    }
 }
 
 propogate_forward = (n, x, lower) => {
@@ -153,14 +162,13 @@ add_handler = (ws, meta_window) => {
 
     if (focus_i > -1) {
         let frame = pages[focus_i].get_frame_rect()
-        print("position: " + (frame.x + frame.width))
-        print("before resize")
-        meta_window.move_resize_frame(true, frame.x + frame.width + overlap, 20, meta_window.get_frame_rect().width, global.screen_height - 20 - margin_tb*2)
-        print("after resize")
+        meta_window.scrollwm_initial_position = {x:frame.x + frame.width + overlap, y:20};
+
+        // Maxmize height. Setting position here doesn't work... 
+        meta_window.move_resize_frame(true, 0, 0,
+                                      meta_window.get_frame_rect().width, global.screen_height - 20 - margin_tb*2)
     }
     meta_window.connect("focus", focus_wrapper)
-
-    ensure_viewport(meta_window)
 }
 
 remove_handler = (ws, meta_window) => {
