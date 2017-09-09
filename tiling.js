@@ -42,7 +42,9 @@ function log() {
 
 
 pages = []
-focus = 0
+focus = () => {
+    return pages.indexOf(global.display.focus_window)
+}
 overlap = 10
 glib = imports.gi.GLib
 
@@ -109,28 +111,28 @@ focus_handler = (meta_window, user_data) => {
     ensure_viewport(meta_window)
     meta_window.activate(timestamp())
 
-    focus = pages.indexOf(meta_window)
+    // focus = pages.indexOf(meta_window)
 }
 
 propogate_forward = (n, x, lower) => {
     if (n < 0 || n >= pages.length)
         return
-    print("positioning " + n)
+    // print("positioning " + n)
     let meta_window = pages[n]
     if (lower)
         meta_window.lower()
-    move(meta_window, x, meta_window.get_frame_rect().y)
+    move(meta_window, x, 20 + margin_tb)
     propogate_forward(n+1, x+meta_window.get_frame_rect().width + overlap, true)
 }
 propogate_backward = (n, x, lower) => {
     if (n < 0 || n >= pages.length)
         return
-    print("positioning " + n)
+    // print("positioning " + n)
     let meta_window = pages[n]
     x = x - meta_window.get_frame_rect().width
     if (lower)
         meta_window.lower()
-    move(meta_window, x, meta_window.get_frame_rect().y)
+    move(meta_window, x, 20 + margin_tb)
     propogate_backward(n-1, x - overlap, true)
 }
 
@@ -140,18 +142,25 @@ focus_wrapper = (meta_window, user_data) => {
 
 add_handler = (ws, meta_window) => {
     log("window-added", meta_window);
-    pages.splice(focus + 1, 0, meta_window)
-    let frame = pages[focus].get_frame_rect()
-    print("position: " + (frame.x + frame.width))
-    print("before resize")
-    meta_window.move_resize_frame(true, frame.x + frame.width + overlap, 20, meta_window.get_frame_rect().width, global.screen_height - 20)
-    print("after resize")
+    let focus_i = focus()
+
+    // Should inspert at index 0 if focus() returns -1
+    pages.splice(focus_i + 1, 0, meta_window)
+
+    if (focus_i > -1) {
+        let frame = pages[focus_i].get_frame_rect()
+        print("position: " + (frame.x + frame.width))
+        print("before resize")
+        meta_window.move_resize_frame(true, frame.x + frame.width + overlap, 20, meta_window.get_frame_rect().width, global.screen_height - 20 - margin_tb*2)
+        print("after resize")
+    }
     meta_window.connect("focus", focus_wrapper)
+
     ensure_viewport(meta_window)
 }
 
 remove_handler = (ws, meta_window) => {
-    log("window-removed", meta_window);
+    log("window-removed", meta_window, meta_window.title);
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
 
@@ -205,10 +214,10 @@ for (let i=0; i < global.screen.n_workspaces; i++) {
 }
 
 next = () => {
-    pages[focus+1].activate(timestamp)
+    pages[focus()+1].activate(timestamp)
 }
 previous = () => {
-    pages[focus-1].activate(timestamp)
+    pages[focus()-1].activate(timestamp)
 }
 
 settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
