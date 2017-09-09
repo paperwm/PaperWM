@@ -2,4 +2,26 @@
 ** When window A is closed
   - The next window, B, receives 'focus' (but the actor of A seems to be gone?)
   - Workspace receives 'window-removed'. ('A' seems to have been stripped of signal handlers)
-  
+** When window A is created  
+   1. on workspace "window-added" is run, actor isn't available
+   2. on display "window-created is run, actor is available
+   3. focus is run if the new window should be focused
+* TODO Generalize to work with more workspaces
+
+eg.
+workspaces[index] = {
+  windows:  [],
+  focus: n,
+}
+
+* TODO Move initial positioning into window-created signal
+Don't scale new windows
+* TODO Hook up resize/move functionality
+* TODO More keybindings, eg. meta-<number>
+* TODO Simple scratchpad 
+Probably easiest/best to 
+* TODO Window search
+* TODO Scaling bug
+Possible fix: hide the actual window and replace it with a clone, which only sets focus on click
+* TODO General animation consistency
+* TODO Better alt-tab
