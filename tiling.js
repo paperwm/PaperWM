@@ -156,6 +156,8 @@ remove_handler = (ws, meta_window) => {
     // window has already received the `focus` signal at this point.
 
     let removed_i = pages.indexOf(meta_window)
+    if (removed_i < 0)
+        return
     pages.splice(removed_i, 1)
 
     // At this point the `focus` index might be invalid so we correct it:
