@@ -1,0 +1,3 @@
+#!/usr/bin/env zsh
+
+journalctl --follow --identifier=org.gnome.Shell.desktop | sed -e 's|\]:|]:\n  |'
