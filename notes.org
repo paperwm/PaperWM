@@ -25,3 +25,4 @@ Probably easiest/best to
 Possible fix: hide the actual window and replace it with a clone, which only sets focus on click
 * TODO General animation consistency
 * TODO Better alt-tab
+* TODO Detect transient windows
