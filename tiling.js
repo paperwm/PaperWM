@@ -73,10 +73,10 @@ move = (meta_window, x, y, onComplete) => {
     actor.scale_center_y = frame.height/2
     Tweener.addTween(actor, {x: x - x_offset
                              , y: y - y_offset
-                             , time: 0.5
+                             , time: 0.25
                              , scale_x: scale
                              , scale_y: scale
-                             , transition: "linear"
+                             , transition: "easeInOutQuad"
                              , onComplete: () => {
                                  actor.meta_window.move_frame(true, x, y);
                                  onComplete && onComplete();
