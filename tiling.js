@@ -74,7 +74,7 @@ move = (meta_window, x, y, onComplete) => {
     let scale = 1
     if (x >= global.screen_width - margin || x <= margin - frame.width)
         scale = 0.95
-    actor.scale_center_y = frame.height/2
+    actor.set_pivot_point(0.5, 0.5);
     Tweener.addTween(actor, {x: x - x_offset
                              , y: y - y_offset
                              , time: 0.25
