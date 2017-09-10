@@ -76,6 +76,7 @@ move = (meta_window, x, y, onComplete) => {
                              , time: 0.5
                              , scale_x: scale
                              , scale_y: scale
+                             , transition: "linear"
                              , onComplete: () => {
                                  actor.meta_window.move_frame(true, x, y);
                                  onComplete && onComplete();
