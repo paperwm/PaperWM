@@ -27,6 +27,7 @@ Possible fix: hide the actual window and replace it with a clone, which only set
 * TODO Better alt-tab
 * TODO Detect transient windows
 * TODO Don't add windows to the focus list when cycling
+* Regression: add_handler doesn't handle the first window
 * Move behavior
 Integrate mouse move and keyboard move. Pop the window out and on top of the other windows, leaving a scaled down gap, when initiating move (either with the mouse or `begin-move`). See [[move.png]].
 
