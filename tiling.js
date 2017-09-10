@@ -160,6 +160,10 @@ focus_wrapper = (meta_window, user_data) => {
 
 add_handler = (ws, meta_window) => {
     log("window-added", meta_window);
+    if (meta_window.window_type != Meta.WindowType.NORMAL) {
+        return
+    }
+
     let focus_i = focus()
 
     // Should inspert at index 0 if focus() returns -1
