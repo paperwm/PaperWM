@@ -41,18 +41,22 @@ function log() {
 }
 
 
-pages = []
+workspaces = []
+workspaces[0] = []
 focus = () => {
-    return pages.indexOf(global.display.focus_window)
+    let meta_window = global.display.focus_window;
+    return workspaces[meta_window.get_workspace().workspace_index].indexOf(meta_window)
 }
 
 window_gap = 10
 margin_lr = 20
-statusbar_height = 20
+statusbar = undefined
 global.stage.get_first_child().get_children().forEach((actor) => {
-    if ("panelBox" == actor.name)
-        statusbar_height = actor.height;
-        })
+    if ("panelBox" == actor.name) {
+        statusbar = actor
+    }
+})
+statusbar_height = statusbar.height
 margin_tb = 4
 overlap = 10
 glib = imports.gi.GLib
@@ -98,9 +102,10 @@ rect = (meta_window) => {
 ensure_viewport = (meta_window) => {
     let [start, end] = rect(meta_window)
 
-    let index = pages.indexOf(meta_window)
+    let workspace = workspaces[meta_window.get_workspace().workspace_index];
+    let index = workspace.indexOf(meta_window)
     let margin = overlap*2
-    if (index == pages.length - 1 || index == 0)
+    if (index == workspace.length - 1 || index == 0)
         margin = 0
     if (end >= global.screen_width - margin) {
         propogate_forward(index + 1, global.screen_width, true)
@@ -125,7 +130,8 @@ focus_handler = (meta_window, user_data) => {
             log("initial postition complete")
             ensure_viewport(meta_window);
         })
-        propogate_forward(pages.indexOf(meta_window)+1,
+        let workspace = workspaces[meta_window.get_workspace().workspace_index];
+        propogate_forward(workspace.indexOf(meta_window)+1,
                           meta_window.scrollwm_initial_position.x + meta_window.get_frame_rect().width + window_gap);
         delete meta_window.scrollwm_initial_position;
     } else {
@@ -134,20 +140,24 @@ focus_handler = (meta_window, user_data) => {
 }
 
 propogate_forward = (n, x, lower) => {
-    if (n < 0 || n >= pages.length)
+    let focus_window = global.display.focus_window
+    let workspace = workspaces[focus_window.get_workspace().workspace_index];
+    if (n < 0 || n >= workspace.length)
         return
     // print("positioning " + n)
-    let meta_window = pages[n]
+    let meta_window = workspace[n]
     if (lower)
         meta_window.lower()
     move(meta_window, x, statusbar_height + margin_tb)
     propogate_forward(n+1, x+meta_window.get_frame_rect().width + overlap, true)
 }
 propogate_backward = (n, x, lower) => {
-    if (n < 0 || n >= pages.length)
+    let focus_window = global.display.focus_window
+    let workspace = workspaces[focus_window.get_workspace().workspace_index];
+    if (n < 0 || n >= workspace.length)
         return
     // print("positioning " + n)
-    let meta_window = pages[n]
+    let meta_window = workspace[n]
     x = x - meta_window.get_frame_rect().width
     if (lower)
         meta_window.lower()
@@ -168,11 +178,12 @@ add_handler = (ws, meta_window) => {
     let focus_i = focus()
 
     // Should inspert at index 0 if focus() returns -1
-    pages.splice(focus_i + 1, 0, meta_window)
+    let workspace = workspaces[ws.workspace_index]
+    workspace.splice(focus_i + 1, 0, meta_window)
 
     if (focus_i > -1) {
-        let frame = pages[focus_i].get_frame_rect()
-        meta_window.scrollwm_initial_position = {x:frame.x + frame.width + overlap, y:statusbar_height};
+        let frame = workspace[focus_i].get_frame_rect()
+        meta_window.scrollwm_initial_position = {x:frame.x + frame.width + overlap, y:statusbar_height + margin_tb};
 
         // Maxmize height. Setting position here doesn't work... 
         meta_window.move_resize_frame(true, 0, 0,
@@ -186,10 +197,11 @@ remove_handler = (ws, meta_window) => {
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
 
-    let removed_i = pages.indexOf(meta_window)
+    let workspace = workspaces[meta_window.get_workspace().workspace_index]
+    let removed_i = workspace.indexOf(meta_window)
     if (removed_i < 0)
         return
-    pages.splice(removed_i, 1)
+    workspace.splice(removed_i, 1)
 
     // Remove our signal handlers: Needed for non-closed windows.
     // (closing a window seems to clean out it's signal handlers)
@@ -197,13 +209,13 @@ remove_handler = (ws, meta_window) => {
 
     // Re-layout: Needed if the removed window didn't have focus.
     // Not sure if we can check if that was the case or not?
-    focus_handler(pages[focus()])
+    focus_handler(workspace[focus()])
 }
 
 add_all_from_workspace = (workspace) => {
     workspace = workspace || global.screen.get_active_workspace();
     workspace.list_windows().forEach((meta_window, i) => {
-        if(pages.indexOf(meta_window) < 0) {
+        if(workspaces[workspace.workspace_index].indexOf(meta_window) < 0) {
             add_handler(workspace, meta_window)
         }
     })
@@ -221,8 +233,6 @@ wrapped_signal_handler = (handler_name, owner_obj) => {
     }
 }
 
-// Initialize workspaces
-workspaces = []
 for (let i=0; i < global.screen.n_workspaces; i++) {
     workspaces[i] = []
     let workspace = global.screen.get_workspace_by_index(i)
@@ -232,10 +242,12 @@ for (let i=0; i < global.screen.n_workspaces; i++) {
 }
 
 next = () => {
-    pages[focus()+1].activate(timestamp)
+    let meta_window = global.display.focus_window
+    workspaces[meta_window.get_workspace().workspace_index][focus()+1].activate(timestamp)
 }
 previous = () => {
-    pages[focus()-1].activate(timestamp)
+    let meta_window = global.display.focus_window
+    workspaces[meta_window.get_workspace().workspace_index][focus()-1].activate(timestamp)
 }
 
 settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
