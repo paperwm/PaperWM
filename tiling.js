@@ -353,5 +353,5 @@ Meta.keybindings_set_custom_handler("cycle-windows", next);
 Meta.keybindings_set_custom_handler("cycle-windows-backward", previous);
 
 // Must use `Meta.keybindings_set_custom_handler` to re-assign handler?
-set_action_handler("move-left", dynamic_function_ref("move_right"));
+set_action_handler("move-left", dynamic_function_ref("move_left"));
 set_action_handler("move-right", dynamic_function_ref("move_right"));
