@@ -45,6 +45,8 @@ workspaces = []
 workspaces[0] = []
 focus = () => {
     let meta_window = global.display.focus_window;
+    if (!meta_window)
+        return -1;
     return workspaces[meta_window.get_workspace().workspace_index].indexOf(meta_window)
 }
 
