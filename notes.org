@@ -32,3 +32,25 @@ Possible fix: hide the actual window and replace it with a clone, which only set
 Integrate mouse move and keyboard move. Pop the window out and on top of the other windows, leaving a scaled down gap, when initiating move (either with the mouse or `begin-move`). See [[move.png]].
 
 Cycling through windows should then move the active window around. Moving with the mouse should move the gap around appropriately, possibly scrolling the strip (though that might be confusing).
+* Crash bug
+
+Replicate by opening and closing eg. copyq very fast, it seems there's a threshold which always triggers a crash.
+
+```
+sep. 11 18:45:01 x230 org.gnome.Shell.desktop[26137]: focus: gnome-shell-minimap: tiling.js | emacs [ x:-526, y:29 w:1220 h:737 ]
+sep. 11 18:46:17 x230 org.gnome.Shell.desktop[26137]: window-added [object instance proxy GType:MetaWindowX11 jsobj@0x7faea590b370 native@0x25fb7d0] display - CopyQ 0
+sep. 11 18:46:17 x230 org.gnome.Shell.desktop[26137]: focus: display - CopyQ [ x:0, y:27 w:662 h:737 ]
+sep. 11 18:46:17 x230 org.gnome.Shell.desktop[26137]: setting initial position [object Object]
+sep. 11 18:46:17 x230 org.gnome.Shell.desktop[26137]: focus: debug [ x:1230, y:29 w:642 h:737 ]
+sep. 11 18:46:17 x230 org.gnome.Shell.desktop[26137]: window-removed [object instance proxy GType:MetaWindowX11 jsobj@0x7faea590b370 native@0x25fb7d0] display - CopyQ
+sep. 11 18:46:17 x230 org.gnome.Shell.desktop[26137]: focus: gnome-shell-minimap: tiling.js | emacs [ x:0, y:29 w:1220 h:737 ]
+sep. 11 18:46:17 x230 org.gnome.Shell.desktop[26137]: **
+sep. 11 18:46:17 x230 org.gnome.Shell.desktop[26137]: mutter:ERROR:core/window.c:5041:meta_window_get_workspaces: code should not be reached
+sep. 11 18:46:20 x230 org.gnome.Shell.desktop[26741]: current session already has an ibus-daemon.
+```
+
+
+1. window-removed on copyq
+2. focus on the last window
+3. crash
+4. On restart a copyq window is still there suggesting that it was either not removed properly, or started to run just before the crash
