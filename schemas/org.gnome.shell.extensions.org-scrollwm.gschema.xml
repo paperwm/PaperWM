@@ -17,11 +17,11 @@
       <summary>Toggles the floating scratch layer</summary>
     </key>
     <key type="as" name="move-right">
-      <default><![CDATA[['<Super><Shift>.']]]></default>
+      <default><![CDATA[['<Super><Shift>period']]]></default>
       <summary>Move the focused window right in the tiling</summary>
     </key>
     <key type="as" name="move-left">
-      <default><![CDATA[['<Super><Shift>,']]]></default>
+      <default><![CDATA[['<Super><Shift>comma']]]></default>
       <summary>Move the focused window left in the tiling</summary>
     </key>
   </schema>

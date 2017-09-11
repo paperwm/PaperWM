@@ -236,11 +236,11 @@ add_all_from_workspace = (workspace) => {
 }
 
 /**
- * Look up the signal handler by name so the handler can be redefined without
- * re-registering to the signal.
- * (generic name? bind_to_name? named_function? dynamic_function_reference?)
+ * Look up the function by name at call time. This makes it convenient to
+ * redefine the function without re-registering all signal handler, keybindings,
+ * etc. (this is like a function symbol in lisp)
  */
-wrapped_signal_handler = (handler_name, owner_obj) => {
+dynamic_function_ref = (handler_name, owner_obj) => {
     owner_obj = owner_obj || window;
     return function() {
         owner_obj[handler_name].apply(owner_obj, arguments);
@@ -251,8 +251,8 @@ for (let i=0; i < global.screen.n_workspaces; i++) {
     workspaces[i] = []
     let workspace = global.screen.get_workspace_by_index(i)
     print("workspace: " + workspace)
-    workspace.connect("window-added", wrapped_signal_handler("add_handler"))
-    workspace.connect("window-removed", wrapped_signal_handler("remove_handler"));
+    workspace.connect("window-added", dynamic_function_ref("add_handler"))
+    workspace.connect("window-removed", dynamic_function_ref("remove_handler"));
     add_all_from_workspace(workspace);
 }
 
@@ -265,6 +265,32 @@ previous = () => {
     workspaces[meta_window.get_workspace().workspace_index][focus()-1].activate(timestamp)
 }
 
+util = {
+    swap: function(array, i, j) {
+        let temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    },
+    in_bounds: function(array, i) {
+        return i >= 0 && i < array.length;
+    }
+};
+
+move_helper = (meta_window, delta) => {
+    // NB: delta should be 1 or -1
+    let ws = workspaces[meta_window.get_workspace().workspace_index]
+    let i = ws.indexOf(meta_window)
+    if(util.in_bounds(ws, i+delta)) {
+        util.swap(ws, i, i+delta);
+        ensure_viewport(meta_window);
+    }
+}
+move_right = () => {
+    move_helper(global.display.focus_window, 1);
+}
+move_left = () => {
+    move_helper(global.display.focus_window, -1);
+}
 
 // See gnome-shell-extensions-negesti/convenience.js for how to do this when we
 // pack this as an actual extension
@@ -324,3 +350,7 @@ shell_settings.set_strv("toggle-overview", ["<super>space"])
 
 Meta.keybindings_set_custom_handler("cycle-windows", next);
 Meta.keybindings_set_custom_handler("cycle-windows-backward", previous);
+
+// Must use `Meta.keybindings_set_custom_handler` to re-assign handler?
+set_action_handler("move-left", dynamic_function_ref("move_right"));
+set_action_handler("move-right", dynamic_function_ref("move_right"));
