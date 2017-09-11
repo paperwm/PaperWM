@@ -78,7 +78,6 @@ move = (meta_window, x, y, onComplete) => {
     let scale = 1
     if (x >= global.screen_width - margin || x <= margin - frame.width)
         scale = 0.95
-    actor.set_pivot_point(0.5, 0.5);
     Tweener.addTween(actor, {x: x - x_offset
                              , y: y - y_offset
                              , time: 0.25
@@ -108,19 +107,21 @@ ensure_viewport = (meta_window) => {
 
     let workspace = workspaces[meta_window.get_workspace().workspace_index];
     let index = workspace.indexOf(meta_window)
-    let margin = overlap*2
+    let margin = margin_lr
     if (index == workspace.length - 1 || index == 0)
         margin = 0
+    let frame = meta_window.get_frame_rect();
     if (end >= global.screen_width - margin) {
-        propogate_forward(index + 1, global.screen_width, true)
-        propogate_backward(index, global.screen_width - margin, false)
+        let position = global.screen_width - margin - frame.width;
+        propogate_forward(index, position, true)
+        propogate_backward(index - 1, position - window_gap, false)
     }
     else if (start <= margin) {
-        propogate_forward(index, margin, false)
-        propogate_backward(index - 1, -global.screen_width, false)
+        let position = margin + frame.width;
+        propogate_backward(index, position, false)
+        propogate_forward(index + 1, position + window_gap, true)
     }
     else {
-        let frame = meta_window.get_frame_rect();
         propogate_forward(index, frame.x, false)
         propogate_backward(index - 1, frame.x - window_gap, false)
     }
@@ -145,6 +146,7 @@ focus_handler = (meta_window, user_data) => {
     }
 }
 
+// Place window's left edge at x
 propogate_forward = (n, x, lower) => {
     let focus_window = global.display.focus_window
     let workspace = workspaces[focus_window.get_workspace().workspace_index];
@@ -154,9 +156,12 @@ propogate_forward = (n, x, lower) => {
     let meta_window = workspace[n]
     if (lower)
         meta_window.lower()
+    // Anchor scaling/animation on the left edge for windows positioned to the right,
+    meta_window.get_compositor_private().set_pivot_point(0, 0.5);
     move(meta_window, x, statusbar_height + margin_tb)
     propogate_forward(n+1, x+meta_window.get_frame_rect().width + overlap, true)
 }
+// Place window's right edge at x
 propogate_backward = (n, x, lower) => {
     let focus_window = global.display.focus_window
     let workspace = workspaces[focus_window.get_workspace().workspace_index];
@@ -165,6 +170,8 @@ propogate_backward = (n, x, lower) => {
     // print("positioning " + n)
     let meta_window = workspace[n]
     x = x - meta_window.get_frame_rect().width
+    // Archor on the right edge for windows positioned to the left.
+    meta_window.get_compositor_private().set_pivot_point(1, 0.5);
     if (lower)
         meta_window.lower()
     move(meta_window, x, statusbar_height + margin_tb)
