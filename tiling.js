@@ -44,7 +44,9 @@ function log() {
 
 
 workspaces = []
-workspaces[0] = []
+for (let i=0; i < global.screen.n_workspaces; i++) {
+    workspaces[i] = []
+}
 focus = () => {
     let meta_window = global.display.focus_window;
     if (!meta_window)
@@ -248,7 +250,6 @@ dynamic_function_ref = (handler_name, owner_obj) => {
 }
 
 for (let i=0; i < global.screen.n_workspaces; i++) {
-    workspaces[i] = []
     let workspace = global.screen.get_workspace_by_index(i)
     print("workspace: " + workspace)
     workspace.connect("window-added", dynamic_function_ref("add_handler"))
