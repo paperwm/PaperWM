@@ -135,13 +135,10 @@ focus_handler = (meta_window, user_data) => {
 
     if(meta_window.scrollwm_initial_position) {
         log("setting initial position", meta_window.scrollwm_initial_position)
-        move(meta_window, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, () => {
-            log("initial postition complete")
-            ensure_viewport(meta_window);
-        })
+        let frame = meta_window.get_frame_rect();
+        meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
+        ensure_viewport(meta_window);
         let workspace = workspaces[meta_window.get_workspace().workspace_index];
-        propogate_forward(workspace.indexOf(meta_window)+1,
-                          meta_window.scrollwm_initial_position.x + meta_window.get_frame_rect().width + window_gap);
         delete meta_window.scrollwm_initial_position;
     } else {
         ensure_viewport(meta_window)
