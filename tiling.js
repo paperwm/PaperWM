@@ -246,6 +246,7 @@ for (let i=0; i < global.screen.n_workspaces; i++) {
     print("workspace: " + workspace)
     workspace.connect("window-added", wrapped_signal_handler("add_handler"))
     workspace.connect("window-removed", wrapped_signal_handler("remove_handler"));
+    add_all_from_workspace(workspace);
 }
 
 next = () => {
