@@ -313,5 +313,9 @@ settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 settings.set_strv("cycle-windows", ["<alt>period", "<super>period" ])
 settings.set_strv("cycle-windows-backward", ["<alt>comma", "<super>comma"])
 settings.set_strv("close", ['<super>c'])
+
+shell_settings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
+shell_settings.set_strv("toggle-overview", ["<super>space"])
+
 Meta.keybindings_set_custom_handler("cycle-windows", next);
 Meta.keybindings_set_custom_handler("cycle-windows-backward", previous);
