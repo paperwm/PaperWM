@@ -115,8 +115,8 @@ ensure_viewport = (meta_window) => {
     let frame = meta_window.get_frame_rect();
     if (end >= global.screen_width - margin) {
         let position = global.screen_width - margin - frame.width;
-        propogate_forward(index, position, true)
-        propogate_backward(index - 1, position - window_gap, false)
+        propogate_forward(index, position, false)
+        propogate_backward(index - 1, position - window_gap, true)
     }
     else if (start <= margin) {
         let position = margin + frame.width;
