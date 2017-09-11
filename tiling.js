@@ -59,7 +59,7 @@ global.stage.get_first_child().get_children().forEach((actor) => {
     }
 })
 statusbar_height = statusbar.height
-margin_tb = 4
+margin_tb = 2
 overlap = 10
 glib = imports.gi.GLib
 
@@ -216,6 +216,7 @@ remove_handler = (ws, meta_window) => {
 
     // Re-layout: Needed if the removed window didn't have focus.
     // Not sure if we can check if that was the case or not?
+    workspace[removed_i - 1].activate(timestamp());
     focus_handler(workspace[focus()])
 }
 
