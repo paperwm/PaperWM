@@ -3,6 +3,8 @@
 function _repl() {
     add_all_from_workspace()
 
+    set_action_handler("toggle-scratch-layer", () => { print("It works!"); });
+
     meta_window = pages[0]
 //: [object instance proxy GType:MetaWindowX11 jsobj@0x7f8c39e52f70 native@0x3d43880]
     workspace = meta_window.get_workspace()
@@ -257,6 +259,55 @@ previous = () => {
     let meta_window = global.display.focus_window
     workspaces[meta_window.get_workspace().workspace_index][focus()-1].activate(timestamp)
 }
+
+
+// See gnome-shell-extensions-negesti/convenience.js for how to do this when we
+// pack this as an actual extension
+get_settings = function(schema) {
+    const GioSSS = Gio.SettingsSchemaSource;
+
+    schema = schema || "org.gnome.shell.extensions.org-scrollwm";
+
+    // Need to create a proper extension soon..
+    let schemaDir = GLib.getenv("HOME")+"/src/gnome-shell/gnome-shell-minimap/schemas";
+    // let schemaDir = GLib.getenv("HOME")+"/YOUR_PATH_HERE;
+    let schemaSource;
+    schemaSource = GioSSS.new_from_directory(schemaDir, GioSSS.get_default(), false);
+
+    let schemaObj = schemaSource.lookup(schema, true);
+    if (!schemaObj)
+        throw new Error('Schema ' + schema + ' could not be found for extension ');
+
+    return new Gio.Settings({ settings_schema: schemaObj });
+}
+
+set_action_handler = function(action_name, handler) {
+    // Ripped from https://github.com/negesti/gnome-shell-extensions-negesti 
+    // Handles multiple gnome-shell versions
+
+    if (Main.wm.addKeybinding && Shell.ActionMode){ // introduced in 3.16
+        Main.wm.addKeybinding(action_name,
+                              get_settings(), Meta.KeyBindingFlags.NONE,
+                              Shell.ActionMode.NORMAL,
+                              handler
+                             );
+    } else if (Main.wm.addKeybinding && Shell.KeyBindingMode) { // introduced in 3.7.5
+        // Shell.KeyBindingMode.NORMAL | Shell.KeyBindingMode.MESSAGE_TRAY,
+        Main.wm.addKeybinding(action_name,
+                              get_settings(), Meta.KeyBindingFlags.NONE,
+                              Shell.KeyBindingMode.NORMAL,
+                              handler
+                             );
+    } else {
+        global.display.add_keybinding(
+            action_name,
+            get_settings(),
+            Meta.KeyBindingFlags.NONE,
+            handler
+        );
+    }
+}
+
 
 settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 settings.set_strv("cycle-windows", ["<alt>period"])

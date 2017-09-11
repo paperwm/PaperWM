@@ -1,0 +1,28 @@
+<schemalist>
+  <schema id="org.gnome.shell.extensions.org-scrollwm" path="/org/gnome/shell/extensions/org-scrollwm/">
+    <!-- Settings -->
+    <key type="s" name="locations">
+      <default>"{}"</default>
+      <summary>Application based configuration</summary>
+    </key>
+
+    <key type="i" name="ignore-top-panel">
+      <default>0</default>
+      <summary>Ignore top panel height</summary>
+    </key>
+
+    <!-- Keybindings -->
+    <key type="as" name="toggle-scratch-layer">
+      <default><![CDATA[['<Super>e']]]></default>
+      <summary>Toggles the floating scratch layer</summary>
+    </key>
+    <key type="as" name="move-right">
+      <default><![CDATA[['<Super><Shift>.']]]></default>
+      <summary>Move the focused window right in the tiling</summary>
+    </key>
+    <key type="as" name="move-left">
+      <default><![CDATA[['<Super><Shift>,']]]></default>
+      <summary>Move the focused window left in the tiling</summary>
+    </key>
+  </schema>
+</schemalist>
