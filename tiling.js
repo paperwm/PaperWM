@@ -117,6 +117,11 @@ ensure_viewport = (meta_window) => {
         propogate_forward(index, margin, false)
         propogate_backward(index - 1, -global.screen_width, false)
     }
+    else {
+        let frame = meta_window.get_frame_rect();
+        propogate_forward(index, frame.x, false)
+        propogate_backward(index - 1, frame.x - window_gap, false)
+    }
 }
 
 framestr = (rect) => {
