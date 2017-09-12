@@ -320,7 +320,7 @@ toggle_maximize_horizontally = () => {
     } else {
         let frame = meta_window.get_frame_rect();
         meta_window.unmaximized_rect = frame;
-        meta_window.move_resize_frame(true, margin_lr, frame.y, global.screen_width - margin_lr*2, frame.height);
+        meta_window.move_resize_frame(true, frame.x, frame.y, global.screen_width - margin_lr*2, frame.height);
     }
     ensure_viewport(meta_window);
 }
