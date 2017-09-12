@@ -110,9 +110,11 @@ ensure_viewport = (meta_window) => {
     let workspace = workspaces[meta_window.get_workspace().workspace_index];
     let index = workspace.indexOf(meta_window)
     let margin = margin_lr
+    let frame = meta_window.get_frame_rect();
+    if (frame.width > global.screen_width - 2*margin)
+        margin = (global.screen_width - frame.width)/2
     if (index == workspace.length - 1 || index == 0)
         margin = 0
-    let frame = meta_window.get_frame_rect();
     if (end >= global.screen_width - margin) {
         let position = global.screen_width - margin - frame.width;
         propogate_forward(index, position, false)
