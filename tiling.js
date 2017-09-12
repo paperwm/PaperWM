@@ -180,6 +180,17 @@ propogate_backward = (n, x, lower) => {
     propogate_backward(n-1, x - overlap, true)
 }
 
+center = (meta_window, zen) => {
+    let frame = meta_window.get_frame_rect();
+    let x = Math.floor((global.screen_width - frame.width)/2)
+    move(meta_window, x, frame.y)
+    let right = zen ? global.screen_width : x + frame.width + window_gap;
+    let left = zen ? -global.screen_width : x - window_gap;
+    let i = workspaces[meta_window.get_workspace().workspace_index].indexOf(meta_window);
+    propogate_forward(i + 1, right);
+    propogate_backward(i - 1, left);
+}
+
 focus_wrapper = (meta_window, user_data) => {
     focus_handler(meta_window, user_data)
 }
