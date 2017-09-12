@@ -7,7 +7,7 @@
    2. on display "window-created is run, actor is available
    3. focus is run if the new window should be focused
 * Keybinding system      
-  Action names is global. eg. `Meta.keybindings_set_custom_handler` works on keybindings from custom schemas too.
+Action names is global. eg. `Meta.keybindings_set_custom_handler` works on keybindings from custom schemas too.
 * TODO Generalize to work with more workspaces
 
 eg.
@@ -22,12 +22,14 @@ Don't scale new windows
 * TODO More keybindings, eg. meta-<number>
 * TODO Simple scratchpad 
 Probably easiest/best to 
-* TODO Window search
+* DONE(*) Window search
+`rofi -show window` is decent off-the-shelf replacement.
 * TODO Scaling bug
 Possible fix: hide the actual window and replace it with a clone, which only sets focus on click
 * TODO General animation consistency
 * TODO Better alt-tab
-* TODO Detect transient windows
+* DONE Detect transient windows
+42d272bea11b7c29965a201ec45ed3ca3a85ea81
 * TODO Don't add windows to the focus list when cycling
 * Regression: add_handler doesn't handle the first window
 * Move behavior
