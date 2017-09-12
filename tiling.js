@@ -304,6 +304,25 @@ move_left = () => {
     move_helper(global.display.focus_window, -1);
 }
 
+toggle_maximize_horizontally = () => {
+    let meta_window = global.display.focus_window;
+
+    // TODO: make some sort of animation
+    // Note: should investigate best-practice for attaching extension-data to meta_windows
+    if(meta_window.unmaximized_rect) {
+        let unmaximized_rect = meta_window.unmaximized_rect;
+        meta_window.move_resize_frame(true,
+                                      unmaximized_rect.x, unmaximized_rect.y,
+                                      unmaximized_rect.width, unmaximized_rect.height)
+        meta_window.unmaximized_rect = undefined;
+    } else {
+        let frame = meta_window.get_frame_rect();
+        meta_window.unmaximized_rect = frame;
+        meta_window.move_resize_frame(true, margin_lr, frame.y, global.screen_width - margin_lr*2, frame.height);
+    }
+    ensure_viewport(meta_window);
+}
+
 // See gnome-shell-extensions-negesti/convenience.js for how to do this when we
 // pack this as an actual extension
 get_settings = function(schema) {
@@ -356,12 +375,15 @@ settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 settings.set_strv("cycle-windows", ["<alt>period", "<super>period" ])
 settings.set_strv("cycle-windows-backward", ["<alt>comma", "<super>comma"])
 settings.set_strv("close", ['<super>c'])
+settings.set_strv("maximize-horizontally", ['<super>h'])
 
 shell_settings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
 shell_settings.set_strv("toggle-overview", ["<super>space"])
 
 Meta.keybindings_set_custom_handler("cycle-windows", next);
 Meta.keybindings_set_custom_handler("cycle-windows-backward", previous);
+// Or use "toggle-maximize"?
+Meta.keybindings_set_custom_handler("maximize-horizontally", toggle_maximize_horizontally);
 
 // Must use `Meta.keybindings_set_custom_handler` to re-assign handler?
 set_action_handler("move-left", dynamic_function_ref("move_left"));
