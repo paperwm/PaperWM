@@ -1,11 +1,11 @@
-* Mutter signal order 
+* Mutter signal order
 ** When window A is closed
-  - The next window, B, receives 'focus' (but the actor of A seems to be gone?)
-  - Workspace receives 'window-removed'. ('A' seems to have been stripped of signal handlers)
-** When window A is created  
-   1. on workspace "window-added" is run, actor isn't available
-   2. on display "window-created is run, actor is available
-   3. focus is run if the new window should be focused
+1. The next window, B, receives 'focus' (but the actor of A seems to be gone?)
+2. Workspace receives 'window-removed'. ('A' seems to have been stripped of signal handlers)
+** When window A is created
+1. on workspace "window-added" is run, actor isn't available
+2. on display "window-created is run, actor is available
+3. focus is run if the new window should be focused
 * Keybinding system      
 Action names is global. eg. `Meta.keybindings_set_custom_handler` works on keybindings from custom schemas too.
 * TODO Generalize to work with more workspaces
