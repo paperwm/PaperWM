@@ -108,7 +108,13 @@ rect = (meta_window) => {
 }
 
 
+ensuring = false;
 ensure_viewport = (meta_window) => {
+    if (ensuring == meta_window) {
+        debug('already ensuring', meta_window.title);
+        return;
+    }
+
     let [start, end] = rect(meta_window)
 
     let workspace = workspaces[meta_window.get_workspace().workspace_index];
@@ -121,17 +127,24 @@ ensure_viewport = (meta_window) => {
         margin = 0
     if (end >= global.screen_width - margin) {
         let position = global.screen_width - margin - frame.width;
-        propogate_forward(index, position, false)
+        ensuring = meta_window;
+        move(meta_window, position, statusbar_height + margin_tb, () => { ensuring = false })
+        propogate_forward(index + 1, position + frame.width + window_gap, true)
         propogate_backward(index - 1, position - window_gap, true)
     }
     else if (start <= margin) {
-        let position = margin + frame.width;
-        propogate_backward(index, position, false)
-        propogate_forward(index + 1, position + window_gap, true)
+        let position = margin;
+        ensuring = meta_window;
+        move(meta_window, position, statusbar_height + margin_tb, () => { ensuring = false })
+        propogate_backward(index - 1, position, true)
+        propogate_forward(index + 1, position + frame.width + window_gap, true)
     }
     else {
-        propogate_forward(index, frame.x, false)
-        propogate_backward(index - 1, frame.x - window_gap, false)
+        let position = frame.x
+        ensuring = meta_window;
+        move(meta_window, position, statusbar_height + margin_tb, () => { ensuring = false })
+        propogate_forward(index + 1, position + frame.width + window_gap, false)
+        propogate_backward(index - 1, position - window_gap, false)
     }
 }
 
