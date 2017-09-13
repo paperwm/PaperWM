@@ -102,8 +102,8 @@ timestamp = () => {
 }
 
 ensuring = false;
-ensure_viewport = (meta_window) => {
-    if (ensuring == meta_window) {
+ensure_viewport = (meta_window, force) => {
+    if (ensuring == meta_window && !force) {
         debug('already ensuring', meta_window.title);
         return;
     }
@@ -255,8 +255,9 @@ remove_handler = (ws, meta_window) => {
 
     // Re-layout: Needed if the removed window didn't have focus.
     // Not sure if we can check if that was the case or not?
-    workspace[removed_i - 1].activate(timestamp());
-    focus_handler(workspace[focus()])
+    workspace[Math.max(0, removed_i - 1)].activate(timestamp());
+    // Force a new ensure, since the focus_handler is run before window-removed
+    ensure_viewport(workspace[focus()], true)
 }
 
 add_all_from_workspace = (workspace) => {
