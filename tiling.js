@@ -207,20 +207,22 @@ add_handler = (ws, meta_window) => {
         return
     }
 
-    let focus_i = focus()
+    let focus_i = focus();
 
     // Should inspert at index 0 if focus() returns -1
     let workspace = workspaces[ws.workspace_index]
     workspace.splice(focus_i + 1, 0, meta_window)
 
-    if (focus_i > -1) {
+    if (focus_i == -1) {
+        meta_window.scrollwm_initial_position = {x: 0, y:statusbar_height + margin_tb};
+    } else {
         let frame = workspace[focus_i].get_frame_rect()
         meta_window.scrollwm_initial_position = {x:frame.x + frame.width + overlap, y:statusbar_height + margin_tb};
 
-        // Maxmize height. Setting position here doesn't work... 
-        meta_window.move_resize_frame(true, 0, 0,
-                                      meta_window.get_frame_rect().width, global.screen_height - statusbar_height - margin_tb*2)
     }
+    // Maxmize height. Setting position here doesn't work... 
+    meta_window.move_resize_frame(true, 0, 0,
+                                  meta_window.get_frame_rect().width, global.screen_height - statusbar_height - margin_tb*2);
     meta_window.connect("focus", focus_wrapper)
 }
 
