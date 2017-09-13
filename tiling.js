@@ -29,7 +29,7 @@ function _repl() {
     })
 }
 
-function log() {
+debug = () => {
     function zeropad(x) {
         x = x.toString();
         if(x.length == 1) return "0"+x;
@@ -136,10 +136,10 @@ framestr = (rect) => {
 }
 
 focus_handler = (meta_window, user_data) => {
-    log("focus", meta_window, framestr(meta_window.get_frame_rect()));
+    debug("focus:", meta_window.title, framestr(meta_window.get_frame_rect()));
 
     if(meta_window.scrollwm_initial_position) {
-        log("setting initial position", meta_window.scrollwm_initial_position)
+        debug("setting initial position", meta_window.scrollwm_initial_position)
         let frame = meta_window.get_frame_rect();
         meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
         ensure_viewport(meta_window);
@@ -198,7 +198,7 @@ focus_wrapper = (meta_window, user_data) => {
 }
 
 add_handler = (ws, meta_window) => {
-    log("window-added", meta_window);
+    debug("window-added", meta_window, meta_window.title, meta_window.window_type);
     if (meta_window.window_type != Meta.WindowType.NORMAL) {
         return
     }
@@ -221,7 +221,7 @@ add_handler = (ws, meta_window) => {
 }
 
 remove_handler = (ws, meta_window) => {
-    log("window-removed", meta_window, meta_window.title);
+    debug("window-removed", meta_window, meta_window.title);
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
 
