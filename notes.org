@@ -16,8 +16,13 @@ workspaces[index] = {
   focus: n,
 }
 
-* TODO Move initial positioning into window-created signal
+* TODO Move initial positioning into actor's first-frame signal
 Don't scale new windows
+
+The actor's ~first-frame~  signal is probably the place to do this:
+
+[[https://developer.gnome.org/meta/stable/MetaWindowActor.html#MetaWindowActor--meta-window][MetaDisplay::window-created is a good place to connect to this signal - at that point, the MetaWindowActor for the window exists, but the window has reliably not yet been drawn. Connecting to an existing window that has already been drawn to the screen is not useful.]] 
+
 * TODO Hook up resize/move functionality
 * TODO More keybindings, eg. meta-<number>
 * TODO Simple scratchpad 
