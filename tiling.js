@@ -140,6 +140,11 @@ focus_handler = (meta_window, user_data) => {
 
     if(meta_window.scrollwm_initial_position) {
         debug("setting initial position", meta_window.scrollwm_initial_position)
+        if (meta_window.get_maximized() == Meta.MaximizeFlags.BOTH) {
+            meta_window.unmaximize(Meta.MaximizeFlags.BOTH);
+            toggle_maximize_horizontally(meta_window);
+            return;
+        }
         let frame = meta_window.get_frame_rect();
         meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
         ensure_viewport(meta_window);
@@ -306,8 +311,8 @@ move_left = () => {
     move_helper(global.display.focus_window, -1);
 }
 
-toggle_maximize_horizontally = () => {
-    let meta_window = global.display.focus_window;
+toggle_maximize_horizontally = (meta_window) => {
+    meta_window = meta_window || global.display.focus_window;
 
     // TODO: make some sort of animation
     // Note: should investigate best-practice for attaching extension-data to meta_windows
