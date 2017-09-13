@@ -8,13 +8,10 @@
 3. focus is run if the new window should be focused
 * Keybinding system      
 Action names is global. eg. `Meta.keybindings_set_custom_handler` works on keybindings from custom schemas too.
-* TODO Generalize to work with more workspaces
+* DONE Generalize to work with more workspaces
+CLOSED: [2017-09-14 to. 00:28]
 
-eg.
-workspaces[index] = {
-  windows:  [],
-  focus: n,
-}
+Partially fixed with workspaces[i][j]
 
 * TODO Move initial positioning into actor's first-frame signal
 Don't scale new windows
