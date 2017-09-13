@@ -12,6 +12,10 @@ function _repl() {
 
     actor = meta_window.get_compositor_private()
 
+    St = imports.gi.St;
+    St.set_slow_down_factor(1);
+    St.set_slow_down_factor(3);
+
     actor.z_position
 
     meta = imports.gi.Meta
