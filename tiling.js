@@ -123,19 +123,24 @@ ensure_viewport = (meta_window) => {
     if (frame.width > global.screen_width - 2*margin_lr)
         margin_lr = (global.screen_width - frame.width)/2;
 
+    let position;
     if (index == 0) {
         // Always align the first window to the display's left edge
-        move_to(meta_window, 0);
+        position = 0;
     } else if (index == workspace.length-1) {
         // Always align the first window to the display's right edge
-        move_to(meta_window, global.screen_width - frame.width);
+        position = global.screen_width - frame.width;
     } else if (frame.x + frame.width >= global.screen_width - margin_lr) {
-        move_to(meta_window, global.screen_width - margin_lr - frame.width);
+        // Align to the right margin
+        position = global.screen_width - margin_lr - frame.width
     } else if (frame.x <= margin_lr) {
-        move_to(meta_window, margin_lr);
+        // Align to the left margin
+        position = margin_lr
     } else {
-        move_to(meta_window, frame.x);
+        // Don't move by default
+        position = frame.x
     }
+    move_to(meta_window, position);
 }
 
 framestr = (rect) => {
