@@ -348,6 +348,45 @@ toggle_maximize_horizontally = (meta_window) => {
     ensure_viewport(meta_window);
 }
 
+altTab = imports.ui.altTab;
+
+FocusCycler = new Lang.Class({
+    Name: 'FocusCycler',
+    Extends: altTab.WindowCyclerPopup,
+
+    _init : function() {
+        this._settings = new Gio.Settings({ schema_id: 'org.gnome.shell.window-switcher' });
+        this.parent();
+        this._selectedIndex = focus();
+    },
+
+    _initialSelection: function(backward, binding) {
+        debug("_initialSelection")
+        if (backward)
+            this._select(this._previous());
+        else if (this._items.length == 1)
+            this._select(0);
+        else
+            this._select(this._next());
+    },
+
+    _highlightItem: function(index, justOutline) {
+        printerr("hightlight", index)
+        ensure_viewport(this._items[index])
+        this._highlight.window = this._items[index];
+        global.window_group.set_child_above_sibling(this._highlight.actor, null);
+    },
+
+    _getWindows: function() {
+        return workspaces[global.display.focus_window.get_workspace().workspace_index];
+    }
+});
+
+scroll_cycle = (display, screen, meta_window, binding) => {
+    let tabPopup = new FocusCycler();
+    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
+}
+
 // See gnome-shell-extensions-negesti/convenience.js for how to do this when we
 // pack this as an actual extension
 get_settings = function(schema) {
@@ -405,8 +444,11 @@ settings.set_strv("maximize-horizontally", ['<super>h'])
 shell_settings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
 shell_settings.set_strv("toggle-overview", ["<super>space"])
 
-Meta.keybindings_set_custom_handler("cycle-windows", next);
-Meta.keybindings_set_custom_handler("cycle-windows-backward", previous);
+Meta.keybindings_set_custom_handler("cycle-windows",
+                                    dynamic_function_ref("scroll_cycle"));
+Meta.keybindings_set_custom_handler("cycle-windows-backward",
+                                    dynamic_function_ref("scroll_cycle"));
+
 // Or use "toggle-maximize"?
 Meta.keybindings_set_custom_handler("maximize-horizontally",
                                     as_key_handler("toggle_maximize_horizontally"));
