@@ -360,6 +360,13 @@ FocusCycler = new Lang.Class({
         this._selectedIndex = focus();
     },
 
+    _next: function() {
+        return Math.min(this._items.length-1, this._selectedIndex+1)
+    },
+    _previous: function() {
+        return Math.max(0, this._selectedIndex-1)
+    },
+
     _initialSelection: function(backward, binding) {
         debug("_initialSelection")
         if (backward)
