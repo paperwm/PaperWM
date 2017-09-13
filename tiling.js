@@ -125,26 +125,22 @@ ensure_viewport = (meta_window) => {
         margin = (global.screen_width - frame.width)/2
     if (index == workspace.length - 1 || index == 0)
         margin = 0
-    if (end >= global.screen_width - margin) {
-        let position = global.screen_width - margin - frame.width;
+
+    function move_to(meta_window, position) {
         ensuring = meta_window;
-        move(meta_window, position, statusbar_height + margin_tb, () => { ensuring = false })
-        propogate_forward(index + 1, position + frame.width + window_gap, true)
-        propogate_backward(index - 1, position - window_gap, true)
+        move(meta_window, position, statusbar_height + margin_tb, () => { ensuring = false });
+        propogate_forward(index + 1, position + frame.width + window_gap, true);
+        propogate_backward(index - 1, position - window_gap, true);
+    }
+
+    if (end >= global.screen_width - margin) {
+        move_to(meta_window, global.screen_width - margin - frame.width);
     }
     else if (start <= margin) {
-        let position = margin;
-        ensuring = meta_window;
-        move(meta_window, position, statusbar_height + margin_tb, () => { ensuring = false })
-        propogate_backward(index - 1, position, true)
-        propogate_forward(index + 1, position + frame.width + window_gap, true)
+        move_to(meta_window, margin);
     }
     else {
-        let position = frame.x
-        ensuring = meta_window;
-        move(meta_window, position, statusbar_height + margin_tb, () => { ensuring = false })
-        propogate_forward(index + 1, position + frame.width + window_gap, false)
-        propogate_backward(index - 1, position - window_gap, false)
+        move_to(meta_window, frame.x);
     }
 }
 
