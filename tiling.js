@@ -101,30 +101,12 @@ timestamp = () => {
     return glib.get_monotonic_time()/1000
 }
 
-
-rect = (meta_window) => {
-    frame = meta_window.get_frame_rect()
-    return [frame.x, frame.x + frame.width]
-}
-
-
 ensuring = false;
 ensure_viewport = (meta_window) => {
     if (ensuring == meta_window) {
         debug('already ensuring', meta_window.title);
         return;
     }
-
-    let [start, end] = rect(meta_window)
-
-    let workspace = workspaces[meta_window.get_workspace().workspace_index];
-    let index = workspace.indexOf(meta_window)
-    let margin = margin_lr
-    let frame = meta_window.get_frame_rect();
-    if (frame.width > global.screen_width - 2*margin)
-        margin = (global.screen_width - frame.width)/2
-    if (index == workspace.length - 1 || index == 0)
-        margin = 0
 
     function move_to(meta_window, position) {
         ensuring = meta_window;
@@ -133,13 +115,25 @@ ensure_viewport = (meta_window) => {
         propogate_backward(index - 1, position - window_gap, true);
     }
 
-    if (end >= global.screen_width - margin) {
-        move_to(meta_window, global.screen_width - margin - frame.width);
-    }
-    else if (start <= margin) {
-        move_to(meta_window, margin);
-    }
-    else {
+    let workspace = workspaces[meta_window.get_workspace().workspace_index];
+    let index = workspace.indexOf(meta_window)
+    let frame = meta_window.get_frame_rect();
+    // Share the available margin evenly between left and right
+    // if the window is wide (should probably use a quotient larger than 2)
+    if (frame.width > global.screen_width - 2*margin_lr)
+        margin_lr = (global.screen_width - frame.width)/2;
+
+    if (index == 0) {
+        // Always align the first window to the display's left edge
+        move_to(meta_window, 0);
+    } else if (index == workspace.length-1) {
+        // Always align the first window to the display's right edge
+        move_to(meta_window, global.screen_width - frame.width);
+    } else if (frame.x + frame.width >= global.screen_width - margin_lr) {
+        move_to(meta_window, global.screen_width - margin_lr - frame.width);
+    } else if (frame.x <= margin_lr) {
+        move_to(meta_window, margin_lr);
+    } else {
         move_to(meta_window, frame.x);
     }
 }
