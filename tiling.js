@@ -197,7 +197,6 @@ center = (meta_window, zen) => {
     propogate_forward(i + 1, right);
     propogate_backward(i - 1, left);
 }
-
 focus_wrapper = (meta_window, user_data) => {
     focus_handler(meta_window, user_data)
 }
@@ -266,6 +265,19 @@ dynamic_function_ref = (handler_name, owner_obj) => {
         owner_obj[handler_name].apply(owner_obj, arguments);
     }
 }
+
+/**
+ * Adapts a function operating on a meta_window to a key handler
+ */
+as_key_handler = function(fn) {
+    if(typeof(fn) === "string") {
+        fn = dynamic_function_ref(fn);
+    }
+    return function(screen, monitor, meta_window, binding) {
+        return fn(meta_window);
+    }
+}
+
 
 for (let i=0; i < global.screen.n_workspaces; i++) {
     let workspace = global.screen.get_workspace_by_index(i)
@@ -390,7 +402,10 @@ shell_settings.set_strv("toggle-overview", ["<super>space"])
 Meta.keybindings_set_custom_handler("cycle-windows", next);
 Meta.keybindings_set_custom_handler("cycle-windows-backward", previous);
 // Or use "toggle-maximize"?
-Meta.keybindings_set_custom_handler("maximize-horizontally", toggle_maximize_horizontally);
+Meta.keybindings_set_custom_handler("maximize-horizontally",
+                                    as_key_handler("toggle_maximize_horizontally"));
+
+
 
 // Must use `Meta.keybindings_set_custom_handler` to re-assign handler?
 set_action_handler("move-left", dynamic_function_ref("move_left"));
