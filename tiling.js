@@ -161,7 +161,6 @@ focus_handler = (meta_window, user_data) => {
         let frame = meta_window.get_frame_rect();
         meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
         ensure_viewport(meta_window);
-        let workspace = workspaces[meta_window.get_workspace().workspace_index];
         delete meta_window.scrollwm_initial_position;
     } else {
         ensure_viewport(meta_window)
@@ -303,8 +302,10 @@ first_frame = (meta_window_actor) => {
         }
         let frame = meta_window.get_frame_rect();
         meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
-        ensure_viewport(meta_window);
+
         let workspace = workspaces[meta_window.get_workspace().workspace_index];
+        propogate_forward(workspace, workspace.indexOf(meta_window) + 1, meta_window.scrollwm_initial_position.x + frame.width);
+
         delete meta_window.scrollwm_initial_position;
     }
 }
