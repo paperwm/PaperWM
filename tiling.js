@@ -361,8 +361,8 @@ PreviewedWindowNavigator = new Lang.Class({
     Extends: altTab.WindowSwitcherPopup,
 
     _init : function() {
-        this._selectedIndex = focus();
         this.parent();
+        this._selectedIndex = focus();
     },
 
     _initialSelection: function(backward, binding) {
