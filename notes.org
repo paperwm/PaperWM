@@ -22,6 +22,9 @@ window B           |              ----|-----------
         -----------|----              |    window A
 window B ->        | ---------------- |
 #+END_SRC 
+* TODO PreviewedWindowNavigator bug
+
+Sometimes ensures the starting window instead of the selected window, while focus is correctly set. Not sure how to reproduce.
 
 * TODO Make all keybindings work when ~Super~ is depressed
 NB: Should work in conjunction with "[[id:d308029d-b3bb-45d2-9418-2c11d7f3cb82][focus-change-committed-on-modifier-release]]". 
