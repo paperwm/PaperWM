@@ -44,7 +44,8 @@ CLOSED: [2017-09-14 to. 00:28]
 
 Partially fixed with workspaces[i][j]
 
-* TODO Move initial positioning into actor's first-frame signal
+* DONE Move initial positioning into actor's first-frame signal
+CLOSED: [2017-09-14 to. 11:16]
 Don't scale new windows
 
 The actor's ~first-frame~  signal is probably the place to do this:

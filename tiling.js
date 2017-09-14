@@ -290,6 +290,33 @@ as_key_handler = function(fn) {
     }
 }
 
+first_frame = (meta_window_actor) => {
+    meta_window_actor.disconnect('first_frame');
+    let meta_window = meta_window_actor.meta_window;
+    debug("first frame: setting initial position", meta_window)
+    if(meta_window.scrollwm_initial_position) {
+        debug("setting initial position", meta_window.scrollwm_initial_position)
+        if (meta_window.get_maximized() == Meta.MaximizeFlags.BOTH) {
+            meta_window.unmaximize(Meta.MaximizeFlags.BOTH);
+            toggle_maximize_horizontally(meta_window);
+            return;
+        }
+        let frame = meta_window.get_frame_rect();
+        meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
+        ensure_viewport(meta_window);
+        let workspace = workspaces[meta_window.get_workspace().workspace_index];
+        delete meta_window.scrollwm_initial_position;
+    }
+}
+
+window_created = (display, meta_window, user_data) => {
+    debug('window-created', meta_window.title);
+    let actor = meta_window.get_compositor_private();
+    actor.connect('first-frame', dynamic_function_ref('first_frame'));
+}
+
+global.display.connect('window-created', dynamic_function_ref('window_created'));
+
 
 for (let i=0; i < global.screen.n_workspaces; i++) {
     let workspace = global.screen.get_workspace_by_index(i)
