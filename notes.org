@@ -24,6 +24,14 @@ window B ->        | ---------------- |
 #+END_SRC 
 
 * TODO Make all keybindings work when ~Super~ is depressed
+NB: Should work in conjunction with "[[id:d308029d-b3bb-45d2-9418-2c11d7f3cb82][focus-change-committed-on-modifier-release]]". 
+
+** While extending the builtin switcherpopups
+The altTab.js/switcherPopup.js "modes" use `Main.pushModal` (--> `shell_global_begin_modal`) which grabs all keys by default. Seems to be overridable (at least if we override the `show` method (which calls pushModal)), but my guess is that the various popups don't pick up changes in the window list for instance.
+
+Might be possible to test the effect adhoc by messing with `Meta.actionMode`?
+** Do our own thing
+Suggestion: Create a listen-for-key-release hidden actor on all keybindings and use that to mark a /navigate-mode/. Ideally normal focus changing operations would be captured when in this mode and prevented from taking effect until /naviagate-end/, so existing code would work without modification. Not sure that simple to achieve though.
 * DONE Generalize to work with more workspaces
 CLOSED: [2017-09-14 to. 00:28]
 
@@ -49,7 +57,12 @@ Possible fix: hide the actual window and replace it with a clone, which only set
 * DONE Detect transient windows
 42d272bea11b7c29965a201ec45ed3ca3a85ea81
 * WIP Don't focus window until modifier release
+:PROPERTIES:
+:ID:       d308029d-b3bb-45d2-9418-2c11d7f3cb82
+:END:
 We probably want this behavior for all window navigation functions.
+
+Note: The mutter keybinding system only doesn't expose keyrelease events. But it's possible to create a clutter actor in response to a mutter keybinding and listen to keyup/keyrelease there.
 
 ** Next/previous window in tiling
 Preliminary implementation based on the extending classes from altTab.js. Currently based on WindowCyclerPopup since that most closely matched the behavior from notion/paper-wm: Simply move to next/previous window scrolling the tiling along.
