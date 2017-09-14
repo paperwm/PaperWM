@@ -110,12 +110,12 @@ ensure_viewport = (meta_window, force) => {
 
     let workspace = workspaces[meta_window.get_workspace().workspace_index];
     let index = workspace.indexOf(meta_window)
-    function move_to(meta_window, position) {
+    function move_to(meta_window, x, y) {
         debug('ensure, workspace length', workspace.length);
         ensuring = meta_window;
-        move(meta_window, position, statusbar_height + margin_tb, () => { ensuring = false });
-        propogate_forward(workspace, index + 1, position + frame.width + window_gap, true);
-        propogate_backward(workspace, index - 1, position - window_gap, true);
+        move(meta_window, x, y, () => { ensuring = false });
+        propogate_forward(workspace, index + 1, x + frame.width + window_gap, true);
+        propogate_backward(workspace, index - 1, x - window_gap, true);
     }
 
     let frame = meta_window.get_frame_rect();
@@ -125,24 +125,25 @@ ensure_viewport = (meta_window, force) => {
     if (frame.width > global.screen_width - 2 * margin_lr)
         margin = (global.screen_width - frame.width)/2;
 
-    let position;
-    if (index == 0) {
+    let x = frame.x;
+    let y = statusbar_height + margin_tb;
+    if (meta_window.fullscreen) {
+        // Fullscreen takes highest priority
+        x = 0, y = 0;
+    } else if (index == 0) {
         // Always align the first window to the display's left edge
-        position = 0;
+        x = 0;
     } else if (index == workspace.length-1) {
         // Always align the first window to the display's right edge
-        position = global.screen_width - frame.width;
+        x = global.screen_width - frame.width;
     } else if (frame.x + frame.width >= global.screen_width - margin) {
         // Align to the right margin
-        position = global.screen_width - margin - frame.width
+        x = global.screen_width - margin - frame.width;
     } else if (frame.x <= margin) {
         // Align to the left margin
-        position = margin
-    } else {
-        // Don't move by default
-        position = frame.x
+        x = margin;
     }
-    move_to(meta_window, position);
+    move_to(meta_window, x, y);
 }
 
 framestr = (rect) => {
