@@ -6,7 +6,7 @@
 1. on workspace "window-added" is run, actor isn't available
 2. on display "window-created is run, actor is available
 3. focus is run if the new window should be focused
-* Keybinding system      
+* Keybinding system
 Action names is global. eg. `Meta.keybindings_set_custom_handler` works on keybindings from custom schemas too.
 * Stack level
 
@@ -48,7 +48,11 @@ Possible fix: hide the actual window and replace it with a clone, which only set
 * TODO Better alt-tab
 * DONE Detect transient windows
 42d272bea11b7c29965a201ec45ed3ca3a85ea81
-* TODO Don't add windows to the focus list when cycling
+* WIP Don't add windows to the focus list when cycling
+Based on WindowCyclerPopup
+* TODO Persist window order across gnome-shell restarts
+Since the xid's don't change a simple xid -> window-placement map regularly written to disk should suffice.
+
 * Regression: add_handler doesn't handle the first window
 * Move behavior
 Integrate mouse move and keyboard move. Pop the window out and on top of the other windows, leaving a scaled down gap, when initiating move (either with the mouse or `begin-move`). See [[move.png]].
