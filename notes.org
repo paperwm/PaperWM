@@ -48,8 +48,13 @@ Possible fix: hide the actual window and replace it with a clone, which only set
 * TODO Better alt-tab
 * DONE Detect transient windows
 42d272bea11b7c29965a201ec45ed3ca3a85ea81
-* WIP Don't add windows to the focus list when cycling
-Based on WindowCyclerPopup
+* WIP Don't focus window until modifier release
+We probably want this behavior for all window navigation functions.
+
+** Next/previous window in tiling
+Preliminary implementation based on the extending classes from altTab.js. Currently based on WindowCyclerPopup since that most closely matched the behavior from notion/paper-wm: Simply move to next/previous window scrolling the tiling along.
+
+Could also use WindowSwitcherPopup which show a preview strip of the windows. Doesn't move to the window by default, but that is likely to be simple to change if wanted.
 * TODO Persist window order across gnome-shell restarts
 Since the xid's don't change a simple xid -> window-placement map regularly written to disk should suffice.
 
