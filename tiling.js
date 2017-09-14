@@ -121,8 +121,9 @@ ensure_viewport = (meta_window, force) => {
     let frame = meta_window.get_frame_rect();
     // Share the available margin evenly between left and right
     // if the window is wide (should probably use a quotient larger than 2)
-    if (frame.width > global.screen_width - 2*margin_lr)
-        margin_lr = (global.screen_width - frame.width)/2;
+    let margin = margin_lr
+    if (frame.width > global.screen_width - 2 * margin_lr)
+        margin = (global.screen_width - frame.width)/2;
 
     let position;
     if (index == 0) {
@@ -131,12 +132,12 @@ ensure_viewport = (meta_window, force) => {
     } else if (index == workspace.length-1) {
         // Always align the first window to the display's right edge
         position = global.screen_width - frame.width;
-    } else if (frame.x + frame.width >= global.screen_width - margin_lr) {
+    } else if (frame.x + frame.width >= global.screen_width - margin) {
         // Align to the right margin
-        position = global.screen_width - margin_lr - frame.width
-    } else if (frame.x <= margin_lr) {
+        position = global.screen_width - margin - frame.width
+    } else if (frame.x <= margin) {
         // Align to the left margin
-        position = margin_lr
+        position = margin
     } else {
         // Don't move by default
         position = frame.x
