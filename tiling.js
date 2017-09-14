@@ -356,8 +356,8 @@ toggle_maximize_horizontally = (meta_window) => {
 
 altTab = imports.ui.altTab;
 
-FocusCycler = new Lang.Class({
-    Name: 'FocusCycler',
+LiveWindowNavigator = new Lang.Class({
+    Name: 'LiveWindowNavigator',
     Extends: altTab.WindowCyclerPopup,
 
     _init : function() {
@@ -395,8 +395,15 @@ FocusCycler = new Lang.Class({
     }
 });
 
-scroll_cycle = (display, screen, meta_window, binding) => {
-    let tabPopup = new FocusCycler();
+/**
+ * Navigate the tiling linearly with live preview, but delaying actual focus
+ * change until modifier is released.
+ */
+live_navigate = (display, screen, meta_window, binding) => {
+    // Note: the reverse binding only work as indented if the action bound to
+    // this function is supported in the base class of LiveWindowNavigator.
+    // See altTab.js and search for _keyPressHandler
+    let tabPopup = new LiveWindowNavigator();
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
 
@@ -458,9 +465,9 @@ shell_settings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
 shell_settings.set_strv("toggle-overview", ["<super>space"])
 
 Meta.keybindings_set_custom_handler("cycle-windows",
-                                    dynamic_function_ref("scroll_cycle"));
+                                    dynamic_function_ref("live_navigate"));
 Meta.keybindings_set_custom_handler("cycle-windows-backward",
-                                    dynamic_function_ref("scroll_cycle"));
+                                    dynamic_function_ref("live_navigate"));
 
 // Or use "toggle-maximize"?
 Meta.keybindings_set_custom_handler("maximize-horizontally",
