@@ -34,16 +34,16 @@ function _repl() {
 }
 
 debug = () => {
-    function zeropad(x) {
-        x = x.toString();
-        if(x.length == 1) return "0"+x;
-        else return x;
-    }
-    let now = new Date();
-    let timeString = zeropad(now.getHours())
-        + ":" + zeropad(now.getMinutes())
-        + ":" + zeropad(now.getSeconds())
-    print(timeString + " | " + Array.prototype.join.call(arguments, " "));
+    // function zeropad(x) {
+    //     x = x.toString();
+    //     if(x.length == 1) return "0"+x;
+    //     else return x;
+    // }
+    // let now = new Date();
+    // let timeString = zeropad(now.getHours())
+    //     + ":" + zeropad(now.getMinutes())
+    //     + ":" + zeropad(now.getSeconds())
+    print(Array.prototype.join.call(arguments, " | "));
 }
 
 
