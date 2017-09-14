@@ -22,6 +22,14 @@ window B           |              ----|-----------
         -----------|----              |    window A
 window B ->        | ---------------- |
 #+END_SRC 
+* GJS
+** import system
+`imports.NAME` reflects the directories and javascript files present in `imports.searchPath`.
+To add a path, simply do `imports.searchPath.push(PATH)`
+
+The entries can also(?) be special uri's referring to directories with .gir files(?)
+
+Or maybe more likely: `imports.gi.` contains everything that's exposed through .gir files.
 * TODO Firefox focus bug
 Sometimes firefox windows refuse to gain proper focus. What happens is that another (or multiple!) firefox window somehow have focus in the address bar. The workaround is to find that/those window(s) and remove focus from the address bar.
 
