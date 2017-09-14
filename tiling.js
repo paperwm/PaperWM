@@ -108,15 +108,16 @@ ensure_viewport = (meta_window, force) => {
         return;
     }
 
-    function move_to(meta_window, position) {
-        ensuring = meta_window;
-        move(meta_window, position, statusbar_height + margin_tb, () => { ensuring = false });
-        propogate_forward(index + 1, position + frame.width + window_gap, true);
-        propogate_backward(index - 1, position - window_gap, true);
-    }
-
     let workspace = workspaces[meta_window.get_workspace().workspace_index];
     let index = workspace.indexOf(meta_window)
+    function move_to(meta_window, position) {
+        debug('ensure, workspace length', workspace.length);
+        ensuring = meta_window;
+        move(meta_window, position, statusbar_height + margin_tb, () => { ensuring = false });
+        propogate_forward(workspace, index + 1, position + frame.width + window_gap, true);
+        propogate_backward(workspace, index - 1, position - window_gap, true);
+    }
+
     let frame = meta_window.get_frame_rect();
     // Share the available margin evenly between left and right
     // if the window is wide (should probably use a quotient larger than 2)
@@ -168,9 +169,7 @@ focus_handler = (meta_window, user_data) => {
 }
 
 // Place window's left edge at x
-propogate_forward = (n, x, lower) => {
-    let focus_window = global.display.focus_window
-    let workspace = workspaces[focus_window.get_workspace().workspace_index];
+propogate_forward = (workspace, n, x, lower) => {
     if (n < 0 || n >= workspace.length)
         return
     // print("positioning " + n)
@@ -180,23 +179,21 @@ propogate_forward = (n, x, lower) => {
     // Anchor scaling/animation on the left edge for windows positioned to the right,
     meta_window.get_compositor_private().set_pivot_point(0, 0.5);
     move(meta_window, x, statusbar_height + margin_tb)
-    propogate_forward(n+1, x+meta_window.get_frame_rect().width + overlap, true)
+    propogate_forward(workspace, n+1, x+meta_window.get_frame_rect().width + overlap, true)
 }
 // Place window's right edge at x
-propogate_backward = (n, x, lower) => {
-    let focus_window = global.display.focus_window
-    let workspace = workspaces[focus_window.get_workspace().workspace_index];
+propogate_backward = (workspace, n, x, lower) => {
     if (n < 0 || n >= workspace.length)
         return
     // print("positioning " + n)
     let meta_window = workspace[n]
     x = x - meta_window.get_frame_rect().width
-    // Archor on the right edge for windows positioned to the left.
+    // Anchor on the right edge for windows positioned to the left.
     meta_window.get_compositor_private().set_pivot_point(1, 0.5);
     if (lower)
         meta_window.lower()
     move(meta_window, x, statusbar_height + margin_tb)
-    propogate_backward(n-1, x - overlap, true)
+    propogate_backward(workspace, n-1, x - overlap, true)
 }
 
 center = (meta_window, zen) => {
