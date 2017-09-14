@@ -356,12 +356,51 @@ toggle_maximize_horizontally = (meta_window) => {
 
 altTab = imports.ui.altTab;
 
+PreviewedWindowNavigator = new Lang.Class({
+    Name: 'PreviewedWindowNavigator',
+    Extends: altTab.WindowSwitcherPopup,
+
+    _init : function() {
+        this._selectedIndex = focus();
+        this.parent();
+    },
+
+    _initialSelection: function(backward, binding) {
+        if (backward)
+            this._select(this._previous());
+        else if (this._items.length == 1)
+            this._select(0);
+        else
+            this._select(this._next());
+    },
+
+    _getWindowList: function() {
+        return workspaces[global.display.focus_window.get_workspace().workspace_index];
+    },
+
+    _select: function(index) {
+        ensure_viewport(this._getWindowList()[index]);
+        this.parent(index);
+    },
+
+    _finish: function(timestamp) {
+        this.was_accepted = true;
+        this.parent(timestamp);
+    },
+
+    _onDestroy: function() {
+        if(!this.was_accepted && this._selectedIndex != focus()) {
+            ensure_viewport(global.display.focus_window);
+        }
+        this.parent();
+    }
+});
+
 LiveWindowNavigator = new Lang.Class({
     Name: 'LiveWindowNavigator',
     Extends: altTab.WindowCyclerPopup,
 
     _init : function() {
-        this._settings = new Gio.Settings({ schema_id: 'org.gnome.shell.window-switcher' });
         this.parent();
         this._selectedIndex = focus();
     },
@@ -402,6 +441,11 @@ live_navigate = (display, screen, meta_window, binding) => {
     // this function is supported in the base class of LiveWindowNavigator.
     // See altTab.js and search for _keyPressHandler
     let tabPopup = new LiveWindowNavigator();
+    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
+}
+
+preview_navigate = (display, screen, meta_window, binding) => {
+    let tabPopup = new PreviewedWindowNavigator();
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
 
@@ -456,6 +500,11 @@ set_action_handler = function(action_name, handler) {
 settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 settings.set_strv("cycle-windows", ["<alt>period", "<super>period" ])
 settings.set_strv("cycle-windows-backward", ["<alt>comma", "<super>comma"])
+
+// Temporary switch-windows bindings
+settings.set_strv("switch-windows", ["<super><ctrl>period" ])
+settings.set_strv("switch-windows-backward", ["<super><ctrl>comma"])
+
 settings.set_strv("close", ['<super>c'])
 settings.set_strv("maximize-horizontally", ['<super>h'])
 
@@ -466,6 +515,12 @@ Meta.keybindings_set_custom_handler("cycle-windows",
                                     dynamic_function_ref("live_navigate"));
 Meta.keybindings_set_custom_handler("cycle-windows-backward",
                                     dynamic_function_ref("live_navigate"));
+
+Meta.keybindings_set_custom_handler("switch-windows",
+                                    dynamic_function_ref("preview_navigate"));
+Meta.keybindings_set_custom_handler("switch-windows-backward",
+                                    dynamic_function_ref("preview_navigate"));
+
 
 // Or use "toggle-maximize"?
 Meta.keybindings_set_custom_handler("maximize-horizontally",
