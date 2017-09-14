@@ -374,7 +374,6 @@ LiveWindowNavigator = new Lang.Class({
     },
 
     _initialSelection: function(backward, binding) {
-        debug("_initialSelection")
         if (backward)
             this._select(this._previous());
         else if (this._items.length == 1)
@@ -384,7 +383,6 @@ LiveWindowNavigator = new Lang.Class({
     },
 
     _highlightItem: function(index, justOutline) {
-        printerr("hightlight", index)
         ensure_viewport(this._items[index])
         this._highlight.window = this._items[index];
         global.window_group.set_child_above_sibling(this._highlight.actor, null);
