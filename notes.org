@@ -22,6 +22,10 @@ window B           |              ----|-----------
         -----------|----              |    window A
 window B ->        | ---------------- |
 #+END_SRC 
+* TODO Firefox focus bug
+Sometimes firefox windows refuse to gain proper focus. What happens is that another (or multiple!) firefox window somehow have focus in the address bar. The workaround is to find that/those window(s) and remove focus from the address bar.
+
+Not sure if firefox, gnome-shell, or our js code is at fault (although I suspect the altTab.js extended code)
 * TODO PreviewedWindowNavigator bug
 
 Sometimes ensures the starting window instead of the selected window, while focus is correctly set. Not sure how to reproduce.
