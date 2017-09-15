@@ -37,16 +37,14 @@ function _repl() {
     })
 }
 
+debug_all = true;
+debug_filter = {};
 debug = () => {
-    // function zeropad(x) {
-    //     x = x.toString();
-    //     if(x.length == 1) return "0"+x;
-    //     else return x;
-    // }
-    // let now = new Date();
-    // let timeString = zeropad(now.getHours())
-    //     + ":" + zeropad(now.getMinutes())
-    //     + ":" + zeropad(now.getSeconds())
+    if (!debug_all) {
+        let keyword = arguments[0];
+        if (!debug_filter[keyword])
+            return;
+    }
     print(Array.prototype.join.call(arguments, " | "));
 }
 
