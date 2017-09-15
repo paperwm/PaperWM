@@ -3,6 +3,10 @@
 function _repl() {
     add_all_from_workspace()
 
+    meta_window = global.display.focus_window;
+    workspace = meta_window.get_workspace();
+    window_actor = meta_window.get_compositor_private();
+
     set_action_handler("toggle-scratch-layer", () => { print("It works!"); });
 
     meta_window = pages[0]
