@@ -124,11 +124,18 @@ ensure_viewport = (meta_window, force) => {
     if (frame.width > global.screen_width - 2 * margin_lr)
         margin = (global.screen_width - frame.width)/2;
 
+    // Hack to ensure the statusbar is visible while there's a fullscreen
+    // windows in the workspace. TODO fade in/out in some way.
+    if (!statusbar.visible) {
+        statusbar.visible = true;
+    }
+
     let x = frame.x;
     let y = statusbar_height + margin_tb;
     if (meta_window.fullscreen) {
         // Fullscreen takes highest priority
         x = 0, y = 0;
+        statusbar.visible = false;
     } else if (index == 0) {
         // Always align the first window to the display's left edge
         x = 0;
