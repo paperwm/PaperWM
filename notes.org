@@ -8,6 +8,8 @@
 3. focus is run if the new window should be focused
 * Keybinding system
 Action names is global. eg. `Meta.keybindings_set_custom_handler` works on keybindings from custom schemas too.
+
+Bind keys without using actions from a schema: https://stackoverflow.com/a/42466781/1517969
 * Stack level
 
   There's not enough room for a maximized window to slide above another maximized window if they move at the same speed:
@@ -30,6 +32,8 @@ To add a path, simply do `imports.searchPath.push(PATH)`
 The entries can also(?) be special uri's referring to directories with .gir files(?)
 
 Or maybe more likely: `imports.gi.` contains everything that's exposed through .gir files.
+
+`GJS_PATH` might be used too.
 * TODO Firefox focus bug
 Sometimes firefox windows refuse to gain proper focus. What happens is that another (or multiple!) firefox window somehow have focus in the address bar. The workaround is to find that/those window(s) and remove focus from the address bar.
 
