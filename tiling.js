@@ -111,7 +111,6 @@ ensure_viewport = (meta_window, force) => {
     let workspace = workspaces[meta_window.get_workspace().workspace_index];
     let index = workspace.indexOf(meta_window)
     function move_to(meta_window, x, y) {
-        debug('ensure, workspace length', workspace.length);
         ensuring = meta_window;
         move(meta_window, x, y, () => { ensuring = false });
         propogate_forward(workspace, index + 1, x + frame.width + window_gap, true);
@@ -374,6 +373,22 @@ window_created = (display, meta_window, user_data) => {
 
 global.display.connect('window-created', dynamic_function_ref('window_created'));
 
+workspace_added = (screen, index) => {
+    workspaces[index] = [];
+    let workspace = global.screen.get_workspace_by_index(index);
+    workspace.connect("window-added", dynamic_function_ref("add_handler"))
+    workspace.connect("window-removed", dynamic_function_ref("remove_handler"));
+    debug('workspace-added', index, workspace);
+
+}
+// Doesn't seem to trigger for some reason
+workspace_removed = (screen, arg1, arg2) => {
+    debug('workspace-removed');
+    let workspace = global.screen.get_workspace_by_index(index);
+}
+
+global.screen.connect("workspace-added", dynamic_function_ref('workspace_added'))
+global.screen.connect("workspace-removed", dynamic_function_ref('workspace_removed'));
 
 recover_all_tilings = function() {
     for (let i=0; i < global.screen.n_workspaces; i++) {
