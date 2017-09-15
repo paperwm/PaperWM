@@ -211,10 +211,17 @@ focus_wrapper = (meta_window, user_data) => {
     focus_handler(meta_window, user_data)
 }
 
+add_filter = (meta_window) => {
+    if (meta_window.window_type != Meta.WindowType.NORMAL) {
+        return false;
+    }
+    return true;
+}
+
 add_handler = (ws, meta_window) => {
     debug("window-added", meta_window, meta_window.title, meta_window.window_type);
-    if (meta_window.window_type != Meta.WindowType.NORMAL) {
-        return
+    if (!add_filter(meta_window)) {
+        return;
     }
 
     let focus_i = focus();
@@ -260,9 +267,56 @@ remove_handler = (ws, meta_window) => {
 
 add_all_from_workspace = (workspace) => {
     workspace = workspace || global.screen.get_active_workspace();
-    workspace.list_windows().forEach((meta_window, i) => {
-        if(workspaces[workspace.workspace_index].indexOf(meta_window) < 0) {
-            add_handler(workspace, meta_window)
+    let windows = workspace.list_windows();
+
+    // On gnome-shell-restarts the windows are moved into the viewport, but
+    // they're moved minimally and the stacking is not changed, so the tiling
+    // order is preserved (sans full-width windows..)
+    function xz_comparator(windows) {
+        // Seems to be the only documented way to get stacking order?
+        // Could also rely on the MetaWindowActor's index in it's parent
+        // children array: That seem to correspond to clutters z-index (note:
+        // z_position is something else)
+        let z_sorted = global.display.sort_windows_by_stacking(windows);
+        function xkey(mw) {
+            let frame = mw.get_frame_rect();
+            if(frame.x <= 0)
+                return 0;
+            if(frame.x+frame.width == global.screen_width) {
+                return global.screen_width;
+            }
+            return frame.x;
+        }
+        // xorder: a|b c|d
+        // zorder: a d b c
+        return (a,b) => {
+            let ax = xkey(a);
+            let bx = xkey(b);
+            // Yes, this is not efficient
+            let az = z_sorted.indexOf(a);
+            let bz = z_sorted.indexOf(b);
+            let xcmp = ax - bx;
+            if (xcmp !== 0)
+                return xcmp;
+
+            if (ax === 0) {
+                // Left side: lower stacking first
+                return az - bz;
+            } else {
+                // Right side: higher stacking first
+                return bz - az;
+            }
+        };
+    }
+
+    windows.sort(xz_comparator(windows));
+
+    let tiling = workspaces[workspace.workspace_index]
+    windows.forEach((meta_window, i) => {
+        if(tiling.indexOf(meta_window) < 0 && add_filter(meta_window)) {
+            // Using add_handler is unreliable since it interacts with focus.
+            tiling.push(meta_window);
+            meta_window.connect("focus", focus_wrapper)
         }
     })
 }
@@ -321,13 +375,16 @@ window_created = (display, meta_window, user_data) => {
 global.display.connect('window-created', dynamic_function_ref('window_created'));
 
 
-for (let i=0; i < global.screen.n_workspaces; i++) {
-    let workspace = global.screen.get_workspace_by_index(i)
-    print("workspace: " + workspace)
-    workspace.connect("window-added", dynamic_function_ref("add_handler"))
-    workspace.connect("window-removed", dynamic_function_ref("remove_handler"));
-    add_all_from_workspace(workspace);
+recover_all_tilings = function() {
+    for (let i=0; i < global.screen.n_workspaces; i++) {
+        let workspace = global.screen.get_workspace_by_index(i)
+        print("workspace: " + workspace)
+        workspace.connect("window-added", dynamic_function_ref("add_handler"))
+        workspace.connect("window-removed", dynamic_function_ref("remove_handler"));
+        add_all_from_workspace(workspace);
+    }
 }
+recover_all_tilings();
 
 next = () => {
     let meta_window = global.display.focus_window
