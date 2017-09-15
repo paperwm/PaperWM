@@ -1,3 +1,6 @@
 #!/usr/bin/env zsh
 
-journalctl --follow --identifier=org.gnome.Shell.desktop | sed -e 's|\]:|]:\n  |'
+
+journalctl --follow \
+           $(dirname =gnome-shell(:A))/.gnome-shell-wrapped \
+    | sed -e 's|\]:|]:\n  |'
