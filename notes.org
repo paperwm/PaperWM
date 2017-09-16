@@ -10,6 +10,12 @@
 Action names is global. eg. `Meta.keybindings_set_custom_handler` works on keybindings from custom schemas too.
 
 Bind keys without using actions from a schema: https://stackoverflow.com/a/42466781/1517969
+* TODO Make a proper github repo
+
+Lets call it ~PaperWM~ for now, or perhaps ~PaperGnome~ / ~GnomePaper~ if we want it to be more connected to the gnome name, (probably not though).
+
+Put it under ~ScrollWM~ or just make a new user?
+
 * Stack level
 
   There's not enough room for a maximized window to slide above another maximized window if they move at the same speed:
