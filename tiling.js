@@ -109,6 +109,7 @@ ensure_viewport = (meta_window, force) => {
         debug('already ensuring', meta_window.title);
         return;
     }
+    debug('Ensuring', meta_window.title);
 
     let workspace = workspaces[meta_window.get_workspace().workspace_index];
     let index = workspace.indexOf(meta_window)
@@ -533,6 +534,7 @@ PreviewedWindowNavigator = new Lang.Class({
     _init : function() {
         this.parent();
         this._selectedIndex = focus();
+        debug('#preview', 'Init', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
     },
 
     _initialSelection: function(backward, binding) {
@@ -549,7 +551,8 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _select: function(index) {
-        ensure_viewport(this._getWindowList()[index]);
+        debug('#preview', 'Select', this._switcherList.windows[index].title, index);
+        ensure_viewport(this._switcherList.windows[index]);
         this.parent(index);
     },
 
@@ -559,8 +562,11 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _onDestroy: function() {
+        // this._selectedIndex is gone here, which might be the problem
+        debug('#preview', 'onDestroy', this._selecetedIndex)
         if(!this.was_accepted && this._selectedIndex != focus()) {
-            ensure_viewport(global.display.focus_window);
+            debug('#preview', 'Abort', global.display.focus_window.title);
+            ensure_viewport(global.display.focus_window, true);
         }
         this.parent();
     }
