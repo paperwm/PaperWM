@@ -75,6 +75,12 @@ glib = imports.gi.GLib
 
 Tweener = imports.ui.tweener;
 margin = 75
+
+// Max height for windows
+max_height = global.screen_height - statusbar_height - margin_tb*2;
+// Height to use when scaled down at the sides
+scaled_height = max_height*0.95;
+scaled_y_offset = (max_height - scaled_height)/2;
 move = (meta_window, x, y, onComplete) => {
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
@@ -84,8 +90,12 @@ move = (meta_window, x, y, onComplete) => {
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
     let scale = 1
-    if (x >= global.screen_width - margin || x <= margin - frame.width)
-        scale = 0.95
+    if (x >= global.screen_width - margin || x <= margin - frame.width) {
+        // Set scale so that the scaled height will be `scaled_height`
+        scale = scaled_height/actor.height;
+        // Center the actor properly
+        y += scaled_y_offset + y_offset;
+    }
     Tweener.addTween(actor, {x: x - x_offset
                              , y: y - y_offset
                              , time: 0.25
@@ -187,7 +197,7 @@ propogate_forward = (workspace, n, x, lower) => {
     if (lower)
         meta_window.lower()
     // Anchor scaling/animation on the left edge for windows positioned to the right,
-    meta_window.get_compositor_private().set_pivot_point(0, 0.5);
+    meta_window.get_compositor_private().set_pivot_point(0, 0);
     move(meta_window, x, statusbar_height + margin_tb)
     propogate_forward(workspace, n+1, x+meta_window.get_frame_rect().width + overlap, true)
 }
@@ -199,7 +209,7 @@ propogate_backward = (workspace, n, x, lower) => {
     let meta_window = workspace[n]
     x = x - meta_window.get_frame_rect().width
     // Anchor on the right edge for windows positioned to the left.
-    meta_window.get_compositor_private().set_pivot_point(1, 0.5);
+    meta_window.get_compositor_private().set_pivot_point(1, 0);
     if (lower)
         meta_window.lower()
     move(meta_window, x, statusbar_height + margin_tb)
