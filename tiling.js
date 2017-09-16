@@ -496,7 +496,7 @@ move_helper = (meta_window, delta) => {
     let i = ws.indexOf(meta_window)
     if(util.in_bounds(ws, i+delta)) {
         util.swap(ws, i, i+delta);
-        ensure_viewport(meta_window);
+        ensure_viewport(meta_window, true);
     }
 }
 move_right = () => {
