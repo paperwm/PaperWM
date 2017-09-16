@@ -428,7 +428,7 @@ first_frame = (meta_window_actor) => {
         meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
 
         let workspace = workspaces[meta_window.get_workspace().workspace_index];
-        propogate_forward(workspace, workspace.indexOf(meta_window) + 1, meta_window.scrollwm_initial_position.x + frame.width);
+        propogate_forward(workspace, workspace.indexOf(meta_window) + 1, meta_window.scrollwm_initial_position.x + frame.width + window_gap);
 
         delete meta_window.scrollwm_initial_position;
     }
