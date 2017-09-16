@@ -226,10 +226,69 @@ add_filter = (meta_window) => {
     return true;
 }
 
+/**
+  Modelled after notion/ion3's system
+
+  Examples:
+
+    defwinprop({
+        wm_class: "Emacs",
+        float: true
+    })
+*/
+winprops = [];
+
+winprop_match_p = (meta_window, prop) => {
+    let wm_class = meta_window.wm_class || "";
+    let title = meta_window.title;
+    if (prop.wm_class !== wm_class) {
+        return false;
+    }
+    if (prop.title) {
+        if (prop.title.constructor === RegExp) {
+            if (!title.match(prop.title))
+                return false;
+        } else {
+            if (prop.title !== title)
+                return false;
+        }
+    }
+
+    return true;
+}
+
+find_winprop = (meta_window) =>  {
+    let props = winprops.filter(
+        winprop_match_p.bind(null, meta_window));
+
+    return props[0];
+}
+
+defwinprop = (spec) => {
+    winprops.push(spec);
+}
+
+defwinprop({
+    wm_class: "copyq",
+    float: true
+})
+
 add_handler = (ws, meta_window) => {
     debug("window-added", meta_window, meta_window.title, meta_window.window_type);
     if (!add_filter(meta_window)) {
         return;
+    }
+
+    let winprop = find_winprop(meta_window);
+    if (winprop) {
+        if(winprop.oneshot) {
+            // untested :)
+            winprops.splice(winprops.indexOf(winprop), 1);
+        }
+        if(winprop.float) {
+            // Let gnome-shell handle the placement
+            return;
+        }
     }
 
     let focus_i = focus();
