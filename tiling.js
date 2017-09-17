@@ -175,7 +175,13 @@ ensure_viewport = (meta_window, force) => {
     }
     // Add a delay for stacked window to avoid windows passing
     // through each other in the z direction
-    let delay = meta_window.get_compositor_private().is_scaled() ? 0.03 : 0;
+
+    let delay = 0;
+    if (meta_window.get_compositor_private().is_scaled()) {
+        // easeInQuad: delta/2(t/duration)^2 + start
+        delay = Math.pow(2*(window.margin - margin_lr)/frame.width, .5)*0.25/2;
+        debug('delay', delay)
+    }
     move_to(meta_window, x, y, delay);
 }
 
