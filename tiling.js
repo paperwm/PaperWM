@@ -591,7 +591,7 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _finish: function(timestamp) {
-        debug('#preview', 'Finish' this._switcherList.windows[index].title, index);
+        debug('#preview', 'Finish', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
         this.was_accepted = true;
         this.parent(timestamp);
     },
