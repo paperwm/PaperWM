@@ -81,7 +81,7 @@ max_height = global.screen_height - statusbar_height - margin_tb*2;
 // Height to use when scaled down at the sides
 scaled_height = max_height*0.95;
 scaled_y_offset = (max_height - scaled_height)/2;
-move = (meta_window, x, y, onComplete, onStart, delay) => {
+move = (meta_window, x, y, onComplete, onStart, delay, easing) => {
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
     let frame = actor.meta_window.get_frame_rect();
@@ -91,6 +91,7 @@ move = (meta_window, x, y, onComplete, onStart, delay) => {
     let y_offset = frame.y - buffer.y;
     let scale = 1;
     delay = delay || 0;
+    easing = easing || "easeInOutQuad";
     if (x >= global.screen_width - margin || x <= margin - frame.width) {
         // Set scale so that the scaled height will be `scaled_height`
         scale = scaled_height/frame.height;
@@ -105,7 +106,7 @@ move = (meta_window, x, y, onComplete, onStart, delay) => {
                              , delay: delay
                              , scale_x: scale
                              , scale_y: scale
-                             , transition: "easeInOutQuad"
+                             , transition: easing
                              , onStart: () => {
                                  onStart && onStart();
                              }
@@ -130,12 +131,13 @@ ensure_viewport = (meta_window, force) => {
 
     let workspace = workspaces[meta_window.get_workspace().workspace_index];
     let index = workspace.indexOf(meta_window)
-    function move_to(meta_window, x, y, delay) {
+    function move_to(meta_window, x, y, delay, easing) {
         ensuring = meta_window;
         move(meta_window, x, y
              , () => { ensuring = false; }
              , () => { meta_window.raise(); }
              , delay
+             , easing
             );
         propogate_forward(workspace, index + 1, x + frame.width + window_gap, false);
         propogate_backward(workspace, index - 1, x - window_gap, false);
@@ -177,12 +179,14 @@ ensure_viewport = (meta_window, force) => {
     // through each other in the z direction
 
     let delay = 0;
+    let easing;
     if (meta_window.get_compositor_private().is_scaled()) {
         // easeInQuad: delta/2(t/duration)^2 + start
-        delay = Math.pow(2*(window.margin - margin_lr)/frame.width, .5)*0.25/2;
+        delay = Math.pow(2*(window.margin - margin_lr)/frame.width, .5)*0.25;
+        easing = 'easeOutQuad';
         debug('delay', delay)
     }
-    move_to(meta_window, x, y, delay);
+    move_to(meta_window, x, y, delay, easing);
 }
 
 framestr = (rect) => {
