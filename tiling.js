@@ -81,7 +81,7 @@ max_height = global.screen_height - statusbar_height - margin_tb*2;
 // Height to use when scaled down at the sides
 scaled_height = max_height*0.95;
 scaled_y_offset = (max_height - scaled_height)/2;
-move = (meta_window, x, y, onComplete) => {
+move = (meta_window, x, y, onComplete, onStart, delay) => {
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
     let frame = actor.meta_window.get_frame_rect();
@@ -89,7 +89,8 @@ move = (meta_window, x, y, onComplete) => {
     x = Math.max(margin - frame.width, x)
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
-    let scale = 1
+    let scale = 1;
+    delay = delay || 0;
     if (x >= global.screen_width - margin || x <= margin - frame.width) {
         // Set scale so that the scaled height will be `scaled_height`
         scale = scaled_height/actor.height;
@@ -98,10 +99,14 @@ move = (meta_window, x, y, onComplete) => {
     }
     Tweener.addTween(actor, {x: x - x_offset
                              , y: y - y_offset
-                             , time: 0.25
+                             , time: 0.25 - delay
+                             , delay: delay
                              , scale_x: scale
                              , scale_y: scale
                              , transition: "easeInOutQuad"
+                             , onStart: () => {
+                                 onStart && onStart();
+                             }
                              , onComplete: () => {
                                  actor.meta_window.move_frame(true, x, y);
                                  onComplete && onComplete();
@@ -123,11 +128,15 @@ ensure_viewport = (meta_window, force) => {
 
     let workspace = workspaces[meta_window.get_workspace().workspace_index];
     let index = workspace.indexOf(meta_window)
-    function move_to(meta_window, x, y) {
+    function move_to(meta_window, x, y, delay) {
         ensuring = meta_window;
-        move(meta_window, x, y, () => { ensuring = false });
-        propogate_forward(workspace, index + 1, x + frame.width + window_gap, true);
-        propogate_backward(workspace, index - 1, x - window_gap, true);
+        move(meta_window, x, y
+             , () => { ensuring = false; }
+             , () => { meta_window.raise(); }
+             , delay
+            );
+        propogate_forward(workspace, index + 1, x + frame.width + window_gap, false);
+        propogate_backward(workspace, index - 1, x - window_gap, false);
     }
 
     let frame = meta_window.get_frame_rect();
@@ -162,7 +171,10 @@ ensure_viewport = (meta_window, force) => {
         // Align to the left margin
         x = margin;
     }
-    move_to(meta_window, x, y);
+    // Add a delay for stacked window to avoid windows passing
+    // through each other in the z direction
+    let delay = meta_window.get_compositor_private().is_scaled() ? 0.03 : 0;
+    move_to(meta_window, x, y, delay);
 }
 
 framestr = (rect) => {
