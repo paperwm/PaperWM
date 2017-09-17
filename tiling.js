@@ -591,13 +591,14 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _finish: function(timestamp) {
+        debug('#preview', 'Finish' this._switcherList.windows[index].title, index);
         this.was_accepted = true;
         this.parent(timestamp);
     },
 
     _onDestroy: function() {
         // this._selectedIndex is gone here, which might be the problem
-        debug('#preview', 'onDestroy', this._selecetedIndex)
+        debug('#preview', 'onDestroy', this.was_accepted);
         if(!this.was_accepted && this._selectedIndex != focus()) {
             debug('#preview', 'Abort', global.display.focus_window.title);
             ensure_viewport(global.display.focus_window, true);
