@@ -563,11 +563,11 @@ PreviewedWindowNavigator = new Lang.Class({
 
     _initialSelection: function(backward, binding) {
         if (backward)
-            this._select(this._previous());
+            this._select(Math.min(this._selectedIndex, this._previous()));
         else if (this._items.length == 1)
             this._select(0);
         else
-            this._select(this._next());
+            this._select(Math.max(this._selectedIndex, this._next()));
     },
 
     _getWindowList: function() {
