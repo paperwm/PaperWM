@@ -93,9 +93,9 @@ move = (meta_window, x, y, onComplete, onStart, delay) => {
     delay = delay || 0;
     if (x >= global.screen_width - margin || x <= margin - frame.width) {
         // Set scale so that the scaled height will be `scaled_height`
-        scale = scaled_height/actor.height;
+        scale = scaled_height/frame.height;
         // Center the actor properly
-        y += scaled_y_offset + y_offset;
+        y += scaled_y_offset;
     }
     Tweener.addTween(actor, {x: x - x_offset
                              , y: y - y_offset
