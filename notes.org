@@ -40,6 +40,9 @@ The entries can also(?) be special uri's referring to directories with .gir file
 Or maybe more likely: `imports.gi.` contains everything that's exposed through .gir files.
 
 `GJS_PATH` might be used too.
+** Debugging
+*** Get a stacktrace
+    `(new Error()).stack`
 * TODO Firefox focus bug
 Sometimes firefox windows refuse to gain proper focus. What happens is that another (or multiple!) firefox window somehow have focus in the address bar. The workaround is to find that/those window(s) and remove focus from the address bar.
 
