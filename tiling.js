@@ -698,12 +698,12 @@ set_action_handler = function(action_name, handler) {
 
 
 settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
-settings.set_strv("cycle-windows", ["<alt>period", "<super>period" ])
-settings.set_strv("cycle-windows-backward", ["<alt>comma", "<super>comma"])
+// Temporary cycle-windows bindings
+settings.set_strv("cycle-windows", ["<super><ctrl>period" ])
+settings.set_strv("cycle-windows-backward", ["<super><ctrl>comma"])
 
-// Temporary switch-windows bindings
-settings.set_strv("switch-windows", ["<super><ctrl>period" ])
-settings.set_strv("switch-windows-backward", ["<super><ctrl>comma"])
+settings.set_strv("switch-windows", ["<alt>period", "<super>period" ])
+settings.set_strv("switch-windows-backward", ["<alt>comma", "<super>comma"])
 
 settings.set_strv("close", ['<super>c'])
 settings.set_strv("maximize-horizontally", ['<super>h'])
