@@ -255,7 +255,8 @@ focus_wrapper = (meta_window, user_data) => {
 }
 
 add_filter = (meta_window) => {
-    if (meta_window.window_type != Meta.WindowType.NORMAL) {
+    if (meta_window.window_type != Meta.WindowType.NORMAL ||
+        meta_window.get_transient_for() != null) {
         return false;
     }
     return true;
