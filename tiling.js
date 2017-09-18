@@ -589,6 +589,13 @@ PreviewedWindowNavigator = new Lang.Class({
         debug('#preview', 'Init', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
     },
 
+    _next: function() {
+        return Math.min(this._items.length-1, this._selectedIndex+1)
+    },
+    _previous: function() {
+        return Math.max(0, this._selectedIndex-1)
+    },
+
     _initialSelection: function(backward, binding) {
         if (backward)
             this._select(Math.min(this._selectedIndex, this._previous()));
