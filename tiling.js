@@ -29,12 +29,6 @@ function _repl() {
     meta_window.raise()
     meta_window.lower()
 
-    let length = 0
-    pages.map((meta_window) => {
-        let width = meta_window.get_frame_rect().width
-        meta_window.move_resize_frame(true, length, 25, width, global.screen_height - 30)
-        length += width + overlap
-    })
 }
 
 debug_all = true; // Consider the default value in `debug_filter` to be true
@@ -87,7 +81,6 @@ global.stage.get_first_child().get_children().forEach((actor) => {
 })
 statusbar_height = statusbar.height
 margin_tb = 2
-overlap = 10
 glib = imports.gi.GLib
 
 Tweener = imports.ui.tweener;
@@ -240,7 +233,7 @@ propogate_forward = (workspace, n, x, lower) => {
     // Anchor scaling/animation on the left edge for windows positioned to the right,
     meta_window.get_compositor_private().set_pivot_point(0, 0);
     move(meta_window, x, statusbar_height + margin_tb)
-    propogate_forward(workspace, n+1, x+meta_window.get_frame_rect().width + overlap, true)
+    propogate_forward(workspace, n+1, x+meta_window.get_frame_rect().width + window_gap, true);
 }
 // Place window's right edge at x
 propogate_backward = (workspace, n, x, lower) => {
@@ -254,7 +247,7 @@ propogate_backward = (workspace, n, x, lower) => {
     if (lower)
         meta_window.lower()
     move(meta_window, x, statusbar_height + margin_tb)
-    propogate_backward(workspace, n-1, x - overlap, true)
+    propogate_backward(workspace, n-1, x - window_gap, true)
 }
 
 center = (meta_window, zen) => {
@@ -354,7 +347,7 @@ add_handler = (ws, meta_window) => {
         meta_window.scrollwm_initial_position = {x: 0, y:statusbar_height + margin_tb};
     } else {
         let frame = workspace[focus_i].get_frame_rect()
-        meta_window.scrollwm_initial_position = {x:frame.x + frame.width + overlap, y:statusbar_height + margin_tb};
+        meta_window.scrollwm_initial_position = {x:frame.x + frame.width + window_gap, y:statusbar_height + margin_tb};
 
     }
     // Maxmize height. Setting position here doesn't work... 
