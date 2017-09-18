@@ -168,10 +168,22 @@ ensure_viewport = (meta_window, force) => {
 
     let x = frame.x;
     let y = statusbar_height + margin_tb;
+    let required_width = workspace.reduce((length, meta_window) => {
+        let frame = meta_window.get_frame_rect();
+        return length + frame.width + window_gap;
+    }, -window_gap);
     if (meta_window.fullscreen) {
         // Fullscreen takes highest priority
         x = 0, y = 0;
         statusbar.visible = false;
+
+    } else if (required_width <= global.screen_width) {
+        let leftovers = global.screen_width - required_width;
+        let gaps = workspace.length + 1;
+        let extra_gap = leftovers/gaps;
+        debug('#extragap', extra_gap);
+        propogate_forward(workspace, 0, extra_gap, true, extra_gap + window_gap);
+        return;
     } else if (index == 0) {
         // Always align the first window to the display's left edge
         x = 0;
@@ -223,23 +235,23 @@ focus_handler = (meta_window, user_data) => {
 }
 
 // Place window's left edge at x
-propogate_forward = (workspace, n, x, lower) => {
+propogate_forward = (workspace, n, x, lower, gap) => {
     if (n < 0 || n >= workspace.length)
         return
-    // print("positioning " + n)
+    gap = gap || window_gap;
     let meta_window = workspace[n]
     if (lower)
         meta_window.lower()
     // Anchor scaling/animation on the left edge for windows positioned to the right,
     meta_window.get_compositor_private().set_pivot_point(0, 0);
     move(meta_window, x, statusbar_height + margin_tb)
-    propogate_forward(workspace, n+1, x+meta_window.get_frame_rect().width + window_gap, true);
+    propogate_forward(workspace, n+1, x+meta_window.get_frame_rect().width + gap, true, gap);
 }
 // Place window's right edge at x
-propogate_backward = (workspace, n, x, lower) => {
+propogate_backward = (workspace, n, x, lower, gap) => {
     if (n < 0 || n >= workspace.length)
         return
-    // print("positioning " + n)
+    gap = gap || window_gap;
     let meta_window = workspace[n]
     x = x - meta_window.get_frame_rect().width
     // Anchor on the right edge for windows positioned to the left.
@@ -247,7 +259,7 @@ propogate_backward = (workspace, n, x, lower) => {
     if (lower)
         meta_window.lower()
     move(meta_window, x, statusbar_height + margin_tb)
-    propogate_backward(workspace, n-1, x - window_gap, true)
+    propogate_backward(workspace, n-1, x - gap, true, gap)
 }
 
 center = (meta_window, zen) => {
