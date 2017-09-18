@@ -37,15 +37,15 @@ function _repl() {
     })
 }
 
-debug_all = true;
-debug_filter = {};
+debug_all = true; // Consider the default value in `debug_filter` to be true
+debug_filter = { "#preview": false };
 debug = () => {
-    if (!debug_all) {
-        let keyword = arguments[0];
-        if (!debug_filter[keyword])
-            return;
-    }
-    print(Array.prototype.join.call(arguments, " | "));
+    let keyword = arguments[0];
+    let filter = debug_filter[keyword];
+    if (filter === false)
+        return;
+    if (debug_all || filter === true)
+        print(Array.prototype.join.call(arguments, " | "));
 }
 
 
@@ -607,7 +607,6 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _onDestroy: function() {
-        // this._selectedIndex is gone here, which might be the problem
         debug('#preview', 'onDestroy', this.was_accepted);
         if(!this.was_accepted && this._selectedIndex != focus()) {
             debug('#preview', 'Abort', global.display.focus_window.title);
