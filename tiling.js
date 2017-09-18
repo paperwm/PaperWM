@@ -48,6 +48,23 @@ debug = () => {
         print(Array.prototype.join.call(arguments, " | "));
 }
 
+print_stacktrace = () => {
+    let trace = (new Error()).stack.split("\n")
+    // Remove _this_ frame
+    trace.splice(0, 1);
+    // Remove some uninteresting frames
+    let filtered = trace.filter((frame) => {
+        return frame !== "wrapper@resource:///org/gnome/gjs/modules/lang.js:178"   
+    });
+    let args = Array.prototype.splice.call(arguments);
+    args.splice(0, 1, "stacktrace:"+(args[0] ? args[0] : ""))
+    // Use non-breaking space to encode new lines (otherwise every frame is
+    // prefixed by timestamp)
+    let nl = " ";
+    args.push(nl+filtered.join(nl))
+    debug.apply(null, args);
+}
+
 
 workspaces = []
 for (let i=0; i < global.screen.n_workspaces; i++) {

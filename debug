@@ -1,6 +1,10 @@
 #!/usr/bin/env zsh
 
 
+
+# We use non-breaking space to encode newlines in multiline messages
+
 journalctl --follow \
            $(dirname =gnome-shell(:A))/.gnome-shell-wrapped \
-    | sed -e 's|\]:|]:\n  |'
+    | sed -e 's|\]:|]:\n  |' \
+          -e 's| |\n    |g'
