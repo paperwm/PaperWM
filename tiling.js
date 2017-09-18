@@ -362,6 +362,12 @@ add_handler = (ws, meta_window) => {
         meta_window.scrollwm_initial_position = {x:frame.x + frame.width + window_gap, y:statusbar_height + margin_tb};
 
     }
+    // If window is receiving focus the focus handler will do the correct thing.
+    // Otherwise we need set the correct position:
+    // For new windows this must be done in 'first-frame' signal.
+    // Existing windows being moved need a new position in this workspace. This
+    // can be done here since the window is fully initialized.
+
     // Maxmize height. Setting position here doesn't work... 
     meta_window.move_resize_frame(true, 0, 0,
                                   meta_window.get_frame_rect().width, global.screen_height - statusbar_height - margin_tb*2);
