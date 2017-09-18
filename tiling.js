@@ -596,6 +596,15 @@ PreviewedWindowNavigator = new Lang.Class({
         this.parent(timestamp);
     },
 
+    _itemEnteredHandler: function() {
+        // The item-enter (mouse hover) event is triggered even after a item is
+        // accepted. This can cause _select to run on the item below the pointer
+        // ensuring the wrong window.
+        if(!this.was_accepted) {
+            this.parent.apply(this, arguments);
+        }
+    },
+
     _onDestroy: function() {
         // this._selectedIndex is gone here, which might be the problem
         debug('#preview', 'onDestroy', this.was_accepted);
