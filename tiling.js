@@ -84,7 +84,7 @@ margin_tb = 2
 glib = imports.gi.GLib
 
 Tweener = imports.ui.tweener;
-margin = 75
+stack_margin = 75
 
 // Max height for windows
 max_height = global.screen_height - statusbar_height - margin_tb*2;
@@ -95,14 +95,14 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
     let frame = actor.meta_window.get_frame_rect();
-    x = Math.min(global.screen_width - margin, x)
-    x = Math.max(margin - frame.width, x)
+    x = Math.min(global.screen_width - stack_margin, x)
+    x = Math.max(stack_margin - frame.width, x)
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
     let scale = 1;
     delay = delay || 0;
     transition = transition || "easeInOutQuad";
-    if (x >= global.screen_width - margin || x <= margin - frame.width) {
+    if (x >= global.screen_width - stack_margin || x <= stack_margin - frame.width) {
         // Set scale so that the scaled height will be `scaled_height`
         scale = scaled_height/frame.height;
         // Center the actor properly
@@ -204,7 +204,7 @@ ensure_viewport = (meta_window, force) => {
     let transition;
     if (meta_window.get_compositor_private().is_scaled()) {
         // easeInQuad: delta/2(t/duration)^2 + start
-        delay = Math.pow(2*(window.margin - margin_lr)/frame.width, .5)*0.25/2;
+        delay = Math.pow(2*(stack_margin - margin_lr)/frame.width, .5)*0.25/2;
         transition = 'easeInOutQuad';
         debug('delay', delay)
     }
