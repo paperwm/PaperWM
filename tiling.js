@@ -1,4 +1,31 @@
-/* Signals: */
+
+// Globals
+glib = imports.gi.GLib
+Tweener = imports.ui.tweener;
+
+// Gap between windows
+window_gap = 10
+// Top/bottom margin
+margin_tb = 2
+// left/right margin
+margin_lr = 20
+stack_margin = 75
+
+statusbar = undefined
+global.stage.get_first_child().get_children().forEach((actor) => {
+    if ("panelBox" == actor.name) {
+        statusbar = actor
+    }
+})
+statusbar_height = statusbar.height
+margin_tb = 2
+
+stack_margin = 75
+
+workspaces = []
+for (let i=0; i < global.screen.n_workspaces; i++) {
+    workspaces[i] = []
+}
 
 function _repl() {
     add_all_from_workspace()
@@ -60,31 +87,12 @@ print_stacktrace = () => {
 }
 
 
-workspaces = []
-for (let i=0; i < global.screen.n_workspaces; i++) {
-    workspaces[i] = []
-}
 focus = () => {
     let meta_window = global.display.focus_window;
     if (!meta_window)
         return -1;
     return workspaces[meta_window.get_workspace().workspace_index].indexOf(meta_window)
 }
-
-window_gap = 10
-margin_lr = 20
-statusbar = undefined
-global.stage.get_first_child().get_children().forEach((actor) => {
-    if ("panelBox" == actor.name) {
-        statusbar = actor
-    }
-})
-statusbar_height = statusbar.height
-margin_tb = 2
-glib = imports.gi.GLib
-
-Tweener = imports.ui.tweener;
-stack_margin = 75
 
 // Max height for windows
 max_height = global.screen_height - statusbar_height - margin_tb*2;
