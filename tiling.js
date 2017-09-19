@@ -712,7 +712,7 @@ get_settings = function(schema) {
     schema = schema || "org.gnome.shell.extensions.org-scrollwm";
 
     // Need to create a proper extension soon..
-    let schemaDir = GLib.getenv("HOME")+"/src/gnome-shell-minimap/schemas";
+    let schemaDir = GLib.getenv("HOME")+"/src/paperwm/schemas";
     // let schemaDir = GLib.getenv("HOME")+"/YOUR_PATH_HERE;
     let schemaSource;
     schemaSource = GioSSS.new_from_directory(schemaDir, GioSSS.get_default(), false);
