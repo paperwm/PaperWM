@@ -1,7 +1,12 @@
 
 // Globals
-glib = imports.gi.GLib
-Tweener = imports.ui.tweener;
+const GLib = imports.gi.GLib;
+const Tweener = imports.ui.tweener;
+const Lang = imports.lang;
+const Meta = imports.gi.Meta;
+const Main = imports.ui.main;
+const Shell = imports.gi.Shell;
+const Gio = imports.gi.Gio;
 
 // Gap between windows
 window_gap = 10
@@ -102,7 +107,7 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
 }
 
 timestamp = () => {
-    return glib.get_monotonic_time()/1000
+    return GLib.get_monotonic_time()/1000
 }
 
 ensuring = false;
