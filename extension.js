@@ -2,6 +2,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const Tiling = Extension.imports.tiling;
 const Gio = imports.gi.Gio;
 const Meta = imports.gi.Meta;
+const Main = imports.ui.main;
 
 function init() {
     // Hook up new workspaces
@@ -11,20 +12,7 @@ function init() {
 function enable() {
     debug('enable')
 
-
-    window.statusbar = undefined;
-
-    statusbar = undefined;
-    global.stage.get_first_child().get_children().forEach((actor) => {
-        if ("panelBox" == actor.name) {
-            statusbar = actor
-        }
-    })
-    // The above doesn't work, we need to find a signal to get the statusbar out
-    // In the meantime just set the height manually
-    statusbar_height = 41;
-
-    global.screen.connect("workspace-added", dynamic_function_ref('workspace_added'))
+    global.screen.connect("workspace-added", dynamic_function_ref('workspace_added'));
     global.screen.connect("workspace-removed", dynamic_function_ref('workspace_removed'));
 
     global.display.connect('window-created', dynamic_function_ref('window_created'));

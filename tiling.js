@@ -17,14 +17,7 @@ margin_lr = 20
 // How much the stack should protrude from the side
 stack_margin = 75
 
-// statusbar = undefined
-// global.stage.get_first_child().get_children().forEach((actor) => {
-//     if ("panelBox" == actor.name) {
-//         statusbar = actor
-//     }
-// })
-// The above is run too early
-statusbar_height = 41
+statusbar_height = Main.layoutManager.panelBox.height;
 
 workspaces = []
 for (let i=0; i < global.screen.n_workspaces; i++) {
@@ -143,9 +136,9 @@ ensure_viewport = (meta_window, force) => {
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
     // windows in the workspace. TODO fade in/out in some way.
-    // if (!statusbar.visible) {
-    //     statusbar.visible = true;
-    // }
+    if (!Main.layoutManager.panelBox.visible) {
+        Main.layoutManager.panelBox.visible = true;
+    }
 
     let x = frame.x;
     let y = statusbar_height + margin_tb;
@@ -156,7 +149,7 @@ ensure_viewport = (meta_window, force) => {
     if (meta_window.fullscreen) {
         // Fullscreen takes highest priority
         x = 0, y = 0;
-        // statusbar.visible = false;
+        Main.layoutManager.panelBox.visible = false;
 
     } else if (required_width <= global.screen_width) {
         let leftovers = global.screen_width - required_width;
