@@ -135,9 +135,13 @@ ensure_viewport = (meta_window, force) => {
         margin = (global.screen_width - frame.width)/2;
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
-    // windows in the workspace. TODO fade in/out in some way.
+    // windows in the workspace.
     if (!Main.layoutManager.panelBox.visible) {
         Main.layoutManager.panelBox.visible = true;
+        Tweener.addTween(Main.layoutManager.panelBox, {
+            y: 0,
+            time: 0.25
+        });
     }
 
     let x = frame.x;
@@ -149,7 +153,13 @@ ensure_viewport = (meta_window, force) => {
     if (meta_window.fullscreen) {
         // Fullscreen takes highest priority
         x = 0, y = 0;
-        Main.layoutManager.panelBox.visible = false;
+        Tweener.addTween(Main.layoutManager.panelBox, {
+            y: -Main.layoutManager.panelBox.height,
+            time: 0.25,
+            onComplete: () => {
+                Main.layoutManager.panelBox.visible = false;
+            }
+        });
 
     } else if (required_width <= global.screen_width) {
         let leftovers = global.screen_width - required_width;
