@@ -14,15 +14,17 @@ window_gap = 10
 margin_tb = 2
 // left/right margin
 margin_lr = 20
+// How much the stack should protrude from the side
 stack_margin = 75
 
-statusbar = undefined
-global.stage.get_first_child().get_children().forEach((actor) => {
-    if ("panelBox" == actor.name) {
-        statusbar = actor
-    }
-})
-statusbar_height = statusbar.height
+// statusbar = undefined
+// global.stage.get_first_child().get_children().forEach((actor) => {
+//     if ("panelBox" == actor.name) {
+//         statusbar = actor
+//     }
+// })
+// The above is run too early
+statusbar_height = 41
 
 workspaces = []
 for (let i=0; i < global.screen.n_workspaces; i++) {
@@ -141,9 +143,9 @@ ensure_viewport = (meta_window, force) => {
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
     // windows in the workspace. TODO fade in/out in some way.
-    if (!statusbar.visible) {
-        statusbar.visible = true;
-    }
+    // if (!statusbar.visible) {
+    //     statusbar.visible = true;
+    // }
 
     let x = frame.x;
     let y = statusbar_height + margin_tb;
@@ -154,7 +156,7 @@ ensure_viewport = (meta_window, force) => {
     if (meta_window.fullscreen) {
         // Fullscreen takes highest priority
         x = 0, y = 0;
-        statusbar.visible = false;
+        // statusbar.visible = false;
 
     } else if (required_width <= global.screen_width) {
         let leftovers = global.screen_width - required_width;
@@ -482,8 +484,6 @@ window_created = (display, meta_window, user_data) => {
     actor.connect('first-frame', dynamic_function_ref('first_frame'));
 }
 
-global.display.connect('window-created', dynamic_function_ref('window_created'));
-
 workspace_added = (screen, index) => {
     workspaces[index] = [];
     let workspace = global.screen.get_workspace_by_index(index);
@@ -497,20 +497,6 @@ workspace_removed = (screen, arg1, arg2) => {
     debug('workspace-removed');
     let workspace = global.screen.get_workspace_by_index(index);
 }
-
-global.screen.connect("workspace-added", dynamic_function_ref('workspace_added'))
-global.screen.connect("workspace-removed", dynamic_function_ref('workspace_removed'));
-
-recover_all_tilings = function() {
-    for (let i=0; i < global.screen.n_workspaces; i++) {
-        let workspace = global.screen.get_workspace_by_index(i)
-        print("workspace: " + workspace)
-        workspace.connect("window-added", dynamic_function_ref("add_handler"))
-        workspace.connect("window-removed", dynamic_function_ref("remove_handler"));
-        add_all_from_workspace(workspace);
-    }
-}
-recover_all_tilings();
 
 next = () => {
     let meta_window = global.display.focus_window
@@ -730,38 +716,3 @@ set_action_handler = function(action_name, handler) {
     }
 }
 
-
-settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
-// Temporary cycle-windows bindings
-settings.set_strv("cycle-windows", ["<super><ctrl>period" ])
-settings.set_strv("cycle-windows-backward", ["<super><ctrl>comma"])
-
-settings.set_strv("switch-windows", ["<alt>period", "<super>period" ])
-settings.set_strv("switch-windows-backward", ["<alt>comma", "<super>comma"])
-
-settings.set_strv("close", ['<super>c'])
-settings.set_strv("maximize-horizontally", ['<super>h'])
-
-shell_settings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
-shell_settings.set_strv("toggle-overview", ["<super>space"])
-
-Meta.keybindings_set_custom_handler("cycle-windows",
-                                    dynamic_function_ref("live_navigate"));
-Meta.keybindings_set_custom_handler("cycle-windows-backward",
-                                    dynamic_function_ref("live_navigate"));
-
-Meta.keybindings_set_custom_handler("switch-windows",
-                                    dynamic_function_ref("preview_navigate"));
-Meta.keybindings_set_custom_handler("switch-windows-backward",
-                                    dynamic_function_ref("preview_navigate"));
-
-
-// Or use "toggle-maximize"?
-Meta.keybindings_set_custom_handler("maximize-horizontally",
-                                    as_key_handler("toggle_maximize_horizontally"));
-
-
-
-// Must use `Meta.keybindings_set_custom_handler` to re-assign handler?
-set_action_handler("move-left", dynamic_function_ref("move_left"));
-set_action_handler("move-right", dynamic_function_ref("move_right"));
