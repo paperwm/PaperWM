@@ -127,8 +127,8 @@ ensure_viewport = (meta_window, force) => {
     }
     debug('Ensuring', meta_window.title);
 
-    let workspace = spaces[meta_window.get_workspace().workspace_index];
-    let index = workspace.indexOf(meta_window)
+    let space = spaces[meta_window.get_workspace().workspace_index];
+    let index = space.indexOf(meta_window)
     function move_to(meta_window, x, y, delay, transition) {
         ensuring = meta_window;
         move(meta_window, x, y
@@ -137,8 +137,8 @@ ensure_viewport = (meta_window, force) => {
              , delay
              , transition
             );
-        propogate_forward(workspace, index + 1, x + frame.width + window_gap, false);
-        propogate_backward(workspace, index - 1, x - window_gap, false);
+        propogate_forward(space, index + 1, x + frame.width + window_gap, false);
+        propogate_backward(space, index - 1, x - window_gap, false);
     }
 
     let frame = meta_window.get_frame_rect();
@@ -149,14 +149,14 @@ ensure_viewport = (meta_window, force) => {
         margin = (global.screen_width - frame.width)/2;
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
-    // windows in the workspace.
+    // windows in the space.
     if (!panelBox.visible) {
         panelBox.show();
     }
 
     let x = frame.x;
     let y = panelBox.height + margin_tb;
-    let required_width = workspace.reduce((length, meta_window) => {
+    let required_width = space.reduce((length, meta_window) => {
         let frame = meta_window.get_frame_rect();
         return length + frame.width + window_gap;
     }, -window_gap);
@@ -173,15 +173,15 @@ ensure_viewport = (meta_window, force) => {
 
     } else if (required_width <= global.screen_width) {
         let leftovers = global.screen_width - required_width;
-        let gaps = workspace.length + 1;
+        let gaps = space.length + 1;
         let extra_gap = leftovers/gaps;
         debug('#extragap', extra_gap);
-        propogate_forward(workspace, 0, extra_gap, true, extra_gap + window_gap);
+        propogate_forward(space, 0, extra_gap, true, extra_gap + window_gap);
         return;
     } else if (index == 0) {
         // Always align the first window to the display's left edge
         x = 0;
-    } else if (index == workspace.length-1) {
+    } else if (index == space.length-1) {
         // Always align the first window to the display's right edge
         x = global.screen_width - frame.width;
     } else if (frame.x + frame.width >= global.screen_width - margin) {
@@ -229,31 +229,31 @@ focus_handler = (meta_window, user_data) => {
 }
 
 // Place window's left edge at x
-propogate_forward = (workspace, n, x, lower, gap) => {
-    if (n < 0 || n >= workspace.length)
+propogate_forward = (space, n, x, lower, gap) => {
+    if (n < 0 || n >= space.length)
         return
     gap = gap || window_gap;
-    let meta_window = workspace[n]
+    let meta_window = space[n]
     if (lower)
         meta_window.lower()
     // Anchor scaling/animation on the left edge for windows positioned to the right,
     meta_window.get_compositor_private().set_pivot_point(0, 0);
     move(meta_window, x, panelBox.height + margin_tb)
-    propogate_forward(workspace, n+1, x+meta_window.get_frame_rect().width + gap, true, gap);
+    propogate_forward(space, n+1, x+meta_window.get_frame_rect().width + gap, true, gap);
 }
 // Place window's right edge at x
-propogate_backward = (workspace, n, x, lower, gap) => {
-    if (n < 0 || n >= workspace.length)
+propogate_backward = (space, n, x, lower, gap) => {
+    if (n < 0 || n >= space.length)
         return
     gap = gap || window_gap;
-    let meta_window = workspace[n]
+    let meta_window = space[n]
     x = x - meta_window.get_frame_rect().width
     // Anchor on the right edge for windows positioned to the left.
     meta_window.get_compositor_private().set_pivot_point(1, 0);
     if (lower)
         meta_window.lower()
     move(meta_window, x, panelBox.height + margin_tb)
-    propogate_backward(workspace, n-1, x - gap, true, gap)
+    propogate_backward(space, n-1, x - gap, true, gap)
 }
 
 center = (meta_window, zen) => {
@@ -346,20 +346,20 @@ add_handler = (ws, meta_window) => {
     let focus_i = focus();
 
     // Should inspert at index 0 if focus() returns -1
-    let workspace = spaces[ws.workspace_index]
-    workspace.splice(focus_i + 1, 0, meta_window)
+    let space = spaces[ws.workspace_index]
+    space.splice(focus_i + 1, 0, meta_window)
 
     if (focus_i == -1) {
         meta_window.scrollwm_initial_position = {x: 0, y:panelBox.height + margin_tb};
     } else {
-        let frame = workspace[focus_i].get_frame_rect()
+        let frame = space[focus_i].get_frame_rect()
         meta_window.scrollwm_initial_position = {x:frame.x + frame.width + window_gap, y:panelBox.height + margin_tb};
 
     }
     // If window is receiving focus the focus handler will do the correct thing.
     // Otherwise we need set the correct position:
     // For new windows this must be done in 'first-frame' signal.
-    // Existing windows being moved need a new position in this workspace. This
+    // Existing windows being moved need a new position in this space. This
     // can be done here since the window is fully initialized.
 
     // Maxmize height. Setting position here doesn't work... 
@@ -373,11 +373,11 @@ remove_handler = (ws, meta_window) => {
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
 
-    let workspace = spaces[meta_window.get_workspace().workspace_index]
-    let removed_i = workspace.indexOf(meta_window)
+    let space = spaces[meta_window.get_workspace().workspace_index]
+    let removed_i = space.indexOf(meta_window)
     if (removed_i < 0)
         return
-    workspace.splice(removed_i, 1)
+    space.splice(removed_i, 1)
 
     // Remove our signal handlers: Needed for non-closed windows.
     // (closing a window seems to clean out it's signal handlers)
@@ -385,9 +385,9 @@ remove_handler = (ws, meta_window) => {
 
     // Re-layout: Needed if the removed window didn't have focus.
     // Not sure if we can check if that was the case or not?
-    workspace[Math.max(0, removed_i - 1)].activate(timestamp());
+    space[Math.max(0, removed_i - 1)].activate(timestamp());
     // Force a new ensure, since the focus_handler is run before window-removed
-    ensure_viewport(workspace[focus()], true)
+    ensure_viewport(space[focus()], true)
 }
 
 add_all_from_workspace = (workspace) => {
@@ -436,11 +436,11 @@ add_all_from_workspace = (workspace) => {
 
     windows.sort(xz_comparator(windows));
 
-    let tiling = spaces[workspace.workspace_index]
+    let space = spaces[workspace.workspace_index]
     windows.forEach((meta_window, i) => {
-        if(tiling.indexOf(meta_window) < 0 && add_filter(meta_window)) {
+        if(space.indexOf(meta_window) < 0 && add_filter(meta_window)) {
             // Using add_handler is unreliable since it interacts with focus.
-            tiling.push(meta_window);
+            space.push(meta_window);
             meta_window.connect("focus", focus_wrapper)
         }
     })
@@ -484,8 +484,8 @@ first_frame = (meta_window_actor) => {
         let frame = meta_window.get_frame_rect();
         meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
 
-        let workspace = spaces[meta_window.get_workspace().workspace_index];
-        propogate_forward(workspace, workspace.indexOf(meta_window) + 1, meta_window.scrollwm_initial_position.x + frame.width + window_gap);
+        let space = spaces[meta_window.get_workspace().workspace_index];
+        propogate_forward(space, space.indexOf(meta_window) + 1, meta_window.scrollwm_initial_position.x + frame.width + window_gap);
 
         delete meta_window.scrollwm_initial_position;
     }
