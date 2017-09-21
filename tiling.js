@@ -17,20 +17,20 @@ margin_lr = 20
 // How much the stack should protrude from the side
 stack_margin = 75
 
-statusbar_height = Main.layoutManager.panelBox.height;
+panelBox = Main.layoutManager.panelBox;
 
-Main.layoutManager.panelBox.connect('show', () => {
-    Tweener.addTween(Main.layoutManager.panelBox, {
+panelBox.connect('show', () => {
+    Tweener.addTween(panelBox, {
         y: 0,
         time: 0.25,
         onOverWrite: () => {
-            Main.layoutManager.panelBox.y = 0;
+            panelBox.y = 0;
         }
     });
 });
 
-Main.layoutManager.panelBox.connect('hide', () => {
-    Main.layoutManager.panelBox.y = - Main.layoutManager.panelBox.height;
+panelBox.connect('hide', () => {
+    panelBox.y = - panelBox.height;
 });
 
 workspaces = []
@@ -75,7 +75,7 @@ focus = () => {
 }
 
 // Max height for windows
-max_height = global.screen_height - statusbar_height - margin_tb*2;
+max_height = global.screen_height - panelBox.height - margin_tb*2;
 // Height to use when scaled down at the sides
 scaled_height = max_height*0.95;
 scaled_y_offset = (max_height - scaled_height)/2;
@@ -150,12 +150,12 @@ ensure_viewport = (meta_window, force) => {
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
     // windows in the workspace.
-    if (!Main.layoutManager.panelBox.visible) {
-        Main.layoutManager.panelBox.show();
+    if (!panelBox.visible) {
+        panelBox.show();
     }
 
     let x = frame.x;
-    let y = statusbar_height + margin_tb;
+    let y = panelBox.height + margin_tb;
     let required_width = workspace.reduce((length, meta_window) => {
         let frame = meta_window.get_frame_rect();
         return length + frame.width + window_gap;
@@ -163,11 +163,11 @@ ensure_viewport = (meta_window, force) => {
     if (meta_window.fullscreen) {
         // Fullscreen takes highest priority
         x = 0, y = 0;
-        Tweener.addTween(Main.layoutManager.panelBox, {
-            y: -Main.layoutManager.panelBox.height,
+        Tweener.addTween(panelBox, {
+            y: -panelBox.height,
             time: 0.25,
             onComplete: () => {
-                Main.layoutManager.panelBox.visible = false;
+                panelBox.visible = false;
             }
         });
 
@@ -238,7 +238,7 @@ propogate_forward = (workspace, n, x, lower, gap) => {
         meta_window.lower()
     // Anchor scaling/animation on the left edge for windows positioned to the right,
     meta_window.get_compositor_private().set_pivot_point(0, 0);
-    move(meta_window, x, statusbar_height + margin_tb)
+    move(meta_window, x, panelBox.height + margin_tb)
     propogate_forward(workspace, n+1, x+meta_window.get_frame_rect().width + gap, true, gap);
 }
 // Place window's right edge at x
@@ -252,7 +252,7 @@ propogate_backward = (workspace, n, x, lower, gap) => {
     meta_window.get_compositor_private().set_pivot_point(1, 0);
     if (lower)
         meta_window.lower()
-    move(meta_window, x, statusbar_height + margin_tb)
+    move(meta_window, x, panelBox.height + margin_tb)
     propogate_backward(workspace, n-1, x - gap, true, gap)
 }
 
@@ -350,10 +350,10 @@ add_handler = (ws, meta_window) => {
     workspace.splice(focus_i + 1, 0, meta_window)
 
     if (focus_i == -1) {
-        meta_window.scrollwm_initial_position = {x: 0, y:statusbar_height + margin_tb};
+        meta_window.scrollwm_initial_position = {x: 0, y:panelBox.height + margin_tb};
     } else {
         let frame = workspace[focus_i].get_frame_rect()
-        meta_window.scrollwm_initial_position = {x:frame.x + frame.width + window_gap, y:statusbar_height + margin_tb};
+        meta_window.scrollwm_initial_position = {x:frame.x + frame.width + window_gap, y:panelBox.height + margin_tb};
 
     }
     // If window is receiving focus the focus handler will do the correct thing.
@@ -364,7 +364,7 @@ add_handler = (ws, meta_window) => {
 
     // Maxmize height. Setting position here doesn't work... 
     meta_window.move_resize_frame(true, 0, 0,
-                                  meta_window.get_frame_rect().width, global.screen_height - statusbar_height - margin_tb*2);
+                                  meta_window.get_frame_rect().width, global.screen_height - panelBox.height - margin_tb*2);
     meta_window.connect("focus", focus_wrapper)
 }
 
