@@ -212,12 +212,18 @@ propogate_forward = (space, n, x, lower, gap) => {
         return
     gap = gap || window_gap;
     let meta_window = space[n]
-    if (lower)
-        meta_window.lower()
-    // Anchor scaling/animation on the left edge for windows positioned to the right,
-    meta_window.get_compositor_private().set_pivot_point(0, 0);
-    move(meta_window, x, panelBox.height + margin_tb)
-    propogate_forward(space, n+1, x+meta_window.get_frame_rect().width + gap, true, gap);
+    let actor = meta_window.get_compositor_private();
+    if (actor) {
+        if (lower)
+            meta_window.lower()
+        // Anchor scaling/animation on the left edge for windows positioned to the right,
+        actor.set_pivot_point(0, 0);
+        move(meta_window, x, panelBox.height + margin_tb)
+        propogate_forward(space, n+1, x+meta_window.get_frame_rect().width + gap, true, gap);
+    } else {
+        // If the window doesn't have an actor we should just skip it
+        propogate_forward(space, n+1, x, true, gap);
+    }
 }
 // Place window's right edge at x
 propogate_backward = (space, n, x, lower, gap) => {
@@ -225,13 +231,19 @@ propogate_backward = (space, n, x, lower, gap) => {
         return
     gap = gap || window_gap;
     let meta_window = space[n]
-    x = x - meta_window.get_frame_rect().width
-    // Anchor on the right edge for windows positioned to the left.
-    meta_window.get_compositor_private().set_pivot_point(1, 0);
-    if (lower)
-        meta_window.lower()
-    move(meta_window, x, panelBox.height + margin_tb)
-    propogate_backward(space, n-1, x - gap, true, gap)
+    let actor = meta_window.get_compositor_private();
+    if (actor) {
+        if (lower)
+            meta_window.lower()
+        x = x - meta_window.get_frame_rect().width
+        // Anchor on the right edge for windows positioned to the left.
+        actor.set_pivot_point(1, 0);
+        move(meta_window, x, panelBox.height + margin_tb)
+        propogate_backward(space, n-1, x - gap, true, gap)
+    } else {
+        // If the window doesn't have an actor we should just skip it
+        propogate_forward(space, n-1, x, true, gap);
+    }
 }
 
 center = (meta_window, zen) => {
