@@ -42,7 +42,10 @@ Or maybe more likely: `imports.gi.` contains everything that's exposed through .
 `GJS_PATH` might be used too.
 ** Debugging
 *** Get a stacktrace
-    `(new Error()).stack`
+`(new Error()).stack`
+* GObject
+The `notify` signal is emited on changes to all GObject properties. Listen to `notify::propery-name` to only receive for changes to ` property-name`. ([[https://developer.gnome.org/gobject/stable/gobject-The-Base-Object-Type.html#GObject-notify][Reference]])
+  
 * TODO Firefox focus bug
 Sometimes firefox windows refuse to gain proper focus. What happens is that another (or multiple!) firefox window somehow have focus in the address bar. The workaround is to find that/those window(s) and remove focus from the address bar.
 
