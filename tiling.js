@@ -9,6 +9,7 @@ const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
 const Gio = imports.gi.Gio;
 const utils = Extension.imports.utils;
+const convenience = Extension.imports.convenience;
 
 // Gap between windows
 window_gap = 10
@@ -625,47 +626,27 @@ preview_navigate = (display, screen, meta_window, binding) => {
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
 
-// See gnome-shell-extensions-negesti/convenience.js for how to do this when we
-// pack this as an actual extension
-get_settings = function(schema) {
-    const GioSSS = Gio.SettingsSchemaSource;
-
-    schema = schema || "org.gnome.shell.extensions.org-scrollwm";
-
-    // Need to create a proper extension soon..
-    let schemaDir = GLib.getenv("HOME")+"/src/paperwm/schemas";
-    // let schemaDir = GLib.getenv("HOME")+"/YOUR_PATH_HERE;
-    let schemaSource;
-    schemaSource = GioSSS.new_from_directory(schemaDir, GioSSS.get_default(), false);
-
-    let schemaObj = schemaSource.lookup(schema, true);
-    if (!schemaObj)
-        throw new Error('Schema ' + schema + ' could not be found for extension ');
-
-    return new Gio.Settings({ settings_schema: schemaObj });
-}
-
 set_action_handler = function(action_name, handler) {
     // Ripped from https://github.com/negesti/gnome-shell-extensions-negesti 
     // Handles multiple gnome-shell versions
 
     if (Main.wm.addKeybinding && Shell.ActionMode){ // introduced in 3.16
         Main.wm.addKeybinding(action_name,
-                              get_settings(), Meta.KeyBindingFlags.NONE,
+                              convenience.getSettings(), Meta.KeyBindingFlags.NONE,
                               Shell.ActionMode.NORMAL,
                               handler
                              );
     } else if (Main.wm.addKeybinding && Shell.KeyBindingMode) { // introduced in 3.7.5
         // Shell.KeyBindingMode.NORMAL | Shell.KeyBindingMode.MESSAGE_TRAY,
         Main.wm.addKeybinding(action_name,
-                              get_settings(), Meta.KeyBindingFlags.NONE,
+                              convenience.getSettings(), Meta.KeyBindingFlags.NONE,
                               Shell.KeyBindingMode.NORMAL,
                               handler
                              );
     } else {
         global.display.add_keybinding(
             action_name,
-            get_settings(),
+            convenience.getSettings(),
             Meta.KeyBindingFlags.NONE,
             handler
         );
