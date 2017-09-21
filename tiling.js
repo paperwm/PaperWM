@@ -27,7 +27,11 @@ Main.layoutManager.panelBox.connect('show', () => {
             Main.layoutManager.panelBox.y = 0;
         }
     });
-})
+});
+
+Main.layoutManager.panelBox.connect('hide', () => {
+    Main.layoutManager.panelBox.y = - Main.layoutManager.panelBox.height;
+});
 
 workspaces = []
 for (let i=0; i < global.screen.n_workspaces; i++) {
