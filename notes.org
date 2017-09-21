@@ -10,12 +10,6 @@
 Action names is global. eg. `Meta.keybindings_set_custom_handler` works on keybindings from custom schemas too.
 
 Bind keys without using actions from a schema: https://stackoverflow.com/a/42466781/1517969
-* TODO Make a proper github repo
-
-Lets call it ~PaperWM~ for now, or perhaps ~PaperGnome~ / ~GnomePaper~ if we want it to be more connected to the gnome name, (probably not though).
-
-Put it under ~ScrollWM~ or just make a new user?
-
 * Stack level
 
   There's not enough room for a maximized window to slide above another maximized window if they move at the same speed:
@@ -50,19 +44,11 @@ The `notify` signal is emited on changes to all GObject properties. Listen to `n
 Sometimes firefox windows refuse to gain proper focus. What happens is that another (or multiple!) firefox window somehow have focus in the address bar. The workaround is to find that/those window(s) and remove focus from the address bar.
 
 Not sure if firefox, gnome-shell, or our js code is at fault (although I suspect the altTab.js extended code)
-* TODO PreviewedWindowNavigator bug
+* DONE PreviewedWindowNavigator bug
+CLOSED: [2017-09-21 to. 23:35]
 
 Sometimes ensures the starting window instead of the selected window, while focus is correctly set. Not sure how to reproduce.
 
-* TODO Make all keybindings work when ~Super~ is depressed
-NB: Should work in conjunction with "[[id:d308029d-b3bb-45d2-9418-2c11d7f3cb82][focus-change-committed-on-modifier-release]]". 
-
-** While extending the builtin switcherpopups
-The altTab.js/switcherPopup.js "modes" use `Main.pushModal` (--> `shell_global_begin_modal`) which grabs all keys by default. Seems to be overridable (at least if we override the `show` method (which calls pushModal)), but my guess is that the various popups don't pick up changes in the window list for instance.
-
-Might be possible to test the effect adhoc by messing with `Meta.actionMode`?
-** Do our own thing
-Suggestion: Create a listen-for-key-release hidden actor on all keybindings and use that to mark a /navigate-mode/. Ideally normal focus changing operations would be captured when in this mode and prevented from taking effect until /naviagate-end/, so existing code would work without modification. Not sure that simple to achieve though.
 * DONE Generalize to work with more workspaces
 CLOSED: [2017-09-14 to. 00:28]
 
@@ -78,31 +64,15 @@ The actor's ~first-frame~  signal is probably the place to do this:
 
 * TODO Hook up resize/move functionality
 * TODO More keybindings, eg. meta-<number>
-* TODO Simple scratchpad 
-Probably easiest/best to 
 * DONE(*) Window search
 `rofi -show window` is decent off-the-shelf replacement.
-* TODO Scaling bug
+* DONE Scaling bug
+CLOSED: [2017-09-21 to. 23:35]
 Possible fix: hide the actual window and replace it with a clone, which only sets focus on click
 * TODO General animation consistency
 * TODO Better alt-tab
 * DONE Detect transient windows
 42d272bea11b7c29965a201ec45ed3ca3a85ea81
-* WIP Don't focus window until modifier release
-:PROPERTIES:
-:ID:       d308029d-b3bb-45d2-9418-2c11d7f3cb82
-:END:
-We probably want this behavior for all window navigation functions.
-
-Note: The mutter keybinding system only doesn't expose keyrelease events. But it's possible to create a clutter actor in response to a mutter keybinding and listen to keyup/keyrelease there.
-
-** Next/previous window in tiling
-Preliminary implementation based on the extending classes from altTab.js. Currently based on WindowCyclerPopup since that most closely matched the behavior from notion/paper-wm: Simply move to next/previous window scrolling the tiling along.
-
-Could also use WindowSwitcherPopup which show a preview strip of the windows. Doesn't move to the window by default, but that is likely to be simple to change if wanted.
-* TODO Persist window order across gnome-shell restarts
-Since the xid's don't change a simple xid -> window-placement map regularly written to disk should suffice.
-
 * Regression: add_handler doesn't handle the first window
 * Move behavior
 Integrate mouse move and keyboard move. Pop the window out and on top of the other windows, leaving a scaled down gap, when initiating move (either with the mouse or `begin-move`). See [[move.png]].
