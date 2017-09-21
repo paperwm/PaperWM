@@ -130,7 +130,7 @@ ensure_viewport = (meta_window, force) => {
     // Share the available margin evenly between left and right
     // if the window is wide (should probably use a quotient larger than 2)
     let margin = margin_lr
-    if (frame.width > global.screen_width - 2 * margin_lr)
+    if (frame.width > global.screen_width - 3*stack_margin)
         margin = (global.screen_width - frame.width)/2;
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
