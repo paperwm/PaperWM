@@ -95,8 +95,11 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
                                  onStart && onStart();
                              }
                              , onComplete: () => {
-                                 actor.meta_window.move_frame(true, x, y);
-                                 onComplete && onComplete();
+                                 if(meta_window.get_compositor_private()) {
+                                     // If the actor is gone, the window is in process of closing
+                                     meta_window.move_frame(true, x, y);
+                                     onComplete && onComplete();
+                                 }
                              }})
 
 }
