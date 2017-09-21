@@ -46,6 +46,9 @@ panelBox.connect('hide', () => {
 });
 
 const spaces = []
+spaces.spaceOf = (meta_window) => {
+    return this[meta_window.get_workspace().workspace_index];
+}
 window.spaces = spaces;
 
 debug_all = true; // Consider the default value in `debug_filter` to be true
