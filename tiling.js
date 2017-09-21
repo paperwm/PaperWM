@@ -33,9 +33,9 @@ panelBox.connect('hide', () => {
     panelBox.y = - panelBox.height;
 });
 
-workspaces = []
+spaces = []
 for (let i=0; i < global.screen.n_workspaces; i++) {
-    workspaces[i] = []
+    spaces[i] = []
 }
 
 debug_all = true; // Consider the default value in `debug_filter` to be true
@@ -71,7 +71,7 @@ focus = () => {
     let meta_window = global.display.focus_window;
     if (!meta_window)
         return -1;
-    return workspaces[meta_window.get_workspace().workspace_index].indexOf(meta_window)
+    return spaces[meta_window.get_workspace().workspace_index].indexOf(meta_window)
 }
 
 // Max height for windows
@@ -127,7 +127,7 @@ ensure_viewport = (meta_window, force) => {
     }
     debug('Ensuring', meta_window.title);
 
-    let workspace = workspaces[meta_window.get_workspace().workspace_index];
+    let workspace = spaces[meta_window.get_workspace().workspace_index];
     let index = workspace.indexOf(meta_window)
     function move_to(meta_window, x, y, delay, transition) {
         ensuring = meta_window;
@@ -262,7 +262,7 @@ center = (meta_window, zen) => {
     move(meta_window, x, frame.y)
     let right = zen ? global.screen_width : x + frame.width + window_gap;
     let left = zen ? -global.screen_width : x - window_gap;
-    let i = workspaces[meta_window.get_workspace().workspace_index].indexOf(meta_window);
+    let i = spaces[meta_window.get_workspace().workspace_index].indexOf(meta_window);
     propogate_forward(i + 1, right);
     propogate_backward(i - 1, left);
 }
@@ -346,7 +346,7 @@ add_handler = (ws, meta_window) => {
     let focus_i = focus();
 
     // Should inspert at index 0 if focus() returns -1
-    let workspace = workspaces[ws.workspace_index]
+    let workspace = spaces[ws.workspace_index]
     workspace.splice(focus_i + 1, 0, meta_window)
 
     if (focus_i == -1) {
@@ -373,7 +373,7 @@ remove_handler = (ws, meta_window) => {
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
 
-    let workspace = workspaces[meta_window.get_workspace().workspace_index]
+    let workspace = spaces[meta_window.get_workspace().workspace_index]
     let removed_i = workspace.indexOf(meta_window)
     if (removed_i < 0)
         return
@@ -436,7 +436,7 @@ add_all_from_workspace = (workspace) => {
 
     windows.sort(xz_comparator(windows));
 
-    let tiling = workspaces[workspace.workspace_index]
+    let tiling = spaces[workspace.workspace_index]
     windows.forEach((meta_window, i) => {
         if(tiling.indexOf(meta_window) < 0 && add_filter(meta_window)) {
             // Using add_handler is unreliable since it interacts with focus.
@@ -484,7 +484,7 @@ first_frame = (meta_window_actor) => {
         let frame = meta_window.get_frame_rect();
         meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
 
-        let workspace = workspaces[meta_window.get_workspace().workspace_index];
+        let workspace = spaces[meta_window.get_workspace().workspace_index];
         propogate_forward(workspace, workspace.indexOf(meta_window) + 1, meta_window.scrollwm_initial_position.x + frame.width + window_gap);
 
         delete meta_window.scrollwm_initial_position;
@@ -498,7 +498,7 @@ window_created = (display, meta_window, user_data) => {
 }
 
 workspace_added = (screen, index) => {
-    workspaces[index] = [];
+    spaces[index] = [];
     let workspace = global.screen.get_workspace_by_index(index);
     workspace.connect("window-added", dynamic_function_ref("add_handler"))
     workspace.connect("window-removed", dynamic_function_ref("remove_handler"));
@@ -513,11 +513,11 @@ workspace_removed = (screen, arg1, arg2) => {
 
 next = () => {
     let meta_window = global.display.focus_window
-    workspaces[meta_window.get_workspace().workspace_index][focus()+1].activate(timestamp)
+    spaces[meta_window.get_workspace().workspace_index][focus()+1].activate(timestamp)
 }
 previous = () => {
     let meta_window = global.display.focus_window
-    workspaces[meta_window.get_workspace().workspace_index][focus()-1].activate(timestamp)
+    spaces[meta_window.get_workspace().workspace_index][focus()-1].activate(timestamp)
 }
 
 util = {
@@ -533,7 +533,7 @@ util = {
 
 move_helper = (meta_window, delta) => {
     // NB: delta should be 1 or -1
-    let ws = workspaces[meta_window.get_workspace().workspace_index]
+    let ws = spaces[meta_window.get_workspace().workspace_index]
     let i = ws.indexOf(meta_window)
     if(util.in_bounds(ws, i+delta)) {
         util.swap(ws, i, i+delta);
@@ -595,7 +595,7 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _getWindowList: function() {
-        return workspaces[global.display.focus_window.get_workspace().workspace_index];
+        return spaces[global.display.focus_window.get_workspace().workspace_index];
     },
 
     _select: function(index) {
@@ -661,7 +661,7 @@ LiveWindowNavigator = new Lang.Class({
     },
 
     _getWindows: function() {
-        return workspaces[global.display.focus_window.get_workspace().workspace_index];
+        return spaces[global.display.focus_window.get_workspace().workspace_index];
     }
 });
 
