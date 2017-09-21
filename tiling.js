@@ -29,14 +29,24 @@ panelBox.connect('show', () => {
     });
 });
 
+
+Space = (workspace) => {
+    // Simplest way to get a straight array interface
+    let space = [];
+    space.workspace = workspace;
+    space.selectedWindow = null;
+    space.moving = false;
+    space.leftStack = 0;
+    space.rightStack = 0;
+    return space;
+}
+
 panelBox.connect('hide', () => {
     panelBox.y = - panelBox.height;
 });
 
-spaces = []
-for (let i=0; i < global.screen.n_workspaces; i++) {
-    spaces[i] = []
-}
+const spaces = []
+window.spaces = spaces;
 
 debug_all = true; // Consider the default value in `debug_filter` to be true
 debug_filter = { "#preview": false };
