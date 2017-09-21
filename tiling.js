@@ -9,7 +9,6 @@ const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
 const Gio = imports.gi.Gio;
 const utils = Extension.imports.utils;
-const convenience = Extension.imports.convenience;
 
 // Gap between windows
 window_gap = 10
@@ -626,30 +625,4 @@ preview_navigate = (display, screen, meta_window, binding) => {
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
 
-set_action_handler = function(action_name, handler) {
-    // Ripped from https://github.com/negesti/gnome-shell-extensions-negesti 
-    // Handles multiple gnome-shell versions
-
-    if (Main.wm.addKeybinding && Shell.ActionMode){ // introduced in 3.16
-        Main.wm.addKeybinding(action_name,
-                              convenience.getSettings(), Meta.KeyBindingFlags.NONE,
-                              Shell.ActionMode.NORMAL,
-                              handler
-                             );
-    } else if (Main.wm.addKeybinding && Shell.KeyBindingMode) { // introduced in 3.7.5
-        // Shell.KeyBindingMode.NORMAL | Shell.KeyBindingMode.MESSAGE_TRAY,
-        Main.wm.addKeybinding(action_name,
-                              convenience.getSettings(), Meta.KeyBindingFlags.NONE,
-                              Shell.KeyBindingMode.NORMAL,
-                              handler
-                             );
-    } else {
-        global.display.add_keybinding(
-            action_name,
-            convenience.getSettings(),
-            Meta.KeyBindingFlags.NONE,
-            handler
-        );
-    }
-}
 
