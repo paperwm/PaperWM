@@ -363,7 +363,7 @@ remove_handler = (ws, meta_window) => {
 
     // Re-layout: Needed if the removed window didn't have focus.
     // Not sure if we can check if that was the case or not?
-    space[Math.max(0, removed_i - 1)].activate(timestamp());
+    space[Math.max(0, removed_i - 1)].activate(global.get_current_time());
     // Force a new ensure, since the focus_handler is run before window-removed
     ensure_viewport(space[focus()], true)
 }
@@ -467,11 +467,11 @@ workspace_removed = (screen, arg1, arg2) => {
 
 next = () => {
     let meta_window = global.display.focus_window
-    spaces[meta_window.get_workspace().workspace_index][focus()+1].activate(timestamp)
+    spaces[meta_window.get_workspace().workspace_index][focus()+1].activate(global.get_current_time())
 }
 previous = () => {
     let meta_window = global.display.focus_window
-    spaces[meta_window.get_workspace().workspace_index][focus()-1].activate(timestamp)
+    spaces[meta_window.get_workspace().workspace_index][focus()-1].activate(global.get_current_time())
 }
 
 move_helper = (meta_window, delta) => {

@@ -31,10 +31,6 @@ framestr = (rect) => {
     return "[ x:"+rect.x + ", y:" + rect.y + " w:" + rect.width + " h:"+rect.height + " ]";
 }
 
-timestamp = () => {
-    return GLib.get_monotonic_time()/1000
-}
-
 /**
  * Look up the function by name at call time. This makes it convenient to
  * redefine the function without re-registering all signal handler, keybindings,
