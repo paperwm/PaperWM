@@ -1,5 +1,6 @@
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const Tiling = Extension.imports.tiling;
+const utils = Extension.utils;
 const Gio = imports.gi.Gio;
 const Meta = imports.gi.Meta;
 const Main = imports.ui.main;
