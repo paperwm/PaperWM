@@ -3,29 +3,49 @@ const Tiling = Extension.imports.tiling;
 const Gio = imports.gi.Gio;
 const Meta = imports.gi.Meta;
 const Main = imports.ui.main;
+const Shell = imports.gi.Shell;
+
+let isDuringGnomeShellStartup = false;
 
 function init() {
-    // Hook up new workspaces
-    debug('init')
+    debug('init');
 }
 
 function enable() {
-    debug('enable')
+    debug('enable');
+
+    // HACK: couldn't find an other way within a reasonable time budget
+    // This state is different from being enabled after startup. Existing
+    // windows are not accessible yet for instance.
+    isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
 
     global.screen.connect("workspace-added", dynamic_function_ref('workspace_added'));
     global.screen.connect("workspace-removed", dynamic_function_ref('workspace_removed'));
 
     global.display.connect('window-created', dynamic_function_ref('window_created'));
 
-    // Hook up existing workspaces
-    for (let i=0; i < global.screen.n_workspaces; i++) {
-        let workspace = global.screen.get_workspace_by_index(i)
-        print("workspace: " + workspace)
-        workspace.connect("window-added", dynamic_function_ref("add_handler"))
-        workspace.connect("window-removed", dynamic_function_ref("remove_handler"));
-        add_all_from_workspace(workspace);
+    function initWorkspaces() {
+        // Hook up existing workspaces
+        for (let i=0; i < global.screen.n_workspaces; i++) {
+            let workspace = global.screen.get_workspace_by_index(i)
+            debug("workspace", workspace)
+            workspace.connect("window-added", dynamic_function_ref("add_handler"))
+            workspace.connect("window-removed", dynamic_function_ref("remove_handler"));
+            add_all_from_workspace(workspace);
+        }
     }
 
+    if (isDuringGnomeShellStartup) {
+        // Defer workspace initialization until existing windows are accessible.
+        // Otherwise we're unable to restore the tiling-order. (when restarting
+        // gnome-shell)
+        Main.layoutManager.connect('startup-complete', function() {
+            isDuringGnomeShellStartup = false;
+            initWorkspaces();
+        });
+    } else {
+        initWorkspaces();
+    }
 
     settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
     // Temporary cycle-windows bindings
