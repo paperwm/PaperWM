@@ -19,6 +19,16 @@ stack_margin = 75
 
 statusbar_height = Main.layoutManager.panelBox.height;
 
+Main.layoutManager.panelBox.connect('show', () => {
+    Tweener.addTween(Main.layoutManager.panelBox, {
+        y: 0,
+        time: 0.25,
+        onOverWrite: () => {
+            Main.layoutManager.panelBox.y = 0;
+        }
+    });
+})
+
 workspaces = []
 for (let i=0; i < global.screen.n_workspaces; i++) {
     workspaces[i] = []
@@ -137,11 +147,7 @@ ensure_viewport = (meta_window, force) => {
     // Hack to ensure the statusbar is visible while there's a fullscreen
     // windows in the workspace.
     if (!Main.layoutManager.panelBox.visible) {
-        Main.layoutManager.panelBox.visible = true;
-        Tweener.addTween(Main.layoutManager.panelBox, {
-            y: 0,
-            time: 0.25
-        });
+        Main.layoutManager.panelBox.show();
     }
 
     let x = frame.x;
