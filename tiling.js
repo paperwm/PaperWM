@@ -48,8 +48,8 @@ panelBox.connect('hide', () => {
 });
 
 const spaces = []
-spaces.spaceOf = (meta_window) => {
-    return this[meta_window.get_workspace().workspace_index];
+spaceOf = (meta_window) => {
+    return spaces[meta_window.get_workspace().workspace_index];
 }
 window.spaces = spaces;
 
@@ -240,9 +240,10 @@ center = (meta_window, zen) => {
     move(meta_window, x, frame.y)
     let right = zen ? global.screen_width : x + frame.width + window_gap;
     let left = zen ? -global.screen_width : x - window_gap;
-    let i = spaces[meta_window.get_workspace().workspace_index].indexOf(meta_window);
-    propogate_forward(i + 1, right);
-    propogate_backward(i - 1, left);
+    let space = spaces.spaceOf(meta_window);
+    let i = space.indexOf(meta_window);
+    propogate_forward(space, i + 1, right);
+    propogate_backward(space, i - 1, left);
 }
 focus_wrapper = (meta_window, user_data) => {
     focus_handler(meta_window, user_data)
