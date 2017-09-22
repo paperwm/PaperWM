@@ -367,18 +367,18 @@ add_handler = (ws, meta_window) => {
         return;
     }
 
-    let focus_i = -1; // (-1 -> at beginning)
+    let insert_after_i = -1; // (-1 -> at beginning)
     if (space.selectedWindow) {
-        focus_i = space.indexOf(space.selectedWindow);
+        insert_after_i = space.indexOf(space.selectedWindow);
     }
 
-    space.splice(focus_i + 1, 0, meta_window)
+    space.splice(insert_after_i + 1, 0, meta_window)
 
-    if (focus_i == -1) {
+    if (insert_after_i == -1) {
         meta_window.scrollwm_initial_position =
             {x: primary.x, y: primary.y + panelBox.height + margin_tb};
     } else {
-        let frame = space[focus_i].get_frame_rect()
+        let frame = space[insert_after_i].get_frame_rect()
         meta_window.scrollwm_initial_position = {x:frame.x + frame.width + window_gap, y:panelBox.height + margin_tb};
 
     }
