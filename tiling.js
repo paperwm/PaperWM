@@ -346,10 +346,15 @@ add_handler = (ws, meta_window) => {
         }
     }
 
-    let focus_i = focus();
-
     // Should inspert at index 0 if focus() returns -1
     let space = spaces[ws.workspace_index]
+
+    // Don't add already added windows
+    if (space.indexOf(meta_window) != -1) {
+        return;
+    }
+
+    let focus_i = focus();
     space.splice(focus_i + 1, 0, meta_window)
 
     if (focus_i == -1) {
