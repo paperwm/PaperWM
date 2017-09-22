@@ -271,8 +271,9 @@ focus_wrapper = (meta_window, user_data) => {
 }
 
 add_filter = (meta_window) => {
-    if (meta_window.window_type != Meta.WindowType.NORMAL ||
-        meta_window.get_transient_for() != null) {
+    if (meta_window.window_type != Meta.WindowType.NORMAL
+        || meta_window.get_transient_for() != null
+        || meta_window.is_on_all_workspaces()) {
         return false;
     }
     return true;
