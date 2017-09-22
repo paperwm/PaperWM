@@ -201,6 +201,9 @@ ensure_viewport = (meta_window, force) => {
 focus_handler = (meta_window, user_data) => {
     debug("focus:", meta_window.title, framestr(meta_window.get_frame_rect()));
 
+    let space = spaceOf(meta_window);
+    space.selectedWindow = meta_window;
+
     if(meta_window.scrollwm_initial_position) {
         debug("setting initial position", meta_window.scrollwm_initial_position)
         if (meta_window.get_maximized() == Meta.MaximizeFlags.BOTH) {
@@ -364,7 +367,11 @@ add_handler = (ws, meta_window) => {
         return;
     }
 
-    let focus_i = focus();
+    let focus_i = -1; // (-1 -> at beginning)
+    if (space.selectedWindow) {
+        focus_i = space.indexOf(space.selectedWindow);
+    }
+
     space.splice(focus_i + 1, 0, meta_window)
 
     if (focus_i == -1) {
