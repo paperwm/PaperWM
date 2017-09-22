@@ -59,7 +59,7 @@ function enable() {
     settings.set_strv("switch-windows-backward", ["<alt>comma", "<super>comma"])
 
     settings.set_strv("close", ['<super>c'])
-    settings.set_strv("maximize-horizontally", ['<super>h'])
+    settings.set_strv("maximize-horizontally", ['<super>f'])
 
     shell_settings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
     shell_settings.set_strv("toggle-overview", ["<super>space"])
