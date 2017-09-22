@@ -1,6 +1,7 @@
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const convenience = Extension.imports.convenience;
 const Tiling = Extension.imports.tiling;
+const Scratch = Extension.imports.scratch;
 const utils = Extension.utils;
 const Gio = imports.gi.Gio;
 const Meta = imports.gi.Meta;
@@ -84,6 +85,7 @@ function enable() {
     // Must use `Meta.keybindings_set_custom_handler` to re-assign handler?
     set_action_handler("move-left", dynamic_function_ref("move_left"));
     set_action_handler("move-right", dynamic_function_ref("move_right"));
+    set_action_handler("toggle-scratch-layer", dynamic_function_ref("toggleScratch"));
 }
 
 function disable() {
