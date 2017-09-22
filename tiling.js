@@ -19,6 +19,9 @@ margin_lr = 20
 // How much the stack should protrude from the side
 stack_margin = 75
 
+
+const  primary = Main.layoutManager.primaryMonitor
+
 panelBox = Main.layoutManager.panelBox;
 
 panelBox.connect('show', () => {
@@ -61,7 +64,7 @@ focus = () => {
 }
 
 // Max height for windows
-max_height = global.screen_height - panelBox.height - margin_tb*2;
+max_height = primary.height - panelBox.height - margin_tb*2;
 // Height to use when scaled down at the sides
 scaled_height = max_height*0.95;
 scaled_y_offset = (max_height - scaled_height)/2;
@@ -69,14 +72,17 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
     let frame = actor.meta_window.get_frame_rect();
-    x = Math.min(global.screen_width - stack_margin, x)
+    // Set monitor offset
+    y += primary.y;
+    x += primary.x;
+    x = Math.min(primary.width - stack_margin, x)
     x = Math.max(stack_margin - frame.width, x)
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
     let scale = 1;
     delay = delay || 0;
     transition = transition || "easeInOutQuad";
-    if (x >= global.screen_width - stack_margin || x <= stack_margin - frame.width) {
+    if (x >= primary.width - stack_margin || x <= stack_margin - frame.width) {
         // Set scale so that the scaled height will be `scaled_height`
         scale = scaled_height/frame.height;
         // Center the actor properly
@@ -130,8 +136,8 @@ ensure_viewport = (meta_window, force) => {
     // Share the available margin evenly between left and right
     // if the window is wide (should probably use a quotient larger than 2)
     let margin = margin_lr
-    if (frame.width > global.screen_width - 3*stack_margin)
-        margin = (global.screen_width - frame.width)/2;
+    if (frame.width > primary.width - 3*stack_margin)
+        margin = (primary.width - frame.width)/2;
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
     // windows in the space.
@@ -156,8 +162,8 @@ ensure_viewport = (meta_window, force) => {
             }
         });
 
-    } else if (required_width <= global.screen_width) {
-        let leftovers = global.screen_width - required_width;
+    } else if (required_width <= primary.width) {
+        let leftovers = primary.width - required_width;
         let gaps = space.length + 1;
         let extra_gap = leftovers/gaps;
         debug('#extragap', extra_gap);
@@ -168,10 +174,10 @@ ensure_viewport = (meta_window, force) => {
         x = 0;
     } else if (index == space.length-1) {
         // Always align the first window to the display's right edge
-        x = global.screen_width - frame.width;
-    } else if (frame.x + frame.width >= global.screen_width - margin) {
+        x = primary.width - frame.width;
+    } else if (frame.x + frame.width >= primary.width - margin) {
         // Align to the right margin
-        x = global.screen_width - margin - frame.width;
+        x = primary.width - margin - frame.width;
     } else if (frame.x <= margin) {
         // Align to the left margin
         x = margin;
@@ -251,10 +257,10 @@ propogate_backward = (space, n, x, lower, gap) => {
 
 center = (meta_window, zen) => {
     let frame = meta_window.get_frame_rect();
-    let x = Math.floor((global.screen_width - frame.width)/2)
+    let x = Math.floor((primary.width - frame.width)/2)
     move(meta_window, x, frame.y)
-    let right = zen ? global.screen_width : x + frame.width + window_gap;
-    let left = zen ? -global.screen_width : x - window_gap;
+    let right = zen ? primary.width : x + frame.width + window_gap;
+    let left = zen ? -primary.width : x - window_gap;
     let space = spaceOf(meta_window);
     let i = space.indexOf(meta_window);
     propogate_forward(space, i + 1, right);
@@ -358,7 +364,7 @@ add_handler = (ws, meta_window) => {
 
     // Maxmize height. Setting position here doesn't work... 
     meta_window.move_resize_frame(true, 0, 0,
-                                  meta_window.get_frame_rect().width, global.screen_height - panelBox.height - margin_tb*2);
+                                  meta_window.get_frame_rect().width, primary.height - panelBox.height - margin_tb*2);
     meta_window.connect("focus", focus_wrapper)
 }
 
@@ -401,8 +407,8 @@ add_all_from_workspace = (workspace) => {
             let frame = mw.get_frame_rect();
             if(frame.x <= 0)
                 return 0;
-            if(frame.x+frame.width == global.screen_width) {
-                return global.screen_width;
+            if(frame.x+frame.width == primary.width) {
+                return primary.width;
             }
             return frame.x;
         }
@@ -520,7 +526,7 @@ toggle_maximize_horizontally = (meta_window) => {
     } else {
         let frame = meta_window.get_frame_rect();
         meta_window.unmaximized_rect = frame;
-        meta_window.move_resize_frame(true, frame.x, frame.y, global.screen_width - margin_lr*2, frame.height);
+        meta_window.move_resize_frame(true, frame.x, frame.y, primary.width - margin_lr*2, frame.height);
     }
     ensure_viewport(meta_window);
 }
