@@ -370,9 +370,20 @@ add_handler = (ws, meta_window) => {
     // Existing windows being moved need a new position in this space. This
     // can be done here since the window is fully initialized.
 
-    // Maxmize height. Setting position here doesn't work... 
-    meta_window.move_resize_frame(true, 0, 0,
-                                  meta_window.get_frame_rect().width, primary.height - panelBox.height - margin_tb*2);
+    // If the MetaWindowActor is available the window already exists and we can position
+    if (meta_window.get_compositor_private()) {
+        meta_window.move_resize_frame(true,
+                                      meta_window.scrollwm_initial_position.x,
+                                      meta_screen.scrollwm_initial_position.y,
+                                      meta_window.get_frame_rect().width,
+                                      primary.height - panelBox.height - margin_tb*2);
+        delete meta_window.scrollwm_initial_position
+    } else {
+        // Just maxmize height. (This sometimes fails though)
+        meta_window.move_resize_frame(true, 0, 0,
+                                      meta_window.get_frame_rect().width,
+                                      primary.height - panelBox.height - margin_tb*2);
+    }
     meta_window[focus_signal] = meta_window.connect("focus", focus_wrapper);
 }
 
