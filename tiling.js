@@ -326,7 +326,13 @@ defwinprop = (spec) => {
 defwinprop({
     wm_class: "copyq",
     float: true
-})
+});
+
+defwinprop({
+    wm_class: "Riot",
+    oneshot: true, // Allow reattaching
+    scratch_layer: true
+});
 
 add_handler = (ws, meta_window) => {
     debug("window-added", meta_window, meta_window.title, meta_window.window_type);
@@ -336,12 +342,16 @@ add_handler = (ws, meta_window) => {
 
     let winprop = find_winprop(meta_window);
     if (winprop) {
-        if(winprop.oneshot) {
+        if (winprop.oneshot) {
             // untested :)
             winprops.splice(winprops.indexOf(winprop), 1);
         }
-        if(winprop.float) {
+        if (winprop.float) {
             // Let gnome-shell handle the placement
+            return;
+        }
+        if (winprop.scratch_layer) {
+            meta_window.stick();
             return;
         }
     }
