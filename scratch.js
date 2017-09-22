@@ -14,6 +14,7 @@ toggleScratch = function() {
     if (isSomeShown) {
         windows.map(function(meta_window) {
             meta_window.minimize();
+            meta_window.unmake_above();
         })
     } else {
         windows.map(function(meta_window) {
