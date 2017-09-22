@@ -19,6 +19,8 @@ margin_lr = 20
 // How much the stack should protrude from the side
 stack_margin = 75
 
+// Symbol to retrieve the focus handler id
+focus_signal = Symbol();
 
 const  primary = Main.layoutManager.primaryMonitor
 
@@ -366,7 +368,7 @@ add_handler = (ws, meta_window) => {
     // Maxmize height. Setting position here doesn't work... 
     meta_window.move_resize_frame(true, 0, 0,
                                   meta_window.get_frame_rect().width, primary.height - panelBox.height - margin_tb*2);
-    meta_window.connect("focus", focus_wrapper)
+    meta_window[focus_signal] = meta_window.connect("focus", focus_wrapper);
 }
 
 remove_handler = (workspace, meta_window) => {
@@ -382,7 +384,10 @@ remove_handler = (workspace, meta_window) => {
 
     // Remove our signal handlers: Needed for non-closed windows.
     // (closing a window seems to clean out it's signal handlers)
-    meta_window.disconnect(focus_wrapper);
+    if (meta_window[focus_signal]) {
+        meta_window.disconnect(meta_window[focus_signal]);
+        delete meta_window[focus_signal];
+    }
 
     // Re-layout: Needed if the removed window didn't have focus.
     // Not sure if we can check if that was the case or not?
@@ -442,7 +447,7 @@ add_all_from_workspace = (workspace) => {
         if(space.indexOf(meta_window) < 0 && add_filter(meta_window)) {
             // Using add_handler is unreliable since it interacts with focus.
             space.push(meta_window);
-            meta_window.connect("focus", focus_wrapper)
+            meta_window[focus_signal] = meta_window.connect("focus", focus_wrapper);
         }
     })
 }
