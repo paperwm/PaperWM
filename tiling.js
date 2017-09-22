@@ -255,7 +255,7 @@ center = (meta_window, zen) => {
     move(meta_window, x, frame.y)
     let right = zen ? global.screen_width : x + frame.width + window_gap;
     let left = zen ? -global.screen_width : x - window_gap;
-    let space = spaces.spaceOf(meta_window);
+    let space = spaceOf(meta_window);
     let i = space.indexOf(meta_window);
     propogate_forward(space, i + 1, right);
     propogate_backward(space, i - 1, left);
