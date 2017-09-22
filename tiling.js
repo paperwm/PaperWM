@@ -368,12 +368,12 @@ add_handler = (ws, meta_window) => {
     meta_window.connect("focus", focus_wrapper)
 }
 
-remove_handler = (ws, meta_window) => {
+remove_handler = (workspace, meta_window) => {
     debug("window-removed", meta_window, meta_window.title);
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
 
-    let space = spaces[meta_window.get_workspace().workspace_index]
+    let space = spaces[workspace.workspace_index];
     let removed_i = space.indexOf(meta_window)
     if (removed_i < 0)
         return
