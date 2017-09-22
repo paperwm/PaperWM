@@ -358,7 +358,8 @@ add_handler = (ws, meta_window) => {
     space.splice(focus_i + 1, 0, meta_window)
 
     if (focus_i == -1) {
-        meta_window.scrollwm_initial_position = {x: 0, y:panelBox.height + margin_tb};
+        meta_window.scrollwm_initial_position =
+            {x: primary.x, y: primary.y + panelBox.height + margin_tb};
     } else {
         let frame = space[focus_i].get_frame_rect()
         meta_window.scrollwm_initial_position = {x:frame.x + frame.width + window_gap, y:panelBox.height + margin_tb};
