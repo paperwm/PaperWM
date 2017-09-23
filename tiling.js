@@ -360,7 +360,8 @@ add_handler = (ws, meta_window) => {
     }
 
     // If we're focusing a scratch window make the new window scratch
-    if (global.display.focus_window.is_on_all_workspaces()) {
+    let focus_window = global.display.focus_window;
+    if (focus_window && focus_window.is_on_all_workspaces()) {
         meta_window.stick()
         return;
     }
