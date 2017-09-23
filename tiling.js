@@ -431,6 +431,20 @@ remove_handler = (workspace, meta_window) => {
         delete meta_window[focus_signal];
     }
 
+    if (space.selectedWindow === meta_window) {
+        // Window closed or moved when other workspace is active so no new focus
+        // has been assigned in this workspace.
+        // Ideally we'd get the window that will get focus when this workspace
+        // is activated again, but the function mutter use doesn't seem to be
+        // exposed to javascript.
+
+        // Use the top window in the MRU list as a proxy:
+        let mru_list = global.display.get_tab_list(Meta.TabList.NORMAL, workspace);
+        // The mru list might contain needy windows from other workspaces
+        space.selectedWindow =
+            mru_list.filter(w => w.get_workspace() === workspace)[0];
+    }
+
     // Force a new ensure, since the focus_handler is run before window-removed
     ensure_viewport(space.selectedWindow, true)
 }
