@@ -28,10 +28,10 @@ panelBox = Main.layoutManager.panelBox;
 
 panelBox.connect('show', () => {
     Tweener.addTween(panelBox, {
-        y: primary.y,
+        scale_y: 1,
         time: 0.25,
         onOverWrite: () => {
-            panelBox.y = primary.y;
+            scale_y: 1;
         }
     });
 });
@@ -49,7 +49,7 @@ Space = (workspace) => {
 }
 
 panelBox.connect('hide', () => {
-    panelBox.y = panelBox.y - panelBox.height;
+    panelBox.scale_y = 0;
 });
 
 const spaces = []
@@ -157,7 +157,7 @@ ensure_viewport = (meta_window, force) => {
         // Fullscreen takes highest priority
         x = 0, y = 0;
         Tweener.addTween(panelBox, {
-            y: primary.y - panelBox.height,
+            scale_y: 0,
             time: 0.25,
             onComplete: () => {
                 panelBox.visible = false;
