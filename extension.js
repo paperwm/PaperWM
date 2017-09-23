@@ -80,26 +80,28 @@ function enable() {
     registerPaperAction("switch-previous", dynamic_function_ref("preview_navigate"),
                         Meta.KeyBindingFlags.IS_REVERSED);
 
-    set_action_handler("move-left", dynamic_function_ref("move_left"));
-    set_action_handler("move-right", dynamic_function_ref("move_right"));
-    set_action_handler("toggle-scratch-layer", dynamic_function_ref("toggleScratch"));
+    registerPaperAction("move-left", dynamic_function_ref("move_left"));
+    registerPaperAction("move-right", dynamic_function_ref("move_right"));
+    registerPaperAction("toggle-scratch-layer", dynamic_function_ref("toggleScratch"));
 }
 
 function disable() {
 }
 
 function registerPaperAction(actionName, handler, metaKeyBindingFlags) {
-    let id = set_action_handler(actionName, handler, metaKeyBindingFlags)
+    let id = registerMutterAction(actionName, handler, metaKeyBindingFlags)
     window.paperActionIds[actionName] = id;
     return id;
 }
 
 /**
- * Register a key-bindable action in mutter. Return the assigned numeric id.
+ * Register a key-bindable action (from our own schema) in mutter.
+ *
+ * Return the assigned numeric id.
  *
  * NB: use `Meta.keybindings_set_custom_handler` to re-assign the handler.
  */
-function set_action_handler(action_name, handler, flags) {
+function registerMutterAction(action_name, handler, flags) {
     // Ripped from https://github.com/negesti/gnome-shell-extensions-negesti 
     // Handles multiple gnome-shell versions
     flags = flags || Meta.KeyBindingFlags.NONE;
