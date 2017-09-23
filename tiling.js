@@ -139,7 +139,6 @@ ensure_viewport = (meta_window, force) => {
     }
 
     let frame = meta_window.get_frame_rect();
-    let margin = margin_lr
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
     // windows in the space.
@@ -181,12 +180,12 @@ ensure_viewport = (meta_window, force) => {
                primary.width - 2*(margin_lr + stack_margin + window_gap)) {
         // Consider the window to be wide and center it
         x = (primary.width - frame.width)/2;
-    } else if (frame.x + frame.width >= primary.width - margin) {
-        // Align to the right margin
-        x = primary.width - margin - frame.width;
-    } else if (frame.x <= margin) {
-        // Align to the left margin
-        x = margin;
+    } else if (frame.x + frame.width >= primary.width - margin_lr) {
+        // Align to the right margin_lr
+        x = primary.width - margin_lr - frame.width;
+    } else if (frame.x <= margin_lr) {
+        // Align to the left margin_lr
+        x = margin_lr;
     }
     // Add a delay for stacked window to avoid windows passing
     // through each other in the z direction
