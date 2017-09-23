@@ -263,6 +263,13 @@ propogate_backward = (space, n, x, lower, gap) => {
     }
 }
 
+// Detach meta_window or the focused window by default
+// Can be used from the looking glass
+detach = function (meta_window) {
+    meta_window = meta_window || global.display.focus_window;
+    remove_handler(meta_window.get_workspace(), meta_window)
+}
+
 center = (meta_window, zen) => {
     let frame = meta_window.get_frame_rect();
     let x = Math.floor((primary.width - frame.width)/2)
