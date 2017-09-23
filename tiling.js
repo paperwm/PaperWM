@@ -408,11 +408,14 @@ add_handler = (ws, meta_window) => {
 
     // If the MetaWindowActor is available the window already exists and we can position
     if (meta_window.get_compositor_private()) {
-        meta_window.move_resize_frame(true,
-                                      meta_window.scrollwm_initial_position.x,
-                                      meta_window.scrollwm_initial_position.y,
-                                      meta_window.get_frame_rect().width,
-                                      primary.height - panelBox.height - margin_tb*2);
+        debug('attach window', meta_window.title, meta_window.has_focus())
+        if (meta_window.has_focus()) {
+            ensure_viewport(meta_window, true);
+        } else {
+            move(meta_window,
+                 meta_window.scrollwm_initial_position.x,
+                 meta_window.scrollwm_initial_position.y);
+        }
         delete meta_window.scrollwm_initial_position
     } else {
         // Just maxmize height. (This sometimes fails though)
