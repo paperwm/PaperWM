@@ -7,9 +7,20 @@
 2. on display "window-created is run, actor is available
 3. focus is run if the new window should be focused
 * Keybinding system
-Action names is global. eg. `Meta.keybindings_set_custom_handler` works on keybindings from custom schemas too.
+Action names are global. eg. `Meta.keybindings_set_custom_handler` works on keybindings from custom schemas too. (despise what the documentation says)
 
-Bind keys without using actions from a schema: https://stackoverflow.com/a/42466781/1517969
+`[[https://developer.gnome.org/meta/stable/MetaDisplay.html#meta-display-add-keybinding][MetaDisplay.add_keybinding]]` (somewhat confusing name) is used to register a named keybindable action. An numeric id is returned.
+
+Mutter itself does not support key-release sensitive bindings, but it's possible to create Clutter actor in response to a key-down binding, which temporarily take over the keyboard. Clutter can listen for key-up/key-release events.
+
+Looking up which action a key is bound to return the action's numeric id (`[[https://developer.gnome.org/meta/stable/MetaDisplay.html#meta-display-get-keybinding-action][MetaDisplay.get_keybinding_action]]`). There is no(?) way to ask mutter for the id<->action-name mapping.
+
+A slightly annoying detail about how all this works is that you normally give the handler before you know the action-id. So if the handler need to know the action-id (eg. if it use clutter to implement a mini-mode and want to respond to the same key that triggered the mode) you either have to store a name->id map, or re-assign the handler afterward.
+
+The Keybinding object which is supplied to keyhandler doesn't seem to expose the key used to trigger the action either?
+
+** Bind keys without using actions from a schema
+https://stackoverflow.com/a/42466781/1517969
 * Stack level
 
   There's not enough room for a maximized window to slide above another maximized window if they move at the same speed:

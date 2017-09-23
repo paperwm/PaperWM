@@ -16,6 +16,16 @@
       <default><![CDATA[['<Super>e']]]></default>
       <summary>Toggles the floating scratch layer</summary>
     </key>
+
+    <key type="as" name="switch-next">
+      <default><![CDATA[['<Super>period']]]></default>
+      <summary>Switch to the next window</summary>
+    </key>
+    <key type="as" name="switch-previous">
+      <default><![CDATA[['<Super>comma']]]></default>
+      <summary>Scroll to the previous window</summary>
+    </key>
+
     <key type="as" name="move-right">
       <default><![CDATA[['<Super><Shift>period']]]></default>
       <summary>Move the focused window right in the tiling</summary>

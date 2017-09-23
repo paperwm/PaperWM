@@ -56,9 +56,6 @@ function enable() {
     settings.set_strv("cycle-windows", ["<super><ctrl>period" ])
     settings.set_strv("cycle-windows-backward", ["<super><ctrl>comma"])
 
-    settings.set_strv("switch-windows", ["<alt>period", "<super>period" ])
-    settings.set_strv("switch-windows-backward", ["<alt>comma", "<super>comma"])
-
     settings.set_strv("close", ['<super>c'])
     settings.set_strv("maximize-horizontally", ['<super>f'])
     settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
@@ -71,19 +68,18 @@ function enable() {
     Meta.keybindings_set_custom_handler("cycle-windows-backward",
                                         dynamic_function_ref("live_navigate"));
 
-    Meta.keybindings_set_custom_handler("switch-windows",
-                                        dynamic_function_ref("preview_navigate"));
-    Meta.keybindings_set_custom_handler("switch-windows-backward",
-                                        dynamic_function_ref("preview_navigate"));
-
-
     // Or use "toggle-maximize"?
     Meta.keybindings_set_custom_handler("maximize-horizontally",
                                         as_key_handler("toggle_maximize_horizontally"));
 
 
+    // Action name => mutter-keybinding-action-id
+    window.paperActionIds = {};
 
-    // Must use `Meta.keybindings_set_custom_handler` to re-assign handler?
+    registerPaperAction("switch-next",     dynamic_function_ref("preview_navigate"));
+    registerPaperAction("switch-previous", dynamic_function_ref("preview_navigate"),
+                        Meta.KeyBindingFlags.IS_REVERSED);
+
     set_action_handler("move-left", dynamic_function_ref("move_left"));
     set_action_handler("move-right", dynamic_function_ref("move_right"));
     set_action_handler("toggle-scratch-layer", dynamic_function_ref("toggleScratch"));
@@ -92,28 +88,40 @@ function enable() {
 function disable() {
 }
 
-function set_action_handler(action_name, handler) {
+function registerPaperAction(actionName, handler, metaKeyBindingFlags) {
+    let id = set_action_handler(actionName, handler, metaKeyBindingFlags)
+    window.paperActionIds[actionName] = id;
+    return id;
+}
+
+/**
+ * Register a key-bindable action in mutter. Return the assigned numeric id.
+ *
+ * NB: use `Meta.keybindings_set_custom_handler` to re-assign the handler.
+ */
+function set_action_handler(action_name, handler, flags) {
     // Ripped from https://github.com/negesti/gnome-shell-extensions-negesti 
     // Handles multiple gnome-shell versions
+    flags = flags || Meta.KeyBindingFlags.NONE;
 
     if (Main.wm.addKeybinding && Shell.ActionMode){ // introduced in 3.16
-        Main.wm.addKeybinding(action_name,
-                              convenience.getSettings(), Meta.KeyBindingFlags.NONE,
-                              Shell.ActionMode.NORMAL,
-                              handler
-                             );
+        return Main.wm.addKeybinding(action_name,
+                                     convenience.getSettings(), flags,
+                                     Shell.ActionMode.NORMAL,
+                                     handler
+                                    );
     } else if (Main.wm.addKeybinding && Shell.KeyBindingMode) { // introduced in 3.7.5
         // Shell.KeyBindingMode.NORMAL | Shell.KeyBindingMode.MESSAGE_TRAY,
-        Main.wm.addKeybinding(action_name,
-                              convenience.getSettings(), Meta.KeyBindingFlags.NONE,
-                              Shell.KeyBindingMode.NORMAL,
-                              handler
-                             );
+        return Main.wm.addKeybinding(action_name,
+                                     convenience.getSettings(), flags,
+                                     Shell.KeyBindingMode.NORMAL,
+                                     handler
+                                    );
     } else {
-        global.display.add_keybinding(
+        return global.display.add_keybinding(
             action_name,
             convenience.getSettings(),
-            Meta.KeyBindingFlags.NONE,
+            flags,
             handler
         );
     }

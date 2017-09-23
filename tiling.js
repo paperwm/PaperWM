@@ -615,8 +615,11 @@ PreviewedWindowNavigator = new Lang.Class({
     Name: 'PreviewedWindowNavigator',
     Extends: altTab.WindowSwitcherPopup,
 
-    _init : function() {
+    _init: function(nextActionId, previousActionId) {
         this.parent();
+
+        this.nextActionId = nextActionId;
+        this.previousActionId = previousActionId;
         this._selectedIndex = focus();
         debug('#preview', 'Init', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
     },
@@ -639,6 +642,18 @@ PreviewedWindowNavigator = new Lang.Class({
 
     _getWindowList: function() {
         return spaces[global.display.focus_window.get_workspace().workspace_index];
+    },
+
+    _keyPressHandler: function(keysym, action) {
+        if (action === this.nextActionId) {
+            this._select(this._next());
+        } else if (action === this.previousActionId) {
+            this._select(this._previous());
+        } else {
+            // Parent can handle rest, but censor the action
+            return this.parent(keysym, undefined);
+        }
+        return undefined;
     },
 
     _select: function(index) {
@@ -721,7 +736,8 @@ live_navigate = (display, screen, meta_window, binding) => {
 }
 
 preview_navigate = (display, screen, meta_window, binding) => {
-    let tabPopup = new PreviewedWindowNavigator();
+    let tabPopup = new PreviewedWindowNavigator(window.paperActionIds["switch-next"],
+                                                window.paperActionIds["switch-previous"]);
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
 
