@@ -28,10 +28,10 @@ panelBox = Main.layoutManager.panelBox;
 
 panelBox.connect('show', () => {
     Tweener.addTween(panelBox, {
-        y: 0,
+        y: primary.y,
         time: 0.25,
         onOverWrite: () => {
-            panelBox.y = 0;
+            panelBox.y = primary.y;
         }
     });
 });
@@ -49,7 +49,7 @@ Space = (workspace) => {
 }
 
 panelBox.connect('hide', () => {
-    panelBox.y = - panelBox.height;
+    panelBox.y = panelBox.y - panelBox.height;
 });
 
 const spaces = []
@@ -157,7 +157,7 @@ ensure_viewport = (meta_window, force) => {
         // Fullscreen takes highest priority
         x = 0, y = 0;
         Tweener.addTween(panelBox, {
-            y: -panelBox.height,
+            y: primary.y - panelBox.height,
             time: 0.25,
             onComplete: () => {
                 panelBox.visible = false;
@@ -385,7 +385,9 @@ add_handler = (ws, meta_window) => {
             {x: primary.x, y: primary.y + panelBox.height + margin_tb};
     } else {
         let frame = space[insert_after_i].get_frame_rect()
-        meta_window.scrollwm_initial_position = {x:frame.x + frame.width + window_gap, y:panelBox.height + margin_tb};
+        meta_window.scrollwm_initial_position =
+            {x: primary.x + frame.x + frame.width + window_gap,
+             y: primary.y + panelBox.height + margin_tb};
 
     }
     // If window is receiving focus the focus handler will do the correct thing.
