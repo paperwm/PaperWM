@@ -22,7 +22,11 @@ stack_margin = 75
 // Symbol to retrieve the focus handler id
 focus_signal = Symbol();
 
-const  primary = Main.layoutManager.primaryMonitor
+let primary = Main.layoutManager.primaryMonitor;
+// Reset primary when monitors change
+global.screen.connect("monitors-changed", function(screen) {
+    primary = Main.layoutManager.primaryMonitor;
+})
 
 panelBox = Main.layoutManager.panelBox;
 
