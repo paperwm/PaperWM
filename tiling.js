@@ -348,7 +348,7 @@ defwinprop({
 });
 
 add_handler = (ws, meta_window) => {
-    debug("window-added", meta_window, meta_window.title, meta_window.window_type);
+    debug("window-added", meta_window, meta_window.title, meta_window.window_type, ws.index());
     if (!add_filter(meta_window)) {
         return;
     }
@@ -427,7 +427,7 @@ add_handler = (ws, meta_window) => {
 }
 
 remove_handler = (workspace, meta_window) => {
-    debug("window-removed", meta_window, meta_window.title);
+    debug("window-removed", meta_window, meta_window.title, workspace.index());
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
     // Not sure if we can check directly if _this_ window had focus when closed.
@@ -460,8 +460,12 @@ remove_handler = (workspace, meta_window) => {
                             && space.indexOf(w) !== -1 )[0];
     }
 
-    // Force a new ensure, since the focus_handler is run before window-removed
-    ensure_viewport(space.selectedWindow, true)
+    // (could be an empty workspace)
+    if (space.selectedWindow) {
+        // Force a new ensure, since the focus_handler is run before
+        // window-removed
+        ensure_viewport(space.selectedWindow, true)
+    }
 }
 
 add_all_from_workspace = (workspace) => {
