@@ -453,7 +453,8 @@ remove_handler = (workspace, meta_window) => {
         let mru_list = global.display.get_tab_list(Meta.TabList.NORMAL, workspace);
         // The mru list might contain needy windows from other workspaces
         space.selectedWindow =
-            mru_list.filter(w => w.get_workspace() === workspace)[0];
+            mru_list.filter(w => w.get_workspace() === workspace
+                            && space.indexOf(w) !== -1 )[0];
     }
 
     // Force a new ensure, since the focus_handler is run before window-removed
