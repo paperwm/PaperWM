@@ -410,7 +410,7 @@ add_handler = (ws, meta_window) => {
     if (meta_window.get_compositor_private()) {
         meta_window.move_resize_frame(true,
                                       meta_window.scrollwm_initial_position.x,
-                                      meta_screen.scrollwm_initial_position.y,
+                                      meta_window.scrollwm_initial_position.y,
                                       meta_window.get_frame_rect().width,
                                       primary.height - panelBox.height - margin_tb*2);
         delete meta_window.scrollwm_initial_position
