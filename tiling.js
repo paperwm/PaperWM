@@ -139,11 +139,7 @@ ensure_viewport = (meta_window, force) => {
     }
 
     let frame = meta_window.get_frame_rect();
-    // Share the available margin evenly between left and right
-    // if the window is wide (should probably use a quotient larger than 2)
     let margin = margin_lr
-    if (frame.width > primary.width - 2*(margin_lr + stack_margin + window_gap))
-        margin = (primary.width - frame.width)/2;
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
     // windows in the space.
@@ -181,6 +177,10 @@ ensure_viewport = (meta_window, force) => {
     } else if (index == space.length-1) {
         // Always align the first window to the display's right edge
         x = primary.width - frame.width;
+    } else if (frame.width >
+               primary.width - 2*(margin_lr + stack_margin + window_gap)) {
+        // Consider the window to be wide and center it
+        x = (primary.width - frame.width)/2;
     } else if (frame.x + frame.width >= primary.width - margin) {
         // Align to the right margin
         x = primary.width - margin - frame.width;
