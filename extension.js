@@ -61,6 +61,7 @@ function enable() {
 
     settings.set_strv("close", ['<super>c'])
     settings.set_strv("maximize-horizontally", ['<super>f'])
+    settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
 
     shell_settings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
     shell_settings.set_strv("toggle-overview", ["<super>space"])
