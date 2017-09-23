@@ -415,6 +415,7 @@ remove_handler = (workspace, meta_window) => {
     debug("window-removed", meta_window, meta_window.title);
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
+    // Not sure if we can check directly if _this_ window had focus when closed.
 
     let space = spaces[workspace.workspace_index];
     let removed_i = space.indexOf(meta_window)
@@ -429,9 +430,6 @@ remove_handler = (workspace, meta_window) => {
         delete meta_window[focus_signal];
     }
 
-    // Re-layout: Needed if the removed window didn't have focus.
-    // Not sure if we can check if that was the case or not?
-    space[Math.max(0, removed_i - 1)].activate(global.get_current_time());
     // Force a new ensure, since the focus_handler is run before window-removed
     ensure_viewport(space[focus()], true)
 }
