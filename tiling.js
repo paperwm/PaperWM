@@ -431,7 +431,7 @@ remove_handler = (workspace, meta_window) => {
     }
 
     // Force a new ensure, since the focus_handler is run before window-removed
-    ensure_viewport(space[focus()], true)
+    ensure_viewport(space.selectedWindow, true)
 }
 
 add_all_from_workspace = (workspace) => {
