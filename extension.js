@@ -54,9 +54,6 @@ function enable() {
     }
 
     settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
-    // Temporary cycle-windows bindings
-    settings.set_strv("cycle-windows", ["<super><ctrl>period" ])
-    settings.set_strv("cycle-windows-backward", ["<super><ctrl>comma"])
 
     settings.set_strv("close", ['<super>c'])
     settings.set_strv("maximize-horizontally", ['<super>f'])
@@ -64,11 +61,6 @@ function enable() {
 
     shell_settings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
     shell_settings.set_strv("toggle-overview", ["<super>space"])
-
-    Meta.keybindings_set_custom_handler("cycle-windows",
-                                        dynamic_function_ref("live_navigate"));
-    Meta.keybindings_set_custom_handler("cycle-windows-backward",
-                                        dynamic_function_ref("live_navigate"));
 
     // Or use "toggle-maximize"?
     Meta.keybindings_set_custom_handler("maximize-horizontally",

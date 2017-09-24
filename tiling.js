@@ -721,54 +721,6 @@ PreviewedWindowNavigator = new Lang.Class({
     }
 });
 
-LiveWindowNavigator = new Lang.Class({
-    Name: 'LiveWindowNavigator',
-    Extends: altTab.WindowCyclerPopup,
-
-    _init : function() {
-        this.parent();
-        this._selectedIndex = focus();
-    },
-
-    _next: function() {
-        return Math.min(this._items.length-1, this._selectedIndex+1)
-    },
-    _previous: function() {
-        return Math.max(0, this._selectedIndex-1)
-    },
-
-    _initialSelection: function(backward, binding) {
-        if (backward)
-            this._select(this._previous());
-        else if (this._items.length == 1)
-            this._select(0);
-        else
-            this._select(this._next());
-    },
-
-    _highlightItem: function(index, justOutline) {
-        ensure_viewport(this._items[index])
-        this._highlight.window = this._items[index];
-        global.window_group.set_child_above_sibling(this._highlight.actor, null);
-    },
-
-    _getWindows: function() {
-        return spaces[global.display.focus_window.get_workspace().workspace_index];
-    }
-});
-
-/**
- * Navigate the tiling linearly with live preview, but delaying actual focus
- * change until modifier is released.
- */
-live_navigate = (display, screen, meta_window, binding) => {
-    // Note: the reverse binding only work as indented if the action bound to
-    // this function is supported in the base class of LiveWindowNavigator.
-    // See altTab.js and search for _keyPressHandler
-    let tabPopup = new LiveWindowNavigator();
-    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
-}
-
 preview_navigate = (display, screen, meta_window, binding) => {
     let tabPopup = new PreviewedWindowNavigator();
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
