@@ -10,6 +10,8 @@ const Shell = imports.gi.Shell;
 
 let isDuringGnomeShellStartup = false;
 
+window.PaperWM = Extension;
+
 function init() {
     debug('init');
 }
