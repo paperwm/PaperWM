@@ -10,12 +10,13 @@ const Shell = imports.gi.Shell;
 const Gio = imports.gi.Gio;
 const utils = Extension.imports.utils;
 
+let preferences = Extension.imports.convenience.getSettings();
 // Gap between windows
-window_gap = 10
+window_gap = preferences.get_int('window-gap');
 // Top/bottom margin
-margin_tb = 2
+margin_tb = preferences.get_int('vertical-margin');
 // left/right margin
-margin_lr = 20
+margin_lr = preferences.get_int('horizontal-margin');
 // How much the stack should protrude from the side
 stack_margin = 75
 

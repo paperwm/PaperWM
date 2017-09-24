@@ -11,6 +11,22 @@
       <summary>Ignore top panel height</summary>
     </key>
 
+
+    <key type="i" name="horizontal-margin">
+      <default>20</default>
+      <summary>Minimum margin from windows left and right edge</summary>
+    </key>
+
+    <key type="i" name="vertical-margin">
+      <default>2</default>
+      <summary>Minimum margin from windows top and bottom edge</summary>
+    </key>
+
+    <key type="i" name="window-gap">
+      <default>10</default>
+      <summary>Minimum gap between windows</summary>
+    </key>
+
     <!-- Keybindings -->
     <key type="as" name="toggle-scratch-layer">
       <default><![CDATA[['<Super>e']]]></default>
