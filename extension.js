@@ -82,8 +82,8 @@ function enable() {
     registerPaperAction("switch-previous", dynamic_function_ref("preview_navigate"),
                         Meta.KeyBindingFlags.IS_REVERSED);
 
-    registerPaperAction("move-left", dynamic_function_ref("move_left"));
-    registerPaperAction("move-right", dynamic_function_ref("move_right"));
+    registerPaperAction("move-left", dynamic_function_ref("preview_navigate"));
+    registerPaperAction("move-right", dynamic_function_ref("preview_navigate"));
     registerPaperAction("toggle-scratch-layer", dynamic_function_ref("toggleScratch"));
 }
 

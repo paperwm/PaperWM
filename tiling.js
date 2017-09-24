@@ -631,25 +631,58 @@ PreviewedWindowNavigator = new Lang.Class({
         return Math.max(0, this._selectedIndex-1)
     },
 
-    _initialSelection: function(backward, binding) {
-        if (backward)
-            this._select(Math.min(this._selectedIndex, this._previous()));
-        else if (this._items.length == 1)
-            this._select(0);
-        else
-            this._select(Math.max(this._selectedIndex, this._next()));
+    _initialSelection: function(backward, actionName) {
+        this._doAction(window.paperActionIds[actionName]);
     },
 
     _getWindowList: function() {
         return spaces[global.display.focus_window.get_workspace().workspace_index];
     },
 
-    _keyPressHandler: function(keysym, action) {
-        if (action === this.nextActionId) {
+    _reorder: function (index, targetIndex) {
+        function swapArray(array, i, j) {
+            let temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+
+        let minimap = this._switcherList._list; // Clutter container for preview-icons
+
+        // Make it visible! (update the clutter container)
+        let selectedItem = minimap.get_child_at_index(index)
+        minimap.remove_child(selectedItem);
+        minimap.insert_child_at_index(selectedItem, targetIndex);
+
+        // Update internal representations to match the new order
+        // Array of actual windows
+        swapArray(this._switcherList.windows, index, targetIndex);
+        // Array of window buttons (wrappers around the icons)
+        swapArray(this._switcherList._items, index, targetIndex);
+        // Array of window icons (possible with preview)
+        swapArray(this._items, index, targetIndex);
+
+        this._select(targetIndex);
+    },
+
+    _doAction: function(mutterActionId) {
+        if (mutterActionId === this.nextActionId) {
             this._select(this._next());
-        } else if (action === this.previousActionId) {
+            return true;
+        } else if (mutterActionId === this.previousActionId) {
             this._select(this._previous());
-        } else {
+            return true;
+        } else if (mutterActionId === window.paperActionIds["move-left"]) {
+            this._reorder(this._selectedIndex, this._previous());
+            return true;
+        } else if (mutterActionId === window.paperActionIds["move-right"]) {
+            this._reorder(this._selectedIndex, this._next());
+            return true;
+        }
+        return false;
+    },
+
+    _keyPressHandler: function(keysym, action) {
+        if(!this._doAction(action)) {
             // Parent can handle rest, but censor the action
             return this.parent(keysym, undefined);
         }
@@ -658,7 +691,9 @@ PreviewedWindowNavigator = new Lang.Class({
 
     _select: function(index) {
         debug('#preview', 'Select', this._switcherList.windows[index].title, index);
-        ensure_viewport(this._switcherList.windows[index]);
+        // Force ensure: The space could've been reordered so the `ensuring`
+        // flag is no longer valid.
+        ensure_viewport(this._switcherList.windows[index], true);
         this.parent(index);
     },
 
