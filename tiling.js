@@ -620,7 +620,8 @@ PreviewedWindowNavigator = new Lang.Class({
         this.parent();
 
         this.space = this._switcherList.windows;
-        this._selectedIndex = this.space.indexOf(this.space.selectedWindow);
+        this._selectedIndex = this.space.indexOf(this.space.selectedWindow
+                                                 || global.display.focus_window);
         debug('#preview', 'Init', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
     },
 
