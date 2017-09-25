@@ -75,33 +75,38 @@ max_height = primary.height - panelBox.height - margin_tb*2;
 // Height to use when scaled down at the sides
 scaled_height = max_height*0.95;
 scaled_y_offset = (max_height - scaled_height)/2;
-move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
+move = (meta_window, {x, y, w, h}, onComplete, onStart, delay, transition) => {
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
     let frame = actor.meta_window.get_frame_rect();
+    w = w || frame.width;
+    h = h || frame.height;
     // Set monitor offset
     y += primary.y;
     x += primary.x;
     x = Math.min(primary.width - stack_margin, x)
-    x = Math.max(stack_margin - frame.width, x)
+    x = Math.max(stack_margin - w, x)
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
     let scale = 1;
     delay = delay || 0;
     transition = transition || "easeInOutQuad";
-    if (x >= primary.width - stack_margin || x <= stack_margin - frame.width) {
+    if (x >= primary.width - stack_margin || x <= stack_margin - w) {
         // Set scale so that the scaled height will be `scaled_height`
         scale = scaled_height/frame.height;
         // Center the actor properly
         y += scaled_y_offset;
         let pivot = actor.pivot_point;
         actor.set_pivot_point(pivot.x, y_offset/buffer.height);
+    } else {
+        actor.set_pivot_point(0,0);
     }
     Tweener.addTween(actor, {x: x - x_offset
                              , y: y - y_offset
+                             // , width: w + x_offset*2
                              , time: 0.25 - delay
                              , delay: delay
-                             , scale_x: scale
+                             , scale_x: scale * w/frame.width
                              , scale_y: scale
                              , transition: transition
                              , onStart: () => {
@@ -110,7 +115,8 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
                              , onComplete: () => {
                                  if(meta_window.get_compositor_private()) {
                                      // If the actor is gone, the window is in process of closing
-                                     meta_window.move_frame(true, x, y);
+                                     meta_window.move_resize_frame(true, x, y, w, h);
+                                     actor.scale_x = scale;
                                      onComplete && onComplete();
                                  }
                              }
@@ -164,23 +170,23 @@ insertWindow = function(space, metaWindow, index) {
 }
 
 // Move @meta_window to x, y and propagate the change in @space
-move_to = function(space, meta_window, x, y, delay, transition) {
+move_to = function(space, meta_window, {x, y, w, h}, delay, transition) {
     // Register @meta_window as moving on @space
     space.moving = meta_window;
-    move(meta_window, x, y
+    move(meta_window, {x, y, w, h}
          , () => { space.moving = false; } // onComplete
          , () => { meta_window.raise(); } // onStart
          , delay
          , transition
         );
     let index = space.indexOf(meta_window);
-    let frame = meta_window.get_frame_rect();
-    propogate_forward(space, index + 1, x + frame.width + window_gap, false);
+    width = w || meta_window.get_frame_rect().width;
+    propogate_forward(space, index + 1, x + width + window_gap, false);
     propogate_backward(space, index - 1, x - window_gap, false);
 }
 
 
-ensure_viewport = (space, meta_window, force) => {
+ensure_viewport = (space, meta_window, force, geom) => {
     if (space.moving == meta_window && !force) {
         debug('already moving', meta_window.title);
         return;
@@ -189,6 +195,8 @@ ensure_viewport = (space, meta_window, force) => {
 
     let index = space.indexOf(meta_window)
     let frame = meta_window.get_frame_rect();
+
+    let w = (geom && geom.w) || frame.width;
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
     // windows in the space.
@@ -201,7 +209,7 @@ ensure_viewport = (space, meta_window, force) => {
     let required_width = space.reduce((length, meta_window) => {
         let frame = meta_window.get_frame_rect();
         return length + frame.width + window_gap;
-    }, -window_gap);
+    }, -window_gap + (w - frame.width)); // last term: hack to use target width
     if (meta_window.fullscreen) {
         // Fullscreen takes highest priority
         x = 0, y = 0;
@@ -225,14 +233,14 @@ ensure_viewport = (space, meta_window, force) => {
         x = 0;
     } else if (index == space.length-1) {
         // Always align the first window to the display's right edge
-        x = primary.width - frame.width;
-    } else if (frame.width >
+        x = primary.width - w;
+    } else if (w >
                primary.width - 2*(margin_lr + stack_margin + window_gap)) {
         // Consider the window to be wide and center it
-        x = (primary.width - frame.width)/2;
-    } else if (frame.x + frame.width >= primary.width - margin_lr) {
+        x = (primary.width - w)/2;
+    } else if (frame.x + w >= primary.width - margin_lr) {
         // Align to the right margin_lr
-        x = primary.width - margin_lr - frame.width;
+        x = primary.width - margin_lr - w;
     } else if (frame.x <= margin_lr) {
         // Align to the left margin_lr
         x = margin_lr;
@@ -244,11 +252,11 @@ ensure_viewport = (space, meta_window, force) => {
     let transition;
     if (meta_window.get_compositor_private().is_scaled()) {
         // easeInQuad: delta/2(t/duration)^2 + start
-        delay = Math.pow(2*(stack_margin - margin_lr)/frame.width, .5)*0.25/2;
+        delay = Math.pow(2*(stack_margin - margin_lr)/w, .5)*0.25/2;
         transition = 'easeInOutQuad';
         debug('delay', delay)
     }
-    move_to(space, meta_window, x, y, delay, transition);
+    move_to(space, meta_window, {x, y, w}, delay, transition);
 }
 
 focus_handler = (meta_window, user_data) => {
@@ -285,7 +293,7 @@ propogate_forward = (space, n, x, lower, gap) => {
             meta_window.lower()
         // Anchor scaling/animation on the left edge for windows positioned to the right,
         actor.set_pivot_point(0, 0);
-        move(meta_window, x, panelBox.height + margin_tb)
+        move(meta_window, {x, y: panelBox.height + margin_tb})
         propogate_forward(space, n+1, x+meta_window.get_frame_rect().width + gap, true, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
@@ -305,7 +313,7 @@ propogate_backward = (space, n, x, lower, gap) => {
         x = x - meta_window.get_frame_rect().width
         // Anchor on the right edge for windows positioned to the left.
         actor.set_pivot_point(1, 0);
-        move(meta_window, x, panelBox.height + margin_tb)
+        move(meta_window, {x, y: panelBox.height + margin_tb})
         propogate_backward(space, n-1, x - gap, true, gap)
     } else {
         // If the window doesn't have an actor we should just skip it
@@ -323,7 +331,7 @@ detach = function (meta_window) {
 center = (meta_window, zen) => {
     let frame = meta_window.get_frame_rect();
     let x = Math.floor((primary.width - frame.width)/2)
-    move(meta_window, x, frame.y)
+    move(meta_window, {x, y:frame.y})
     let right = zen ? primary.width : x + frame.width + window_gap;
     let left = zen ? -primary.width : x - window_gap;
     let space = spaceOf(meta_window);
@@ -588,20 +596,23 @@ workspace_removed = (screen, arg1, arg2) => {
 toggle_maximize_horizontally = (meta_window) => {
     meta_window = meta_window || global.display.focus_window;
 
+    let x, y, w;
     // TODO: make some sort of animation
     // Note: should investigate best-practice for attaching extension-data to meta_windows
     if(meta_window.unmaximized_rect) {
         let unmaximized_rect = meta_window.unmaximized_rect;
-        meta_window.move_resize_frame(true,
-                                      unmaximized_rect.x, unmaximized_rect.y,
-                                      unmaximized_rect.width, unmaximized_rect.height)
+        w = unmaximized_rect.width;
+        // meta_window.move_resize_frame(true,
+        //                               unmaximized_rect.x, unmaximized_rect.y,
+        //                               unmaximized_rect.width, unmaximized_rect.height)
         meta_window.unmaximized_rect = undefined;
     } else {
         let frame = meta_window.get_frame_rect();
         meta_window.unmaximized_rect = frame;
-        meta_window.move_resize_frame(true, frame.x, frame.y, primary.width - margin_lr*2, frame.height);
+        w = primary.width - margin_lr*2;
+        // meta_window.move_resize_frame(true, frame.x, frame.y, primary.width - margin_lr*2, frame.height);
     }
-    ensure_viewport(spaceOf(meta_window), meta_window);
+    ensure_viewport(spaceOf(meta_window), meta_window, false, {w});
 }
 
 altTab = imports.ui.altTab;
