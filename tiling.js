@@ -113,7 +113,14 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
                                      meta_window.move_frame(true, x, y);
                                      onComplete && onComplete();
                                  }
-                             }})
+                             }
+                             , onOverwrite: function() {
+                                 // Align the frame to the actor
+                                 meta_window.move_frame(true
+                                                        , actor.x + x_offset
+                                                        , actor.y + y_offset);
+                             }
+                            })
 
 }
 
