@@ -160,7 +160,45 @@ insertWindow = function(space, metaWindow, index) {
                                       primary.height - panelBox.height - margin_tb*2);
     }
 
+    let signal = Symbol();
+    // Connect `setInitialPosition` first, because we need ensure to run
+    // after the position have been set.
+    metaWindow[signal] = metaWindow.connect('focus',
+                       Lang.bind({metaWindow, signal}, setInitialPosition));
     metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
+}
+
+window_created = (display, metaWindow, user_data) => {
+    debug('window-created', metaWindow.title);
+    let actor = metaWindow.get_compositor_private();
+    let signal = Symbol();
+    metaWindow[signal] = actor.connect('first-frame',
+                  Lang.bind({metaWindow, signal}, setInitialPosition));
+}
+
+// Needs to be called by {metaWindow, signal}
+setInitialPosition = function() {
+    let {metaWindow, signal} = this;
+    // HACK: disconnect on both the window and actor since it's connected
+    // from on both objects
+    let signalId = metaWindow[signal];
+    metaWindow.disconnect(signalId);
+    metaWindow.get_compositor_private().disconnect(signalId);
+    if(metaWindow.scrollwm_initial_position) {
+        debug("setting initial position", metaWindow.scrollwm_initial_position)
+        if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
+            metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
+            toggle_maximize_horizontally(metaWindow);
+            return;
+        }
+        let frame = metaWindow.get_frame_rect();
+        metaWindow.move_resize_frame(true, metaWindow.scrollwm_initial_position.x, metaWindow.scrollwm_initial_position.y, frame.width, frame.height)
+
+        let space = spaceOf(metaWindow);
+        propogate_forward(space, space.indexOf(metaWindow) + 1, metaWindow.scrollwm_initial_position.x + frame.width + window_gap);
+
+        delete metaWindow.scrollwm_initial_position;
+    }
 }
 
 // Move @meta_window to x, y and propagate the change in @space
@@ -257,20 +295,7 @@ focus_handler = (meta_window, user_data) => {
     let space = spaceOf(meta_window);
     space.selectedWindow = meta_window;
 
-    if(meta_window.scrollwm_initial_position) {
-        debug("setting initial position", meta_window.scrollwm_initial_position)
-        if (meta_window.get_maximized() == Meta.MaximizeFlags.BOTH) {
-            meta_window.unmaximize(Meta.MaximizeFlags.BOTH);
-            toggle_maximize_horizontally(meta_window);
-            return;
-        }
-        let frame = meta_window.get_frame_rect();
-        meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
-        ensure_viewport(space, meta_window);
-        delete meta_window.scrollwm_initial_position;
-    } else {
-        ensure_viewport(space, meta_window)
-    }
+    ensure_viewport(space, meta_window);
 }
 
 // Place window's left edge at x
@@ -542,33 +567,6 @@ add_all_from_workspace = (workspace) => {
 
     space.selectedWindow = global.display.get_tab_list(Meta.TabList.NORMAL, workspace)[0];
     ensure_viewport(space, space.selectedWindow);
-}
-
-first_frame = (meta_window_actor) => {
-    meta_window_actor.disconnect('first_frame');
-    let meta_window = meta_window_actor.meta_window;
-    debug("first frame: setting initial position", meta_window)
-    if(meta_window.scrollwm_initial_position) {
-        debug("setting initial position", meta_window.scrollwm_initial_position)
-        if (meta_window.get_maximized() == Meta.MaximizeFlags.BOTH) {
-            meta_window.unmaximize(Meta.MaximizeFlags.BOTH);
-            toggle_maximize_horizontally(meta_window);
-            return;
-        }
-        let frame = meta_window.get_frame_rect();
-        meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
-
-        let space = spaces[meta_window.get_workspace().workspace_index];
-        propogate_forward(space, space.indexOf(meta_window) + 1, meta_window.scrollwm_initial_position.x + frame.width + window_gap);
-
-        delete meta_window.scrollwm_initial_position;
-    }
-}
-
-window_created = (display, meta_window, user_data) => {
-    debug('window-created', meta_window.title);
-    let actor = meta_window.get_compositor_private();
-    actor.connect('first-frame', dynamic_function_ref('first_frame'));
 }
 
 workspace_added = (screen, index) => {
