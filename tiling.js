@@ -529,6 +529,8 @@ add_all_from_workspace = (workspace) => {
             meta_window[focus_signal] = meta_window.connect("focus", focus_wrapper);
         }
     })
+
+    ensure_viewport(space, global.display.get_tab_list(Meta.TabList.NORMAL, workspace)[0]);
 }
 
 first_frame = (meta_window_actor) => {
