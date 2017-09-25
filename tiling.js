@@ -575,31 +575,6 @@ workspace_removed = (screen, arg1, arg2) => {
     let workspace = global.screen.get_workspace_by_index(index);
 }
 
-next = () => {
-    let meta_window = global.display.focus_window
-    spaces[meta_window.get_workspace().workspace_index][focus()+1].activate(global.get_current_time())
-}
-previous = () => {
-    let meta_window = global.display.focus_window
-    spaces[meta_window.get_workspace().workspace_index][focus()-1].activate(global.get_current_time())
-}
-
-move_helper = (meta_window, delta) => {
-    // NB: delta should be 1 or -1
-    let ws = spaces[meta_window.get_workspace().workspace_index]
-    let i = ws.indexOf(meta_window)
-    if(utils.in_bounds(ws, i+delta)) {
-        utils.swap(ws, i, i+delta);
-        ensure_viewport(ws, meta_window, true);
-    }
-}
-move_right = () => {
-    move_helper(global.display.focus_window, 1);
-}
-move_left = () => {
-    move_helper(global.display.focus_window, -1);
-}
-
 toggle_maximize_horizontally = (meta_window) => {
     meta_window = meta_window || global.display.focus_window;
 
