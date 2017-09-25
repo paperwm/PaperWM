@@ -123,8 +123,8 @@ move_to = function(space, meta_window, x, y, delay, transition) {
     // Register @meta_window as moving on @space
     space.moving = meta_window;
     move(meta_window, x, y
-         , () => { meta_window.raise(); } // onStart
          , () => { space.moving = false; } // onComplete
+         , () => { meta_window.raise(); } // onStart
          , delay
          , transition
         );
