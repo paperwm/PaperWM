@@ -117,20 +117,18 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
 
 }
 
-ensuring = false;
-ensure_viewport = (meta_window, force) => {
-    if (ensuring == meta_window && !force) {
-        debug('already ensuring', meta_window.title);
+ensure_viewport = (space, meta_window, force) => {
+    if (space.moving == meta_window && !force) {
+        debug('already moving', meta_window.title);
         return;
     }
-    debug('Ensuring', meta_window.title);
+    debug('Moving', meta_window.title);
 
-    let space = spaces[meta_window.get_workspace().workspace_index];
     let index = space.indexOf(meta_window)
     function move_to(meta_window, x, y, delay, transition) {
-        ensuring = meta_window;
+        space.moving = meta_window;
         move(meta_window, x, y
-             , () => { ensuring = false; }
+             , () => { space.moving = false; }
              , () => { meta_window.raise(); }
              , delay
              , transition
@@ -217,10 +215,10 @@ focus_handler = (meta_window, user_data) => {
         }
         let frame = meta_window.get_frame_rect();
         meta_window.move_resize_frame(true, meta_window.scrollwm_initial_position.x, meta_window.scrollwm_initial_position.y, frame.width, frame.height)
-        ensure_viewport(meta_window);
+        ensure_viewport(space, meta_window);
         delete meta_window.scrollwm_initial_position;
     } else {
-        ensure_viewport(meta_window)
+        ensure_viewport(space, meta_window)
     }
 }
 
@@ -411,7 +409,7 @@ add_handler = (ws, meta_window) => {
     if (meta_window.get_compositor_private()) {
         debug('attach window', meta_window.title, meta_window.has_focus())
         if (meta_window.has_focus()) {
-            ensure_viewport(meta_window, true);
+            ensure_viewport(space, meta_window, true);
         } else {
             move(meta_window,
                  meta_window.scrollwm_initial_position.x,
@@ -465,7 +463,7 @@ remove_handler = (workspace, meta_window) => {
     if (space.selectedWindow) {
         // Force a new ensure, since the focus_handler is run before
         // window-removed
-        ensure_viewport(space.selectedWindow, true)
+        ensure_viewport(space, space.selectedWindow, true)
     }
 }
 
@@ -581,7 +579,7 @@ move_helper = (meta_window, delta) => {
     let i = ws.indexOf(meta_window)
     if(utils.in_bounds(ws, i+delta)) {
         utils.swap(ws, i, i+delta);
-        ensure_viewport(meta_window, true);
+        ensure_viewport(ws, meta_window, true);
     }
 }
 move_right = () => {
@@ -607,7 +605,7 @@ toggle_maximize_horizontally = (meta_window) => {
         meta_window.unmaximized_rect = frame;
         meta_window.move_resize_frame(true, frame.x, frame.y, primary.width - margin_lr*2, frame.height);
     }
-    ensure_viewport(meta_window);
+    ensure_viewport(spaceOf(meta_window), meta_window);
 }
 
 altTab = imports.ui.altTab;
@@ -694,7 +692,7 @@ PreviewedWindowNavigator = new Lang.Class({
         debug('#preview', 'Select', this._switcherList.windows[index].title, index);
         // Force ensure: The space could've been reordered so the `ensuring`
         // flag is no longer valid.
-        ensure_viewport(this._switcherList.windows[index], true);
+        ensure_viewport(this.space, this._switcherList.windows[index], true);
         this.parent(index);
     },
 
@@ -717,7 +715,7 @@ PreviewedWindowNavigator = new Lang.Class({
         debug('#preview', 'onDestroy', this.was_accepted);
         if(!this.was_accepted && this._selectedIndex != focus()) {
             debug('#preview', 'Abort', global.display.focus_window.title);
-            ensure_viewport(global.display.focus_window, true);
+            ensure_viewport(this.space, global.display.focus_window, true);
         }
         this.parent();
     }
