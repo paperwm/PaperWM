@@ -530,7 +530,8 @@ add_all_from_workspace = (workspace) => {
         }
     })
 
-    ensure_viewport(space, global.display.get_tab_list(Meta.TabList.NORMAL, workspace)[0]);
+    space.selectedWindow = global.display.get_tab_list(Meta.TabList.NORMAL, workspace)[0];
+    ensure_viewport(space, space.selectedWindow);
 }
 
 first_frame = (meta_window_actor) => {
