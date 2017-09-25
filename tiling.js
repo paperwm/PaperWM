@@ -124,6 +124,44 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
 
 }
 
+// Insert @metaWindow in @space at @index, setting up focus handling
+insertWindow = function(space, metaWindow, index) {
+    index = index || space.length;
+    space.splice(index, 0, metaWindow);
+
+    if (index == 0) {
+        metaWindow.scrollwm_initial_position =
+            {x: primary.x, y: primary.y + panelBox.height + margin_tb};
+    } else {
+        let frame = space[index - 1].get_frame_rect()
+        metaWindow.scrollwm_initial_position =
+            {x: primary.x + frame.x + frame.width + window_gap,
+             y: primary.y + panelBox.height + margin_tb};
+
+    }
+
+    // If the MetaWindowActor is available the window already exists and we can
+    // position
+    if (metaWindow.get_compositor_private()) {
+        debug('attach window', metaWindow.title, metaWindow.has_focus())
+        if (metaWindow.has_focus()) {
+            ensure_viewport(space, metaWindow, true);
+        } else {
+            move_to(space, metaWindow,
+                 metaWindow.scrollwm_initial_position.x,
+                 metaWindow.scrollwm_initial_position.y);
+        }
+        delete metaWindow.scrollwm_initial_position
+    } else {
+        // Otherwise just maxmize height, and let either `focus` or
+        // `first-frame` do positioning
+        metaWindow.move_resize_frame(true, 0, 0,
+                                      metaWindow.get_frame_rect().width,
+                                      primary.height - panelBox.height - margin_tb*2);
+    }
+
+    metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
+}
 
 // Move @meta_window to x, y and propagate the change in @space
 move_to = function(space, meta_window, x, y, delay, transition) {
@@ -402,42 +440,7 @@ add_handler = (ws, meta_window) => {
         insert_after_i = space.indexOf(space.selectedWindow);
     }
 
-    space.splice(insert_after_i + 1, 0, meta_window)
-
-    if (insert_after_i == -1) {
-        meta_window.scrollwm_initial_position =
-            {x: primary.x, y: primary.y + panelBox.height + margin_tb};
-    } else {
-        let frame = space[insert_after_i].get_frame_rect()
-        meta_window.scrollwm_initial_position =
-            {x: primary.x + frame.x + frame.width + window_gap,
-             y: primary.y + panelBox.height + margin_tb};
-
-    }
-    // If window is receiving focus the focus handler will do the correct thing.
-    // Otherwise we need set the correct position:
-    // For new windows this must be done in 'first-frame' signal.
-    // Existing windows being moved need a new position in this space. This
-    // can be done here since the window is fully initialized.
-
-    // If the MetaWindowActor is available the window already exists and we can position
-    if (meta_window.get_compositor_private()) {
-        debug('attach window', meta_window.title, meta_window.has_focus())
-        if (meta_window.has_focus()) {
-            ensure_viewport(space, meta_window, true);
-        } else {
-            move_to(space, meta_window,
-                 meta_window.scrollwm_initial_position.x,
-                 meta_window.scrollwm_initial_position.y);
-        }
-        delete meta_window.scrollwm_initial_position
-    } else {
-        // Just maxmize height. (This sometimes fails though)
-        meta_window.move_resize_frame(true, 0, 0,
-                                      meta_window.get_frame_rect().width,
-                                      primary.height - panelBox.height - margin_tb*2);
-    }
-    meta_window[focus_signal] = meta_window.connect("focus", focus_wrapper);
+    insertWindow(space, meta_window, insert_after_i + 1);
 }
 
 remove_handler = (workspace, meta_window) => {
