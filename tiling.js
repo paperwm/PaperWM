@@ -117,6 +117,24 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
 
 }
 
+
+// Move @meta_window to x, y and propagate the change in @space
+move_to = function(space, meta_window, x, y, delay, transition) {
+    // Register @meta_window as moving on @space
+    space.moving = meta_window;
+    move(meta_window, x, y
+         , () => { meta_window.raise(); } // onStart
+         , () => { space.moving = false; } // onComplete
+         , delay
+         , transition
+        );
+    let index = space.indexOf(meta_window);
+    let frame = meta_window.get_frame_rect();
+    propogate_forward(space, index + 1, x + frame.width + window_gap, false);
+    propogate_backward(space, index - 1, x - window_gap, false);
+}
+
+
 ensure_viewport = (space, meta_window, force) => {
     if (space.moving == meta_window && !force) {
         debug('already moving', meta_window.title);
@@ -125,18 +143,6 @@ ensure_viewport = (space, meta_window, force) => {
     debug('Moving', meta_window.title);
 
     let index = space.indexOf(meta_window)
-    function move_to(meta_window, x, y, delay, transition) {
-        space.moving = meta_window;
-        move(meta_window, x, y
-             , () => { space.moving = false; }
-             , () => { meta_window.raise(); }
-             , delay
-             , transition
-            );
-        propogate_forward(space, index + 1, x + frame.width + window_gap, false);
-        propogate_backward(space, index - 1, x - window_gap, false);
-    }
-
     let frame = meta_window.get_frame_rect();
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
@@ -197,7 +203,7 @@ ensure_viewport = (space, meta_window, force) => {
         transition = 'easeInOutQuad';
         debug('delay', delay)
     }
-    move_to(meta_window, x, y, delay, transition);
+    move_to(space, meta_window, x, y, delay, transition);
 }
 
 focus_handler = (meta_window, user_data) => {
@@ -411,7 +417,7 @@ add_handler = (ws, meta_window) => {
         if (meta_window.has_focus()) {
             ensure_viewport(space, meta_window, true);
         } else {
-            move(meta_window,
+            move_to(space, meta_window,
                  meta_window.scrollwm_initial_position.x,
                  meta_window.scrollwm_initial_position.y);
         }
