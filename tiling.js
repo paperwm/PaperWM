@@ -702,7 +702,7 @@ PreviewedWindowNavigator = new Lang.Class({
         debug('#preview', 'onDestroy', this.was_accepted);
         if(!this.was_accepted && this._selectedIndex != focus()) {
             debug('#preview', 'Abort', global.display.focus_window.title);
-            ensure_viewport(this.space, global.display.focus_window, true);
+            ensure_viewport(this.space, global.display.focus_window);
         }
         this.parent();
     }
