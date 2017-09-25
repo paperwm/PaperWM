@@ -666,6 +666,9 @@ PreviewedWindowNavigator = new Lang.Class({
         // Array of window icons (possible with preview)
         swapArray(this._items, index, targetIndex);
 
+        // We've changed the space order so new ensures needs to take effect
+        this.space.moving = false;
+
         this._select(targetIndex);
     },
 
@@ -696,9 +699,7 @@ PreviewedWindowNavigator = new Lang.Class({
 
     _select: function(index) {
         debug('#preview', 'Select', this._switcherList.windows[index].title, index);
-        // Force ensure: The space could've been reordered so the `ensuring`
-        // flag is no longer valid.
-        ensure_viewport(this.space, this._switcherList.windows[index], true);
+        ensure_viewport(this.space, this._switcherList.windows[index]);
         this.parent(index);
     },
 
