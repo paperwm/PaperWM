@@ -8,16 +8,28 @@ const Meta = imports.gi.Meta;
 const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
 
+let SESSIONID = ""+(new Date().getTime());
+// The extension sometimes go through multiple init -> enable -> disable cycles..
+// Keep track of the count here.
+let initCount = 0;
+
 let isDuringGnomeShellStartup = false;
 
 window.PaperWM = Extension;
 
 function init() {
-    debug('init');
+    initCount++;
+    SESSIONID += "#"
+    debug('init', SESSIONID);
 }
 
 function enable() {
-    debug('enable');
+    debug('enable', SESSIONID);
+    if(initCount > 1) {
+        debug("#startup",
+              "Reinitialized against our will! Skipping 'enable()' to not cause trouble. ('disable()' isn't implemented yet)")
+        return;
+    }
 
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
@@ -80,6 +92,7 @@ function enable() {
 }
 
 function disable() {
+    debug("disable", SESSIONID);
 }
 
 function registerPaperAction(actionName, handler, metaKeyBindingFlags) {
