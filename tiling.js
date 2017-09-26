@@ -125,8 +125,10 @@ insertWindow = function(space, metaWindow, index) {
     space.splice(index, 0, metaWindow);
 
     if (index == 0) {
+        let frame = metaWindow.get_frame_rect();
         metaWindow.scrollwm_initial_position =
-            {x: primary.x, y: primary.y + panelBox.height + margin_tb};
+            {x: primary.x + (primary.width - frame.width)/2,
+             y: primary.y + panelBox.height + margin_tb};
     } else {
         let frame = space[index - 1].get_frame_rect()
         metaWindow.scrollwm_initial_position =
