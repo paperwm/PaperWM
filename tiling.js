@@ -124,6 +124,7 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
 
 }
 
+let isInserted = Symbol();
 // Insert @metaWindow in @space at @index, setting up focus handling
 insertWindow = function(space, metaWindow, index) {
     index = index || space.length;
@@ -152,23 +153,28 @@ insertWindow = function(space, metaWindow, index) {
                  metaWindow.scrollwm_initial_position.y);
         }
         delete metaWindow.scrollwm_initial_position
+        // Reconnect focus signal for existing windows
+        metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
     } else {
-        // Otherwise just maxmize height, and let either `focus` or
-        // `first-frame` do positioning
+        // Otherwise maxmize height, and let either `focus` or
+        // `first-frame` do positioning and further signal hookup
         metaWindow.move_resize_frame(true, 0, 0,
                                       metaWindow.get_frame_rect().width,
                                       primary.height - panelBox.height - margin_tb*2);
-    }
 
-    let signal = Symbol();
-    // Connect `setInitialPosition` first, because we need ensure to run
-    // after the position have been set.
-    metaWindow[signal] = metaWindow.connect('focus',
-                       Lang.bind({metaWindow, signal}, setInitialPosition));
-    metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
+        // Set `isInserted` so `first-frame` signal will connect `focus_wrapper`
+        metaWindow[isInserted] = true;
+        let signal = Symbol();
+        metaWindow[signal] = metaWindow.connect('focus',
+                                                Lang.bind({metaWindow, signal}, setInitialPosition));
+    }
 }
 
 window_created = (display, metaWindow, user_data) => {
+    // Only run setInitialPosition on inserted windows
+    if (!metaWindow[isInserted])
+        return;
+    delete metaWindow[isInserted];
     debug('window-created', metaWindow.title);
     let actor = metaWindow.get_compositor_private();
     let signal = Symbol();
@@ -177,13 +183,9 @@ window_created = (display, metaWindow, user_data) => {
 }
 
 // Needs to be called by {metaWindow, signal}
-setInitialPosition = function() {
+setInitialPosition = function(actor) {
     let {metaWindow, signal} = this;
-    // HACK: disconnect on both the window and actor since it's connected
-    // from both objects at different times (causes warnings)
-    let signalId = metaWindow[signal];
-    metaWindow.disconnect(signalId);
-    metaWindow.get_compositor_private().disconnect(signalId);
+
     if(metaWindow.scrollwm_initial_position) {
         debug("setting initial position", metaWindow.scrollwm_initial_position)
         if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
@@ -192,11 +194,28 @@ setInitialPosition = function() {
             return;
         }
         let space = spaceOf(metaWindow);
-        move_to(space, metaWindow,
-                metaWindow.scrollwm_initial_position.x,
-                metaWindow.scrollwm_initial_position.y)
+        if (metaWindow.has_focus()) {
+            metaWindow.move_frame(true,
+                                  metaWindow.scrollwm_initial_position.x,
+                                  metaWindow.scrollwm_initial_position.y)
+            ensure_viewport(space, metaWindow, true);
+        } else {
+            move_to(space, metaWindow,
+                    metaWindow.scrollwm_initial_position.x,
+                    metaWindow.scrollwm_initial_position.y)
+        }
 
         delete metaWindow.scrollwm_initial_position;
+    }
+
+    let signalId = metaWindow[signal];
+    // check if we're in `first-frame` or `focus`
+    if (actor.constructor == Meta.WindowActor) {
+        metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
+
+        metaWindow.get_compositor_private().disconnect(signalId);
+    } else {
+        metaWindow.disconnect(signalId);
     }
 }
 
