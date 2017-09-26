@@ -141,20 +141,13 @@ insertWindow = function(space, metaWindow, index) {
 
     }
 
+    let actor = metaWindow.get_compositor_private();
     // If the MetaWindowActor is available the window already exists and we can
     // position
-    if (metaWindow.get_compositor_private()) {
+    if (actor) {
         debug('attach window', metaWindow.title, metaWindow.has_focus())
-        if (metaWindow.has_focus()) {
-            ensure_viewport(space, metaWindow, true);
-        } else {
-            move_to(space, metaWindow,
-                 metaWindow.scrollwm_initial_position.x,
-                 metaWindow.scrollwm_initial_position.y);
-        }
-        delete metaWindow.scrollwm_initial_position
-        // Reconnect focus signal for existing windows
-        metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
+        // Set position and hookup signals, with `existing` set to true
+        setInitialPosition.apply({metaWindow}, [ actor, true ]);
     } else {
         // Otherwise maxmize height, and let either `focus` or
         // `first-frame` do positioning and further signal hookup
@@ -183,7 +176,7 @@ window_created = (display, metaWindow, user_data) => {
 }
 
 // Needs to be called by {metaWindow, signal}
-setInitialPosition = function(actor) {
+setInitialPosition = function(actor, existing) {
     let {metaWindow, signal} = this;
 
     if(metaWindow.scrollwm_initial_position) {
@@ -195,7 +188,9 @@ setInitialPosition = function(actor) {
         }
         let space = spaceOf(metaWindow);
         if (metaWindow.has_focus()) {
-            metaWindow.move_frame(true,
+            space.selectedWindow = metaWindow;
+            // Only move the frame when dealing with new windows
+            !existing && metaWindow.move_frame(true,
                                   metaWindow.scrollwm_initial_position.x,
                                   metaWindow.scrollwm_initial_position.y)
             ensure_viewport(space, metaWindow, true);
@@ -213,9 +208,9 @@ setInitialPosition = function(actor) {
     if (actor.constructor == Meta.WindowActor) {
         metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
 
-        metaWindow.get_compositor_private().disconnect(signalId);
+        signalId && metaWindow.get_compositor_private().disconnect(signalId);
     } else {
-        metaWindow.disconnect(signalId);
+        signalId && metaWindow.disconnect(signalId);
     }
 }
 
