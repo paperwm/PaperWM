@@ -180,7 +180,7 @@ window_created = (display, metaWindow, user_data) => {
 setInitialPosition = function() {
     let {metaWindow, signal} = this;
     // HACK: disconnect on both the window and actor since it's connected
-    // from on both objects
+    // from both objects at different times (causes warnings)
     let signalId = metaWindow[signal];
     metaWindow.disconnect(signalId);
     metaWindow.get_compositor_private().disconnect(signalId);
@@ -191,11 +191,10 @@ setInitialPosition = function() {
             toggle_maximize_horizontally(metaWindow);
             return;
         }
-        let frame = metaWindow.get_frame_rect();
-        metaWindow.move_resize_frame(true, metaWindow.scrollwm_initial_position.x, metaWindow.scrollwm_initial_position.y, frame.width, frame.height)
-
         let space = spaceOf(metaWindow);
-        propogate_forward(space, space.indexOf(metaWindow) + 1, metaWindow.scrollwm_initial_position.x + frame.width + window_gap);
+        move_to(space, metaWindow,
+                metaWindow.scrollwm_initial_position.x,
+                metaWindow.scrollwm_initial_position.y)
 
         delete metaWindow.scrollwm_initial_position;
     }
