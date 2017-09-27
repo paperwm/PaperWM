@@ -14,37 +14,46 @@ allocationChanged = function allocationChanged(actor, propertySpec) {
     this.layout(this.clones);
 }
 
+const notifySignal = Symbol();
+
 function createMinimap(space) {
     let viewport = new Clutter.Actor();
-    let clones = space.map((mw) => {
-        let windowActor = mw.get_compositor_private()
-        let clone = new Clutter.Clone({ source: windowActor });
-        clone.meta_window = mw;
-        windowActor.connect("notify::allocation",
-                            Lang.bind(viewport, dynamic_function_ref("allocationChanged")));
-        return clone;
-    });
+    viewport.space = space;
+
+    function updateClones() {
+        viewport.clones = space.map((mw) => {
+            let windowActor = mw.get_compositor_private()
+            let clone = new Clutter.Clone({ source: windowActor });
+            clone.meta_window = mw;
+            if (windowActor[notifySignal]) {
+                windowActor.disconnect(windowActor[notifySignal]);
+            }
+            windowActor[notifySignal] = windowActor.connect("notify::allocation",
+                                                            Lang.bind(viewport, dynamic_function_ref("allocationChanged")));
+            return clone;
+        });
+
+    }
+
     let minimapActor = new Clutter.Actor();
-    clones.forEach(clone => {
-        minimapActor.add_actor(clone);
-    })
 
     viewport.restack = function (around) {
         minimapActor.remove_all_children();
+        let clones = viewport.clones;
 
         for (let i=0; i < around; i++) {
-            print(clones[i])
             minimapActor.add_actor(clones[i]);
         }
         for (let i=clones.length-1; i>around; i--) {
-            print(clones[i])
             minimapActor.add_actor(clones[i]);
         }
         minimapActor.add_actor(clones[around]);
     };
 
     viewport.fold = function (around) {
+        around = around || space.indexOf(space.selectedWindow);
         this.restack(around);
+        let clones = viewport.clones;
 
         let maxProtrusion = 500;
         for (let i=0; i < around; i++) {
@@ -74,10 +83,12 @@ function createMinimap(space) {
     }
 
     viewport.unfold = function () {
-        viewport.layout(clones);
+        viewport.layout(viewport.clones);
     }
 
     viewport.toggle = function() {
+        updateClones();
+        viewport.restack(space.indexOf(space.selectedWindow));
         viewport.visible = !viewport.visible;
     }
 
@@ -111,7 +122,7 @@ function createMinimap(space) {
         Tweener.addTween(minimapActor, { x: originX, time: 0.25, transition: 'easeInOutQuad' });
     }
 
-    viewport.clones = clones;
+    viewport.clones = [];
     viewport.set_scale(0.1, 0.1);
     viewport.height = primary.height;
     viewport.width = primary.width;
