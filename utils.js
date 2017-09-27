@@ -39,7 +39,7 @@ framestr = (rect) => {
 dynamic_function_ref = (handler_name, owner_obj) => {
     owner_obj = owner_obj || window;
     return function() {
-        owner_obj[handler_name].apply(owner_obj, arguments);
+        owner_obj[handler_name].apply(this, arguments);
     }
 }
 

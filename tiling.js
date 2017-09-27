@@ -10,6 +10,8 @@ const Shell = imports.gi.Shell;
 const Gio = imports.gi.Gio;
 const utils = Extension.imports.utils;
 
+Minimap = Extension.imports.minimap;
+
 let preferences = Extension.imports.convenience.getSettings();
 // Gap between windows
 window_gap = preferences.get_int('window-gap');
@@ -53,6 +55,7 @@ Space = (workspace) => {
     space.moving = false;
     space.leftStack = 0;
     space.rightStack = 0;
+    space.minimap = Minimap.createMinimap(space);
     return space;
 }
 
@@ -299,9 +302,7 @@ ensure_viewport = (space, meta_window, force) => {
         debug('delay', delay)
     }
     let newOriginX = move_to(space, meta_window, x, y, delay, transition);
-    if(window.minimapSyncFn) {
-        window.minimapSyncFn(newOriginX);
-    }
+    space.minimap.sync(newOriginX);
 }
 
 focus_handler = (meta_window, user_data) => {

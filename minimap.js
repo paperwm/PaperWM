@@ -2,12 +2,6 @@ Clutter = imports.gi.Clutter;
 Tweener = imports.ui.tweener;
 Lang = imports.lang;
 
-if (window.mm) {
-    mm.viewport.destroy();
-}
-
-mm = null;
-
 calcOffset = function(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
     let frame = metaWindow.get_frame_rect();
@@ -16,49 +10,21 @@ calcOffset = function(metaWindow) {
     return [x_offset, y_offset];
 }
 
-layout = function(actors) {
-
-    function tweenTo(actor, x) {
-        let [dx, dy] = calcOffset(actor.meta_window);
-        // actor.set_pivot_point(0, 0);
-        Tweener.addTween(actor, { x: x - dx
-                                  , scale_x: 1
-                                  , scale_y: 1
-                                  , time: 0.25
-                                  , transition: "easeInOutQuad"});
-    }
-
-    function propagate_forward(i, leftEdge, gap) {
-        if(i < 0 || i >= actors.length)
-            return;
-        let actor = actors[i];
-        let w = actor.meta_window.get_frame_rect().width;
-        let x = leftEdge;
-
-        tweenTo(actor, x);
-
-        propagate_forward(i+1, x + w + gap, gap);
-    }
-
-    propagate_forward(0, 0, window_gap);
-}
-
 allocationChanged = function allocationChanged(actor, propertySpec) {
-    layout(mm.viewport.clones);
+    this.layout(this.clones);
 }
 
-createMinimap = function(workspace) {
-    let space = spaces[workspace.index()].slice();
+function createMinimap(space) {
+    let viewport = new Clutter.Actor();
     let clones = space.map((mw) => {
         let windowActor = mw.get_compositor_private()
         let clone = new Clutter.Clone({ source: windowActor });
         clone.meta_window = mw;
         windowActor.connect("notify::allocation",
-                            dynamic_function_ref("allocationChanged"));
+                            Lang.bind(viewport, dynamic_function_ref("allocationChanged")));
         return clone;
     });
     let minimapActor = new Clutter.Actor();
-    let viewport = new Clutter.Actor();
     clones.forEach(clone => {
         minimapActor.add_actor(clone);
     })
@@ -108,7 +74,41 @@ createMinimap = function(workspace) {
     }
 
     viewport.unfold = function () {
-        layout(clones);
+        viewport.layout(clones);
+    }
+
+    viewport.toggle = function() {
+        viewport.visible = !viewport.visible;
+    }
+
+    viewport.layout = function(actors) {
+        function tweenTo(actor, x) {
+            let [dx, dy] = calcOffset(actor.meta_window);
+            // actor.set_pivot_point(0, 0);
+            Tweener.addTween(actor, { x: x - dx
+                                        , scale_x: 1
+                                        , scale_y: 1
+                                        , time: 0.25
+                                        , transition: "easeInOutQuad"});
+        }
+
+        function propagate_forward(i, leftEdge, gap) {
+            if(i < 0 || i >= actors.length)
+                return;
+            let actor = actors[i];
+            let w = actor.meta_window.get_frame_rect().width;
+            let x = leftEdge;
+
+            tweenTo(actor, x);
+
+            propagate_forward(i+1, x + w + gap, gap);
+        }
+
+        propagate_forward(0, 0, window_gap);
+    }
+
+    viewport.sync = function(originX) {
+        Tweener.addTween(minimapActor, { x: originX, time: 0.25, transition: 'easeInOutQuad' });
     }
 
     viewport.clones = clones;
@@ -118,23 +118,15 @@ createMinimap = function(workspace) {
     viewport.add_actor(minimapActor);
     viewport.set_background_color(Clutter.Color.get_static(3))
     viewport.hide();
-    return {viewport: viewport, minimap: minimapActor};
-}
 
-minimapSyncFn = function(originX) {
-    Tweener.addTween(mm.minimap, { x: originX, time: 0.25, transition: 'easeInOutQuad' });
-}
+    viewport.layout(viewport.clones);
+    global.stage.add_actor(viewport)
+    viewport.x = (primary.width - viewport.get_transformed_size()[0])/2;
 
-toggleMinimap = function() {
-    if (!mm) {
-        mm = createMinimap(global.screen.get_active_workspace());
-        layout(mm.viewport.clones);
-        global.stage.add_actor(mm.viewport)
-        mm.viewport.x = (primary.width - mm.viewport.get_transformed_size()[0])/2;
-    }
-    mm.viewport.visible = !mm.viewport.visible;
+    return viewport;
 }
 
 // bg=Main.layoutManager._backgroundGroup.get_children()[0]
 // bgc= new Clutter.Clone({source:bg})
+
 
