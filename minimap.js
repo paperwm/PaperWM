@@ -8,14 +8,15 @@ if (window.mm) {
 
 mm = null;
 
+calcOffset = function(metaWindow) {
+    let buffer = metaWindow.get_buffer_rect();
+    let frame = metaWindow.get_frame_rect();
+    let x_offset = frame.x - buffer.x;
+    let y_offset = frame.y - buffer.y;
+    return [x_offset, y_offset];
+}
+
 layout = function(actors) {
-    function calcOffset(metaWindow) {
-        let buffer = metaWindow.get_buffer_rect();
-        let frame = metaWindow.get_frame_rect();
-        let x_offset = frame.x - buffer.x;
-        let y_offset = frame.y - buffer.y;
-        return [x_offset, y_offset];
-    }
 
     function tweenTo(actor, x) {
         let [dx, dy] = calcOffset(actor.meta_window);
@@ -79,23 +80,28 @@ createMinimap = function(workspace) {
     viewport.fold = function (around) {
         this.restack(around);
 
+        let maxProtrusion = 500;
         for (let i=0; i < around; i++) {
             let clone = clones[i];
-            clone.set_pivot_point(0.9, 0.5);
-            if (clone.x + minimapActor.x + clone.width <= stack_margin) {
-                Tweener.addTween(clone, {x: -minimapActor.x - clone.width + 5*stack_margin
+            let [x_offset, y_offset] = calcOffset(clone.meta_window);
+            clone.set_pivot_point(x_offset/clone.width, 0.5);
+            if (clone.x + minimapActor.x - x_offset <= -maxProtrusion) {
+                Tweener.addTween(clone, {x: -minimapActor.x - maxProtrusion - x_offset
                                          , scale_x: 0.9
                                          , scale_y: 0.9
+                                         , transition: "easeInOutQuad"
                                          , time: 0.25});
             }
         }
         for (let i=clones.length-1; i>around; i--) {
             let clone = clones[i];
-            clone.set_pivot_point(0.1, 0.5);
-            if (clone.x + minimapActor.x >= primary.width - stack_margin) {
-                Tweener.addTween(clone, {x: -minimapActor.x + primary.width - 5*stack_margin
+            let [x_offset, y_offset] = calcOffset(clone.meta_window);
+            clone.set_pivot_point(1 - x_offset/clone.width, 0.5);
+            if (clone.x - x_offset + clone.width + minimapActor.x >= primary.width + maxProtrusion) {
+                Tweener.addTween(clone, {x: -minimapActor.x + primary.width + maxProtrusion - clone.width - x_offset
                                          , scale_x: 0.9
                                          , scale_y: 0.9
+                                         , transition: "easeInOutQuad"
                                          , time: 0.25});
             }
         }
