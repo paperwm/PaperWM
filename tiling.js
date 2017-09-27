@@ -346,7 +346,7 @@ propogate_backward = (space, n, x, lower, gap) => {
         propogate_backward(space, n-1, x - gap, true, gap)
     } else {
         // If the window doesn't have an actor we should just skip it
-        propogate_forward(space, n-1, x, true, gap);
+        propogate_backward(space, n-1, x, true, gap);
     }
 }
 
