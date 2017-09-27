@@ -36,7 +36,8 @@ global.screen.connect("monitors-changed", function(screen) {
 
 panelBox = Main.layoutManager.panelBox;
 
-panelBox.connect('show', () => {
+showPanelBox = () => {
+    panelBox.show();
     Tweener.addTween(panelBox, {
         scale_y: 1,
         time: 0.25,
@@ -44,8 +45,9 @@ panelBox.connect('show', () => {
             scale_y: 1;
         }
     });
-});
+}
 
+panelBox.connect('show', showPanelBox);
 
 Space = (workspace) => {
     // Simplest way to get a straight array interface
@@ -245,8 +247,8 @@ ensure_viewport = (space, meta_window, force) => {
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
     // windows in the space.
-    if (!panelBox.visible) {
-        panelBox.show();
+    if (!meta_window.fullscreen) {
+        showPanelBox();
     }
 
     let x = frame.x;
