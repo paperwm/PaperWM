@@ -266,7 +266,7 @@ ensure_viewport = (space, meta_window, force) => {
     } else if (required_width <= primary.width) {
         let leftovers = primary.width - required_width;
         let gaps = space.length + 1;
-        let extra_gap = leftovers/gaps;
+        let extra_gap = Math.floor(leftovers/gaps);
         debug('#extragap', extra_gap);
         propogate_forward(space, 0, extra_gap, true, extra_gap + window_gap);
         return;
@@ -279,7 +279,7 @@ ensure_viewport = (space, meta_window, force) => {
     } else if (frame.width >
                primary.width - 2*(margin_lr + stack_margin + window_gap)) {
         // Consider the window to be wide and center it
-        x = (primary.width - frame.width)/2;
+        x = Math.round((primary.width - frame.width)/2);
     } else if (frame.x + frame.width >= primary.width - minimumMargin) {
         // Align to the right margin_lr
         x = primary.width - margin_lr - frame.width;
