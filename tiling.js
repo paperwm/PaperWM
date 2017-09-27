@@ -226,7 +226,7 @@ move_to = function(space, meta_window, x, y, delay, transition) {
     let index = space.indexOf(meta_window);
     let frame = meta_window.get_frame_rect();
     propogate_forward(space, index + 1, x + frame.width + window_gap, false);
-    propogate_backward(space, index - 1, x - window_gap, false);
+    return propogate_backward(space, index - 1, x - window_gap, false);
 }
 
 
@@ -298,7 +298,10 @@ ensure_viewport = (space, meta_window, force) => {
         transition = 'easeInOutQuad';
         debug('delay', delay)
     }
-    move_to(space, meta_window, x, y, delay, transition);
+    let newOriginX = move_to(space, meta_window, x, y, delay, transition);
+    if(window.minimapSyncFn) {
+        window.minimapSyncFn(newOriginX);
+    }
 }
 
 focus_handler = (meta_window, user_data) => {
@@ -331,9 +334,9 @@ propogate_forward = (space, n, x, lower, gap) => {
 }
 // Place window's right edge at x
 propogate_backward = (space, n, x, lower, gap) => {
-    if (n < 0 || n >= space.length)
-        return
     gap = gap || window_gap;
+    if (n < 0 || n >= space.length)
+        return x+gap;
     let meta_window = space[n]
     let actor = meta_window.get_compositor_private();
     if (actor) {
@@ -343,10 +346,10 @@ propogate_backward = (space, n, x, lower, gap) => {
         // Anchor on the right edge for windows positioned to the left.
         actor.set_pivot_point(1, 0);
         move(meta_window, x, panelBox.height + margin_tb)
-        propogate_backward(space, n-1, x - gap, true, gap)
+        return propogate_backward(space, n-1, x - gap, true, gap)
     } else {
         // If the window doesn't have an actor we should just skip it
-        propogate_backward(space, n-1, x, true, gap);
+        return propogate_backward(space, n-1, x, true, gap);
     }
 }
 
