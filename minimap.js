@@ -2,6 +2,10 @@ Clutter = imports.gi.Clutter;
 Tweener = imports.ui.tweener;
 Lang = imports.lang;
 
+if (window.mm) {
+    mm.viewport.destroy();
+}
+
 mm = null;
 
 layout = function(actors) {
@@ -15,7 +19,12 @@ layout = function(actors) {
 
     function tweenTo(actor, x) {
         let [dx, dy] = calcOffset(actor.meta_window);
-        Tweener.addTween(actor, { x: x - dx, time: 0.25, transition: "easeInOutQuad"});
+        // actor.set_pivot_point(0, 0);
+        Tweener.addTween(actor, { x: x - dx
+                                  , scale_x: 1
+                                  , scale_y: 1
+                                  , time: 0.25
+                                  , transition: "easeInOutQuad"});
     }
 
     function propagate_forward(i, leftEdge, gap) {
@@ -34,7 +43,7 @@ layout = function(actors) {
 }
 
 allocationChanged = function allocationChanged(actor, propertySpec) {
-    layout(mm.minimap.get_children());
+    layout(mm.viewport.clones);
 }
 
 createMinimap = function(workspace) {
@@ -52,7 +61,52 @@ createMinimap = function(workspace) {
     clones.forEach(clone => {
         minimapActor.add_actor(clone);
     })
-    viewport.set_scale(0.4, 0.4);
+
+    viewport.restack = function (around) {
+        minimapActor.remove_all_children();
+
+        for (let i=0; i < around; i++) {
+            print(clones[i])
+            minimapActor.add_actor(clones[i]);
+        }
+        for (let i=clones.length-1; i>around; i--) {
+            print(clones[i])
+            minimapActor.add_actor(clones[i]);
+        }
+        minimapActor.add_actor(clones[around]);
+    };
+
+    viewport.fold = function (around) {
+        this.restack(around);
+
+        for (let i=0; i < around; i++) {
+            let clone = clones[i];
+            clone.set_pivot_point(0.9, 0.5);
+            if (clone.x + minimapActor.x + clone.width <= stack_margin) {
+                Tweener.addTween(clone, {x: -minimapActor.x - clone.width + 5*stack_margin
+                                         , scale_x: 0.9
+                                         , scale_y: 0.9
+                                         , time: 0.25});
+            }
+        }
+        for (let i=clones.length-1; i>around; i--) {
+            let clone = clones[i];
+            clone.set_pivot_point(0.1, 0.5);
+            if (clone.x + minimapActor.x >= primary.width - stack_margin) {
+                Tweener.addTween(clone, {x: -minimapActor.x + primary.width - 5*stack_margin
+                                         , scale_x: 0.9
+                                         , scale_y: 0.9
+                                         , time: 0.25});
+            }
+        }
+    }
+
+    viewport.unfold = function () {
+        layout(clones);
+    }
+
+    viewport.clones = clones;
+    viewport.set_scale(0.1, 0.1);
     viewport.height = primary.height;
     viewport.width = primary.width;
     viewport.add_actor(minimapActor);
@@ -68,7 +122,7 @@ minimapSyncFn = function(originX) {
 toggleMinimap = function() {
     if (!mm) {
         mm = createMinimap(global.screen.get_active_workspace());
-        layout(mm.minimap.get_children());
+        layout(mm.viewport.clones);
         global.stage.add_actor(mm.viewport)
         mm.viewport.x = (primary.width - mm.viewport.get_transformed_size()[0])/2;
     }
