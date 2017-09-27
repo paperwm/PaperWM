@@ -294,7 +294,7 @@ ensure_viewport = (space, meta_window, force) => {
     let transition;
     if (meta_window.get_compositor_private().is_scaled()) {
         // easeInQuad: delta/2(t/duration)^2 + start
-        delay = Math.pow(2*(stack_margin - margin_lr)/frame.width, .5)*0.25/2;
+        delay = Math.pow(2*(stack_margin - minimumMargin)/frame.width, .5)*0.25/2;
         transition = 'easeInOutQuad';
         debug('delay', delay)
     }
