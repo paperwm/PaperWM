@@ -54,6 +54,13 @@ Space = (workspace) => {
     let space = [];
     space.workspace = workspace;
     space.selectedWindow = null;
+    space.selectedIndex = () => {
+        if (space.selectedWindow) {
+            return space.indexOf(space.selectedWindow);
+        } else {
+            return -1;
+        }
+    }
     space.moving = false;
     space.leftStack = 0;
     space.rightStack = 0;
