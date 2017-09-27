@@ -19,11 +19,14 @@ margin_tb = preferences.get_int('vertical-margin');
 margin_lr = preferences.get_int('horizontal-margin');
 // How much the stack should protrude from the side
 stack_margin = 75
+// Minimum margin
+minimumMargin = 15;
 
 // Symbol to retrieve the focus handler id
 focus_signal = Symbol();
 
-let primary = Main.layoutManager.primaryMonitor;
+primary = Main.layoutManager.primaryMonitor;
+//: [object Monitor]
 // Reset primary when monitors change
 global.screen.connect("monitors-changed", function(screen) {
     primary = Main.layoutManager.primaryMonitor;
@@ -277,10 +280,10 @@ ensure_viewport = (space, meta_window, force) => {
                primary.width - 2*(margin_lr + stack_margin + window_gap)) {
         // Consider the window to be wide and center it
         x = (primary.width - frame.width)/2;
-    } else if (frame.x + frame.width >= primary.width - margin_lr) {
+    } else if (frame.x + frame.width >= primary.width - minimumMargin) {
         // Align to the right margin_lr
         x = primary.width - margin_lr - frame.width;
-    } else if (frame.x <= margin_lr) {
+    } else if (frame.x <= minimumMargin) {
         // Align to the left margin_lr
         x = margin_lr;
     }
@@ -606,7 +609,7 @@ toggle_maximize_horizontally = (meta_window) => {
     } else {
         let frame = meta_window.get_frame_rect();
         meta_window.unmaximized_rect = frame;
-        meta_window.move_resize_frame(true, frame.x, frame.y, primary.width - margin_lr*2, frame.height);
+        meta_window.move_resize_frame(true, frame.x, frame.y, primary.width - minimumMargin*2, frame.height);
     }
     ensure_viewport(spaceOf(meta_window), meta_window);
 }
