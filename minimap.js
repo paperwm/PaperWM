@@ -89,6 +89,7 @@ function createMinimap(space) {
     viewport.toggle = function() {
         updateClones();
         viewport.restack(space.indexOf(space.selectedWindow));
+        viewport.layout(viewport.clones);
         viewport.visible = !viewport.visible;
     }
 
