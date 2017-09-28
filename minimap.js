@@ -2,6 +2,7 @@ Clutter = imports.gi.Clutter;
 Tweener = imports.ui.tweener;
 Lang = imports.lang;
 St = imports.gi.St;
+Workspace = imports.ui.workspace;
 
 calcOffset = function(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
@@ -17,6 +18,73 @@ allocationChanged = function allocationChanged(actor, propertySpec) {
 
 const notifySignal = Symbol();
 
+var WindowCloneLayout = new Lang.Class({
+    Name: 'WindowCloneLayout2',
+    Extends: Clutter.LayoutManager,
+
+    _init: function(boundingBox) {
+        this.parent();
+
+        this._boundingBox = boundingBox;
+    },
+
+    get boundingBox() {
+        return this._boundingBox;
+    },
+
+    set boundingBox(b) {
+        this._boundingBox = b;
+        this.layout_changed();
+    },
+
+    _makeBoxForWindow: function(window) {
+        // We need to adjust the position of the actor because of the
+        // consequences of invisible borders -- in reality, the texture
+        // has an extra set of "padding" around it that we need to trim
+        // down.
+
+        // The outer rect (from which we compute the bounding box)
+        // paradoxically is the smaller rectangle, containing the positions
+        // of the visible frame. The input rect contains everything,
+        // including the invisible border padding.
+        let inputRect = window.get_buffer_rect();
+        let frame = window.get_frame_rect();
+
+        let box = new Clutter.ActorBox();
+
+        box.set_origin(-(inputRect.x - frame.x),
+                       -(inputRect.y - frame.y));
+        box.set_size(frame.width, frame.height);
+        // debug("box", box.get_x(), box.get_y(), box.get_width(), box.get_height())
+
+        return box;
+    },
+
+    vfunc_get_preferred_height: function(container, forWidth) {
+        let frame = container.get_first_child().meta_window.get_frame_rect();
+        return [frame.height, frame.height];
+    },
+
+    vfunc_get_preferred_width: function(container, forHeight) {
+        let frame = container.get_first_child().meta_window.get_frame_rect();
+        return [frame.width, frame.width];
+    },
+
+    vfunc_allocate: function(container, box, flags) {
+        container.get_children().forEach(Lang.bind(this, function (child) {
+            let realWindow;
+            // if (child == container._delegate._windowClone)
+            //     realWindow = container._delegate.realWindow;
+            // else
+                realWindow = child.source;
+
+            child.allocate(this._makeBoxForWindow(realWindow.meta_window),
+                           flags);
+        }));
+    }
+});
+
+
 function Minimap(space) {
     let viewport = new Clutter.Actor();
     viewport.space = space;
@@ -25,7 +93,7 @@ function Minimap(space) {
         viewport.clones = space.map((mw) => {
             let windowActor = mw.get_compositor_private()
             let clone = new Clutter.Clone({ source: windowActor });
-            let container = new St.Widget();
+            let container = new St.Widget({ layout_manager: new WindowCloneLayout() });
             clone.meta_window = mw;
             if (windowActor[notifySignal]) {
                 windowActor.disconnect(windowActor[notifySignal]);
@@ -33,9 +101,9 @@ function Minimap(space) {
             windowActor[notifySignal] = windowActor.connect("notify::allocation",
                                                             Lang.bind(viewport, dynamic_function_ref("allocationChanged")));
 
-            let [x_offset, y_offset] = calcOffset(clone.meta_window);
             container.add_actor(clone);
-            clone.set_position(-x_offset, -y_offset);
+            // let [x_offset, y_offset] = calcOffset(clone.meta_window);
+            // clone.set_position(-x_offset, -y_offset);
             return container;
         });
 
@@ -91,8 +159,10 @@ function Minimap(space) {
     viewport.toggle = function() {
         if (!viewport.visible) {
             updateClones();
-            viewport.restack(space.indexOf(space.selectedWindow));
+            let selectedIndex = space.selectedIndex();
+            viewport.restack(selectedIndex);
             viewport.layout(viewport.clones);
+            viewport.clones[selectedIndex].set_style_class_name("paper-mm-selected-window");
         }
         viewport.visible = !viewport.visible;
     }
