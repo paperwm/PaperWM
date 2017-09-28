@@ -64,7 +64,7 @@ function Minimap(space) {
         let maxProtrusion = 500;
         for (let i=0; i < around; i++) {
             let clone = clones[i];
-            if (clone.x + minimapActor.x - x_offset <= -maxProtrusion) {
+            if (clone.x + minimapActor.x <= -maxProtrusion) {
                 Tweener.addTween(clone, {x: -minimapActor.x - maxProtrusion
                                          , scale_x: 0.9
                                          , scale_y: 0.9
