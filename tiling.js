@@ -64,7 +64,7 @@ Space = (workspace) => {
     space.moving = false;
     space.leftStack = 0;
     space.rightStack = 0;
-    space.minimap = Minimap.createMinimap(space);
+    space.minimap = Minimap.Minimap(space);
     return space;
 }
 

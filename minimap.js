@@ -16,7 +16,7 @@ allocationChanged = function allocationChanged(actor, propertySpec) {
 
 const notifySignal = Symbol();
 
-function createMinimap(space) {
+function Minimap(space) {
     let viewport = new Clutter.Actor();
     viewport.space = space;
 
