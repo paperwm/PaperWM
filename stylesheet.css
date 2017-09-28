@@ -1,0 +1,4 @@
+.paper-mm-selected-window {
+    border: 10px cyan; /* if we need to operate in pre-scaled dimension */
+    border-radius: 5px;
+}
