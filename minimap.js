@@ -1,6 +1,7 @@
 Clutter = imports.gi.Clutter;
 Tweener = imports.ui.tweener;
 Lang = imports.lang;
+St = imports.gi.St;
 
 calcOffset = function(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
@@ -24,13 +25,18 @@ function Minimap(space) {
         viewport.clones = space.map((mw) => {
             let windowActor = mw.get_compositor_private()
             let clone = new Clutter.Clone({ source: windowActor });
+            let container = new St.Widget();
             clone.meta_window = mw;
             if (windowActor[notifySignal]) {
                 windowActor.disconnect(windowActor[notifySignal]);
             }
             windowActor[notifySignal] = windowActor.connect("notify::allocation",
                                                             Lang.bind(viewport, dynamic_function_ref("allocationChanged")));
-            return clone;
+
+            let [x_offset, y_offset] = calcOffset(clone.meta_window);
+            container.add_actor(clone);
+            clone.set_position(-x_offset, -y_offset);
+            return container;
         });
 
     }
@@ -58,10 +64,8 @@ function Minimap(space) {
         let maxProtrusion = 500;
         for (let i=0; i < around; i++) {
             let clone = clones[i];
-            let [x_offset, y_offset] = calcOffset(clone.meta_window);
-            clone.set_pivot_point(x_offset/clone.width, 0.5);
             if (clone.x + minimapActor.x - x_offset <= -maxProtrusion) {
-                Tweener.addTween(clone, {x: -minimapActor.x - maxProtrusion - x_offset
+                Tweener.addTween(clone, {x: -minimapActor.x - maxProtrusion
                                          , scale_x: 0.9
                                          , scale_y: 0.9
                                          , transition: "easeInOutQuad"
@@ -70,10 +74,8 @@ function Minimap(space) {
         }
         for (let i=clones.length-1; i>around; i--) {
             let clone = clones[i];
-            let [x_offset, y_offset] = calcOffset(clone.meta_window);
-            clone.set_pivot_point(1 - x_offset/clone.width, 0.5);
-            if (clone.x - x_offset + clone.width + minimapActor.x >= primary.width + maxProtrusion) {
-                Tweener.addTween(clone, {x: -minimapActor.x + primary.width + maxProtrusion - clone.width - x_offset
+            if (clone.x + clone.width + minimapActor.x >= primary.width + maxProtrusion) {
+                Tweener.addTween(clone, {x: -minimapActor.x + primary.width + maxProtrusion - clone.width
                                          , scale_x: 0.9
                                          , scale_y: 0.9
                                          , transition: "easeInOutQuad"
@@ -97,9 +99,9 @@ function Minimap(space) {
 
     viewport.layout = function(actors) {
         function tweenTo(actor, x) {
-            let [dx, dy] = calcOffset(actor.meta_window);
+            // let [dx, dy] = calcOffset(actor.meta_window);
             // actor.set_pivot_point(0, 0);
-            Tweener.addTween(actor, { x: x - dx
+            Tweener.addTween(actor, { x: x
                                         , scale_x: 1
                                         , scale_y: 1
                                         , time: 0.25
@@ -110,7 +112,7 @@ function Minimap(space) {
             if(i < 0 || i >= actors.length)
                 return;
             let actor = actors[i];
-            let w = actor.meta_window.get_frame_rect().width;
+            let w = actor.get_first_child().meta_window.get_frame_rect().width;
             let x = leftEdge;
 
             tweenTo(actor, x);
