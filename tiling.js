@@ -41,7 +41,7 @@ showPanelBox = () => {
     Tweener.addTween(panelBox, {
         scale_y: 1,
         time: 0.25,
-        onOverWrite: () => {
+        onOverwrite: () => {
             scale_y: 1;
         }
     });
