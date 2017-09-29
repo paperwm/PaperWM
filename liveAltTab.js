@@ -118,3 +118,86 @@ WindowManager.WindowManager.prototype._previewWorkspaceDone = function() {
     if (this._movingWindow)
         this._movingWindow = null;
 }
+
+LiveAltTab = Lang.Class({
+    Name: 'LiveAltTab',
+    Extends: AltTab.WindowSwitcherPopup,
+
+    _getwindowList: function () {
+        return global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
+    },
+
+    _keyPressHandler: function(keysym, action) {
+        switch(action) {
+        case Meta.KeyBindingAction.SWITCH_APPLICATIONS:
+            action = Meta.KeyBindingAction.SWITCH_WINDOWS;
+            break;
+        case Meta.KeyBindingAction.SWITCH_APPLICATIONS_BACKWARD:
+            action = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
+            break;
+        }
+        return this.parent(keysym, action)
+    },
+
+    _select: function(num) {
+
+        if (this.switchedWorkspace) {
+            Main.wm._previewWorkspaceDone(global.window_manager);
+            this.switchedWorkspace = false;
+        }
+
+        let from = this._switcherList.windows[this._selectedIndex];
+        let to = this._switcherList.windows[num];
+
+        let fromIndex = from.get_workspace().workspace_index;
+        let toIndex = to.get_workspace().workspace_index;
+        if (toIndex !== fromIndex) {
+            let direction = fromIndex < toIndex ? Meta.MotionDirection.DOWN : Meta.MotionDirection.UP;
+            Main.wm._previewWorkspace(from.get_workspace().workspace_index,
+                                      to.get_workspace().workspace_index,
+                                      direction)
+            this.switchedWorkspace = true;
+        }
+
+        let space = spaceOf(to);
+        ensure_viewport(space, to);
+        this._selectedIndex = num;
+        this._switcherList.highlight(num);
+    },
+
+    _finish: function() {
+        this.parent();
+
+        this.was_accepted = true;
+        if (this.switchedWorkspace) {
+            Main.wm._previewWorkspaceDone(global.window_manager);
+        }
+    },
+
+    _itemEnteredHandler: function() {
+        // The item-enter (mouse hover) event is triggered even after a item is
+        // accepted. This can cause _select to run on the item below the pointer
+        // ensuring the wrong window.
+        if(!this.was_accepted) {
+            this.parent.apply(this, arguments);
+        }
+    },
+
+    _onDestroy: function() {
+        debug('#preview', 'onDestroy', this.was_accepted);
+        if(!this.was_accepted) {
+            // Select the starting window
+            this._select(0);
+            if (this.switchedWorkspace) {
+                Main.wm._previewWorkspaceDone(global.window_manager);
+            }
+        }
+        this.parent();
+    }
+})
+
+
+liveAltTab = (display, screen, meta_window, binding) => {
+    let tabPopup = new LiveAltTab();
+    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
+}

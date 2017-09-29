@@ -2,6 +2,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const convenience = Extension.imports.convenience;
 const Tiling = Extension.imports.tiling;
 const Scratch = Extension.imports.scratch;
+const LiveAltTab = Extension.imports.liveAltTab;
 const utils = Extension.utils;
 const Gio = imports.gi.Gio;
 const Meta = imports.gi.Meta;
@@ -78,6 +79,8 @@ function enable() {
     Meta.keybindings_set_custom_handler("maximize-horizontally",
                                         as_key_handler("toggle_maximize_horizontally"));
 
+    Meta.keybindings_set_custom_handler("switch-applications",
+                                        dynamic_function_ref("liveAltTab"));
 
     // Action name => mutter-keybinding-action-id
     window.paperActionIds = {};
