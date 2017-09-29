@@ -590,8 +590,12 @@ add_all_from_workspace = (workspace) => {
         }
     })
 
-    space.selectedWindow = global.display.get_tab_list(Meta.TabList.NORMAL, workspace)[0];
-    ensure_viewport(space, space.selectedWindow);
+    let tabList = global.display.get_tab_list(Meta.TabList.NORMAL, workspace)
+        .filter(metaWindow => { return space.indexOf(metaWindow) !== -1; });
+    if (tabList[0]) {
+        space.selectedWindow = tabList[0]
+        ensure_viewport(space, space.selectedWindow);
+    }
 }
 
 workspace_added = (screen, index) => {
