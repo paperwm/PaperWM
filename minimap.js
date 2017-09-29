@@ -18,23 +18,37 @@ allocationChanged = function allocationChanged(actor, propertySpec) {
 
 const notifySignal = Symbol();
 
-var WindowCloneLayout = new Lang.Class({
-    Name: 'WindowCloneLayout2',
+WindowClone = new Lang.Class({
+    Name: 'WindowClone',
+    Extends: Clutter.Actor,
+
+    _init: function(metaWindow) {
+        this.parent();
+        this.metaWindow = metaWindow;
+        this.clone = new Clutter.Clone({source: metaWindow.get_compositor_private()});
+        let [dx, dy] = calcOffset(metaWindow);
+        this.add_actor(this.clone);
+        this.clone.x = -dx;
+        this.clone.y = -dy;
+    },
+
+    vfunc_get_preferred_height: function(forWidth) {
+        let frame = this.metaWindow.get_frame_rect();
+        return [frame.height, frame.height];
+    },
+
+    vfunc_get_preferred_width: function(forHeight) {
+        let frame = this.metaWindow.get_frame_rect();
+        return [frame.width, frame.width];
+    }
+});
+
+WindowCloneLayout = new Lang.Class({
+    Name: 'WindowCloneLayout',
     Extends: Clutter.LayoutManager,
 
-    _init: function(boundingBox) {
+    _init: function() {
         this.parent();
-
-        this._boundingBox = boundingBox;
-    },
-
-    get boundingBox() {
-        return this._boundingBox;
-    },
-
-    set boundingBox(b) {
-        this._boundingBox = b;
-        this.layout_changed();
     },
 
     _makeBoxForWindow: function(window) {
@@ -52,10 +66,9 @@ var WindowCloneLayout = new Lang.Class({
 
         let box = new Clutter.ActorBox();
 
-        box.set_origin(-(inputRect.x - frame.x),
-                       -(inputRect.y - frame.y));
-        box.set_size(frame.width, frame.height);
-        // debug("box", box.get_x(), box.get_y(), box.get_width(), box.get_height())
+        box.set_origin((inputRect.x - frame.x),
+                       (inputRect.y - frame.y));
+        box.set_size(inputRect.width, inputRect.height);
 
         return box;
     },
@@ -83,7 +96,6 @@ var WindowCloneLayout = new Lang.Class({
         }));
     }
 });
-
 
 function Minimap(space) {
     let viewport = new Clutter.Actor();
@@ -162,7 +174,6 @@ function Minimap(space) {
             let selectedIndex = space.selectedIndex();
             viewport.restack(selectedIndex);
             viewport.layout(viewport.clones);
-            viewport.clones[selectedIndex].set_style_class_name("paper-mm-selected-window");
         }
         viewport.visible = !viewport.visible;
     }
