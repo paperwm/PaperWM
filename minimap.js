@@ -19,7 +19,7 @@ allocationChanged = function allocationChanged(actor, propertySpec) {
 const notifySignal = Symbol();
 
 WindowClone = new Lang.Class({
-    Name: 'WindowClone',
+    Name: 'PaperWindowClone',
     Extends: Clutter.Actor,
 
     _init: function(metaWindow) {
@@ -44,7 +44,7 @@ WindowClone = new Lang.Class({
 });
 
 WindowCloneLayout = new Lang.Class({
-    Name: 'WindowCloneLayout',
+    Name: 'PaperWindowCloneLayout',
     Extends: Clutter.LayoutManager,
 
     _init: function() {
