@@ -89,6 +89,8 @@ function enable() {
     registerPaperAction("move-left", dynamic_function_ref("preview_navigate"));
     registerPaperAction("move-right", dynamic_function_ref("preview_navigate"));
     registerPaperAction("toggle-scratch-layer", dynamic_function_ref("toggleScratch"));
+
+    registerPaperAction("develop-set-globals", dynamic_function_ref("setDevGlobals"));
 }
 
 function disable() {

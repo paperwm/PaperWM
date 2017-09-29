@@ -50,5 +50,12 @@
       <default><![CDATA[['<Super><Shift>comma']]]></default>
       <summary>Move the focused window left in the tiling</summary>
     </key>
+
+    <key type="as" name="develop-set-globals">
+      <default><![CDATA[['<Super>Insert']]]></default>
+      <summary>
+        Develop: set various global js variables. Eg. `metaWindow` to the focused window
+      </summary>
+    </key>
   </schema>
 </schemalist>

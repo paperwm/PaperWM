@@ -64,3 +64,54 @@ function in_bounds(array, i) {
     return i >= 0 && i < array.length;
 }
 
+
+//// Debug and development utils
+
+setDevGlobals = function() {
+    // Accept the risk of this interfering with existing code for now
+    metaWindow = global.display.focus_window;
+    workspace = global.screen.get_active_workspace();
+    actor = metaWindow.get_compositor_private();
+}
+
+/**
+ * Visualize the frame and buffer bounding boxes of a meta window
+ */
+toggleWindowBoxes = function(metaWindow) {
+    metaWindow = metaWindow || global.display.focus_window;
+
+    if(metaWindow._paperDebugBoxes) {
+        metaWindow._paperDebugBoxes.forEach(box => {
+            box.destroy();
+        });
+        delete metaWindow._paperDebugBoxes;
+        return [];
+    }
+
+    let frame = metaWindow.get_frame_rect()
+    let inputFrame = metaWindow.get_buffer_rect()
+    let actor = metaWindow.get_compositor_private();
+
+    makeFrameBox = function({x, y, width, height}, color) {
+        let frameBox = new St.Widget();
+        frameBox.set_position(x, y)
+        frameBox.set_size(width, height)
+        frameBox.set_style("border: 2px" + color + " solid");
+        return frameBox;
+    }
+
+    let boxes = [];
+
+    boxes.push(makeFrameBox(frame, "red"));
+    boxes.push(makeFrameBox(inputFrame, "blue"));
+
+    if(inputFrame.x !== actor.x || inputFrame.y !== actor.y
+       || inputFrame.width !== actor.width || inputFrame.height !== actor.height) {
+        boxes.push(makeFrameBox(actor, "yellow"));
+    }
+
+    boxes.forEach(box => global.stage.add_actor(box));
+
+    metaWindow._paperDebugBoxes = boxes;
+    return boxes;
+}
