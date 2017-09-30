@@ -260,6 +260,13 @@ MultiMap = function() {
         Tweener.addTween(multimap, { y: -i*rowHeight, time: 0.25 });
         minimaps[selectedIndex].unfold();
     }
+    multimapViewport.onlyShowSelected = function() {
+        multimap.get_children().forEach((wrapper, i) => {
+            if (i !== selectedIndex) {
+                wrapper.hide();
+            }
+        });
+    }
     multimapViewport.setSelected(selectedIndex);
     return multimapViewport;
 }
