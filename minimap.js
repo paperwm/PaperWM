@@ -238,7 +238,7 @@ MultiMap = function() {
     spaces.forEach((s) => {
         let wrapper = new St.Widget();
         wrapper.add_actor(s.minimap);
-        multimap.add_actor(wrapper);
+        wrapper.reparent(multimap);
         s.minimap.visible = false;
         s.minimap.toggle();
         s.minimap.fold();
