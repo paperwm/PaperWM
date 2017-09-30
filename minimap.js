@@ -226,6 +226,44 @@ function Minimap(space) {
     return viewport;
 }
 
+
+MultiMap = function() {
+    multimapViewport = new St.Widget();
+    multimap = new St.BoxLayout()
+    multimapViewport.add_actor(multimap);
+    multimap.set_vertical(true)
+    multimap.remove_all_children()
+    global.stage.add_actor(multimapViewport);
+    let minimaps = [];
+    spaces.forEach((s) => {
+        let wrapper = new St.Widget();
+        wrapper.add_actor(s.minimap);
+        multimap.add_actor(wrapper);
+        s.minimap.visible = false;
+        s.minimap.toggle();
+        s.minimap.fold();
+        let ts = s.minimap.get_transformed_size();
+        wrapper.width = ts[0];
+        wrapper.height = ts[1];
+        minimaps.push(s.minimap);
+    })
+    multimapViewport.show()
+    let centerY = (primary.height - multimap.first_child.height)/2;
+    let centerX = (primary.width - multimap.first_child.width)/2;
+    multimapViewport.x = centerX;
+    multimapViewport.y = centerY;
+    let rowHeight = multimap.first_child.height;
+    let selectedIndex = global.screen.get_active_workspace_index();
+    multimapViewport.setSelected = function(i) {
+        minimaps[selectedIndex].fold();
+        selectedIndex = i;
+        Tweener.addTween(multimap, { y: -i*rowHeight, time: 0.25 });
+        minimaps[selectedIndex].unfold();
+    }
+    multimapViewport.setSelected(selectedIndex);
+    return multimapViewport;
+}
+
 // bg=Main.layoutManager._backgroundGroup.get_children()[0]
 // bgc= new Clutter.Clone({source:bg})
 
