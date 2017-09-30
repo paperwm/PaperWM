@@ -138,6 +138,9 @@ function Minimap(space) {
 
     viewport.fold = function (around) {
         around = around || space.indexOf(space.selectedWindow);
+        if (around < 0) {
+            return;
+        }
         this.restack(around);
         let clones = viewport.clones;
 
@@ -172,8 +175,10 @@ function Minimap(space) {
         if (!viewport.visible) {
             updateClones();
             let selectedIndex = space.selectedIndex();
-            viewport.restack(selectedIndex);
-            viewport.layout(viewport.clones);
+            if(selectedIndex > -1) {
+                viewport.restack(selectedIndex);
+                viewport.layout(viewport.clones);
+            }
         }
         viewport.visible = !viewport.visible;
     }
