@@ -198,7 +198,7 @@ function Minimap(space) {
             if(i < 0 || i >= actors.length)
                 return;
             let actor = actors[i];
-            let w = actor.get_first_child().meta_window.get_frame_rect().width;
+            let w = actor.width;
             let x = leftEdge;
 
             tweenTo(actor, x);
