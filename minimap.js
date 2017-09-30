@@ -222,8 +222,6 @@ function Minimap(space) {
     viewport.hide();
 
     viewport.layout(viewport.clones);
-    global.stage.add_actor(viewport)
-    viewport.x = (primary.width - viewport.get_transformed_size()[0])/2;
 
     return viewport;
 }
