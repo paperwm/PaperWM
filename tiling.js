@@ -275,9 +275,6 @@ ensure_viewport = (space, meta_window, force) => {
         Tweener.addTween(panelBox, {
             scale_y: 0,
             time: 0.25,
-            onComplete: () => {
-                panelBox.visible = false;
-            }
         });
 
     } else if (required_width <= primary.width) {
