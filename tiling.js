@@ -255,6 +255,8 @@ ensure_viewport = (space, meta_window, force) => {
     debug('Moving', meta_window.title);
 
     let index = space.indexOf(meta_window)
+    if (index === -1)
+        return;
     let frame = meta_window.get_frame_rect();
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
