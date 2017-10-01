@@ -69,7 +69,12 @@ Space = (workspace) => {
 }
 
 panelBox.connect('hide', () => {
-    panelBox.scale_y = 0;
+    let space = spaces[global.screen.get_active_workspace_index()];
+    if (space.selectedWindow.fullscreen) {
+        panelBox.scale_y = 0;
+    } else {
+        panelBox.show();
+    }
 });
 
 const spaces = []
