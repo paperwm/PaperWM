@@ -242,9 +242,9 @@ function Minimap(space) {
 
 
 MultiMap = function() {
-    multimapViewport = new St.Widget();
-    multimap = new St.BoxLayout()
-    multimapViewport.add_actor(multimap);
+    let viewport = new St.Widget();
+    let multimap = new St.BoxLayout()
+    viewport.add_actor(multimap);
     multimap.set_vertical(true)
     multimap.remove_all_children()
     let minimaps = [];
@@ -259,28 +259,28 @@ MultiMap = function() {
         wrapper.height = s.minimap.height * s.minimap.scale_y;
         minimaps.push(s.minimap);
     })
-    multimapViewport.show()
+    viewport.show()
     let centerY = (primary.height - multimap.first_child.height)/2;
     let centerX = (primary.width - multimap.first_child.width)/2;
-    multimapViewport.x = centerX;
-    multimapViewport.y = centerY;
+    viewport.x = centerX;
+    viewport.y = centerY;
     let rowHeight = multimap.first_child.height;
     let selectedIndex = global.screen.get_active_workspace_index();
-    multimapViewport.setSelected = function(i) {
+    viewport.setSelected = function(i) {
         minimaps[selectedIndex].fold();
         selectedIndex = i;
         Tweener.addTween(multimap, { y: -i*rowHeight, time: 0.25 });
         minimaps[selectedIndex].unfold();
     }
-    multimapViewport.onlyShowSelected = function() {
+    viewport.onlyShowSelected = function() {
         multimap.get_children().forEach((wrapper, i) => {
             if (i !== selectedIndex) {
                 wrapper.hide();
             }
         });
     }
-    multimapViewport.setSelected(selectedIndex);
-    return multimapViewport;
+    viewport.setSelected(selectedIndex);
+    return viewport;
 }
 
 // bg=Main.layoutManager._backgroundGroup.get_children()[0]
