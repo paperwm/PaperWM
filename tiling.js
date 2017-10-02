@@ -773,6 +773,9 @@ PreviewedWindowNavigator = new Lang.Class({
         debug('#preview', 'Finish', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
         this.was_accepted = true;
         Main.activateWindow(this._switcherList.windows[this._selectedIndex])
+        // Finish workspace preview _after_ activate, that way the new animation
+        // triggered by activate gets killed immediately
+        Main.wm._previewWorkspaceDone();
         this.parent(timestamp);
     },
 
@@ -791,6 +794,7 @@ PreviewedWindowNavigator = new Lang.Class({
             debug('#preview', 'Abort', global.display.focus_window.title);
             ensure_viewport(this.space, global.display.focus_window);
         }
+        Main.wm._previewWorkspaceDone();
         this.parent();
     }
 });
