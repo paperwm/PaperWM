@@ -721,6 +721,8 @@ PreviewedWindowNavigator = new Lang.Class({
             let multimap = this._switcherList.actor;
             let from = multimap.selectedIndex;
             let to = from - 1;
+            if (to < 0)
+                return;
             Main.wm._previewWorkspaceDone();
             Main.wm._previewWorkspace(from, to, Meta.MotionDirection.UP);
             multimap.setSelected(to);
@@ -733,6 +735,8 @@ PreviewedWindowNavigator = new Lang.Class({
             let multimap = this._switcherList.actor;
             let from = multimap.selectedIndex;
             let to = from + 1;
+            if (to >= spaces.length)
+                return;
             Main.wm._previewWorkspaceDone();
             Main.wm._previewWorkspace(from, to, Meta.MotionDirection.DOWN);
             multimap.setSelected(to);
