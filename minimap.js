@@ -231,12 +231,8 @@ MultiMap = function() {
         wrapper.height = s.minimap.height * s.minimap.scale_y;
         minimaps.push(s.minimap);
     })
-    viewport.show()
-    let centerY = (primary.height - multimap.first_child.height)/2;
-    let centerX = (primary.width - multimap.first_child.width)/2;
-    viewport.x = centerX;
-    viewport.y = centerY;
     let rowHeight = multimap.first_child.height;
+    viewport.height = rowHeight;
     let selectedIndex = global.screen.get_active_workspace_index();
     viewport.setSelected = function(i, animate = true) {
         minimaps[selectedIndex].fold();
