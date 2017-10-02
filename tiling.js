@@ -707,7 +707,32 @@ PreviewedWindowNavigator = new Lang.Class({
         } else if (mutterActionId === window.paperActionIds["move-right"]) {
             this._reorder(this._selectedIndex, this._next());
             return true;
+        } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_UP) {
+            let multimap = this._switcherList.actor;
+            let from = multimap.selectedIndex;
+            let to = from - 1;
+            Main.wm._previewWorkspaceDone();
+            Main.wm._previewWorkspace(from, to, Meta.MotionDirection.UP);
+            multimap.setSelected(to);
+            this.space = spaces[to];
+            this._switcherList.windows = this.space;
+            this._items = this.space;
+            this._selectedIndex = this.space.selectedIndex();
+            return true;
+        } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_DOWN) {
+            let multimap = this._switcherList.actor;
+            let from = multimap.selectedIndex;
+            let to = from + 1;
+            Main.wm._previewWorkspaceDone();
+            Main.wm._previewWorkspace(from, to, Meta.MotionDirection.DOWN);
+            multimap.setSelected(to);
+            this.space = spaces[to];
+            this._switcherList.windows = this.space;
+            this._items = this.space;
+            this._selectedIndex = this.space.selectedIndex();
+            return true;
         }
+
         return false;
     },
 
