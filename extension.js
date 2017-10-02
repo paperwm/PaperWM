@@ -82,6 +82,12 @@ function enable() {
     Meta.keybindings_set_custom_handler("switch-applications",
                                         dynamic_function_ref("liveAltTab"));
 
+    Meta.keybindings_set_custom_handler("switch-to-workspace-up",
+                                        dynamic_function_ref("preview_navigate"));
+
+    Meta.keybindings_set_custom_handler("switch-to-workspace-down",
+                                        dynamic_function_ref("preview_navigate"));
+
     // Action name => mutter-keybinding-action-id
     window.paperActionIds = {};
 

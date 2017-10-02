@@ -674,7 +674,17 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _initialSelection: function(backward, actionName) {
-        this._doAction(window.paperActionIds[actionName]);
+        let actionId = window.paperActionIds[actionName];
+        if(actionId === undefined) {
+            try {
+                // Check for built-in actions
+                actionId = Meta.prefs_get_keybinding_action(actionName);
+            } catch(e) {
+                debug("Couldn't resolve action name");
+            }
+        }
+
+        this._doAction(actionId);
     },
 
     _getWindowList: function() {
