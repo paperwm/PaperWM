@@ -128,6 +128,7 @@ function Minimap(space) {
         let maxProtrusion = 500;
         for (let i=0; i < around; i++) {
             let clone = clones[i];
+            clone.set_pivot_point(0, 0.5);
             if (clone.x + minimapActor.x <= -maxProtrusion) {
                 Tweener.addTween(clone, {x: -minimapActor.x - maxProtrusion
                                          , scale_x: 0.9
@@ -138,6 +139,7 @@ function Minimap(space) {
         }
         for (let i=clones.length-1; i>around; i--) {
             let clone = clones[i];
+            clone.set_pivot_point(1, 0.5);
             if (clone.x + clone.width + minimapActor.x >= primary.width + maxProtrusion) {
                 Tweener.addTween(clone, {x: -minimapActor.x + primary.width + maxProtrusion - clone.width
                                          , scale_x: 0.9
