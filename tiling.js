@@ -635,16 +635,32 @@ toggle_maximize_horizontally = (meta_window) => {
     ensure_viewport(spaceOf(meta_window), meta_window);
 }
 
-altTab = imports.ui.altTab;
+MinimapList = new Lang.Class({
+    Name: 'MinimapList',
 
+    _init: function(windows) {
+        this.windows = windows;
+        this.actor = MultiMap();
+    },
+
+    highlight: function(num) {}
+})
+const Signals = imports.signals;
+Signals.addSignalMethods(MinimapList.prototype);
+
+SwitcherPopup = imports.ui.switcherPopup;
 PreviewedWindowNavigator = new Lang.Class({
     Name: 'PreviewedWindowNavigator',
-    Extends: altTab.WindowSwitcherPopup,
+    Extends: SwitcherPopup.SwitcherPopup,
 
     _init: function() {
         this.parent();
 
+        this._switcherList = new MinimapList(this._getWindowList());
         this.space = this._switcherList.windows;
+
+        this._items = this.space;
+
         this._selectedIndex = this.space.indexOf(this.space.selectedWindow
                                                  || global.display.focus_window);
         debug('#preview', 'Init', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
@@ -672,22 +688,7 @@ PreviewedWindowNavigator = new Lang.Class({
             array[j] = temp;
         }
 
-        let minimap = this._switcherList._list; // Clutter container for preview-icons
-
-        // Make it visible! (update the clutter container)
-        let selectedItem = minimap.get_child_at_index(index)
-        minimap.remove_child(selectedItem);
-        minimap.insert_child_at_index(selectedItem, targetIndex);
-
-        // Update internal representations to match the new order
-        // Array of actual windows
         swapArray(this._switcherList.windows, index, targetIndex);
-        // Array of window buttons (wrappers around the icons)
-        swapArray(this._switcherList._items, index, targetIndex);
-        // Array of window icons (possible with preview)
-        swapArray(this._items, index, targetIndex);
-
-        // We've changed the space order so new ensures needs to take effect
         this.space.moving = false;
 
         this._select(targetIndex);
@@ -724,9 +725,19 @@ PreviewedWindowNavigator = new Lang.Class({
         this.parent(index);
     },
 
+    destroy: function() {
+        // Rescue the minimaps before we destroy
+        for (let i=0; i < spaces.length; i++) {
+            let minimap = spaces[i].minimap;
+            minimap.get_parent().remove_child(minimap);
+        }
+        this.parent();
+    },
+
     _finish: function(timestamp) {
         debug('#preview', 'Finish', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
         this.was_accepted = true;
+        Main.activateWindow(this._switcherList.windows[this._selectedIndex])
         this.parent(timestamp);
     },
 
