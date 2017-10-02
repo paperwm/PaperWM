@@ -19,11 +19,11 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, dir
     if (direction == Meta.MotionDirection.UP ||
         direction == Meta.MotionDirection.UP_LEFT ||
         direction == Meta.MotionDirection.UP_RIGHT)
-        yDest = global.screen_height - Main.panel.actor.height;
+        yDest = global.screen_height;
     else if (direction == Meta.MotionDirection.DOWN ||
              direction == Meta.MotionDirection.DOWN_LEFT ||
              direction == Meta.MotionDirection.DOWN_RIGHT)
-        yDest = -global.screen_height + Main.panel.actor.height;
+        yDest = -global.screen_height;
 
     if (direction == Meta.MotionDirection.LEFT ||
         direction == Meta.MotionDirection.UP_LEFT ||
