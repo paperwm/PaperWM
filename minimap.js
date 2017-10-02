@@ -136,11 +136,17 @@ function Minimap(space) {
         minimapActor.add_actor(clones[around]);
     };
 
-    viewport.fold = function (around) {
+    viewport.fold = function (around, animate = true) {
         around = around || space.indexOf(space.selectedWindow);
         if (around < 0) {
             return;
         }
+
+        let time = 0;
+        if (animate) {
+            time = 0.25;
+        }
+
         this.restack(around);
         let clones = viewport.clones;
 
@@ -152,7 +158,7 @@ function Minimap(space) {
                                          , scale_x: 0.9
                                          , scale_y: 0.9
                                          , transition: "easeInOutQuad"
-                                         , time: 0.25});
+                                         , time: time});
             }
         }
         for (let i=clones.length-1; i>around; i--) {
@@ -162,35 +168,43 @@ function Minimap(space) {
                                          , scale_x: 0.9
                                          , scale_y: 0.9
                                          , transition: "easeInOutQuad"
-                                         , time: 0.25});
+                                         , time: time});
             }
         }
     }
 
-    viewport.unfold = function () {
-        viewport.layout(viewport.clones);
+    viewport.unfold = function (animate = true) {
+        viewport.layout(viewport.clones, animate);
     }
 
     viewport.toggle = function() {
         if (!viewport.visible) {
-            updateClones();
-            let selectedIndex = space.selectedIndex();
-            if(selectedIndex > -1) {
-                viewport.restack(selectedIndex);
-                viewport.layout(viewport.clones);
-            }
+            viewport.refresh();
         }
         viewport.visible = !viewport.visible;
     }
 
-    viewport.layout = function(actors) {
+    viewport.refresh = function() {
+        updateClones();
+        let selectedIndex = space.selectedIndex();
+        if(selectedIndex > -1) {
+            viewport.restack(selectedIndex);
+            viewport.layout(viewport.clones, false);
+        }
+    }
+
+    viewport.layout = function(actors, animate = true) {
         function tweenTo(actor, x) {
             // let [dx, dy] = calcOffset(actor.meta_window);
             // actor.set_pivot_point(0, 0);
+            let time = 0;
+            if (animate) {
+                time = 0.25;
+            }
             Tweener.addTween(actor, { x: x
                                         , scale_x: 1
                                         , scale_y: 1
-                                        , time: 0.25
+                                        , time: time
                                         , transition: "easeInOutQuad"});
         }
 
@@ -239,9 +253,9 @@ MultiMap = function() {
         let wrapper = new St.Widget();
         wrapper.add_actor(s.minimap);
         wrapper.reparent(multimap);
-        s.minimap.visible = false;
-        s.minimap.toggle();
-        s.minimap.fold();
+        s.minimap.visible = true;
+        s.minimap.refresh();
+        s.minimap.fold(undefined, false);
         let ts = s.minimap.get_transformed_size();
         wrapper.width = ts[0];
         wrapper.height = ts[1];
