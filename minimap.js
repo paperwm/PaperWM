@@ -247,7 +247,6 @@ MultiMap = function() {
     multimapViewport.add_actor(multimap);
     multimap.set_vertical(true)
     multimap.remove_all_children()
-    global.stage.add_actor(multimapViewport);
     let minimaps = [];
     spaces.forEach((s) => {
         let wrapper = new St.Widget();
@@ -256,9 +255,8 @@ MultiMap = function() {
         s.minimap.visible = true;
         s.minimap.refresh();
         s.minimap.fold(undefined, false);
-        let ts = s.minimap.get_transformed_size();
-        wrapper.width = ts[0];
-        wrapper.height = ts[1];
+        wrapper.width = s.minimap.width * s.minimap.scale_x;
+        wrapper.height = s.minimap.height * s.minimap.scale_y;
         minimaps.push(s.minimap);
     })
     multimapViewport.show()
