@@ -238,11 +238,11 @@ MultiMap = function() {
     viewport.y = centerY;
     let rowHeight = multimap.first_child.height;
     let selectedIndex = global.screen.get_active_workspace_index();
-    viewport.setSelected = function(i) {
+    viewport.setSelected = function(i, animate = true) {
         minimaps[selectedIndex].fold();
         selectedIndex = i;
         Tweener.addTween(multimap, { y: -i*rowHeight, time: 0.25 });
-        minimaps[selectedIndex].unfold();
+        minimaps[selectedIndex].unfold(animate);
     }
     viewport.onlyShowSelected = function() {
         multimap.get_children().forEach((wrapper, i) => {
@@ -251,7 +251,7 @@ MultiMap = function() {
             }
         });
     }
-    viewport.setSelected(selectedIndex);
+    viewport.setSelected(selectedIndex, false);
     return viewport;
 }
 
