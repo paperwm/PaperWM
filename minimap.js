@@ -18,31 +18,6 @@ allocationChanged = function allocationChanged(actor, propertySpec) {
 
 const notifySignal = Symbol();
 
-WindowClone = new Lang.Class({
-    Name: 'PaperWindowClone',
-    Extends: Clutter.Actor,
-
-    _init: function(metaWindow) {
-        this.parent();
-        this.metaWindow = metaWindow;
-        this.clone = new Clutter.Clone({source: metaWindow.get_compositor_private()});
-        let [dx, dy] = calcOffset(metaWindow);
-        this.add_actor(this.clone);
-        this.clone.x = -dx;
-        this.clone.y = -dy;
-    },
-
-    vfunc_get_preferred_height: function(forWidth) {
-        let frame = this.metaWindow.get_frame_rect();
-        return [frame.height, frame.height];
-    },
-
-    vfunc_get_preferred_width: function(forHeight) {
-        let frame = this.metaWindow.get_frame_rect();
-        return [frame.width, frame.width];
-    }
-});
-
 WindowCloneLayout = new Lang.Class({
     Name: 'PaperWindowCloneLayout',
     Extends: Clutter.LayoutManager,
