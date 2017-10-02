@@ -10,10 +10,15 @@ debug = () => {
         print(Array.prototype.join.call(arguments, " | "));
 }
 
-print_stacktrace = () => {
-    let trace = (new Error()).stack.split("\n")
-    // Remove _this_ frame
-    trace.splice(0, 1);
+print_stacktrace = (error) => {
+    let trace;
+    if (!error) {
+        trace = (new Error()).stack.split("\n")
+        // Remove _this_ frame
+        trace.splice(0, 1);
+    } else {
+        trace = error.stack.split("\n");
+    }
     // Remove some uninteresting frames
     let filtered = trace.filter((frame) => {
         return frame !== "wrapper@resource:///org/gnome/gjs/modules/lang.js:178"   
