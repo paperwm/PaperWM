@@ -208,9 +208,6 @@ function Minimap(space) {
     viewport.width = primary.width;
     viewport.add_actor(minimapActor);
     viewport.set_background_color(Clutter.Color.get_static(3))
-    viewport.hide();
-
-    viewport.layout(viewport.clones);
 
     return viewport;
 }
