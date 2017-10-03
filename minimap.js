@@ -255,6 +255,7 @@ MultiMap = function() {
                 wrapper.hide();
             }
         });
+        multimap.y = 0;
     }
     viewport.showAll = function() {
         multimap.get_children().forEach((wrapper, i) => {
