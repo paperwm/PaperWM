@@ -254,6 +254,11 @@ MultiMap = function() {
         });
     }
     viewport.setSelected(viewport.selectedIndex, false);
+    let chrome = new St.Widget();
+    viewport.add_child(chrome);
+    chrome.set_size(viewport.width + 2*4, viewport.height + 2*4);
+    chrome.set_position(-4, -4);
+    chrome.set_style('border: 4px blue');
     return viewport;
 }
 
