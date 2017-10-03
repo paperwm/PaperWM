@@ -7,17 +7,36 @@
 2. on display "window-created is run, actor is available
 3. focus is run if the new window should be focused
 * Keybinding system
-Action names are global. eg. `Meta.keybindings_set_custom_handler` works on keybindings from custom schemas too. (despise what the documentation says)
+`Main.wm.addKeybinding` is used to register a named keybindable /action/ and it's handler. An numeric id is returned. (this is a thin wrapper around `[[https://developer.gnome.org/meta/stable/MetaDisplay.html#meta-display-add-keybinding][MetaDisplay.add_keybinding]]`)
 
-`[[https://developer.gnome.org/meta/stable/MetaDisplay.html#meta-display-add-keybinding][MetaDisplay.add_keybinding]]` (somewhat confusing name) is used to register a named keybindable action. An numeric id is returned.
+The action should have an entry in the schema underlying the `GSettings` object supplied to `addKeybinding`. This is where the actual keybinding is specified. Multiple bindings can be specified.
 
-Keybinding handlers fire on key-down.
+#+BEGIN_SRC xml
+<key type="as" name="toggle-scratch-layer">
+  <default><![CDATA[['<Super>e']]]></default>
+  <summary>Toggles the floating scratch layer</summary>
+</key>
+#+END_SRC
+
+To change a keybinding simply change this value in the gsetting: (mutter will pick up the change automatically.
+
+#+BEGIN_SRC javascript
+mySettings.set_strv("toggle-scratch-layer", ["<Super>s"]);
+#+END_SRC
+
+Action names are global. (note that the mutter documentation mostly refers to actions as keybindings)
+
+`Meta.keybindings_set_custom_handler` is used to change a action handler. Despite what the documentation suggests this works for non-builtin actions too.
+
+Action handlers fire on key-down.
 
 Mutter itself does not support key-release sensitive bindings, but it's possible to create a Clutter actor in response to a key-down binding, which temporarily take over the keyboard. Clutter can listen for key-up/key-release events.
 
-Looking up which action a key is bound to return the action's numeric id (`[[https://developer.gnome.org/meta/stable/MetaDisplay.html#meta-display-get-keybinding-action][MetaDisplay.get_keybinding_action]]`). There is no(?) way to ask mutter for the id<->action-name mapping.
+`[[https://developer.gnome.org/meta/stable/MetaDisplay.html#meta-display-get-keybinding-action][MetaDisplay.get_keybinding_action]]` looks up the action id bound to a specific modifer+keycode. This is mostly useful when handling key events within clutter.
 
-It's not possible to look up the handler of a keybinding action...(?)
+The id -> action-name mapping is not(?) exposed. For builtin actions `Meta.prefs_get_keybinding_action(actionName)` will give the id of actionName.
+
+It's not possible to look up the handler of a action...(?)
 
 A slightly annoying detail about how all this works is that you normally give the handler before you know the action-id. So if the handler need to know the action-id (eg. if it use clutter to implement a mini-mode and want to respond to the same key that triggered the mode) you either have to store a name->id map, or re-assign the handler afterward.
 
