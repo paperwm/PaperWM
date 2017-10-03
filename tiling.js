@@ -725,7 +725,7 @@ PreviewedWindowNavigator = new Lang.Class({
             let from = multimap.selectedIndex;
             let to = from - 1;
             if (to < 0)
-                return;
+                return true;
             Main.wm._previewWorkspaceDone();
             Main.wm._previewWorkspace(from, to, Meta.MotionDirection.UP);
             multimap.setSelected(to);
@@ -740,7 +740,7 @@ PreviewedWindowNavigator = new Lang.Class({
             let from = multimap.selectedIndex;
             let to = from + 1;
             if (to >= spaces.length)
-                return;
+                return true;
             Main.wm._previewWorkspaceDone();
             Main.wm._previewWorkspace(from, to, Meta.MotionDirection.DOWN);
             multimap.setSelected(to);
@@ -755,11 +755,11 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _keyPressHandler: function(keysym, action) {
-        if(!this._doAction(action)) {
-            // Parent can handle rest, but censor the action
-            return this.parent(keysym, undefined);
+        if (this._doAction(action)) {
+            return Clutter.EVENT_STOP;
+        } else {
+            return Clutter.EVENT_PROPAGATE;
         }
-        return undefined;
     },
 
     _select: function(index) {
