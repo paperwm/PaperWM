@@ -9,6 +9,7 @@ const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
 const Gio = imports.gi.Gio;
 const utils = Extension.imports.utils;
+const Clutter = imports.gi.Clutter;
 
 Minimap = Extension.imports.minimap;
 
