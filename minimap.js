@@ -246,7 +246,10 @@ MultiMap = function() {
         }
 
         viewport.selectedIndex = i;
-        Tweener.addTween(multimap, { y: -i*rowHeight, time: 0.25 });
+        let time = 0;
+        if (animate)
+            time = 0.25;
+        Tweener.addTween(multimap, { y: -i*rowHeight, time: time, transition: 'linear' });
         minimaps[viewport.selectedIndex].unfold(animate);
     }
     viewport.onlyShowSelected = function() {
