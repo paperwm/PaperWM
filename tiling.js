@@ -659,6 +659,8 @@ PreviewedWindowNavigator = new Lang.Class({
         this._switcherList = new MinimapList(this._getWindowList());
         this.space = this._switcherList.windows;
 
+        this._switcherList.actor.onlyShowSelected();
+
         this._items = this.space;
 
         this._selectedIndex = this.space.indexOf(this.space.selectedWindow
@@ -719,6 +721,7 @@ PreviewedWindowNavigator = new Lang.Class({
             return true;
         } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_UP) {
             let multimap = this._switcherList.actor;
+            multimap.showAll();
             let from = multimap.selectedIndex;
             let to = from - 1;
             if (to < 0)
@@ -733,6 +736,7 @@ PreviewedWindowNavigator = new Lang.Class({
             return true;
         } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_DOWN) {
             let multimap = this._switcherList.actor;
+            multimap.showAll();
             let from = multimap.selectedIndex;
             let to = from + 1;
             if (to >= spaces.length)

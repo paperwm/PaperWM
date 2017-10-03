@@ -253,6 +253,12 @@ MultiMap = function() {
             }
         });
     }
+    viewport.showAll = function() {
+        multimap.get_children().forEach((wrapper, i) => {
+            wrapper.show();
+        });
+        viewport.setSelected(viewport.selectedIndex, false);
+    };
     viewport.setSelected(viewport.selectedIndex, false);
     let chrome = new St.Widget();
     viewport.add_child(chrome);
