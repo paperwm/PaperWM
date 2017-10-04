@@ -664,9 +664,8 @@ PreviewedWindowNavigator = new Lang.Class({
 
         this._items = this.space;
 
-        this._selectedIndex = this.space.indexOf(this.space.selectedWindow
-                                                 || global.display.focus_window);
-        debug('#preview', 'Init', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
+        this._selectedIndex = this.space.selectedIndex();
+        // debug('#preview', 'Init', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
     },
 
     _next: function() {
@@ -691,7 +690,7 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _getWindowList: function() {
-        return spaces[global.display.focus_window.get_workspace().workspace_index];
+        return spaces[global.screen.get_active_workspace_index()];
     },
 
     _reorder: function (index, targetIndex) {
@@ -764,8 +763,9 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _select: function(index) {
-        debug('#preview', 'Select', this._switcherList.windows[index].title, index);
-        ensure_viewport(this.space, this._switcherList.windows[index]);
+        // debug('#preview', 'Select', this._switcherList.windows[index].title, index);
+        if (this._switcherList.windows[index])
+            ensure_viewport(this.space, this._switcherList.windows[index]);
         this.parent(index);
     },
 
@@ -779,9 +779,13 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _finish: function(timestamp) {
-        debug('#preview', 'Finish', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
         this.was_accepted = true;
-        Main.activateWindow(this._switcherList.windows[this._selectedIndex])
+        if (this.space.length === 0) {
+            this.space.workspace.activate(global.get_current_time());
+        } else {
+            Main.activateWindow(this._switcherList.windows[this._selectedIndex]);
+            debug('#preview', 'Finish', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
+        }
         // Finish workspace preview _after_ activate, that way the new animation
         // triggered by activate gets killed immediately
         Main.wm._previewWorkspaceDone();
