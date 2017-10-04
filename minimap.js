@@ -271,7 +271,7 @@ MultiMap = function() {
     viewport.add_child(chrome);
     chrome.set_size(viewport.width + 2*4, viewport.height + 2*4);
     chrome.set_position(-4, -4);
-    chrome.set_style('border: 4px blue');
+    chrome.set_style('border: 4px blue; border-radius: 8px;');
     return viewport;
 }
 
