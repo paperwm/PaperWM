@@ -76,7 +76,36 @@ Or maybe more likely: `imports.gi.` contains everything that's exposed through .
 `(new Error()).stack`
 * GObject
 The `notify` signal is emited on changes to all GObject properties. Listen to `notify::propery-name` to only receive for changes to ` property-name`. ([[https://developer.gnome.org/gobject/stable/gobject-The-Base-Object-Type.html#GObject-notify][Reference]])
-  
+* Gnome-shell scene graph and GUI system
+NB: some details might differ with the wayland backend.
+
+Gnome shell use [[https://developer.gnome.org/clutter/stable/][Clutter]] to mange all visible components. Basic GUI components are provided by the [[https://developer.gnome.org/st/stable/][St]] (built on top of clutter).
+
+Low level window management and input handling happens through [[https://developer.gnome.org/meta/stable/][mutter/meta]]. Gnome-shell is technically a mutter plugin.
+
+Input handling can be directed through clutter by (at least) two means:
+
+: Main.pushModal(actor)
+The clutter actor will receives all input until `Main.popModal` is called.
+
+: Main.layoutManager._trackActor(actor)
+
+Gnome-shell will inform mutter[1] that mouse input in the actor's region should be sent through clutter. This allows the actor to capture input. Ie. setting `reactive` to true is not enough to capture mouse input.
+
+Building `StWidget` detached from the stage are likely to result in the following warning:
+
+: st_widget_get_theme_node called on the widget [0x... St...] which is not in the stage.
+
+This is because a lot of actor properties depend on the style of the actor and that can depend on the ancestors of the actor. (`.parent .child { border: 2px; }`)
+
+So any code that try to access eg. height/width requires that the full style info is present.
+
+
+[1] By using `meta_set_stage_input_region` through `global.set_stage_input_region`
+
+** `MetaWindow` and `MetaWindowActor`
+   TODO: display_rect vs frame_rect vs actor.width. Gotchas when placing MetaWindowActors in containers, etc.
+
 * TODO Firefox focus bug
 Sometimes firefox windows refuse to gain proper focus. What happens is that another (or multiple!) firefox window somehow have focus in the address bar. The workaround is to find that/those window(s) and remove focus from the address bar.
 
