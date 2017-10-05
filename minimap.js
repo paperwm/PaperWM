@@ -229,8 +229,8 @@ MultiMap = function() {
         s.minimap.visible = true;
         s.minimap.refresh();
         s.minimap.fold(undefined, false);
-        wrapper.width = s.minimap.width * s.minimap.scale_x;
-        wrapper.height = s.minimap.height * s.minimap.scale_y;
+        wrapper.width = Math.ceil(s.minimap.width * s.minimap.scale_x);
+        wrapper.height = Math.ceil(s.minimap.height * s.minimap.scale_y);
         minimaps.push(s.minimap);
     })
     let rowHeight = multimap.first_child.height;
