@@ -1,7 +1,7 @@
 
 debug_all = true; // Consider the default value in `debug_filter` to be true
 debug_filter = { "#preview": false };
-debug = () => {
+debug = function() {
     let keyword = arguments[0];
     let filter = debug_filter[keyword];
     if (filter === false)
@@ -10,7 +10,7 @@ debug = () => {
         print(Array.prototype.join.call(arguments, " | "));
 }
 
-print_stacktrace = (error) => {
+print_stacktrace = function(error) {
     let trace;
     if (!error) {
         trace = (new Error()).stack.split("\n")
@@ -23,7 +23,7 @@ print_stacktrace = (error) => {
     let filtered = trace.filter((frame) => {
         return frame !== "wrapper@resource:///org/gnome/gjs/modules/lang.js:178"   
     });
-    let args = Array.prototype.splice.call(arguments);
+    let args = [...arguments];
     args.splice(0, 1, "stacktrace:"+(args[0] ? args[0] : ""))
     // Use non-breaking space to encode new lines (otherwise every frame is
     // prefixed by timestamp)
@@ -41,7 +41,7 @@ framestr = (rect) => {
  * redefine the function without re-registering all signal handler, keybindings,
  * etc. (this is like a function symbol in lisp)
  */
-dynamic_function_ref = (handler_name, owner_obj) => {
+dynamic_function_ref = function(handler_name, owner_obj) {
     owner_obj = owner_obj || window;
     return function() {
         owner_obj[handler_name].apply(this, arguments);
