@@ -72,15 +72,17 @@ WindowCloneLayout = new Lang.Class({
     }
 });
 
-function Minimap(space) {
-    let viewport = new Clutter.Actor();
+function Minimap(space)  {
+    let viewport = new Clutter.Actor({ name: "minimap-viewport" });
     viewport.space = space;
 
     function updateClones() {
         viewport.clones = space.map((mw) => {
             let windowActor = mw.get_compositor_private()
             let clone = new Clutter.Clone({ source: windowActor });
-            let container = new St.Widget({ layout_manager: new WindowCloneLayout() });
+            let container = new St.Widget({ layout_manager: new WindowCloneLayout(),
+                                            name: "window-clone-container"
+                                          });
             clone.meta_window = mw;
             if (windowActor[notifySignal]) {
                 windowActor.disconnect(windowActor[notifySignal]);
@@ -96,7 +98,7 @@ function Minimap(space) {
 
     }
 
-    let minimapActor = new Clutter.Actor();
+    let minimapActor = new Clutter.Actor({ name: "minimap-container"} );
 
     viewport.restack = function (around) {
         minimapActor.remove_all_children();
@@ -216,14 +218,14 @@ function Minimap(space) {
 
 
 MultiMap = function() {
-    let viewport = new St.Widget();
-    let multimap = new St.BoxLayout()
+    let viewport = new St.Widget({ name: "multimap-viewport" });
+    let multimap = new St.BoxLayout({ name: "multimap-container" });
     viewport.add_actor(multimap);
     multimap.set_vertical(true)
     multimap.remove_all_children()
     let minimaps = [];
-    spaces.forEach((s) => {
-        let wrapper = new St.Widget();
+    spaces.forEach((s, i) => {
+        let wrapper = new St.Widget({ name: "minimap-wrapper-"+i });
         s.minimap.reparent(wrapper);
         multimap.add_child(wrapper);
         s.minimap.visible = true;
