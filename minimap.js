@@ -80,9 +80,9 @@ function Minimap(space)  {
         viewport.clones = space.map((mw) => {
             let windowActor = mw.get_compositor_private()
             let clone = new Clutter.Clone({ source: windowActor });
-            let container = new St.Widget({ layout_manager: new WindowCloneLayout(),
-                                            name: "window-clone-container"
-                                          });
+            let container = new Clutter.Actor({ layout_manager: new WindowCloneLayout(),
+                                                name: "window-clone-container"
+                                              });
             clone.meta_window = mw;
             if (windowActor[notifySignal]) {
                 windowActor.disconnect(windowActor[notifySignal]);
