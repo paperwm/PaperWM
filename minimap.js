@@ -237,6 +237,7 @@ MultiMap = function() {
     })
     let rowHeight = multimap.first_child.height;
     viewport.height = rowHeight;
+    viewport.width = multimap.first_child.width;
     viewport.selectedIndex = global.screen.get_active_workspace_index();
     viewport.setSelected = function(i, animate = true) {
         if (i >= multimap.get_children().length ||
