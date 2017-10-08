@@ -764,8 +764,11 @@ PreviewedWindowNavigator = new Lang.Class({
 
     _select: function(index) {
         // debug('#preview', 'Select', this._switcherList.windows[index].title, index);
-        if (this._switcherList.windows[index])
-            ensure_viewport(this.space, this._switcherList.windows[index]);
+        let metaWindow = this._switcherList.windows[index];
+        if (metaWindow) {
+            this.space.selectedWindow = metaWindow;
+            ensure_viewport(this.space, metaWindow);
+        }
         this.parent(index);
     },
 
