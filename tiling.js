@@ -65,7 +65,6 @@ Space = (workspace) => {
     space.moving = false;
     space.leftStack = 0;
     space.rightStack = 0;
-    space.minimap = Minimap.Minimap(space);
     return space;
 }
 
@@ -316,7 +315,7 @@ ensure_viewport = (space, meta_window, force) => {
         debug('delay', delay)
     }
     let newOriginX = move_to(space, meta_window, x, y, delay, transition);
-    space.minimap.sync(newOriginX);
+    return newOriginX;
 }
 
 focus_handler = (meta_window, user_data) => {
@@ -754,17 +753,15 @@ PreviewedWindowNavigator = new Lang.Class({
         let metaWindow = this.space[index];
         if (metaWindow) {
             this.space.selectedWindow = metaWindow;
-            ensure_viewport(this.space, metaWindow);
+            let newX = ensure_viewport(this.space, metaWindow);
+            if (newX !== undefined) {
+                this._switcherList.getSelected().sync(newX);
+            }
         }
         this._selectedIndex = index;
     },
 
     destroy: function() {
-        // Rescue the minimaps before we destroy
-        for (let i=0; i < spaces.length; i++) {
-            let minimap = spaces[i].minimap;
-            minimap.get_parent().remove_child(minimap);
-        }
         this.parent();
     },
 

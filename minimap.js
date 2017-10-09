@@ -17,7 +17,7 @@ allocationChanged = function allocationChanged(actor, propertySpec) {
     this.layout(this.clones);
 }
 
-const notifySignal = Symbol();
+notifySignal = Symbol();
 
 WindowCloneLayout = new Lang.Class({
     Name: 'PaperWindowCloneLayout',
@@ -73,11 +73,24 @@ WindowCloneLayout = new Lang.Class({
     }
 });
 
-function Minimap(space)  {
-    let viewport = new Clutter.Actor({ name: "minimap-viewport" });
-    viewport.space = space;
+const Minimap = new Lang.Class({
+    Name: 'Minimap',
 
-    function createClones(windows) {
+    _init: function(space) {
+        this.actor = new Clutter.Actor({ name: "minimap-this" });
+        this.space = space;
+        this.minimapActor = new Clutter.Actor({ name: "minimap-container"} );
+
+        this.clones = [];
+        this.actor.set_scale(0.1, 0.1);
+        this.actor.height = primary.height;
+        this.actor.width = primary.width;
+        this.actor.add_actor(this.minimapActor);
+        this.actor.set_background_color(Clutter.Color.get_static(3))
+
+    },
+
+    createClones: function(windows) {
         return windows.map((mw) => {
             let windowActor = mw.get_compositor_private()
             let clone = new Clutter.Clone({ source: windowActor });
@@ -89,7 +102,7 @@ function Minimap(space)  {
                 windowActor.disconnect(windowActor[notifySignal]);
             }
             windowActor[notifySignal] = windowActor.connect("notify::allocation",
-                                                            Lang.bind(viewport, dynamic_function_ref("allocationChanged")));
+                                                            Lang.bind(this, dynamic_function_ref("allocationChanged")));
 
             container.add_actor(clone);
             // let [x_offset, y_offset] = calcOffset(clone.meta_window);
@@ -97,25 +110,23 @@ function Minimap(space)  {
             return container;
         });
 
-    }
+    },
 
-    let minimapActor = new Clutter.Actor({ name: "minimap-container"} );
-
-    viewport.restack = function (around) {
-        minimapActor.remove_all_children();
-        let clones = viewport.clones;
+    restack: function (around) {
+        this.minimapActor.remove_all_children();
+        let clones = this.clones;
 
         for (let i=0; i < around; i++) {
-            minimapActor.add_actor(clones[i]);
+            this.minimapActor.add_actor(clones[i]);
         }
         for (let i=clones.length-1; i>around; i--) {
-            minimapActor.add_actor(clones[i]);
+            this.minimapActor.add_actor(clones[i]);
         }
-        minimapActor.add_actor(clones[around]);
-    };
+        this.minimapActor.add_actor(clones[around]);
+    },
 
-    viewport.fold = function (around, animate = true) {
-        around = around || space.indexOf(space.selectedWindow);
+    fold: function (around, animate = true) {
+        around = around || this.space.indexOf(this.space.selectedWindow);
         if (around < 0) {
             return;
         }
@@ -126,14 +137,14 @@ function Minimap(space)  {
         }
 
         this.restack(around);
-        let clones = viewport.clones;
+        let clones = this.clones;
 
         let maxProtrusion = 500;
         for (let i=0; i < around; i++) {
             let clone = clones[i];
             clone.set_pivot_point(0, 0.5);
-            if (clone.x + minimapActor.x <= -maxProtrusion) {
-                Tweener.addTween(clone, {x: -minimapActor.x - maxProtrusion
+            if (clone.x + this.minimapActor.x <= -maxProtrusion) {
+                Tweener.addTween(clone, {x: -this.minimapActor.x - maxProtrusion
                                          , scale_x: 0.9
                                          , scale_y: 0.9
                                          , transition: "easeInOutQuad"
@@ -143,37 +154,37 @@ function Minimap(space)  {
         for (let i=clones.length-1; i>around; i--) {
             let clone = clones[i];
             clone.set_pivot_point(1, 0.5);
-            if (clone.x + clone.width + minimapActor.x >= primary.width + maxProtrusion) {
-                Tweener.addTween(clone, {x: -minimapActor.x + primary.width + maxProtrusion - clone.width
+            if (clone.x + clone.width + this.minimapActor.x >= primary.width + maxProtrusion) {
+                Tweener.addTween(clone, {x: -this.minimapActor.x + primary.width + maxProtrusion - clone.width
                                          , scale_x: 0.9
                                          , scale_y: 0.9
                                          , transition: "easeInOutQuad"
                                          , time: time});
             }
         }
-    }
+    },
 
-    viewport.unfold = function (animate = true) {
-        viewport.layout(viewport.clones, animate);
-    }
+    unfold: function (animate = true) {
+        this.layout(this.clones, animate);
+    },
 
-    viewport.toggle = function() {
-        if (!viewport.visible) {
-            viewport.refresh();
+    toggle: function() {
+        if (!this.visible) {
+            this.refresh();
         }
-        viewport.visible = !viewport.visible;
-    }
+        this.actor.visible = !this.actor.visible;
+    },
 
-    viewport.refresh = function() {
-        viewport.clones = createClones(viewport.space);
-        let selectedIndex = space.selectedIndex();
+    refresh: function() {
+        this.clones = this.createClones(this.space);
+        let selectedIndex = this.space.selectedIndex();
         if(selectedIndex > -1) {
-            viewport.restack(selectedIndex);
-            viewport.layout(viewport.clones, false);
+            this.restack(selectedIndex);
+            this.layout(this.clones, false);
         }
-    }
+    },
 
-    viewport.layout = function(actors, animate = true) {
+    layout: function(actors, animate = true) {
         function tweenTo(actor, x) {
             // let [dx, dy] = calcOffset(actor.meta_window);
             // actor.set_pivot_point(0, 0);
@@ -201,21 +212,12 @@ function Minimap(space)  {
         }
 
         propagate_forward(0, 0, window_gap);
-    }
+    },
 
-    viewport.sync = function(originX) {
-        Tweener.addTween(minimapActor, { x: originX, time: 0.25, transition: 'easeInOutQuad' });
-    }
-
-    viewport.clones = [];
-    viewport.set_scale(0.1, 0.1);
-    viewport.height = primary.height;
-    viewport.width = primary.width;
-    viewport.add_actor(minimapActor);
-    viewport.set_background_color(Clutter.Color.get_static(3))
-
-    return viewport;
-}
+    sync: function(originX) {
+        Tweener.addTween(this.minimapActor, { x: originX, time: 0.25, transition: 'easeInOutQuad' });
+    },
+})
 
 
 MultiMap = new Lang.Class({
@@ -277,14 +279,15 @@ MultiMap = new Lang.Class({
 
     addSpace: function(s, i) {
         let wrapper = new St.Widget({ name: "minimap-wrapper-"+i });
-        s.minimap.reparent(wrapper);
+        let minimap = new Minimap(s);
+        minimap.actor.reparent(wrapper);
         this.container.add_child(wrapper);
-        s.minimap.visible = true;
-        s.minimap.refresh();
-        s.minimap.fold(undefined, false);
-        wrapper.width = Math.ceil(s.minimap.width * s.minimap.scale_x);
-        wrapper.height = Math.ceil(s.minimap.height * s.minimap.scale_y);
-        this.minimaps.push(s.minimap);
+        minimap.actor.visible = true;
+        minimap.refresh();
+        minimap.fold(undefined, false);
+        wrapper.width = Math.ceil(minimap.actor.width * minimap.actor.scale_x);
+        wrapper.height = Math.ceil(minimap.actor.height * minimap.actor.scale_y);
+        this.minimaps.push(minimap);
     },
 
     setSelected: function(i, animate = true) {
