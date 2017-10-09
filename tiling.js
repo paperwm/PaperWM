@@ -641,7 +641,7 @@ MinimapList = new Lang.Class({
 
     _init: function(windows) {
         this.windows = windows;
-        this.actor = MultiMap();
+        this.actor = MultiMap(true);
     },
 
     highlight: function(num) {}
@@ -726,10 +726,13 @@ PreviewedWindowNavigator = new Lang.Class({
             let to = from - 1;
             if (to < 0)
                 return true;
+            let oldMap = multimap.getSelected();
+            let newMap = multimap.setSelected(to);
             Main.wm._previewWorkspaceDone();
-            Main.wm._previewWorkspace(from, to, Meta.MotionDirection.UP);
-            multimap.setSelected(to);
-            this.space = spaces[to];
+            Main.wm._previewWorkspace(oldMap.space.workspace.workspace_index,
+                                      newMap.space.workspace.workspace_index,
+                                      Meta.MotionDirection.UP);
+            this.space = newMap.space;
             this._switcherList.windows = this.space;
             this._items = this.space;
             this._selectedIndex = this.space.selectedIndex();
@@ -741,10 +744,13 @@ PreviewedWindowNavigator = new Lang.Class({
             let to = from + 1;
             if (to >= spaces.length)
                 return true;
+            let oldMap = multimap.getSelected();
+            let newMap = multimap.setSelected(to);
             Main.wm._previewWorkspaceDone();
-            Main.wm._previewWorkspace(from, to, Meta.MotionDirection.DOWN);
-            multimap.setSelected(to);
-            this.space = spaces[to];
+            Main.wm._previewWorkspace(oldMap.space.workspace.workspace_index,
+                                      newMap.space.workspace.workspace_index,
+                                      Meta.MotionDirection.DOWN);
+            this.space = newMap.space;
             this._switcherList.windows = this.space;
             this._items = this.space;
             this._selectedIndex = this.space.selectedIndex();

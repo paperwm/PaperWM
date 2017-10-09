@@ -3,6 +3,7 @@ Tweener = imports.ui.tweener;
 Lang = imports.lang;
 St = imports.gi.St;
 Workspace = imports.ui.workspace;
+Meta = imports.gi.Meta;
 
 calcOffset = function(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
@@ -217,14 +218,15 @@ function Minimap(space)  {
 }
 
 
-MultiMap = function() {
+MultiMap = function(mru) {
     let viewport = new St.Widget({ name: "multimap-viewport" });
     let multimap = new St.BoxLayout({ name: "multimap-container" });
     viewport.add_actor(multimap);
     multimap.set_vertical(true)
     multimap.remove_all_children()
     let minimaps = [];
-    spaces.forEach((s, i) => {
+
+    function addSpace(s, i) {
         let wrapper = new St.Widget({ name: "minimap-wrapper-"+i });
         s.minimap.reparent(wrapper);
         multimap.add_child(wrapper);
@@ -234,11 +236,40 @@ MultiMap = function() {
         wrapper.width = Math.ceil(s.minimap.width * s.minimap.scale_x);
         wrapper.height = Math.ceil(s.minimap.height * s.minimap.scale_y);
         minimaps.push(s.minimap);
-    })
+    }
+    if (mru) {
+        let seen = {};
+        let i = 0;
+        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+            .forEach(metaWindow => {
+                let workspace = metaWindow.get_workspace();
+                if (!seen[workspace]) {
+                    debug('add workspace');
+                    addSpace(spaces[workspace.workspace_index], i)
+                    seen[workspace] = true;
+                    i++;
+                }
+            });
+
+        let workspaces = global.screen.get_n_workspaces();
+        for (let j=0; j < workspaces; j++) {
+            let workspace = global.screen.get_workspace_by_index(j);
+            if (!seen[workspace]) {
+                debug('add workspace');
+                addSpace(spaces[workspace.workspace_index], i)
+                i++;
+                seen[workspace] = true;
+            }
+        }
+    } else {
+        spaces.forEach((s, i) => {
+            addSpace(s, i);
+        })
+    }
     let rowHeight = multimap.first_child.height;
     viewport.height = rowHeight;
     viewport.width = multimap.first_child.width;
-    viewport.selectedIndex = global.screen.get_active_workspace_index();
+    viewport.selectedIndex = 0;
     viewport.setSelected = function(i, animate = true) {
         if (i >= multimap.get_children().length ||
             i < 0) {
@@ -252,8 +283,12 @@ MultiMap = function() {
         let time = 0;
         if (animate)
             time = 0.25;
-        Tweener.addTween(multimap, { y: -i*rowHeight, time: time, transition: 'linear' });
+        Tweener.addTween(multimap, { y: -i*rowHeight, time: time, transition: 'easeInOutQuad' });
         minimaps[viewport.selectedIndex].unfold(animate);
+        return minimaps[viewport.selectedIndex];
+    }
+    viewport.getSelected = function() {
+        return minimaps[viewport.selectedIndex];
     }
     viewport.onlyShowSelected = function() {
         multimap.get_children().forEach((wrapper, i) => {
