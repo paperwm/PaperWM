@@ -230,6 +230,7 @@ MultiMap = new Lang.Class({
         this.minimaps = [];
 
         if (mru) {
+            this.selectedIndex = 0;
             let seen = {};
             let i = 0;
             global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
@@ -254,6 +255,7 @@ MultiMap = new Lang.Class({
                 }
             }
         } else {
+            this.selectedIndex = global.screen.get_active_workspace_index();
             spaces.forEach((s, i) => {
                 this.addSpace(s, i);
             })
@@ -262,7 +264,6 @@ MultiMap = new Lang.Class({
         this.actor.height = this.rowHeight;
         this.actor.width = this.container.first_child.width;
 
-        this.selectedIndex = 0;
         let minimap = this.setSelected(this.selectedIndex, false);
         this.windows = minimap.space;
         let chrome = new St.Widget();
