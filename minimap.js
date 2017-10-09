@@ -267,7 +267,6 @@ MultiMap = new Lang.Class({
         this.actor.width = this.container.first_child.width;
 
         let minimap = this.setSelected(this.selectedIndex, false);
-        this.windows = minimap.space;
         let chrome = new St.Widget();
         this.actor.add_child(chrome);
         chrome.set_size(this.actor.width + 2*4, this.actor.height + 2*4);

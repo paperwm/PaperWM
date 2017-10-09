@@ -645,7 +645,7 @@ PreviewedWindowNavigator = new Lang.Class({
         this.parent();
 
         this._switcherList = new MultiMap(true);
-        this.space = this._switcherList.windows;
+        this.space = this._switcherList.getSelected().space;
 
         this._switcherList.onlyShowSelected();
 
@@ -654,7 +654,7 @@ PreviewedWindowNavigator = new Lang.Class({
         this._items = [1];
 
         this._selectedIndex = this.space.selectedIndex();
-        // debug('#preview', 'Init', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
+        // debug('#preview', 'Init', this.space[this._selectedIndex].title, this._selectedIndex);
     },
 
     _next: function() {
@@ -685,7 +685,7 @@ PreviewedWindowNavigator = new Lang.Class({
             array[j] = temp;
         }
 
-        swapArray(this._switcherList.windows, index, targetIndex);
+        swapArray(this.space, index, targetIndex);
         this.space.moving = false;
 
         this._select(targetIndex);
@@ -718,7 +718,6 @@ PreviewedWindowNavigator = new Lang.Class({
                                       newMap.space.workspace.workspace_index,
                                       Meta.MotionDirection.UP);
             this.space = newMap.space;
-            this._switcherList.windows = this.space;
             this._selectedIndex = this.space.selectedIndex();
             return true;
         } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_DOWN) {
@@ -735,7 +734,6 @@ PreviewedWindowNavigator = new Lang.Class({
                                       newMap.space.workspace.workspace_index,
                                       Meta.MotionDirection.DOWN);
             this.space = newMap.space;
-            this._switcherList.windows = this.space;
             this._selectedIndex = this.space.selectedIndex();
             return true;
         }
@@ -752,8 +750,8 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _select: function(index) {
-        // debug('#preview', 'Select', this._switcherList.windows[index].title, index);
-        let metaWindow = this._switcherList.windows[index];
+        // debug('#preview', 'Select', this.space[index].title, index);
+        let metaWindow = this.space[index];
         if (metaWindow) {
             this.space.selectedWindow = metaWindow;
             ensure_viewport(this.space, metaWindow);
@@ -775,8 +773,8 @@ PreviewedWindowNavigator = new Lang.Class({
         if (this.space.length === 0) {
             this.space.workspace.activate(global.get_current_time());
         } else {
-            Main.activateWindow(this._switcherList.windows[this._selectedIndex]);
-            debug('#preview', 'Finish', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
+            Main.activateWindow(this.space[this._selectedIndex]);
+            debug('#preview', 'Finish', this.space[this._selectedIndex].title, this._selectedIndex);
         }
         // Finish workspace preview _after_ activate, that way the new animation
         // triggered by activate gets killed immediately
