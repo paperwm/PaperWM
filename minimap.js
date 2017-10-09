@@ -218,102 +218,111 @@ function Minimap(space)  {
 }
 
 
-MultiMap = function(mru) {
-    let viewport = new St.Widget({ name: "multimap-viewport" });
-    let multimap = new St.BoxLayout({ name: "multimap-container" });
-    viewport.add_actor(multimap);
-    multimap.set_vertical(true)
-    multimap.remove_all_children()
-    let minimaps = [];
+MultiMap = new Lang.Class({
+    Name: 'MultiMap',
 
-    function addSpace(s, i) {
+    _init: function(mru) {
+        this.actor = new St.Widget({ name: "multimap-viewport" });
+        this.container = new St.BoxLayout({ name: "multimap-container" });
+        this.actor.add_actor(this.container);
+        this.container.set_vertical(true)
+        this.container.remove_all_children()
+        this.minimaps = [];
+
+        if (mru) {
+            let seen = {};
+            let i = 0;
+            global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+                .forEach(metaWindow => {
+                    let workspace = metaWindow.get_workspace();
+                    if (!seen[workspace]) {
+                        debug('add workspace');
+                        this.addSpace(spaces[workspace.workspace_index], i)
+                        seen[workspace] = true;
+                        i++;
+                    }
+                });
+
+            let workspaces = global.screen.get_n_workspaces();
+            for (let j=0; j < workspaces; j++) {
+                let workspace = global.screen.get_workspace_by_index(j);
+                if (!seen[workspace]) {
+                    debug('add workspace');
+                    this.addSpace(spaces[workspace.workspace_index], i)
+                    i++;
+                    seen[workspace] = true;
+                }
+            }
+        } else {
+            spaces.forEach((s, i) => {
+                this.addSpace(s, i);
+            })
+        }
+        this.rowHeight = this.container.first_child.height;
+        this.actor.height = this.rowHeight;
+        this.actor.width = this.container.first_child.width;
+
+        this.selectedIndex = 0;
+        let minimap = this.setSelected(this.selectedIndex, false);
+        this.windows = minimap.space;
+        let chrome = new St.Widget();
+        this.actor.add_child(chrome);
+        chrome.set_size(this.actor.width + 2*4, this.actor.height + 2*4);
+        chrome.set_position(-4, -4);
+        chrome.set_style('border: 4px #215d9c; border-radius: 8px;');
+    },
+
+
+    addSpace: function(s, i) {
         let wrapper = new St.Widget({ name: "minimap-wrapper-"+i });
         s.minimap.reparent(wrapper);
-        multimap.add_child(wrapper);
+        this.container.add_child(wrapper);
         s.minimap.visible = true;
         s.minimap.refresh();
         s.minimap.fold(undefined, false);
         wrapper.width = Math.ceil(s.minimap.width * s.minimap.scale_x);
         wrapper.height = Math.ceil(s.minimap.height * s.minimap.scale_y);
-        minimaps.push(s.minimap);
-    }
-    if (mru) {
-        let seen = {};
-        let i = 0;
-        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
-            .forEach(metaWindow => {
-                let workspace = metaWindow.get_workspace();
-                if (!seen[workspace]) {
-                    debug('add workspace');
-                    addSpace(spaces[workspace.workspace_index], i)
-                    seen[workspace] = true;
-                    i++;
-                }
-            });
+        this.minimaps.push(s.minimap);
+    },
 
-        let workspaces = global.screen.get_n_workspaces();
-        for (let j=0; j < workspaces; j++) {
-            let workspace = global.screen.get_workspace_by_index(j);
-            if (!seen[workspace]) {
-                debug('add workspace');
-                addSpace(spaces[workspace.workspace_index], i)
-                i++;
-                seen[workspace] = true;
-            }
-        }
-    } else {
-        spaces.forEach((s, i) => {
-            addSpace(s, i);
-        })
-    }
-    let rowHeight = multimap.first_child.height;
-    viewport.height = rowHeight;
-    viewport.width = multimap.first_child.width;
-    viewport.selectedIndex = 0;
-    viewport.setSelected = function(i, animate = true) {
-        if (i >= multimap.get_children().length ||
+    setSelected: function(i, animate = true) {
+        if (i >= this.container.get_children().length ||
             i < 0) {
             return;
         }
-        if (i !== viewport.selectedIndex) {
-            minimaps[viewport.selectedIndex].fold(undefined, animate);
+        if (i !== this.selectedIndex) {
+            this.minimaps[this.selectedIndex].fold(undefined, animate);
         }
 
-        viewport.selectedIndex = i;
+        this.selectedIndex = i;
         let time = 0;
         if (animate)
             time = 0.25;
-        Tweener.addTween(multimap, { y: -i*rowHeight, time: time, transition: 'easeInOutQuad' });
-        minimaps[viewport.selectedIndex].unfold(animate);
-        return minimaps[viewport.selectedIndex];
-    }
-    viewport.getSelected = function() {
-        return minimaps[viewport.selectedIndex];
-    }
-    viewport.onlyShowSelected = function() {
-        multimap.get_children().forEach((wrapper, i) => {
-            if (i !== viewport.selectedIndex) {
+        Tweener.addTween(this.container, { y: -i*this.rowHeight, time: time, transition: 'easeInOutQuad' });
+        this.minimaps[this.selectedIndex].unfold(animate);
+        return this.minimaps[this.selectedIndex];
+    },
+
+    getSelected: function() {
+        return this.minimaps[this.selectedIndex];
+    },
+
+    onlyShowSelected: function() {
+        this.container.get_children().forEach((wrapper, i) => {
+            if (i !== this.selectedIndex) {
                 wrapper.hide();
             }
         });
-        multimap.y = 0;
-    }
-    viewport.showAll = function() {
-        multimap.get_children().forEach((wrapper, i) => {
+        this.container.y = 0;
+    },
+
+    showAll: function() {
+        this.container.get_children().forEach((wrapper, i) => {
             wrapper.show();
         });
-        viewport.setSelected(viewport.selectedIndex, false);
-    };
-    viewport.setSelected(viewport.selectedIndex, false);
-    let chrome = new St.Widget();
-    viewport.add_child(chrome);
-    chrome.set_size(viewport.width + 2*4, viewport.height + 2*4);
-    chrome.set_position(-4, -4);
-    chrome.set_style('border: 4px blue; border-radius: 8px;');
-    return viewport;
-}
+        this.setSelected(this.selectedIndex, false);
+    }
+})
 
-// bg=Main.layoutManager._backgroundGroup.get_children()[0]
-// bgc= new Clutter.Clone({source:bg})
-
-
+const Signals = imports.signals;
+Signals.addSignalMethods(MultiMap.prototype);

@@ -636,19 +636,6 @@ toggle_maximize_horizontally = (meta_window) => {
     ensure_viewport(spaceOf(meta_window), meta_window);
 }
 
-MinimapList = new Lang.Class({
-    Name: 'MinimapList',
-
-    _init: function(windows) {
-        this.windows = windows;
-        this.actor = MultiMap(true);
-    },
-
-    highlight: function(num) {}
-})
-const Signals = imports.signals;
-Signals.addSignalMethods(MinimapList.prototype);
-
 SwitcherPopup = imports.ui.switcherPopup;
 PreviewedWindowNavigator = new Lang.Class({
     Name: 'PreviewedWindowNavigator',
@@ -657,10 +644,10 @@ PreviewedWindowNavigator = new Lang.Class({
     _init: function() {
         this.parent();
 
-        this._switcherList = new MinimapList(this._getWindowList());
+        this._switcherList = new MultiMap(true);
         this.space = this._switcherList.windows;
 
-        this._switcherList.actor.onlyShowSelected();
+        this._switcherList.onlyShowSelected();
 
         this._items = this.space;
 
@@ -720,7 +707,7 @@ PreviewedWindowNavigator = new Lang.Class({
             this._reorder(this._selectedIndex, this._next());
             return true;
         } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_UP) {
-            let multimap = this._switcherList.actor;
+            let multimap = this._switcherList;
             multimap.showAll();
             let from = multimap.selectedIndex;
             let to = from - 1;
@@ -738,7 +725,7 @@ PreviewedWindowNavigator = new Lang.Class({
             this._selectedIndex = this.space.selectedIndex();
             return true;
         } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_DOWN) {
-            let multimap = this._switcherList.actor;
+            let multimap = this._switcherList;
             multimap.showAll();
             let from = multimap.selectedIndex;
             let to = from + 1;
@@ -775,7 +762,7 @@ PreviewedWindowNavigator = new Lang.Class({
             this.space.selectedWindow = metaWindow;
             ensure_viewport(this.space, metaWindow);
         }
-        this.parent(index);
+        this._selectedIndex = index;
     },
 
     destroy: function() {
