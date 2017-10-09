@@ -649,14 +649,16 @@ PreviewedWindowNavigator = new Lang.Class({
 
         this._switcherList.onlyShowSelected();
 
-        this._items = this.space;
+        // HACK: workaround to enable moving from empty workspace. See check in
+        // SwitcherPopup.show
+        this._items = [1];
 
         this._selectedIndex = this.space.selectedIndex();
         // debug('#preview', 'Init', this._switcherList.windows[this._selectedIndex].title, this._selectedIndex);
     },
 
     _next: function() {
-        return Math.min(this._items.length-1, this._selectedIndex+1)
+        return Math.min(this.space.length-1, this._selectedIndex+1)
     },
     _previous: function() {
         return Math.max(0, this._selectedIndex-1)
@@ -717,7 +719,6 @@ PreviewedWindowNavigator = new Lang.Class({
                                       Meta.MotionDirection.UP);
             this.space = newMap.space;
             this._switcherList.windows = this.space;
-            this._items = this.space;
             this._selectedIndex = this.space.selectedIndex();
             return true;
         } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_DOWN) {
@@ -735,7 +736,6 @@ PreviewedWindowNavigator = new Lang.Class({
                                       Meta.MotionDirection.DOWN);
             this.space = newMap.space;
             this._switcherList.windows = this.space;
-            this._items = this.space;
             this._selectedIndex = this.space.selectedIndex();
             return true;
         }

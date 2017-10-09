@@ -232,7 +232,9 @@ MultiMap = new Lang.Class({
         if (mru) {
             this.selectedIndex = 0;
             let seen = {};
-            let i = 0;
+            this.addSpace(spaces[global.screen.get_active_workspace_index()], 0)
+            seen[global.screen.get_active_workspace()] = true;
+            let i = 1;
             global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
                 .forEach(metaWindow => {
                     let workspace = metaWindow.get_workspace();
