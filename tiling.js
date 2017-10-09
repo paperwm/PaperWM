@@ -676,10 +676,6 @@ PreviewedWindowNavigator = new Lang.Class({
         this._doAction(actionId);
     },
 
-    _getWindowList: function() {
-        return spaces[global.screen.get_active_workspace_index()];
-    },
-
     _reorder: function (index, targetIndex) {
         function swapArray(array, i, j) {
             let temp = array[i];
