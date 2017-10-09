@@ -77,8 +77,8 @@ function Minimap(space)  {
     let viewport = new Clutter.Actor({ name: "minimap-viewport" });
     viewport.space = space;
 
-    function updateClones() {
-        viewport.clones = space.map((mw) => {
+    function createClones(windows) {
+        return windows.map((mw) => {
             let windowActor = mw.get_compositor_private()
             let clone = new Clutter.Clone({ source: windowActor });
             let container = new Clutter.Actor({ layout_manager: new WindowCloneLayout(),
@@ -165,7 +165,7 @@ function Minimap(space)  {
     }
 
     viewport.refresh = function() {
-        updateClones();
+        viewport.clones = createClones(viewport.space);
         let selectedIndex = space.selectedIndex();
         if(selectedIndex > -1) {
             viewport.restack(selectedIndex);
