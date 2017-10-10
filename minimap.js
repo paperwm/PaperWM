@@ -13,12 +13,6 @@ calcOffset = function(metaWindow) {
     return [x_offset, y_offset];
 }
 
-allocationChanged = function allocationChanged(actor, propertySpec) {
-    this.layout(this.clones);
-}
-
-notifySignal = Symbol();
-
 WindowCloneLayout = new Lang.Class({
     Name: 'PaperWindowCloneLayout',
     Extends: Clutter.LayoutManager,
@@ -98,15 +92,8 @@ const Minimap = new Lang.Class({
                                                 name: "window-clone-container"
                                               });
             clone.meta_window = mw;
-            if (windowActor[notifySignal]) {
-                windowActor.disconnect(windowActor[notifySignal]);
-            }
-            windowActor[notifySignal] = windowActor.connect("notify::allocation",
-                                                            Lang.bind(this, dynamic_function_ref("allocationChanged")));
 
             container.add_actor(clone);
-            // let [x_offset, y_offset] = calcOffset(clone.meta_window);
-            // clone.set_position(-x_offset, -y_offset);
             return container;
         });
 
