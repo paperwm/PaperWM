@@ -181,6 +181,8 @@ const Minimap = new Lang.Class({
         if(selectedIndex > -1) {
             this.restack(selectedIndex);
             this.layout(this.clones, false);
+            let frame = this.space.selectedWindow.get_frame_rect();
+            this.sync(frame.x, false);
         }
     },
 
@@ -214,8 +216,15 @@ const Minimap = new Lang.Class({
         propagate_forward(0, 0, window_gap);
     },
 
-    sync: function(originX) {
-        Tweener.addTween(this.minimapActor, { x: originX, time: 0.25, transition: 'easeInOutQuad' });
+    sync: function(selectedWindowX, animate=true) {
+        let time = 0;
+        if (animate)
+            time = 0.25
+        let selectedIndex = this.space.selectedIndex();
+        let clone = this.clones[selectedIndex];
+        Tweener.addTween(this.minimapActor
+                         , { x: -(clone.x - selectedWindowX)
+                             , time: time, transition: 'easeInOutQuad' });
     },
 })
 
