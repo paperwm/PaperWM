@@ -210,6 +210,9 @@ const Minimap = new Lang.Class({
 
         let movingClone = this.clones[index];
 
+        // Make sure the moving window is on top
+        this.minimapActor.set_child_above_sibling(movingClone, this.minimapActor.last_child);
+
         let temp = this.clones[index];
         this.clones[index] = this.clones[targetIndex];
         this.clones[targetIndex] = temp;
