@@ -181,6 +181,7 @@ const Minimap = new Lang.Class({
             if (animate) {
                 time = 0.25;
             }
+            actor.destinationX = x;
             Tweener.addTween(actor, { x: x
                                         , scale_x: 1
                                         , scale_y: 1
@@ -201,6 +202,26 @@ const Minimap = new Lang.Class({
         }
 
         propagate_forward(0, 0, window_gap);
+    },
+
+    reorder: function(index, targetIndex, targetX) {
+        // targetX is the destination of the moving window in viewport
+        // coordinates
+
+        let movingClone = this.clones[index];
+
+        let temp = this.clones[index];
+        this.clones[index] = this.clones[targetIndex];
+        this.clones[targetIndex] = temp;
+
+        this.layout(this.clones);
+
+        // this.layout sets destinationX
+        Tweener.addTween(this.minimapActor
+                         , { x: -(movingClone.destinationX - targetX) 
+                             , time: 0.25, transition: 'easeInOutQuad'
+                           });
+
     },
 
     sync: function(selectedWindowX, animate=true) {

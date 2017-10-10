@@ -686,9 +686,13 @@ PreviewedWindowNavigator = new Lang.Class({
         }
 
         swapArray(this.space, index, targetIndex);
-        this.space.moving = false;
 
-        this._select(targetIndex);
+        let metaWindow = this.space[targetIndex];
+        let newX = ensure_viewport(this.space, metaWindow, true);
+
+        this._selectedIndex = targetIndex;
+
+        this._switcherList.getSelected().reorder(index, targetIndex, newX);
     },
 
     _doAction: function(mutterActionId) {
