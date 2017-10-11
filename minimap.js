@@ -136,6 +136,10 @@ const Minimap = new Lang.Class({
                                          , scale_y: 0.9
                                          , transition: "easeInOutQuad"
                                          , time: time});
+            } else {
+                this.minimapActor
+                    .set_child_above_sibling(clone,
+                                             this.minimapActor.last_child);
             }
         }
         for (let i=clones.length-1; i>around; i--) {
