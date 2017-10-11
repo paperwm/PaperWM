@@ -779,6 +779,7 @@ PreviewedWindowNavigator = new Lang.Class({
             }
         }
         this._selectedIndex = index;
+        this._switcherList.highlight(index);
     },
 
     destroy: function() {

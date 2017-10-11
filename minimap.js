@@ -237,6 +237,7 @@ Minimap = new Lang.Class({
             time = 0.25
         let selectedIndex = this.space.selectedIndex();
         let clone = this.clones[selectedIndex];
+        this.minimapActor.destinationX = -(clone.x - selectedWindowX);
         Tweener.addTween(this.minimapActor
                          , { x: -(clone.x - selectedWindowX)
                              , time: time, transition: 'easeInOutQuad' });
@@ -293,6 +294,12 @@ MultiMap = new Lang.Class({
         this.actor.width = this.container.first_child.width;
 
         let minimap = this.setSelected(this.selectedIndex, false);
+
+        this.selectionChrome = new St.Widget();
+        this.actor.add_child(this.selectionChrome);
+        this.selectionChrome.set_style('border: 4px cyan; border-radius: 8px');
+
+
         let chrome = new St.Widget();
         this.actor.add_child(chrome);
         chrome.set_size(this.actor.width + 2*4, this.actor.height + 2*4);
@@ -350,6 +357,28 @@ MultiMap = new Lang.Class({
             wrapper.show();
         });
         this.setSelected(this.selectedIndex, false);
+    },
+
+    highlight: function(index) {
+        let minimap = this.getSelected();
+        let clone = minimap.clones[index];
+        let size = clone.get_transformed_size()
+
+        let delta = minimap.minimapActor.x - minimap.minimapActor.destinationX;
+        let position = minimap.minimapActor
+            .apply_relative_transform_to_point(this.actor,
+                                               new Clutter.Vertex(
+                                                   {x: clone.destinationX - delta,
+                                                    y: clone.y,
+                                                    z: clone.z_position
+                                                   }));
+        Tweener.addTween(this.selectionChrome,
+                         {x: position.x - 4,
+                          y: position.y - 4,
+                          width: size[0] + 8,
+                          height: size[1] + 8,
+                          time: 0.25
+                         })
     }
 })
 
