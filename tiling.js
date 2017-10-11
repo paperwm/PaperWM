@@ -722,7 +722,7 @@ PreviewedWindowNavigator = new Lang.Class({
                                       newMap.space.workspace.workspace_index,
                                       Meta.MotionDirection.UP);
             this.space = newMap.space;
-            this._selectedIndex = this.space.selectedIndex();
+            this._select(this.space.selectedIndex());
             return true;
         } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_DOWN) {
             let multimap = this._switcherList;
@@ -738,7 +738,7 @@ PreviewedWindowNavigator = new Lang.Class({
                                       newMap.space.workspace.workspace_index,
                                       Meta.MotionDirection.DOWN);
             this.space = newMap.space;
-            this._selectedIndex = this.space.selectedIndex();
+            this._select(this.space.selectedIndex());
             return true;
         }
 
