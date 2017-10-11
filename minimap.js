@@ -186,7 +186,8 @@ Minimap = new Lang.Class({
                 time = 0.25;
             }
             actor.destinationX = x;
-            Tweener.addTween(actor, { x: x
+            Tweener.addTween(actor, { x: actor.destinationX
+                                        , y: 0
                                         , scale_x: 1
                                         , scale_y: 1
                                         , time: time
@@ -297,27 +298,30 @@ MultiMap = new Lang.Class({
 
         this.selectionChrome = new St.Widget();
         this.actor.add_child(this.selectionChrome);
-        this.selectionChrome.set_style('border: 4px cyan; border-radius: 8px');
+        this.selectionChrome.set_style('border: 4px #256ab1; border-radius: 8px');
 
 
         let chrome = new St.Widget();
         this.actor.add_child(chrome);
         chrome.set_size(this.actor.width + 2*4, this.actor.height + 2*4);
         chrome.set_position(-4, -4);
-        chrome.set_style('border: 4px #215d9c; border-radius: 8px;');
+        chrome.set_style('border: 4px #454f52; border-radius: 8px;');
     },
-
 
     addSpace: function(s, i) {
         let wrapper = new St.Widget({ name: "minimap-wrapper-"+i });
         let minimap = new Minimap(s);
+        wrapper.set_background_color(Clutter.Color.get_static(3))
         minimap.actor.reparent(wrapper);
         this.container.add_child(wrapper);
         minimap.actor.visible = true;
         minimap.refresh();
         minimap.fold(undefined, false);
-        wrapper.width = Math.ceil(minimap.actor.width * minimap.actor.scale_x);
-        wrapper.height = Math.ceil(minimap.actor.height * minimap.actor.scale_y);
+        wrapper.width =
+            Math.ceil(minimap.actor.width * minimap.actor.scale_x) + 20;
+        wrapper.height =
+            Math.ceil(minimap.actor.height * minimap.actor.scale_y) + 12;
+        minimap.actor.set_position(10, 8);
         this.minimaps.push(minimap);
     },
 
@@ -369,15 +373,16 @@ MultiMap = new Lang.Class({
             .apply_relative_transform_to_point(this.actor,
                                                new Clutter.Vertex(
                                                    {x: clone.destinationX - delta,
-                                                    y: clone.y,
+                                                    y: panelBox.height,
                                                     z: clone.z_position
                                                    }));
         Tweener.addTween(this.selectionChrome,
                          {x: position.x - 4,
-                          y: position.y - 4,
+                          y: 4,
                           width: size[0] + 8,
                           height: size[1] + 8,
-                          time: 0.25
+                          time: 0.25,
+                          transition: 'easeInOutQuad'
                          })
     }
 })
