@@ -740,6 +740,58 @@ PreviewedWindowNavigator = new Lang.Class({
             this.space = newMap.space;
             this._select(this.space.selectedIndex());
             return true;
+        } else if (mutterActionId === Meta.KeyBindingAction.MOVE_TO_WORKSPACE_DOWN) {
+            let multimap = this._switcherList;
+            multimap.showAll();
+            let from = multimap.selectedIndex;
+            let to = from + 1;
+            if (to >= spaces.length)
+                return true;
+            let oldMap = multimap.getSelected();
+            let newMap = multimap.setSelected(to);
+            let selectedWindow = this.space.selectedWindow;
+            Main.wm._previewWorkspaceDone();
+
+            Main.wm._movingWindow = selectedWindow;
+            selectedWindow.change_workspace(newMap.space.workspace);
+            oldMap.refresh();
+            newMap.refresh();
+            oldMap.fold();
+            multimap.setSelected(to);
+            Main.wm._previewWorkspace(oldMap.space.workspace.workspace_index,
+                                      newMap.space.workspace.workspace_index,
+                                      Meta.MotionDirection.DOWN);
+            this.space = newMap.space;
+            this.space.selectedWindow = selectedWindow;
+            this.space.moving = false;
+            this._select(this.space.selectedIndex());
+            return true;
+        } else if (mutterActionId === Meta.KeyBindingAction.MOVE_TO_WORKSPACE_UP) {
+            let multimap = this._switcherList;
+            multimap.showAll();
+            let from = multimap.selectedIndex;
+            let to = from - 1;
+            if (to >= spaces.length)
+                return true;
+            let oldMap = multimap.getSelected();
+            let newMap = multimap.setSelected(to);
+            let selectedWindow = this.space.selectedWindow;
+            Main.wm._previewWorkspaceDone();
+
+            Main.wm._movingWindow = selectedWindow;
+            selectedWindow.change_workspace(newMap.space.workspace);
+            oldMap.refresh();
+            newMap.refresh();
+            oldMap.fold();
+            // global.display.clear_mouse_mode();
+            Main.wm._previewWorkspace(oldMap.space.workspace.workspace_index,
+                                      newMap.space.workspace.workspace_index,
+                                      Meta.MotionDirection.UP);
+            this.space = newMap.space;
+            this.space.selectedWindow = selectedWindow;
+            this.space.moving = false;
+            this._select(this.space.selectedIndex());
+            return true;
         }
 
         return false;
