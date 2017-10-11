@@ -11,7 +11,7 @@ const Gio = imports.gi.Gio;
 const utils = Extension.imports.utils;
 const Clutter = imports.gi.Clutter;
 
-Minimap = Extension.imports.minimap;
+Extension.imports.minimap;
 
 let preferences = Extension.imports.convenience.getSettings();
 // Gap between windows

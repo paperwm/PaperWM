@@ -67,7 +67,7 @@ WindowCloneLayout = new Lang.Class({
     }
 });
 
-const Minimap = new Lang.Class({
+Minimap = new Lang.Class({
     Name: 'Minimap',
 
     _init: function(space) {
