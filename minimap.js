@@ -369,16 +369,41 @@ MultiMap = new Lang.Class({
         let clone = minimap.clones[index];
         let size = clone.get_transformed_size()
 
-        let delta = minimap.minimapActor.x - minimap.minimapActor.destinationX;
-        let position = minimap.minimapActor
-            .apply_relative_transform_to_point(this.actor,
-                                               new Clutter.Vertex(
-                                                   {x: clone.destinationX - delta,
-                                                    y: panelBox.height,
-                                                    z: clone.z_position
-                                                   }));
+        // Note that both the minimapActor and the clone could be moving at this
+        // point.
+        //
+        // For some reason Clutter.Actor.apply_relative_transform_to_point
+        // fail to work when changing workspace.. (ie. when going from only one
+        // minimap visible to all visible)
+
+        /**
+         * Transformation a point in `actor`-relative coordinates to `ancestor`
+         * relative coordinates. (NB: ignores rotations for now)
+         * Uses actor's `destinationX/Y` if set.
+         */
+        function transform(actor, ancestor, x, y) {
+            if (actor === ancestor || !actor)
+                return [x, y];
+
+            let actorX = actor.x;
+            if (actor.destinationX !== undefined)
+                actorX = actor.destinationX;
+
+            let actorY = actor.y;
+            if (actor.destinationY !== undefined)
+                actorX = actor.destinationY;
+
+            return transform(actor.get_parent(), ancestor,
+                             x*actor.scale_x + actorX,
+                             y*actor.scale_y + actorY);
+        }
+
+        // Calculate destinationX of selected clone in viewport coordinates and
+        // tween the chrome there
+        let [x, yIgnored] = transform(minimap.minimapActor, this.actor, clone.destinationX, 0)
+
         Tweener.addTween(this.selectionChrome,
-                         {x: position.x - 4,
+                         {x: x - 4,
                           y: 4,
                           width: size[0] + 8,
                           height: size[1] + 8,
