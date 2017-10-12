@@ -704,8 +704,10 @@ PreviewedWindowNavigator = new Lang.Class({
             to = from + 1;
         else
             to = from - 1;
-        if (to < 0 || to >= spaces.length)
+        if (to < 0 || to >= spaces.length) {
+            this._select(this.space.selectedIndex());
             return true;
+        }
         let oldMap = multimap.getSelected();
         let newMap = multimap.setSelected(to);
         Main.wm._previewWorkspaceDone();
