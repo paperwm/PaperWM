@@ -127,11 +127,14 @@ Minimap = new Lang.Class({
         let clones = this.clones;
 
         let maxProtrusion = 500;
+        let leftStackGap = maxProtrusion/(around);
+        let rightStackGap = maxProtrusion/(clones.length - 1 - around);
         for (let i=0; i < around; i++) {
             let clone = clones[i];
             clone.set_pivot_point(0, 0.5);
             if (clone.x + this.minimapActor.x <= -maxProtrusion) {
-                Tweener.addTween(clone, {x: -this.minimapActor.x - maxProtrusion
+                Tweener.addTween(clone, {x: -this.minimapActor.x
+                                         - (maxProtrusion - i*leftStackGap)
                                          , scale_x: 0.9
                                          , scale_y: 0.9
                                          , transition: "easeInOutQuad"
@@ -146,7 +149,9 @@ Minimap = new Lang.Class({
             let clone = clones[i];
             clone.set_pivot_point(1, 0.5);
             if (clone.x + clone.width + this.minimapActor.x >= primary.width + maxProtrusion) {
-                Tweener.addTween(clone, {x: -this.minimapActor.x + primary.width + maxProtrusion - clone.width
+                Tweener.addTween(clone, {x: -this.minimapActor.x
+                                         + primary.width
+                                         + (maxProtrusion - (clones.length-1 - i)*rightStackGap) - clone.width
                                          , scale_x: 0.9
                                          , scale_y: 0.9
                                          , transition: "easeInOutQuad"
