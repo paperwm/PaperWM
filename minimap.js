@@ -206,7 +206,7 @@ Minimap = new Lang.Class({
             propagate_forward(i+1, x + w + gap, gap);
         }
 
-        propagate_forward(0, 0, window_gap);
+        propagate_forward(0, 0, 5*window_gap);
     },
 
     reorder: function(index, targetIndex, targetX) {
