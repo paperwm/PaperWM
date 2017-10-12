@@ -227,7 +227,7 @@ Minimap = new Lang.Class({
         // this.layout sets destinationX
         this.minimapActor.destinationX = -(movingClone.destinationX - targetX);
         Tweener.addTween(this.minimapActor
-                         , { x: -(movingClone.destinationX - targetX) 
+                         , { x: this.minimapActor.destinationX 
                              , time: 0.25, transition: 'easeInOutQuad'
                            });
 
@@ -239,9 +239,9 @@ Minimap = new Lang.Class({
             time = 0.25
         let selectedIndex = this.space.selectedIndex();
         let clone = this.clones[selectedIndex];
-        this.minimapActor.destinationX = -(clone.x - selectedWindowX);
+        this.minimapActor.destinationX = -(clone.destinationX - selectedWindowX);
         Tweener.addTween(this.minimapActor
-                         , { x: -(clone.x - selectedWindowX)
+                         , { x: this.minimapActor.destinationX
                              , time: time, transition: 'easeInOutQuad' });
     },
 })
