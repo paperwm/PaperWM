@@ -693,6 +693,7 @@ PreviewedWindowNavigator = new Lang.Class({
         this._selectedIndex = targetIndex;
 
         this._switcherList.getSelected().reorder(index, targetIndex, newX);
+        this._switcherList.highlight(targetIndex);
     },
 
     selectSpace: function(direction, move) {

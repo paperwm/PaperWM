@@ -225,6 +225,7 @@ Minimap = new Lang.Class({
         this.layout(this.clones);
 
         // this.layout sets destinationX
+        this.minimapActor.destinationX = -(movingClone.destinationX - targetX);
         Tweener.addTween(this.minimapActor
                          , { x: -(movingClone.destinationX - targetX) 
                              , time: 0.25, transition: 'easeInOutQuad'
