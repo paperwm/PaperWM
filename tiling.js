@@ -212,8 +212,8 @@ setInitialPosition = function(actor, existing) {
             ensure_viewport(space, metaWindow, true);
         } else {
             move_to(space, metaWindow,
-                    metaWindow.scrollwm_initial_position.x,
-                    metaWindow.scrollwm_initial_position.y)
+                    { x: metaWindow.scrollwm_initial_position.x,
+                      y: metaWindow.scrollwm_initial_position.y });
         }
 
         delete metaWindow.scrollwm_initial_position;
@@ -231,12 +231,12 @@ setInitialPosition = function(actor, existing) {
 }
 
 // Move @meta_window to x, y and propagate the change in @space
-move_to = function(space, meta_window, x, y, delay, transition) {
+move_to = function(space, meta_window, { x, y, delay, transition,
+                                         onComplete, onStart }) {
     // Register @meta_window as moving on @space
-    space.moving = meta_window;
     move(meta_window, x, y
-         , () => { space.moving = false; } // onComplete
-         , () => { meta_window.raise(); } // onStart
+         , onComplete
+         , onStart
          , delay
          , transition
         );
@@ -314,7 +314,11 @@ ensure_viewport = (space, meta_window, force) => {
         transition = 'easeInOutQuad';
         debug('delay', delay)
     }
-    move_to(space, meta_window, x, y, delay, transition);
+    space.moving = meta_window;
+    move_to(space, meta_window, { x, y, delay, transition,
+                                  onComplete: () => { space.moving = false;},
+                                  onStart:() => { meta_window.raise(); }
+                                });
     // Return x so we can position the minimap
     return x;
 }
