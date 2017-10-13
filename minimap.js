@@ -3,6 +3,7 @@ Tweener = imports.ui.tweener;
 Lang = imports.lang;
 St = imports.gi.St;
 Workspace = imports.ui.workspace;
+Background = imports.ui.background;
 Meta = imports.gi.Meta;
 
 calcOffset = function(metaWindow) {
@@ -80,7 +81,6 @@ Minimap = new Lang.Class({
         this.actor.height = primary.height;
         this.actor.width = primary.width;
         this.actor.add_actor(this.minimapActor);
-        this.actor.set_background_color(Clutter.Color.get_static(3))
 
     },
 
@@ -317,7 +317,13 @@ MultiMap = new Lang.Class({
     addSpace: function(s, i) {
         let wrapper = new St.Widget({ name: "minimap-wrapper-"+i });
         let minimap = new Minimap(s);
-        wrapper.set_background_color(Clutter.Color.get_static(3))
+
+        // Create the background, see overview.js
+        let background = new Meta.BackgroundGroup();
+        let bgManager = new Background.BackgroundManager({ container: background,
+                                                           monitorIndex: 0,
+                                                           vignette: false });
+        wrapper.add_child(background);
         minimap.actor.reparent(wrapper);
         this.container.add_child(wrapper);
         minimap.actor.visible = true;
@@ -327,6 +333,8 @@ MultiMap = new Lang.Class({
             Math.ceil(minimap.actor.width * minimap.actor.scale_x) + 20;
         wrapper.height =
             Math.ceil(minimap.actor.height * minimap.actor.scale_y) + 12;
+        background.first_child.width = wrapper.width;
+        background.first_child.height = wrapper.height;
         minimap.actor.set_position(10, 8);
         this.minimaps.push(minimap);
     },
