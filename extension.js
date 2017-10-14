@@ -100,6 +100,9 @@ function enable() {
     registerPaperAction("toggle-scratch-layer", dynamic_function_ref("toggleScratch"));
 
     registerPaperAction("develop-set-globals", dynamic_function_ref("setDevGlobals"));
+
+    registerPaperAction("cycle-width", as_key_handler("cycleWindowWidth"),
+                        Meta.KeyBindingFlags.PER_WINDOW);
 }
 
 function disable() {

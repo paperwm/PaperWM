@@ -830,4 +830,30 @@ preview_navigate = (display, screen, meta_window, binding) => {
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
 
+cycleWindowWidth = function(metaWindow) {
+    const gr = 1/1.618;
+    const ratios = [(1-gr), 1/2, gr];
 
+    function findNext(tr) {
+        // Find the first ratio that is significantly bigger than 'tr'
+        for (let i = 0; i < ratios.length; i++) {
+            let r = ratios[i]
+            if (tr <= r) {
+                if (tr/r > 0.9) {
+                    return (i+1) % ratios.length;
+                } else {
+                    return i;
+                }
+            }
+        }
+        return 0; // cycle
+    }
+    let frame = metaWindow.get_frame_rect();
+    let availableWidth = primary.width - minimumMargin*2;
+    let r = frame.width / availableWidth;
+    let nextW = Math.floor(ratios[findNext(r)]*availableWidth);
+    metaWindow.move_resize_frame(true, frame.x, frame.y, nextW, frame.height);
+    ensure_viewport(spaceOf(metaWindow), metaWindow, true);
+
+    delete metaWindow.unmaximized_rect;
+}

@@ -51,6 +51,11 @@
       <summary>Move the focused window left in the tiling</summary>
     </key>
 
+    <key type="as" name="cycle-width">
+      <default><![CDATA[['<Super>r']]]></default>
+      <summary>Cycle through a pre-determined list of window widths</summary>
+    </key>
+
     <key type="as" name="develop-set-globals">
       <default><![CDATA[['<Super>Insert']]]></default>
       <summary>
