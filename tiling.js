@@ -90,6 +90,14 @@ focus = () => {
     return spaces[meta_window.get_workspace().workspace_index].indexOf(meta_window)
 }
 
+isStacked = function(metaWindow) {
+    return metaWindow.get_compositor_private().is_scaled();
+}
+
+isUnStacked = function(metaWindow) {
+    return !isStacked(metaWindow);
+}
+
 isFullyVisible = function(metaWindow) {
     let frame = metaWindow.get_frame_rect();
     return frame.x >= 0 && (frame.x + frame.width) <= primary.width;
@@ -648,6 +656,28 @@ toggle_maximize_horizontally = (meta_window) => {
         meta_window.move_resize_frame(true, frame.x, frame.y, primary.width - minimumMargin*2, frame.height);
     }
     ensure_viewport(spaceOf(meta_window), meta_window);
+}
+
+tileVisible = function(metaWindow) {
+    metaWindow = metaWindow || global.display.focus_window;
+    let space = spaceOf(metaWindow);
+    if (!space)
+        return;
+
+    let active = space.filter(isUnStacked);
+    let requiredWidth =
+        utils.sum(active.map(mw => mw.get_frame_rect().width))
+        + (active.length-1)*window_gap + minimumMargin*2;
+    let deficit = requiredWidth - primary.width;
+    if (deficit > 0) {
+        let perWindowReduction = Math.ceil(deficit/active.length);
+        active.forEach(mw => {
+            let frame = mw.get_frame_rect();
+            mw.move_resize_frame(true, frame.x, frame.y, frame.width - perWindowReduction, frame.height);
+        });
+
+    }
+    move_to(space, active[0], { x: minimumMargin, y: active[0].get_frame_rect().y });
 }
 
 SwitcherPopup = imports.ui.switcherPopup;

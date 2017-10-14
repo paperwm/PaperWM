@@ -103,6 +103,8 @@ function enable() {
 
     registerPaperAction("cycle-width", as_key_handler("cycleWindowWidth"),
                         Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction("tile-visible", as_key_handler("tileVisible"),
+                        Meta.KeyBindingFlags.PER_WINDOW);
 }
 
 function disable() {

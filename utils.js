@@ -120,3 +120,7 @@ toggleWindowBoxes = function(metaWindow) {
     metaWindow._paperDebugBoxes = boxes;
     return boxes;
 }
+
+function sum(array) {
+    return array.reduce((a, b) => a + b, 0);
+}
