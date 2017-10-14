@@ -90,6 +90,11 @@ focus = () => {
     return spaces[meta_window.get_workspace().workspace_index].indexOf(meta_window)
 }
 
+isFullyVisible = function(metaWindow) {
+    let frame = metaWindow.get_frame_rect();
+    return frame.x >= 0 && (frame.x + frame.width) <= primary.width;
+}
+
 // Max height for windows
 max_height = primary.height - panelBox.height - margin_tb*2;
 // Height to use when scaled down at the sides
@@ -303,6 +308,11 @@ ensure_viewport = (space, meta_window, force) => {
         // Align to the left margin_lr
         x = margin_lr;
     }
+
+    if (isFullyVisible(meta_window)) {
+        x = frame.x;
+    }
+
     // Add a delay for stacked window to avoid windows passing
     // through each other in the z direction
 
