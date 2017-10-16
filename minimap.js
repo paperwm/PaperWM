@@ -161,7 +161,7 @@ Minimap = new Lang.Class({
     },
 
     unfold: function (animate = true) {
-        this.layout(this.clones, animate);
+        this.layout(animate);
     },
 
     toggle: function() {
@@ -176,16 +176,15 @@ Minimap = new Lang.Class({
         let selectedIndex = this.space.selectedIndex();
         if(selectedIndex > -1) {
             this.restack(selectedIndex);
-            this.layout(this.clones, false);
+            this.layout(false);
             let frame = this.space.selectedWindow.get_frame_rect();
             this.sync(frame.x, false);
         }
     },
 
-    layout: function(actors, animate = true) {
+    layout: function(animate = true) {
+        let actors = this.clones;
         function tweenTo(actor, x) {
-            // let [dx, dy] = calcOffset(actor.meta_window);
-            // actor.set_pivot_point(0, 0);
             let time = 0;
             if (animate) {
                 time = 0.25;
@@ -227,7 +226,7 @@ Minimap = new Lang.Class({
         this.clones[index] = this.clones[targetIndex];
         this.clones[targetIndex] = temp;
 
-        this.layout(this.clones);
+        this.layout();
 
         // this.layout sets destinationX
         this.minimapActor.destinationX = -(movingClone.destinationX - targetX);
