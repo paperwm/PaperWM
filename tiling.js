@@ -130,6 +130,7 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
         let pivot = actor.pivot_point;
         actor.set_pivot_point(pivot.x, y_offset/buffer.height);
     }
+    meta_window.destinationX = x;
     Tweener.addTween(actor, {x: x - x_offset
                              , y: y - y_offset
                              , time: 0.25 - delay
@@ -141,6 +142,7 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
                                  onStart && onStart();
                              }
                              , onComplete: () => {
+                                 meta_window.destinationX = undefined;
                                  if(meta_window.get_compositor_private()) {
                                      // If the actor is gone, the window is in process of closing
                                      meta_window.move_frame(true, x, y);
@@ -801,6 +803,17 @@ PreviewedWindowNavigator = new Lang.Class({
         } else if (mutterActionId === Meta.KeyBindingAction.MOVE_TO_WORKSPACE_UP) {
             this.selectSpace(Meta.MotionDirection.UP, true);
             return true;
+        } else {
+            let action = paperActions.byId(mutterActionId);
+            if (action) {
+                let metaWindow = this.space[this._selectedIndex];
+                action.handler(null, null, metaWindow);
+                let minimap = this._switcherList.getSelected();
+                minimap.layout();
+                minimap.sync(metaWindow.destinationX);
+                this._switcherList.highlight(this._selectedIndex);
+                return true;
+            }
         }
 
         return false;
