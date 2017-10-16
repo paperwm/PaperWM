@@ -92,20 +92,27 @@ The clutter actor will receives all input until `Main.popModal` is called.
 
 Gnome-shell will inform mutter[1] that mouse input in the actor's region should be sent through clutter. This allows the actor to capture input. Ie. setting `reactive` to true is not enough to capture mouse input.
 
-Building `StWidget` detached from the stage are likely to result in the following warning:
+Building `StWidget` detached from the stage are prone to result in the following warning:
 
 : st_widget_get_theme_node called on the widget [0x... St...] which is not in the stage.
 
 This is because a lot of actor properties depend on the style of the actor and that can depend on the ancestors of the actor. (`.parent .child { border: 2px; }`)
 
-So any code that try to access eg. height/width requires that the full style info is present.
-
+So any code that try to access eg. height/width (unless these have been explicitly set beforehand) requires that the full style info is present.
 
 [1] By using `meta_set_stage_input_region` through `global.set_stage_input_region`
 
 ** `MetaWindow` and `MetaWindowActor`
-   TODO: display_rect vs frame_rect vs actor.width. Gotchas when placing MetaWindowActors in containers, etc.
+TODO: display_rect vs frame_rect vs actor.width. Gotchas when placing MetaWindowActors in containers, etc.
 
+** Stacking/"z-index"
+The "z-index" in clutter is controlled by the actors position in the scene graph. Ie. the actors are drawn in a depth first manner. So the last child of a parent will be drawn on top of all the other children, and so on.
+
+To my knowledge there is no way to make a actor "break out" of its parent. If sibling A is drawn below another actor X, sibling B will also be drawn below X.
+
+NB: `ClutterActor.z-position` **don't** control the z-index. It is used to control the perspective of the actors (most relevant for rotated actors).
+
+A complication when using non-window actors inside `global.window_group` is that mutter keep restacking the window actors in a way that destroys the non-window actors z-index. Listening on the `restacked` signal of `global.screen` (`MetaScreen`) and restack the non-window actors in the handler is a workaround that seems to work.
 * TODO Firefox focus bug
 Sometimes firefox windows refuse to gain proper focus. What happens is that another (or multiple!) firefox window somehow have focus in the address bar. The workaround is to find that/those window(s) and remove focus from the address bar.
 
