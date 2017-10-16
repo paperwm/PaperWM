@@ -709,13 +709,14 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _initialSelection: function(backward, actionName) {
-        let actionId = window.paperActionIds[actionName];
-        if(actionId === undefined) {
+        let actionId = paperActions.idOf(actionName);
+        if(actionId === Meta.KeyBindingAction.NONE) {
             try {
                 // Check for built-in actions
                 actionId = Meta.prefs_get_keybinding_action(actionName);
             } catch(e) {
                 debug("Couldn't resolve action name");
+                return;
             }
         }
 
@@ -776,16 +777,16 @@ PreviewedWindowNavigator = new Lang.Class({
     },
 
     _doAction: function(mutterActionId) {
-        if (mutterActionId === window.paperActionIds["switch-next"]) {
+        if (mutterActionId === paperActions.idOf("switch-next")) {
             this._select(this._next());
             return true;
-        } else if (mutterActionId === window.paperActionIds["switch-previous"]) {
+        } else if (mutterActionId === paperActions.idOf("switch-previous")) {
             this._select(this._previous());
             return true;
-        } else if (mutterActionId === window.paperActionIds["move-left"]) {
+        } else if (mutterActionId === paperActions.idOf("move-left")) {
             this._reorder(this._selectedIndex, this._previous());
             return true;
-        } else if (mutterActionId === window.paperActionIds["move-right"]) {
+        } else if (mutterActionId === paperActions.idOf("move-right")) {
             this._reorder(this._selectedIndex, this._next());
             return true;
         } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_UP) {

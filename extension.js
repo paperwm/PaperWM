@@ -18,6 +18,44 @@ let isDuringGnomeShellStartup = false;
 
 window.PaperWM = Extension;
 
+/*
+  Keep track of some mappings mutter doesn't do/expose
+  - action-name -> action-id mapping
+  - action-id   -> action mapping
+  - action      -> handler
+*/
+window.paperActions = {
+    actions: [],
+    nameMap: {},
+    register: function(actionName, handler, metaKeyBindingFlags) {
+        let id = registerMutterAction(actionName,
+                                      handler,
+                                      metaKeyBindingFlags)
+        let action = { id: id
+                       , name: actionName
+                       , handler: handler
+                     };
+        this.actions.push(action);
+        this.nameMap[actionName] = action;
+        return action;
+    },
+    idOf: function(name) {
+        let action = this.byName(name);
+        if (action) {
+            return action.id;
+        } else {
+            return Meta.KeyBindingAction.NONE;
+        }
+    },
+    byName: function(name) {
+        return this.nameMap[name];
+    },
+    byId: function(mutterId) {
+        return this.actions.find(action => action.id == mutterId);
+    }
+};
+
+
 function init() {
     initCount++;
     SESSIONID += "#"
@@ -88,33 +126,25 @@ function enable() {
     Meta.keybindings_set_custom_handler("switch-to-workspace-down",
                                         dynamic_function_ref("preview_navigate"));
 
-    // Action name => mutter-keybinding-action-id
-    window.paperActionIds = {};
 
-    registerPaperAction("switch-next",     dynamic_function_ref("preview_navigate"));
-    registerPaperAction("switch-previous", dynamic_function_ref("preview_navigate"),
+    paperActions.register("switch-next",     dynamic_function_ref("preview_navigate"));
+    paperActions.register("switch-previous", dynamic_function_ref("preview_navigate"),
                         Meta.KeyBindingFlags.IS_REVERSED);
 
-    registerPaperAction("move-left", dynamic_function_ref("preview_navigate"));
-    registerPaperAction("move-right", dynamic_function_ref("preview_navigate"));
-    registerPaperAction("toggle-scratch-layer", dynamic_function_ref("toggleScratch"));
+    paperActions.register("move-left", dynamic_function_ref("preview_navigate"));
+    paperActions.register("move-right", dynamic_function_ref("preview_navigate"));
+    paperActions.register("toggle-scratch-layer", dynamic_function_ref("toggleScratch"));
 
-    registerPaperAction("develop-set-globals", dynamic_function_ref("setDevGlobals"));
+    paperActions.register("develop-set-globals", dynamic_function_ref("setDevGlobals"));
 
-    registerPaperAction("cycle-width", as_key_handler("cycleWindowWidth"),
+    paperActions.register("cycle-width", as_key_handler("cycleWindowWidth"),
                         Meta.KeyBindingFlags.PER_WINDOW);
-    registerPaperAction("tile-visible", as_key_handler("tileVisible"),
+    paperActions.register("tile-visible", as_key_handler("tileVisible"),
                         Meta.KeyBindingFlags.PER_WINDOW);
 }
 
 function disable() {
     debug("disable", SESSIONID);
-}
-
-function registerPaperAction(actionName, handler, metaKeyBindingFlags) {
-    let id = registerMutterAction(actionName, handler, metaKeyBindingFlags)
-    window.paperActionIds[actionName] = id;
-    return id;
 }
 
 /**
