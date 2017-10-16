@@ -5,6 +5,7 @@ St = imports.gi.St;
 Workspace = imports.ui.workspace;
 Background = imports.ui.background;
 Meta = imports.gi.Meta;
+Pango = imports.gi.Pango;
 
 calcOffset = function(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
@@ -77,7 +78,7 @@ Minimap = new Lang.Class({
         this.minimapActor = new Clutter.Actor({ name: "minimap-container"} );
 
         this.clones = [];
-        this.actor.set_scale(0.1, 0.1);
+        this.actor.set_scale(0.25, 0.25);
         this.actor.height = primary.height;
         this.actor.width = primary.width;
         this.actor.add_actor(this.minimapActor);
@@ -302,6 +303,13 @@ MultiMap = new Lang.Class({
         let minimap = this.setSelected(this.selectedIndex, false);
 
         this.selectionChrome = new St.Widget();
+        let label = new St.Label({ style_class: "window-caption" });
+        this.selectionChrome.add_child(label);
+        label.y = Math.round(this.rowHeight / 2 - 30);
+        label.x = 4 + 2;
+
+        label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+        this.selectionChrome.label = label;
         this.actor.add_child(this.selectionChrome);
         this.selectionChrome.set_style('border: 4px #256ab1; border-radius: 8px');
 
@@ -413,6 +421,12 @@ MultiMap = new Lang.Class({
         // Calculate destinationX of selected clone in viewport coordinates and
         // tween the chrome there
         let [x, yIgnored] = transform(minimap.minimapActor, this.actor, clone.destinationX, 0)
+        x = Math.round(x);
+
+        let label = this.selectionChrome.label;
+        label.y = Math.round((size[1] - label.height)/2);
+        label.text = clone.first_child.meta_window.title;
+        label.width = size[0] - 4
 
         Tweener.addTween(this.selectionChrome,
                          {x: x - 4,
