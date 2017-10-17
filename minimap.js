@@ -7,6 +7,9 @@ Background = imports.ui.background;
 Meta = imports.gi.Meta;
 Pango = imports.gi.Pango;
 
+
+MINIMAP_SCALE = 0.15;
+
 calcOffset = function(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
     let frame = metaWindow.get_frame_rect();
@@ -78,7 +81,7 @@ Minimap = new Lang.Class({
         this.minimapActor = new Clutter.Actor({ name: "minimap-container"} );
 
         this.clones = [];
-        this.actor.set_scale(0.25, 0.25);
+        this.actor.set_scale(MINIMAP_SCALE, MINIMAP_SCALE);
         this.actor.height = primary.height;
         this.actor.width = primary.width;
         this.actor.add_actor(this.minimapActor);
@@ -302,23 +305,22 @@ MultiMap = new Lang.Class({
 
         let minimap = this.setSelected(this.selectedIndex, false);
 
-        this.selectionChrome = new St.Widget();
-        let label = new St.Label({ style_class: "window-caption" });
+        this.selectionChrome = new St.Widget({ style_class: 'window-clone-border'});
+        let label = new St.Label({ style_class: "window-caption"});
         this.selectionChrome.add_child(label);
         label.y = Math.round(this.rowHeight / 2 - 30);
-        label.x = 4 + 2;
+       // label.x = 4 + 2;
 
         label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
         this.selectionChrome.label = label;
         this.actor.add_child(this.selectionChrome);
-        this.selectionChrome.set_style('border: 4px #256ab1; border-radius: 8px');
 
 
-        let chrome = new St.Widget();
-        this.actor.add_child(chrome);
-        chrome.set_size(this.actor.width + 2*4, this.actor.height + 2*4);
-        chrome.set_position(-4, -4);
-        chrome.set_style('border: 4px #454f52; border-radius: 8px;');
+        // let chrome = new St.Widget();
+        // this.actor.add_child(chrome);
+        // chrome.set_size(this.actor.width + 2*4, this.actor.height + 2*4);
+        // chrome.set_position(-4, -4);
+        // chrome.set_style('border: 4px #454f52; border-radius: 8px;');
     },
 
     addSpace: function(s, i) {
@@ -330,7 +332,13 @@ MultiMap = new Lang.Class({
         let bgManager = new Background.BackgroundManager({ container: background,
                                                            monitorIndex: 0,
                                                            vignette: false });
+
+
+        let chrome = new St.Widget();
+
         wrapper.add_child(background);
+        wrapper.add_child(chrome);
+
         minimap.actor.reparent(wrapper);
         this.container.add_child(wrapper);
         minimap.actor.visible = true;
@@ -339,7 +347,11 @@ MultiMap = new Lang.Class({
         wrapper.width =
             Math.ceil(minimap.actor.width * minimap.actor.scale_x) + 20;
         wrapper.height =
-            Math.ceil(minimap.actor.height * minimap.actor.scale_y) + 12;
+            Math.ceil(minimap.actor.height * minimap.actor.scale_y) + 38;
+
+        chrome.set_size(wrapper.width + 2*4, wrapper.height + 4);
+        chrome.set_position(-4, -4);
+        chrome.set_style('border: 4px #454f52; border-radius: 6px;');
         background.first_child.width = wrapper.width;
         background.first_child.height = wrapper.height;
         minimap.actor.set_position(10, 8);
@@ -424,9 +436,15 @@ MultiMap = new Lang.Class({
         x = Math.round(x);
 
         let label = this.selectionChrome.label;
-        label.y = Math.round((size[1] - label.height)/2);
+        let oldWidth = label.first_child.width;
         label.text = clone.first_child.meta_window.title;
-        label.width = size[0] - 4
+        let newWidth = label.first_child.width;
+
+        Tweener.addTween(label, {x: Math.round((size[0] + 8 - label.width)/2),
+                                 y: Math.round(size[1] + 4),
+                                 time: 0.25,
+                                 transition: 'easeInOutQuad'
+                                });
 
         Tweener.addTween(this.selectionChrome,
                          {x: x - 4,
