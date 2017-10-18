@@ -340,21 +340,16 @@ ensure_viewport = (space, meta_window, force) => {
                primary.width - 2*(margin_lr + stack_margin + window_gap)) {
         // Consider the window to be wide and center it
         x = Math.round((primary.width - frame.width)/2);
-    } else if (frame.x + frame.width >= primary.width - minimumMargin) {
+    } else if (frame.x + frame.width > primary.width) {
         // Align to the right margin_lr
         x = primary.width - margin_lr - frame.width;
-    } else if (frame.x <= minimumMargin) {
+    } else if (frame.x < 0) {
         // Align to the left margin_lr
         x = margin_lr;
     }
 
-    if (isFullyVisible(meta_window)) {
-        x = frame.x;
-    }
-
     // Add a delay for stacked window to avoid windows passing
     // through each other in the z direction
-
     let delay = 0;
     let transition;
     if (meta_window.get_compositor_private().is_scaled()) {
