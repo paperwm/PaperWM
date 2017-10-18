@@ -132,7 +132,7 @@ Minimap = new Lang.Class({
 
         let maxProtrusion = 500;
         let leftStackGap = maxProtrusion/(around);
-        let rightStackGap = maxProtrusion/(clones.length - 1 - around);
+        let rightStackGap = maxProtrusion/(clones.length - around);
         for (let i=0; i < around; i++) {
             let clone = clones[i];
             clone.set_pivot_point(0, 0.5);
