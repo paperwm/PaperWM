@@ -349,6 +349,14 @@ MultiMap = new Lang.Class({
         wrapper.height =
             Math.ceil(minimap.actor.height * minimap.actor.scale_y) + 38;
 
+        let workspaceLabel = new St.Label({ style_class: "window-caption" });
+        workspaceLabel.text = Meta.prefs_get_workspace_name(s.workspace.index());
+        if (i == this.selectedIndex) {
+            workspaceLabel.opacity = 0;
+        }
+        wrapper.add_child(workspaceLabel)
+        wrapper.workspaceLabel = workspaceLabel;
+
         chrome.set_size(wrapper.width + 2*4, wrapper.height + 4);
         chrome.set_position(-4, -4);
         chrome.set_style('border: 4px #454f52; border-radius: 6px;');
@@ -366,6 +374,8 @@ MultiMap = new Lang.Class({
         }
         if (i !== this.selectedIndex) {
             this.minimaps[this.selectedIndex].fold(undefined, animate);
+            Tweener.addTween(this.container.get_children()[this.selectedIndex].workspaceLabel,
+                             { opacity: 255, time: 0.25, transition: 'linear' });
         }
 
         this.selectedIndex = i;
@@ -374,6 +384,9 @@ MultiMap = new Lang.Class({
             time = 0.25;
         Tweener.addTween(this.container, { y: -i*this.rowHeight, time: time, transition: 'easeInOutQuad' });
         this.minimaps[this.selectedIndex].unfold(animate);
+        Tweener.addTween(this.container.get_children()[this.selectedIndex].workspaceLabel,
+                         { opacity: 0, time: 0.50, transition: 'linear' });
+
         return this.minimaps[this.selectedIndex];
     },
 
@@ -393,6 +406,11 @@ MultiMap = new Lang.Class({
     showAll: function() {
         this.container.get_children().forEach((wrapper, i) => {
             wrapper.show();
+            let workspaceLabel = wrapper.workspaceLabel;
+            workspaceLabel.x = Math.round((wrapper.width - workspaceLabel.width) / 2);
+            workspaceLabel.y = Math.round((wrapper.height - 38 - workspaceLabel.height) / 2)
+                + this.minimaps[i].actor.y;
+
         });
         this.setSelected(this.selectedIndex, false);
     },
