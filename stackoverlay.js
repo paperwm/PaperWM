@@ -122,19 +122,54 @@ var StackOverlay = new Lang.Class({
     setTarget: function(metaWindow) {
         this.target = metaWindow;
 
+        function bail() {
+            this.target = null;
+            this.overlay.hide();
+            return false;
+        }
+
         if (!metaWindow) {
             // No target. Eg. if we're at the left- or right-most window
-            this.overlay.hide();
-            return;
+            return bail();
         }
 
         let overlay = this.overlay;
         let actor = metaWindow.get_compositor_private();
+        let frame = metaWindow.get_frame_rect();
+        let resizeBorderWidth = 5; // approx.
+        let space = spaceOf(metaWindow);
 
+
+        // Note: Atm. this can be called when the windows are moving. Therefore
+        //       we must use destinationX and we might occationally get wrong y
+        //       positions (icon) (since we don't track the y destination)
+        //       We also assume window widths are are unchanging.
         if (actor.x < stack_margin) {
+            let neighbour = space[space.indexOf(metaWindow) + 1]
+            if (!neighbour)
+                return bail(); // Should normally have a neighbour. Bail!
+ 
+            let neighbourX = neighbour.destinationX ||
+                neighbour.get_frame_rect().x;
+
             overlay.x = 0;
+            overlay.width = Math.min(
+                stack_margin,
+                neighbourX - resizeBorderWidth
+            );
         } else {
-            overlay.x = this.monitor.width - overlay.width;
+            let neighbour = space[space.indexOf(metaWindow) - 1]
+            if (!neighbour)
+                return bail(); // Should normally have a neighbour. Bail!
+
+            let neighbourFrame = neighbour.get_frame_rect();
+            let neighbourX = neighbour.destinationX || neighbourFrame.x;
+            
+            overlay.x = Math.max(
+                this.monitor.width - stack_margin,
+                neighbourX + neighbourFrame.width + resizeBorderWidth
+            );
+            overlay.width = this.monitor.width - overlay.x;
         }
 
         if (this.showIcon) {
@@ -145,6 +180,7 @@ var StackOverlay = new Lang.Class({
 
         // Tweener.addTween(this.overlay, { opacity: 255, time: 0.25 });
         overlay.show();
+        return true;
     },
     fadeOut: function() {
         Tweener.addTween(this.overlay, { opacity: 0, time: 0.25 });
