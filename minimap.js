@@ -477,8 +477,8 @@ MultiMap = new Lang.Class({
         Tweener.addTween(this.selectionChrome,
                          {x: x - 4,
                           y: y,
-                          width: size[0] + 8,
-                          height: size[1] + 8,
+                          width: Math.round(size[0] + 8),
+                          height: Math.round(size[1] + 8),
                           time: 0.25,
                           transition: 'easeInOutQuad'
                          })
