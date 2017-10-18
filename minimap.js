@@ -323,9 +323,9 @@ MultiMap = new Lang.Class({
         // chrome.set_style('border: 4px #454f52; border-radius: 8px;');
     },
 
-    addSpace: function(s, i) {
+    addSpace: function(space, i) {
         let wrapper = new St.Widget({ name: "minimap-wrapper-"+i });
-        let minimap = new Minimap(s);
+        let minimap = new Minimap(space);
 
         // Create the background, see overview.js
         let background = new Meta.BackgroundGroup();
@@ -350,7 +350,7 @@ MultiMap = new Lang.Class({
             Math.ceil(minimap.actor.height * minimap.actor.scale_y) + 38;
 
         let workspaceLabel = new St.Label({ style_class: "window-caption" });
-        workspaceLabel.text = Meta.prefs_get_workspace_name(s.workspace.index());
+        workspaceLabel.text = Meta.prefs_get_workspace_name(space.workspace.index());
         if (i == this.selectedIndex) {
             workspaceLabel.opacity = 0;
         }
