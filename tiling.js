@@ -25,6 +25,11 @@ stack_margin = 75
 // Minimum margin
 minimumMargin = 15;
 
+// FIXME: stackoverlay have to be imported after certain global variables have been
+//        defined atm. Preferences should be accessed as preferences and globals
+//        such as stack_margin should probably not be in tiling.js
+const StackOverlay = Extension.imports.stackoverlay;
+
 // Symbol to retrieve the focus handler id
 focus_signal = Symbol();
 
@@ -55,6 +60,10 @@ Space = (workspace) => {
     let space = [];
     space.workspace = workspace;
     space.selectedWindow = null;
+    space.moving = false;
+    space.leftStack = 0; // not implemented
+    space.rightStack = 0; // not implemented
+
     space.selectedIndex = () => {
         if (space.selectedWindow) {
             return space.indexOf(space.selectedWindow);
@@ -62,9 +71,29 @@ Space = (workspace) => {
             return -1;
         }
     }
-    space.moving = false;
-    space.leftStack = 0;
-    space.rightStack = 0;
+    space.topOfLeftStack = function() {
+        if (!space.selectedWindow)
+            return null;
+
+        for(let i = space.indexOf(space.selectedWindow); i >= 0; i--) {
+            if (isStacked(space[i])) {
+                return space[i];
+            }
+        }
+        return null;
+    }
+    space.topOfRightStack = function() {
+        if (!space.selectedWindow)
+            return null;
+
+        for(let i = space.indexOf(space.selectedWindow); i < space.length; i++) {
+            if (isStacked(space[i])) {
+                return space[i];
+                break;
+            }
+        }
+        return null;
+    }
     return space;
 }
 
@@ -335,10 +364,15 @@ ensure_viewport = (space, meta_window, force) => {
         debug('delay', delay)
     }
     space.moving = meta_window;
-    move_to(space, meta_window, { x, y, delay, transition,
-                                  onComplete: () => { space.moving = false;},
-                                  onStart:() => { meta_window.raise(); }
-                                });
+    move_to(space, meta_window,
+            { x, y, delay, transition,
+              onComplete: () => {
+                  space.moving = false;
+                  StackOverlay.leftOverlay.setTarget(space.topOfLeftStack());
+                  StackOverlay.rightOverlay.setTarget(space.topOfRightStack());
+              },
+              onStart:() => { meta_window.raise(); }
+            });
     // Return x so we can position the minimap
     return x;
 }

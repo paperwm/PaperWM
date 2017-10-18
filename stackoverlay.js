@@ -1,8 +1,8 @@
-Clutter = imports.gi.Clutter;
-Tweener = imports.ui.tweener;
-Lang = imports.lang;
-Main = imports.ui.main;
-Shell = imports.gi.Shell;
+const Clutter = imports.gi.Clutter;
+const Tweener = imports.ui.tweener;
+const Lang = imports.lang;
+const Main = imports.ui.main;
+const Shell = imports.gi.Shell;
 
 /*
   The stack overlay decorates the top stacked window with its icon and
@@ -38,14 +38,7 @@ Shell = imports.gi.Shell;
   restack loops)
 */
 
-StackOverlay = new Lang.Class({
-    Name: 'Stackoverlay',
-    _init: function(metaWindow) {
-
-    },
-});
-
-createAppIcon = function(metaWindow, size) {
+function createAppIcon(metaWindow, size) {
     let tracker = Shell.WindowTracker.get_default();
     let app = tracker.get_window_app(metaWindow);
     let appIcon = app ? app.create_icon_texture(size)
@@ -57,65 +50,106 @@ createAppIcon = function(metaWindow, size) {
     return appIcon;
 }
 
-function createStackoverlay(metaWindow) {
-    if (metaWindow.stackOverlay)
-        metaWindow.stackOverlay.destroy();
+var StackOverlay = new Lang.Class({
+    Name: 'Stackoverlay',
 
-    let actor = metaWindow.get_compositor_private();
+    _init: function(showIcon) {
+        this.showIcon = showIcon;
 
-    let overlay = new Clutter.Actor({ reactive: true
-                                      , name: "stack-overlay" });
-    metaWindow.stackOverlay = overlay;
-    overlay.connect('button-press-event', () => {
-        return true;
-    });
-    overlay.connect('button-release-event', () => {
-        Main.activateWindow(metaWindow);
-        overlay.destroy();
-        return true;
-    });
-    overlay.opacity = 255
+        let overlay = new Clutter.Actor({ reactive: true
+                                          , name: "stack-overlay" });
 
-    let offset = calcOffset(metaWindow)
-    let dx = offset[0];
-    let dy = offset[1];
+        this.monitor = Main.layoutManager.primaryMonitor;
 
-    overlay.width = stack_margin;
-    overlay.height = metaWindow.get_frame_rect().height * actor.scale_y;
+        let panelBox = Main.layoutManager.panelBox;
 
-    let icon = createAppIcon(metaWindow, margin_lr)
-    overlay.add_child(icon)
+        overlay.y = panelBox.height;
+        overlay.width = stack_margin;
+        overlay.height = this.monitor.height - panelBox.height; 
 
-    overlay.y = actor.y + dy;
-    icon.y = 4;
+        overlay.hide();
 
-    let iconMargin = 2;
+        overlay.connect('button-press-event', () => {
+            return true;
+        });
+        overlay.connect('button-release-event', () => {
+            // this.fadeOut();
+            Main.activateWindow(this.target);
+            return true;
+        });
 
-    if (actor.x < 0) {
-        overlay.x = 0;
-        icon.x = iconMargin;
-    } else {
-        overlay.x = primary.width - overlay.width;
-        icon.x = overlay.width - margin_lr - iconMargin; // Assume icon with == margin_lr
+        global.window_group.add_child(overlay);
+        Main.layoutManager._trackActor(overlay)
+
+        this.overlay = overlay;
+
+        // We must "restack" the overlay each time mutter does a window restack
+        // :(
+        // NOTE: Should probably use _one_ callback for all non-window actors we
+        // need to keep stacked in window_group, but this works for now
+        global.screen.connect("restacked", () => {
+            if (!this.target)
+                return;
+            let actor = this.target.get_compositor_private();
+            global.window_group.set_child_above_sibling(this.overlay,
+                                                        actor);
+        });
+    },
+    updateIcon: function() {
+        if (this.icon) {
+            this.icon.destroy();
+            this.icon = null;
+        }
+
+        let iconMarginX = 2;
+        let iconSize = margin_lr;
+        let icon = createAppIcon(this.target, iconSize);
+        this.icon = icon;
+
+        let actor = this.target.get_compositor_private();
+
+        if (actor.x <= stack_margin) {
+            icon.x = iconMarginX;
+        } else {
+            icon.x = this.overlay.width - iconMarginX - iconSize; 
+        }
+
+        let [dx, dy] = calcOffset(this.target)
+        icon.y = actor.y + dy + 4 - this.overlay.y;
+
+        this.overlay.add_child(icon);
+    },
+    setTarget: function(metaWindow) {
+        this.target = metaWindow;
+
+        if (!metaWindow) {
+            // No target. Eg. if we're at the left- or right-most window
+            this.overlay.hide();
+            return;
+        }
+
+        let overlay = this.overlay;
+        let actor = metaWindow.get_compositor_private();
+
+        if (actor.x < stack_margin) {
+            overlay.x = 0;
+        } else {
+            overlay.x = this.monitor.width - overlay.width;
+        }
+
+        if (this.showIcon) {
+            this.updateIcon();
+        }
+
+        global.window_group.set_child_above_sibling(overlay, actor);
+
+        // Tweener.addTween(this.overlay, { opacity: 255, time: 0.25 });
+        overlay.show();
+    },
+    fadeOut: function() {
+        Tweener.addTween(this.overlay, { opacity: 0, time: 0.25 });
     }
+});
 
-    global.window_group.insert_child_above(overlay, actor);
-
-    Main.layoutManager._trackActor(overlay)
-
-    // We must "restack" the overlay each time mutter does a window restack :(
-    // NOTE: Should probably use _one_ callback for all non-window
-    // actors we need to keep stacked in window_group, but this works
-    // for now
-    global.screen.connect("restacked", () => {
-        global.window_group.set_child_above_sibling(overlay, actor)
-    });
-}
-
-function repl() {
-    createStackoverlay(metaWindow);
-
-    global.window_group.set_child_below_sibling(metaWindow.stackOverlay, actor);
-
-    global.window_group.get_children();
-}
+var leftOverlay  = new StackOverlay();
+var rightOverlay = new StackOverlay();
