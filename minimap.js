@@ -398,10 +398,6 @@ MultiMap = new Lang.Class({
     },
 
     highlight: function(index) {
-        let minimap = this.getSelected();
-        let clone = minimap.clones[index];
-        let size = clone.get_transformed_size()
-
         // Note that both the minimapActor and the clone could be moving at this
         // point.
         //
@@ -431,15 +427,29 @@ MultiMap = new Lang.Class({
                              y*actor.scale_y + actorY);
         }
 
-        // Calculate destinationX of selected clone in viewport coordinates and
-        // tween the chrome there
-        let [x, yIgnored] = transform(minimap.minimapActor, this.actor, clone.destinationX, 0)
-        x = Math.round(x);
-
+        let minimap = this.getSelected();
+        let clone = minimap.clones[index];
         let label = this.selectionChrome.label;
-        let oldWidth = label.first_child.width;
-        label.text = clone.first_child.meta_window.title;
-        let newWidth = label.first_child.width;
+
+        let size, x, y;
+        if (clone) {
+            // Calculate destinationX of selected clone in viewport coordinates and
+            // tween the chrome there
+            [x, yIgnored] = transform(minimap.minimapActor, this.actor, clone.destinationX, 0);
+            x = Math.round(x);
+            y = 4;
+            size = clone.get_transformed_size();
+            label.text = clone.first_child.meta_window.title;
+            label.show();
+        } else {
+            // We're in an empty workspace
+            size = this.actor.get_size();
+            // Apply correction due to overlapping borders
+            size[1] -= 4;
+            x = 0;
+            y = -4;
+            label.hide();
+        }
 
         Tweener.addTween(label, {x: Math.round((size[0] + 8 - label.width)/2),
                                  y: Math.round(size[1] + 4),
@@ -449,7 +459,7 @@ MultiMap = new Lang.Class({
 
         Tweener.addTween(this.selectionChrome,
                          {x: x - 4,
-                          y: 4,
+                          y: y,
                           width: size[0] + 8,
                           height: size[1] + 8,
                           time: 0.25,
