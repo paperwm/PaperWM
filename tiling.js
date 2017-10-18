@@ -365,6 +365,9 @@ ensure_viewport = (space, meta_window, force) => {
                   space.moving = false;
                   StackOverlay.leftOverlay.setTarget(space.topOfLeftStack());
                   StackOverlay.rightOverlay.setTarget(space.topOfRightStack());
+                  // Certain gnome-shell/mutter animations expect default
+                  // pivot point (eg. fullscreen)
+                  meta_window.get_compositor_private().set_pivot_point(0, 0);
               },
               onStart:() => { meta_window.raise(); }
             });
