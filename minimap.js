@@ -431,7 +431,7 @@ MultiMap = new Lang.Class({
         let clone = minimap.clones[index];
         let label = this.selectionChrome.label;
 
-        let size, x, y;
+        let size, x, y, newWidth;
         if (clone) {
             // Calculate destinationX of selected clone in viewport coordinates and
             // tween the chrome there
@@ -439,8 +439,23 @@ MultiMap = new Lang.Class({
             x = Math.round(x);
             y = 4;
             size = clone.get_transformed_size();
-            label.text = clone.first_child.meta_window.title;
-            label.show();
+
+            // When width have been set on the label we can't get the
+            // required width out anymore. Easiest workaround is making
+            // a new label. This enables animating the width.
+            let newLabel = new St.Label({
+                text: clone.first_child.meta_window.title,
+                style_class: "window-caption"});
+
+            newLabel.set_position(label.x, label.y);
+            label.destroy();
+
+            this.selectionChrome.add_child(newLabel);
+            this.selectionChrome.label = newLabel;
+
+            newWidth = newLabel.width;
+            newLabel.width = label.width;
+            label = newLabel;
         } else {
             // We're in an empty workspace
             size = this.actor.get_size();
@@ -448,11 +463,13 @@ MultiMap = new Lang.Class({
             size[1] -= 4;
             x = 0;
             y = -4;
+            newWidth = 0;
             label.hide();
         }
 
-        Tweener.addTween(label, {x: Math.round((size[0] + 8 - label.width)/2),
+        Tweener.addTween(label, {x: Math.round((size[0] + 8 - newWidth)/2),
                                  y: Math.round(size[1] + 4),
+                                 width: newWidth,
                                  time: 0.25,
                                  transition: 'easeInOutQuad'
                                 });
