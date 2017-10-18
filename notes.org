@@ -92,6 +92,10 @@ The clutter actor will receives all input until `Main.popModal` is called.
 
 Gnome-shell will inform mutter[1] that mouse input in the actor's region should be sent through clutter. This allows the actor to capture input. Ie. setting `reactive` to true is not enough to capture mouse input.
 
+It does not seem to be possible to propagate input captured by a tracked actor to a window actor below.
+
+NB! When a "tracked" actor is stacked below a _window actor_ it will still prevent the window actor from receiving input!
+
 Building `StWidget` detached from the stage are prone to result in the following warning:
 
 : st_widget_get_theme_node called on the widget [0x... St...] which is not in the stage.
