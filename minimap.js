@@ -352,8 +352,9 @@ MultiMap = new Lang.Class({
         chrome.set_size(wrapper.width + 2*4, wrapper.height + 4);
         chrome.set_position(-4, -4);
         chrome.set_style('border: 4px #454f52; border-radius: 6px;');
-        background.first_child.width = wrapper.width;
-        background.first_child.height = wrapper.height;
+        let backgroundScaleX = wrapper.width/background.width;
+        let backgroundScaleY = wrapper.height/background.height;
+        background.set_scale(backgroundScaleX, backgroundScaleY);
         minimap.actor.set_position(10, 8);
         this.minimaps.push(minimap);
     },
