@@ -137,10 +137,11 @@ Minimap = new Lang.Class({
             let clone = clones[i];
             clone.set_pivot_point(0, 0.5);
             if (clone.x + this.minimapActor.x <= -maxProtrusion) {
+                let scale = 1 - 0.05*(around - i);
                 Tweener.addTween(clone, {x: -this.minimapActor.x
                                          - (maxProtrusion - i*leftStackGap)
-                                         , scale_x: 0.9
-                                         , scale_y: 0.9
+                                         , scale_x: scale
+                                         , scale_y: scale
                                          , transition: "easeInOutQuad"
                                          , time: time});
             } else {
@@ -153,11 +154,12 @@ Minimap = new Lang.Class({
             let clone = clones[i];
             clone.set_pivot_point(1, 0.5);
             if (clone.x + clone.width + this.minimapActor.x >= primary.width + maxProtrusion) {
+                let scale = 1 - 0.05*(i - around);
                 Tweener.addTween(clone, {x: -this.minimapActor.x
                                          + primary.width
                                          + (maxProtrusion - (clones.length-1 - i)*rightStackGap) - clone.width
-                                         , scale_x: 0.9
-                                         , scale_y: 0.9
+                                         , scale_x: scale
+                                         , scale_y: scale
                                          , transition: "easeInOutQuad"
                                          , time: time});
             }
