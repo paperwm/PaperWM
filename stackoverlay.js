@@ -122,7 +122,7 @@ var StackOverlay = new Lang.Class({
     setTarget: function(metaWindow) {
         this.target = metaWindow;
 
-        function bail() {
+        bail = () => {
             this.target = null;
             this.overlay.hide();
             return false;
