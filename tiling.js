@@ -120,7 +120,7 @@ focus = () => {
 }
 
 isStacked = function(metaWindow) {
-    return metaWindow.get_compositor_private().is_scaled();
+    return metaWindow._isStacked;
 }
 
 isUnStacked = function(metaWindow) {
@@ -158,6 +158,9 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
         y += scaled_y_offset;
         let pivot = actor.pivot_point;
         actor.set_pivot_point(pivot.x, y_offset/buffer.height);
+        meta_window._isStacked = true; // use isStacked function to check
+    } else {
+        meta_window._isStacked = false; // use isStacked function to check
     }
     meta_window.destinationX = x;
     Tweener.addTween(actor, {x: x - x_offset
@@ -363,6 +366,7 @@ ensure_viewport = (space, meta_window, force) => {
             { x, y, delay, transition,
               onComplete: () => {
                   space.moving = false;
+                  // NOTE: Stack overlays should really be updated on the early returns above too
                   StackOverlay.leftOverlay.setTarget(space.topOfLeftStack());
                   StackOverlay.rightOverlay.setTarget(space.topOfRightStack());
                   // Certain gnome-shell/mutter animations expect default

@@ -64,8 +64,9 @@ var StackOverlay = new Lang.Class({
         let panelBox = Main.layoutManager.panelBox;
 
         overlay.y = panelBox.height;
-        overlay.width = stack_margin;
+        // global.window_group is below the panel so not really necessary to adjust height?
         overlay.height = this.monitor.height - panelBox.height; 
+        overlay.width = stack_margin;
 
         overlay.hide();
 
@@ -155,7 +156,7 @@ var StackOverlay = new Lang.Class({
             overlay.x = 0;
             overlay.width = Math.min(
                 stack_margin,
-                neighbourX - resizeBorderWidth
+                Math.max(0, neighbourX - resizeBorderWidth)
             );
         } else {
             let neighbour = space[space.indexOf(metaWindow) - 1]
