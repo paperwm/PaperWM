@@ -5,6 +5,7 @@ const Scratch = Extension.imports.scratch;
 const LiveAltTab = Extension.imports.liveAltTab;
 const utils = Extension.utils;
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const Meta = imports.gi.Meta;
 const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
@@ -141,6 +142,8 @@ function enable() {
                         Meta.KeyBindingFlags.PER_WINDOW);
     paperActions.register("tile-visible", as_key_handler("tileVisible"),
                         Meta.KeyBindingFlags.PER_WINDOW);
+
+    loadRcFile();
 }
 
 function disable() {
@@ -179,5 +182,28 @@ function registerMutterAction(action_name, handler, flags) {
             flags,
             handler
         );
+    }
+}
+
+function loadRcFile() {
+    try {
+        // https://github.com/coolwanglu/gnome-shell-extension-rc/blob/master/extension.js
+        // But since we want to be sure that our extension is loaded at the time 
+        // we load our own. 
+        //
+        // Note that `imports.misc.extensionUtils.getCurrentExtension();` works
+        // inside the rc file
+        const rcpath = GLib.getenv('HOME') + '/.config/' + "paperwm-rc.js"
+        if (GLib.file_test(rcpath, GLib.FileTest.IS_REGULAR)) {
+            const [success, rcCodeBytes] = GLib.file_get_contents(rcpath);
+            if (success) {
+                debug("Loading rcfile:", rcpath)
+                eval(rcCodeBytes.toString());
+            } else {
+                debug("Failed to read rcfile");
+            }
+        }
+    } catch(e) {
+        debug("rcfile error", e.message, e.stack);
     }
 }
