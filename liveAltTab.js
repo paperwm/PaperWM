@@ -5,6 +5,8 @@ const Meta = imports.gi.Meta;
 const AltTab = imports.ui.altTab;
 const Main = imports.ui.main;
 let WindowManager = imports.ui.windowManager;
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Scratch = Extension.imports.scratch;
 
 WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, direction) {
 
@@ -123,8 +125,17 @@ LiveAltTab = Lang.Class({
     Name: 'LiveAltTab',
     Extends: AltTab.WindowSwitcherPopup,
 
-    _getwindowList: function () {
-        return global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
+    _getWindowList: function () {
+        let tabList = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
+        if (Scratch.isScratchActive()) {
+            // Force scratch windows on top as a poor mans substitute for the
+            // scratch layer actually changing the MRU list
+            let scratchWindows = Scratch.getScratchWindows();
+            let normalWindows = tabList.filter(mw => !Scratch.isScratchWindow(mw))
+            return scratchWindows.concat(normalWindows);
+        } else {
+            return tabList;
+        }
     },
 
     _keyPressHandler: function(keysym, action) {

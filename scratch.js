@@ -1,15 +1,22 @@
 const Meta = imports.gi.Meta;
 
-toggleScratch = function() {
-    let workspace = global.screen.get_active_workspace()
-    let windows = global.display.get_tab_list(Meta.TabList.NORMAL, workspace)
-        .filter(function(meta_window) {
-            return meta_window.is_on_all_workspaces();
-        });
+function isScratchWindow(metaWindow) {
+    return metaWindow.is_on_all_workspaces();
+}
 
-    let isSomeShown = windows.reduce(function(shown, meta_window) {
-        return shown || !meta_window.minimized;
-    }, false)
+/** Return scratch windows in MRU order */
+function getScratchWindows() {
+    return global.display.get_tab_list(Meta.TabList.NORMAL, null)
+        .filter(isScratchWindow);
+}
+
+function isScratchActive() {
+    return getScratchWindows().some(metaWindow => !metaWindow.minimized);
+}
+
+toggleScratch = function() {
+    let windows = getScratchWindows();
+    let isSomeShown = isScratchActive();
 
     if (isSomeShown) {
         windows.map(function(meta_window) {
