@@ -59,6 +59,12 @@ Space = (workspace) => {
     // Simplest way to get a straight array interface
     let space = [];
     space.workspace = workspace;
+    space.addSignal =
+        workspace.connect("window-added",
+                          dynamic_function_ref("add_handler"));
+    space.removeSignal =
+        workspace.connect("window-removed",
+                          dynamic_function_ref("remove_handler"));
     space.selectedWindow = null;
     space.moving = false;
     space.leftStack = 0; // not implemented

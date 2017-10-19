@@ -87,8 +87,6 @@ function enable() {
             let workspace = global.screen.get_workspace_by_index(i)
             Tiling.spaces[i] = Space(workspace);
             debug("workspace", workspace)
-            workspace.connect("window-added", dynamic_function_ref("add_handler"))
-            workspace.connect("window-removed", dynamic_function_ref("remove_handler"));
             add_all_from_workspace(workspace);
         }
     }
