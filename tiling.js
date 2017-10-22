@@ -332,6 +332,10 @@ ensure_viewport = (space, meta_window, force) => {
             time: 0.25,
         });
 
+    } else if (meta_window.maximized_vertically
+               && meta_window.maximized_horizontally) {
+        x = frame.x;
+        y = frame.y;
     } else if (required_width <= primary.width) {
         let leftovers = primary.width - required_width;
         let gaps = space.length + 1;
