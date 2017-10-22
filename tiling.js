@@ -326,7 +326,7 @@ ensure_viewport = (space, meta_window, force) => {
     }, -window_gap);
     if (meta_window.fullscreen) {
         // Fullscreen takes highest priority
-        x = 0, y = 0;
+        x = frame.x, y = frame.y;
         Tweener.addTween(panelBox, {
             scale_y: 0,
             time: 0.25,
