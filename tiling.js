@@ -198,6 +198,9 @@ insertWindow = function(space, metaWindow, index) {
     space.splice(index, 0, metaWindow);
 
     if (index == 0) {
+        // If the workspace was empty the inserted window should be selected
+        space.selectedWindow = metaWindow;
+
         let frame = metaWindow.get_frame_rect();
         metaWindow.scrollwm_initial_position =
             {x: primary.x + (primary.width - frame.width)/2,

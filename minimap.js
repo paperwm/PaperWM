@@ -185,6 +185,9 @@ Minimap = new Lang.Class({
             this.layout(false);
             let frame = this.space.selectedWindow.get_frame_rect();
             this.sync(frame.x, false);
+        } else {
+            // We're in an empty workspace so can just remove what's left
+            this.minimapActor.remove_all_children();
         }
     },
 
