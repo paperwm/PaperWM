@@ -180,9 +180,7 @@ LiveAltTab = Lang.Class({
         this.parent();
 
         this.was_accepted = true;
-        if (this.switchedWorkspace) {
-            Main.wm._previewWorkspaceDone(global.window_manager);
-        }
+        Main.wm._previewWorkspaceDone(global.window_manager);
     },
 
     _itemEnteredHandler: function() {
@@ -199,9 +197,7 @@ LiveAltTab = Lang.Class({
         if(!this.was_accepted) {
             // Select the starting window
             this._select(0);
-            if (this.switchedWorkspace) {
-                Main.wm._previewWorkspaceDone(global.window_manager);
-            }
+            Main.wm._previewWorkspaceDone(global.window_manager);
         }
         this.parent();
     }
