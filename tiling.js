@@ -103,6 +103,67 @@ Space = (workspace) => {
     return space;
 }
 
+// Singleton spaces object, shouldn't be reused
+var spaces = (function () {
+    let spaces = [];
+
+    spaces.nWorkspacesSignal =
+        global.screen.connect('notify::n-workspaces',
+                              Lang.bind(spaces, dynamic_function_ref('workspacesChanged', spaces)));
+
+    spaces.windowCreatedSignal =
+        global.display.connect('window-created',
+                               dynamic_function_ref('window_created'));
+
+    spaces.workspacesChanged = function () {
+        let nWorkspaces = global.screen.n_workspaces;
+
+        // Identifying destroyed workspaces is rather bothersome,
+        // as it will for example report having windows,
+        // but will crash when looking at the workspace index
+
+        // Gather all indexed workspaces for easy comparison
+        let workspaces = {};
+        for (let i=0; i < nWorkspaces; i++) {
+            let workspace = global.screen.get_workspace_by_index(i);
+            workspaces[workspace] = true;
+            let index = workspace.index();
+            if (this[index] === undefined) {
+                debug('workspace added', workspace);
+                this.addSpace(workspace, index);
+            }
+        }
+
+        this.filter(space => {
+            // find the workspaces that aren't indexed
+            return workspaces[space.workspace] !== true;
+        }).forEach(space => {
+            debug('workspace removed', space.workspace);
+            this.removeSpace(space);
+        });
+    };
+
+    spaces.addSpace = function(workspace, index) {
+        index = index || this.length;
+        this.splice(index, 0, Space(workspace));
+    };
+
+    spaces.removeSpace = function(space) {
+        let workspace = space.workspace;
+        workspace.disconnect(space.addSignal);
+        workspace.disconnect(space.removeSignal);
+        this.splice(this.indexOf(space), 1);
+    };
+
+    return spaces;
+})();
+window.spaces = spaces;
+
+spaceOf = (meta_window) => {
+    return spaces[meta_window.get_workspace().workspace_index];
+}
+
+
 panelBox.connect('hide', () => {
     let space = spaces[global.screen.get_active_workspace_index()];
     if (space.selectedWindow.fullscreen) {
@@ -111,12 +172,6 @@ panelBox.connect('hide', () => {
         panelBox.show();
     }
 });
-
-const spaces = []
-spaceOf = (meta_window) => {
-    return spaces[meta_window.get_workspace().workspace_index];
-}
-window.spaces = spaces;
 
 focus = () => {
     let meta_window = global.display.focus_window;
@@ -673,39 +728,6 @@ add_all_from_workspace = (workspace) => {
     if (tabList[0]) {
         space.selectedWindow = tabList[0]
         ensure_viewport(space, space.selectedWindow);
-    }
-}
-
-workspacesChanged = function () {
-    let nWorkspaces = global.screen.n_workspaces;
-    if (spaces.length < nWorkspaces) {
-        debug('workspace added', nWorkspaces);
-        let index = nWorkspaces - 1;
-        let workspace = global.screen.get_workspace_by_index(index);
-        spaces[index] = Space(workspace);
-    } else {
-        debug('workspace removed', nWorkspaces);
-
-        // Identifying destroyed workspaces is rather bothersome,
-        // as it will for example report having windows,
-        // but will crash when looking at the workspace index
-
-        // Gather all indexed workspaces for easy comparison
-        let workspaces = {};
-        for (let i=0; i < nWorkspaces; i++) {
-            let workspace = global.screen.get_workspace_by_index(i);
-            workspaces[workspace] = true;
-        }
-
-        spaces.filter(space => {
-            // find the workspaces that aren't indexed
-            return workspaces[space.workspace] !== true;
-        }).forEach(space => {
-            let workspace = space.workspace;
-            workspace.disconnect(space.addSignal);
-            workspace.disconnect(space.removeSignal);
-            spaces.splice(spaces.indexOf(space), 1);
-        });
     }
 }
 

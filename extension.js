@@ -76,17 +76,12 @@ function enable() {
     // windows are not accessible yet for instance.
     isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
 
-    let updateWorkspacesId =
-        global.screen.connect('notify::n-workspaces',
-                              dynamic_function_ref('workspacesChanged'));
-
-    global.display.connect('window-created', dynamic_function_ref('window_created'));
 
     function initWorkspaces() {
         // Hook up existing workspaces
         for (let i=0; i < global.screen.n_workspaces; i++) {
             let workspace = global.screen.get_workspace_by_index(i)
-            Tiling.spaces[i] = Space(workspace);
+            Tiling.spaces.addSpace(workspace);
             debug("workspace", workspace)
             add_all_from_workspace(workspace);
         }
