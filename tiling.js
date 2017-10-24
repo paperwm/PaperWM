@@ -676,18 +676,37 @@ add_all_from_workspace = (workspace) => {
     }
 }
 
-workspace_added = (screen, index) => {
-    spaces[index] = [];
-    let workspace = global.screen.get_workspace_by_index(index);
-    workspace.connect("window-added", dynamic_function_ref("add_handler"))
-    workspace.connect("window-removed", dynamic_function_ref("remove_handler"));
-    debug('workspace-added', index, workspace);
+workspacesChanged = function () {
+    let nWorkspaces = global.screen.n_workspaces;
+    if (spaces.length < nWorkspaces) {
+        debug('workspace added', nWorkspaces);
+        let index = nWorkspaces - 1;
+        let workspace = global.screen.get_workspace_by_index(index);
+        spaces[index] = Space(workspace);
+    } else {
+        debug('workspace removed', nWorkspaces);
 
-}
-// Doesn't seem to trigger for some reason
-workspace_removed = (screen, arg1, arg2) => {
-    debug('workspace-removed');
-    let workspace = global.screen.get_workspace_by_index(index);
+        // Identifying destroyed workspaces is rather bothersome,
+        // as it will for example report having windows,
+        // but will crash when looking at the workspace index
+
+        // Gather all indexed workspaces for easy comparison
+        let workspaces = {};
+        for (let i=0; i < nWorkspaces; i++) {
+            let workspace = global.screen.get_workspace_by_index(i);
+            workspaces[workspace] = true;
+        }
+
+        spaces.filter(space => {
+            // find the workspaces that aren't indexed
+            return workspaces[space.workspace] !== true;
+        }).forEach(space => {
+            let workspace = space.workspace;
+            workspace.disconnect(space.addSignal);
+            workspace.disconnect(space.removeSignal);
+            spaces.splice(spaces.indexOf(space), 1);
+        });
+    }
 }
 
 toggle_maximize_horizontally = (meta_window) => {

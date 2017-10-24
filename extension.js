@@ -76,8 +76,9 @@ function enable() {
     // windows are not accessible yet for instance.
     isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
 
-    global.screen.connect("workspace-added", dynamic_function_ref('workspace_added'));
-    global.screen.connect("workspace-removed", dynamic_function_ref('workspace_removed'));
+    let updateWorkspacesId =
+        global.screen.connect('notify::n-workspaces',
+                              dynamic_function_ref('workspacesChanged'));
 
     global.display.connect('window-created', dynamic_function_ref('window_created'));
 
