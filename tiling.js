@@ -725,7 +725,8 @@ toggle_maximize_horizontally = (meta_window) => {
         meta_window.unmaximized_rect = frame;
         meta_window.move_resize_frame(true, frame.x, frame.y, primary.width - minimumMargin*2, frame.height);
     }
-    ensure_viewport(spaceOf(meta_window), meta_window);
+    // We've mutated the space, so need to force the ensure
+    ensure_viewport(spaceOf(meta_window), meta_window, true);
 }
 
 tileVisible = function(metaWindow) {
