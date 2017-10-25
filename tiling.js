@@ -155,14 +155,13 @@ var spaces = (function () {
         this.splice(this.indexOf(space), 1);
     };
 
+    spaces.spaceOfWindow = function(meta_window) {
+        return this[meta_window.get_workspace().workspace_index];
+    };
+
     return spaces;
 })();
 window.spaces = spaces;
-
-spaceOf = (meta_window) => {
-    return spaces[meta_window.get_workspace().workspace_index];
-}
-
 
 panelBox.connect('hide', () => {
     let space = spaces[global.screen.get_active_workspace_index()];
@@ -313,7 +312,7 @@ setInitialPosition = function(actor, existing) {
             toggle_maximize_horizontally(metaWindow);
             return;
         }
-        let space = spaceOf(metaWindow);
+        let space = spaces.spaceOfWindow(metaWindow);
         if (metaWindow.has_focus()) {
             space.selectedWindow = metaWindow;
             // Only move the frame when dealing with new windows
@@ -450,7 +449,7 @@ ensure_viewport = (space, meta_window, force) => {
 focus_handler = (meta_window, user_data) => {
     debug("focus:", meta_window.title, framestr(meta_window.get_frame_rect()));
 
-    let space = spaceOf(meta_window);
+    let space = spaces.spaceOfWindow(meta_window);
     space.selectedWindow = meta_window;
 
     ensure_viewport(space, meta_window);
@@ -509,7 +508,7 @@ center = (meta_window, zen) => {
     move(meta_window, x, frame.y)
     let right = zen ? primary.width : x + frame.width + window_gap;
     let left = zen ? -primary.width : x - window_gap;
-    let space = spaceOf(meta_window);
+    let space = spaces.spaceOfWindow(meta_window);
     let i = space.indexOf(meta_window);
     propogate_forward(space, i + 1, right);
     propogate_backward(space, i - 1, left);
@@ -748,12 +747,12 @@ toggle_maximize_horizontally = (meta_window) => {
         meta_window.move_resize_frame(true, frame.x, frame.y, primary.width - minimumMargin*2, frame.height);
     }
     // We've mutated the space, so need to force the ensure
-    ensure_viewport(spaceOf(meta_window), meta_window, true);
+    ensure_viewport(spaces.spaceOfWindow(meta_window), meta_window, true);
 }
 
 tileVisible = function(metaWindow) {
     metaWindow = metaWindow || global.display.focus_window;
-    let space = spaceOf(metaWindow);
+    let space = spaces.spaceOfWindow(metaWindow);
     if (!space)
         return;
 
@@ -998,7 +997,7 @@ cycleWindowWidth = function(metaWindow) {
     let r = frame.width / availableWidth;
     let nextW = Math.floor(ratios[findNext(r)]*availableWidth);
     metaWindow.move_resize_frame(true, frame.x, frame.y, nextW, frame.height);
-    ensure_viewport(spaceOf(metaWindow), metaWindow, true);
+    ensure_viewport(spaces.spaceOfWindow(metaWindow), metaWindow, true);
 
     delete metaWindow.unmaximized_rect;
 }

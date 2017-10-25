@@ -138,7 +138,7 @@ var StackOverlay = new Lang.Class({
         let actor = metaWindow.get_compositor_private();
         let frame = metaWindow.get_frame_rect();
         let resizeBorderWidth = 5; // approx.
-        let space = spaceOf(metaWindow);
+        let space = spaces.spaceOfWindow(metaWindow);
 
 
         // Note: Atm. this can be called when the windows are moving. Therefore
