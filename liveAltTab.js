@@ -65,10 +65,10 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, dir
             switchData.movingWindow = record;
             switchData.windows.push(switchData.movingWindow);
             actor.reparent(switchData.movingWindowBin);
-        } else if (window.get_workspace().index() == from) {
+        } else if (window.get_workspace() == from) {
             switchData.windows.push(record);
             actor.reparent(switchData.outGroup);
-        } else if (window.get_workspace().index() == to) {
+        } else if (window.get_workspace() == to) {
             switchData.windows.push(record);
             actor.reparent(switchData.inGroup);
             actor.show();
@@ -164,8 +164,8 @@ LiveAltTab = Lang.Class({
         let toIndex = to.get_workspace().workspace_index;
         if (toIndex !== fromIndex) {
             let direction = fromIndex < toIndex ? Meta.MotionDirection.DOWN : Meta.MotionDirection.UP;
-            Main.wm._previewWorkspace(from.get_workspace().workspace_index,
-                                      to.get_workspace().workspace_index,
+            Main.wm._previewWorkspace(from.get_workspace(),
+                                      to.get_workspace(),
                                       direction)
             this.switchedWorkspace = true;
         }

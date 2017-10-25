@@ -866,8 +866,8 @@ PreviewedWindowNavigator = new Lang.Class({
         }
 
         // This will crash gnome-shell if one of the workspaces have been removed
-        Main.wm._previewWorkspace(oldMap.space.workspace.workspace_index,
-                                  newMap.space.workspace.workspace_index,
+        Main.wm._previewWorkspace(oldMap.space.workspace,
+                                  newMap.space.workspace,
                                   direction);
         this.space = newMap.space;
         this._select(this.space.selectedIndex());
