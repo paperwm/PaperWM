@@ -300,9 +300,12 @@ MultiMap = new Lang.Class({
             }
         } else {
             this.selectedIndex = global.screen.get_active_workspace_index();
-            spaces.forEach((s, i) => {
-                this.addSpace(s, i);
-            })
+            let nWorkspaces = global.screen.n_workspaces;
+            for (let i=0; i < nWorkspaces; i++) {
+                let workspace = global.screen.get_workspace_by_index(i);
+                let space = spaces.spaceOf(workspace);
+                this.addSpace(space, i);
+            }
         }
         this.rowHeight = this.container.first_child.height;
         this.actor.height = this.rowHeight;

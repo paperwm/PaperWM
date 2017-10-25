@@ -107,6 +107,8 @@ Space = (workspace) => {
 var spaces = (function () {
     let spaces = [];
 
+    spaces._spaces = {};
+
     spaces.nWorkspacesSignal =
         global.screen.connect('notify::n-workspaces',
                               Lang.bind(spaces, dynamic_function_ref('workspacesChanged', spaces)));
@@ -127,40 +129,38 @@ var spaces = (function () {
         for (let i=0; i < nWorkspaces; i++) {
             let workspace = global.screen.get_workspace_by_index(i);
             workspaces[workspace] = true;
-            let index = workspace.index();
-            if (this[index] === undefined) {
+            if (this._spaces[workspace] === undefined) {
                 debug('workspace added', workspace);
-                this.addSpace(workspace, index);
+                this.addSpace(workspace);
             }
         }
 
-        this.filter(space => {
-            // find the workspaces that aren't indexed
-            return workspaces[space.workspace] !== true;
-        }).forEach(space => {
-            debug('workspace removed', space.workspace);
-            this.removeSpace(space);
-        });
+        for (let key in this._spaces) {
+            let space = this._spaces[key];
+            if (workspaces[space.workspace] !== true) {
+                debug('workspace removed', space.workspace);
+                this.removeSpace(space);
+            }
+        }
     };
 
-    spaces.addSpace = function(workspace, index) {
-        index = index || this.length;
-        this.splice(index, 0, Space(workspace));
+    spaces.addSpace = function(workspace) {
+        this._spaces[workspace] = Space(workspace);
     };
 
     spaces.removeSpace = function(space) {
         let workspace = space.workspace;
         workspace.disconnect(space.addSignal);
         workspace.disconnect(space.removeSignal);
-        this.splice(this.indexOf(space), 1);
+        delete this._spaces[workspace];
     };
 
     spaces.spaceOfWindow = function(meta_window) {
-        return this[meta_window.get_workspace().workspace_index];
+        return this._spaces[meta_window.get_workspace()];
     };
 
     spaces.spaceOf = function(workspace) {
-        return this[workspace.workspace_index];
+        return this._spaces[workspace];
     };
 
     return spaces;
@@ -846,7 +846,7 @@ PreviewedWindowNavigator = new Lang.Class({
             to = from + 1;
         else
             to = from - 1;
-        if (to < 0 || to >= spaces.length) {
+        if (to < 0 || to >= multimap.minimaps.length) {
             this._select(this.space.selectedIndex());
             return true;
         }
@@ -865,6 +865,7 @@ PreviewedWindowNavigator = new Lang.Class({
             newMap.space.moving = false;
         }
 
+        // This will crash gnome-shell if one of the workspaces have been removed
         Main.wm._previewWorkspace(oldMap.space.workspace.workspace_index,
                                   newMap.space.workspace.workspace_index,
                                   direction);
