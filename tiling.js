@@ -159,12 +159,16 @@ var spaces = (function () {
         return this[meta_window.get_workspace().workspace_index];
     };
 
+    spaces.spaceOf = function(workspace) {
+        return this[workspace.workspace_index];
+    };
+
     return spaces;
 })();
 window.spaces = spaces;
 
 panelBox.connect('hide', () => {
-    let space = spaces[global.screen.get_active_workspace_index()];
+    let space = spaces.spaceOf(global.screen.get_active_workspace());
     if (space.selectedWindow.fullscreen) {
         panelBox.scale_y = 0;
     } else {
@@ -176,7 +180,7 @@ focus = () => {
     let meta_window = global.display.focus_window;
     if (!meta_window)
         return -1;
-    return spaces[meta_window.get_workspace().workspace_index].indexOf(meta_window)
+    return spaces.spaceOfWindow(meta_window).indexOf(meta_window);
 }
 
 isStacked = function(metaWindow) {
@@ -610,7 +614,7 @@ add_handler = (ws, meta_window) => {
         return;
     }
 
-    let space = spaces[ws.workspace_index]
+    let space = spaces.spaceOf(ws);
 
     // Don't add already added windows
     if (space.indexOf(meta_window) != -1) {
@@ -631,7 +635,7 @@ remove_handler = (workspace, meta_window) => {
     // window has already received the `focus` signal at this point.
     // Not sure if we can check directly if _this_ window had focus when closed.
 
-    let space = spaces[workspace.workspace_index];
+    let space = spaces.spaceOf(workspace);
     let removed_i = space.indexOf(meta_window)
     if (removed_i < 0)
         return
@@ -713,7 +717,7 @@ add_all_from_workspace = (workspace) => {
 
     windows.sort(xz_comparator(windows));
 
-    let space = spaces[workspace.workspace_index]
+    let space = spaces.spaceOf(workspace);
     windows.forEach((meta_window, i) => {
         if(space.indexOf(meta_window) < 0 && add_filter(meta_window)) {
             // Using add_handler is unreliable since it interacts with focus.
