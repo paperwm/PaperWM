@@ -107,7 +107,7 @@ Space = (workspace) => {
 var spaces = (function () {
     let spaces = [];
 
-    spaces._spaces = {};
+    spaces._spaces = new Map();
 
     spaces.nWorkspacesSignal =
         global.screen.connect('notify::n-workspaces',
