@@ -343,7 +343,9 @@ MultiMap = new Lang.Class({
 
 
         let chrome = new St.Widget();
+        let padding = new St.Widget({style_class: 'modal-dialog'});
 
+        wrapper.add_child(padding);
         wrapper.add_child(background);
         wrapper.add_child(chrome);
 
@@ -365,11 +367,14 @@ MultiMap = new Lang.Class({
         wrapper.add_child(workspaceLabel)
         wrapper.workspaceLabel = workspaceLabel;
 
-        chrome.set_size(wrapper.width + 2*4, wrapper.height + 4);
-        chrome.set_position(-4, -4);
-        chrome.set_style('border: 4px #454f52; border-radius: 6px;');
+        let chromeBorder = 2;
+        chrome.set_size(wrapper.width + 2*chromeBorder, wrapper.height + chromeBorder);
+        chrome.set_position(-chromeBorder, -chromeBorder);
+        chrome.set_style('border: 2px #454f52; border-radius: 6px;');
         let backgroundScaleX = wrapper.width/background.width;
         let backgroundScaleY = wrapper.height/background.height;
+        padding.set_size(wrapper.width + 2*(500*0.15), wrapper.height + 4);
+        padding.set_position(-(500*0.15), -chromeBorder);
         background.set_scale(backgroundScaleX, backgroundScaleY);
         minimap.actor.set_position(10, 8);
         this.minimaps.push(minimap);
