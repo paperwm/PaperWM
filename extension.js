@@ -71,6 +71,7 @@ function enable() {
         return;
     }
 
+    initCount++;
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
     // windows are not accessible yet for instance.
