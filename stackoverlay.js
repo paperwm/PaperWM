@@ -7,6 +7,7 @@ const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
+const Minimap = Extension.imports.minimap;
 
 /*
   The stack overlay decorates the top stacked window with its icon and
@@ -119,7 +120,7 @@ var StackOverlay = new Lang.Class({
             icon.x = this.overlay.width - iconMarginX - iconSize; 
         }
 
-        let [dx, dy] = calcOffset(this.target)
+        let [dx, dy] = Minimap.calcOffset(this.target);
         icon.y = actor.y + dy + 4 - this.overlay.y;
 
         this.overlay.add_child(icon);
@@ -127,7 +128,7 @@ var StackOverlay = new Lang.Class({
     setTarget: function(metaWindow) {
         this.target = metaWindow;
 
-        bail = () => {
+        let bail = () => {
             this.target = null;
             this.overlay.hide();
             return false;

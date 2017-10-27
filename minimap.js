@@ -14,7 +14,7 @@ const debug = utils.debug;
 
 var MINIMAP_SCALE = 0.15;
 
-calcOffset = function(metaWindow) {
+var calcOffset = function(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
     let frame = metaWindow.get_frame_rect();
     let x_offset = frame.x - buffer.x;
@@ -470,7 +470,7 @@ var MultiMap = new Lang.Class({
         if (clone) {
             // Calculate destinationX of selected clone in viewport coordinates and
             // tween the chrome there
-            [x, yIgnored] = transform(minimap.minimapActor, this.actor, clone.destinationX, 0);
+            [x, y] = transform(minimap.minimapActor, this.actor, clone.destinationX, 0);
             x = Math.round(x);
             y = 4;
             size = clone.get_transformed_size();

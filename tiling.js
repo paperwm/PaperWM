@@ -307,7 +307,7 @@ var insertWindow = function(space, metaWindow, index) {
 }
 
 // Needs to be called by {metaWindow, signal}
-setInitialPosition = function(actor, existing) {
+var setInitialPosition = function(actor, existing) {
     let {metaWindow, signal} = this;
 
     if(metaWindow.scrollwm_initial_position) {
@@ -346,7 +346,7 @@ setInitialPosition = function(actor, existing) {
 }
 
 // Move @meta_window to x, y and propagate the change in @space
-move_to = function(space, meta_window, { x, y, delay, transition,
+var move_to = function(space, meta_window, { x, y, delay, transition,
                                          onComplete, onStart }) {
     // Register @meta_window as moving on @space
     move(meta_window, x, y
