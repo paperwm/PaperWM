@@ -1,5 +1,4 @@
 
-// Globals
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const GLib = imports.gi.GLib;
 const Tweener = imports.ui.tweener;
@@ -11,15 +10,15 @@ const Gio = imports.gi.Gio;
 const utils = Extension.imports.utils;
 const Clutter = imports.gi.Clutter;
 
-Extension.imports.minimap;
+var Minimap = Extension.imports.minimap;
 
 let preferences = Extension.imports.convenience.getSettings();
 // Gap between windows
-window_gap = preferences.get_int('window-gap');
+var window_gap = preferences.get_int('window-gap');
 // Top/bottom margin
-margin_tb = preferences.get_int('vertical-margin');
+var margin_tb = preferences.get_int('vertical-margin');
 // left/right margin
-margin_lr = preferences.get_int('horizontal-margin');
+var margin_lr = preferences.get_int('horizontal-margin');
 // How much the stack should protrude from the side
 stack_margin = 75
 // Minimum margin
@@ -31,7 +30,7 @@ minimumMargin = 15;
 const StackOverlay = Extension.imports.stackoverlay;
 
 // Symbol to retrieve the focus handler id
-focus_signal = Symbol();
+var focus_signal = Symbol();
 
 primary = Main.layoutManager.primaryMonitor;
 //: [object Monitor]
@@ -40,9 +39,9 @@ global.screen.connect("monitors-changed", function(screen) {
     primary = Main.layoutManager.primaryMonitor;
 })
 
-panelBox = Main.layoutManager.panelBox;
+var panelBox = Main.layoutManager.panelBox;
 
-showPanelBox = () => {
+var showPanelBox = () => {
     panelBox.show();
     Tweener.addTween(panelBox, {
         scale_y: 1,
@@ -55,7 +54,7 @@ showPanelBox = () => {
 
 panelBox.connect('show', showPanelBox);
 
-Space = (workspace) => {
+var Space = (workspace) => {
     // Simplest way to get a straight array interface
     let space = [];
     space.workspace = workspace;
@@ -176,32 +175,32 @@ panelBox.connect('hide', () => {
     }
 });
 
-focus = () => {
+var focus = () => {
     let meta_window = global.display.focus_window;
     if (!meta_window)
         return -1;
     return spaces.spaceOfWindow(meta_window).indexOf(meta_window);
 }
 
-isStacked = function(metaWindow) {
+var isStacked = function(metaWindow) {
     return metaWindow._isStacked;
 }
 
-isUnStacked = function(metaWindow) {
+var isUnStacked = function(metaWindow) {
     return !isStacked(metaWindow);
 }
 
-isFullyVisible = function(metaWindow) {
+var isFullyVisible = function(metaWindow) {
     let frame = metaWindow.get_frame_rect();
     return frame.x >= 0 && (frame.x + frame.width) <= primary.width;
 }
 
 // Max height for windows
-max_height = primary.height - panelBox.height - margin_tb*2;
+var max_height = primary.height - panelBox.height - margin_tb*2;
 // Height to use when scaled down at the sides
-scaled_height = max_height*0.95;
-scaled_y_offset = (max_height - scaled_height)/2;
-move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
+var scaled_height = max_height*0.95;
+var scaled_y_offset = (max_height - scaled_height)/2;
+var move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
     let frame = actor.meta_window.get_frame_rect();
@@ -249,9 +248,9 @@ move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
 
 }
 
-let isInserted = Symbol();
+var isInserted = Symbol();
 // Insert @metaWindow in @space at @index, setting up focus handling
-insertWindow = function(space, metaWindow, index) {
+var insertWindow = function(space, metaWindow, index) {
     index = index || space.length;
     space.splice(index, 0, metaWindow);
 
@@ -361,7 +360,7 @@ move_to = function(space, meta_window, { x, y, delay, transition,
 }
 
 
-ensure_viewport = (space, meta_window, force) => {
+var ensure_viewport = (space, meta_window, force) => {
     if (space.moving == meta_window && !force) {
         debug('already moving', meta_window.title);
         return;
@@ -450,8 +449,8 @@ ensure_viewport = (space, meta_window, force) => {
     return x;
 }
 
-focus_handler = (meta_window, user_data) => {
-    debug("focus:", meta_window.title, framestr(meta_window.get_frame_rect()));
+var focus_handler = (meta_window, user_data) => {
+    debug("focus:", meta_window.title, utils.framestr(meta_window.get_frame_rect()));
 
     let space = spaces.spaceOfWindow(meta_window);
     space.selectedWindow = meta_window;
@@ -460,7 +459,7 @@ focus_handler = (meta_window, user_data) => {
 }
 
 // Place window's left edge at x
-propogate_forward = (space, n, x, lower, gap) => {
+var propogate_forward = (space, n, x, lower, gap) => {
     if (n < 0 || n >= space.length)
         return
     gap = gap || window_gap;
@@ -479,7 +478,7 @@ propogate_forward = (space, n, x, lower, gap) => {
     }
 }
 // Place window's right edge at x
-propogate_backward = (space, n, x, lower, gap) => {
+var propogate_backward = (space, n, x, lower, gap) => {
     gap = gap || window_gap;
     if (n < 0 || n >= space.length)
         return;
@@ -501,12 +500,12 @@ propogate_backward = (space, n, x, lower, gap) => {
 
 // Detach meta_window or the focused window by default
 // Can be used from the looking glass
-detach = function (meta_window) {
+var detach = function (meta_window) {
     meta_window = meta_window || global.display.focus_window;
     remove_handler(meta_window.get_workspace(), meta_window)
 }
 
-center = (meta_window, zen) => {
+var center = (meta_window, zen) => {
     let frame = meta_window.get_frame_rect();
     let x = Math.floor((primary.width - frame.width)/2)
     move(meta_window, x, frame.y)
@@ -521,7 +520,7 @@ focus_wrapper = (meta_window, user_data) => {
     focus_handler(meta_window, user_data)
 }
 
-add_filter = (meta_window) => {
+var add_filter = (meta_window) => {
     if (meta_window.window_type != Meta.WindowType.NORMAL
         || meta_window.get_transient_for() != null
         || meta_window.is_on_all_workspaces()) {
@@ -540,9 +539,9 @@ add_filter = (meta_window) => {
         float: true
     })
 */
-winprops = [];
+var winprops = [];
 
-winprop_match_p = (meta_window, prop) => {
+var winprop_match_p = (meta_window, prop) => {
     let wm_class = meta_window.wm_class || "";
     let title = meta_window.title;
     if (prop.wm_class !== wm_class) {
@@ -561,14 +560,14 @@ winprop_match_p = (meta_window, prop) => {
     return true;
 }
 
-find_winprop = (meta_window) =>  {
+var find_winprop = (meta_window) =>  {
     let props = winprops.filter(
         winprop_match_p.bind(null, meta_window));
 
     return props[0];
 }
 
-defwinprop = (spec) => {
+var defwinprop = (spec) => {
     winprops.push(spec);
 }
 
@@ -671,7 +670,7 @@ remove_handler = (workspace, meta_window) => {
     }
 }
 
-add_all_from_workspace = (workspace) => {
+var add_all_from_workspace = (workspace) => {
     workspace = workspace || global.screen.get_active_workspace();
     let windows = workspace.list_windows();
 
@@ -776,15 +775,15 @@ tileVisible = function(metaWindow) {
     move_to(space, active[0], { x: minimumMargin, y: active[0].get_frame_rect().y });
 }
 
-SwitcherPopup = imports.ui.switcherPopup;
-PreviewedWindowNavigator = new Lang.Class({
+const SwitcherPopup = imports.ui.switcherPopup;
+var PreviewedWindowNavigator = new Lang.Class({
     Name: 'PreviewedWindowNavigator',
     Extends: SwitcherPopup.SwitcherPopup,
 
     _init: function() {
         this.parent();
 
-        this._switcherList = new MultiMap(true);
+        this._switcherList = new Minimap.MultiMap(true);
         this.space = this._switcherList.getSelected().space;
 
         this._switcherList.onlyShowSelected();

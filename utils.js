@@ -1,6 +1,6 @@
 
-debug_all = true; // Consider the default value in `debug_filter` to be true
-debug_filter = { "#preview": false };
+var debug_all = true; // Consider the default value in `debug_filter` to be true
+var debug_filter = { "#preview": false };
 debug = function() {
     let keyword = arguments[0];
     let filter = debug_filter[keyword];
@@ -10,7 +10,7 @@ debug = function() {
         print(Array.prototype.join.call(arguments, " | "));
 }
 
-print_stacktrace = function(error) {
+var print_stacktrace = function(error) {
     let trace;
     if (!error) {
         trace = (new Error()).stack.split("\n")
@@ -32,7 +32,7 @@ print_stacktrace = function(error) {
     debug.apply(null, args);
 }
 
-framestr = (rect) => {
+var framestr = (rect) => {
     return "[ x:"+rect.x + ", y:" + rect.y + " w:" + rect.width + " h:"+rect.height + " ]";
 }
 

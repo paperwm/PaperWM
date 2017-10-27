@@ -1,14 +1,16 @@
-Clutter = imports.gi.Clutter;
-Tweener = imports.ui.tweener;
-Lang = imports.lang;
-St = imports.gi.St;
-Workspace = imports.ui.workspace;
-Background = imports.ui.background;
-Meta = imports.gi.Meta;
-Pango = imports.gi.Pango;
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Clutter = imports.gi.Clutter;
+const Tweener = imports.ui.tweener;
+const Lang = imports.lang;
+const St = imports.gi.St;
+const Workspace = imports.ui.workspace;
+const Background = imports.ui.background;
+const Meta = imports.gi.Meta;
+const Pango = imports.gi.Pango;
 
+const Tiling = Extension.imports.tiling;
 
-MINIMAP_SCALE = 0.15;
+var MINIMAP_SCALE = 0.15;
 
 calcOffset = function(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
@@ -18,7 +20,7 @@ calcOffset = function(metaWindow) {
     return [x_offset, y_offset];
 }
 
-WindowCloneLayout = new Lang.Class({
+var WindowCloneLayout = new Lang.Class({
     Name: 'PaperWindowCloneLayout',
     Extends: Clutter.LayoutManager,
 
@@ -72,7 +74,7 @@ WindowCloneLayout = new Lang.Class({
     }
 });
 
-Minimap = new Lang.Class({
+var Minimap = new Lang.Class({
     Name: 'Minimap',
 
     _init: function(space) {
@@ -219,7 +221,7 @@ Minimap = new Lang.Class({
             propagate_forward(i+1, x + w + gap, gap);
         }
 
-        propagate_forward(0, 0, 5*window_gap);
+        propagate_forward(0, 0, 5*Tiling.window_gap);
     },
 
     reorder: function(index, targetIndex, targetX) {
@@ -260,7 +262,7 @@ Minimap = new Lang.Class({
 })
 
 
-MultiMap = new Lang.Class({
+var MultiMap = new Lang.Class({
     Name: 'MultiMap',
 
     _init: function(mru) {

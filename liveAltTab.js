@@ -4,9 +4,11 @@ const Lang = imports.lang;
 const Meta = imports.gi.Meta;
 const AltTab = imports.ui.altTab;
 const Main = imports.ui.main;
+const Tweener = imports.ui.tweener;
 let WindowManager = imports.ui.windowManager;
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const Scratch = Extension.imports.scratch;
+const Tiling = Extension.imports.tiling;
 
 WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, direction) {
 
@@ -121,7 +123,7 @@ WindowManager.WindowManager.prototype._previewWorkspaceDone = function() {
         this._movingWindow = null;
 }
 
-LiveAltTab = Lang.Class({
+var LiveAltTab = Lang.Class({
     Name: 'LiveAltTab',
     Extends: AltTab.WindowSwitcherPopup,
 
@@ -171,7 +173,7 @@ LiveAltTab = Lang.Class({
         }
 
         let space = spaces.spaceOfWindow(to);
-        ensure_viewport(space, to);
+        Tiling.ensure_viewport(space, to);
         this._selectedIndex = num;
         this._switcherList.highlight(num);
     },

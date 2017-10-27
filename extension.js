@@ -84,7 +84,7 @@ function enable() {
             let workspace = global.screen.get_workspace_by_index(i)
             Tiling.spaces.addSpace(workspace);
             debug("workspace", workspace)
-            add_all_from_workspace(workspace);
+            Tiling.add_all_from_workspace(workspace);
         }
     }
 
