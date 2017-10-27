@@ -51,9 +51,9 @@ var dynamic_function_ref = function(handler_name, owner_obj) {
 /**
  * Adapts a function operating on a meta_window to a key handler
  */
-as_key_handler = function(fn) {
+var as_key_handler = function(fn, owner_obj = window) {
     if(typeof(fn) === "string") {
-        fn = dynamic_function_ref(fn);
+        fn = dynamic_function_ref(fn, owner_obj);
     }
     return function(screen, monitor, meta_window, binding) {
         return fn(meta_window);

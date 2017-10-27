@@ -101,6 +101,7 @@ function enable() {
     }
 
     let dynamic_function_ref = utils.dynamic_function_ref;
+    let as_key_handler = utils.as_key_handler;
 
     settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
@@ -113,7 +114,8 @@ function enable() {
 
     // Or use "toggle-maximize"?
     Meta.keybindings_set_custom_handler("maximize-horizontally",
-                                        as_key_handler("toggle_maximize_horizontally"));
+                                        as_key_handler("toggle_maximize_horizontally",
+                                                       Tiling));
 
     Meta.keybindings_set_custom_handler("switch-applications",
                                         dynamic_function_ref("liveAltTab",
@@ -150,10 +152,14 @@ function enable() {
                           dynamic_function_ref("setDevGlobals",
                                                utils));
 
-    paperActions.register("cycle-width", as_key_handler("cycleWindowWidth"),
-                        Meta.KeyBindingFlags.PER_WINDOW);
-    paperActions.register("tile-visible", as_key_handler("tileVisible"),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+    paperActions.register("cycle-width",
+                          as_key_handler("cycleWindowWidth",
+                                         Tiling),
+                          Meta.KeyBindingFlags.PER_WINDOW);
+    paperActions.register("tile-visible",
+                          as_key_handler("tileVisible",
+                                         Tiling),
+                          Meta.KeyBindingFlags.PER_WINDOW);
 
     loadRcFile();
 }

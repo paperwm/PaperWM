@@ -517,7 +517,7 @@ var center = (meta_window, zen) => {
     propogate_forward(space, i + 1, right);
     propogate_backward(space, i - 1, left);
 }
-focus_wrapper = (meta_window, user_data) => {
+var focus_wrapper = (meta_window, user_data) => {
     focus_handler(meta_window, user_data)
 }
 
@@ -734,7 +734,7 @@ var add_all_from_workspace = (workspace) => {
     }
 }
 
-toggle_maximize_horizontally = (meta_window) => {
+var toggle_maximize_horizontally = (meta_window) => {
     meta_window = meta_window || global.display.focus_window;
 
     // TODO: make some sort of animation
@@ -754,7 +754,7 @@ toggle_maximize_horizontally = (meta_window) => {
     ensure_viewport(spaces.spaceOfWindow(meta_window), meta_window, true);
 }
 
-tileVisible = function(metaWindow) {
+var tileVisible = function(metaWindow) {
     metaWindow = metaWindow || global.display.focus_window;
     let space = spaces.spaceOfWindow(metaWindow);
     if (!space)
@@ -979,7 +979,7 @@ var preview_navigate = (display, screen, meta_window, binding) => {
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
 
-cycleWindowWidth = function(metaWindow) {
+var cycleWindowWidth = function(metaWindow) {
     const gr = 1/1.618;
     const ratios = [(1-gr), 1/2, gr];
 
