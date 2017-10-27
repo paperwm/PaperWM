@@ -278,7 +278,7 @@ var MultiMap = new Lang.Class({
         if (mru) {
             this.selectedIndex = 0;
             let seen = {};
-            this.addSpace(spaces.spaceOf(global.screen.get_active_workspace()), 0)
+            this.addSpace(Tiling.spaces.spaceOf(global.screen.get_active_workspace()), 0)
             seen[global.screen.get_active_workspace()] = true;
             let i = 1;
             global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
@@ -286,7 +286,7 @@ var MultiMap = new Lang.Class({
                     let workspace = metaWindow.get_workspace();
                     if (!seen[workspace]) {
                         debug('add workspace');
-                        this.addSpace(spaces.spaceOf(workspace), i)
+                        this.addSpace(Tiling.spaces.spaceOf(workspace), i)
                         seen[workspace] = true;
                         i++;
                     }
@@ -297,7 +297,7 @@ var MultiMap = new Lang.Class({
                 let workspace = global.screen.get_workspace_by_index(j);
                 if (!seen[workspace]) {
                     debug('add workspace');
-                    this.addSpace(spaces.spaceOf(workspace), i);
+                    this.addSpace(Tiling.spaces.spaceOf(workspace), i);
                     i++;
                     seen[workspace] = true;
                 }
@@ -307,7 +307,7 @@ var MultiMap = new Lang.Class({
             let nWorkspaces = global.screen.n_workspaces;
             for (let i=0; i < nWorkspaces; i++) {
                 let workspace = global.screen.get_workspace_by_index(i);
-                let space = spaces.spaceOf(workspace);
+                let space = Tiling.spaces.spaceOf(workspace);
                 this.addSpace(space, i);
             }
         }

@@ -178,7 +178,6 @@ var spaces = (function () {
 
     return spaces;
 })();
-window.spaces = spaces;
 
 panelBox.connect('hide', () => {
     let space = spaces.spaceOf(global.screen.get_active_workspace());

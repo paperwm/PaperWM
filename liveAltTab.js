@@ -174,7 +174,7 @@ var LiveAltTab = Lang.Class({
             this.switchedWorkspace = true;
         }
 
-        let space = spaces.spaceOfWindow(to);
+        let space = Tiling.spaces.spaceOfWindow(to);
         Tiling.ensure_viewport(space, to);
         this._selectedIndex = num;
         this._switcherList.highlight(num);
