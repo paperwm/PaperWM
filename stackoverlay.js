@@ -1,3 +1,5 @@
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Tiling = Extension.imports.tiling;
 const Clutter = imports.gi.Clutter;
 const Tweener = imports.ui.tweener;
 const Lang = imports.lang;
@@ -66,7 +68,7 @@ var StackOverlay = new Lang.Class({
         overlay.y = panelBox.height;
         // global.window_group is below the panel so not really necessary to adjust height?
         overlay.height = this.monitor.height - panelBox.height; 
-        overlay.width = stack_margin;
+        overlay.width = Tiling.stack_margin;
 
         overlay.hide();
 
@@ -109,7 +111,7 @@ var StackOverlay = new Lang.Class({
 
         let actor = this.target.get_compositor_private();
 
-        if (actor.x <= stack_margin) {
+        if (actor.x <= Tiling.stack_margin) {
             icon.x = iconMarginX;
         } else {
             icon.x = this.overlay.width - iconMarginX - iconSize; 
@@ -145,7 +147,7 @@ var StackOverlay = new Lang.Class({
         //       we must use destinationX and we might occationally get wrong y
         //       positions (icon) (since we don't track the y destination)
         //       We also assume window widths are are unchanging.
-        if (actor.x < stack_margin) {
+        if (actor.x < Tiling.stack_margin) {
             let neighbour = space[space.indexOf(metaWindow) + 1]
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
@@ -155,7 +157,7 @@ var StackOverlay = new Lang.Class({
 
             overlay.x = 0;
             overlay.width = Math.min(
-                stack_margin,
+                Tiling.stack_margin,
                 Math.max(0, neighbourX - resizeBorderWidth)
             );
         } else {
@@ -167,7 +169,7 @@ var StackOverlay = new Lang.Class({
             let neighbourX = neighbour.destinationX || neighbourFrame.x;
             
             overlay.x = Math.max(
-                this.monitor.width - stack_margin,
+                this.monitor.width - Tiling.stack_margin,
                 neighbourX + neighbourFrame.width + resizeBorderWidth
             );
             overlay.width = this.monitor.width - overlay.x;

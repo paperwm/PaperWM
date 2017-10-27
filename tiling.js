@@ -21,9 +21,9 @@ var margin_tb = preferences.get_int('vertical-margin');
 // left/right margin
 var margin_lr = preferences.get_int('horizontal-margin');
 // How much the stack should protrude from the side
-stack_margin = 75
+var stack_margin = 75;
 // Minimum margin
-minimumMargin = 15;
+var minimumMargin = 15;
 
 // FIXME: stackoverlay have to be imported after certain global variables have been
 //        defined atm. Preferences should be accessed as preferences and globals
