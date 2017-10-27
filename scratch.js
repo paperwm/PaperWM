@@ -1,4 +1,7 @@
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const Meta = imports.gi.Meta;
+const utils = Extension.imports.utils;
+const debug = utils.debug;
 
 function isScratchWindow(metaWindow) {
     return metaWindow.is_on_all_workspaces();

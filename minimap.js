@@ -9,6 +9,8 @@ const Meta = imports.gi.Meta;
 const Pango = imports.gi.Pango;
 
 const Tiling = Extension.imports.tiling;
+const utils = Extension.imports.utils;
+const debug = utils.debug;
 
 var MINIMAP_SCALE = 0.15;
 

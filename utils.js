@@ -1,7 +1,7 @@
 
 var debug_all = true; // Consider the default value in `debug_filter` to be true
 var debug_filter = { "#preview": false };
-debug = function() {
+var debug = function() {
     let keyword = arguments[0];
     let filter = debug_filter[keyword];
     if (filter === false)
@@ -82,7 +82,7 @@ var setDevGlobals = function() {
 /**
  * Visualize the frame and buffer bounding boxes of a meta window
  */
-toggleWindowBoxes = function(metaWindow) {
+var toggleWindowBoxes = function(metaWindow) {
     metaWindow = metaWindow || global.display.focus_window;
 
     if(metaWindow._paperDebugBoxes) {

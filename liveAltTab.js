@@ -9,6 +9,8 @@ let WindowManager = imports.ui.windowManager;
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const Scratch = Extension.imports.scratch;
 const Tiling = Extension.imports.tiling;
+const utils = Extension.imports.utils;
+const debug = utils.debug;
 
 WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, direction) {
 

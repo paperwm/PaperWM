@@ -5,6 +5,8 @@ const Tweener = imports.ui.tweener;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
+const utils = Extension.imports.utils;
+const debug = utils.debug;
 
 /*
   The stack overlay decorates the top stacked window with its icon and
