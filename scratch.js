@@ -14,7 +14,7 @@ function isScratchActive() {
     return getScratchWindows().some(metaWindow => !metaWindow.minimized);
 }
 
-toggleScratch = function() {
+var toggleScratch = function() {
     let windows = getScratchWindows();
     let isSomeShown = isScratchActive();
 

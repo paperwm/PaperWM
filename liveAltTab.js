@@ -206,7 +206,7 @@ var LiveAltTab = Lang.Class({
 })
 
 
-liveAltTab = (display, screen, meta_window, binding) => {
+var liveAltTab = (display, screen, meta_window, binding) => {
     let tabPopup = new LiveAltTab();
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }

@@ -41,7 +41,7 @@ var framestr = (rect) => {
  * redefine the function without re-registering all signal handler, keybindings,
  * etc. (this is like a function symbol in lisp)
  */
-dynamic_function_ref = function(handler_name, owner_obj) {
+var dynamic_function_ref = function(handler_name, owner_obj) {
     owner_obj = owner_obj || window;
     return function() {
         owner_obj[handler_name].apply(this, arguments);
@@ -72,7 +72,7 @@ function in_bounds(array, i) {
 
 //// Debug and development utils
 
-setDevGlobals = function() {
+var setDevGlobals = function() {
     // Accept the risk of this interfering with existing code for now
     metaWindow = global.display.focus_window;
     workspace = global.screen.get_active_workspace();

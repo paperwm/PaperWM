@@ -3,7 +3,7 @@ const convenience = Extension.imports.convenience;
 const Tiling = Extension.imports.tiling;
 const Scratch = Extension.imports.scratch;
 const LiveAltTab = Extension.imports.liveAltTab;
-const utils = Extension.utils;
+const utils = Extension.imports.utils;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Meta = imports.gi.Meta;
@@ -100,6 +100,8 @@ function enable() {
         initWorkspaces();
     }
 
+    let dynamic_function_ref = utils.dynamic_function_ref;
+
     settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
     settings.set_strv("close", ['<super>c'])
@@ -114,24 +116,39 @@ function enable() {
                                         as_key_handler("toggle_maximize_horizontally"));
 
     Meta.keybindings_set_custom_handler("switch-applications",
-                                        dynamic_function_ref("liveAltTab"));
+                                        dynamic_function_ref("liveAltTab",
+                                                             LiveAltTab));
 
     Meta.keybindings_set_custom_handler("switch-to-workspace-up",
-                                        dynamic_function_ref("preview_navigate"));
+                                        dynamic_function_ref("preview_navigate",
+                                                             Tiling));
 
     Meta.keybindings_set_custom_handler("switch-to-workspace-down",
-                                        dynamic_function_ref("preview_navigate"));
+                                        dynamic_function_ref("preview_navigate",
+                                                             Tiling));
 
 
-    paperActions.register("switch-next",     dynamic_function_ref("preview_navigate"));
-    paperActions.register("switch-previous", dynamic_function_ref("preview_navigate"),
-                        Meta.KeyBindingFlags.IS_REVERSED);
+    paperActions.register("switch-next",
+                          dynamic_function_ref("preview_navigate",
+                                               Tiling));
+    paperActions.register("switch-previous",
+                          dynamic_function_ref("preview_navigate",
+                                               Tiling),
+                          Meta.KeyBindingFlags.IS_REVERSED);
 
-    paperActions.register("move-left", dynamic_function_ref("preview_navigate"));
-    paperActions.register("move-right", dynamic_function_ref("preview_navigate"));
-    paperActions.register("toggle-scratch-layer", dynamic_function_ref("toggleScratch"));
+    paperActions.register("move-left",
+                          dynamic_function_ref("preview_navigate",
+                                               Tiling));
+    paperActions.register("move-right",
+                          dynamic_function_ref("preview_navigate",
+                                               Tiling));
+    paperActions.register("toggle-scratch-layer",
+                          dynamic_function_ref("toggleScratch",
+                                               Scratch));
 
-    paperActions.register("develop-set-globals", dynamic_function_ref("setDevGlobals"));
+    paperActions.register("develop-set-globals",
+                          dynamic_function_ref("setDevGlobals",
+                                               utils));
 
     paperActions.register("cycle-width", as_key_handler("cycleWindowWidth"),
                         Meta.KeyBindingFlags.PER_WINDOW);

@@ -11,6 +11,7 @@ const utils = Extension.imports.utils;
 const Clutter = imports.gi.Clutter;
 
 var Minimap = Extension.imports.minimap;
+var Me = Extension.imports.tiling;
 
 let preferences = Extension.imports.convenience.getSettings();
 // Gap between windows
@@ -60,10 +61,10 @@ var Space = (workspace) => {
     space.workspace = workspace;
     space.addSignal =
         workspace.connect("window-added",
-                          dynamic_function_ref("add_handler"));
+                          utils.dynamic_function_ref("add_handler", Me));
     space.removeSignal =
         workspace.connect("window-removed",
-                          dynamic_function_ref("remove_handler"));
+                          utils.dynamic_function_ref("remove_handler", Me));
     space.selectedWindow = null;
     space.moving = false;
     space.leftStack = 0; // not implemented
@@ -110,11 +111,11 @@ var spaces = (function () {
 
     spaces.nWorkspacesSignal =
         global.screen.connect('notify::n-workspaces',
-                              Lang.bind(spaces, dynamic_function_ref('workspacesChanged', spaces)));
+                              Lang.bind(spaces, utils.dynamic_function_ref('workspacesChanged', spaces)));
 
     spaces.windowCreatedSignal =
         global.display.connect('window-created',
-                               dynamic_function_ref('window_created'));
+                               utils.dynamic_function_ref('window_created', spaces));
 
     spaces.workspacesChanged = function () {
         let nWorkspaces = global.screen.n_workspaces;
@@ -160,6 +161,18 @@ var spaces = (function () {
 
     spaces.spaceOf = function(workspace) {
         return this._spaces[workspace];
+    };
+
+    spaces.window_created = function (display, metaWindow, user_data) {
+        // Only run setInitialPosition on inserted windows
+        if (!metaWindow[isInserted])
+            return;
+        delete metaWindow[isInserted];
+        debug('window-created', metaWindow.title);
+        let actor = metaWindow.get_compositor_private();
+        let signal = Symbol();
+        metaWindow[signal] = actor.connect('first-frame',
+                                           Lang.bind({metaWindow, signal}, setInitialPosition));
     };
 
     return spaces;
@@ -290,18 +303,6 @@ var insertWindow = function(space, metaWindow, index) {
         metaWindow[signal] = metaWindow.connect('focus',
                                                 Lang.bind({metaWindow, signal}, setInitialPosition));
     }
-}
-
-window_created = (display, metaWindow, user_data) => {
-    // Only run setInitialPosition on inserted windows
-    if (!metaWindow[isInserted])
-        return;
-    delete metaWindow[isInserted];
-    debug('window-created', metaWindow.title);
-    let actor = metaWindow.get_compositor_private();
-    let signal = Symbol();
-    metaWindow[signal] = actor.connect('first-frame',
-                  Lang.bind({metaWindow, signal}, setInitialPosition));
 }
 
 // Needs to be called by {metaWindow, signal}
@@ -582,7 +583,7 @@ defwinprop({
     scratch_layer: true
 });
 
-add_handler = (ws, meta_window) => {
+var add_handler = (ws, meta_window) => {
     debug("window-added", meta_window, meta_window.title, meta_window.window_type, ws.index());
     if (!add_filter(meta_window)) {
         return;
@@ -628,7 +629,7 @@ add_handler = (ws, meta_window) => {
     insertWindow(space, meta_window, insert_after_i + 1);
 }
 
-remove_handler = (workspace, meta_window) => {
+var remove_handler = (workspace, meta_window) => {
     debug("window-removed", meta_window, meta_window.title, workspace.index());
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
@@ -973,7 +974,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     }
 });
 
-preview_navigate = (display, screen, meta_window, binding) => {
+var preview_navigate = (display, screen, meta_window, binding) => {
     let tabPopup = new PreviewedWindowNavigator();
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
