@@ -86,8 +86,8 @@ var Minimap = new Lang.Class({
 
         this.clones = [];
         this.actor.set_scale(MINIMAP_SCALE, MINIMAP_SCALE);
-        this.actor.height = primary.height;
-        this.actor.width = primary.width;
+        this.actor.height = Tiling.primary.height;
+        this.actor.width = Tiling.primary.width;
         this.actor.add_actor(this.minimapActor);
 
     },
@@ -157,10 +157,10 @@ var Minimap = new Lang.Class({
         for (let i=clones.length-1; i>around; i--) {
             let clone = clones[i];
             clone.set_pivot_point(1, 0.5);
-            if (clone.x + clone.width + this.minimapActor.x >= primary.width + maxProtrusion) {
+            if (clone.x + clone.width + this.minimapActor.x >= Tiling.primary.width + maxProtrusion) {
                 let scale = 1 - 0.05*(i - around);
                 Tweener.addTween(clone, {x: -this.minimapActor.x
-                                         + primary.width
+                                         + Tiling.primary.width
                                          + (maxProtrusion - (clones.length-1 - i)*rightStackGap) - clone.width
                                          , scale_x: scale
                                          , scale_y: scale

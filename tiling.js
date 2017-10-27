@@ -34,7 +34,7 @@ const StackOverlay = Extension.imports.stackoverlay;
 // Symbol to retrieve the focus handler id
 var focus_signal = Symbol();
 
-primary = Main.layoutManager.primaryMonitor;
+var primary = Main.layoutManager.primaryMonitor;
 //: [object Monitor]
 // Reset primary when monitors change
 global.screen.connect("monitors-changed", function(screen) {
