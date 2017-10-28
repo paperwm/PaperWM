@@ -114,6 +114,10 @@ var spaces = (function () {
         global.screen.connect('notify::n-workspaces',
                               Lang.bind(spaces, utils.dynamic_function_ref('workspacesChanged', spaces)));
 
+    spaces.workspaceRemovedSignal =
+        global.screen.connect('workspace-removed',
+                              utils.dynamic_function_ref('workspaceRemoved', spaces));
+
     spaces.windowCreatedSignal =
         global.display.connect('window-created',
                                utils.dynamic_function_ref('window_created', spaces));
@@ -143,6 +147,18 @@ var spaces = (function () {
                 this.removeSpace(space);
             }
         }
+    };
+
+    spaces.workspaceRemoved = function(screen, index) {
+        let settings = new Gio.Settings({ schema_id:
+                                          'org.gnome.desktop.wm.preferences'});
+        let names = settings.get_strv('workspace-names');
+
+        // Move removed workspace name to the end. Could've simply removed it
+        // too, but this way it's not lost. In the future we want a UI to select
+        // old names when selecting a new workspace.
+        names = names.slice(0, index).concat(names.slice(index+1), [names[index]]);
+        settings.set_strv('workspace-names', names);
     };
 
     spaces.addSpace = function(workspace) {
