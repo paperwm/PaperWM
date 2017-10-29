@@ -14,7 +14,7 @@ const debug = utils.debug;
 
 var MINIMAP_SCALE = 0.15;
 
-var calcOffset = function(metaWindow) {
+function calcOffset(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
     let frame = metaWindow.get_frame_rect();
     let x_offset = frame.x - buffer.x;

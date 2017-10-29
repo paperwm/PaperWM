@@ -43,7 +43,7 @@ global.screen.connect("monitors-changed", function(screen) {
 
 var panelBox = Main.layoutManager.panelBox;
 
-var showPanelBox = () => {
+function showPanelBox() {
     panelBox.show();
     Tweener.addTween(panelBox, {
         scale_y: 1,
@@ -56,7 +56,7 @@ var showPanelBox = () => {
 
 panelBox.connect('show', showPanelBox);
 
-var Space = (workspace) => {
+function Space(workspace) {
     // Simplest way to get a straight array interface
     let space = [];
     space.workspace = workspace;
@@ -204,22 +204,22 @@ panelBox.connect('hide', () => {
     }
 });
 
-var focus = () => {
+function focus() {
     let meta_window = global.display.focus_window;
     if (!meta_window)
         return -1;
     return spaces.spaceOfWindow(meta_window).indexOf(meta_window);
 }
 
-var isStacked = function(metaWindow) {
+function isStacked(metaWindow) {
     return metaWindow._isStacked;
 }
 
-var isUnStacked = function(metaWindow) {
+function isUnStacked(metaWindow) {
     return !isStacked(metaWindow);
 }
 
-var isFullyVisible = function(metaWindow) {
+function isFullyVisible(metaWindow) {
     let frame = metaWindow.get_frame_rect();
     return frame.x >= 0 && (frame.x + frame.width) <= primary.width;
 }
@@ -229,7 +229,7 @@ var max_height = primary.height - panelBox.height - margin_tb*2;
 // Height to use when scaled down at the sides
 var scaled_height = max_height*0.95;
 var scaled_y_offset = (max_height - scaled_height)/2;
-var move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
+function move(meta_window, x, y, onComplete, onStart, delay, transition) {
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
     let frame = actor.meta_window.get_frame_rect();
@@ -279,7 +279,7 @@ var move = (meta_window, x, y, onComplete, onStart, delay, transition) => {
 
 var isInserted = Symbol();
 // Insert @metaWindow in @space at @index, setting up focus handling
-var insertWindow = function(space, metaWindow, index) {
+function insertWindow(space, metaWindow, index) {
     index = index || space.length;
     space.splice(index, 0, metaWindow);
 
@@ -322,7 +322,7 @@ var insertWindow = function(space, metaWindow, index) {
 }
 
 // Needs to be called by {metaWindow, signal}
-var setInitialPosition = function(actor, existing) {
+function setInitialPosition(actor, existing) {
     let {metaWindow, signal} = this;
 
     if(metaWindow.scrollwm_initial_position) {
@@ -361,7 +361,7 @@ var setInitialPosition = function(actor, existing) {
 }
 
 // Move @meta_window to x, y and propagate the change in @space
-var move_to = function(space, meta_window, { x, y, delay, transition,
+function move_to(space, meta_window, { x, y, delay, transition,
                                          onComplete, onStart }) {
     // Register @meta_window as moving on @space
     move(meta_window, x, y
@@ -377,7 +377,7 @@ var move_to = function(space, meta_window, { x, y, delay, transition,
 }
 
 
-var ensure_viewport = (space, meta_window, force) => {
+function ensure_viewport(space, meta_window, force) {
     if (space.moving == meta_window && !force) {
         debug('already moving', meta_window.title);
         return;
@@ -466,7 +466,7 @@ var ensure_viewport = (space, meta_window, force) => {
     return x;
 }
 
-var focus_handler = (meta_window, user_data) => {
+function focus_handler(meta_window, user_data) {
     debug("focus:", meta_window.title, utils.framestr(meta_window.get_frame_rect()));
 
     let space = spaces.spaceOfWindow(meta_window);
@@ -476,7 +476,7 @@ var focus_handler = (meta_window, user_data) => {
 }
 
 // Place window's left edge at x
-var propogate_forward = (space, n, x, lower, gap) => {
+function propogate_forward(space, n, x, lower, gap) {
     if (n < 0 || n >= space.length)
         return
     gap = gap || window_gap;
@@ -495,7 +495,7 @@ var propogate_forward = (space, n, x, lower, gap) => {
     }
 }
 // Place window's right edge at x
-var propogate_backward = (space, n, x, lower, gap) => {
+function propogate_backward(space, n, x, lower, gap) {
     gap = gap || window_gap;
     if (n < 0 || n >= space.length)
         return;
@@ -517,12 +517,12 @@ var propogate_backward = (space, n, x, lower, gap) => {
 
 // Detach meta_window or the focused window by default
 // Can be used from the looking glass
-var detach = function (meta_window) {
+function detach (meta_window) {
     meta_window = meta_window || global.display.focus_window;
     remove_handler(meta_window.get_workspace(), meta_window)
 }
 
-var center = (meta_window, zen) => {
+function center(meta_window, zen) {
     let frame = meta_window.get_frame_rect();
     let x = Math.floor((primary.width - frame.width)/2)
     move(meta_window, x, frame.y)
@@ -533,11 +533,11 @@ var center = (meta_window, zen) => {
     propogate_forward(space, i + 1, right);
     propogate_backward(space, i - 1, left);
 }
-var focus_wrapper = (meta_window, user_data) => {
+function focus_wrapper(meta_window, user_data) {
     focus_handler(meta_window, user_data)
 }
 
-var add_filter = (meta_window) => {
+function add_filter(meta_window) {
     if (meta_window.window_type != Meta.WindowType.NORMAL
         || meta_window.get_transient_for() != null
         || meta_window.is_on_all_workspaces()) {
@@ -558,7 +558,7 @@ var add_filter = (meta_window) => {
 */
 var winprops = [];
 
-var winprop_match_p = (meta_window, prop) => {
+function winprop_match_p(meta_window, prop) {
     let wm_class = meta_window.wm_class || "";
     let title = meta_window.title;
     if (prop.wm_class !== wm_class) {
@@ -577,14 +577,14 @@ var winprop_match_p = (meta_window, prop) => {
     return true;
 }
 
-var find_winprop = (meta_window) =>  {
+function find_winprop(meta_window)  {
     let props = winprops.filter(
         winprop_match_p.bind(null, meta_window));
 
     return props[0];
 }
 
-var defwinprop = (spec) => {
+function defwinprop(spec) {
     winprops.push(spec);
 }
 
@@ -599,7 +599,7 @@ defwinprop({
     scratch_layer: true
 });
 
-var add_handler = (ws, meta_window) => {
+function add_handler(ws, meta_window) {
     debug("window-added", meta_window, meta_window.title, meta_window.window_type, ws.index());
     if (!add_filter(meta_window)) {
         return;
@@ -645,7 +645,7 @@ var add_handler = (ws, meta_window) => {
     insertWindow(space, meta_window, insert_after_i + 1);
 }
 
-var remove_handler = (workspace, meta_window) => {
+function remove_handler(workspace, meta_window) {
     debug("window-removed", meta_window, meta_window.title, workspace.index());
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
@@ -687,7 +687,7 @@ var remove_handler = (workspace, meta_window) => {
     }
 }
 
-var add_all_from_workspace = (workspace) => {
+function add_all_from_workspace(workspace) {
     workspace = workspace || global.screen.get_active_workspace();
     let windows = workspace.list_windows();
 
@@ -750,7 +750,7 @@ var add_all_from_workspace = (workspace) => {
     }
 }
 
-var toggle_maximize_horizontally = (meta_window) => {
+function toggle_maximize_horizontally(meta_window) {
     meta_window = meta_window || global.display.focus_window;
 
     // TODO: make some sort of animation
@@ -770,7 +770,7 @@ var toggle_maximize_horizontally = (meta_window) => {
     ensure_viewport(spaces.spaceOfWindow(meta_window), meta_window, true);
 }
 
-var tileVisible = function(metaWindow) {
+function tileVisible(metaWindow) {
     metaWindow = metaWindow || global.display.focus_window;
     let space = spaces.spaceOfWindow(metaWindow);
     if (!space)
@@ -990,12 +990,12 @@ var PreviewedWindowNavigator = new Lang.Class({
     }
 });
 
-var preview_navigate = (display, screen, meta_window, binding) => {
+function preview_navigate(display, screen, meta_window, binding) {
     let tabPopup = new PreviewedWindowNavigator();
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
 
-var cycleWindowWidth = function(metaWindow) {
+function cycleWindowWidth(metaWindow) {
     const gr = 1/1.618;
     const ratios = [(1-gr), 1/2, gr];
 

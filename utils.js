@@ -1,7 +1,7 @@
 
 var debug_all = true; // Consider the default value in `debug_filter` to be true
 var debug_filter = { "#preview": false };
-var debug = function() {
+function debug() {
     let keyword = arguments[0];
     let filter = debug_filter[keyword];
     if (filter === false)
@@ -10,7 +10,7 @@ var debug = function() {
         print(Array.prototype.join.call(arguments, " | "));
 }
 
-var print_stacktrace = function(error) {
+function print_stacktrace(error) {
     let trace;
     if (!error) {
         trace = (new Error()).stack.split("\n")
@@ -32,7 +32,7 @@ var print_stacktrace = function(error) {
     debug.apply(null, args);
 }
 
-var framestr = (rect) => {
+function framestr(rect) {
     return "[ x:"+rect.x + ", y:" + rect.y + " w:" + rect.width + " h:"+rect.height + " ]";
 }
 
@@ -41,7 +41,7 @@ var framestr = (rect) => {
  * redefine the function without re-registering all signal handler, keybindings,
  * etc. (this is like a function symbol in lisp)
  */
-var dynamic_function_ref = function(handler_name, owner_obj) {
+function dynamic_function_ref(handler_name, owner_obj) {
     owner_obj = owner_obj || window;
     return function() {
         owner_obj[handler_name].apply(this, arguments);
@@ -51,7 +51,7 @@ var dynamic_function_ref = function(handler_name, owner_obj) {
 /**
  * Adapts a function operating on a meta_window to a key handler
  */
-var as_key_handler = function(fn, owner_obj = window) {
+function as_key_handler(fn, owner_obj = window) {
     if(typeof(fn) === "string") {
         fn = dynamic_function_ref(fn, owner_obj);
     }
@@ -72,7 +72,7 @@ function in_bounds(array, i) {
 
 //// Debug and development utils
 
-var setDevGlobals = function() {
+function setDevGlobals() {
     // Accept the risk of this interfering with existing code for now
     metaWindow = global.display.focus_window;
     workspace = global.screen.get_active_workspace();
@@ -82,7 +82,7 @@ var setDevGlobals = function() {
 /**
  * Visualize the frame and buffer bounding boxes of a meta window
  */
-var toggleWindowBoxes = function(metaWindow) {
+function toggleWindowBoxes(metaWindow) {
     metaWindow = metaWindow || global.display.focus_window;
 
     if(metaWindow._paperDebugBoxes) {
