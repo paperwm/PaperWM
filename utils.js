@@ -127,7 +127,7 @@ function sum(array) {
 
 function setWorkspaceName(name, workspace) {
     let i;
-    if (workspaceOrIndex === undefined) {
+    if (workspace === undefined) {
         i = global.screen.get_active_workspace_index();
     } else {
         i = workspace.index();
