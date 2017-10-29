@@ -62,15 +62,55 @@ window B           |              ----|-----------
 window B ->        | ---------------- |
 #+END_SRC 
 * GJS
-** import system
+** import system / module system
 `imports.NAME` reflects the directories and javascript files present in `imports.searchPath`.
 To add a path, simply do `imports.searchPath.push(PATH)`
 
-The entries can also(?) be special uri's referring to directories with .gir files(?)
+The entries can also(?) be special uri's referring to directories with .gir/.typelib files(?)
 
-Or maybe more likely: `imports.gi.` contains everything that's exposed through .gir files.
+Or maybe more likely: `imports.gi.` contains everything that's exposed through .gir/.typelib files.
 
 `GJS_PATH` might be used too.
+
+*** Reloading modules
+Modules **can't** be reloaded, but writing to `imports.myModule.myVariable` works. Eg.
+#+BEGIN_SRC javascript
+// myModule
+var foo = 1;
+function printFoo() {
+  print(foo);
+}
+#+END_SRC
+
+After `imports.myModule.foo = 2`, `printFoo` will print 2. All users of the module share the same module object so they will also see the updated variable.
+
+*** Refering to the current module
+Refering to the module being loaded works:
+#+BEGIN_SRC javascript
+// myModule.js
+var currentModule = imports.myModule;
+var foo = 1;
+currentModule.foo = 2;
+print(foo); // prints 2
+#+END_SRC
+I don't know if it's possible without knowing the module name.
+*** Creating a standalone importer
+This trick is due to gnome-shell
+#+BEGIN_SRC javascript
+function createImporter (directoryPath) {
+    const Gio = imports.gi.Gio;
+    let oldSearchPath = imports.searchPath.slice();  // make a copy
+    let directory = Gio.file_new_for_path(directoryPath);
+    try {
+        imports.searchPath = [ directory.get_parent().get_path() ];
+        // importing a "subdir" creates a new importer object that doesn't
+        // affect the global one
+        return imports[directory.get_basename()];
+    } finally {
+        imports.searchPath = oldSearchPath;
+    }
+}
+#+END_SRC
 ** Debugging
 *** Get a stacktrace
 `(new Error()).stack`
@@ -117,6 +157,16 @@ To my knowledge there is no way to make a actor "break out" of its parent. If si
 NB: `ClutterActor.z-position` **don't** control the z-index. It is used to control the perspective of the actors (most relevant for rotated actors).
 
 A complication when using non-window actors inside `global.window_group` is that mutter keep restacking the window actors in a way that destroys the non-window actors z-index. Listening on the `restacked` signal of `global.screen` (`MetaScreen`) and restack the non-window actors in the handler is a workaround that seems to work.
+* Extension system
+All extension objects are available using
+`imports.misc.extensionUtils.extensions[extensionUiid];`
+where the key is the uuid from the metadata.json file.
+
+The /current/ extension object is usually found like this:
+#+BEGIN_SRC javascript
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+#+END_SRC
 * TODO Firefox focus bug
 Sometimes firefox windows refuse to gain proper focus. What happens is that another (or multiple!) firefox window somehow have focus in the address bar. The workaround is to find that/those window(s) and remove focus from the address bar.
 
