@@ -124,3 +124,21 @@ var toggleWindowBoxes = function(metaWindow) {
 function sum(array) {
     return array.reduce((a, b) => a + b, 0);
 }
+
+function setWorkspaceName(name, workspace) {
+    let i;
+    if (workspaceOrIndex === undefined) {
+        i = global.screen.get_active_workspace_index();
+    } else {
+        i = workspace.index();
+    }
+    let settings = new Gio.Settings({ schema_id:
+                                      'org.gnome.desktop.wm.preferences'});
+    let names = settings.get_strv('workspace-names');
+
+    let oldName = names[i];
+    names[i] = name;
+    settings.set_strv('workspace-names', names);
+
+    return oldName;
+}
