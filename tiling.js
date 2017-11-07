@@ -229,7 +229,11 @@ var max_height = primary.height - panelBox.height - margin_tb*2;
 // Height to use when scaled down at the sides
 var scaled_height = max_height*0.95;
 var scaled_y_offset = (max_height - scaled_height)/2;
-function move(meta_window, x, y, onComplete, onStart, delay, transition) {
+function move(meta_window, {x, y,
+                            onComplete = () => {},
+                            onStart = () => {},
+                            delay = 0,
+                            transition = 'easeInOutQuad'}) {
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
     let frame = actor.meta_window.get_frame_rect();
@@ -241,8 +245,6 @@ function move(meta_window, x, y, onComplete, onStart, delay, transition) {
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
     let scale = 1;
-    delay = delay || 0;
-    transition = transition || "easeInOutQuad";
     if (x >= primary.width - stack_margin || x <= stack_margin - frame.width) {
         // Set scale so that the scaled height will be `scaled_height`
         scale = scaled_height/frame.height;
@@ -262,15 +264,13 @@ function move(meta_window, x, y, onComplete, onStart, delay, transition) {
                              , scale_x: scale
                              , scale_y: scale
                              , transition: transition
-                             , onStart: () => {
-                                 onStart && onStart();
-                             }
+                             , onStart: onStart
                              , onComplete: () => {
                                  meta_window.destinationX = undefined;
                                  if(meta_window.get_compositor_private()) {
                                      // If the actor is gone, the window is in process of closing
                                      meta_window.move_frame(true, x, y);
-                                     onComplete && onComplete();
+                                     onComplete();
                                  }
                              }
                             })
@@ -364,11 +364,11 @@ function setInitialPosition(actor, existing) {
 function move_to(space, meta_window, { x, y, delay, transition,
                                          onComplete, onStart }) {
     // Register @meta_window as moving on @space
-    move(meta_window, x, y
-         , onComplete
-         , onStart
-         , delay
-         , transition
+    move(meta_window, { x, y
+                        , onComplete
+                        , onStart
+                        , delay
+                        , transition }
         );
     let index = space.indexOf(meta_window);
     let frame = meta_window.get_frame_rect();
@@ -487,7 +487,7 @@ function propogate_forward(space, n, x, lower, gap) {
             meta_window.lower()
         // Anchor scaling/animation on the left edge for windows positioned to the right,
         actor.set_pivot_point(0, 0);
-        move(meta_window, x, panelBox.height + margin_tb)
+        move(meta_window, { x, y: panelBox.height + margin_tb });
         propogate_forward(space, n+1, x+meta_window.get_frame_rect().width + gap, true, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
@@ -507,7 +507,7 @@ function propogate_backward(space, n, x, lower, gap) {
         x = x - meta_window.get_frame_rect().width
         // Anchor on the right edge for windows positioned to the left.
         actor.set_pivot_point(1, 0);
-        move(meta_window, x, panelBox.height + margin_tb)
+        move(meta_window, { x, y: panelBox.height + margin_tb })
         propogate_backward(space, n-1, x - gap, true, gap)
     } else {
         // If the window doesn't have an actor we should just skip it
@@ -525,7 +525,7 @@ function detach (meta_window) {
 function center(meta_window, zen) {
     let frame = meta_window.get_frame_rect();
     let x = Math.floor((primary.width - frame.width)/2)
-    move(meta_window, x, frame.y)
+    move_to(undefined, meta_window, {x, y: frame.y})
     let right = zen ? primary.width : x + frame.width + window_gap;
     let left = zen ? -primary.width : x - window_gap;
     let space = spaces.spaceOfWindow(meta_window);
