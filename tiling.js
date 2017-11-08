@@ -764,7 +764,7 @@ function toggle_maximize_horizontally(meta_window) {
     } else {
         let frame = meta_window.get_frame_rect();
         meta_window.unmaximized_rect = frame;
-        meta_window.move_resize_frame(true, frame.x, frame.y, primary.width - minimumMargin*2, frame.height);
+        meta_window.move_resize_frame(true, minimumMargin, frame.y, primary.width - minimumMargin*2, frame.height);
     }
     // We've mutated the space, so need to force the ensure
     ensure_viewport(spaces.spaceOfWindow(meta_window), meta_window, true);
