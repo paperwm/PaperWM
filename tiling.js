@@ -230,10 +230,16 @@ var max_height = primary.height - panelBox.height - margin_tb*2;
 var scaled_height = max_height*0.95;
 var scaled_y_offset = (max_height - scaled_height)/2;
 function move(meta_window, {x, y,
-                            onComplete = () => {},
-                            onStart = () => {},
-                            delay = 0,
-                            transition = 'easeInOutQuad'}) {
+                            onComplete,
+                            onStart,
+                            delay,
+                            transition}) {
+
+    onComplete = onComplete || (() => {});
+    onStart = onStart || (() => {});
+    delay = delay || 0;
+    transition = transition || 'easeInOutQuad';
+
     let actor = meta_window.get_compositor_private()
     let buffer = actor.meta_window.get_buffer_rect();
     let frame = actor.meta_window.get_frame_rect();
