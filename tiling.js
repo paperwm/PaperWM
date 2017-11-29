@@ -596,7 +596,7 @@ function defwinprop(spec) {
 
 defwinprop({
     wm_class: "copyq",
-    float: true
+    scratch_layer: true
 });
 
 defwinprop({
