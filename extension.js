@@ -10,6 +10,7 @@ const GLib = imports.gi.GLib;
 const Meta = imports.gi.Meta;
 const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
+const Lang = imports.lang;
 
 let SESSIONID = ""+(new Date().getTime());
 // The extension sometimes go through multiple init -> enable -> disable cycles..
@@ -66,15 +67,31 @@ function init() {
 }
 
 var settings;
+let nWorkspacesSignal;
+let workspaceRemovedSignal;
+let windowCreatedSignal;
 function enable() {
-    debug('enable', SESSIONID);
     // Only enable after disable have been run
     if (enabled)
         return;
+
+    debug('enable', SESSIONID);
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
     // windows are not accessible yet for instance.
     isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
+
+    nWorkspacesSignal =
+        global.screen.connect('notify::n-workspaces',
+                              Lang.bind(Tiling.spaces, utils.dynamic_function_ref('workspacesChanged', Tiling.spaces)));
+
+    workspaceRemovedSignal =
+        global.screen.connect('workspace-removed',
+                              utils.dynamic_function_ref('workspaceRemoved', Tiling.spaces));
+
+    windowCreatedSignal =
+        global.display.connect('window-created',
+                               utils.dynamic_function_ref('window_created', Tiling.spaces));
 
     function initWorkspaces() {
         // Hook up existing workspaces
@@ -188,9 +205,9 @@ function disable() {
         });
 
     // Disable workspace related signals
-    global.screen.disconnect(Tiling.spaces.nWorkspacesSignal);
-    global.screen.disconnect(Tiling.spaces.workspaceRemovedSignal);
-    global.display.disconnect(Tiling.spaces.windowCreatedSignal);
+    global.screen.disconnect(nWorkspacesSignal);
+    global.screen.disconnect(workspaceRemovedSignal);
+    global.display.disconnect(windowCreatedSignal);
     for (let workspace in Tiling.spaces._spaces) {
         Tiling.spaces.removeSpace(Tiling.spaces._spaces[workspace]);
     }

@@ -110,18 +110,6 @@ var spaces = (function () {
 
     spaces._spaces = new Map();
 
-    spaces.nWorkspacesSignal =
-        global.screen.connect('notify::n-workspaces',
-                              Lang.bind(spaces, utils.dynamic_function_ref('workspacesChanged', spaces)));
-
-    spaces.workspaceRemovedSignal =
-        global.screen.connect('workspace-removed',
-                              utils.dynamic_function_ref('workspaceRemoved', spaces));
-
-    spaces.windowCreatedSignal =
-        global.display.connect('window-created',
-                               utils.dynamic_function_ref('window_created', spaces));
-
     spaces.workspacesChanged = function () {
         let nWorkspaces = global.screen.n_workspaces;
 
