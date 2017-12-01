@@ -53,8 +53,14 @@ function showPanelBox() {
         }
     });
 }
-
-panelBox.connect('show', showPanelBox);
+function hidePanelBox () {
+    let space = spaces.spaceOf(global.screen.get_active_workspace());
+    if (space.selectedWindow.fullscreen) {
+        panelBox.scale_y = 0;
+    } else {
+        panelBox.show();
+    }
+}
 
 function Space(workspace) {
     // Simplest way to get a straight array interface
@@ -1023,6 +1029,8 @@ function cycleWindowWidth(metaWindow) {
 let nWorkspacesSignal;
 let workspaceRemovedSignal;
 let windowCreatedSignal;
+var panelBoxShowId;
+var panelBoxHideId;
 function enable () {
     nWorkspacesSignal =
         global.screen.connect('notify::n-workspaces',
@@ -1035,6 +1043,9 @@ function enable () {
     windowCreatedSignal =
         global.display.connect('window-created',
                                utils.dynamic_function_ref('window_created', spaces));
+
+    panelBoxShowId =  panelBox.connect('show', showPanelBox);
+    panelBoxHideId = panelBox.connect('hide', hidePanelBox);
 }
 
 function disable () {
@@ -1056,4 +1067,8 @@ function disable () {
     for (let workspace in spaces._spaces) {
         spaces.removeSpace(spaces._spaces[workspace]);
     }
+
+    panelBox.scale_y = 1;
+    panelBox.disconnect(panelBoxShowId);
+    panelBox.disconnect(panelBoxHideId);
 }
