@@ -28,6 +28,24 @@
     </key>
 
     <!-- Keybindings -->
+    <key type="as" name="previous-workspace">
+      <default><![CDATA[['<Super>d']]]></default>
+      <summary>Switch to previously used workspace</summary>
+    </key>
+    <key type="as" name="previous-workspace-backward">
+      <default><![CDATA[['<Super>u']]]></default>
+      <summary>Switch to the previously used workspace, backward order</summary>
+    </key>
+
+    <key type="as" name="move-previous-workspace">
+      <default><![CDATA[['<Super><Shift>d']]]></default>
+      <summary>Move current window to the previously used workspace</summary>
+    </key>
+    <key type="as" name="move-previous-workspace-backward">
+      <default><![CDATA[['<Super><Shift>u']]]></default>
+      <summary>Move current window to the previously used workspace, backward order</summary>
+    </key>
+
     <key type="as" name="toggle-scratch-layer">
       <default><![CDATA[['<Super>e']]]></default>
       <summary>Toggles the floating scratch layer</summary>

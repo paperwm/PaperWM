@@ -84,15 +84,18 @@ function init() {
                                         dynamic_function_ref("liveAltTab",
                                                              LiveAltTab));
 
-    Meta.keybindings_set_custom_handler("switch-to-workspace-up",
-                                        dynamic_function_ref("preview_navigate",
-                                                             Tiling));
-
-    Meta.keybindings_set_custom_handler("switch-to-workspace-down",
-                                        dynamic_function_ref("preview_navigate",
-                                                             Tiling));
-
-
+    paperActions.register('previous-workspace',
+                          dynamic_function_ref("preview_navigate",
+                                               Tiling))
+    paperActions.register('previous-workspace-backward',
+                          dynamic_function_ref("preview_navigate",
+                                               Tiling))
+    paperActions.register('move-previous-workspace',
+                          dynamic_function_ref("preview_navigate",
+                                               Tiling))
+    paperActions.register('move-previous-workspace-backward',
+                          dynamic_function_ref("preview_navigate",
+                                               Tiling))
     paperActions.register("switch-next",
                           dynamic_function_ref("preview_navigate",
                                                Tiling));

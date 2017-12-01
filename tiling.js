@@ -896,16 +896,19 @@ var PreviewedWindowNavigator = new Lang.Class({
         } else if (mutterActionId === paperActions.idOf("move-right")) {
             this._reorder(this._selectedIndex, this._next());
             return true;
-        } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_UP) {
+        } else if (mutterActionId
+                   === paperActions.idOf('previous-workspace-backward')) {
             this.selectSpace(Meta.MotionDirection.UP);
             return true;
-        } else if (mutterActionId === Meta.KeyBindingAction.WORKSPACE_DOWN) {
+        } else if (mutterActionId === paperActions.idOf('previous-workspace')) {
             this.selectSpace(Meta.MotionDirection.DOWN);
             return true;
-        } else if (mutterActionId === Meta.KeyBindingAction.MOVE_TO_WORKSPACE_DOWN) {
+        } else if (mutterActionId
+                   === paperActions.idOf('move-previous-workspace')) {
             this.selectSpace(Meta.MotionDirection.DOWN, true);
             return true;
-        } else if (mutterActionId === Meta.KeyBindingAction.MOVE_TO_WORKSPACE_UP) {
+        } else if (mutterActionId
+                   === paperActions.idOf('move-previous-workspace-backward')) {
             this.selectSpace(Meta.MotionDirection.UP, true);
             return true;
         } else {
