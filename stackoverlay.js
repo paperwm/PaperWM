@@ -75,10 +75,10 @@ var StackOverlay = new Lang.Class({
 
         overlay.hide();
 
-        overlay.connect('button-press-event', () => {
+        this.pressId = overlay.connect('button-press-event', () => {
             return true;
         });
-        overlay.connect('button-release-event', () => {
+        this.releaseId = overlay.connect('button-release-event', () => {
             // this.fadeOut();
             Main.activateWindow(this.target);
             return true;
@@ -93,7 +93,7 @@ var StackOverlay = new Lang.Class({
         // :(
         // NOTE: Should probably use _one_ callback for all non-window actors we
         // need to keep stacked in window_group, but this works for now
-        global.screen.connect("restacked", () => {
+        this.restackId = global.screen.connect("restacked", () => {
             if (!this.target)
                 return;
             let actor = this.target.get_compositor_private();

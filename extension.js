@@ -4,6 +4,7 @@ const Tiling = Extension.imports.tiling;
 const Scratch = Extension.imports.scratch;
 const LiveAltTab = Extension.imports.liveAltTab;
 const utils = Extension.imports.utils;
+const StackOverlay = Extension.imports.stackoverlay;
 const debug = utils.debug;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
@@ -210,6 +211,15 @@ function disable() {
     global.display.disconnect(windowCreatedSignal);
     for (let workspace in Tiling.spaces._spaces) {
         Tiling.spaces.removeSpace(Tiling.spaces._spaces[workspace]);
+    }
+
+    // Disconnect the overlay
+    let overlays = [StackOverlay.leftOverlay, StackOverlay.rightOverlay];
+    for (let overlay of overlays) {
+        let actor = overlay.overlay;
+        actor.disconnect(overlay.pressId);
+        actor.disconnect(overlay.releaseId);
+        global.screen.disconnect(overlay.restackId);
     }
 
     enabled = false;
