@@ -145,17 +145,8 @@ function enable() {
     // windows are not accessible yet for instance.
     isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
 
-    nWorkspacesSignal =
-        global.screen.connect('notify::n-workspaces',
-                              Lang.bind(Tiling.spaces, utils.dynamic_function_ref('workspacesChanged', Tiling.spaces)));
-
-    workspaceRemovedSignal =
-        global.screen.connect('workspace-removed',
-                              utils.dynamic_function_ref('workspaceRemoved', Tiling.spaces));
-
-    windowCreatedSignal =
-        global.display.connect('window-created',
-                               utils.dynamic_function_ref('window_created', Tiling.spaces));
+    Tiling.enable();
+    StackOverlay.enable();
 
     function initWorkspaces() {
         // Hook up existing workspaces
@@ -179,7 +170,6 @@ function enable() {
         initWorkspaces();
     }
 
-    StackOverlay.enable();
 
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
@@ -198,27 +188,8 @@ function disable() {
         return;
     debug("disable", SESSIONID);
     // Disconnect focus and reset scale and pivot
-    let focus_signal = Tiling.focus_signal;
-    global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
-        .forEach(metaWindow => {
-            let actor = metaWindow.get_compositor_private();
-            actor.set_scale(1, 1);
-            actor.set_pivot_point(0, 0);
-            if (metaWindow[focus_signal]) {
-                metaWindow.disconnect(metaWindow[focus_signal]);
-                delete metaWindow[focus_signal]
-            }
-        });
 
-    // Disable workspace related signals
-    global.screen.disconnect(nWorkspacesSignal);
-    global.screen.disconnect(workspaceRemovedSignal);
-    global.display.disconnect(windowCreatedSignal);
-    for (let workspace in Tiling.spaces._spaces) {
-        Tiling.spaces.removeSpace(Tiling.spaces._spaces[workspace]);
-    }
-
-    // Disable the stackoverlays
+    Tiling.disable();
     StackOverlay.disable()
 
     enabled = false;

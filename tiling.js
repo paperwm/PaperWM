@@ -1019,3 +1019,41 @@ function cycleWindowWidth(metaWindow) {
 
     delete metaWindow.unmaximized_rect;
 }
+
+let nWorkspacesSignal;
+let workspaceRemovedSignal;
+let windowCreatedSignal;
+function enable () {
+    nWorkspacesSignal =
+        global.screen.connect('notify::n-workspaces',
+                              Lang.bind(spaces, utils.dynamic_function_ref('workspacesChanged', spaces)));
+
+    workspaceRemovedSignal =
+        global.screen.connect('workspace-removed',
+                              utils.dynamic_function_ref('workspaceRemoved', spaces));
+
+    windowCreatedSignal =
+        global.display.connect('window-created',
+                               utils.dynamic_function_ref('window_created', spaces));
+}
+
+function disable () {
+    global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+        .forEach(metaWindow => {
+            let actor = metaWindow.get_compositor_private();
+            actor.set_scale(1, 1);
+            actor.set_pivot_point(0, 0);
+            if (metaWindow[focus_signal]) {
+                metaWindow.disconnect(metaWindow[focus_signal]);
+                delete metaWindow[focus_signal]
+            }
+        });
+
+    // Disable workspace related signals
+    global.screen.disconnect(nWorkspacesSignal);
+    global.screen.disconnect(workspaceRemovedSignal);
+    global.display.disconnect(windowCreatedSignal);
+    for (let workspace in spaces._spaces) {
+        spaces.removeSpace(spaces._spaces[workspace]);
+    }
+}
