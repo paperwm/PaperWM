@@ -15,6 +15,7 @@ let SESSIONID = ""+(new Date().getTime());
 // The extension sometimes go through multiple init -> enable -> disable cycles..
 // Keep track of the count here.
 let initCount = 0;
+let enabled = false;
 
 let isDuringGnomeShellStartup = false;
 
@@ -67,6 +68,9 @@ function init() {
 var settings;
 function enable() {
     debug('enable', SESSIONID);
+    // Only enable after disable have been run
+    if (enabled)
+        return;
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
     // windows are not accessible yet for instance.
@@ -94,6 +98,7 @@ function enable() {
         initWorkspaces();
     }
 
+    enabled = true;
     if(initCount > 1) {
         debug("#startup",
               "Reinitialized against our will! Skip adding bindings again to not cause trouble. ('disable()' isn't fully implemented yet)")
@@ -166,7 +171,31 @@ function enable() {
 }
 
 function disable() {
+    if (!enabled)
+        return;
     debug("disable", SESSIONID);
+    // Disconnect focus and reset scale and pivot
+    let focus_signal = Tiling.focus_signal;
+    global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+        .forEach(metaWindow => {
+            let actor = metaWindow.get_compositor_private();
+            actor.set_scale(1, 1);
+            actor.set_pivot_point(0, 0);
+            if (metaWindow[focus_signal]) {
+                metaWindow.disconnect(metaWindow[focus_signal]);
+                delete metaWindow[focus_signal]
+            }
+        });
+
+    // Disable workspace related signals
+    global.screen.disconnect(Tiling.spaces.nWorkspacesSignal);
+    global.screen.disconnect(Tiling.spaces.workspaceRemovedSignal);
+    global.display.disconnect(Tiling.spaces.windowCreatedSignal);
+    for (let workspace in Tiling.spaces._spaces) {
+        Tiling.spaces.removeSpace(Tiling.spaces._spaces[workspace]);
+    }
+
+    enabled = false;
 }
 
 /**
