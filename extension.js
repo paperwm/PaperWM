@@ -179,6 +179,8 @@ function enable() {
         initWorkspaces();
     }
 
+    StackOverlay.enable();
+
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
     settings.set_strv("close", ['<super>c'])
@@ -216,14 +218,8 @@ function disable() {
         Tiling.spaces.removeSpace(Tiling.spaces._spaces[workspace]);
     }
 
-    // Disconnect the overlay
-    let overlays = [StackOverlay.leftOverlay, StackOverlay.rightOverlay];
-    for (let overlay of overlays) {
-        let actor = overlay.overlay;
-        actor.disconnect(overlay.pressId);
-        actor.disconnect(overlay.releaseId);
-        global.screen.disconnect(overlay.restackId);
-    }
+    // Disable the stackoverlays
+    StackOverlay.disable()
 
     enabled = false;
 }

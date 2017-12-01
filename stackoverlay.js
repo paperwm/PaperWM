@@ -193,5 +193,20 @@ var StackOverlay = new Lang.Class({
     }
 });
 
-var leftOverlay  = new StackOverlay();
-var rightOverlay = new StackOverlay();
+var leftOverlay;
+var rightOverlay;
+function enable() {
+    leftOverlay  = new StackOverlay();
+    rightOverlay = new StackOverlay();
+}
+
+function disable() {
+    // Disconnect the overlay
+    for (let overlay of [leftOverlay, rightOverlay]) {
+        let actor = overlay.overlay;
+        actor.disconnect(overlay.pressId);
+        actor.disconnect(overlay.releaseId);
+        global.screen.disconnect(overlay.restackId);
+        actor.destroy();
+    }
+}
