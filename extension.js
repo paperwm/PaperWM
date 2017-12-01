@@ -67,18 +67,10 @@ function init() {
 var settings;
 function enable() {
     debug('enable', SESSIONID);
-    if(initCount > 1) {
-        debug("#startup",
-              "Reinitialized against our will! Skipping 'enable()' to not cause trouble. ('disable()' isn't implemented yet)")
-        return;
-    }
-
-    initCount++;
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
     // windows are not accessible yet for instance.
     isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
-
 
     function initWorkspaces() {
         // Hook up existing workspaces
@@ -101,6 +93,13 @@ function enable() {
     } else {
         initWorkspaces();
     }
+
+    if(initCount > 1) {
+        debug("#startup",
+              "Reinitialized against our will! Skip adding bindings again to not cause trouble. ('disable()' isn't fully implemented yet)")
+        return;
+    }
+    initCount++;
 
     let dynamic_function_ref = utils.dynamic_function_ref;
     let as_key_handler = utils.as_key_handler;
