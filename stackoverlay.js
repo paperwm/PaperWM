@@ -1,4 +1,4 @@
-const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
 const Tiling = Extension.imports.tiling;
 const Clutter = imports.gi.Clutter;
 const Tweener = imports.ui.tweener;

@@ -1,5 +1,4 @@
-
-const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
 const GLib = imports.gi.GLib;
 const Tweener = imports.ui.tweener;
 const Lang = imports.lang;

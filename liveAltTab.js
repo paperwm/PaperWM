@@ -1,4 +1,4 @@
-
+const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
 const Clutter = imports.gi.Clutter;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
@@ -6,7 +6,6 @@ const AltTab = imports.ui.altTab;
 const Main = imports.ui.main;
 const Tweener = imports.ui.tweener;
 let WindowManager = imports.ui.windowManager;
-const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const Scratch = Extension.imports.scratch;
 const Tiling = Extension.imports.tiling;
 const utils = Extension.imports.utils;
