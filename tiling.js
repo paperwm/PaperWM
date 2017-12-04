@@ -188,15 +188,6 @@ var spaces = (function () {
     return spaces;
 })();
 
-panelBox.connect('hide', () => {
-    let space = spaces.spaceOf(global.screen.get_active_workspace());
-    if (space.selectedWindow.fullscreen) {
-        panelBox.scale_y = 0;
-    } else {
-        panelBox.show();
-    }
-});
-
 function focus() {
     let meta_window = global.display.focus_window;
     if (!meta_window)
@@ -374,7 +365,6 @@ function move_to(space, meta_window, { x, y, delay, transition,
     propogate_forward(space, index + 1, x + frame.width + window_gap, false);
     propogate_backward(space, index - 1, x - window_gap, false);
 }
-
 
 function ensure_viewport(space, meta_window, force) {
     if (space.moving == meta_window && !force) {
