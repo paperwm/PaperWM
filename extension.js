@@ -23,44 +23,6 @@ let isDuringGnomeShellStartup = false;
 
 window.PaperWM = Extension;
 
-/*
-  Keep track of some mappings mutter doesn't do/expose
-  - action-name -> action-id mapping
-  - action-id   -> action mapping
-  - action      -> handler
-*/
-window.paperActions = {
-    actions: [],
-    nameMap: {},
-    register: function(actionName, handler, metaKeyBindingFlags) {
-        let id = registerMutterAction(actionName,
-                                      handler,
-                                      metaKeyBindingFlags)
-        let action = { id: id
-                       , name: actionName
-                       , handler: handler
-                     };
-        this.actions.push(action);
-        this.nameMap[actionName] = action;
-        return action;
-    },
-    idOf: function(name) {
-        let action = this.byName(name);
-        if (action) {
-            return action.id;
-        } else {
-            return Meta.KeyBindingAction.NONE;
-        }
-    },
-    byName: function(name) {
-        return this.nameMap[name];
-    },
-    byId: function(mutterId) {
-        return this.actions.find(action => action.id == mutterId);
-    }
-};
-
-
 function init() {
     SESSIONID += "#"
     debug('init', SESSIONID);
@@ -71,6 +33,43 @@ function init() {
         return;
     }
     initCount++;
+
+    /*
+      Keep track of some mappings mutter doesn't do/expose
+      - action-name -> action-id mapping
+      - action-id   -> action mapping
+      - action      -> handler
+    */
+    window.paperActions = {
+        actions: [],
+        nameMap: {},
+        register: function(actionName, handler, metaKeyBindingFlags) {
+            let id = registerMutterAction(actionName,
+                                          handler,
+                                          metaKeyBindingFlags)
+            let action = { id: id
+                           , name: actionName
+                           , handler: handler
+                         };
+            this.actions.push(action);
+            this.nameMap[actionName] = action;
+            return action;
+        },
+        idOf: function(name) {
+            let action = this.byName(name);
+            if (action) {
+                return action.id;
+            } else {
+                return Meta.KeyBindingAction.NONE;
+            }
+        },
+        byName: function(name) {
+            return this.nameMap[name];
+        },
+        byId: function(mutterId) {
+            return this.actions.find(action => action.id == mutterId);
+        }
+    };
 
     let dynamic_function_ref = utils.dynamic_function_ref;
     let as_key_handler = utils.as_key_handler;
