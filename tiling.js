@@ -810,6 +810,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     _initialSelection: function(backward, actionName) {
+        let paperActions = Extension.imports.extension.paperActions;
         let actionId = paperActions.idOf(actionName);
         if(actionId === Meta.KeyBindingAction.NONE) {
             try {
@@ -879,6 +880,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     _doAction: function(mutterActionId) {
+        let paperActions = Extension.imports.extension.paperActions;
         if (mutterActionId === paperActions.idOf("switch-next")) {
             this._select(this._next());
             return true;

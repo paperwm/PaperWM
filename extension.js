@@ -23,6 +23,7 @@ let isDuringGnomeShellStartup = false;
 
 window.PaperWM = Extension;
 
+var paperActions;
 function init() {
     SESSIONID += "#"
     debug('init', SESSIONID);
@@ -40,7 +41,7 @@ function init() {
       - action-id   -> action mapping
       - action      -> handler
     */
-    window.paperActions = {
+    paperActions = {
         actions: [],
         nameMap: {},
         register: function(actionName, handler, metaKeyBindingFlags) {
