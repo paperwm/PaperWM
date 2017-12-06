@@ -34,11 +34,6 @@ const StackOverlay = Extension.imports.stackoverlay;
 var focus_signal = Symbol();
 
 var primary = Main.layoutManager.primaryMonitor;
-//: [object Monitor]
-// Reset primary when monitors change
-global.screen.connect("monitors-changed", function(screen) {
-    primary = Main.layoutManager.primaryMonitor;
-})
 
 var panelBox = Main.layoutManager.panelBox;
 
@@ -1017,11 +1012,8 @@ function cycleWindowWidth(metaWindow) {
     delete metaWindow.unmaximized_rect;
 }
 
-let nWorkspacesSignal;
-let workspaceRemovedSignal;
-let windowCreatedSignal;
-var panelBoxShowId;
-var panelBoxHideId;
+var nWorkspacesSignal, workspaceRemovedSignal, windowCreatedSignal;
+var panelBoxShowId, panelBoxHideId, monitorsChangedId;
 function enable () {
     nWorkspacesSignal =
         global.screen.connect('notify::n-workspaces',
@@ -1034,6 +1026,13 @@ function enable () {
     windowCreatedSignal =
         global.display.connect('window-created',
                                utils.dynamic_function_ref('window_created', spaces));
+
+    // Reset primary when monitors change
+    monitorsChangedId = global.screen.connect(
+        "monitors-changed",
+        function(screen) {
+            primary = Main.layoutManager.primaryMonitor;
+        });
 
     panelBoxShowId =  panelBox.connect('show', showPanelBox);
     panelBoxHideId = panelBox.connect('hide', hidePanelBox);
@@ -1058,6 +1057,8 @@ function disable () {
     for (let workspace in spaces._spaces) {
         spaces.removeSpace(spaces._spaces[workspace]);
     }
+
+    global.screen.disconnect(monitorsChangedId);
 
     panelBox.scale_y = 1;
     panelBox.disconnect(panelBoxShowId);
