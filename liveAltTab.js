@@ -142,6 +142,9 @@ var LiveAltTab = Lang.Class({
     },
 
     _keyPressHandler: function(keysym, action) {
+        // After the first super-tab the action we get is apparently
+        // SWITCH_APPLICATIONS so we need to case on those too.
+        let paperActions = Extension.imports.extension.paperActions;
         switch(action) {
         case Meta.KeyBindingAction.SWITCH_APPLICATIONS:
             action = Meta.KeyBindingAction.SWITCH_WINDOWS;
@@ -149,6 +152,14 @@ var LiveAltTab = Lang.Class({
         case Meta.KeyBindingAction.SWITCH_APPLICATIONS_BACKWARD:
             action = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
             break;
+        case paperActions.idOf('live-alt-tab'):
+            action = Meta.KeyBindingAction.SWITCH_WINDOWS;
+            break;
+            ;;
+        case paperActions.idOf('live-alt-tab-backward'):
+            action = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
+            break;
+            ;;
         }
         return this.parent(keysym, action)
     },

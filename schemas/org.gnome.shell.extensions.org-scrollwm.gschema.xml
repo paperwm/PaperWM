@@ -28,6 +28,15 @@
     </key>
 
     <!-- Keybindings -->
+    <key type="as" name="live-alt-tab">
+      <default><![CDATA[['<Super>Tab']]]></default>
+      <summary>Switch to previously used window</summary>
+    </key>
+    <key type="as" name="live-alt-tab-backward">
+      <default><![CDATA[['<Super><Shift>Tab']]]></default>
+      <summary>Switch to previously used window, backward order</summary>
+    </key>
+
     <key type="as" name="previous-workspace">
       <default><![CDATA[['<Super>d']]]></default>
       <summary>Switch to previously used workspace</summary>

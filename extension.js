@@ -80,9 +80,12 @@ function init() {
                                         as_key_handler("toggle_maximize_horizontally",
                                                        Tiling));
 
-    Meta.keybindings_set_custom_handler("switch-applications",
-                                        dynamic_function_ref("liveAltTab",
-                                                             LiveAltTab));
+    paperActions.register('live-alt-tab',
+                          dynamic_function_ref('liveAltTab',
+                                               LiveAltTab))
+    paperActions.register('live-alt-tab-backward',
+                          dynamic_function_ref('liveAltTab',
+                                               LiveAltTab))
 
     paperActions.register('previous-workspace',
                           dynamic_function_ref("preview_navigate",
@@ -201,6 +204,12 @@ function enable() {
     settings.set_strv("maximize-horizontally", ['<super>f'])
     settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
 
+    // We want to use 
+    killKeybinding('switch-applications');
+    killKeybinding('switch-applications-backward');
+    killKeybinding('switch-group');
+    killKeybinding('switch-group-backward');
+
     let shell_settings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
     shell_settings.set_strv("toggle-overview", ["<super>space"])
 
@@ -215,6 +224,8 @@ function disable() {
 
     Tiling.disable();
     StackOverlay.disable()
+
+    restoreKeybindings();
 
     enabled = false;
 }
