@@ -52,20 +52,20 @@
     </key>
 
     <key type="as" name="switch-next">
-      <default><![CDATA[['<Super>period']]]></default>
+      <default><![CDATA[['<Super>period', '<Super>Right']]]></default>
       <summary>Switch to the next window</summary>
     </key>
     <key type="as" name="switch-previous">
-      <default><![CDATA[['<Super>comma']]]></default>
+      <default><![CDATA[['<Super>comma', '<Super>Left']]]></default>
       <summary>Scroll to the previous window</summary>
     </key>
 
     <key type="as" name="move-right">
-      <default><![CDATA[['<Super><Shift>period']]]></default>
+      <default><![CDATA[['<Super><Shift>period', '<Super><Shift>Right']]]></default>
       <summary>Move the focused window right in the tiling</summary>
     </key>
     <key type="as" name="move-left">
-      <default><![CDATA[['<Super><Shift>comma']]]></default>
+      <default><![CDATA[['<Super><Shift>comma', '<Super><Shift>Left']]]></default>
       <summary>Move the focused window left in the tiling</summary>
     </key>
 
