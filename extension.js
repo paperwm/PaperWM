@@ -130,6 +130,30 @@ function init() {
     loadRcFile();
 }
 
+let originalBindings = new Map();
+function killKeybinding (key, settings) {
+    settings = settings
+        || new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
+    if (!originalBindings.get(settings))
+        originalBindings.set(settings, {});
+    let store = originalBindings.get(settings);
+    store[key] = settings.get_user_value(key);
+    settings.set_strv(key, []);
+}
+
+function restoreKeybindings() {
+    for (let [settings, store] of originalBindings) {
+        for (let key in store) {
+            // Reset the key to its default value
+            settings.reset(key);
+            let userValue = store[key];
+            if (userValue) {
+                settings.set_strv(key, userValue.unpack());
+            }
+        }
+    }
+}
+
 var settings;
 let nWorkspacesSignal;
 let workspaceRemovedSignal;
