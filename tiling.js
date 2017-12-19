@@ -614,6 +614,8 @@ function add_handler(ws, meta_window) {
         return;
     }
 
+    meta_window.unmake_above();
+
     let space = spaces.spaceOf(ws);
 
     // Don't add already added windows
