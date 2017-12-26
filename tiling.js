@@ -524,12 +524,45 @@ function focus_wrapper(meta_window, user_data) {
 }
 
 function add_filter(meta_window) {
+    let add = true;
     if (meta_window.window_type != Meta.WindowType.NORMAL
         || meta_window.get_transient_for() != null
         ) {
-        return false;
+        add = false;
     }
-    return true;
+
+    let winprop = find_winprop(meta_window);
+    if (winprop) {
+        if (winprop.oneshot) {
+            // untested :)
+            winprops.splice(winprops.indexOf(winprop), 1);
+        }
+        if (winprop.float) {
+            // Let gnome-shell handle the placement
+            add = false;
+        }
+        if (winprop.scratch_layer) {
+            meta_window.stick();
+            meta_window.make_above();
+            add = false;
+        }
+    }
+
+    // If we're focusing a scratch window make on top and return
+    let focus_window = global.display.focus_window;
+    if (focus_window && focus_window.is_on_all_workspaces()) {
+        meta_window.stick();
+        meta_window.make_above();
+        add = false;
+    }
+
+    // If the window is a scratch window make it always on top
+    if (meta_window.is_on_all_workspaces()) {
+        meta_window.make_above();
+        add = false;
+    }
+
+    return add;
 }
 
 /**
@@ -588,37 +621,6 @@ defwinprop({
 function add_handler(ws, meta_window) {
     debug("window-added", meta_window, meta_window.title, meta_window.window_type, ws.index());
     if (!add_filter(meta_window)) {
-        return;
-    }
-
-    let winprop = find_winprop(meta_window);
-    if (winprop) {
-        if (winprop.oneshot) {
-            // untested :)
-            winprops.splice(winprops.indexOf(winprop), 1);
-        }
-        if (winprop.float) {
-            // Let gnome-shell handle the placement
-            return;
-        }
-        if (winprop.scratch_layer) {
-            meta_window.stick();
-            meta_window.make_above();
-            return;
-        }
-    }
-
-    // If we're focusing a scratch window make on top and return
-    let focus_window = global.display.focus_window;
-    if (focus_window && focus_window.is_on_all_workspaces()) {
-        meta_window.stick();
-        meta_window.make_above();
-        return;
-    }
-
-    // If the window is a scratch window make it always on top
-    if (meta_window.is_on_all_workspaces()) {
-        meta_window.make_above();
         return;
     }
 
