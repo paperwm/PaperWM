@@ -268,6 +268,8 @@ function insertWindow(space, metaWindow, index) {
     index = index || space.length;
     space.splice(index, 0, metaWindow);
 
+    metaWindow.unmake_above();
+
     if (index == 0) {
         // If the workspace was empty the inserted window should be selected
         space.selectedWindow = metaWindow;
@@ -524,7 +526,7 @@ function focus_wrapper(meta_window, user_data) {
 function add_filter(meta_window) {
     if (meta_window.window_type != Meta.WindowType.NORMAL
         || meta_window.get_transient_for() != null
-        || meta_window.is_on_all_workspaces()) {
+        ) {
         return false;
     }
     return true;
@@ -614,7 +616,11 @@ function add_handler(ws, meta_window) {
         return;
     }
 
-    meta_window.unmake_above();
+    // If the window is a scratch window make it always on top
+    if (meta_window.is_on_all_workspaces()) {
+        meta_window.make_above();
+        return;
+    }
 
     let space = spaces.spaceOf(ws);
 
