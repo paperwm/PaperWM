@@ -27,10 +27,11 @@ function toggleScratch() {
             meta_window.unmake_above();
         })
     } else {
+        windows.reverse();
         windows.map(function(meta_window) {
             meta_window.unminimize();
             meta_window.make_above();
         })
-        windows[0].activate(global.get_current_time())
+        windows[windows.length-1].activate(global.get_current_time());
     }
 }
