@@ -225,6 +225,7 @@ var LiveAltTab = Lang.Class({
             this._select(0);
             Main.wm._previewWorkspaceDone(global.window_manager);
         }
+        this.clone && this.clone.destroy();
         this.parent();
     }
 })
