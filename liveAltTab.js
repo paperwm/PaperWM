@@ -174,6 +174,18 @@ var LiveAltTab = Lang.Class({
         let from = this._switcherList.windows[this._selectedIndex];
         let to = this._switcherList.windows[num];
 
+        this.clone && this.clone.destroy();
+        // Show pseudo focused scratch windows
+        if (Scratch.isScratchWindow(to)) {
+            let actor = to.get_compositor_private();
+            let clone = new Clutter.Clone({source: actor});
+            clone.position = actor.position;
+            this.clone = clone;
+            Main.uiGroup.add_child(clone);
+            // Raise the switcherpopup to the top
+            Main.uiGroup.set_child_above_sibling(this.actor, clone);
+        }
+
         let fromIndex = from.get_workspace().workspace_index;
         let toIndex = to.get_workspace().workspace_index;
         if (toIndex !== fromIndex) {
