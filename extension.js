@@ -5,6 +5,7 @@ const Scratch = Extension.imports.scratch;
 const LiveAltTab = Extension.imports.liveAltTab;
 const utils = Extension.imports.utils;
 const StackOverlay = Extension.imports.stackoverlay;
+const App = Extension.imports.app;
 const debug = utils.debug;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
@@ -139,6 +140,11 @@ function init() {
                                          Tiling),
                           Meta.KeyBindingFlags.PER_WINDOW);
 
+    paperActions.register('new-window',
+                          as_key_handler('newWindow',
+                                         App),
+                          Meta.KeyBindingFlags.PER_WINDOW);
+
     loadRcFile();
 }
 
@@ -219,6 +225,8 @@ function enable() {
     killKeybinding('switch-applications-backward', wmSettings);
     killKeybinding('switch-group', wmSettings);
     killKeybinding('switch-group-backward', wmSettings);
+    // Super-n is used for new-window
+    killKeybinding('focus-active-notification', shellSettings);
 
     shellSettings.set_strv("toggle-overview", ["<super>space"])
 

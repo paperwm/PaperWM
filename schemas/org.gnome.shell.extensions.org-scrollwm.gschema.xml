@@ -28,6 +28,11 @@
     </key>
 
     <!-- Keybindings -->
+    <key type="as" name="new-window">
+      <default><![CDATA[['<Super>n']]]></default>
+      <summary>Open new window</summary>
+    </key>
+
     <key type="as" name="live-alt-tab">
       <default><![CDATA[['<Super>Tab']]]></default>
       <summary>Switch to previously used window</summary>
