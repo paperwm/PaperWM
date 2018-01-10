@@ -131,11 +131,7 @@ var LiveAltTab = Lang.Class({
     _getWindowList: function () {
         let tabList = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
         if (Scratch.isScratchActive()) {
-            // Force scratch windows on top as a poor mans substitute for the
-            // scratch layer actually changing the MRU list
-            let scratchWindows = Scratch.getScratchWindows();
-            let normalWindows = tabList.filter(mw => !Scratch.isScratchWindow(mw))
-            return scratchWindows.concat(normalWindows);
+            return Scratch.getScratchWindows();
         } else {
             return tabList;
         }
