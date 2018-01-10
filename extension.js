@@ -23,6 +23,9 @@ let isDuringGnomeShellStartup = false;
 
 window.PaperWM = Extension;
 
+var wmSettings;
+var shellSettings;
+var paperSettings;
 var paperActions;
 function init() {
     SESSIONID += "#"
@@ -34,6 +37,12 @@ function init() {
         return;
     }
     initCount++;
+
+    wmSettings =
+        new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
+
+    shellSettings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
+    paperSettings = convenience.getSettings();
 
     /*
       Keep track of some mappings mutter doesn't do/expose
@@ -157,7 +166,6 @@ function restoreKeybindings() {
     }
 }
 
-var settings;
 let nWorkspacesSignal;
 let workspaceRemovedSignal;
 let windowCreatedSignal;
@@ -197,6 +205,8 @@ function enable() {
         initWorkspaces();
     }
 
+    // Restore settings if we've reloaded
+    restoreKeybindings(paperSettings);
 
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
@@ -205,13 +215,12 @@ function enable() {
     settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
 
     // We want to use 
-    killKeybinding('switch-applications');
-    killKeybinding('switch-applications-backward');
-    killKeybinding('switch-group');
-    killKeybinding('switch-group-backward');
+    killKeybinding('switch-applications', wmSettings);
+    killKeybinding('switch-applications-backward', wmSettings);
+    killKeybinding('switch-group', wmSettings);
+    killKeybinding('switch-group-backward', wmSettings);
 
-    let shell_settings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
-    shell_settings.set_strv("toggle-overview", ["<super>space"])
+    shellSettings.set_strv("toggle-overview", ["<super>space"])
 
     enabled = true;
 }
@@ -225,7 +234,12 @@ function disable() {
     Tiling.disable();
     StackOverlay.disable()
 
-    restoreKeybindings();
+    // Restore default gnome bindings
+    restoreKeybindings(wmSettings);
+
+    // Kill our custom bindings
+    killKeybinding('live-alt-tab', paperSettings)
+    killKeybinding('live-alt-tab-backward', paperSettings)
 
     enabled = false;
 }
