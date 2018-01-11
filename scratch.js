@@ -4,7 +4,7 @@ const utils = Extension.imports.utils;
 const debug = utils.debug;
 
 function isScratchWindow(metaWindow) {
-    return metaWindow.is_on_all_workspaces();
+    return metaWindow && metaWindow.is_on_all_workspaces();
 }
 
 /** Return scratch windows in MRU order */

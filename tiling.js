@@ -11,6 +11,7 @@ const debug = utils.debug;
 const Clutter = imports.gi.Clutter;
 
 var Minimap = Extension.imports.minimap;
+var Scratch = Extension.imports.scratch;
 var Me = Extension.imports.tiling;
 
 let preferences = Extension.imports.convenience.getSettings();
@@ -550,14 +551,14 @@ function add_filter(meta_window) {
 
     // If we're focusing a scratch window make on top and return
     let focus_window = global.display.focus_window;
-    if (focus_window && focus_window.is_on_all_workspaces()) {
+    if (Scratch.isScratchWindow(focus_window)) {
         meta_window.stick();
         meta_window.make_above();
         add = false;
     }
 
     // If the window is a scratch window make it always on top
-    if (meta_window.is_on_all_workspaces()) {
+    if (Scratch.isScratchWindow(meta_window)) {
         meta_window.make_above();
         add = false;
     }
