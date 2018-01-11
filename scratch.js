@@ -4,7 +4,7 @@ const utils = Extension.imports.utils;
 const debug = utils.debug;
 
 function isScratchWindow(metaWindow) {
-    return metaWindow && metaWindow.is_on_all_workspaces();
+    return metaWindow && (metaWindow.above || metaWindow.minimized);
 }
 
 /** Return scratch windows in MRU order */
@@ -47,10 +47,17 @@ function enable() {
         function (window) {
             let item;
             item = this.addAction(_('Scratch'), Lang.bind(this, function() {
-                if (isScratchWindow(window))
-                    window.unstick();
-                else
+                if (isScratchWindow(window)) {
+                    window.unmake_above();
+                    // Make sure to detach and attach the window to the
+                    // workspace
                     window.stick();
+                    window.unstick();
+                }
+                else {
+                    window.make_above();
+                    window.stick();
+                }
             }));
             if (isScratchWindow(window))
                 item.setOrnament(PopupMenu.Ornament.CHECK);
