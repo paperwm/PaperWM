@@ -188,6 +188,7 @@ function enable() {
 
     Tiling.enable();
     StackOverlay.enable();
+    Scratch.enable();
 
     function initWorkspaces() {
         // Hook up existing workspaces
@@ -240,7 +241,8 @@ function disable() {
     // Disconnect focus and reset scale and pivot
 
     Tiling.disable();
-    StackOverlay.disable()
+    StackOverlay.disable();
+    Scratch.disable();
 
     // Restore default gnome bindings
     restoreKeybindings(wmSettings);

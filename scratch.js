@@ -35,3 +35,30 @@ function toggleScratch() {
         windows[windows.length-1].activate(global.get_current_time());
     }
 }
+
+// Monkey patch the alt-space menu
+const Lang = imports.lang;
+const PopupMenu = imports.ui.popupMenu;
+const WindowMenu = imports.ui.windowMenu;
+const originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
+
+function enable() {
+    WindowMenu.WindowMenu.prototype._buildMenu =
+        function (window) {
+            let item;
+            item = this.addAction(_('Scratch'), Lang.bind(this, function() {
+                if (isScratchWindow(window))
+                    window.unstick();
+                else
+                    window.stick();
+            }));
+            if (isScratchWindow(window))
+                item.setOrnament(PopupMenu.Ornament.CHECK);
+
+            originalBuildMenu.call(this, window);
+        };
+}
+
+function disable() {
+    WindowMenu.WindowMenu.prototype._buildMenu = originalBuildMenu;
+}
