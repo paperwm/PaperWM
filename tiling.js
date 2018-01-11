@@ -528,6 +528,7 @@ function add_filter(meta_window) {
     let add = true;
     if (meta_window.window_type != Meta.WindowType.NORMAL
         || meta_window.get_transient_for() != null
+        || meta_window.is_on_all_workspaces()
         ) {
         add = false;
     }
