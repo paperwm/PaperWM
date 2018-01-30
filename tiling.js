@@ -80,24 +80,25 @@ function Space(workspace) {
         }
     }
     space.topOfLeftStack = function() {
-        if (!space.selectedWindow)
+        // There's no left stack
+        if (!isStacked(space[0]))
             return null;
 
-        for(let i = space.indexOf(space.selectedWindow); i >= 0; i--) {
-            if (isStacked(space[i])) {
-                return space[i];
+        for(let i = 0; i < space.length; i++) {
+            if (!isStacked(space[i])) {
+                return space[i - 1];
             }
         }
         return null;
     }
     space.topOfRightStack = function() {
-        if (!space.selectedWindow)
+        // There's no right stack
+        if (!isStacked(space[space.length-1]))
             return null;
 
-        for(let i = space.indexOf(space.selectedWindow); i < space.length; i++) {
-            if (isStacked(space[i])) {
-                return space[i];
-                break;
+        for(let i = space.length - 1; i >= 0; i--) {
+            if (!isStacked(space[i])) {
+                return space[i + 1];
             }
         }
         return null;
