@@ -446,6 +446,17 @@ function ensure_viewport(space, meta_window, force) {
                   // Certain gnome-shell/mutter animations expect default
                   // pivot point (eg. fullscreen)
                   meta_window.get_compositor_private().set_pivot_point(0, 0);
+
+                  // Make sure that the top of the stack level is properly done
+                  let from = space.indexOf(space.topOfLeftStack());
+                  let to = space.indexOf(space.topOfRightStack());
+                  from = from === -1 ?  0: from;
+                  to = to === -1 ?  space.length - 1: to;
+
+                  space[to].raise();
+                  for (let i = from; i < to; i++) {
+                      space[i].raise();
+                  }
               },
               onStart:() => { meta_window.raise(); }
             });
@@ -470,8 +481,6 @@ function propogate_forward(space, n, x, lower, gap) {
     let meta_window = space[n]
     let actor = meta_window.get_compositor_private();
     if (actor) {
-        if (lower)
-            meta_window.lower()
         // Anchor scaling/animation on the left edge for windows positioned to the right,
         actor.set_pivot_point(0, 0);
         move(meta_window, { x, y: panelBox.height + margin_tb });
@@ -489,8 +498,6 @@ function propogate_backward(space, n, x, lower, gap) {
     let meta_window = space[n]
     let actor = meta_window.get_compositor_private();
     if (actor) {
-        if (lower)
-            meta_window.lower()
         x = x - meta_window.get_frame_rect().width
         // Anchor on the right edge for windows positioned to the left.
         actor.set_pivot_point(1, 0);
