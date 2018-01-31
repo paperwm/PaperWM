@@ -449,20 +449,26 @@ function ensure_viewport(space, meta_window, force) {
                   meta_window.get_compositor_private().set_pivot_point(0, 0);
 
                   // Make sure that the top of the stack level is properly done
-                  let from = space.indexOf(space.topOfLeftStack());
-                  let to = space.indexOf(space.topOfRightStack());
-                  from = from === -1 ?  0: from;
-                  to = to === -1 ?  space.length - 1: to;
-
-                  space[to].raise();
-                  for (let i = from; i < to; i++) {
-                      space[i].raise();
-                  }
+                  fixStackLevels(space);
               },
               onStart:() => { meta_window.raise(); }
             });
     // Return x so we can position the minimap
     return x;
+}
+
+function fixStackLevels(space) {
+    // Make sure that the top of the stack level is properly done
+    let from = space.indexOf(space.topOfLeftStack());
+    let to = space.indexOf(space.topOfRightStack());
+    from = from === -1 ?  0: from;
+    to = to === -1 ?  space.length - 1: to;
+
+    if (space[to])
+    space[to].raise();
+    for (let i = from; i < to; i++) {
+        space[i].raise();
+    }
 }
 
 function focus_handler(meta_window, user_data) {
