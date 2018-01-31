@@ -461,11 +461,15 @@ function fixStackLevels(space) {
     // Make sure that the top of the stack level is properly done
     let from = space.indexOf(space.topOfLeftStack());
     let to = space.indexOf(space.topOfRightStack());
-    from = from === -1 ?  0: from;
-    to = to === -1 ?  space.length - 1: to;
+    from = Math.max(0, from);
 
-    if (space[to])
-    space[to].raise();
+    if (to === -1) {
+        // No right stack, so we need to loop to the end
+        to = spaces.length;
+    } else {
+        space[to].raise();
+    }
+    // Raise all windows up to the last non-stacked window
     for (let i = from; i < to; i++) {
         space[i].raise();
     }
