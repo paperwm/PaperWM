@@ -490,32 +490,11 @@ function ensure_viewport(space, meta_window, force) {
                   // Certain gnome-shell/mutter animations expect default
                   // pivot point (eg. fullscreen)
                   meta_window.get_compositor_private().set_pivot_point(0, 0);
-
-                  // Make sure that the top of the stack level is properly done
-                  fixStackLevels(space);
               },
               onStart:() => { meta_window.raise(); }
             });
     // Return x so we can position the minimap
     return x;
-}
-
-function fixStackLevels(space) {
-    // Make sure that the top of the stack level is properly done
-    let from = space.indexOf(space.topOfLeftStack());
-    let to = space.indexOf(space.topOfRightStack());
-    from = Math.max(0, from);
-
-    if (to === -1) {
-        // No right stack, so we need to loop to the end
-        to = spaces.length;
-    } else {
-        space[to].raise();
-    }
-    // Raise all windows up to the last non-stacked window
-    for (let i = from; i < to; i++) {
-        space[i].raise();
-    }
 }
 
 function focus_handler(meta_window, user_data) {
