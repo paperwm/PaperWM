@@ -11,33 +11,11 @@ const Tiling = Extension.imports.tiling;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 
-WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, direction) {
+WindowManager.WindowManager.prototype._previewWorkspace = function(from, to) {
 
     let windows = global.get_window_actors();
 
-    /* @direction is the direction that the "camera" moves, so the
-     * screen contents have to move one screen's worth in the
-     * opposite direction.
-     */
-    let xDest = 0, yDest = 0;
-
-    if (direction == Meta.MotionDirection.UP ||
-        direction == Meta.MotionDirection.UP_LEFT ||
-        direction == Meta.MotionDirection.UP_RIGHT)
-        yDest = global.screen_height;
-    else if (direction == Meta.MotionDirection.DOWN ||
-             direction == Meta.MotionDirection.DOWN_LEFT ||
-             direction == Meta.MotionDirection.DOWN_RIGHT)
-        yDest = -global.screen_height;
-
-    if (direction == Meta.MotionDirection.LEFT ||
-        direction == Meta.MotionDirection.UP_LEFT ||
-        direction == Meta.MotionDirection.DOWN_LEFT)
-        xDest = global.screen_width;
-    else if (direction == Meta.MotionDirection.RIGHT ||
-             direction == Meta.MotionDirection.UP_RIGHT ||
-             direction == Meta.MotionDirection.DOWN_RIGHT)
-        xDest = -global.screen_width;
+    let xDest = 0, yDest = global.screen_height;
 
     let switchData = {};
     this._switchData = switchData;
@@ -78,7 +56,7 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, dir
         }
     }
 
-    switchData.inGroup.set_position(-xDest, -yDest);
+    switchData.inGroup.set_position(-xDest, global.screen_height);
     switchData.inGroup.raise_top();
 
     switchData.movingWindowBin.raise_top();
@@ -185,10 +163,8 @@ var LiveAltTab = Lang.Class({
         let fromIndex = from.get_workspace().workspace_index;
         let toIndex = to.get_workspace().workspace_index;
         if (toIndex !== fromIndex) {
-            let direction = fromIndex < toIndex ? Meta.MotionDirection.DOWN : Meta.MotionDirection.UP;
             Main.wm._previewWorkspace(from.get_workspace(),
-                                      to.get_workspace(),
-                                      direction)
+                                      to.get_workspace());
             this.switchedWorkspace = true;
         }
 
