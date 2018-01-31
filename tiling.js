@@ -365,6 +365,63 @@ function move_to(space, meta_window, { x, y, delay, transition,
     propogate_backward(space, index - 1, x - window_gap, false);
 }
 
+const DIRECTION = {
+    Left: 0,
+    Right: 1
+}
+
+/**
+   Put @space[@index] on the stack in @direction.
+ */
+function stackWindow(space, index, direction) {
+    let metaWindow = space[index];
+    metaWindow._isStacked = true; // use isStacked function to check
+
+    let x, y = primary.y + panelBox.height + margin_tb;
+
+    let actor = metaWindow.get_compositor_private();
+    let buffer = metaWindow.get_buffer_rect();
+    let frame = metaWindow.get_frame_rect();
+
+
+    let x_offset = frame.x - buffer.x;
+    let y_offset = frame.y - buffer.y;
+
+    var max_height = primary.height - panelBox.height - margin_tb*2;
+    // Height to use when scaled down at the sides
+    var scaled_height = max_height*0.95;
+    var scaled_y_offset = (max_height - scaled_height)/2;
+
+    let scale = scaled_height/frame.height;
+    // Center the actor properly
+    y += scaled_y_offset;
+
+    if (direction === DIRECTION.Right) {
+        x = primary.x + primary.width - stack_margin;
+        actor.set_pivot_point(0, y_offset/buffer.height);
+    } else { // Left
+        x = primary.x + stack_margin - frame.width;
+        actor.set_pivot_point(1, y_offset/buffer.height);
+    }
+
+    metaWindow.destinationX = x;
+    Tweener.addTween(actor, {x: x - x_offset
+                             , y: y - y_offset
+                             , time: 0.25
+                             , scale_x: scale
+                             , scale_y: scale
+                             , transition: 'easeInOutQuad'
+                             , onComplete: () => {
+                                 metaWindow.destinationX = undefined;
+                                 if(metaWindow.get_compositor_private()) {
+                                     // If the actor is gone, the window is in
+                                     // process of closing
+                                     metaWindow.move_frame(true, x, y);
+                                 }
+                             }
+                            });
+}
+
 function ensure_viewport(space, meta_window, force) {
     if (space.moving == meta_window && !force) {
         debug('already moving', meta_window.title);
