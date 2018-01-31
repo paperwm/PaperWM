@@ -205,11 +205,9 @@ function isFullyVisible(metaWindow) {
     return frame.x >= 0 && (frame.x + frame.width) <= primary.width;
 }
 
-// Max height for windows
-var max_height = primary.height - panelBox.height - margin_tb*2;
-// Height to use when scaled down at the sides
-var scaled_height = max_height*0.95;
-var scaled_y_offset = (max_height - scaled_height)/2;
+/**
+ * Animate @meta_window to (@x, @y) in frame coordinates.
+ */
 function move(meta_window, {x, y,
                             onComplete,
                             onStart,
@@ -221,35 +219,21 @@ function move(meta_window, {x, y,
     delay = delay || 0;
     transition = transition || 'easeInOutQuad';
 
-    let actor = meta_window.get_compositor_private()
-    let buffer = actor.meta_window.get_buffer_rect();
-    let frame = actor.meta_window.get_frame_rect();
+    let actor = meta_window.get_compositor_private();
+    let buffer = meta_window.get_buffer_rect();
+    let frame = meta_window.get_frame_rect();
     // Set monitor offset
     y += primary.y;
     x += primary.x;
-    x = Math.min(primary.width - stack_margin, x)
-    x = Math.max(stack_margin - frame.width, x)
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
-    let scale = 1;
-    if (x >= primary.width - stack_margin || x <= stack_margin - frame.width) {
-        // Set scale so that the scaled height will be `scaled_height`
-        scale = scaled_height/frame.height;
-        // Center the actor properly
-        y += scaled_y_offset;
-        let pivot = actor.pivot_point;
-        actor.set_pivot_point(pivot.x, y_offset/buffer.height);
-        meta_window._isStacked = true; // use isStacked function to check
-    } else {
-        meta_window._isStacked = false; // use isStacked function to check
-    }
     meta_window.destinationX = x;
     Tweener.addTween(actor, {x: x - x_offset
                              , y: y - y_offset
                              , time: 0.25 - delay
                              , delay: delay
-                             , scale_x: scale
-                             , scale_y: scale
+                             , scale_y: 1
+                             , scale_x: 1
                              , transition: transition
                              , onStart: onStart
                              , onComplete: () => {
@@ -429,6 +413,8 @@ function ensure_viewport(space, meta_window, force) {
     }
     debug('Moving', meta_window.title);
 
+    meta_window._isStacked = false;
+
     let index = space.indexOf(meta_window)
     if (index === -1)
         return;
@@ -545,12 +531,22 @@ function focus_handler(meta_window, user_data) {
 function propogate_forward(space, n, x, lower, gap) {
     if (n < 0 || n >= space.length)
         return
+    let meta_window = space[n];
+
+    // Check if we should start stacking windows
+    if (x > primary.x + primary.width - stack_margin) {
+        for (let i=n; i<space.length; i++) {
+            stackWindow(space, i, DIRECTION.Right);
+        }
+        return;
+    }
+    meta_window._isStacked = false;
+    meta_window.raise();
+
     gap = gap || window_gap;
-    let meta_window = space[n]
     let actor = meta_window.get_compositor_private();
     if (actor) {
         // Anchor scaling/animation on the left edge for windows positioned to the right,
-        actor.set_pivot_point(0, 0);
         move(meta_window, { x, y: panelBox.height + margin_tb });
         propogate_forward(space, n+1, x+meta_window.get_frame_rect().width + gap, true, gap);
     } else {
@@ -558,17 +554,28 @@ function propogate_forward(space, n, x, lower, gap) {
         propogate_forward(space, n+1, x, true, gap);
     }
 }
+
 // Place window's right edge at x
 function propogate_backward(space, n, x, lower, gap) {
     gap = gap || window_gap;
     if (n < 0 || n >= space.length)
         return;
-    let meta_window = space[n]
+    let meta_window = space[n];
+
+    // Check if we should start stacking windows
+    if (x < stack_margin) {
+        for (let i=n; i>=0; i--) {
+            stackWindow(space, i, DIRECTION.Left);
+        }
+        return;
+    }
+    meta_window._isStacked = false;
+    meta_window.raise();
+
     let actor = meta_window.get_compositor_private();
     if (actor) {
         x = x - meta_window.get_frame_rect().width
         // Anchor on the right edge for windows positioned to the left.
-        actor.set_pivot_point(1, 0);
         move(meta_window, { x, y: panelBox.height + margin_tb })
         propogate_backward(space, n-1, x - gap, true, gap)
     } else {
