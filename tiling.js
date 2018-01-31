@@ -484,9 +484,6 @@ function ensure_viewport(space, meta_window, force) {
             { x, y, delay, transition,
               onComplete: () => {
                   space.moving = false;
-                  // NOTE: Stack overlays should really be updated on the early returns above too
-                  StackOverlay.leftOverlay.setTarget(space.topOfLeftStack());
-                  StackOverlay.rightOverlay.setTarget(space.topOfRightStack());
                   // Certain gnome-shell/mutter animations expect default
                   // pivot point (eg. fullscreen)
                   meta_window.get_compositor_private().set_pivot_point(0, 0);
@@ -508,8 +505,10 @@ function focus_handler(meta_window, user_data) {
 
 // Place window's left edge at x
 function propogate_forward(space, n, x, lower, gap) {
-    if (n < 0 || n >= space.length)
-        return
+    if (n < 0 || n >= space.length) {
+        StackOverlay.rightOverlay.setTarget(null);
+        return;
+    }
     let meta_window = space[n];
 
     // Check if we should start stacking windows
@@ -517,6 +516,7 @@ function propogate_forward(space, n, x, lower, gap) {
         for (let i=n; i<space.length; i++) {
             stackWindow(space, i, DIRECTION.Right);
         }
+        StackOverlay.rightOverlay.setTarget(meta_window);
         return;
     }
     meta_window._isStacked = false;
@@ -536,9 +536,10 @@ function propogate_forward(space, n, x, lower, gap) {
 
 // Place window's right edge at x
 function propogate_backward(space, n, x, lower, gap) {
-    gap = gap || window_gap;
-    if (n < 0 || n >= space.length)
+    if (n < 0 || n >= space.length) {
+        StackOverlay.leftOverlay.setTarget(null);
         return;
+    }
     let meta_window = space[n];
 
     // Check if we should start stacking windows
@@ -546,11 +547,13 @@ function propogate_backward(space, n, x, lower, gap) {
         for (let i=n; i>=0; i--) {
             stackWindow(space, i, DIRECTION.Left);
         }
+        StackOverlay.leftOverlay.setTarget(meta_window);
         return;
     }
     meta_window._isStacked = false;
     meta_window.raise();
 
+    gap = gap || window_gap;
     let actor = meta_window.get_compositor_private();
     if (actor) {
         x = x - meta_window.get_frame_rect().width
