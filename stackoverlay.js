@@ -163,7 +163,7 @@ var StackOverlay = new Lang.Class({
                 this.monitor.width - Tiling.stack_margin,
                 neighbourX + neighbourFrame.width + resizeBorderWidth
             );
-            overlay.width = this.monitor.width - overlay.x;
+            overlay.width = Math.max(0, this.monitor.width - overlay.x);
         }
 
         if (this.showIcon) {
