@@ -133,18 +133,21 @@ var StackOverlay = new Lang.Class({
         let resizeBorderWidth = 5; // approx.
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
 
-
         // Note: Atm. this can be called when the windows are moving. Therefore
         //       we must use destinationX and we might occationally get wrong y
         //       positions (icon) (since we don't track the y destination)
         //       We also assume window widths are are unchanging.
-        if (metaWindow.destinationX < Tiling.stack_margin) {
+        let destX = metaWindow.destinationX;
+        if (destX === undefined)
+            destX = frame.x;
+        if (destX < Tiling.stack_margin) {
             let neighbour = space[space.indexOf(metaWindow) + 1]
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
  
-            let neighbourX = neighbour.destinationX ||
-                neighbour.get_frame_rect().x;
+            let neighbourX = neighbour.destinationX;
+            if (neighbourX === undefined)
+                neighbourX = neighbour.get_frame_rect().x;
 
             overlay.x = 0;
             overlay.width = Math.min(
@@ -157,8 +160,10 @@ var StackOverlay = new Lang.Class({
                 return bail(); // Should normally have a neighbour. Bail!
 
             let neighbourFrame = neighbour.get_frame_rect();
-            let neighbourX = neighbour.destinationX || neighbourFrame.x;
-            
+            let neighbourX = neighbour.destinationX;
+            if (neighbourX === undefined)
+                neighbourX = neighbourFrame.x;
+
             overlay.x = Math.max(
                 this.monitor.width - Tiling.stack_margin,
                 neighbourX + neighbourFrame.width + resizeBorderWidth
