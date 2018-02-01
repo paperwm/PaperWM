@@ -88,18 +88,6 @@ var StackOverlay = new Lang.Class({
         Main.layoutManager._trackActor(overlay)
 
         this.overlay = overlay;
-
-        // We must "restack" the overlay each time mutter does a window restack
-        // :(
-        // NOTE: Should probably use _one_ callback for all non-window actors we
-        // need to keep stacked in window_group, but this works for now
-        this.restackId = global.screen.connect("restacked", () => {
-            if (!this.target)
-                return;
-            let actor = this.target.get_compositor_private();
-            global.window_group.set_child_above_sibling(this.overlay,
-                                                        actor);
-        });
     },
     updateIcon: function() {
         if (this.icon) {
@@ -206,7 +194,6 @@ function disable() {
         let actor = overlay.overlay;
         actor.disconnect(overlay.pressId);
         actor.disconnect(overlay.releaseId);
-        global.screen.disconnect(overlay.restackId);
         actor.destroy();
     }
 }
