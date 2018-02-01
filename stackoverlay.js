@@ -150,7 +150,7 @@ var StackOverlay = new Lang.Class({
         //       we must use destinationX and we might occationally get wrong y
         //       positions (icon) (since we don't track the y destination)
         //       We also assume window widths are are unchanging.
-        if (actor.x < Tiling.stack_margin) {
+        if (metaWindow.destinationX < Tiling.stack_margin) {
             let neighbour = space[space.indexOf(metaWindow) + 1]
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
