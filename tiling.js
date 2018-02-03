@@ -280,11 +280,8 @@ function insertWindow(space, metaWindow, index) {
         // Set position and hookup signals, with `existing` set to true
         setInitialPosition.apply({metaWindow}, [ actor, true ]);
     } else {
-        // Otherwise maxmize height, and let either `focus` or
-        // `first-frame` do positioning and further signal hookup
-        metaWindow.move_resize_frame(true, 0, 0,
-                                      metaWindow.get_frame_rect().width,
-                                      primary.height - panelBox.height - margin_tb*2);
+        // Let either `focus` or `first-frame` do positioning and further signal
+        // hookup
 
         // Set `isInserted` so `first-frame` signal will connect `focus_wrapper`
         metaWindow[isInserted] = true;
