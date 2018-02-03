@@ -44,7 +44,7 @@ function showPanelBox() {
         scale_y: 1,
         time: 0.25,
         onOverwrite: () => {
-            scale_y = 1;
+            panelBox.scale_y = 1;
         }
     });
 }
