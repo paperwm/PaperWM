@@ -416,6 +416,9 @@ function ensure_viewport(space, meta_window, force) {
     if (index === -1)
         return;
     let frame = meta_window.get_frame_rect();
+    meta_window.move_resize_frame(true, frame.x, frame.y,
+                                  frame.width,
+                                  primary.height - panelBox.height - margin_tb*2);
 
     // Hack to ensure the statusbar is visible while there's a fullscreen
     // windows in the space.
