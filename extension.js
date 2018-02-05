@@ -17,7 +17,7 @@ const Lang = imports.lang;
 let SESSIONID = ""+(new Date().getTime());
 // The extension sometimes go through multiple init -> enable -> disable cycles..
 // Keep track of the count here.
-let initCount = 0;
+let initRun;
 let enabled = false;
 
 let isDuringGnomeShellStartup = false;
@@ -32,12 +32,12 @@ function init() {
     SESSIONID += "#"
     debug('init', SESSIONID);
 
-    if(initCount > 0) {
+    if(initRun) {
         debug("#startup",
               "Reinitialized against our will! Skip adding bindings again to not cause trouble. ('disable()' isn't fully implemented yet)")
         return;
     }
-    initCount++;
+    initRun = true;
 
     wmSettings =
         new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
