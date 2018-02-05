@@ -213,7 +213,7 @@ function enable() {
     }
 
     // Restore settings if we've reloaded
-    restoreKeybindings(paperSettings);
+    // restoreKeybindings(paperSettings);
 
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
@@ -245,11 +245,11 @@ function disable() {
     Scratch.disable();
 
     // Restore default gnome bindings
-    restoreKeybindings(wmSettings);
+    // restoreKeybindings(wmSettings);
 
     // Kill our custom bindings
-    killKeybinding('live-alt-tab', paperSettings)
-    killKeybinding('live-alt-tab-backward', paperSettings)
+    // killKeybinding('live-alt-tab', paperSettings)
+    // killKeybinding('live-alt-tab-backward', paperSettings)
 
     enabled = false;
 }
