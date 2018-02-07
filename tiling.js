@@ -178,7 +178,7 @@ var spaces = (function () {
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
         let signal = Symbol();
-        metaWindow[signal] = actor.connect('first-frame',
+        metaWindow[signal] = actor.connect('show',
                                            Lang.bind({metaWindow, signal}, setInitialPosition));
     };
 
