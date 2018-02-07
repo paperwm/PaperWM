@@ -345,8 +345,8 @@ function move_to(space, meta_window, { x, y, delay, transition,
         );
     let index = space.indexOf(meta_window);
     let frame = meta_window.get_frame_rect();
-    propogate_forward(space, index + 1, x + frame.width + window_gap, false);
-    propogate_backward(space, index - 1, x - window_gap, false);
+    propogate_forward(space, index + 1, x + frame.width + window_gap);
+    propogate_backward(space, index - 1, x - window_gap);
 }
 
 const DIRECTION = {
@@ -452,7 +452,7 @@ function ensure_viewport(space, meta_window, force) {
         let gaps = space.length + 1;
         let extra_gap = Math.floor(leftovers/gaps);
         debug('#extragap', extra_gap);
-        propogate_forward(space, 0, extra_gap, true, extra_gap + window_gap);
+        propogate_forward(space, 0, extra_gap, extra_gap + window_gap);
         return;
     } else if (index == 0) {
         // Always align the first window to the display's left edge
@@ -507,7 +507,7 @@ function focus_handler(meta_window, user_data) {
 }
 
 // Place window's left edge at x
-function propogate_forward(space, n, x, lower, gap) {
+function propogate_forward(space, n, x, gap) {
     if (n < 0 || n >= space.length) {
         StackOverlay.rightOverlay.setTarget(null);
         return;
@@ -530,15 +530,15 @@ function propogate_forward(space, n, x, lower, gap) {
     if (actor) {
         // Anchor scaling/animation on the left edge for windows positioned to the right,
         move(meta_window, { x, y: panelBox.height + margin_tb });
-        propogate_forward(space, n+1, x+meta_window.get_frame_rect().width + gap, true, gap);
+        propogate_forward(space, n+1, x+meta_window.get_frame_rect().width + gap, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
-        propogate_forward(space, n+1, x, true, gap);
+        propogate_forward(space, n+1, x, gap);
     }
 }
 
 // Place window's right edge at x
-function propogate_backward(space, n, x, lower, gap) {
+function propogate_backward(space, n, x, gap) {
     if (n < 0 || n >= space.length) {
         StackOverlay.leftOverlay.setTarget(null);
         return;
@@ -561,11 +561,11 @@ function propogate_backward(space, n, x, lower, gap) {
     if (actor) {
         x = x - meta_window.get_frame_rect().width
         // Anchor on the right edge for windows positioned to the left.
-        move(meta_window, { x, y: panelBox.height + margin_tb })
-        propogate_backward(space, n-1, x - gap, true, gap)
+        move(meta_window, { x, y: panelBox.height + margin_tb });
+        propogate_backward(space, n-1, x - gap, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
-        propogate_backward(space, n-1, x, true, gap);
+        propogate_backward(space, n-1, x, gap);
     }
 }
 
