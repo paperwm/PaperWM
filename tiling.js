@@ -314,9 +314,7 @@ function setInitialPosition(actor, existing) {
             space.selectedWindow = metaWindow;
             ensure_viewport(space, metaWindow, true);
         } else {
-            move_to(space, metaWindow,
-                    { x: metaWindow.scrollwm_initial_position.x,
-                      y: metaWindow.scrollwm_initial_position.y });
+            ensure_viewport(space, space.selectedWindow);
         }
 
         delete metaWindow.scrollwm_initial_position;
