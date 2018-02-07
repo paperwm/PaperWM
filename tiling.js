@@ -303,12 +303,15 @@ function setInitialPosition(actor, existing) {
             return;
         }
         let space = spaces.spaceOfWindow(metaWindow);
+
+        // Only move the frame when dealing with new windows
+        !existing && metaWindow.move_frame(true,
+                              metaWindow.scrollwm_initial_position.x,
+                              metaWindow.scrollwm_initial_position.y);
+
+
         if (metaWindow.has_focus()) {
             space.selectedWindow = metaWindow;
-            // Only move the frame when dealing with new windows
-            !existing && metaWindow.move_frame(true,
-                                  metaWindow.scrollwm_initial_position.x,
-                                  metaWindow.scrollwm_initial_position.y)
             ensure_viewport(space, metaWindow, true);
         } else {
             move_to(space, metaWindow,
