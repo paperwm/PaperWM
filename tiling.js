@@ -518,10 +518,16 @@ function propogate_forward(space, n, x, gap) {
             stackWindow(space, i, DIRECTION.Right);
         }
         StackOverlay.rightOverlay.setTarget(meta_window);
+
+        // Set stack levels in the correct order, as the the "highest" window
+        // will have priority when handing out focus
+        let selected = space.selectedIndex();
+        for (let i=n; i > selected; i--) {
+            space[i].raise();
+        }
         return;
     }
     meta_window._isStacked = false;
-    meta_window.raise();
 
     gap = gap || window_gap;
     let actor = meta_window.get_compositor_private();
@@ -549,10 +555,14 @@ function propogate_backward(space, n, x, gap) {
             stackWindow(space, i, DIRECTION.Left);
         }
         StackOverlay.leftOverlay.setTarget(meta_window);
+
+        let selected = space.selectedIndex();
+        for (let i=n; i <= selected; i++) {
+            space[i].raise();
+        }
         return;
     }
     meta_window._isStacked = false;
-    meta_window.raise();
 
     gap = gap || window_gap;
     let actor = meta_window.get_compositor_private();
