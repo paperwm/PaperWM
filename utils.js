@@ -1,3 +1,4 @@
+const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
 
 var debug_all = true; // Consider the default value in `debug_filter` to be true
 var debug_filter = { "#preview": false };
@@ -72,11 +73,15 @@ function in_bounds(array, i) {
 
 //// Debug and development utils
 
+const Tiling = Extension.imports.tiling;
+
 function setDevGlobals() {
     // Accept the risk of this interfering with existing code for now
     metaWindow = global.display.focus_window;
+    meta_window = global.display.focus_window;
     workspace = global.screen.get_active_workspace();
     actor = metaWindow.get_compositor_private();
+    space = Tiling.spaces.spaceOfWindow(metaWindow);
 }
 
 /**
