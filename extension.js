@@ -1,12 +1,15 @@
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const convenience = Extension.imports.convenience;
+
 const Tiling = Extension.imports.tiling;
 const Scratch = Extension.imports.scratch;
 const LiveAltTab = Extension.imports.liveAltTab;
 const utils = Extension.imports.utils;
 const StackOverlay = Extension.imports.stackoverlay;
 const App = Extension.imports.app;
+const Kludges = Extension.imports.kludges;
 const debug = utils.debug;
+
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Meta = imports.gi.Meta;
@@ -38,6 +41,8 @@ function init() {
         return;
     }
     initRun = true;
+
+    Kludges.init();
 
     wmSettings =
         new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
@@ -189,6 +194,7 @@ function enable() {
     Tiling.enable();
     StackOverlay.enable();
     Scratch.enable();
+    Kludges.enable();
 
     function initWorkspaces() {
         // Hook up existing workspaces
@@ -243,6 +249,7 @@ function disable() {
     Tiling.disable();
     StackOverlay.disable();
     Scratch.disable();
+    Kludges.disable();
 
     // Restore default gnome bindings
     // restoreKeybindings(wmSettings);
