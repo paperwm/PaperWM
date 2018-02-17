@@ -1,13 +1,16 @@
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const convenience = Extension.imports.convenience;
 
-const Tiling = Extension.imports.tiling;
-const Scratch = Extension.imports.scratch;
-const LiveAltTab = Extension.imports.liveAltTab;
-const utils = Extension.imports.utils;
-const StackOverlay = Extension.imports.stackoverlay;
-const App = Extension.imports.app;
-const Kludges = Extension.imports.kludges;
+const modules = [
+    Extension.imports.tiling, Extension.imports.scratch,
+    Extension.imports.liveAltTab, Extension.imports.utils,
+    Extension.imports.stackoverlay, Extension.imports.app,
+    Extension.imports.kludges
+];
+const [ Tiling, Scratch, LiveAltTab,
+        utils, StackOverlay,
+        App, Kludges ] = modules;
+
 const debug = utils.debug;
 
 const Gio = imports.gi.Gio;
@@ -42,7 +45,7 @@ function init() {
     }
     initRun = true;
 
-    Kludges.init();
+    modules.forEach(m => m.init && m.init());
 
     wmSettings =
         new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
@@ -185,16 +188,13 @@ function enable() {
     if (enabled)
         return;
 
+    modules.forEach(m => m.enable && m.enable());
+
     debug('enable', SESSIONID);
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
     // windows are not accessible yet for instance.
     isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
-
-    Tiling.enable();
-    StackOverlay.enable();
-    Scratch.enable();
-    Kludges.enable();
 
     function initWorkspaces() {
         // Hook up existing workspaces
@@ -246,10 +246,7 @@ function disable() {
     debug("disable", SESSIONID);
     // Disconnect focus and reset scale and pivot
 
-    Tiling.disable();
-    StackOverlay.disable();
-    Scratch.disable();
-    Kludges.disable();
+    modules.forEach(m => m.disable && m.disable());
 
     // Restore default gnome bindings
     // restoreKeybindings(wmSettings);
