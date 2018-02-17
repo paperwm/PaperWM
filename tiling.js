@@ -345,6 +345,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
     let frame = meta_window.get_frame_rect();
     propogate_forward(space, index + 1, x + frame.width + window_gap);
     propogate_backward(space, index - 1, x - window_gap);
+    fixStack(space, index);
 }
 
 const DIRECTION = {
@@ -512,6 +513,31 @@ function focus_handler(meta_window, user_data) {
     ensure_viewport(space, meta_window);
 }
 
+/**
+  We need to stack windows in mru order, since mutter picks from the
+  stack, not the mru, when auto choosing focus after closing a window.
+ */
+function fixStack(space, around) {
+    let topLeft = space.topOfLeftStack();
+    let topRight = space.topOfRightStack();
+
+    let left = topLeft !== null ? space.indexOf(topLeft) : 0;
+    let right = topRight !== null ? space.indexOf(topRight) : space.length - 1;
+
+    let max = Math.max(Math.abs(around - left), Math.abs(around - right));
+
+    let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
+                                          space.workspace);
+
+    for (let i=max; i >= 0; i--) {
+        let leftWindow = space[around - i];
+        let rightWindow = space[around + i];
+        mru.filter(w => w === leftWindow || w === rightWindow)
+            .reverse()
+            .forEach(w => w && w.raise());
+    }
+}
+
 // Place window's left edge at x
 function propogate_forward(space, n, x, gap) {
     if (n < 0 || n >= space.length) {
@@ -526,13 +552,6 @@ function propogate_forward(space, n, x, gap) {
             stackWindow(space, i, DIRECTION.Right);
         }
         StackOverlay.rightOverlay.setTarget(meta_window);
-
-        // Set stack levels in the correct order, as the the "highest" window
-        // will have priority when handing out focus
-        let selected = space.selectedIndex();
-        for (let i=n; i > selected; i--) {
-            space[i].raise();
-        }
         return;
     }
     meta_window._isStacked = false;
@@ -563,11 +582,6 @@ function propogate_backward(space, n, x, gap) {
             stackWindow(space, i, DIRECTION.Left);
         }
         StackOverlay.leftOverlay.setTarget(meta_window);
-
-        let selected = space.selectedIndex();
-        for (let i=n; i <= selected; i++) {
-            space[i].raise();
-        }
         return;
     }
     meta_window._isStacked = false;
