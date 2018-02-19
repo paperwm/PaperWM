@@ -428,6 +428,9 @@ function ensure_viewport(space, meta_window, force) {
         showPanelBox();
     }
 
+    if (meta_window.destinationX !== undefined)
+        // Use the destination of the window if available
+        frame.x = meta_window.destinationX;
     let x = frame.x;
     let y = panelBox.height + margin_tb;
     let required_width = space.reduce((length, meta_window) => {
@@ -436,7 +439,7 @@ function ensure_viewport(space, meta_window, force) {
     }, -window_gap);
     if (meta_window.fullscreen) {
         // Fullscreen takes highest priority
-        x = frame.x, y = frame.y;
+        x = 0, y = 0;
         Tweener.addTween(panelBox, {
             scale_y: 0,
             time: 0.25,
