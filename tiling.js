@@ -455,6 +455,7 @@ function ensure_viewport(space, meta_window, force) {
         let extra_gap = Math.floor(leftovers/gaps);
         debug('#extragap', extra_gap);
         propogate_forward(space, 0, extra_gap, extra_gap + window_gap);
+        propogate_backward(space, -1);
         return;
     } else if (index == 0) {
         // Always align the first window to the display's left edge
