@@ -551,7 +551,7 @@ function propogate_forward(space, n, x, gap) {
     let meta_window = space[n];
 
     // Check if we should start stacking windows
-    if (x > primary.x + primary.width - stack_margin) {
+    if (x > primary.width - stack_margin) {
         for (let i=n; i<space.length; i++) {
             stackWindow(space, i, DIRECTION.Right);
         }
