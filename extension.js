@@ -152,8 +152,6 @@ function init() {
                           as_key_handler('newWindow',
                                          App),
                           Meta.KeyBindingFlags.PER_WINDOW);
-
-    loadRcFile();
 }
 
 let originalBindings = new Map();
@@ -238,6 +236,8 @@ function enable() {
     shellSettings.set_strv("toggle-overview", ["<super>space"])
 
     enabled = true;
+
+    loadRcFile();
 }
 
 function disable() {
