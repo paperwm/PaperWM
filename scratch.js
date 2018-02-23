@@ -64,19 +64,9 @@ function enable() {
     WindowMenu.WindowMenu.prototype._buildMenu =
         function (window) {
             let item;
-            item = this.addAction(_('Scratch'), Lang.bind(this, function() {
-                if (isScratchWindow(window)) {
-                    window.unmake_above();
-                    // Make sure to detach and attach the window to the
-                    // workspace
-                    window.stick();
-                    window.unstick();
-                }
-                else {
-                    window.make_above();
-                    window.stick();
-                }
-            }));
+            item = this.addAction(_('Scratch'), () => {
+                toggle(window);
+            });
             if (isScratchWindow(window))
                 item.setOrnament(PopupMenu.Ornament.CHECK);
 
