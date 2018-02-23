@@ -103,7 +103,8 @@ function init() {
                                                LiveAltTab))
     paperActions.register('live-alt-tab-backward',
                           dynamic_function_ref('liveAltTab',
-                                               LiveAltTab))
+                                               LiveAltTab),
+                          Meta.KeyBindingFlags.IS_REVERSED);
 
     paperActions.register('previous-workspace',
                           dynamic_function_ref("preview_navigate",
