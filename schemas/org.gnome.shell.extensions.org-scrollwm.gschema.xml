@@ -43,11 +43,11 @@
     </key>
 
     <key type="as" name="previous-workspace">
-      <default><![CDATA[['<Super>d']]]></default>
+      <default><![CDATA[['<Super>d', '<Super>Above_Tab']]]></default>
       <summary>Switch to previously used workspace</summary>
     </key>
     <key type="as" name="previous-workspace-backward">
-      <default><![CDATA[['<Super>u']]]></default>
+      <default><![CDATA[['<Super>u', '<Super><Shift>Above_Tab']]]></default>
       <summary>Switch to the previously used workspace, backward order</summary>
     </key>
 
