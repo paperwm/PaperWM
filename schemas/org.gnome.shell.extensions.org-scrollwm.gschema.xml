@@ -65,6 +65,11 @@
       <summary>Toggles the floating scratch layer</summary>
     </key>
 
+    <key type="as" name="toggle-scratch">
+        <default><![CDATA[['<Super><Ctrl>Escape']]]></default>
+        <summary>Attach/detach the current window into the scratch layer</summary>
+    </key>
+
     <key type="as" name="switch-next">
       <default><![CDATA[['<Super>period', '<Super>Right']]]></default>
       <summary>Switch to the next window</summary>

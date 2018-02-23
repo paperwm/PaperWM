@@ -135,6 +135,11 @@ function init() {
                           dynamic_function_ref("toggleScratch",
                                                Scratch));
 
+    paperActions.register("toggle-scratch",
+                          utils.as_key_handler("toggle",
+                                               Scratch),
+                          Meta.KeyBindingFlags.PER_WINDOW);
+
     paperActions.register("develop-set-globals",
                           dynamic_function_ref("setDevGlobals",
                                                utils));

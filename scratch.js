@@ -3,6 +3,24 @@ const Meta = imports.gi.Meta;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 
+function makeScratch(metaWindow) {
+    metaWindow.make_above();
+    metaWindow.stick();
+}
+
+function unmakeScratch(metaWindow) {
+    metaWindow.unmake_above();
+    metaWindow.unstick();
+}
+
+function toggle(metaWindow) {
+    if (isScratchWindow(metaWindow)) {
+        unmakeScratch(metaWindow);
+    } else {
+        makeScratch(metaWindow);
+    }
+}
+
 function isScratchWindow(metaWindow) {
     return metaWindow && (metaWindow.above || metaWindow.minimized);
 }
