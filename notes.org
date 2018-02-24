@@ -46,7 +46,24 @@ The Keybinding object which is supplied to keyhandler doesn't seem to expose the
 Simply use the keysym name as if the modifier was a regular key. Don't use angle brackets - those are used for **modifiers**.
 : settings.set_strv("my-action", ["Super_L"])
 ** Bind keys without using actions from a schema
-https://stackoverflow.com/a/42466781/1517969
+From: https://stackoverflow.com/a/42466781/1517969
+
+#+BEGIN_SRC javascript
+Meta = imports.gi.Meta;
+Main = imports.ui.main;
+Shell = imports.gi.Shell;
+
+let action = global.display.grab_accelerator("<super>u");
+let name = Meta.external_binding_name_for_action(action);
+Main.wm.allowKeybinding(name, Shell.ActionMode.ALL);
+global.display.connect(
+    'accelerator-activated',
+    function(display, action, deviceId, timestamp){
+        log('Accelerator Activated: [display={}, action={}, deviceId={}, timestamp={}]',
+            display, action, deviceId, timestamp)
+    })
+#+END_SRC
+
 * Stack level
 
   There's not enough room for a maximized window to slide above another maximized window if they move at the same speed:
