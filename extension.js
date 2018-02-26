@@ -65,7 +65,11 @@ function init() {
         register: function(actionName, handler, metaKeyBindingFlags) {
             let id = registerMutterAction(actionName,
                                           handler,
-                                          metaKeyBindingFlags)
+                                          metaKeyBindingFlags);
+            // If the id is NONE the action is already registered
+            if (id === Meta.KeyBindingAction.NONE)
+                return null;
+
             let action = { id: id
                            , name: actionName
                            , handler: handler
