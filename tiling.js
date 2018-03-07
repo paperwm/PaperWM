@@ -653,7 +653,7 @@ function add_filter(meta_window) {
 
     // If we're focusing a scratch window make on top and return
     let focus_window = global.display.focus_window;
-    if (Scratch.isScratchWindow(focus_window)) {
+    if (Scratch.isScratchWindow(focus_window) && !startup) {
         meta_window.stick();
         meta_window.make_above();
         add = false;
@@ -832,7 +832,7 @@ function add_all_from_workspace(workspace) {
 
     let space = spaces.spaceOf(workspace);
     windows.forEach((meta_window, i) => {
-        if(space.indexOf(meta_window) < 0 && add_filter(meta_window)) {
+        if(space.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
             // Using add_handler is unreliable since it interacts with focus.
             space.push(meta_window);
             meta_window[focus_signal] = meta_window.connect("focus", focus_wrapper);
