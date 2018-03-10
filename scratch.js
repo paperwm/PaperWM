@@ -25,7 +25,7 @@ function toggle(metaWindow) {
 }
 
 function isScratchWindow(metaWindow) {
-    return metaWindow[float];
+    return metaWindow && metaWindow[float];
 }
 
 /** Return scratch windows in MRU order */
