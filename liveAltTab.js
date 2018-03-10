@@ -107,7 +107,8 @@ var LiveAltTab = Lang.Class({
     Extends: AltTab.WindowSwitcherPopup,
 
     _getWindowList: function () {
-        let tabList = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
+        let tabList = global.display.get_tab_list(Meta.TabList.NORMAL_ALL,
+                                                  global.screen.get_active_workspace());
         if (Scratch.isScratchActive()) {
             return Scratch.getScratchWindows();
         } else {
