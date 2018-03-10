@@ -2,13 +2,16 @@ const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix
 const Meta = imports.gi.Meta;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
+let float;
 
 function makeScratch(metaWindow) {
+    metaWindow[float] = true;
     metaWindow.make_above();
     metaWindow.stick();
 }
 
 function unmakeScratch(metaWindow) {
+    metaWindow[float] = false;
     metaWindow.unmake_above();
     metaWindow.unstick();
 }
@@ -22,7 +25,7 @@ function toggle(metaWindow) {
 }
 
 function isScratchWindow(metaWindow) {
-    return metaWindow && (metaWindow.above || metaWindow.minimized);
+    return metaWindow[float];
 }
 
 /** Return scratch windows in MRU order */
@@ -59,6 +62,10 @@ const Lang = imports.lang;
 const PopupMenu = imports.ui.popupMenu;
 const WindowMenu = imports.ui.windowMenu;
 const originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
+
+function init() {
+    float = Symbol();
+}
 
 function enable() {
     WindowMenu.WindowMenu.prototype._buildMenu =

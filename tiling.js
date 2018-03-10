@@ -831,6 +831,12 @@ function add_all_from_workspace(workspace) {
     let space = spaces.spaceOf(workspace);
     windows.forEach((meta_window, i) => {
         if(space.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
+            if (meta_window.above || meta_window.minimized) {
+                // Rough heuristic to figure out if a window should float
+                Scratch.makeScratch(meta_window);
+                return;
+            }
+
             // Using add_handler is unreliable since it interacts with focus.
             space.push(meta_window);
             meta_window[focus_signal] = meta_window.connect("focus", focus_wrapper);
