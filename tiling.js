@@ -483,19 +483,9 @@ function ensure_viewport(space, meta_window, force) {
         x = minimumMargin;
     }
 
-    // Add a delay for stacked window to avoid windows passing
-    // through each other in the z direction
-    let delay = 0;
-    let transition;
-    if (meta_window.get_compositor_private().is_scaled()) {
-        // easeInQuad: delta/2(t/duration)^2 + start
-        delay = Math.pow(2*(stack_margin - minimumMargin)/frame.width, .5)*0.25/2;
-        transition = 'easeOutQuad';
-        debug('delay', delay)
-    }
     space.moving = meta_window;
     move_to(space, meta_window,
-            { x, y, delay, transition,
+            { x, y,
               onComplete: () => {
                   space.moving = false;
                   // Certain gnome-shell/mutter animations expect default
