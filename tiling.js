@@ -625,7 +625,7 @@ function focus_wrapper(meta_window, user_data) {
     focus_handler(meta_window, user_data)
 }
 
-function add_filter(meta_window) {
+function add_filter(meta_window, startup) {
     let add = true;
     if (meta_window.window_type != Meta.WindowType.NORMAL
         || meta_window.get_transient_for() != null
