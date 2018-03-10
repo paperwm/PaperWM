@@ -645,8 +645,7 @@ function add_filter(meta_window, startup) {
             add = false;
         }
         if (winprop.scratch_layer) {
-            meta_window.stick();
-            meta_window.make_above();
+            Scratch.makeScratch(meta_window);
             add = false;
         }
     }
@@ -654,8 +653,7 @@ function add_filter(meta_window, startup) {
     // If we're focusing a scratch window make on top and return
     let focus_window = global.display.focus_window;
     if (Scratch.isScratchWindow(focus_window) && !startup) {
-        meta_window.stick();
-        meta_window.make_above();
+        Scratch.makeScratch(meta_window);
         add = false;
     }
 
