@@ -57,53 +57,58 @@ function hidePanelBox () {
     }
 }
 
-function Space(workspace) {
-    // Simplest way to get a straight array interface
-    let space = [];
-    space.workspace = workspace;
-    space.addSignal =
-        workspace.connect("window-added",
-                          utils.dynamic_function_ref("add_handler", Me));
-    space.removeSignal =
-        workspace.connect("window-removed",
-                          utils.dynamic_function_ref("remove_handler", Me));
-    space.selectedWindow = null;
-    space.moving = false;
-    space.leftStack = 0; // not implemented
-    space.rightStack = 0; // not implemented
+class Space extends Array {
+    constructor (workspace) {
+        super(0);
+        this.workspace = workspace;
+        this.addSignal =
+            workspace.connect("window-added",
+                              utils.dynamic_function_ref("add_handler", Me));
+        this.removeSignal =
+            workspace.connect("window-removed",
+                              utils.dynamic_function_ref("remove_handler", Me));
+        this.selectedWindow = null;
+        this.moving = false;
+        this.leftStack = 0; // not implemented
+        this.rightStack = 0; // not implemented
+    }
 
-    space.selectedIndex = () => {
-        if (space.selectedWindow) {
-            return space.indexOf(space.selectedWindow);
+    // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
+    static get [Symbol.species]() { return Array; }
+
+    selectedIndex () {
+        if (this.selectedWindow) {
+            return this.indexOf(this.selectedWindow);
         } else {
             return -1;
         }
     }
-    space.topOfLeftStack = function() {
+
+    topOfLeftStack () {
         // There's no left stack
-        if (!isStacked(space[0]))
+        if (!isStacked(this[0]))
             return null;
 
-        for(let i = 0; i < space.length; i++) {
-            if (!isStacked(space[i])) {
-                return space[i - 1];
+        for(let i = 0; i < this.length; i++) {
+            if (!isStacked(this[i])) {
+                return this[i - 1];
             }
         }
         return null;
     }
-    space.topOfRightStack = function() {
+
+    topOfRightStack () {
         // There's no right stack
-        if (!isStacked(space[space.length-1]))
+        if (!isStacked(this[this.length-1]))
             return null;
 
-        for(let i = space.length - 1; i >= 0; i--) {
-            if (!isStacked(space[i])) {
-                return space[i + 1];
+        for(let i = this.length - 1; i >= 0; i--) {
+            if (!isStacked(this[i])) {
+                return this[i + 1];
             }
         }
         return null;
     }
-    return space;
 }
 
 // Singleton spaces object, shouldn't be reused
@@ -152,7 +157,7 @@ var spaces = (function () {
     };
 
     spaces.addSpace = function(workspace) {
-        this._spaces[workspace] = Space(workspace);
+        this._spaces[workspace] = new Space(workspace);
     };
 
     spaces.removeSpace = function(space) {
