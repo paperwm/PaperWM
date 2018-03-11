@@ -157,22 +157,22 @@ var spaces = (function () {
     };
 
     spaces.addSpace = function(workspace) {
-        this._spaces[workspace] = new Space(workspace);
+        this._spaces.set(workspace, new Space(workspace));
     };
 
     spaces.removeSpace = function(space) {
         let workspace = space.workspace;
         workspace.disconnect(space.addSignal);
         workspace.disconnect(space.removeSignal);
-        delete this._spaces[workspace];
+        this._spaces.delete(workspace);
     };
 
     spaces.spaceOfWindow = function(meta_window) {
-        return this._spaces[meta_window.get_workspace()];
+        return this._spaces.get(meta_window.get_workspace());
     };
 
     spaces.spaceOf = function(workspace) {
-        return this._spaces[workspace];
+        return this._spaces.get(workspace);
     };
 
     spaces.window_created = function (display, metaWindow, user_data) {
