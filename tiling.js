@@ -505,6 +505,10 @@ function ensure_viewport(space, meta_window, force) {
 function focus_handler(meta_window, user_data) {
     debug("focus:", meta_window.title, utils.framestr(meta_window.get_frame_rect()));
 
+    if (Scratch.isScratchWindow(meta_window)) {
+        Scratch.makeScratch(meta_window);
+    }
+
     let space = spaces.spaceOfWindow(meta_window);
     ensure_viewport(space, meta_window);
 }
