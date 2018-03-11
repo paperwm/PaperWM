@@ -32,7 +32,7 @@ var minimumMargin = 15;
 const StackOverlay = Extension.imports.stackoverlay;
 
 // Symbol to retrieve the focus handler id
-var focus_signal = Symbol();
+var focus_signal;
 
 var primary = Main.layoutManager.primaryMonitor;
 
@@ -824,7 +824,11 @@ function add_all_from_workspace(workspace) {
 
     let space = spaces.spaceOf(workspace);
     windows.forEach((meta_window, i) => {
-        meta_window[focus_signal] = meta_window.connect("focus", focus_wrapper);
+        if (!meta_window[focus_signal]) {
+            // Don't register the focus handling more than once
+            meta_window[focus_signal] =
+                meta_window.connect("focus", focus_wrapper);
+        }
         if (meta_window.above || meta_window.minimized) {
             // Rough heuristic to figure out if a window should float
             Scratch.makeScratch(meta_window);
@@ -1120,6 +1124,10 @@ function cycleWindowWidth(metaWindow) {
     ensure_viewport(spaces.spaceOfWindow(metaWindow), metaWindow, true);
 
     delete metaWindow.unmaximized_rect;
+}
+
+function init() {
+    focus_signal = Symbol();
 }
 
 var nWorkspacesSignal, workspaceRemovedSignal, windowCreatedSignal;
