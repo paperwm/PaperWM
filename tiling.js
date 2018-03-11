@@ -183,6 +183,7 @@ var spaces = (function () {
         let signal = Symbol();
         metaWindow[signal] = actor.connect('show',
                                            Lang.bind({metaWindow, signal}, setInitialPosition));
+        metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
     };
 
     return spaces;
@@ -326,8 +327,6 @@ function setInitialPosition(actor, existing) {
     let signalId = metaWindow[signal];
     // check if we're in `first-frame` or `focus`
     if (actor.constructor == Meta.WindowActor) {
-        metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
-
         signalId && metaWindow.get_compositor_private().disconnect(signalId);
     } else {
         signalId && metaWindow.disconnect(signalId);
@@ -420,6 +419,8 @@ function ensure_viewport(space, meta_window, force) {
     let index = space.indexOf(meta_window)
     if (index === -1)
         return;
+
+    space.selectedWindow = meta_window;
     let frame = meta_window.get_frame_rect();
     meta_window.move_resize_frame(true, frame.x, frame.y,
                                   frame.width,
@@ -505,8 +506,6 @@ function focus_handler(meta_window, user_data) {
     debug("focus:", meta_window.title, utils.framestr(meta_window.get_frame_rect()));
 
     let space = spaces.spaceOfWindow(meta_window);
-    space.selectedWindow = meta_window;
-
     ensure_viewport(space, meta_window);
 }
 let focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
@@ -821,6 +820,7 @@ function add_all_from_workspace(workspace) {
 
     let space = spaces.spaceOf(workspace);
     windows.forEach((meta_window, i) => {
+        meta_window[focus_signal] = meta_window.connect("focus", focus_wrapper);
         if(space.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
             if (meta_window.above || meta_window.minimized) {
                 // Rough heuristic to figure out if a window should float
@@ -830,7 +830,6 @@ function add_all_from_workspace(workspace) {
 
             // Using add_handler is unreliable since it interacts with focus.
             space.push(meta_window);
-            meta_window[focus_signal] = meta_window.connect("focus", focus_wrapper);
         }
     })
 
