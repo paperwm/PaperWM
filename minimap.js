@@ -483,13 +483,13 @@ var MultiMap = new Lang.Class({
                 style_class: "window-caption"});
 
             newLabel.set_position(label.x, label.y);
-            label.destroy();
 
             this.selectionChrome.add_child(newLabel);
             this.selectionChrome.label = newLabel;
 
             newWidth = newLabel.width;
             newLabel.width = label.width;
+            label.destroy();
             label = newLabel;
         } else {
             // We're in an empty workspace
