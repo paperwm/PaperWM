@@ -509,6 +509,7 @@ function focus_handler(meta_window, user_data) {
 
     ensure_viewport(space, meta_window);
 }
+let focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
 
 /**
   We need to stack windows in mru order, since mutter picks from the
@@ -613,9 +614,6 @@ function center(meta_window, zen) {
     let i = space.indexOf(meta_window);
     propogate_forward(space, i + 1, right);
     propogate_backward(space, i - 1, left);
-}
-function focus_wrapper(meta_window, user_data) {
-    focus_handler(meta_window, user_data)
 }
 
 function add_filter(meta_window, startup) {
