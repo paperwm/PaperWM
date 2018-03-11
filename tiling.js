@@ -113,9 +113,7 @@ class Space extends Array {
 
 // Singleton spaces object, shouldn't be reused
 var spaces = (function () {
-    let spaces = [];
-
-    spaces._spaces = new Map();
+    let spaces = new Map();
 
     spaces.workspacesChanged = function () {
         let nWorkspaces = global.screen.n_workspaces;
@@ -157,22 +155,22 @@ var spaces = (function () {
     };
 
     spaces.addSpace = function(workspace) {
-        this._spaces.set(workspace, new Space(workspace));
+        this.set(workspace, new Space(workspace));
     };
 
     spaces.removeSpace = function(space) {
         let workspace = space.workspace;
         workspace.disconnect(space.addSignal);
         workspace.disconnect(space.removeSignal);
-        this._spaces.delete(workspace);
+        this.delete(workspace);
     };
 
     spaces.spaceOfWindow = function(meta_window) {
-        return this._spaces.get(meta_window.get_workspace());
+        return this.get(meta_window.get_workspace());
     };
 
     spaces.spaceOf = function(workspace) {
-        return this._spaces.get(workspace);
+        return this.get(workspace);
     };
 
     spaces.window_created = function (display, metaWindow, user_data) {
