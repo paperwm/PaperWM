@@ -746,13 +746,6 @@ function remove_handler(workspace, meta_window) {
         return
     space.splice(removed_i, 1)
 
-    // Remove our signal handlers: Needed for non-closed windows.
-    // (closing a window seems to clean out it's signal handlers)
-    if (meta_window[focus_signal]) {
-        meta_window.disconnect(meta_window[focus_signal]);
-        delete meta_window[focus_signal];
-    }
-
     if (space.selectedWindow === meta_window) {
         // Window closed or moved when other workspace is active so no new focus
         // has been assigned in this workspace.
