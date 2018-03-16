@@ -174,6 +174,8 @@ var spaces = (function () {
     };
 
     spaces.window_created = function (display, metaWindow, user_data) {
+        if (!metaWindow[focus_signal])
+            metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
         // Only run setInitialPosition on inserted windows
         if (!metaWindow[isInserted])
             return;
@@ -183,7 +185,6 @@ var spaces = (function () {
         let signal = Symbol();
         metaWindow[signal] = actor.connect('show',
                                            Lang.bind({metaWindow, signal}, setInitialPosition));
-        metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
     };
 
     return spaces;
@@ -507,6 +508,7 @@ function focus_handler(meta_window, user_data) {
 
     if (Scratch.isScratchWindow(meta_window)) {
         Scratch.makeScratch(meta_window);
+        showPanelBox();
     }
 
     let space = spaces.spaceOfWindow(meta_window);
