@@ -127,14 +127,13 @@ var spaces = (function () {
         for (let i=0; i < nWorkspaces; i++) {
             let workspace = global.screen.get_workspace_by_index(i);
             workspaces[workspace] = true;
-            if (this._spaces[workspace] === undefined) {
+            if (spaces.spaceOf(workspace) === undefined) {
                 debug('workspace added', workspace);
                 this.addSpace(workspace);
             }
         }
 
-        for (let key in this._spaces) {
-            let space = this._spaces[key];
+        for (let [workspace, space] of spaces) {
             if (workspaces[space.workspace] !== true) {
                 debug('workspace removed', space.workspace);
                 this.removeSpace(space);
@@ -1167,8 +1166,8 @@ function disable () {
     global.screen.disconnect(nWorkspacesSignal);
     global.screen.disconnect(workspaceRemovedSignal);
     global.display.disconnect(windowCreatedSignal);
-    for (let workspace in spaces._spaces) {
-        spaces.removeSpace(spaces._spaces[workspace]);
+    for (let [workspace, space] of spaces) {
+        spaces.removeSpace(space);
     }
 
     global.screen.disconnect(monitorsChangedId);
