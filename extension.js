@@ -242,6 +242,9 @@ function enable() {
     killKeybinding('switch-group-backward', wmSettings);
     // Super-n is used for new-window
     killKeybinding('focus-active-notification', shellSettings);
+    // Switched to '<super>escape' in 3.28
+    killKeybinding('restore-shortcuts',
+                   new Gio.Settings({ schema_id: "org.gnome.mutter.wayland.keybindings"}));
 
     shellSettings.set_strv("toggle-overview", ["<super>space"])
 
