@@ -508,6 +508,13 @@ function focus_handler(meta_window, user_data) {
     if (Scratch.isScratchWindow(meta_window)) {
         Scratch.makeScratch(meta_window);
         showPanelBox();
+        return;
+    }
+
+    // If meta_window is a transient window ensure the parent window instead
+    let transientFor = meta_window.get_transient_for();
+    if (transientFor !== null) {
+        meta_window = transientFor;
     }
 
     let space = spaces.spaceOfWindow(meta_window);
