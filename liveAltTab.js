@@ -11,7 +11,7 @@ const Tiling = Extension.imports.tiling;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 
-WindowManager.WindowManager.prototype._previewWorkspace = function(from, to) {
+WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, callback) {
 
     let windows = global.get_window_actors();
 
@@ -71,7 +71,8 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to) {
                      { x: 0,
                        y: 0,
                        time: 0.25,
-                       transition: 'easeInOutQuad'
+                       transition: 'easeInOutQuad',
+                       onComplete: callback,
                      });
 }
 

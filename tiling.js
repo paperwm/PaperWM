@@ -976,8 +976,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         // This will crash gnome-shell if one of the workspaces have been removed
         Main.wm._previewWorkspace(oldMap.space.workspace,
-                                  newMap.space.workspace,
-                                  direction);
+                                  newMap.space.workspace);
         this.space = newMap.space;
         this._select(this.space.selectedIndex());
     },
@@ -1078,11 +1077,17 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     _onDestroy: function() {
         debug('#preview', 'onDestroy', this.was_accepted);
-        if(!this.was_accepted && this._selectedIndex != focus()) {
-            debug('#preview', 'Abort', global.display.focus_window.title);
-            ensure_viewport(this.space, global.display.focus_window);
-        }
         Main.wm._previewWorkspaceDone();
+        if(!this.was_accepted) {
+            debug('#preview', 'Abort', global.display.focus_window.title);
+            let focus = global.display.focus_window;
+            if (focus.get_workspace() !== this.space.workspace) {
+                Main.wm._previewWorkspace(this.space.workspace, focus.get_workspace(),
+                    () => Main.wm._previewWorkspaceDone()
+                );
+            }
+            ensure_viewport(spaces.spaceOfWindow(focus), focus);
+        }
         this.parent();
     }
 });
