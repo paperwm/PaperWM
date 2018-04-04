@@ -285,7 +285,6 @@ var MultiMap = new Lang.Class({
                 .forEach(metaWindow => {
                     let workspace = metaWindow.get_workspace();
                     if (!seen[workspace]) {
-                        debug('add workspace');
                         this.addSpace(Tiling.spaces.spaceOf(workspace), i)
                         seen[workspace] = true;
                         i++;
@@ -296,7 +295,6 @@ var MultiMap = new Lang.Class({
             for (let j=0; j < workspaces; j++) {
                 let workspace = global.screen.get_workspace_by_index(j);
                 if (!seen[workspace]) {
-                    debug('add workspace');
                     this.addSpace(Tiling.spaces.spaceOf(workspace), i);
                     i++;
                     seen[workspace] = true;
