@@ -32,12 +32,62 @@ var minimumMargin = 15;
 //        such as stack_margin should probably not be in tiling.js
 const StackOverlay = Extension.imports.stackoverlay;
 
-// Symbol to retrieve the focus handler id
-var focus_signal;
 
 var primary = Main.layoutManager.primaryMonitor;
 
 var panelBox = Main.layoutManager.panelBox;
+
+// Symbol to retrieve the focus handler id
+var focus_signal;
+function init() {
+    focus_signal = Symbol();
+}
+
+var nWorkspacesSignal, workspaceRemovedSignal, windowCreatedSignal,
+    monitorsChangedId;
+function enable () {
+    nWorkspacesSignal =
+        global.screen.connect('notify::n-workspaces',
+                              Lang.bind(spaces, utils.dynamic_function_ref('workspacesChanged', spaces)));
+
+    workspaceRemovedSignal =
+        global.screen.connect('workspace-removed',
+                              utils.dynamic_function_ref('workspaceRemoved', spaces));
+
+    windowCreatedSignal =
+        global.display.connect('window-created',
+                               utils.dynamic_function_ref('window_created', spaces));
+
+    // Reset primary when monitors change
+    monitorsChangedId = global.screen.connect(
+        "monitors-changed",
+        function(screen) {
+            primary = Main.layoutManager.primaryMonitor;
+        });
+}
+
+function disable () {
+    global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+        .forEach(metaWindow => {
+            let actor = metaWindow.get_compositor_private();
+            actor.set_scale(1, 1);
+            actor.set_pivot_point(0, 0);
+            if (metaWindow[focus_signal]) {
+                metaWindow.disconnect(metaWindow[focus_signal]);
+                delete metaWindow[focus_signal]
+            }
+        });
+
+    // Disable workspace related signals
+    global.screen.disconnect(nWorkspacesSignal);
+    global.screen.disconnect(workspaceRemovedSignal);
+    global.display.disconnect(windowCreatedSignal);
+    for (let [workspace, space] of spaces) {
+        spaces.removeSpace(space);
+    }
+
+    global.screen.disconnect(monitorsChangedId);
+}
 
 class Space extends Array {
     constructor (workspace) {
@@ -1108,54 +1158,4 @@ function cycleWindowWidth(metaWindow) {
     ensure_viewport(spaces.spaceOfWindow(metaWindow), metaWindow, true);
 
     delete metaWindow.unmaximized_rect;
-}
-
-function init() {
-    focus_signal = Symbol();
-}
-
-var nWorkspacesSignal, workspaceRemovedSignal, windowCreatedSignal,
-    monitorsChangedId;
-function enable () {
-    nWorkspacesSignal =
-        global.screen.connect('notify::n-workspaces',
-                              Lang.bind(spaces, utils.dynamic_function_ref('workspacesChanged', spaces)));
-
-    workspaceRemovedSignal =
-        global.screen.connect('workspace-removed',
-                              utils.dynamic_function_ref('workspaceRemoved', spaces));
-
-    windowCreatedSignal =
-        global.display.connect('window-created',
-                               utils.dynamic_function_ref('window_created', spaces));
-
-    // Reset primary when monitors change
-    monitorsChangedId = global.screen.connect(
-        "monitors-changed",
-        function(screen) {
-            primary = Main.layoutManager.primaryMonitor;
-        });
-}
-
-function disable () {
-    global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
-        .forEach(metaWindow => {
-            let actor = metaWindow.get_compositor_private();
-            actor.set_scale(1, 1);
-            actor.set_pivot_point(0, 0);
-            if (metaWindow[focus_signal]) {
-                metaWindow.disconnect(metaWindow[focus_signal]);
-                delete metaWindow[focus_signal]
-            }
-        });
-
-    // Disable workspace related signals
-    global.screen.disconnect(nWorkspacesSignal);
-    global.screen.disconnect(workspaceRemovedSignal);
-    global.display.disconnect(windowCreatedSignal);
-    for (let [workspace, space] of spaces) {
-        spaces.removeSpace(space);
-    }
-
-    global.screen.disconnect(monitorsChangedId);
 }
