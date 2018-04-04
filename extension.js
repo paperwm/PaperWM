@@ -5,11 +5,12 @@ const modules = [
     Extension.imports.tiling, Extension.imports.scratch,
     Extension.imports.liveAltTab, Extension.imports.utils,
     Extension.imports.stackoverlay, Extension.imports.app,
-    Extension.imports.kludges
+    Extension.imports.kludges, Extension.imports.topbar
 ];
 const [ Tiling, Scratch, LiveAltTab,
         utils, StackOverlay,
-        App, Kludges ] = modules;
+        App, Kludges, TopBar
+      ] = modules;
 
 const debug = utils.debug;
 

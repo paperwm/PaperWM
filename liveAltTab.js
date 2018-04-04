@@ -10,8 +10,11 @@ const Scratch = Extension.imports.scratch;
 const Tiling = Extension.imports.tiling;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
+var TopBar = Extension.imports.topbar;
 
 WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, callback) {
+
+    TopBar.updateWorkspaceIndicator(to.index());
 
     let windows = global.get_window_actors();
 
