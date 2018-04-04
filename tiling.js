@@ -12,6 +12,7 @@ const Clutter = imports.gi.Clutter;
 
 var Minimap = Extension.imports.minimap;
 var Scratch = Extension.imports.scratch;
+var TopBar = Extension.imports.topbar;
 var Me = Extension.imports.tiling;
 
 let preferences = Extension.imports.convenience.getSettings();
@@ -37,25 +38,6 @@ var focus_signal;
 var primary = Main.layoutManager.primaryMonitor;
 
 var panelBox = Main.layoutManager.panelBox;
-
-function showPanelBox() {
-    panelBox.show();
-    Tweener.addTween(panelBox, {
-        scale_y: 1,
-        time: 0.25,
-        onOverwrite: () => {
-            panelBox.scale_y = 1;
-        }
-    });
-}
-function hidePanelBox () {
-    let space = spaces.spaceOf(global.screen.get_active_workspace());
-    if (space.selectedWindow.fullscreen) {
-        panelBox.scale_y = 0;
-    } else {
-        panelBox.show();
-    }
-}
 
 class Space extends Array {
     constructor (workspace) {
@@ -429,7 +411,7 @@ function ensure_viewport(space, meta_window, force) {
     // Hack to ensure the statusbar is visible while there's a fullscreen
     // windows in the space.
     if (!meta_window.fullscreen) {
-        showPanelBox();
+        TopBar.show();
     }
 
     if (meta_window.destinationX !== undefined)
@@ -444,11 +426,7 @@ function ensure_viewport(space, meta_window, force) {
     if (meta_window.fullscreen) {
         // Fullscreen takes highest priority
         x = 0, y = 0;
-        Tweener.addTween(panelBox, {
-            scale_y: 0,
-            time: 0.25,
-        });
-
+        TopBar.hide();
     } else if (meta_window.maximized_vertically
                && meta_window.maximized_horizontally) {
         x = frame.x;
@@ -507,7 +485,7 @@ function focus_handler(meta_window, user_data) {
 
     if (Scratch.isScratchWindow(meta_window)) {
         Scratch.makeScratch(meta_window);
-        showPanelBox();
+        TopBar.show();
         return;
     }
 
@@ -1136,8 +1114,8 @@ function init() {
     focus_signal = Symbol();
 }
 
-var nWorkspacesSignal, workspaceRemovedSignal, windowCreatedSignal;
-var panelBoxShowId, panelBoxHideId, monitorsChangedId;
+var nWorkspacesSignal, workspaceRemovedSignal, windowCreatedSignal,
+    monitorsChangedId;
 function enable () {
     nWorkspacesSignal =
         global.screen.connect('notify::n-workspaces',
@@ -1157,9 +1135,6 @@ function enable () {
         function(screen) {
             primary = Main.layoutManager.primaryMonitor;
         });
-
-    panelBoxShowId =  panelBox.connect('show', showPanelBox);
-    panelBoxHideId = panelBox.connect('hide', hidePanelBox);
 }
 
 function disable () {
@@ -1183,8 +1158,4 @@ function disable () {
     }
 
     global.screen.disconnect(monitorsChangedId);
-
-    panelBox.scale_y = 1;
-    panelBox.disconnect(panelBoxShowId);
-    panelBox.disconnect(panelBoxHideId);
 }

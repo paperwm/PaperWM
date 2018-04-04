@@ -2,16 +2,22 @@
   Functionality related to the top bar, often called the statusbar.
  */
 
+const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 const Meta = imports.gi.Meta;
 const Main = imports.ui.main;
+const Tweener = imports.ui.tweener;
+
+const Tiling = Extension.imports.tiling;
+
+var panelBox = Main.layoutManager.panelBox;
 
 var orginalActivitiesText;
 function init () {
-    let label = Main.layoutManager.panelBox.first_child.first_child.first_child.first_child.first_child;
+    let label = panelBox.first_child.first_child.first_child.first_child.first_child;
     orginalActivitiesText = label.text;
 }
 
-var updateIndicatorSignal;
+var updateIndicatorSignal, panelBoxShowId, panelBoxHideId;
 function enable () {
     updateIndicatorSignal =
         global.screen.connect_after('workspace-switched',
@@ -19,6 +25,15 @@ function enable () {
                                         updateWorkspaceIndicator(to);
                                     });
 
+    panelBoxShowId =  panelBox.connect('show', show);
+    panelBoxHideId = panelBox.connect('hide', () => {
+        let space = Tiling.spaces.spaceOf(global.screen.get_active_workspace());
+        if (space.selectedWindow.fullscreen) {
+            hide();
+        } else {
+            panelBox.show();
+        }
+    });
     // Update the worksapce name on startup
     updateWorkspaceIndicator(global.screen.get_active_workspace_index());
 }
@@ -26,6 +41,34 @@ function enable () {
 function disable () {
     global.screen.disconnect(updateIndicatorSignal);
     setWorkspaceName(orginalActivitiesText);
+
+    panelBox.scale_y = 1;
+    panelBox.disconnect(panelBoxShowId);
+    panelBox.disconnect(panelBoxHideId);
+}
+
+function show() {
+    panelBox.show();
+    Tweener.addTween(panelBox, {
+        scale_y: 1,
+        time: 0.25,
+        onOverwrite: () => {
+            panelBox.scale_y = 1;
+        }
+    });
+}
+
+function hide() {
+    Tweener.addTween(panelBox, {
+        scale_y: 0,
+        time: 0.25,
+        onOverwrite: () => {
+            panelBox.scale_y = 0;
+        },
+        onComplete: () => {
+            panelBox.scale_y = 0;
+        }
+    });
 }
 
 /**
@@ -38,7 +81,6 @@ function updateWorkspaceIndicator (workspaceIndex) {
 };
 
 function setWorkspaceName (name) {
-    let panelBox = Main.layoutManager.panelBox;
     // A lot of boxes
     let label = panelBox.first_child.first_child
         .first_child.first_child.first_child;
