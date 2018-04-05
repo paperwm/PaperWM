@@ -13,7 +13,7 @@ var panelBox = Main.layoutManager.panelBox;
 
 var orginalActivitiesText;
 function init () {
-    let label = panelBox.first_child.first_child.first_child.first_child.first_child;
+    let label = Main.panel.statusArea.activities.actor.first_child;
     orginalActivitiesText = label.text;
 }
 
@@ -81,8 +81,6 @@ function updateWorkspaceIndicator (workspaceIndex) {
 };
 
 function setWorkspaceName (name) {
-    // A lot of boxes
-    let label = panelBox.first_child.first_child
-        .first_child.first_child.first_child;
+    let label = Main.panel.statusArea.activities.actor.first_child;
     label.text = name;
 }
