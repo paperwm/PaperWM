@@ -4,10 +4,12 @@
 
 const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 const SwitcherPopup = imports.ui.switcherPopup;
+const WindowManager = imports.ui.windowManager;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
 const Main = imports.ui.main;
 const Clutter = imports.gi.Clutter;
+const Tweener = imports.ui.tweener;
 
 const Minimap = Extension.imports.minimap;
 const Tiling = Extension.imports.tiling;
@@ -229,4 +231,99 @@ var PreviewedWindowNavigator = new Lang.Class({
 function preview_navigate(display, screen, meta_window, binding) {
     let tabPopup = new PreviewedWindowNavigator();
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
+}
+
+
+var TopBar = Extension.imports.topbar;
+WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, callback) {
+
+    TopBar.updateWorkspaceIndicator(to.index());
+
+    let windows = global.get_window_actors();
+
+    let xDest = 0, yDest = global.screen_height;
+
+    let switchData = {};
+    this._switchData = switchData;
+    switchData.inGroup = new Clutter.Actor();
+    switchData.outGroup = new Clutter.Actor();
+    switchData.movingWindowBin = new Clutter.Actor();
+    switchData.windows = [];
+
+    let wgroup = global.window_group;
+    wgroup.add_actor(switchData.inGroup);
+    wgroup.add_actor(switchData.outGroup);
+    wgroup.add_actor(switchData.movingWindowBin);
+
+    for (let i = 0; i < windows.length; i++) {
+        let actor = windows[i];
+        let window = actor.get_meta_window();
+
+        if (!window.showing_on_its_workspace())
+            continue;
+
+        if (window.is_on_all_workspaces())
+            continue;
+
+        let record = { window: actor,
+                       parent: actor.get_parent() };
+
+        if (this._movingWindow && window == this._movingWindow) {
+            switchData.movingWindow = record;
+            switchData.windows.push(switchData.movingWindow);
+            actor.reparent(switchData.movingWindowBin);
+        } else if (window.get_workspace() == from) {
+            switchData.windows.push(record);
+            actor.reparent(switchData.outGroup);
+        } else if (window.get_workspace() == to) {
+            switchData.windows.push(record);
+            actor.reparent(switchData.inGroup);
+            actor.show();
+        }
+    }
+
+    switchData.inGroup.set_position(-xDest, global.screen_height);
+    switchData.inGroup.raise_top();
+
+    switchData.movingWindowBin.raise_top();
+
+    Tweener.addTween(switchData.outGroup,
+                     { x: xDest,
+                       y: yDest,
+                       time: 0.25,
+                       transition: 'easeInOutQuad',
+                     });
+    Tweener.addTween(switchData.inGroup,
+                     { x: 0,
+                       y: 0,
+                       time: 0.25,
+                       transition: 'easeInOutQuad',
+                       onComplete: callback,
+                     });
+}
+
+WindowManager.WindowManager.prototype._previewWorkspaceDone = function() {
+    let switchData = this._switchData;
+    if (!switchData)
+        return;
+    this._switchData = null;
+
+    for (let i = 0; i < switchData.windows.length; i++) {
+        let w = switchData.windows[i];
+        if (w.window.is_destroyed()) // Window gone
+            continue;
+        if (w.window.get_parent() == switchData.outGroup) {
+            w.window.reparent(w.parent);
+            w.window.hide();
+        } else
+            w.window.reparent(w.parent);
+    }
+    Tweener.removeTweens(switchData.inGroup);
+    Tweener.removeTweens(switchData.outGroup);
+    switchData.inGroup.destroy();
+    switchData.outGroup.destroy();
+    switchData.movingWindowBin.destroy();
+
+    if (this._movingWindow)
+        this._movingWindow = null;
 }
