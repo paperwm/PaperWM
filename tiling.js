@@ -1050,7 +1050,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             return true;
         } else {
             let action = paperActions.byId(mutterActionId);
-            if (action) {
+            if (action && action.name !== 'toggle-scratch-layer') {
                 let metaWindow = this.space[this._selectedIndex];
                 action.handler(null, null, metaWindow);
                 let minimap = this._switcherList.getSelected();
