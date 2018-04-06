@@ -38,14 +38,15 @@ var primary = Main.layoutManager.primaryMonitor;
 var panelBox = Main.layoutManager.panelBox;
 
 // Symbol to retrieve the focus handler id
-var focus_signal;
+var focus_signal, oldSpaces;
 function init() {
     focus_signal = Symbol();
+    oldSpaces = new Map();
 }
 
 var nWorkspacesSignal, workspaceRemovedSignal, windowCreatedSignal,
     monitorsChangedId;
-function enable () {
+function enable() {
     nWorkspacesSignal =
         global.screen.connect('notify::n-workspaces',
                               Lang.bind(spaces, utils.dynamic_function_ref('workspacesChanged', spaces)));
@@ -67,9 +68,10 @@ function enable () {
         // Hook up existing workspaces
         for (let i=0; i < global.screen.n_workspaces; i++) {
             let workspace = global.screen.get_workspace_by_index(i)
+            let oldSpace = oldSpaces.get(workspace);
             spaces.addSpace(workspace);
+            add_all_from_workspace(workspace, oldSpace);
             debug("workspace", workspace)
-            add_all_from_workspace(workspace);
         }
     }
 
@@ -104,6 +106,9 @@ function disable () {
                 delete metaWindow[focus_signal]
             }
         });
+
+    // Copy the old spaces.
+    oldSpaces = new Map(spaces);
 
     // Disable workspace related signals
     global.screen.disconnect(nWorkspacesSignal);
@@ -832,9 +837,10 @@ function remove_handler(workspace, meta_window) {
     }
 }
 
-function add_all_from_workspace(workspace) {
-    workspace = workspace || global.screen.get_active_workspace();
-    let windows = workspace.list_windows();
+/**
+   let workspace = global.screen.get_active_workspace()
+ */
+function add_all_from_workspace(workspace, windows = []) {
 
     // On gnome-shell-restarts the windows are moved into the viewport, but
     // they're moved minimally and the stacking is not changed, so the tiling
@@ -876,7 +882,14 @@ function add_all_from_workspace(workspace) {
         };
     }
 
-    windows.sort(xz_comparator(windows));
+    workspace = workspace || global.screen.get_active_workspace();
+    windows = windows.concat(
+        // Add all the other windows as we want to support someone disabling
+        // the extension, and enabling it after using the session for a
+        // while
+        workspace.list_windows()
+            .filter(w => windows.indexOf(w) === -1)
+            .sort(xz_comparator(workspace.list_windows())));
 
     let space = spaces.spaceOf(workspace);
     windows.forEach((meta_window, i) => {

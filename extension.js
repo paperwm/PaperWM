@@ -27,8 +27,6 @@ let SESSIONID = ""+(new Date().getTime());
 let initRun;
 let enabled = false;
 
-let isDuringGnomeShellStartup = false;
-
 window.PaperWM = Extension;
 
 var wmSettings;
