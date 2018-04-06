@@ -982,6 +982,9 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     selectSpace: function(direction, move) {
+        if (Main.panel.statusArea.appMenu)
+            Main.panel.statusArea.appMenu.container.hide();
+
         let multimap = this._switcherList;
         multimap.showAll();
         let from = multimap.selectedIndex;
@@ -1111,6 +1114,8 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     _onDestroy: function() {
+        if (Main.panel.statusArea.appMenu)
+            Main.panel.statusArea.appMenu.container.show();
         debug('#preview', 'onDestroy', this.was_accepted);
         Main.wm._previewWorkspaceDone();
         if(!this.was_accepted) {
