@@ -5,11 +5,13 @@ const modules = [
     Extension.imports.tiling, Extension.imports.scratch,
     Extension.imports.liveAltTab, Extension.imports.utils,
     Extension.imports.stackoverlay, Extension.imports.app,
-    Extension.imports.kludges, Extension.imports.topbar
+    Extension.imports.kludges, Extension.imports.topbar,
+    Extension.imports.navigator
 ];
 const [ Tiling, Scratch, LiveAltTab,
         utils, StackOverlay,
-        App, Kludges, TopBar
+        App, Kludges, TopBar,
+        Navigator
       ] = modules;
 
 const debug = utils.debug;
@@ -111,30 +113,30 @@ function init() {
 
     paperActions.register('previous-workspace',
                           dynamic_function_ref("preview_navigate",
-                                               Tiling))
+                                               Navigator));
     paperActions.register('previous-workspace-backward',
                           dynamic_function_ref("preview_navigate",
-                                               Tiling))
+                                               Navigator));
     paperActions.register('move-previous-workspace',
                           dynamic_function_ref("preview_navigate",
-                                               Tiling))
+                                               Navigator));
     paperActions.register('move-previous-workspace-backward',
                           dynamic_function_ref("preview_navigate",
-                                               Tiling))
+                                               Navigator));
     paperActions.register("switch-next",
                           dynamic_function_ref("preview_navigate",
-                                               Tiling));
+                                               Navigator));
     paperActions.register("switch-previous",
                           dynamic_function_ref("preview_navigate",
-                                               Tiling),
+                                               Navigator),
                           Meta.KeyBindingFlags.IS_REVERSED);
 
     paperActions.register("move-left",
                           dynamic_function_ref("preview_navigate",
-                                               Tiling));
+                                               Navigator));
     paperActions.register("move-right",
                           dynamic_function_ref("preview_navigate",
-                                               Tiling));
+                                               Navigator));
     paperActions.register("toggle-scratch-layer",
                           dynamic_function_ref("toggleScratch",
                                                Scratch));
