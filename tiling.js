@@ -58,6 +58,33 @@ function enable () {
         global.display.connect('window-created',
                                utils.dynamic_function_ref('window_created', spaces));
 
+    // HACK: couldn't find an other way within a reasonable time budget
+    // This state is different from being enabled after startup. Existing
+    // windows are not accessible yet for instance.
+    let isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
+
+    function initWorkspaces() {
+        // Hook up existing workspaces
+        for (let i=0; i < global.screen.n_workspaces; i++) {
+            let workspace = global.screen.get_workspace_by_index(i)
+            spaces.addSpace(workspace);
+            debug("workspace", workspace)
+            add_all_from_workspace(workspace);
+        }
+    }
+
+    if (isDuringGnomeShellStartup) {
+        // Defer workspace initialization until existing windows are accessible.
+        // Otherwise we're unable to restore the tiling-order. (when restarting
+        // gnome-shell)
+        Main.layoutManager.connect('startup-complete', function() {
+            isDuringGnomeShellStartup = false;
+            initWorkspaces();
+        });
+    } else {
+        initWorkspaces();
+    }
+
     // Reset primary when monitors change
     monitorsChangedId = global.screen.connect(
         "monitors-changed",
