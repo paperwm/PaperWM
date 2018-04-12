@@ -37,9 +37,10 @@ var primary = Main.layoutManager.primaryMonitor;
 var panelBox = Main.layoutManager.panelBox;
 
 // Symbol to retrieve the focus handler id
-var focus_signal, oldSpaces;
+var focus_signal, minimizeSignal, oldSpaces;
 function init() {
     focus_signal = Symbol();
+    minimizeSignal = Symbol();
     oldSpaces = new Map();
 }
 
@@ -103,6 +104,10 @@ function disable () {
             if (metaWindow[focus_signal]) {
                 metaWindow.disconnect(metaWindow[focus_signal]);
                 delete metaWindow[focus_signal]
+            }
+            if (metaWindow[minimizeSignal]) {
+                metaWindow.disconnect(metaWindow[minimizeSignal]);
+                delete metaWindow[minimizeSignal];
             }
         });
 
@@ -238,6 +243,11 @@ var spaces = (function () {
     spaces.window_created = function (display, metaWindow, user_data) {
         if (!metaWindow[focus_signal])
             metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
+
+        if (!metaWindow[minimizeSignal]) {
+            metaWindow[minimizeSignal] =
+                metaWindow.connect('notify::minimized', minimizeWrapper);
+        }
         // Only run setInitialPosition on inserted windows
         if (!metaWindow[isInserted])
             return;
@@ -582,6 +592,17 @@ function focus_handler(meta_window, user_data) {
 let focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
 
 /**
+   Push all minimized windows to the scratch layer
+ */
+function minimizeHandler(metaWindow) {
+    debug('minimized', metaWindow.title);
+    if (metaWindow.minimized) {
+        Scratch.makeScratch(metaWindow);
+    }
+}
+let minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
+
+/**
   We need to stack windows in mru order, since mutter picks from the
   stack, not the mru, when auto choosing focus after closing a window.
  */
@@ -897,6 +918,12 @@ function add_all_from_workspace(workspace, windows = []) {
             meta_window[focus_signal] =
                 meta_window.connect("focus", focus_wrapper);
         }
+
+        if (!meta_window[minimizeSignal]) {
+            meta_window[minimizeSignal] =
+                meta_window.connect('notify::minimized', minimizeWrapper);
+        }
+
         if (meta_window.above || meta_window.minimized) {
             // Rough heuristic to figure out if a window should float
             Scratch.makeScratch(meta_window);
