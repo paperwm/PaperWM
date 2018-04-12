@@ -39,22 +39,27 @@ function isScratchActive() {
 }
 
 function toggleScratch() {
-    let windows = getScratchWindows();
-    let isSomeShown = isScratchActive();
+    if (isScratchActive())
+        hide();
+    else
+        show();
+}
 
-    if (isSomeShown) {
-        windows.map(function(meta_window) {
-            meta_window.minimize();
-            meta_window.unmake_above();
-        })
-    } else {
-        windows.reverse();
-        windows.map(function(meta_window) {
+function show() {
+    let windows = getScratchWindows();
+    windows.slice().reverse()
+        . map(function(meta_window) {
             meta_window.unminimize();
             meta_window.make_above();
-        })
-        windows[windows.length-1].activate(global.get_current_time());
-    }
+    });
+    windows[0].activate(global.get_current_time());
+}
+
+function hide() {
+    let windows = getScratchWindows();
+    windows.map(function(meta_window) {
+        meta_window.minimize();
+    });
 }
 
 // Monkey patch the alt-space menu
