@@ -1,5 +1,7 @@
 const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
 const Meta = imports.gi.Meta;
+
+const TopBar = Extension.imports.topbar;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 let float;
@@ -49,6 +51,7 @@ function toggleScratch() {
 
 function show() {
     let windows = getScratchWindows();
+    TopBar.show();
     windows.slice().reverse()
         . map(function(meta_window) {
             meta_window.unminimize();
