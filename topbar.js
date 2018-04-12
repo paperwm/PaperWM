@@ -27,6 +27,18 @@ function enable () {
                                         updateWorkspaceIndicator(to);
                                     }));
 
+    screenSignals.push(
+        global.screen.connect('in-fullscreen-changed',
+                              (screen) => {
+                                  let workspace = global.screen.get_active_workspace();
+                                  let space = Tiling.spaces.spaceOf(workspace);
+                                  if (space.selectedWindow.fullscreen) {
+                                      hide();
+                                  } else {
+                                      show();
+                                  }
+                              }));
+
     panelBoxShowId =  panelBox.connect('show', show);
     panelBoxHideId = panelBox.connect('hide', () => {
         let space = Tiling.spaces.spaceOf(global.screen.get_active_workspace());
