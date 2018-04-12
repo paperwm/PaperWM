@@ -19,8 +19,10 @@ function unmakeScratch(metaWindow) {
 function toggle(metaWindow) {
     if (isScratchWindow(metaWindow)) {
         unmakeScratch(metaWindow);
+        hide();
     } else {
         makeScratch(metaWindow);
+        show();
     }
 }
 
