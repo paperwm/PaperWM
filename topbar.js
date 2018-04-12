@@ -12,18 +12,20 @@ const Tiling = Extension.imports.tiling;
 var panelBox = Main.layoutManager.panelBox;
 
 var orginalActivitiesText;
+var screenSignals;
 function init () {
     let label = Main.panel.statusArea.activities.actor.first_child;
     orginalActivitiesText = label.text;
+    screenSignals = [];
 }
 
-var updateIndicatorSignal, panelBoxShowId, panelBoxHideId;
+var panelBoxShowId, panelBoxHideId;
 function enable () {
-    updateIndicatorSignal =
+    screenSignals.push(
         global.screen.connect_after('workspace-switched',
                                     (screen, from, to) => {
                                         updateWorkspaceIndicator(to);
-                                    });
+                                    }));
 
     panelBoxShowId =  panelBox.connect('show', show);
     panelBoxHideId = panelBox.connect('hide', () => {
@@ -39,7 +41,9 @@ function enable () {
 }
 
 function disable () {
-    global.screen.disconnect(updateIndicatorSignal);
+    screenSignals.forEach(id => global.screen.disconnect(id));
+    screenSignals = [];
+
     setWorkspaceName(orginalActivitiesText);
 
     panelBox.scale_y = 1;
