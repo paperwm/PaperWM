@@ -86,10 +86,10 @@ function enable() {
         global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(metaWindow => {
                 metaWindow[signals] = [
-                        metaWindow.connect("focus", focus_wrapper),
-                        metaWindow.connect('notify::fullscreen', fullscreenWrapper),
-                        metaWindow.connect('notify::minimized', minimizeWrapper)
-                    ];
+                    metaWindow.connect("focus", focus_wrapper),
+                    metaWindow.connect('notify::minimized', minimizeWrapper),
+                    metaWindow.connect('size-changed', sizeHandler)
+                ];
             });
     }
 
@@ -251,7 +251,6 @@ var spaces = (function () {
         if (!metaWindow[signals]) {
             metaWindow[signals] = [
                 metaWindow.connect("focus", focus_wrapper),
-                metaWindow.connect('notify::fullscreen', fullscreenWrapper),
                 metaWindow.connect('notify::minimized', minimizeWrapper)
             ];
         }
@@ -408,6 +407,8 @@ function setInitialPosition(actor, existing) {
     // check if we're in `first-frame` or `focus`
     if (actor.constructor == Meta.WindowActor) {
         signalId && metaWindow.get_compositor_private().disconnect(signalId);
+        metaWindow[signals].push(
+            metaWindow.connect('size-changed', sizeHandler));
     } else {
         signalId && metaWindow.disconnect(signalId);
     }
@@ -578,6 +579,13 @@ function ensure_viewport(space, meta_window, force) {
     return x;
 }
 
+function sizeHandler(metaWindow) {
+    debug('size-changed', metaWindow.title);
+    let space = spaces.spaceOfWindow(metaWindow);
+    if (space.selectedWindow === metaWindow)
+        ensure_viewport(space, metaWindow, true);
+}
+
 function focus_handler(meta_window, user_data) {
     debug("focus:", meta_window.title, utils.framestr(meta_window.get_frame_rect()));
 
@@ -608,26 +616,6 @@ function minimizeHandler(metaWindow) {
     }
 }
 let minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
-
-function fullscreenHandler(metaWindow) {
-    debug('fullscreen', metaWindow.title);
-    let space = spaces.spaceOfWindow(metaWindow);
-    if (space.selectedWindow !== metaWindow)
-        return;
-
-    let frame = metaWindow.get_frame_rect();
-    if (metaWindow.fullscreen) {
-        TopBar.hide();
-        propogate_forward(space, space.selectedIndex() + 1, primary.width);
-        propogate_backward(space, space.selectedIndex() - 1, 0);
-    } else {
-        TopBar.show();
-        propogate_forward(space, space.selectedIndex() + 1,
-                          frame.x + frame.width + window_gap);
-        propogate_backward(space, space.selectedIndex() - 1, frame.x - window_gap);
-    }
-}
-let fullscreenWrapper = utils.dynamic_function_ref('fullscreenHandler', Me);
 
 /**
   We need to stack windows in mru order, since mutter picks from the
@@ -975,8 +963,6 @@ function toggle_maximize_horizontally(meta_window) {
         meta_window.unmaximized_rect = frame;
         meta_window.move_resize_frame(true, minimumMargin, frame.y, primary.width - minimumMargin*2, frame.height);
     }
-    // We've mutated the space, so need to force the ensure
-    ensure_viewport(spaces.spaceOfWindow(meta_window), meta_window, true);
 }
 
 function tileVisible(metaWindow) {
@@ -1024,7 +1010,6 @@ function cycleWindowWidth(metaWindow) {
     let r = frame.width / availableWidth;
     let nextW = Math.floor(ratios[findNext(r)]*availableWidth);
     metaWindow.move_resize_frame(true, frame.x, frame.y, nextW, frame.height);
-    ensure_viewport(spaces.spaceOfWindow(metaWindow), metaWindow, true);
 
     delete metaWindow.unmaximized_rect;
 }
