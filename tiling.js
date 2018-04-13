@@ -82,6 +82,15 @@ function enable() {
             add_all_from_workspace(workspace, oldSpace);
             debug("workspace", workspace)
         }
+
+        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+            .forEach(metaWindow => {
+                metaWindow[signals] = [
+                        metaWindow.connect("focus", focus_wrapper),
+                        metaWindow.connect('notify::fullscreen', fullscreenWrapper),
+                        metaWindow.connect('notify::minimized', minimizeWrapper)
+                    ];
+            });
     }
 
     if (isDuringGnomeShellStartup) {
@@ -931,13 +940,6 @@ function add_all_from_workspace(workspace, windows = []) {
 
     let space = spaces.spaceOf(workspace);
     windows.forEach((meta_window, i) => {
-        if (!meta_window[signals]) {
-            meta_window[signals] = [
-                meta_window.connect("focus", focus_wrapper),
-                meta_window.connect('notify::fullscreen', fullscreenWrapper),
-                meta_window.connect('notify::minimized', minimizeWrapper)
-            ];
-        }
         if (meta_window.above || meta_window.minimized) {
             // Rough heuristic to figure out if a window should float
             Scratch.makeScratch(meta_window);
