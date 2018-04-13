@@ -113,6 +113,10 @@ function disable () {
                 metaWindow.disconnect(metaWindow[minimizeSignal]);
                 delete metaWindow[minimizeSignal];
             }
+            if (metaWindow[signals]) {
+                metaWindow[signals].forEach(id => metaWindow.disconnect(id));
+                delete metaWindow[signals];
+            }
         });
 
     // Copy the old spaces.
@@ -247,6 +251,12 @@ var spaces = (function () {
         if (!metaWindow[focus_signal])
             metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
 
+        if (!metaWindow[signals]) {
+            metaWindow[signals] = [];
+            metaWindow[signals].push(
+                metaWindow.connect('notify::fullscreen', fullscreenWrapper)
+            );
+        }
         if (!metaWindow[minimizeSignal]) {
             metaWindow[minimizeSignal] =
                 metaWindow.connect('notify::minimized', minimizeWrapper);
@@ -605,6 +615,26 @@ function minimizeHandler(metaWindow) {
 }
 let minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
 
+function fullscreenHandler(metaWindow) {
+    debug('fullscreen', metaWindow.title);
+    let space = spaces.spaceOfWindow(metaWindow);
+    if (space.selectedWindow !== metaWindow)
+        return;
+
+    let frame = metaWindow.get_frame_rect();
+    if (metaWindow.fullscreen) {
+        TopBar.hide();
+        propogate_forward(space, space.selectedIndex() + 1, primary.width);
+        propogate_backward(space, space.selectedIndex() - 1, 0);
+    } else {
+        TopBar.show();
+        propogate_forward(space, space.selectedIndex() + 1,
+                          frame.x + frame.width + window_gap);
+        propogate_backward(space, space.selectedIndex() - 1, frame.x - window_gap);
+    }
+}
+let fullscreenWrapper = utils.dynamic_function_ref('fullscreenHandler', Me);
+
 /**
   We need to stack windows in mru order, since mutter picks from the
   stack, not the mru, when auto choosing focus after closing a window.
@@ -920,6 +950,12 @@ function add_all_from_workspace(workspace, windows = []) {
             // Don't register the focus handling more than once
             meta_window[focus_signal] =
                 meta_window.connect("focus", focus_wrapper);
+        }
+        if (!meta_window[signals]) {
+            meta_window[signals] = [];
+            meta_window[signals].push(
+                meta_window.connect('notify::fullscreen', fullscreenWrapper)
+            );
         }
 
         if (!meta_window[minimizeSignal]) {
