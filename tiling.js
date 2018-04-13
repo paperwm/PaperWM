@@ -37,10 +37,8 @@ var primary = Main.layoutManager.primaryMonitor;
 var panelBox = Main.layoutManager.panelBox;
 
 // Symbol to retrieve the focus handler id
-var signals, focus_signal, minimizeSignal, oldSpaces;
+var signals, oldSpaces;
 function init() {
-    focus_signal = Symbol();
-    minimizeSignal = Symbol();
     signals = Symbol();
     oldSpaces = new Map();
 
@@ -105,14 +103,7 @@ function disable () {
             let actor = metaWindow.get_compositor_private();
             actor.set_scale(1, 1);
             actor.set_pivot_point(0, 0);
-            if (metaWindow[focus_signal]) {
-                metaWindow.disconnect(metaWindow[focus_signal]);
-                delete metaWindow[focus_signal]
-            }
-            if (metaWindow[minimizeSignal]) {
-                metaWindow.disconnect(metaWindow[minimizeSignal]);
-                delete metaWindow[minimizeSignal];
-            }
+
             if (metaWindow[signals]) {
                 metaWindow[signals].forEach(id => metaWindow.disconnect(id));
                 delete metaWindow[signals];
@@ -248,18 +239,12 @@ var spaces = (function () {
     };
 
     spaces.window_created = function (display, metaWindow, user_data) {
-        if (!metaWindow[focus_signal])
-            metaWindow[focus_signal] = metaWindow.connect("focus", focus_wrapper);
-
         if (!metaWindow[signals]) {
-            metaWindow[signals] = [];
-            metaWindow[signals].push(
-                metaWindow.connect('notify::fullscreen', fullscreenWrapper)
-            );
-        }
-        if (!metaWindow[minimizeSignal]) {
-            metaWindow[minimizeSignal] =
-                metaWindow.connect('notify::minimized', minimizeWrapper);
+            metaWindow[signals] = [
+                metaWindow.connect("focus", focus_wrapper),
+                metaWindow.connect('notify::fullscreen', fullscreenWrapper),
+                metaWindow.connect('notify::minimized', minimizeWrapper)
+            ];
         }
         // Only run setInitialPosition on inserted windows
         if (!metaWindow[isInserted])
@@ -946,23 +931,13 @@ function add_all_from_workspace(workspace, windows = []) {
 
     let space = spaces.spaceOf(workspace);
     windows.forEach((meta_window, i) => {
-        if (!meta_window[focus_signal]) {
-            // Don't register the focus handling more than once
-            meta_window[focus_signal] =
-                meta_window.connect("focus", focus_wrapper);
-        }
         if (!meta_window[signals]) {
-            meta_window[signals] = [];
-            meta_window[signals].push(
-                meta_window.connect('notify::fullscreen', fullscreenWrapper)
-            );
+            meta_window[signals] = [
+                meta_window.connect("focus", focus_wrapper),
+                meta_window.connect('notify::fullscreen', fullscreenWrapper),
+                meta_window.connect('notify::minimized', minimizeWrapper)
+            ];
         }
-
-        if (!meta_window[minimizeSignal]) {
-            meta_window[minimizeSignal] =
-                meta_window.connect('notify::minimized', minimizeWrapper);
-        }
-
         if (meta_window.above || meta_window.minimized) {
             // Rough heuristic to figure out if a window should float
             Scratch.makeScratch(meta_window);
