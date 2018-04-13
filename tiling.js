@@ -37,27 +37,38 @@ var primary = Main.layoutManager.primaryMonitor;
 var panelBox = Main.layoutManager.panelBox;
 
 // Symbol to retrieve the focus handler id
-var focus_signal, minimizeSignal, oldSpaces;
+var signals, focus_signal, minimizeSignal, oldSpaces;
 function init() {
     focus_signal = Symbol();
     minimizeSignal = Symbol();
+    signals = Symbol();
     oldSpaces = new Map();
+
+    global.screen[signals] = [];
+    global.display[signals] = [];
 }
 
-var nWorkspacesSignal, workspaceRemovedSignal, windowCreatedSignal,
-    monitorsChangedId;
 function enable() {
-    nWorkspacesSignal =
-        global.screen.connect('notify::n-workspaces',
-                              Lang.bind(spaces, utils.dynamic_function_ref('workspacesChanged', spaces)));
+    global.screen[signals].push(
+        global.screen.connect(
+            'notify::n-workspaces',
+            Lang.bind(spaces,
+                      utils.dynamic_function_ref('workspacesChanged', spaces))),
 
-    workspaceRemovedSignal =
-        global.screen.connect('workspace-removed',
-                              utils.dynamic_function_ref('workspaceRemoved', spaces));
+        global.screen.connect(
+            'workspace-removed',
+            utils.dynamic_function_ref('workspaceRemoved', spaces)),
 
-    windowCreatedSignal =
-        global.display.connect('window-created',
-                               utils.dynamic_function_ref('window_created', spaces));
+        // Reset primary when monitors change
+        global.screen.connect("monitors-changed",
+            function(screen) {
+                primary = Main.layoutManager.primaryMonitor;
+            }));
+
+    global.display[signals].push(
+        global.display.connect(
+            'window-created',
+            utils.dynamic_function_ref('window_created', spaces)));
 
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
@@ -86,13 +97,6 @@ function enable() {
     } else {
         initWorkspaces();
     }
-
-    // Reset primary when monitors change
-    monitorsChangedId = global.screen.connect(
-        "monitors-changed",
-        function(screen) {
-            primary = Main.layoutManager.primaryMonitor;
-        });
 }
 
 function disable () {
@@ -115,14 +119,13 @@ function disable () {
     oldSpaces = new Map(spaces);
 
     // Disable workspace related signals
-    global.screen.disconnect(nWorkspacesSignal);
-    global.screen.disconnect(workspaceRemovedSignal);
-    global.display.disconnect(windowCreatedSignal);
+    global.screen[signals].forEach(id => global.screen.disconnect(id));
+    global.display[signals].forEach(id => global.display.disconnect(id));
+    global.screen[signals] = [];
+    global.display[signals] = [];
     for (let [workspace, space] of spaces) {
         spaces.removeSpace(space);
     }
-
-    global.screen.disconnect(monitorsChangedId);
 }
 
 class Space extends Array {
