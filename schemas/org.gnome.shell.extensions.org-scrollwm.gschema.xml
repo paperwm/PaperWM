@@ -1,17 +1,6 @@
 <schemalist>
   <schema id="org.gnome.shell.extensions.org-scrollwm" path="/org/gnome/shell/extensions/org-scrollwm/">
     <!-- Settings -->
-    <key type="s" name="locations">
-      <default>"{}"</default>
-      <summary>Application based configuration</summary>
-    </key>
-
-    <key type="i" name="ignore-top-panel">
-      <default>0</default>
-      <summary>Ignore top panel height</summary>
-    </key>
-
-
     <key type="i" name="horizontal-margin">
       <default>20</default>
       <summary>Minimum margin from windows left and right edge</summary>
