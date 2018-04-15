@@ -3,6 +3,7 @@ const GLib = imports.gi.GLib;
 const Tweener = imports.ui.tweener;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
+const Clutter = imports.gi.Clutter;
 const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
 const Gio = imports.gi.Gio;
@@ -21,10 +22,11 @@ var window_gap = preferences.get_int('window-gap');
 var margin_tb = preferences.get_int('vertical-margin');
 // left/right margin
 var margin_lr = preferences.get_int('horizontal-margin');
+margin_lr = 30
 // How much the stack should protrude from the side
 var stack_margin = 75;
 // Minimum margin
-var minimumMargin = 15;
+var minimumMargin = 30;
 
 // FIXME: stackoverlay have to be imported after certain global variables have been
 //        defined atm. Preferences should be accessed as preferences and globals
@@ -37,16 +39,24 @@ var primary = Main.layoutManager.primaryMonitor;
 var panelBox = Main.layoutManager.panelBox;
 
 // Symbol to retrieve the focus handler id
-var signals, oldSpaces;
+var signals, oldSpaces, backgroundGroup;
 function init() {
     signals = Symbol();
     oldSpaces = new Map();
+
+    backgroundGroup = global.window_group.first_child;
 
     global.screen[signals] = [];
     global.display[signals] = [];
 }
 
 function enable() {
+
+    backgroundGroup.reparent(Main.uiGroup);
+    Main.uiGroup.set_child_below_sibling(
+        backgroundGroup,
+        Main.uiGroup.first_child);
+
     global.screen[signals].push(
         global.screen.connect(
             'notify::n-workspaces',
@@ -74,6 +84,14 @@ function enable() {
     let isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
 
     function initWorkspaces() {
+
+        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+            .forEach(metaWindow => {
+                let actor = metaWindow.get_compositor_private();
+                let clone = new Clutter.Clone({source: actor});
+                metaWindow.clone = clone;
+            });
+
         // Hook up existing workspaces
         for (let i=0; i < global.screen.n_workspaces; i++) {
             let workspace = global.screen.get_workspace_by_index(i)
@@ -107,11 +125,18 @@ function enable() {
 }
 
 function disable () {
+    backgroundGroup.reparent(global.window_group);
+    global.window_group.set_child_below_sibling(
+        backgroundGroup,
+        global.window_group.first_child);
+
     global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
         .forEach(metaWindow => {
             let actor = metaWindow.get_compositor_private();
             actor.set_scale(1, 1);
             actor.set_pivot_point(0, 0);
+
+            metaWindow.clone.destroy();
 
             if (metaWindow[signals]) {
                 metaWindow[signals].forEach(id => metaWindow.disconnect(id));
@@ -142,6 +167,15 @@ class Space extends Array {
         this.removeSignal =
             workspace.connect("window-removed",
                               utils.dynamic_function_ref("remove_handler", Me));
+
+        let cloneContainer = new Clutter.Actor();
+        this.cloneContainer = cloneContainer;
+        cloneContainer.set_size(global.screen_width, global.screen_height);
+        Main.uiGroup.add_actor(cloneContainer);
+        Main.uiGroup.set_child_above_sibling(
+            cloneContainer,
+            Main.uiGroup.first_child);
+
         this.selectedWindow = null;
         this.moving = false;
         this.leftStack = 0; // not implemented
@@ -236,6 +270,7 @@ var spaces = (function () {
         let workspace = space.workspace;
         workspace.disconnect(space.addSignal);
         workspace.disconnect(space.removeSignal);
+        space.cloneContainer.destroy();
         this.delete(workspace);
     };
 
@@ -254,12 +289,16 @@ var spaces = (function () {
                 metaWindow.connect('notify::minimized', minimizeWrapper)
             ];
         }
+
+        let actor = metaWindow.get_compositor_private();
+        let clone = new Clutter.Clone({source: actor});
+        metaWindow.clone = clone;
+
         // Only run setInitialPosition on inserted windows
         if (!metaWindow[isInserted])
             return;
         delete metaWindow[isInserted];
         debug('window-created', metaWindow.title);
-        let actor = metaWindow.get_compositor_private();
         let signal = Symbol();
         metaWindow[signal] = actor.connect('show',
                                            Lang.bind({metaWindow, signal}, setInitialPosition));
@@ -295,7 +334,9 @@ function move(meta_window, {x, y,
                             onComplete,
                             onStart,
                             delay,
-                            transition}) {
+                            transition,
+                            stack
+                           }) {
 
     onComplete = onComplete || (() => {});
     onStart = onStart || (() => {});
@@ -305,13 +346,18 @@ function move(meta_window, {x, y,
     let actor = meta_window.get_compositor_private();
     let buffer = meta_window.get_buffer_rect();
     let frame = meta_window.get_frame_rect();
+    let clone = meta_window.clone;
+
+    clone.show();
+    actor.hide();
+
     // Set monitor offset
     y += primary.y;
     x += primary.x;
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
     meta_window.destinationX = x;
-    Tweener.addTween(actor, {x: x - x_offset
+    Tweener.addTween(clone, {x: x - x_offset
                              , y: y - y_offset
                              , time: 0.25 - delay
                              , delay: delay
@@ -323,6 +369,11 @@ function move(meta_window, {x, y,
                                  meta_window.destinationX = undefined;
                                  if(meta_window.get_compositor_private()) {
                                      // If the actor is gone, the window is in process of closing
+                                     if (!stack) {
+                                         actor.set_position(clone.x, clone.y);
+                                         clone.hide();
+                                         actor.show();
+                                     }
                                      meta_window.move_frame(true, x, y);
                                      onComplete();
                                  }
@@ -409,6 +460,11 @@ function setInitialPosition(actor, existing) {
         signalId && metaWindow.get_compositor_private().disconnect(signalId);
         metaWindow[signals].push(
             metaWindow.connect('size-changed', sizeHandler));
+
+        let space = spaces.spaceOfWindow(metaWindow);
+        space.cloneContainer.add_actor(metaWindow.clone);
+        metaWindow.clone.hide();
+
     } else {
         signalId && metaWindow.disconnect(signalId);
     }
@@ -417,7 +473,6 @@ function setInitialPosition(actor, existing) {
 // Move @meta_window to x, y and propagate the change in @space
 function move_to(space, meta_window, { x, y, delay, transition,
                                          onComplete, onStart }) {
-    // Register @meta_window as moving on @space
     move(meta_window, { x, y
                         , onComplete
                         , onStart
@@ -434,58 +489,6 @@ function move_to(space, meta_window, { x, y, delay, transition,
 const DIRECTION = {
     Left: 0,
     Right: 1
-}
-
-/**
-   Put @space[@index] on the stack in @direction.
- */
-function stackWindow(space, index, direction) {
-    let metaWindow = space[index];
-    metaWindow._isStacked = true; // use isStacked function to check
-
-    let x, y = primary.y + panelBox.height + margin_tb;
-
-    let actor = metaWindow.get_compositor_private();
-    let buffer = metaWindow.get_buffer_rect();
-    let frame = metaWindow.get_frame_rect();
-
-
-    let x_offset = frame.x - buffer.x;
-    let y_offset = frame.y - buffer.y;
-
-    var max_height = primary.height - panelBox.height - margin_tb*2;
-    // Height to use when scaled down at the sides
-    var scaled_height = max_height*0.95;
-    var scaled_y_offset = (max_height - scaled_height)/2;
-
-    let scale = scaled_height/frame.height;
-    // Center the actor properly
-    y += scaled_y_offset;
-
-    if (direction === DIRECTION.Right) {
-        x = primary.x + primary.width - stack_margin;
-        actor.set_pivot_point(0, y_offset/buffer.height);
-    } else { // Left
-        x = primary.x + stack_margin - frame.width;
-        actor.set_pivot_point(1, y_offset/buffer.height);
-    }
-
-    metaWindow.destinationX = x;
-    Tweener.addTween(actor, {x: x - x_offset
-                             , y: y - y_offset
-                             , time: 0.25
-                             , scale_x: scale
-                             , scale_y: scale
-                             , transition: 'easeInOutQuad'
-                             , onComplete: () => {
-                                 metaWindow.destinationX = undefined;
-                                 if(metaWindow.get_compositor_private()) {
-                                     // If the actor is gone, the window is in
-                                     // process of closing
-                                     metaWindow.move_frame(true, x, y);
-                                 }
-                             }
-                            });
 }
 
 function ensure_viewport(space, meta_window, force) {
@@ -649,22 +652,28 @@ function propogate_forward(space, n, x, gap) {
         return;
     }
     let meta_window = space[n];
+    let frame = meta_window.get_frame_rect();
+    gap = gap || window_gap;
 
+    let stack = false;
     // Check if we should start stacking windows
     if (x > primary.width - stack_margin) {
-        for (let i=n; i<space.length; i++) {
-            stackWindow(space, i, DIRECTION.Right);
-        }
-        StackOverlay.rightOverlay.setTarget(meta_window);
-        return;
+        stack = true;
+        meta_window._isStacked = true;
+    } else {
+        meta_window._isStacked = false;
     }
-    meta_window._isStacked = false;
 
-    gap = gap || window_gap;
     let actor = meta_window.get_compositor_private();
     if (actor) {
         // Anchor scaling/animation on the left edge for windows positioned to the right,
-        move(meta_window, { x, y: panelBox.height + margin_tb });
+
+        move(meta_window, { x,
+                            y: meta_window.fullscreen ?
+                            0 :
+                            panelBox.height + margin_tb,
+                            stack
+                          });
         propogate_forward(space, n+1, x+meta_window.get_frame_rect().width + gap, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
@@ -679,23 +688,27 @@ function propogate_backward(space, n, x, gap) {
         return;
     }
     let meta_window = space[n];
+    let frame = meta_window.get_frame_rect();
+    gap = gap || window_gap;
 
     // Check if we should start stacking windows
+    let stack = false;
     if (x < stack_margin) {
-        for (let i=n; i>=0; i--) {
-            stackWindow(space, i, DIRECTION.Left);
-        }
-        StackOverlay.leftOverlay.setTarget(meta_window);
-        return;
+        stack = true;
+        meta_window._isStacked = true;
+    } else {
+        meta_window._isStacked = false;
     }
-    meta_window._isStacked = false;
 
-    gap = gap || window_gap;
     let actor = meta_window.get_compositor_private();
     if (actor) {
         x = x - meta_window.get_frame_rect().width
         // Anchor on the right edge for windows positioned to the left.
-        move(meta_window, { x, y: panelBox.height + margin_tb });
+        move(meta_window, { x, y: meta_window.fullscreen ?
+                            0 :
+                            panelBox.height + margin_tb,
+                            stack
+                          });
         propogate_backward(space, n-1, x - gap, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
@@ -838,6 +851,8 @@ function remove_handler(workspace, meta_window) {
         return
     space.splice(removed_i, 1)
 
+    space.cloneContainer.remove_actor(meta_window.clone);
+
     if (space.selectedWindow === meta_window) {
         // Window closed or moved when other workspace is active so no new focus
         // has been assigned in this workspace.
@@ -925,6 +940,7 @@ function add_all_from_workspace(workspace, windows = []) {
         if(space.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
             // Using add_handler is unreliable since it interacts with focus.
             space.push(meta_window);
+            space.cloneContainer.add_actor(meta_window.clone);
         }
     })
 
