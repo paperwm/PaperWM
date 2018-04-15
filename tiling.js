@@ -769,8 +769,8 @@ function add_filter(meta_window, startup) {
   Examples:
 
     defwinprop({
-        wm_class: "Emacs",
-        float: true
+        wm_class: "Riot",
+        scratch_layer: true
     })
 */
 var winprops = [];
@@ -804,17 +804,6 @@ function find_winprop(meta_window)  {
 function defwinprop(spec) {
     winprops.push(spec);
 }
-
-defwinprop({
-    wm_class: "copyq",
-    scratch_layer: true
-});
-
-defwinprop({
-    wm_class: "Riot",
-    oneshot: true, // Allow reattaching
-    scratch_layer: true
-});
 
 function add_handler(ws, meta_window) {
     debug("window-added", meta_window, meta_window.title, meta_window.window_type, ws.index());
