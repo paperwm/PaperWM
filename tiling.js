@@ -165,6 +165,9 @@ function disable () {
     }
 }
 
+let colors = [ 'grey', 'cyan', 'red', 'blue', 'green', 'yellow', 'orange'];
+let color = 0;
+let containers = [];
 class Space extends Array {
     constructor (workspace) {
         super(0);
@@ -178,7 +181,11 @@ class Space extends Array {
 
         let cloneContainer = new Clutter.Actor();
         this.cloneContainer = cloneContainer;
+
+
         cloneContainer.set_size(global.screen_width, global.screen_height);
+        cloneContainer.background_color = Clutter.color_from_string(colors[color])[1];
+        color = (color + 1) % colors.length;
         Main.uiGroup.add_actor(cloneContainer);
         Main.uiGroup.set_child_above_sibling(
             cloneContainer,
