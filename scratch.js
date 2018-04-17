@@ -56,6 +56,7 @@ function show() {
         . map(function(meta_window) {
             meta_window.unminimize();
             meta_window.make_above();
+            meta_window.get_compositor_private().show();
     });
     windows[0].activate(global.get_current_time());
 }
@@ -64,6 +65,7 @@ function hide() {
     let windows = getScratchWindows();
     windows.map(function(meta_window) {
         meta_window.minimize();
+        meta_window.get_compositor_private().hide();
     });
 }
 
