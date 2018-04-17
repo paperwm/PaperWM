@@ -491,8 +491,6 @@ function setInitialPosition(actor, existing) {
 
         let space = spaces.spaceOfWindow(metaWindow);
         space.cloneContainer.add_actor(metaWindow.clone);
-        metaWindow.clone.hide();
-
     } else {
         signalId && metaWindow.disconnect(signalId);
     }
