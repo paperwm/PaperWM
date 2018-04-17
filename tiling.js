@@ -108,6 +108,10 @@ function enable() {
                     metaWindow.connect('notify::minimized', minimizeWrapper),
                     metaWindow.connect('size-changed', sizeHandler)
                 ];
+                let actor = metaWindow.get_compositor_private();
+                actor[signals] = [
+                    actor.connect('show', showWrapper)
+                ];
             });
     }
 
@@ -135,6 +139,10 @@ function disable () {
             let actor = metaWindow.get_compositor_private();
             actor.set_scale(1, 1);
             actor.set_pivot_point(0, 0);
+
+            if (actor[signals]) {
+                actor[signals].forEach(id => actor.disconnect(id));
+            }
 
             metaWindow.clone.destroy();
 
@@ -293,6 +301,10 @@ var spaces = (function () {
         let actor = metaWindow.get_compositor_private();
         let clone = new Clutter.Clone({source: actor});
         metaWindow.clone = clone;
+
+        actor[signals] = [
+            actor.connect('show', showWrapper)
+        ];
 
         // Only run setInitialPosition on inserted windows
         if (!metaWindow[isInserted])
@@ -624,9 +636,18 @@ function minimizeHandler(metaWindow) {
     debug('minimized', metaWindow.title);
     if (metaWindow.minimized) {
         Scratch.makeScratch(metaWindow);
+        metaWindow.get_compositor_private().hide();
     }
 }
 let minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
+
+function showHandler(actor) {
+    let metaWindow = actor.meta_window;
+    if (metaWindow.clone.visible) {
+        actor.hide();
+    }
+}
+let showWrapper = utils.dynamic_function_ref('showHandler', Me);
 
 /**
   We need to stack windows in mru order, since mutter picks from the
