@@ -267,17 +267,6 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, cal
                        y: yDest,
                        time: 0.25,
                        transition: 'easeInOutQuad',
-                       onComplete: () => {
-                           Main.uiGroup.set_child_above_sibling(
-                               toSpace.cloneContainer,
-                               fromSpace.cloneContainer);
-                       },
-                       onOverwrite: () => {
-                           Main.uiGroup.set_child_above_sibling(
-                               toSpace.cloneContainer,
-                               fromSpace.cloneContainer);
-                       }
-
                      });
     Tweener.addTween(toSpace.cloneContainer,
                      { x: 0,
