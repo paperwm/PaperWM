@@ -70,10 +70,10 @@ function enable() {
         global.screen.connect(
             'workspace-switched',
             (screen, from, to) => {
-                let f = spaces.get(global.screen.get_workspace_by_index(from));
-                let t = spaces.get(global.screen.get_workspace_by_index(to));
-                Main.uiGroup.set_child_above_sibling(t.cloneContainer,
-                                                     f.cloneContainer);
+                Main.wm._previewWorkspace(
+                    global.screen.get_workspace_by_index(from),
+                    global.screen.get_workspace_by_index(to)
+                );
             }),
 
         // Reset primary when monitors change
