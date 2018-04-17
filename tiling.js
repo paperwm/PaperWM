@@ -642,8 +642,10 @@ let minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
 
 function showHandler(actor) {
     let metaWindow = actor.meta_window;
-    if (metaWindow.clone.visible) {
+    let onActive = metaWindow.get_workspace() === global.screen.get_active_workspace();
+    if (metaWindow.clone.visible || ! onActive) {
         actor.hide();
+        metaWindow.clone.show();
     }
 }
 let showWrapper = utils.dynamic_function_ref('showHandler', Me);
