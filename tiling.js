@@ -67,6 +67,15 @@ function enable() {
             'workspace-removed',
             utils.dynamic_function_ref('workspaceRemoved', spaces)),
 
+        global.screen.connect(
+            'workspace-switched',
+            (screen, from, to) => {
+                let f = spaces.get(global.screen.get_workspace_by_index(from));
+                let t = spaces.get(global.screen.get_workspace_by_index(to));
+                Main.uiGroup.set_child_above_sibling(t.cloneContainer,
+                                                     f.cloneContainer);
+            }),
+
         // Reset primary when monitors change
         global.screen.connect("monitors-changed",
             function(screen) {
