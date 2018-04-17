@@ -256,6 +256,9 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, cal
         w.clone.show();
     });
 
+    toSpace.cloneContainer.set_pivot_point(0.5, 0);
+    fromSpace.cloneContainer.set_pivot_point(0.5, 0);
+
     toSpace.cloneContainer.set_position(0, 0);
     toSpace.cloneContainer.show();
     Main.uiGroup.set_child_below_sibling(
@@ -265,12 +268,16 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, cal
     Tweener.addTween(fromSpace.cloneContainer,
                      { x: xDest,
                        y: yDest,
+                       scale_x: 0.9,
+                       scale_y: 0.9,
                        time: 0.25,
                        transition: 'easeInOutQuad',
                      });
     Tweener.addTween(toSpace.cloneContainer,
                      { x: 0,
                        y: 0,
+                       scale_x: 1,
+                       scale_y: 1,
                        time: 0.25,
                        transition: 'easeInOutQuad',
                        onComplete: callback,
