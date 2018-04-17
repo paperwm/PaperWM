@@ -23,8 +23,21 @@ var PreviewedWindowNavigator = new Lang.Class({
     _init: function() {
         this.parent();
 
-        this._switcherList = new Minimap.MultiMap(true);
+        let multimap = new Minimap.MultiMap(true);
+        this.multimap = multimap;
+        this._switcherList = multimap;
         this.space = this._switcherList.getSelected().space;
+
+        multimap.minimaps.forEach((m, i) => {
+            m.space.cloneContainer.set_position(0, 0);
+            if (multimap.minimaps[i + 1] === undefined)
+                return;
+            Main.uiGroup.set_child_above_sibling(
+                m.space.cloneContainer,
+                multimap.minimaps[i + 1].space.cloneContainer
+            )
+        })
+
 
         this._switcherList.onlyShowSelected();
 
