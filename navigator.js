@@ -239,67 +239,44 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, cal
 
     TopBar.updateWorkspaceIndicator(to.index());
 
-    let windows = global.get_window_actors();
-
     let xDest = 0, yDest = global.screen_height;
 
-    let switchData = {};
-    this._switchData = switchData;
-    switchData.inGroup = new Clutter.Actor();
-    switchData.outGroup = new Clutter.Actor();
-    switchData.movingWindowBin = new Clutter.Actor();
-    switchData.windows = [];
+    let fromSpace = Tiling.spaces.spaceOf(from);
+    let toSpace = Tiling.spaces.spaceOf(to);
 
-    let wgroup = global.window_group;
-    wgroup.add_actor(switchData.inGroup);
-    wgroup.add_actor(switchData.outGroup);
-    wgroup.add_actor(switchData.movingWindowBin);
+    this._fromSpace = fromSpace;
+    this._toSpace = toSpace;
 
-    for (let i = 0; i < windows.length; i++) {
-        let actor = windows[i];
-        let window = actor.get_meta_window();
+    fromSpace.forEach(w => {
+        w.get_compositor_private().hide();
+        w.clone.show();
+    });
+    toSpace.forEach(w => {
+        w.get_compositor_private().hide();
+        w.clone.show();
+    });
 
-        if (!window.showing_on_its_workspace())
-            continue;
+    toSpace.cloneContainer.set_position(-xDest, global.screen_height);
+    toSpace.cloneContainer.show();
 
-        if (window.is_on_all_workspaces())
-            continue;
-
-        let record = { window: actor,
-                       parent: actor.get_parent() };
-
-        if (this._movingWindow && window == this._movingWindow) {
-            switchData.movingWindow = record;
-            switchData.windows.push(switchData.movingWindow);
-            actor.reparent(switchData.movingWindowBin);
-        } else if (window.get_workspace() == from) {
-            switchData.windows.push(record);
-            actor.reparent(switchData.outGroup);
-        } else if (window.get_workspace() == to) {
-            switchData.windows.push(record);
-            actor.reparent(switchData.inGroup);
-            actor.show();
-        }
-    }
-
-    switchData.inGroup.set_position(-xDest, global.screen_height);
-    switchData.inGroup.raise_top();
-
-    switchData.movingWindowBin.raise_top();
-
-    Tweener.addTween(switchData.outGroup,
+    Tweener.addTween(fromSpace.cloneContainer,
                      { x: xDest,
                        y: yDest,
                        time: 0.25,
                        transition: 'easeInOutQuad',
+                       onComplete: () => {
+                           fromSpace.cloneContainer.hide();
+                           fromSpace.cloneContainer.set_position(0, 0);
+                       }
                      });
-    Tweener.addTween(switchData.inGroup,
+    Tweener.addTween(toSpace.cloneContainer,
                      { x: 0,
                        y: 0,
                        time: 0.25,
                        transition: 'easeInOutQuad',
                        onComplete: callback,
                      });
+
 }
 
 WindowManager.WindowManager.prototype._previewWorkspaceDone = function() {
@@ -326,4 +303,17 @@ WindowManager.WindowManager.prototype._previewWorkspaceDone = function() {
 
     if (this._movingWindow)
         this._movingWindow = null;
+
+    let fromSpace = this.fromSpace, toSpace = this._toSpace;
+    if (fromSpace && toSpace) {
+        fromSpace.forEach(w => {
+            w.get_compositor_private().hide();
+            w.clone.show();
+        });
+        toSpace.forEach(w => {
+            w.get_compositor_private().hide();
+            w.clone.show();
+        });
+    }
+
 }
