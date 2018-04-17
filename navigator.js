@@ -256,8 +256,11 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, cal
         w.clone.show();
     });
 
-    toSpace.cloneContainer.set_position(-xDest, global.screen_height);
+    toSpace.cloneContainer.set_position(0, 0);
     toSpace.cloneContainer.show();
+    Main.uiGroup.set_child_below_sibling(
+        toSpace.cloneContainer,
+        fromSpace.cloneContainer);
 
     Tweener.addTween(fromSpace.cloneContainer,
                      { x: xDest,
@@ -265,9 +268,16 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, cal
                        time: 0.25,
                        transition: 'easeInOutQuad',
                        onComplete: () => {
-                           fromSpace.cloneContainer.hide();
-                           fromSpace.cloneContainer.set_position(0, 0);
+                           Main.uiGroup.set_child_above_sibling(
+                               toSpace.cloneContainer,
+                               fromSpace.cloneContainer);
+                       },
+                       onOverwrite: () => {
+                           Main.uiGroup.set_child_above_sibling(
+                               toSpace.cloneContainer,
+                               fromSpace.cloneContainer);
                        }
+
                      });
     Tweener.addTween(toSpace.cloneContainer,
                      { x: 0,
