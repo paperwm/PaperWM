@@ -268,7 +268,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
         // Finish workspace preview _after_ activate, that way the new animation
         // triggered by activate gets killed immediately
-        Main.wm._previewWorkspaceDone();
         this.parent(timestamp);
     },
 
@@ -285,7 +284,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
         debug('#preview', 'onDestroy', this.was_accepted);
-        Main.wm._previewWorkspaceDone();
         if(!this.was_accepted) {
             debug('#preview', 'Abort', global.display.focus_window.title);
             let focus = global.display.focus_window;
@@ -358,43 +356,4 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, cal
                        time: 0.25,
                        transition: 'easeInOutQuad',
                      });
-}
-
-WindowManager.WindowManager.prototype._previewWorkspaceDone = function() {
-    let switchData = this._switchData;
-    if (!switchData)
-        return;
-    this._switchData = null;
-
-    for (let i = 0; i < switchData.windows.length; i++) {
-        let w = switchData.windows[i];
-        if (w.window.is_destroyed()) // Window gone
-            continue;
-        if (w.window.get_parent() == switchData.outGroup) {
-            w.window.reparent(w.parent);
-            w.window.hide();
-        } else
-            w.window.reparent(w.parent);
-    }
-    Tweener.removeTweens(switchData.inGroup);
-    Tweener.removeTweens(switchData.outGroup);
-    switchData.inGroup.destroy();
-    switchData.outGroup.destroy();
-    switchData.movingWindowBin.destroy();
-
-    if (this._movingWindow)
-        this._movingWindow = null;
-
-    let fromSpace = this.fromSpace, toSpace = this._toSpace;
-    if (fromSpace && toSpace) {
-        fromSpace.forEach(w => {
-            w.get_compositor_private().hide();
-            w.clone.show();
-        });
-        toSpace.forEach(w => {
-            w.get_compositor_private().hide();
-            w.clone.show();
-        });
-    }
-
 }

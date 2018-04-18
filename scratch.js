@@ -67,7 +67,6 @@ function hide() {
     let windows = getScratchWindows();
     windows.map(function(meta_window) {
         meta_window.minimize();
-        meta_window.get_compositor_private().hide();
     });
 }
 
