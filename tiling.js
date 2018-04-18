@@ -680,18 +680,10 @@ let showWrapper = utils.dynamic_function_ref('showHandler', Me);
   stack, not the mru, when auto choosing focus after closing a window.
  */
 function fixStack(space, around) {
-    let topLeft = space.topOfLeftStack();
-    let topRight = space.topOfRightStack();
-
-    let left = topLeft !== null ? space.indexOf(topLeft) : 0;
-    let right = topRight !== null ? space.indexOf(topRight) : space.length - 1;
-
-    let max = Math.max(Math.abs(around - left), Math.abs(around - right));
-
     let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
                                           space.workspace);
 
-    for (let i=max; i >= 0; i--) {
+    for (let i=1; i >= 0; i--) {
         let leftWindow = space[around - i];
         let rightWindow = space[around + i];
         mru.filter(w => w === leftWindow || w === rightWindow)
