@@ -11,12 +11,14 @@ const Main = imports.ui.main;
 const Clutter = imports.gi.Clutter;
 const Tweener = imports.ui.tweener;
 
+var TopBar = Extension.imports.topbar;
 const Minimap = Extension.imports.minimap;
 const Tiling = Extension.imports.tiling;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 
 const scale = 0.90;
+var navigating = false;
 
 var PreviewedWindowNavigator = new Lang.Class({
     Name: 'PreviewedWindowNavigator',
@@ -24,6 +26,8 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     _init: function() {
         this.parent();
+
+        navigating = true;
 
         let multimap = new Minimap.MultiMap(true);
         this.multimap = multimap;
@@ -290,6 +294,8 @@ var PreviewedWindowNavigator = new Lang.Class({
             }
             Tiling.ensure_viewport(Tiling.spaces.spaceOfWindow(focus), focus);
         }
+
+        navigating = false;
         this.parent();
     }
 });
