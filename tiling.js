@@ -53,12 +53,6 @@ function init() {
 }
 
 function enable() {
-
-    backgroundGroup.reparent(Main.uiGroup);
-    Main.uiGroup.set_child_below_sibling(
-        backgroundGroup,
-        Main.uiGroup.first_child);
-
     global.screen[signals].push(
         global.screen.connect(
             'notify::n-workspaces',
@@ -140,11 +134,6 @@ function enable() {
 }
 
 function disable () {
-    backgroundGroup.reparent(global.window_group);
-    global.window_group.set_child_below_sibling(
-        backgroundGroup,
-        global.window_group.first_child);
-
     global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
         .forEach(metaWindow => {
             let actor = metaWindow.get_compositor_private();
@@ -201,10 +190,12 @@ class Space extends Array {
         cloneContainer.background_color =
             Clutter.color_from_string(colors[color])[1];
         color = (color + 1) % colors.length;
-        Main.uiGroup.add_actor(cloneContainer);
-        Main.uiGroup.set_child_above_sibling(
+
+        let cloneParent = backgroundGroup;
+        cloneParent.add_actor(cloneContainer);
+        cloneParent.set_child_above_sibling(
             cloneContainer,
-            Main.uiGroup.first_child);
+            cloneParent.first_child);
 
         this.selectedWindow = null;
         this.moving = false;
@@ -656,7 +647,6 @@ function minimizeHandler(metaWindow) {
     debug('minimized', metaWindow.title);
     if (metaWindow.minimized) {
         Scratch.makeScratch(metaWindow);
-        metaWindow.get_compositor_private().hide();
     }
 }
 let minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
