@@ -16,6 +16,8 @@ const Tiling = Extension.imports.tiling;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 
+const scale = 0.90;
+
 var PreviewedWindowNavigator = new Lang.Class({
     Name: 'PreviewedWindowNavigator',
     Extends: SwitcherPopup.SwitcherPopup,
@@ -28,15 +30,27 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._switcherList = multimap;
         this.space = this._switcherList.getSelected().space;
 
+        let heights = [0, 0.10, 0.05];
+
         multimap.minimaps.forEach((m, i) => {
-            m.space.cloneContainer.set_position(0, 0);
-            if (multimap.minimaps[i + 1] === undefined)
+            let h = heights[i];
+            if (h === undefined)
+                h = 0;
+            m.space.cloneContainer.set_position(0, global.screen_height*h);
+
+            m.space.cloneContainer.scale_y = scale;
+            m.space.cloneContainer.scale_x = scale;
+
+            if (multimap.minimaps[i - 1] === undefined)
                 return;
-            Main.uiGroup.set_child_above_sibling(
+            Main.uiGroup.set_child_below_sibling(
                 m.space.cloneContainer,
-                multimap.minimaps[i + 1].space.cloneContainer
-            )
-        })
+                multimap.minimaps[i - 1].space.cloneContainer
+            );
+            m.space.cloneContainer.show();
+        });
+        this.space.cloneContainer.scale_y = 1;
+        this.space.cloneContainer.scale_x = 1;
 
 
         this._switcherList.onlyShowSelected();
@@ -91,11 +105,13 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     selectSpace: function(direction, move) {
+        this._switcherList.actor.hide();
+
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.hide();
 
         let multimap = this._switcherList;
-        multimap.showAll();
+
         let from = multimap.selectedIndex;
         let to;
         if (direction === Meta.MotionDirection.DOWN)
@@ -108,22 +124,47 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
         let oldMap = multimap.getSelected();
         let newMap = multimap.setSelected(to);
-        Main.wm._previewWorkspaceDone();
 
-        if (move) {
-            let selectedWindow = this.space.selectedWindow;
-            Main.wm._movingWindow = selectedWindow;
-            selectedWindow.change_workspace(newMap.space.workspace);
-            oldMap.refresh();
-            newMap.refresh();
-            oldMap.fold();
-            newMap.space.selectedWindow = selectedWindow;
-            newMap.space.moving = false;
-        }
+        TopBar.updateWorkspaceIndicator(newMap.space.workspace.index());
 
-        // This will crash gnome-shell if one of the workspaces have been removed
-        Main.wm._previewWorkspace(oldMap.space.workspace,
-                                  newMap.space.workspace);
+        let spaces = [
+            multimap.minimaps[to],
+            multimap.minimaps[to - 1],
+            multimap.minimaps[to + 1]
+        ].filter(x => x)
+            .map(x => x.space);
+
+        spaces.forEach(space => space.forEach(w => {
+            w.get_compositor_private().hide();
+            w.clone.show();
+        }));
+
+        let heights = [0.10, 0.95, 0.05];
+
+        multimap.minimaps.forEach((m, i) => {
+            let actor = m.space.cloneContainer;
+            let h;
+            if (to === i)
+                h = heights[0];
+            else if (to + 1 === i)
+                h = heights[2];
+            else if (to - 1 === i)
+                h = heights[1];
+            else if (i > to)
+                h = 0;
+            else if (i < to)
+                h = 1;
+
+            Tweener.addTween(actor,
+                             {y: h*global.screen_height,
+                              time: 0.25,
+                              scale_x: scale,
+                              scale_y: scale,
+                              transition: 'easeInOutQuad',
+                             });
+
+        });
+
         this.space = newMap.space;
         this._select(this.space.selectedIndex());
     },
@@ -201,6 +242,17 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     _finish: function(timestamp) {
         this.was_accepted = true;
+
+        let multimap = this.multimap;
+        let last = multimap.minimaps[multimap.selectedIndex - 1];
+        Main.wm._previewWorkspace(last && last.space.workspace,
+                                  this.space.workspace,
+                                  () => {
+                                      Main.uiGroup.set_child_above_sibling(
+                                          this.space.cloneContainer,
+                                          multimap.minimaps[0].space.cloneContainer);
+                                  });
+
         if (this.space.length === 0) {
             this.space.workspace.activate(global.get_current_time());
         } else {
@@ -230,10 +282,11 @@ var PreviewedWindowNavigator = new Lang.Class({
         if(!this.was_accepted) {
             debug('#preview', 'Abort', global.display.focus_window.title);
             let focus = global.display.focus_window;
+            let multimap = this.multimap;
+            let last = multimap.minimaps[multimap.selectedIndex - 1];
             if (focus.get_workspace() !== this.space.workspace) {
-                Main.wm._previewWorkspace(this.space.workspace, focus.get_workspace(),
-                    () => Main.wm._previewWorkspaceDone()
-                );
+                Main.wm._previewWorkspace(last && last.space.workspace,
+                                          focus.get_workspace());
             }
             Tiling.ensure_viewport(Tiling.spaces.spaceOfWindow(focus), focus);
         }
@@ -247,45 +300,21 @@ function preview_navigate(display, screen, meta_window, binding) {
 }
 
 
-var TopBar = Extension.imports.topbar;
 WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, callback) {
 
     TopBar.updateWorkspaceIndicator(to.index());
 
     let xDest = 0, yDest = global.screen_height;
 
-    let fromSpace = Tiling.spaces.spaceOf(from);
     let toSpace = Tiling.spaces.spaceOf(to);
 
-    this._fromSpace = fromSpace;
     this._toSpace = toSpace;
 
-    fromSpace.forEach(w => {
-        w.get_compositor_private().hide();
-        w.clone.show();
-    });
     toSpace.forEach(w => {
         w.get_compositor_private().hide();
         w.clone.show();
     });
 
-    toSpace.cloneContainer.set_pivot_point(0.5, 0);
-    fromSpace.cloneContainer.set_pivot_point(0.5, 0);
-
-    toSpace.cloneContainer.set_position(0, 0);
-    toSpace.cloneContainer.show();
-    Main.uiGroup.set_child_below_sibling(
-        toSpace.cloneContainer,
-        fromSpace.cloneContainer);
-
-    Tweener.addTween(fromSpace.cloneContainer,
-                     { x: xDest,
-                       y: yDest,
-                       scale_x: 0.9,
-                       scale_y: 0.9,
-                       time: 0.25,
-                       transition: 'easeInOutQuad',
-                     });
     Tweener.addTween(toSpace.cloneContainer,
                      { x: 0,
                        y: 0,
@@ -293,9 +322,32 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, cal
                        scale_y: 1,
                        time: 0.25,
                        transition: 'easeInOutQuad',
-                       onComplete: callback,
+                       onComplete: callback
                      });
 
+    if (!from)
+        return;
+
+    let fromSpace = Tiling.spaces.spaceOf(from) || [];
+    this._fromSpace = fromSpace;
+
+    Main.uiGroup.set_child_below_sibling(
+        toSpace.cloneContainer,
+        fromSpace.cloneContainer);
+
+    fromSpace.forEach(w => {
+        w.get_compositor_private().hide();
+        w.clone.show();
+    });
+
+    Tweener.addTween(fromSpace.cloneContainer,
+                     { x: xDest,
+                       y: yDest,
+                       scale_x: scale,
+                       scale_y: scale,
+                       time: 0.25,
+                       transition: 'easeInOutQuad',
+                     });
 }
 
 WindowManager.WindowManager.prototype._previewWorkspaceDone = function() {

@@ -20,6 +20,7 @@ let preferences = Extension.imports.convenience.getSettings();
 var window_gap = preferences.get_int('window-gap');
 // Top/bottom margin
 var margin_tb = preferences.get_int('vertical-margin');
+margin_tb = 6
 // left/right margin
 var margin_lr = preferences.get_int('horizontal-margin');
 margin_lr = 30
@@ -194,6 +195,10 @@ class Space extends Array {
 
         cloneContainer.set_size(global.screen_width, global.screen_height);
         cloneContainer.background_color = Clutter.color_from_string(colors[color])[1];
+        cloneContainer.set_clip(0, 0, global.screen_width, global.screen_height)
+        cloneContainer.set_pivot_point(0.5, 0);
+        cloneContainer.background_color =
+            Clutter.color_from_string(colors[color])[1];
         color = (color + 1) % colors.length;
         Main.uiGroup.add_actor(cloneContainer);
         Main.uiGroup.set_child_above_sibling(
