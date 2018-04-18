@@ -17,7 +17,7 @@ const Tiling = Extension.imports.tiling;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 
-const scale = 0.90;
+var scale = 0.9;
 var navigating = false;
 
 var PreviewedWindowNavigator = new Lang.Class({
