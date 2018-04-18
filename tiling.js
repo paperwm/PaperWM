@@ -657,6 +657,9 @@ function showHandler(actor) {
     let metaWindow = actor.meta_window;
     let onActive = metaWindow.get_workspace() === global.screen.get_active_workspace();
 
+    if (Scratch.isScratchWindow(metaWindow))
+        return;
+
     if (metaWindow.clone.visible || ! onActive || Navigator.navigating) {
         actor.hide();
         metaWindow.clone.show();
