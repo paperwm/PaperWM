@@ -42,9 +42,8 @@ var PreviewedWindowNavigator = new Lang.Class({
                 h = 0;
             m.space.cloneContainer.set_position(0, global.screen_height*h);
 
-            m.space.cloneContainer.scale_y = scale;
-            m.space.cloneContainer.scale_x = scale;
-
+            m.space.cloneContainer.scale_y = scale + (1 - i)*0.01;
+            m.space.cloneContainer.scale_x = scale + (1 - i)*0.01;
             if (multimap.minimaps[i - 1] === undefined)
                 return;
             cloneParent.set_child_below_sibling(
@@ -162,8 +161,8 @@ var PreviewedWindowNavigator = new Lang.Class({
             Tweener.addTween(actor,
                              {y: h*global.screen_height,
                               time: 0.25,
-                              scale_x: scale,
-                              scale_y: scale,
+                              scale_x: scale + (to - i)*0.01,
+                              scale_y: scale + (to - i)*0.01,
                               transition: 'easeInOutQuad',
                              });
 
