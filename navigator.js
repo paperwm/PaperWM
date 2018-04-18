@@ -36,6 +36,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         let heights = [0, 0.10, 0.05];
 
+        let cloneParent = this.space.cloneContainer.get_parent();
         multimap.minimaps.forEach((m, i) => {
             let h = heights[i];
             if (h === undefined)
@@ -47,7 +48,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
             if (multimap.minimaps[i - 1] === undefined)
                 return;
-            Main.uiGroup.set_child_below_sibling(
+            cloneParent.set_child_below_sibling(
                 m.space.cloneContainer,
                 multimap.minimaps[i - 1].space.cloneContainer
             );
@@ -249,13 +250,15 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         let multimap = this.multimap;
         let last = multimap.minimaps[multimap.selectedIndex - 1];
-        Main.wm._previewWorkspace(last && last.space.workspace,
-                                  this.space.workspace,
-                                  () => {
-                                      Main.uiGroup.set_child_above_sibling(
-                                          this.space.cloneContainer,
-                                          multimap.minimaps[0].space.cloneContainer);
-                                  });
+        Main.wm._previewWorkspace(
+            last && last.space.workspace,
+            this.space.workspace,
+            () => {
+                let cloneParent = this.space.cloneContainer.get_parent();
+                cloneParent.set_child_above_sibling(
+                    this.space.cloneContainer,
+                    multimap.minimaps[0].space.cloneContainer);
+            });
 
         if (this.space.length === 0) {
             this.space.workspace.activate(global.get_current_time());
@@ -337,7 +340,8 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, cal
     let fromSpace = Tiling.spaces.spaceOf(from) || [];
     this._fromSpace = fromSpace;
 
-    Main.uiGroup.set_child_below_sibling(
+    let cloneParent = fromSpace.cloneContainer.get_parent();
+    cloneParent.set_child_below_sibling(
         toSpace.cloneContainer,
         fromSpace.cloneContainer);
 
