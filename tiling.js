@@ -13,6 +13,7 @@ const debug = utils.debug;
 var Minimap = Extension.imports.minimap;
 var Scratch = Extension.imports.scratch;
 var TopBar = Extension.imports.topbar;
+var Navigator = Extension.imports.navigator;
 var Me = Extension.imports.tiling;
 
 let preferences = Extension.imports.convenience.getSettings();
@@ -175,7 +176,7 @@ function disable () {
     }
 }
 
-let colors = [ 'grey', 'cyan', 'red', 'blue', 'green', 'yellow', 'orange'];
+let colors = [ 'grey', 'green', 'yellow', 'orange', 'cyan', 'blue', 'red'];
 let color = 0;
 let containers = [];
 class Space extends Array {
@@ -663,7 +664,8 @@ let minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
 function showHandler(actor) {
     let metaWindow = actor.meta_window;
     let onActive = metaWindow.get_workspace() === global.screen.get_active_workspace();
-    if (metaWindow.clone.visible || ! onActive) {
+
+    if (metaWindow.clone.visible || ! onActive || Navigator.navigating) {
         actor.hide();
         metaWindow.clone.show();
     }

@@ -10,6 +10,8 @@ function makeScratch(metaWindow) {
     metaWindow[float] = true;
     metaWindow.make_above();
     metaWindow.stick();
+    metaWindow.clone.hide();
+    metaWindow.get_compositor_private().show();
 }
 
 function unmakeScratch(metaWindow) {
