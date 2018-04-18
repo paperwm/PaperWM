@@ -250,7 +250,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         let multimap = this.multimap;
         let last = multimap.minimaps[multimap.selectedIndex - 1];
-        Main.wm._previewWorkspace(
+        switchWorkspace(
             last && last.space.workspace,
             this.space.workspace,
             () => {
@@ -290,8 +290,8 @@ var PreviewedWindowNavigator = new Lang.Class({
             let multimap = this.multimap;
             let last = multimap.minimaps[multimap.selectedIndex - 1];
             if (focus.get_workspace() !== this.space.workspace) {
-                Main.wm._previewWorkspace(last && last.space.workspace,
-                                          focus.get_workspace());
+                switchWorkspace(last && last.space.workspace,
+                                focus.get_workspace());
             }
             Tiling.ensure_viewport(Tiling.spaces.spaceOfWindow(focus), focus);
         }
@@ -306,16 +306,12 @@ function preview_navigate(display, screen, meta_window, binding) {
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
 
-
-WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, callback) {
-
+function switchWorkspace(from, to, callback) {
     TopBar.updateWorkspaceIndicator(to.index());
 
     let xDest = 0, yDest = global.screen_height;
 
     let toSpace = Tiling.spaces.spaceOf(to);
-
-    this._toSpace = toSpace;
 
     toSpace.forEach(w => {
         w.get_compositor_private().hide();
@@ -336,7 +332,6 @@ WindowManager.WindowManager.prototype._previewWorkspace = function(from, to, cal
         return;
 
     let fromSpace = Tiling.spaces.spaceOf(from) || [];
-    this._fromSpace = fromSpace;
 
     let cloneParent = fromSpace.cloneContainer.get_parent();
     cloneParent.set_child_below_sibling(

@@ -66,7 +66,7 @@ function enable() {
         global.screen.connect(
             'workspace-switched',
             (screen, from, to) => {
-                Main.wm._previewWorkspace(
+                Navigator.switchWorkspace(
                     global.screen.get_workspace_by_index(from),
                     global.screen.get_workspace_by_index(to)
                 );
