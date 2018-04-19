@@ -4,7 +4,6 @@
 
 const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 const SwitcherPopup = imports.ui.switcherPopup;
-const WindowManager = imports.ui.windowManager;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
 const Main = imports.ui.main;
