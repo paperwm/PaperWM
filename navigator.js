@@ -249,11 +249,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     _finish: function(timestamp) {
         this.was_accepted = true;
 
-        let multimap = this.multimap;
-        let last = multimap.minimaps[multimap.selectedIndex - 1];
-        switchWorkspace(
-            last && last.space.workspace,
-            this.space.workspace);
+        switchWorkspace(this.space.workspace);
 
         if (this.space.length === 0) {
             this.space.workspace.activate(global.get_current_time());
@@ -286,8 +282,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             let multimap = this.multimap;
             let last = multimap.minimaps[multimap.selectedIndex - 1];
             if (focus.get_workspace() !== this.space.workspace) {
-                switchWorkspace(last && last.space.workspace,
-                                focus.get_workspace());
+                switchWorkspace(focus.get_workspace());
             }
             Tiling.ensure_viewport(Tiling.spaces.spaceOfWindow(focus), focus);
         }
@@ -305,7 +300,7 @@ function preview_navigate(display, screen, meta_window, binding) {
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
 
-function switchWorkspace(from, to, callback) {
+function switchWorkspace(to, callback) {
     TopBar.updateWorkspaceIndicator(to.index());
 
     let xDest = 0, yDest = global.screen_height;
@@ -325,17 +320,15 @@ function switchWorkspace(from, to, callback) {
                        }
                      });
 
-    if (!from || from === to)
+    let last = toSpace.cloneContainer.get_next_sibling();
+    if (last === null)
         return;
-
-    let fromSpace = Tiling.spaces.spaceOf(from) || [];
-
-    let cloneParent = fromSpace.cloneContainer.get_parent();
+    let cloneParent = last.get_parent();
     cloneParent.set_child_below_sibling(
         toSpace.cloneContainer,
-        fromSpace.cloneContainer);
+        last);
 
-    Tweener.addTween(fromSpace.cloneContainer,
+    Tweener.addTween(last,
                      { x: xDest,
                        y: yDest,
                        scale_x: scale,

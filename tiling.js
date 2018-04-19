@@ -67,10 +67,7 @@ function enable() {
         global.screen.connect(
             'workspace-switched',
             (screen, from, to) => {
-                Navigator.switchWorkspace(
-                    global.screen.get_workspace_by_index(from),
-                    global.screen.get_workspace_by_index(to)
-                );
+                Navigator.switchWorkspace(global.screen.get_workspace_by_index(to));
             }),
 
         // Reset primary when monitors change
@@ -120,7 +117,7 @@ function enable() {
                 ];
             });
 
-        Navigator.switchWorkspace(null, global.screen.get_active_workspace());
+        Navigator.switchWorkspace(global.screen.get_active_workspace());
     }
 
     if (isDuringGnomeShellStartup) {
