@@ -722,6 +722,78 @@ function move_to(space, meta_window, { x, y, delay, transition,
     fixStack(space, index);
 }
 
+// Place window's left edge at x
+function propagateForward(space, n, x, gap) {
+    if (n < 0 || n >= space.length) {
+        StackOverlay.rightOverlay.setTarget(null);
+        return;
+    }
+    let meta_window = space[n];
+    let frame = meta_window.get_frame_rect();
+    gap = gap || window_gap;
+
+    let stack = false;
+    // Check if we should start stacking windows
+    if (x > primary.width - stack_margin) {
+        stack = true;
+        meta_window._isStacked = true;
+    } else {
+        meta_window._isStacked = false;
+    }
+
+    let actor = meta_window.get_compositor_private();
+    if (actor) {
+        // Anchor scaling/animation on the left edge for windows positioned to the right,
+
+        move(meta_window, { x,
+                            y: meta_window.fullscreen ?
+                            0 :
+                            panelBox.height + margin_tb,
+                            stack
+                          });
+        propagateForward(space, n+1, x+meta_window.get_frame_rect().width + gap, gap);
+    } else {
+        // If the window doesn't have an actor we should just skip it
+        propagateForward(space, n+1, x, gap);
+    }
+}
+
+// Place window's right edge at x
+function propagateBackward(space, n, x, gap) {
+    if (n < 0 || n >= space.length) {
+        StackOverlay.leftOverlay.setTarget(null);
+        return;
+    }
+    let meta_window = space[n];
+    let frame = meta_window.get_frame_rect();
+    gap = gap || window_gap;
+
+    // Check if we should start stacking windows
+    let stack = false;
+    if (x < stack_margin) {
+        stack = true;
+        meta_window._isStacked = true;
+    } else {
+        meta_window._isStacked = false;
+    }
+
+    let actor = meta_window.get_compositor_private();
+    if (actor) {
+        x = x - meta_window.get_frame_rect().width
+        // Anchor on the right edge for windows positioned to the left.
+        move(meta_window, { x, y: meta_window.fullscreen ?
+                            0 :
+                            panelBox.height + margin_tb,
+                            stack
+                          });
+        propagateBackward(space, n-1, x - gap, gap);
+    } else {
+        // If the window doesn't have an actor we should just skip it
+        propagateBackward(space, n-1, x, gap);
+    }
+}
+
+
 const DIRECTION = {
     Left: 0,
     Right: 1
@@ -895,77 +967,6 @@ function fixStack(space, around) {
         mru.filter(w => w === leftWindow || w === rightWindow)
             .reverse()
             .forEach(w => w && w.raise());
-    }
-}
-
-// Place window's left edge at x
-function propagateForward(space, n, x, gap) {
-    if (n < 0 || n >= space.length) {
-        StackOverlay.rightOverlay.setTarget(null);
-        return;
-    }
-    let meta_window = space[n];
-    let frame = meta_window.get_frame_rect();
-    gap = gap || window_gap;
-
-    let stack = false;
-    // Check if we should start stacking windows
-    if (x > primary.width - stack_margin) {
-        stack = true;
-        meta_window._isStacked = true;
-    } else {
-        meta_window._isStacked = false;
-    }
-
-    let actor = meta_window.get_compositor_private();
-    if (actor) {
-        // Anchor scaling/animation on the left edge for windows positioned to the right,
-
-        move(meta_window, { x,
-                            y: meta_window.fullscreen ?
-                            0 :
-                            panelBox.height + margin_tb,
-                            stack
-                          });
-        propagateForward(space, n+1, x+meta_window.get_frame_rect().width + gap, gap);
-    } else {
-        // If the window doesn't have an actor we should just skip it
-        propagateForward(space, n+1, x, gap);
-    }
-}
-
-// Place window's right edge at x
-function propagateBackward(space, n, x, gap) {
-    if (n < 0 || n >= space.length) {
-        StackOverlay.leftOverlay.setTarget(null);
-        return;
-    }
-    let meta_window = space[n];
-    let frame = meta_window.get_frame_rect();
-    gap = gap || window_gap;
-
-    // Check if we should start stacking windows
-    let stack = false;
-    if (x < stack_margin) {
-        stack = true;
-        meta_window._isStacked = true;
-    } else {
-        meta_window._isStacked = false;
-    }
-
-    let actor = meta_window.get_compositor_private();
-    if (actor) {
-        x = x - meta_window.get_frame_rect().width
-        // Anchor on the right edge for windows positioned to the left.
-        move(meta_window, { x, y: meta_window.fullscreen ?
-                            0 :
-                            panelBox.height + margin_tb,
-                            stack
-                          });
-        propagateBackward(space, n-1, x - gap, gap);
-    } else {
-        // If the window doesn't have an actor we should just skip it
-        propagateBackward(space, n-1, x, gap);
     }
 }
 
