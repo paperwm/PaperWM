@@ -188,6 +188,12 @@ class Space extends Array {
                               utils.dynamic_function_ref("remove_handler", Me));
 
         let cloneContainer = new St.Widget();
+        let label = new St.Label();
+
+        label.text = Meta.prefs_get_workspace_name(workspace.index());
+        label.set_position(12, 6);
+        cloneContainer.add_actor(label);
+
         this.cloneContainer = cloneContainer;
 
         cloneContainer.set_size(global.screen_width, global.screen_height);
