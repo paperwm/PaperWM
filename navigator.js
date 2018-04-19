@@ -26,6 +26,9 @@ var PreviewedWindowNavigator = new Lang.Class({
     _init: function() {
         this.parent();
 
+        this._block = Main.wm._blockAnimations;
+        Main.wm._blockAnimations = true;
+
         navigating = true;
 
         let multimap = new Minimap.MultiMap(true);
@@ -276,6 +279,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
         debug('#preview', 'onDestroy', this.was_accepted);
+
         if(!this.was_accepted) {
             debug('#preview', 'Abort', global.display.focus_window.title);
             let focus = global.display.focus_window;
@@ -289,6 +293,9 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
 
         navigating = false;
+
+        Main.wm._blockAnimations = this._block;
+
         this.parent();
     }
 });
