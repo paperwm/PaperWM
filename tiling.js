@@ -431,74 +431,6 @@ function add_all_from_workspace(workspace, windows = []) {
     }
 }
 
-function isStacked(metaWindow) {
-    return metaWindow._isStacked;
-}
-
-function isUnStacked(metaWindow) {
-    return !isStacked(metaWindow);
-}
-
-function isFullyVisible(metaWindow) {
-    let frame = metaWindow.get_frame_rect();
-    return frame.x >= 0 && (frame.x + frame.width) <= primary.width;
-}
-
-/**
- * Animate @meta_window to (@x, @y) in frame coordinates.
- */
-function move(meta_window, {x, y,
-                            onComplete,
-                            onStart,
-                            delay,
-                            transition,
-                            stack
-                           }) {
-
-    onComplete = onComplete || (() => {});
-    onStart = onStart || (() => {});
-    delay = delay || 0;
-    transition = transition || 'easeInOutQuad';
-
-    let actor = meta_window.get_compositor_private();
-    let buffer = meta_window.get_buffer_rect();
-    let frame = meta_window.get_frame_rect();
-    let clone = meta_window.clone;
-
-    clone.show();
-    actor.hide();
-
-    // Set monitor offset
-    y += primary.y;
-    x += primary.x;
-    let x_offset = frame.x - buffer.x;
-    let y_offset = frame.y - buffer.y;
-    meta_window.destinationX = x;
-    Tweener.addTween(clone, {x: x - x_offset
-                             , y: y - y_offset
-                             , time: 0.25 - delay
-                             , delay: delay
-                             , scale_y: 1
-                             , scale_x: 1
-                             , transition: transition
-                             , onStart: onStart
-                             , onComplete: () => {
-                                 meta_window.destinationX = undefined;
-                                 if(meta_window.get_compositor_private()) {
-                                     // If the actor is gone, the window is in process of closing
-                                     if (!stack) {
-                                         actor.set_position(clone.x, clone.y);
-                                         clone.hide();
-                                         actor.show();
-                                     }
-                                     meta_window.move_frame(true, x, y);
-                                     onComplete();
-                                 }
-                             }
-                            })
-
-}
-
 function remove_handler(workspace, meta_window) {
     debug("window-removed", meta_window, meta_window.title, workspace.index());
     // Note: If `meta_window` was closed and had focus at the time, the next
@@ -641,6 +573,61 @@ function setInitialPosition(actor, existing) {
     } else {
         signalId && metaWindow.disconnect(signalId);
     }
+}
+
+/**
+ * Animate @meta_window to (@x, @y) in frame coordinates.
+ */
+function move(meta_window, {x, y,
+                            onComplete,
+                            onStart,
+                            delay,
+                            transition,
+                            stack
+                           }) {
+
+    onComplete = onComplete || (() => {});
+    onStart = onStart || (() => {});
+    delay = delay || 0;
+    transition = transition || 'easeInOutQuad';
+
+    let actor = meta_window.get_compositor_private();
+    let buffer = meta_window.get_buffer_rect();
+    let frame = meta_window.get_frame_rect();
+    let clone = meta_window.clone;
+
+    clone.show();
+    actor.hide();
+
+    // Set monitor offset
+    y += primary.y;
+    x += primary.x;
+    let x_offset = frame.x - buffer.x;
+    let y_offset = frame.y - buffer.y;
+    meta_window.destinationX = x;
+    Tweener.addTween(clone, {x: x - x_offset
+                             , y: y - y_offset
+                             , time: 0.25 - delay
+                             , delay: delay
+                             , scale_y: 1
+                             , scale_x: 1
+                             , transition: transition
+                             , onStart: onStart
+                             , onComplete: () => {
+                                 meta_window.destinationX = undefined;
+                                 if(meta_window.get_compositor_private()) {
+                                     // If the actor is gone, the window is in process of closing
+                                     if (!stack) {
+                                         actor.set_position(clone.x, clone.y);
+                                         clone.hide();
+                                         actor.show();
+                                     }
+                                     meta_window.move_frame(true, x, y);
+                                     onComplete();
+                                 }
+                             }
+                            })
+
 }
 
 // Move @meta_window to x, y and propagate the change in @space
@@ -999,6 +986,19 @@ function defwinprop(spec) {
 }
 
 /* simple utils */
+
+function isStacked(metaWindow) {
+    return metaWindow._isStacked;
+}
+
+function isUnStacked(metaWindow) {
+    return !isStacked(metaWindow);
+}
+
+function isFullyVisible(metaWindow) {
+    let frame = metaWindow.get_frame_rect();
+    return frame.x >= 0 && (frame.x + frame.width) <= primary.width;
+}
 
 function toggle_maximize_horizontally(meta_window) {
     meta_window = meta_window || global.display.focus_window;
