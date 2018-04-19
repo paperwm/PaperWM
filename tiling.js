@@ -793,12 +793,6 @@ function propagateBackward(space, n, x, gap) {
     }
 }
 
-
-const DIRECTION = {
-    Left: 0,
-    Right: 1
-}
-
 /**
    Make sure that `meta_window` is in view, scrolling the space if needed.
  */
