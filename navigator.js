@@ -23,6 +23,8 @@ var PreviewedWindowNavigator = new Lang.Class({
     Name: 'PreviewedWindowNavigator',
     Extends: SwitcherPopup.SwitcherPopup,
 
+    _yPositions: [0.95, 0.10, 0.035, 0.01],
+
     _init: function() {
         this.parent();
 
@@ -36,13 +38,13 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._switcherList = multimap;
         this.space = this._switcherList.getSelected().space;
 
-        let heights = [0, 0.10, 0.05];
+        let heights = [0].concat(this._yPositions.slice(1));
 
         let cloneParent = this.space.cloneContainer.get_parent();
         multimap.minimaps.forEach((m, i) => {
             let h = heights[i];
             if (h === undefined)
-                h = 0;
+                h = heights[heights.length-1];
             m.space.cloneContainer.set_position(0, global.screen_height*h);
 
             m.space.cloneContainer.scale_y = scale + (1 - i)*0.01;
@@ -145,19 +147,19 @@ var PreviewedWindowNavigator = new Lang.Class({
             w.clone.show();
         }));
 
-        let heights = [0.10, 0.95, 0.05];
+        let heights = this._yPositions;
 
         multimap.minimaps.forEach((m, i) => {
             let actor = m.space.cloneContainer;
             let h;
             if (to === i)
-                h = heights[0];
+                h = heights[1];
             else if (to + 1 === i)
                 h = heights[2];
             else if (to - 1 === i)
-                h = heights[1];
+                h = heights[0];
             else if (i > to)
-                h = 0;
+                h = heights[3];
             else if (i < to)
                 h = 1;
 
