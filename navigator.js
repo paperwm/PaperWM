@@ -104,6 +104,8 @@ var PreviewedWindowNavigator = new Lang.Class({
         swapArray(this.space, index, targetIndex);
 
         let metaWindow = this.space[targetIndex];
+        metaWindow.clone.raise_top();
+
         let newX = Tiling.ensureViewport(metaWindow, this.space, true);
 
         this._selectedIndex = targetIndex;
