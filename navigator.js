@@ -326,7 +326,7 @@ function switchWorkspace(from, to, callback) {
                        onComplete: callback
                      });
 
-    if (!from)
+    if (!from || from === to)
         return;
 
     let fromSpace = Tiling.spaces.spaceOf(from) || [];
