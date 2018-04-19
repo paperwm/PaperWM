@@ -119,6 +119,8 @@ function enable() {
                     actor.connect('show', showWrapper)
                 ];
             });
+
+        Navigator.switchWorkspace(null, global.screen.get_active_workspace());
     }
 
     if (isDuringGnomeShellStartup) {

@@ -250,13 +250,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         let last = multimap.minimaps[multimap.selectedIndex - 1];
         switchWorkspace(
             last && last.space.workspace,
-            this.space.workspace,
-            () => {
-                let cloneParent = this.space.cloneContainer.get_parent();
-                cloneParent.set_child_above_sibling(
-                    this.space.cloneContainer,
-                    multimap.minimaps[0].space.cloneContainer);
-            });
+            this.space.workspace);
 
         if (this.space.length === 0) {
             this.space.workspace.activate(global.get_current_time());
@@ -323,7 +317,10 @@ function switchWorkspace(from, to, callback) {
                        scale_y: 1,
                        time: 0.25,
                        transition: 'easeInOutQuad',
-                       onComplete: callback
+                       onComplete: () => {
+                           toSpace.cloneContainer.raise_top();
+                           callback && callback();
+                       }
                      });
 
     if (!from || from === to)
