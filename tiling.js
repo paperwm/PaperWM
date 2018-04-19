@@ -170,13 +170,16 @@ function disable () {
 
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
 let colors = [
-    '#EAE8E3', '#BAB5AB', '#807D74', '#565248', '#C5D2C8', '#83A67F', '#5D7555',
-    '#445632', '#E0B6AF', '#C1665A', '#884631', '#663822', '#ADA7C8', '#887FA3',
-    '#625B81', '#494066', '#9DB8D2', '#7590AE', '#4B6983', '#314E6C', '#EFE0CD',
-    '#E0C39E', '#B39169', '#826647', '#DF421E', '#990000', '#EED680', '#D1940C',
+    '#9DB8D2', '#7590AE', '#4B6983', '#314E6C',
+    '#EAE8E3', '#BAB5AB', '#807D74', '#565248',
+    '#C5D2C8', '#83A67F', '#5D7555', '#445632',
+    '#E0B6AF', '#C1665A', '#884631', '#663822',
+    '#ADA7C8', '#887FA3', '#625B81', '#494066',
+    '#EFE0CD', '#E0C39E', '#B39169', '#826647',
+    '#DF421E', '#990000', '#EED680', '#D1940C',
     '#46A046', '#267726', '#ffffff', '#000000'
 ];
-let color = 1;
+let color = 3; // light -> dark: 0 -> 3
 let containers = [];
 class Space extends Array {
     constructor (workspace) {
@@ -212,7 +215,7 @@ class Space extends Array {
             `background: ${colors[color]};
              box-shadow: 0px -10px 10px 10px black;
              border-radius: 2px 2px 0 0;`);
-        color = (color + 9) % colors.length;
+        color = (color + 4) % colors.length;
 
         this.selectedWindow = null;
         this.moving = false;
