@@ -354,6 +354,83 @@ var spaces = (function () {
     return spaces;
 })();
 
+
+/**
+   let workspace = global.screen.get_active_workspace()
+ */
+function add_all_from_workspace(workspace, windows = []) {
+
+    // On gnome-shell-restarts the windows are moved into the viewport, but
+    // they're moved minimally and the stacking is not changed, so the tiling
+    // order is preserved (sans full-width windows..)
+    function xz_comparator(windows) {
+        // Seems to be the only documented way to get stacking order?
+        // Could also rely on the MetaWindowActor's index in it's parent
+        // children array: That seem to correspond to clutters z-index (note:
+        // z_position is something else)
+        let z_sorted = global.display.sort_windows_by_stacking(windows);
+        function xkey(mw) {
+            let frame = mw.get_frame_rect();
+            if(frame.x <= 0)
+                return 0;
+            if(frame.x+frame.width == primary.width) {
+                return primary.width;
+            }
+            return frame.x;
+        }
+        // xorder: a|b c|d
+        // zorder: a d b c
+        return (a,b) => {
+            let ax = xkey(a);
+            let bx = xkey(b);
+            // Yes, this is not efficient
+            let az = z_sorted.indexOf(a);
+            let bz = z_sorted.indexOf(b);
+            let xcmp = ax - bx;
+            if (xcmp !== 0)
+                return xcmp;
+
+            if (ax === 0) {
+                // Left side: lower stacking first
+                return az - bz;
+            } else {
+                // Right side: higher stacking first
+                return bz - az;
+            }
+        };
+    }
+
+    workspace = workspace || global.screen.get_active_workspace();
+    windows = windows.concat(
+        // Add all the other windows as we want to support someone disabling
+        // the extension, and enabling it after using the session for a
+        // while
+        workspace.list_windows()
+            .filter(w => windows.indexOf(w) === -1)
+            .sort(xz_comparator(workspace.list_windows())));
+
+    let space = spaces.spaceOf(workspace);
+    windows.forEach((meta_window, i) => {
+        if (meta_window.above || meta_window.minimized) {
+            // Rough heuristic to figure out if a window should float
+            Scratch.makeScratch(meta_window);
+            return;
+        }
+        if(space.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
+            // Using add_handler is unreliable since it interacts with focus.
+            space.push(meta_window);
+            space.cloneContainer.add_actor(meta_window.clone);
+        }
+    })
+
+    let tabList = global.display.get_tab_list(Meta.TabList.NORMAL, workspace)
+        .filter(metaWindow => { return space.indexOf(metaWindow) !== -1; });
+    if (tabList[0]) {
+        space.selectedWindow = tabList[0]
+        ensure_viewport(space, space.selectedWindow);
+    }
+}
+
 function focus() {
     let meta_window = global.display.focus_window;
     if (!meta_window)
@@ -427,6 +504,64 @@ function move(meta_window, {x, y,
                              }
                             })
 
+}
+
+function remove_handler(workspace, meta_window) {
+    debug("window-removed", meta_window, meta_window.title, workspace.index());
+    // Note: If `meta_window` was closed and had focus at the time, the next
+    // window has already received the `focus` signal at this point.
+    // Not sure if we can check directly if _this_ window had focus when closed.
+
+    let space = spaces.spaceOf(workspace);
+    let removed_i = space.indexOf(meta_window)
+    if (removed_i < 0)
+        return
+    space.splice(removed_i, 1)
+
+    space.cloneContainer.remove_actor(meta_window.clone);
+
+    if (space.selectedWindow === meta_window) {
+        // Window closed or moved when other workspace is active so no new focus
+        // has been assigned in this workspace.
+        // Ideally we'd get the window that will get focus when this workspace
+        // is activated again, but the function mutter use doesn't seem to be
+        // exposed to javascript.
+
+        // Use the top window in the MRU list as a proxy:
+        let mru_list = global.display.get_tab_list(Meta.TabList.NORMAL, workspace);
+        // The mru list might contain needy windows from other workspaces
+        space.selectedWindow =
+            mru_list.filter(w => w.get_workspace() === workspace
+                            && space.indexOf(w) !== -1 )[0];
+    }
+
+    // (could be an empty workspace)
+    if (space.selectedWindow) {
+        // Force a new ensure, since the focus_handler is run before
+        // window-removed
+        ensure_viewport(space, space.selectedWindow, true)
+    }
+}
+
+function add_handler(ws, meta_window) {
+    debug("window-added", meta_window, meta_window.title, meta_window.window_type, ws.index());
+    if (!add_filter(meta_window)) {
+        return;
+    }
+
+    let space = spaces.spaceOf(ws);
+
+    // Don't add already added windows
+    if (space.indexOf(meta_window) != -1) {
+        return;
+    }
+
+    let insert_after_i = -1; // (-1 -> at beginning)
+    if (space.selectedWindow) {
+        insert_after_i = space.indexOf(space.selectedWindow);
+    }
+
+    insertWindow(space, meta_window, insert_after_i + 1);
 }
 
 var isInserted = Symbol();
@@ -869,139 +1004,7 @@ function defwinprop(spec) {
     winprops.push(spec);
 }
 
-function add_handler(ws, meta_window) {
-    debug("window-added", meta_window, meta_window.title, meta_window.window_type, ws.index());
-    if (!add_filter(meta_window)) {
-        return;
-    }
-
-    let space = spaces.spaceOf(ws);
-
-    // Don't add already added windows
-    if (space.indexOf(meta_window) != -1) {
-        return;
-    }
-
-    let insert_after_i = -1; // (-1 -> at beginning)
-    if (space.selectedWindow) {
-        insert_after_i = space.indexOf(space.selectedWindow);
-    }
-
-    insertWindow(space, meta_window, insert_after_i + 1);
-}
-
-function remove_handler(workspace, meta_window) {
-    debug("window-removed", meta_window, meta_window.title, workspace.index());
-    // Note: If `meta_window` was closed and had focus at the time, the next
-    // window has already received the `focus` signal at this point.
-    // Not sure if we can check directly if _this_ window had focus when closed.
-
-    let space = spaces.spaceOf(workspace);
-    let removed_i = space.indexOf(meta_window)
-    if (removed_i < 0)
-        return
-    space.splice(removed_i, 1)
-
-    space.cloneContainer.remove_actor(meta_window.clone);
-
-    if (space.selectedWindow === meta_window) {
-        // Window closed or moved when other workspace is active so no new focus
-        // has been assigned in this workspace.
-        // Ideally we'd get the window that will get focus when this workspace
-        // is activated again, but the function mutter use doesn't seem to be
-        // exposed to javascript.
-
-        // Use the top window in the MRU list as a proxy:
-        let mru_list = global.display.get_tab_list(Meta.TabList.NORMAL, workspace);
-        // The mru list might contain needy windows from other workspaces
-        space.selectedWindow =
-            mru_list.filter(w => w.get_workspace() === workspace
-                            && space.indexOf(w) !== -1 )[0];
-    }
-
-    // (could be an empty workspace)
-    if (space.selectedWindow) {
-        // Force a new ensure, since the focus_handler is run before
-        // window-removed
-        ensure_viewport(space, space.selectedWindow, true)
-    }
-}
-
-/**
-   let workspace = global.screen.get_active_workspace()
- */
-function add_all_from_workspace(workspace, windows = []) {
-
-    // On gnome-shell-restarts the windows are moved into the viewport, but
-    // they're moved minimally and the stacking is not changed, so the tiling
-    // order is preserved (sans full-width windows..)
-    function xz_comparator(windows) {
-        // Seems to be the only documented way to get stacking order?
-        // Could also rely on the MetaWindowActor's index in it's parent
-        // children array: That seem to correspond to clutters z-index (note:
-        // z_position is something else)
-        let z_sorted = global.display.sort_windows_by_stacking(windows);
-        function xkey(mw) {
-            let frame = mw.get_frame_rect();
-            if(frame.x <= 0)
-                return 0;
-            if(frame.x+frame.width == primary.width) {
-                return primary.width;
-            }
-            return frame.x;
-        }
-        // xorder: a|b c|d
-        // zorder: a d b c
-        return (a,b) => {
-            let ax = xkey(a);
-            let bx = xkey(b);
-            // Yes, this is not efficient
-            let az = z_sorted.indexOf(a);
-            let bz = z_sorted.indexOf(b);
-            let xcmp = ax - bx;
-            if (xcmp !== 0)
-                return xcmp;
-
-            if (ax === 0) {
-                // Left side: lower stacking first
-                return az - bz;
-            } else {
-                // Right side: higher stacking first
-                return bz - az;
-            }
-        };
-    }
-
-    workspace = workspace || global.screen.get_active_workspace();
-    windows = windows.concat(
-        // Add all the other windows as we want to support someone disabling
-        // the extension, and enabling it after using the session for a
-        // while
-        workspace.list_windows()
-            .filter(w => windows.indexOf(w) === -1)
-            .sort(xz_comparator(workspace.list_windows())));
-
-    let space = spaces.spaceOf(workspace);
-    windows.forEach((meta_window, i) => {
-        if (meta_window.above || meta_window.minimized) {
-            // Rough heuristic to figure out if a window should float
-            Scratch.makeScratch(meta_window);
-            return;
-        }
-        if(space.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
-            // Using add_handler is unreliable since it interacts with focus.
-            space.push(meta_window);
-            space.cloneContainer.add_actor(meta_window.clone);
-        }
-    })
-
-    let tabList = global.display.get_tab_list(Meta.TabList.NORMAL, workspace)
-        .filter(metaWindow => { return space.indexOf(metaWindow) !== -1; });
-    if (tabList[0]) {
-        space.selectedWindow = tabList[0]
-        ensure_viewport(space, space.selectedWindow);
-    }
-}
+/* simple utils */
 
 function toggle_maximize_horizontally(meta_window) {
     meta_window = meta_window || global.display.focus_window;
