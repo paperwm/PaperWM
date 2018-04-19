@@ -4,6 +4,7 @@ const Tweener = imports.ui.tweener;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
 const Clutter = imports.gi.Clutter;
+const St = imports.gi.St;
 const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
 const Gio = imports.gi.Gio;
@@ -179,23 +180,24 @@ class Space extends Array {
             workspace.connect("window-removed",
                               utils.dynamic_function_ref("remove_handler", Me));
 
-        let cloneContainer = new Clutter.Actor();
+        let cloneContainer = new St.Widget();
         this.cloneContainer = cloneContainer;
 
-
         cloneContainer.set_size(global.screen_width, global.screen_height);
-        cloneContainer.background_color = Clutter.color_from_string(colors[color])[1];
-        cloneContainer.set_clip(0, 0, global.screen_width, global.screen_height)
+        cloneContainer.set_clip(0, 0, global.screen_width, global.screen_height);
         cloneContainer.set_pivot_point(0.5, 0);
-        cloneContainer.background_color =
-            Clutter.color_from_string(colors[color])[1];
-        color = (color + 1) % colors.length;
 
         let cloneParent = backgroundGroup;
         cloneParent.add_actor(cloneContainer);
         cloneParent.set_child_above_sibling(
             cloneContainer,
             cloneParent.first_child);
+
+        cloneContainer.set_style(
+            `background: ${colors[color]};
+             box-shadow: 0px -10px 10px 10px black;
+             border-radius: 2px 2px 0 0;`);
+        color = (color + 1) % colors.length;
 
         this.selectedWindow = null;
         this.moving = false;
