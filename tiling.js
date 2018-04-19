@@ -201,7 +201,9 @@ class Space extends Array {
         this.cloneContainer = cloneContainer;
 
         cloneContainer.set_size(global.screen_width, global.screen_height);
-        cloneContainer.set_clip(0, 0, global.screen_width, global.screen_height);
+        cloneContainer.set_clip(-10, -10,
+                                global.screen_width + 2*10,
+                                global.screen_height + 10);
         cloneContainer.set_pivot_point(0.5, 0);
 
         let cloneParent = backgroundGroup;
@@ -212,8 +214,9 @@ class Space extends Array {
 
         cloneContainer.set_style(
             `background: ${colors[color]};
-             box-shadow: 0px -10px 10px 10px black;
-             border-radius: 2px 2px 0 0;`);
+             box-shadow: 0px -10px 4px 2px black;
+             box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);
+             border-radius: 4px 4px 0 0;`);
         color = (color + 4) % colors.length;
 
         this.selectedWindow = null;
