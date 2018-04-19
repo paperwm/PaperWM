@@ -683,8 +683,8 @@ function move_to(space, meta_window, { x, y, delay, transition,
         );
     let index = space.indexOf(meta_window);
     let frame = meta_window.get_frame_rect();
-    propogate_forward(space, index + 1, x + frame.width + window_gap);
-    propogate_backward(space, index - 1, x - window_gap);
+    propagateForward(space, index + 1, x + frame.width + window_gap);
+    propagateBackward(space, index - 1, x - window_gap);
     fixStack(space, index);
 }
 
@@ -741,8 +741,8 @@ function ensureViewport(meta_window, space, force) {
         let gaps = space.length + 1;
         let extra_gap = Math.floor(leftovers/gaps);
         debug('#extragap', extra_gap);
-        propogate_forward(space, 0, extra_gap, extra_gap + window_gap);
-        propogate_backward(space, -1);
+        propagateForward(space, 0, extra_gap, extra_gap + window_gap);
+        propagateBackward(space, -1);
         return;
     } else if (index == 0) {
         // Always align the first window to the display's left edge
@@ -855,7 +855,7 @@ function fixStack(space, around) {
 }
 
 // Place window's left edge at x
-function propogate_forward(space, n, x, gap) {
+function propagateForward(space, n, x, gap) {
     if (n < 0 || n >= space.length) {
         StackOverlay.rightOverlay.setTarget(null);
         return;
@@ -883,15 +883,15 @@ function propogate_forward(space, n, x, gap) {
                             panelBox.height + margin_tb,
                             stack
                           });
-        propogate_forward(space, n+1, x+meta_window.get_frame_rect().width + gap, gap);
+        propagateForward(space, n+1, x+meta_window.get_frame_rect().width + gap, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
-        propogate_forward(space, n+1, x, gap);
+        propagateForward(space, n+1, x, gap);
     }
 }
 
 // Place window's right edge at x
-function propogate_backward(space, n, x, gap) {
+function propagateBackward(space, n, x, gap) {
     if (n < 0 || n >= space.length) {
         StackOverlay.leftOverlay.setTarget(null);
         return;
@@ -918,10 +918,10 @@ function propogate_backward(space, n, x, gap) {
                             panelBox.height + margin_tb,
                             stack
                           });
-        propogate_backward(space, n-1, x - gap, gap);
+        propagateBackward(space, n-1, x - gap, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
-        propogate_backward(space, n-1, x, gap);
+        propagateBackward(space, n-1, x, gap);
     }
 }
 
@@ -997,8 +997,8 @@ function center(meta_window, zen) {
     let left = zen ? -primary.width : x - window_gap;
     let space = spaces.spaceOfWindow(meta_window);
     let i = space.indexOf(meta_window);
-    propogate_forward(space, i + 1, right);
-    propogate_backward(space, i - 1, left);
+    propagateForward(space, i + 1, right);
+    propagateBackward(space, i - 1, left);
 }
 
 function toggle_maximize_horizontally(meta_window) {
