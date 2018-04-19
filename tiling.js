@@ -150,6 +150,8 @@ function disable () {
                 metaWindow[signals].forEach(id => metaWindow.disconnect(id));
                 delete metaWindow[signals];
             }
+
+            actor.show();
         });
 
     // Copy the old spaces.
