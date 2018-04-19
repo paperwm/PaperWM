@@ -883,25 +883,6 @@ function propogate_backward(space, n, x, gap) {
     }
 }
 
-// Detach meta_window or the focused window by default
-// Can be used from the looking glass
-function detach (meta_window) {
-    meta_window = meta_window || global.display.focus_window;
-    remove_handler(meta_window.get_workspace(), meta_window)
-}
-
-function center(meta_window, zen) {
-    let frame = meta_window.get_frame_rect();
-    let x = Math.floor((primary.width - frame.width)/2)
-    move_to(undefined, meta_window, {x, y: frame.y})
-    let right = zen ? primary.width : x + frame.width + window_gap;
-    let left = zen ? -primary.width : x - window_gap;
-    let space = spaces.spaceOfWindow(meta_window);
-    let i = space.indexOf(meta_window);
-    propogate_forward(space, i + 1, right);
-    propogate_backward(space, i - 1, left);
-}
-
 function add_filter(meta_window, startup) {
     let add = true;
     if (meta_window.window_type != Meta.WindowType.NORMAL
@@ -998,6 +979,25 @@ function isUnStacked(metaWindow) {
 function isFullyVisible(metaWindow) {
     let frame = metaWindow.get_frame_rect();
     return frame.x >= 0 && (frame.x + frame.width) <= primary.width;
+}
+
+// Detach meta_window or the focused window by default
+// Can be used from the looking glass
+function detach (meta_window) {
+    meta_window = meta_window || global.display.focus_window;
+    remove_handler(meta_window.get_workspace(), meta_window)
+}
+
+function center(meta_window, zen) {
+    let frame = meta_window.get_frame_rect();
+    let x = Math.floor((primary.width - frame.width)/2)
+    move_to(undefined, meta_window, {x, y: frame.y})
+    let right = zen ? primary.width : x + frame.width + window_gap;
+    let left = zen ? -primary.width : x - window_gap;
+    let space = spaces.spaceOfWindow(meta_window);
+    let i = space.indexOf(meta_window);
+    propogate_forward(space, i + 1, right);
+    propogate_backward(space, i - 1, left);
 }
 
 function toggle_maximize_horizontally(meta_window) {
