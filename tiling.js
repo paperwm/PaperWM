@@ -648,6 +648,103 @@ function setInitialPosition(actor, existing) {
     }
 }
 
+
+/**
+   Make sure that `meta_window` is in view, scrolling the space if needed.
+ */
+function ensureViewport(meta_window, space, force) {
+    space = space || spaces.spaceOfWindow(meta_window);
+    if (space.moving == meta_window && !force) {
+        debug('already moving', meta_window.title);
+        return;
+    }
+    debug('Moving', meta_window.title);
+
+    meta_window._isStacked = false;
+
+    let index = space.indexOf(meta_window)
+    if (index === -1)
+        return;
+
+    space.selectedWindow = meta_window;
+    let frame = meta_window.get_frame_rect();
+    meta_window.move_resize_frame(true, frame.x, frame.y,
+                                  frame.width,
+                                  primary.height - panelBox.height - margin_tb*2);
+
+    // Hack to ensure the statusbar is visible while there's a fullscreen
+    // windows in the space.
+    if (!meta_window.fullscreen) {
+        TopBar.show();
+    }
+
+    if (meta_window.destinationX !== undefined)
+        // Use the destination of the window if available
+        frame.x = meta_window.destinationX;
+    let x = frame.x;
+    let y = panelBox.height + margin_tb;
+    let required_width = space.reduce((length, meta_window) => {
+        let frame = meta_window.get_frame_rect();
+        return length + frame.width + window_gap;
+    }, -window_gap);
+    if (meta_window.fullscreen) {
+        // Fullscreen takes highest priority
+        x = 0, y = 0;
+        TopBar.hide();
+    } else if (meta_window.maximized_vertically
+               && meta_window.maximized_horizontally) {
+        x = frame.x;
+        y = frame.y;
+    } else if (required_width <= primary.width) {
+        let leftovers = primary.width - required_width;
+        let gaps = space.length + 1;
+        let extra_gap = Math.floor(leftovers/gaps);
+        debug('#extragap', extra_gap);
+        propagateForward(space, 0, extra_gap, extra_gap + window_gap);
+        propagateBackward(space, -1);
+        return;
+    } else if (index == 0) {
+        // Always align the first window to the display's left edge
+        x = 0;
+    } else if (index == space.length-1) {
+        // Always align the first window to the display's right edge
+        x = primary.width - frame.width;
+    } else if (frame.width >
+               primary.width - 2*(margin_lr + stack_margin + window_gap)) {
+        // Consider the window to be wide and center it
+        x = Math.round((primary.width - frame.width)/2);
+
+    } else if (frame.x + frame.width > primary.width) {
+        // Align to the right margin_lr
+        x = primary.width - margin_lr - frame.width;
+    } else if (frame.x < 0) {
+        // Align to the left margin_lr
+        x = margin_lr;
+    } else if (frame.x + frame.width === primary.width) {
+        // When opening new windows at the end, in the background, we want to
+        // show some minimup margin
+        x = primary.width - minimumMargin - frame.width;
+    } else if (frame.x === 0) {
+        // Same for the start (though the case isn't as common)
+        x = minimumMargin;
+    }
+
+    space.moving = meta_window;
+    move_to(space, meta_window,
+            { x, y,
+              onComplete: () => {
+                  space.moving = false;
+                  // Certain gnome-shell/mutter animations expect default
+                  // pivot point (eg. fullscreen)
+                  meta_window.get_compositor_private().set_pivot_point(0, 0);
+              },
+              onStart:() => { meta_window.raise(); }
+            });
+    // Return x so we can position the minimap
+    return x;
+}
+
+
 /**
    Animate @meta_window to (@x, @y) in primary relative coordinates.
 
@@ -791,101 +888,6 @@ function propagateBackward(space, n, x, gap) {
         // If the window doesn't have an actor we should just skip it
         propagateBackward(space, n-1, x, gap);
     }
-}
-
-/**
-   Make sure that `meta_window` is in view, scrolling the space if needed.
- */
-function ensureViewport(meta_window, space, force) {
-    space = space || spaces.spaceOfWindow(meta_window);
-    if (space.moving == meta_window && !force) {
-        debug('already moving', meta_window.title);
-        return;
-    }
-    debug('Moving', meta_window.title);
-
-    meta_window._isStacked = false;
-
-    let index = space.indexOf(meta_window)
-    if (index === -1)
-        return;
-
-    space.selectedWindow = meta_window;
-    let frame = meta_window.get_frame_rect();
-    meta_window.move_resize_frame(true, frame.x, frame.y,
-                                  frame.width,
-                                  primary.height - panelBox.height - margin_tb*2);
-
-    // Hack to ensure the statusbar is visible while there's a fullscreen
-    // windows in the space.
-    if (!meta_window.fullscreen) {
-        TopBar.show();
-    }
-
-    if (meta_window.destinationX !== undefined)
-        // Use the destination of the window if available
-        frame.x = meta_window.destinationX;
-    let x = frame.x;
-    let y = panelBox.height + margin_tb;
-    let required_width = space.reduce((length, meta_window) => {
-        let frame = meta_window.get_frame_rect();
-        return length + frame.width + window_gap;
-    }, -window_gap);
-    if (meta_window.fullscreen) {
-        // Fullscreen takes highest priority
-        x = 0, y = 0;
-        TopBar.hide();
-    } else if (meta_window.maximized_vertically
-               && meta_window.maximized_horizontally) {
-        x = frame.x;
-        y = frame.y;
-    } else if (required_width <= primary.width) {
-        let leftovers = primary.width - required_width;
-        let gaps = space.length + 1;
-        let extra_gap = Math.floor(leftovers/gaps);
-        debug('#extragap', extra_gap);
-        propagateForward(space, 0, extra_gap, extra_gap + window_gap);
-        propagateBackward(space, -1);
-        return;
-    } else if (index == 0) {
-        // Always align the first window to the display's left edge
-        x = 0;
-    } else if (index == space.length-1) {
-        // Always align the first window to the display's right edge
-        x = primary.width - frame.width;
-    } else if (frame.width >
-               primary.width - 2*(margin_lr + stack_margin + window_gap)) {
-        // Consider the window to be wide and center it
-        x = Math.round((primary.width - frame.width)/2);
-
-    } else if (frame.x + frame.width > primary.width) {
-        // Align to the right margin_lr
-        x = primary.width - margin_lr - frame.width;
-    } else if (frame.x < 0) {
-        // Align to the left margin_lr
-        x = margin_lr;
-    } else if (frame.x + frame.width === primary.width) {
-        // When opening new windows at the end, in the background, we want to
-        // show some minimup margin
-        x = primary.width - minimumMargin - frame.width;
-    } else if (frame.x === 0) {
-        // Same for the start (though the case isn't as common)
-        x = minimumMargin;
-    }
-
-    space.moving = meta_window;
-    move_to(space, meta_window,
-            { x, y,
-              onComplete: () => {
-                  space.moving = false;
-                  // Certain gnome-shell/mutter animations expect default
-                  // pivot point (eg. fullscreen)
-                  meta_window.get_compositor_private().set_pivot_point(0, 0);
-              },
-              onStart:() => { meta_window.raise(); }
-            });
-    // Return x so we can position the minimap
-    return x;
 }
 
 // `MetaWindow::size-changed` handling
