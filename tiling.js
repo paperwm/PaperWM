@@ -180,6 +180,10 @@ let colors = [
 ];
 let color = 3; // light -> dark: 0 -> 3
 let containers = [];
+
+/**
+   Array used to store the scrolled tiling.
+ */
 class Space extends Array {
     constructor (workspace) {
         super(0);
@@ -263,7 +267,11 @@ class Space extends Array {
     }
 }
 
-// Singleton spaces object, shouldn't be reused
+/**
+   A `Map` to store all `Spaces`'s, indexed by the corresponding workspace.
+
+   TODO: Move initialization to enable
+ */
 var spaces = (function () {
     let spaces = new Map();
 
@@ -356,7 +364,8 @@ var spaces = (function () {
 
 
 /**
-   let workspace = global.screen.get_active_workspace()
+   Add any existing windows on `workspace` to the corresponding `Space`,
+   optionally using `windows` as a preferred order.
  */
 function add_all_from_workspace(workspace, windows = []) {
 
@@ -431,6 +440,9 @@ function add_all_from_workspace(workspace, windows = []) {
     }
 }
 
+/**
+   Types of windows which never should be tiled.
+ */
 function add_filter(meta_window, startup) {
     let add = true;
     if (meta_window.window_type != Meta.WindowType.NORMAL
@@ -473,6 +485,11 @@ function add_filter(meta_window, startup) {
 }
 
 
+/**
+   Handle windows leaving workspaces.
+
+   TODO: move to `Space`
+ */
 function remove_handler(workspace, meta_window) {
     debug("window-removed", meta_window, meta_window.title, workspace.index());
     // Note: If `meta_window` was closed and had focus at the time, the next
@@ -510,6 +527,11 @@ function remove_handler(workspace, meta_window) {
     }
 }
 
+/**
+   Handle windows entering workspaces.
+
+   TODO: move to `Space`
+*/
 function add_handler(ws, meta_window) {
     debug("window-added", meta_window, meta_window.title, meta_window.window_type, ws.index());
     if (!add_filter(meta_window)) {
@@ -574,7 +596,16 @@ function insertWindow(space, metaWindow, index) {
     }
 }
 
-// Needs to be called by {metaWindow, signal}
+/**
+   Weird utility to function that applies the any initial position on newly
+   added windows. Specifically gets called by the first `MetaWindow::focus`,
+   or `Actor::show` signal.
+
+   The main purpose is handling both newly created window and windows that are
+   moved into a workspace. This is probably pretty foolish.
+
+   NB: Needs to be called by {metaWindow, signal}
+*/
 function setInitialPosition(actor, existing) {
     let {metaWindow, signal} = this;
 
@@ -618,7 +649,10 @@ function setInitialPosition(actor, existing) {
 }
 
 /**
- * Animate @meta_window to (@x, @y) in frame coordinates.
+   Animate @meta_window to (@x, @y) in primary relative coordinates.
+
+
+   FIXME: This should really be __monitor__ relative instead.
  */
 function move(meta_window, {x, y,
                             onComplete,
@@ -693,6 +727,9 @@ const DIRECTION = {
     Right: 1
 }
 
+/**
+   Make sure that `meta_window` is in view, scrolling the space if needed.
+ */
 function ensureViewport(meta_window, space, force) {
     space = space || spaces.spaceOfWindow(meta_window);
     if (space.moving == meta_window && !force) {
@@ -785,6 +822,7 @@ function ensureViewport(meta_window, space, force) {
     return x;
 }
 
+// `MetaWindow::size-changed` handling
 function sizeHandler(metaWindow) {
     debug('size-changed', metaWindow.title);
     let space = spaces.spaceOfWindow(metaWindow);
@@ -792,6 +830,7 @@ function sizeHandler(metaWindow) {
         ensureViewport(metaWindow, space, true);
 }
 
+// `MetaWindow::focus` handling
 function focus_handler(meta_window, user_data) {
     debug("focus:", meta_window.title, utils.framestr(meta_window.get_frame_rect()));
 
@@ -823,6 +862,11 @@ function minimizeHandler(metaWindow) {
 }
 let minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
 
+/**
+  `WindowActor::show` handling
+
+  Kill any falsely shown WindowActor.
+*/
 function showHandler(actor) {
     let metaWindow = actor.meta_window;
     let onActive = metaWindow.get_workspace() === global.screen.get_active_workspace();
