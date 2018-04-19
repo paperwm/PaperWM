@@ -431,13 +431,6 @@ function add_all_from_workspace(workspace, windows = []) {
     }
 }
 
-function focus() {
-    let meta_window = global.display.focus_window;
-    if (!meta_window)
-        return -1;
-    return spaces.spaceOfWindow(meta_window).indexOf(meta_window);
-}
-
 function isStacked(metaWindow) {
     return metaWindow._isStacked;
 }
