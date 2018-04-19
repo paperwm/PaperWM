@@ -431,6 +431,48 @@ function add_all_from_workspace(workspace, windows = []) {
     }
 }
 
+function add_filter(meta_window, startup) {
+    let add = true;
+    if (meta_window.window_type != Meta.WindowType.NORMAL
+        || meta_window.get_transient_for() != null
+        || meta_window.is_on_all_workspaces()
+        ) {
+        add = false;
+    }
+
+    let winprop = find_winprop(meta_window);
+    if (winprop) {
+        if (winprop.oneshot) {
+            // untested :)
+            winprops.splice(winprops.indexOf(winprop), 1);
+        }
+        if (winprop.float) {
+            // Let gnome-shell handle the placement
+            add = false;
+        }
+        if (winprop.scratch_layer) {
+            Scratch.makeScratch(meta_window);
+            add = false;
+        }
+    }
+
+    // If we're focusing a scratch window make on top and return
+    let focus_window = global.display.focus_window;
+    if (Scratch.isScratchWindow(focus_window) && !startup) {
+        Scratch.makeScratch(meta_window);
+        add = false;
+    }
+
+    // If the window is a scratch window make it always on top
+    if (Scratch.isScratchWindow(meta_window)) {
+        meta_window.make_above();
+        add = false;
+    }
+
+    return add;
+}
+
+
 function remove_handler(workspace, meta_window) {
     debug("window-removed", meta_window, meta_window.title, workspace.index());
     // Note: If `meta_window` was closed and had focus at the time, the next
@@ -881,47 +923,6 @@ function propogate_backward(space, n, x, gap) {
         // If the window doesn't have an actor we should just skip it
         propogate_backward(space, n-1, x, gap);
     }
-}
-
-function add_filter(meta_window, startup) {
-    let add = true;
-    if (meta_window.window_type != Meta.WindowType.NORMAL
-        || meta_window.get_transient_for() != null
-        || meta_window.is_on_all_workspaces()
-        ) {
-        add = false;
-    }
-
-    let winprop = find_winprop(meta_window);
-    if (winprop) {
-        if (winprop.oneshot) {
-            // untested :)
-            winprops.splice(winprops.indexOf(winprop), 1);
-        }
-        if (winprop.float) {
-            // Let gnome-shell handle the placement
-            add = false;
-        }
-        if (winprop.scratch_layer) {
-            Scratch.makeScratch(meta_window);
-            add = false;
-        }
-    }
-
-    // If we're focusing a scratch window make on top and return
-    let focus_window = global.display.focus_window;
-    if (Scratch.isScratchWindow(focus_window) && !startup) {
-        Scratch.makeScratch(meta_window);
-        add = false;
-    }
-
-    // If the window is a scratch window make it always on top
-    if (Scratch.isScratchWindow(meta_window)) {
-        meta_window.make_above();
-        add = false;
-    }
-
-    return add;
 }
 
 /**
