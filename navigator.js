@@ -102,7 +102,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         swapArray(this.space, index, targetIndex);
 
         let metaWindow = this.space[targetIndex];
-        let newX = Tiling.ensure_viewport(this.space, metaWindow, true);
+        let newX = Tiling.ensureViewport(metaWindow, this.space, true);
 
         this._selectedIndex = targetIndex;
 
@@ -233,7 +233,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         let metaWindow = this.space[index];
         if (metaWindow) {
             this.space.selectedWindow = metaWindow;
-            let newX = Tiling.ensure_viewport(this.space, metaWindow);
+            let newX = Tiling.ensureViewport(metaWindow, this.space);
             if (newX !== undefined) {
                 this._switcherList.getSelected().sync(newX);
             }
@@ -284,7 +284,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             if (focus.get_workspace() !== this.space.workspace) {
                 switchWorkspace(focus.get_workspace());
             }
-            Tiling.ensure_viewport(Tiling.spaces.spaceOfWindow(focus), focus);
+            Tiling.ensureViewport(focus, Tiling.spaces.spaceOfWindow(focus));
         }
 
         navigating = false;

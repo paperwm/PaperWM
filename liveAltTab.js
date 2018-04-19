@@ -69,7 +69,7 @@ var LiveAltTab = Lang.Class({
         }
 
         let space = Tiling.spaces.spaceOfWindow(to);
-        Tiling.ensure_viewport(space, to);
+        Tiling.ensureViewport(to, space);
         this._selectedIndex = num;
         this._switcherList.highlight(num);
     },

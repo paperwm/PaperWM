@@ -427,7 +427,7 @@ function add_all_from_workspace(workspace, windows = []) {
         .filter(metaWindow => { return space.indexOf(metaWindow) !== -1; });
     if (tabList[0]) {
         space.selectedWindow = tabList[0]
-        ensure_viewport(space, space.selectedWindow);
+        ensureViewport(space.selectedWindow, space);
     }
 }
 
@@ -532,7 +532,7 @@ function remove_handler(workspace, meta_window) {
     if (space.selectedWindow) {
         // Force a new ensure, since the focus_handler is run before
         // window-removed
-        ensure_viewport(space, space.selectedWindow, true)
+        ensureViewport(space.selectedWindow, space, true)
     }
 }
 
@@ -621,9 +621,9 @@ function setInitialPosition(actor, existing) {
 
         if (metaWindow.has_focus()) {
             space.selectedWindow = metaWindow;
-            ensure_viewport(space, metaWindow, true);
+            ensureViewport(metaWindow, space, true);
         } else {
-            ensure_viewport(space, space.selectedWindow);
+            ensureViewport(space.selectedWindow, space);
         }
 
         delete metaWindow.scrollwm_initial_position;
@@ -664,7 +664,8 @@ const DIRECTION = {
     Right: 1
 }
 
-function ensure_viewport(space, meta_window, force) {
+function ensureViewport(meta_window, space, force) {
+    space = space || spaces.spaceOfWindow(meta_window);
     if (space.moving == meta_window && !force) {
         debug('already moving', meta_window.title);
         return;
@@ -759,7 +760,7 @@ function sizeHandler(metaWindow) {
     debug('size-changed', metaWindow.title);
     let space = spaces.spaceOfWindow(metaWindow);
     if (space.selectedWindow === metaWindow)
-        ensure_viewport(space, metaWindow, true);
+        ensureViewport(metaWindow, space, true);
 }
 
 function focus_handler(meta_window, user_data) {
@@ -778,7 +779,7 @@ function focus_handler(meta_window, user_data) {
     }
 
     let space = spaces.spaceOfWindow(meta_window);
-    ensure_viewport(space, meta_window);
+    ensureViewport(meta_window, space);
 }
 let focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
 
