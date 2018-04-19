@@ -49,11 +49,6 @@ var LiveAltTab = Lang.Class({
 
     _select: function(num) {
 
-        // if (this.switchedWorkspace) {
-        //     Main.wm._previewWorkspaceDone(global.window_manager);
-        //     this.switchedWorkspace = false;
-        // }
-
         let from = this._switcherList.windows[this._selectedIndex];
         let to = this._switcherList.windows[num];
 
@@ -69,14 +64,6 @@ var LiveAltTab = Lang.Class({
             Main.uiGroup.set_child_above_sibling(this.actor, clone);
         }
 
-        // let fromIndex = from.get_workspace().workspace_index;
-        // let toIndex = to.get_workspace().workspace_index;
-        // if (toIndex !== fromIndex) {
-        //     Main.wm._previewWorkspace(from.get_workspace(),
-        //                               to.get_workspace());
-        //     this.switchedWorkspace = true;
-        // }
-
         let space = Tiling.spaces.spaceOfWindow(to);
         Tiling.ensure_viewport(space, to);
         this._selectedIndex = num;
@@ -85,9 +72,7 @@ var LiveAltTab = Lang.Class({
 
     _finish: function() {
         this.parent();
-
         this.was_accepted = true;
-        // Main.wm._previewWorkspaceDone(global.window_manager);
     },
 
     _itemEnteredHandler: function() {
@@ -104,7 +89,6 @@ var LiveAltTab = Lang.Class({
         if(!this.was_accepted) {
             // Select the starting window
             this._select(0);
-            // Main.wm._previewWorkspaceDone(global.window_manager);
         }
         this.clone && this.clone.destroy();
         this.parent();
