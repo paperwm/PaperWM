@@ -17,6 +17,10 @@ var LiveAltTab = Lang.Class({
     _getWindowList: function () {
         let tabList = global.display.get_tab_list(Meta.TabList.NORMAL_ALL,
                                                   global.screen.get_active_workspace());
+
+        this._block = Main.wm._blockAnimations;
+        Main.wm._blockAnimations = true;
+
         if (Scratch.isScratchActive()) {
             return Scratch.getScratchWindows();
         } else {
@@ -86,6 +90,7 @@ var LiveAltTab = Lang.Class({
 
     _onDestroy: function() {
         debug('#preview', 'onDestroy', this.was_accepted);
+        Main.wm._blockAnimations = this._block;
         if(!this.was_accepted) {
             // Select the starting window
             this._select(0);
