@@ -305,11 +305,6 @@ function switchWorkspace(from, to, callback) {
 
     let toSpace = Tiling.spaces.spaceOf(to);
 
-    toSpace.forEach(w => {
-        w.get_compositor_private().hide();
-        w.clone.show();
-    });
-
     Tweener.addTween(toSpace.cloneContainer,
                      { x: 0,
                        y: 0,
@@ -332,11 +327,6 @@ function switchWorkspace(from, to, callback) {
     cloneParent.set_child_below_sibling(
         toSpace.cloneContainer,
         fromSpace.cloneContainer);
-
-    fromSpace.forEach(w => {
-        w.get_compositor_private().hide();
-        w.clone.show();
-    });
 
     Tweener.addTween(fromSpace.cloneContainer,
                      { x: xDest,
