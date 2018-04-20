@@ -176,7 +176,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         });
 
         this.space = newMap.space;
-        this._select(this.space.selectedIndex());
+        this._selectedIndex = this.space.selectedIndex();
     },
 
     _doAction: function(mutterActionId) {
