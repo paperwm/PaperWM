@@ -277,29 +277,8 @@ var MultiMap = new Lang.Class({
 
         if (mru) {
             this.selectedIndex = 0;
-            let seen = {};
-            this.addSpace(Tiling.spaces.spaceOf(global.screen.get_active_workspace()), 0)
-            seen[global.screen.get_active_workspace()] = true;
-            let i = 1;
-            global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
-                .forEach(metaWindow => {
-                    let workspace = metaWindow.get_workspace();
-                    if (!seen[workspace]) {
-                        this.addSpace(Tiling.spaces.spaceOf(workspace), i)
-                        seen[workspace] = true;
-                        i++;
-                    }
-                });
-
-            let workspaces = global.screen.get_n_workspaces();
-            for (let j=0; j < workspaces; j++) {
-                let workspace = global.screen.get_workspace_by_index(j);
-                if (!seen[workspace]) {
-                    this.addSpace(Tiling.spaces.spaceOf(workspace), i);
-                    i++;
-                    seen[workspace] = true;
-                }
-            }
+            Tiling.spaces.mru()
+                .forEach((s, i) => this.addSpace(s, i));
         } else {
             this.selectedIndex = global.screen.get_active_workspace_index();
             let nWorkspaces = global.screen.n_workspaces;

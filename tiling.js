@@ -370,6 +370,36 @@ class Spaces extends Map {
         return this.get(workspace);
     };
 
+    /**
+       Return an array of Space's ordered in most recently used order.
+     */
+    mru() {
+        let seen = new Map(), out = [];
+        let active = global.screen.get_active_workspace();
+        out.push(this.get(active));
+        seen.set(active, true);
+
+        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+            .forEach((metaWindow, i) => {
+                let workspace = metaWindow.get_workspace();
+                if (!seen.get(workspace)) {
+                    out.push(this.get(workspace));
+                    seen.set(workspace, true);
+                }
+            });
+
+        let workspaces = global.screen.get_n_workspaces();
+        for (let i=0; i < workspaces; i++) {
+            let workspace = global.screen.get_workspace_by_index(i);
+            if (!seen.get(workspace)) {
+                out.push(this.get(workspace));
+                seen.set(workspace, true);
+           }
+        }
+
+        return out;
+    }
+
     window_created(display, metaWindow, user_data) {
         if (!metaWindow[signals]) {
             metaWindow[signals] = [
