@@ -55,7 +55,7 @@ let colors = [
     '#DF421E', '#990000', '#EED680', '#D1940C',
     '#46A046', '#267726', '#ffffff', '#000000'
 ];
-let color = 3; // light -> dark: 0 -> 3
+let color;
 
 /**
    Array used to store the scrolled tiling.
@@ -257,6 +257,7 @@ function init() {
 function enable() {
 
     spaces = new Spaces();
+    color = 3;
 
     global.screen[signals].push(
         global.screen.connect(
