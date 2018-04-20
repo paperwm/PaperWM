@@ -103,6 +103,85 @@ class Space extends Array {
         this.moving = false;
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
+
+        this.addAll(oldSpaces.get(workspace));
+    }
+
+    /**
+       Add any existing windows on `workspace` to the corresponding `Space`,
+       optionally using `windows` as a preferred order.
+    */
+    addAll(windows = []) {
+
+        // On gnome-shell-restarts the windows are moved into the viewport, but
+        // they're moved minimally and the stacking is not changed, so the tiling
+        // order is preserved (sans full-width windows..)
+        function xz_comparator(windows) {
+            // Seems to be the only documented way to get stacking order?
+            // Could also rely on the MetaWindowActor's index in it's parent
+            // children array: That seem to correspond to clutters z-index (note:
+            // z_position is something else)
+            let z_sorted = global.display.sort_windows_by_stacking(windows);
+            function xkey(mw) {
+                let frame = mw.get_frame_rect();
+                if(frame.x <= 0)
+                    return 0;
+                if(frame.x+frame.width == primary.width) {
+                    return primary.width;
+                }
+                return frame.x;
+            }
+            // xorder: a|b c|d
+            // zorder: a d b c
+            return (a,b) => {
+                let ax = xkey(a);
+                let bx = xkey(b);
+                // Yes, this is not efficient
+                let az = z_sorted.indexOf(a);
+                let bz = z_sorted.indexOf(b);
+                let xcmp = ax - bx;
+                if (xcmp !== 0)
+                    return xcmp;
+
+                if (ax === 0) {
+                    // Left side: lower stacking first
+                    return az - bz;
+                } else {
+                    // Right side: higher stacking first
+                    return bz - az;
+                }
+            };
+        }
+
+        let space = this;
+        let workspace = space.workspace;
+        windows = windows.concat(
+            // Add all the other windows as we want to support someone disabling
+            // the extension, and enabling it after using the session for a
+            // while
+            workspace.list_windows()
+                .filter(w => windows.indexOf(w) === -1)
+                .sort(xz_comparator(workspace.list_windows())));
+
+        windows.forEach((meta_window, i) => {
+            if (meta_window.above || meta_window.minimized) {
+                // Rough heuristic to figure out if a window should float
+                Scratch.makeScratch(meta_window);
+                return;
+            }
+            if(space.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
+                // Using add_handler is unreliable since it interacts with focus.
+                space.push(meta_window);
+                space.cloneContainer.add_actor(meta_window.clone);
+            }
+        })
+
+        let tabList = global.display.get_tab_list(Meta.TabList.NORMAL, workspace)
+            .filter(metaWindow => { return space.indexOf(metaWindow) !== -1; });
+        if (tabList[0]) {
+            space.selectedWindow = tabList[0]
+            ensureViewport(space.selectedWindow, space);
+        }
     }
 
     // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
@@ -321,9 +400,7 @@ function enable() {
         // Hook up existing workspaces
         for (let i=0; i < global.screen.n_workspaces; i++) {
             let workspace = global.screen.get_workspace_by_index(i)
-            let oldSpace = oldSpaces.get(workspace);
             spaces.addSpace(workspace);
-            add_all_from_workspace(workspace, oldSpace);
             debug("workspace", workspace)
         }
 
@@ -383,83 +460,6 @@ function disable () {
     // Disable workspace related signals
     global.screen[signals].forEach(id => global.screen.disconnect(id));
     global.screen[signals] = [];
-}
-
-/**
-   Add any existing windows on `workspace` to the corresponding `Space`,
-   optionally using `windows` as a preferred order.
- */
-function add_all_from_workspace(workspace, windows = []) {
-
-    // On gnome-shell-restarts the windows are moved into the viewport, but
-    // they're moved minimally and the stacking is not changed, so the tiling
-    // order is preserved (sans full-width windows..)
-    function xz_comparator(windows) {
-        // Seems to be the only documented way to get stacking order?
-        // Could also rely on the MetaWindowActor's index in it's parent
-        // children array: That seem to correspond to clutters z-index (note:
-        // z_position is something else)
-        let z_sorted = global.display.sort_windows_by_stacking(windows);
-        function xkey(mw) {
-            let frame = mw.get_frame_rect();
-            if(frame.x <= 0)
-                return 0;
-            if(frame.x+frame.width == primary.width) {
-                return primary.width;
-            }
-            return frame.x;
-        }
-        // xorder: a|b c|d
-        // zorder: a d b c
-        return (a,b) => {
-            let ax = xkey(a);
-            let bx = xkey(b);
-            // Yes, this is not efficient
-            let az = z_sorted.indexOf(a);
-            let bz = z_sorted.indexOf(b);
-            let xcmp = ax - bx;
-            if (xcmp !== 0)
-                return xcmp;
-
-            if (ax === 0) {
-                // Left side: lower stacking first
-                return az - bz;
-            } else {
-                // Right side: higher stacking first
-                return bz - az;
-            }
-        };
-    }
-
-    workspace = workspace || global.screen.get_active_workspace();
-    windows = windows.concat(
-        // Add all the other windows as we want to support someone disabling
-        // the extension, and enabling it after using the session for a
-        // while
-        workspace.list_windows()
-            .filter(w => windows.indexOf(w) === -1)
-            .sort(xz_comparator(workspace.list_windows())));
-
-    let space = spaces.spaceOf(workspace);
-    windows.forEach((meta_window, i) => {
-        if (meta_window.above || meta_window.minimized) {
-            // Rough heuristic to figure out if a window should float
-            Scratch.makeScratch(meta_window);
-            return;
-        }
-        if(space.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
-            // Using add_handler is unreliable since it interacts with focus.
-            space.push(meta_window);
-            space.cloneContainer.add_actor(meta_window.clone);
-        }
-    })
-
-    let tabList = global.display.get_tab_list(Meta.TabList.NORMAL, workspace)
-        .filter(metaWindow => { return space.indexOf(metaWindow) !== -1; });
-    if (tabList[0]) {
-        space.selectedWindow = tabList[0]
-        ensureViewport(space.selectedWindow, space);
-    }
 }
 
 /**
