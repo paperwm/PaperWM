@@ -12,9 +12,6 @@ function init() {
 }
 
 function enable() {
-    // Don't redirect fullscreen windows, this fixes a lot of eg. flashing when
-    // switching to or away from fullscreen windows.
-    Meta.disable_unredirect_for_screen(global.screen);
 
     // Don't hide notifications when there's fullscreen windows in the workspace.
     // Fullscreen windows aren't special in paperWM and might not even be
@@ -83,6 +80,5 @@ function enable() {
 }
 
 function disable() {
-    Meta.disable_unredirect_for_screen(global.screen);
     imports.ui.messageTray.MessageTray.prototype._updateState = orgUpdateState;
 }
