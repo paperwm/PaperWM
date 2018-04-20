@@ -257,9 +257,54 @@ class Spaces extends Map {
                 'window-created',
                 utils.dynamic_function_ref('window_created', this))
         ];
+
+        // Clone and hook up existing windows
+        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+            .forEach(metaWindow => {
+                let actor = metaWindow.get_compositor_private();
+                let clone = new Clutter.Clone({source: actor});
+                metaWindow.clone = clone;
+
+                metaWindow[signals] = [
+                    metaWindow.connect("focus", focus_wrapper),
+                    metaWindow.connect('notify::minimized', minimizeWrapper),
+                    metaWindow.connect('size-changed', sizeHandler)
+                ];
+                actor[signals] = [
+                    actor.connect('show', showWrapper)
+                ];
+            });
+
+        // Hook up existing workspaces
+        for (let i=0; i < global.screen.n_workspaces; i++) {
+            let workspace = global.screen.get_workspace_by_index(i)
+            this.addSpace(workspace);
+            debug("workspace", workspace)
+        }
     }
 
     destroy() {
+        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+            .forEach(metaWindow => {
+                let actor = metaWindow.get_compositor_private();
+                actor.set_scale(1, 1);
+                actor.set_pivot_point(0, 0);
+
+                if (actor[signals]) {
+                    actor[signals].forEach(id => actor.disconnect(id));
+                }
+
+                if (metaWindow.clone)
+                    metaWindow.clone.destroy();
+
+                if (metaWindow[signals]) {
+                    metaWindow[signals].forEach(id => metaWindow.disconnect(id));
+                    delete metaWindow[signals];
+                }
+
+                actor.show();
+            });
+
         this.screenSignals.forEach(id => global.screen.disconnect(id));
         this.displaySignals.forEach(id => global.display.disconnect(id));
 
@@ -367,7 +412,6 @@ function init() {
 
 function enable() {
 
-    spaces = new Spaces();
     color = 3;
 
     global.screen[signals].push(
@@ -389,34 +433,7 @@ function enable() {
     let isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
 
     function initWorkspaces() {
-
-        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
-            .forEach(metaWindow => {
-                let actor = metaWindow.get_compositor_private();
-                let clone = new Clutter.Clone({source: actor});
-                metaWindow.clone = clone;
-            });
-
-        // Hook up existing workspaces
-        for (let i=0; i < global.screen.n_workspaces; i++) {
-            let workspace = global.screen.get_workspace_by_index(i)
-            spaces.addSpace(workspace);
-            debug("workspace", workspace)
-        }
-
-        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
-            .forEach(metaWindow => {
-                metaWindow[signals] = [
-                    metaWindow.connect("focus", focus_wrapper),
-                    metaWindow.connect('notify::minimized', minimizeWrapper),
-                    metaWindow.connect('size-changed', sizeHandler)
-                ];
-                let actor = metaWindow.get_compositor_private();
-                actor[signals] = [
-                    actor.connect('show', showWrapper)
-                ];
-            });
-
+        spaces = new Spaces();
         Navigator.switchWorkspace(global.screen.get_active_workspace());
     }
 
@@ -434,27 +451,6 @@ function enable() {
 }
 
 function disable () {
-    global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
-        .forEach(metaWindow => {
-            let actor = metaWindow.get_compositor_private();
-            actor.set_scale(1, 1);
-            actor.set_pivot_point(0, 0);
-
-            if (actor[signals]) {
-                actor[signals].forEach(id => actor.disconnect(id));
-            }
-
-            if (metaWindow.clone)
-                metaWindow.clone.destroy();
-
-            if (metaWindow[signals]) {
-                metaWindow[signals].forEach(id => metaWindow.disconnect(id));
-                delete metaWindow[signals];
-            }
-
-            actor.show();
-        });
-
     spaces.destroy();
 
     // Disable workspace related signals
