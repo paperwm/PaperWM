@@ -11,11 +11,14 @@ const Gio = imports.gi.Gio;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 
+var spaces;
+
 var Minimap = Extension.imports.minimap;
 var Scratch = Extension.imports.scratch;
 var TopBar = Extension.imports.topbar;
 var Navigator = Extension.imports.navigator;
 var Me = Extension.imports.tiling;
+
 
 let preferences = Extension.imports.convenience.getSettings();
 // Gap between windows
@@ -53,7 +56,6 @@ let colors = [
     '#46A046', '#267726', '#ffffff', '#000000'
 ];
 let color = 3; // light -> dark: 0 -> 3
-let containers = [];
 
 /**
    Array used to store the scrolled tiling.
@@ -141,6 +143,105 @@ class Space extends Array {
     }
 }
 
+/**
+   A `Map` to store all `Spaces`'s, indexed by the corresponding workspace.
+
+   TODO: Move initialization to enable
+*/
+class Spaces extends Map {
+    // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
+    static get [Symbol.species]() { return Map; }
+
+    constructor() {
+        super();
+    }
+
+    workspacesChanged() {
+        let nWorkspaces = global.screen.n_workspaces;
+
+        // Identifying destroyed workspaces is rather bothersome,
+        // as it will for example report having windows,
+        // but will crash when looking at the workspace index
+
+        // Gather all indexed workspaces for easy comparison
+        let workspaces = {};
+        for (let i=0; i < nWorkspaces; i++) {
+            let workspace = global.screen.get_workspace_by_index(i);
+            workspaces[workspace] = true;
+            if (this.spaceOf(workspace) === undefined) {
+                debug('workspace added', workspace);
+                this.addSpace(workspace);
+            }
+        }
+
+        for (let [workspace, space] of this) {
+            if (workspaces[space.workspace] !== true) {
+                debug('workspace removed', space.workspace);
+                this.removeSpace(space);
+            }
+        }
+    };
+
+    workspaceRemoved(screen, index) {
+        let settings = new Gio.Settings({ schema_id:
+                                          'org.gnome.desktop.wm.preferences'});
+        let names = settings.get_strv('workspace-names');
+
+        // Move removed workspace name to the end. Could've simply removed it
+        // too, but this way it's not lost. In the future we want a UI to select
+        // old names when selecting a new workspace.
+        names = names.slice(0, index).concat(names.slice(index+1), [names[index]]);
+        settings.set_strv('workspace-names', names);
+    };
+
+    addSpace(workspace) {
+        this.set(workspace, new Space(workspace));
+    };
+
+    removeSpace(space) {
+        let workspace = space.workspace;
+        workspace.disconnect(space.addSignal);
+        workspace.disconnect(space.removeSignal);
+        space.cloneContainer.destroy();
+        this.delete(workspace);
+    };
+
+    spaceOfWindow(meta_window) {
+        return this.get(meta_window.get_workspace());
+    };
+
+    spaceOf(workspace) {
+        return this.get(workspace);
+    };
+
+    window_created(display, metaWindow, user_data) {
+        if (!metaWindow[signals]) {
+            metaWindow[signals] = [
+                metaWindow.connect("focus", focus_wrapper),
+                metaWindow.connect('notify::minimized', minimizeWrapper)
+            ];
+        }
+
+        let actor = metaWindow.get_compositor_private();
+        let clone = new Clutter.Clone({source: actor});
+        metaWindow.clone = clone;
+
+        actor[signals] = [
+            actor.connect('show', showWrapper)
+        ];
+
+        // Only run setInitialPosition on inserted windows
+        if (!metaWindow[isInserted])
+            return;
+        delete metaWindow[isInserted];
+        debug('window-created', metaWindow.title);
+        let signal = Symbol();
+        metaWindow[signal] = actor.connect('show',
+                                           Lang.bind({metaWindow, signal}, setInitialPosition));
+    };
+
+}
+
 // Symbol to retrieve the focus handler id
 var signals, oldSpaces, backgroundGroup;
 function init() {
@@ -154,6 +255,9 @@ function init() {
 }
 
 function enable() {
+
+    spaces = new Spaces();
+
     global.screen[signals].push(
         global.screen.connect(
             'notify::n-workspaces',
@@ -266,102 +370,6 @@ function disable () {
         spaces.removeSpace(space);
     }
 }
-
-/**
-   A `Map` to store all `Spaces`'s, indexed by the corresponding workspace.
-
-   TODO: Move initialization to enable
- */
-var spaces = (function () {
-    let spaces = new Map();
-
-    spaces.workspacesChanged = function () {
-        let nWorkspaces = global.screen.n_workspaces;
-
-        // Identifying destroyed workspaces is rather bothersome,
-        // as it will for example report having windows,
-        // but will crash when looking at the workspace index
-
-        // Gather all indexed workspaces for easy comparison
-        let workspaces = {};
-        for (let i=0; i < nWorkspaces; i++) {
-            let workspace = global.screen.get_workspace_by_index(i);
-            workspaces[workspace] = true;
-            if (spaces.spaceOf(workspace) === undefined) {
-                debug('workspace added', workspace);
-                this.addSpace(workspace);
-            }
-        }
-
-        for (let [workspace, space] of spaces) {
-            if (workspaces[space.workspace] !== true) {
-                debug('workspace removed', space.workspace);
-                this.removeSpace(space);
-            }
-        }
-    };
-
-    spaces.workspaceRemoved = function(screen, index) {
-        let settings = new Gio.Settings({ schema_id:
-                                          'org.gnome.desktop.wm.preferences'});
-        let names = settings.get_strv('workspace-names');
-
-        // Move removed workspace name to the end. Could've simply removed it
-        // too, but this way it's not lost. In the future we want a UI to select
-        // old names when selecting a new workspace.
-        names = names.slice(0, index).concat(names.slice(index+1), [names[index]]);
-        settings.set_strv('workspace-names', names);
-    };
-
-    spaces.addSpace = function(workspace) {
-        this.set(workspace, new Space(workspace));
-    };
-
-    spaces.removeSpace = function(space) {
-        let workspace = space.workspace;
-        workspace.disconnect(space.addSignal);
-        workspace.disconnect(space.removeSignal);
-        space.cloneContainer.destroy();
-        this.delete(workspace);
-    };
-
-    spaces.spaceOfWindow = function(meta_window) {
-        return this.get(meta_window.get_workspace());
-    };
-
-    spaces.spaceOf = function(workspace) {
-        return this.get(workspace);
-    };
-
-    spaces.window_created = function (display, metaWindow, user_data) {
-        if (!metaWindow[signals]) {
-            metaWindow[signals] = [
-                metaWindow.connect("focus", focus_wrapper),
-                metaWindow.connect('notify::minimized', minimizeWrapper)
-            ];
-        }
-
-        let actor = metaWindow.get_compositor_private();
-        let clone = new Clutter.Clone({source: actor});
-        metaWindow.clone = clone;
-
-        actor[signals] = [
-            actor.connect('show', showWrapper)
-        ];
-
-        // Only run setInitialPosition on inserted windows
-        if (!metaWindow[isInserted])
-            return;
-        delete metaWindow[isInserted];
-        debug('window-created', metaWindow.title);
-        let signal = Symbol();
-        metaWindow[signal] = actor.connect('show',
-                                           Lang.bind({metaWindow, signal}, setInitialPosition));
-    };
-
-    return spaces;
-})();
-
 
 /**
    Add any existing windows on `workspace` to the corresponding `Space`,
