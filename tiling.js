@@ -465,6 +465,11 @@ function enable() {
     function initWorkspaces() {
         spaces = new Spaces();
         Navigator.switchWorkspace(global.screen.get_active_workspace());
+
+        if (!Scratch.isScratchActive()) {
+            Scratch.getScratchWindows().forEach(
+                w => w.get_compositor_private().hide());
+        }
     }
 
     if (isDuringGnomeShellStartup) {
