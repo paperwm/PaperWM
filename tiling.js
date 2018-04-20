@@ -141,6 +141,13 @@ class Space extends Array {
         }
         return null;
     }
+
+    destroy() {
+        let workspace = this.workspace;
+        workspace.disconnect(this.addSignal);
+        workspace.disconnect(this.removeSignal);
+        this.cloneContainer.destroy();
+    }
 }
 
 /**
@@ -199,10 +206,7 @@ class Spaces extends Map {
     };
 
     removeSpace(space) {
-        let workspace = space.workspace;
-        workspace.disconnect(space.addSignal);
-        workspace.disconnect(space.removeSignal);
-        space.cloneContainer.destroy();
+        space.destroy();
         this.delete(workspace);
     };
 
