@@ -263,6 +263,7 @@ class Spaces extends Map {
             .forEach(metaWindow => {
                 let actor = metaWindow.get_compositor_private();
                 let clone = new Clutter.Clone({source: actor});
+                clone.set_position(actor.x, actor.y);
                 metaWindow.clone = clone;
 
                 metaWindow[signals] = [
@@ -410,6 +411,7 @@ class Spaces extends Map {
 
         let actor = metaWindow.get_compositor_private();
         let clone = new Clutter.Clone({source: actor});
+        clone.set_position(actor.x, actor.y);
         metaWindow.clone = clone;
 
         actor[signals] = [
