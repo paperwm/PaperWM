@@ -349,7 +349,8 @@ function disable () {
                 actor[signals].forEach(id => actor.disconnect(id));
             }
 
-            metaWindow.clone.destroy();
+            if (metaWindow.clone)
+                metaWindow.clone.destroy();
 
             if (metaWindow[signals]) {
                 metaWindow[signals].forEach(id => metaWindow.disconnect(id));
