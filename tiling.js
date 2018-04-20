@@ -419,9 +419,9 @@ class Spaces extends Map {
         ];
 
         // Only run setInitialPosition on inserted windows
-        if (!metaWindow[isInserted])
+        let space = spaces.spaceOfWindow(metaWindow);
+        if (space.indexOf(metaWindow) === -1)
             return;
-        delete metaWindow[isInserted];
         debug('window-created', metaWindow.title);
         let signal = Symbol();
         metaWindow[signal] = actor.connect('show',
@@ -611,7 +611,6 @@ function add_handler(ws, meta_window) {
     insertWindow(space, meta_window, insert_after_i + 1);
 }
 
-var isInserted = Symbol();
 // Insert @metaWindow in @space at @index, setting up focus handling
 function insertWindow(space, metaWindow, index) {
     index = index || space.length;
@@ -637,27 +636,23 @@ function insertWindow(space, metaWindow, index) {
 
     let actor = metaWindow.get_compositor_private();
     // If the MetaWindowActor is available the window already exists and we can
-    // position
+    // position it.
     if (actor) {
         debug('attach window', metaWindow.title, metaWindow.has_focus())
         // Set position and hookup signals, with `existing` set to true
         setInitialPosition.apply({metaWindow}, [ actor, true ]);
-    } else {
-        // Let either `focus` or `first-frame` do positioning and further signal
-        // hookup
-
-        // Set `isInserted` so `first-frame` signal will connect `focus_wrapper`
-        metaWindow[isInserted] = true;
-        let signal = Symbol();
-        metaWindow[signal] = metaWindow.connect('focus',
-                                                Lang.bind({metaWindow, signal}, setInitialPosition));
     }
+    // Otherwise we're dealing with a new window, so we let `window-created`
+    // handle initial positioning.
 }
 
 /**
    Weird utility to function that applies the any initial position on newly
-   added windows. Specifically gets called by the first `MetaWindow::focus`,
-   or `Actor::show` signal.
+   added windows.
+
+   When dealing with a new window it's called from the actor's `show` signal.
+   For existing windows it's being called from the workspace's `window-added`
+   signal.
 
    The main purpose is handling both newly created window and windows that are
    moved into a workspace. This is probably pretty foolish.
