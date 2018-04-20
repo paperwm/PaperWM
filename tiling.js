@@ -450,7 +450,10 @@ function enable() {
         global.screen.connect(
             'workspace-switched',
             (screen, from, to) => {
-                Navigator.switchWorkspace(global.screen.get_workspace_by_index(to));
+                Navigator.switchWorkspace(
+                    global.screen.get_workspace_by_index(to),
+                    global.screen.get_workspace_by_index(from)
+                );
             }),
 
         // Reset primary when monitors change

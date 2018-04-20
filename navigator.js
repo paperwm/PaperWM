@@ -304,12 +304,19 @@ function preview_navigate(display, screen, meta_window, binding) {
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
 }
 
-function switchWorkspace(to, callback) {
+function switchWorkspace(to, from, callback) {
     TopBar.updateWorkspaceIndicator(to.index());
 
     let xDest = 0, yDest = global.screen_height;
 
     let toSpace = Tiling.spaces.spaceOf(to);
+
+    if (from) {
+        Tiling.spaces.spaceOf(from).forEach(w => {
+            w.get_compositor_private().hide();
+            w.clone.show();
+        });
+    }
 
     Tweener.addTween(toSpace.cloneContainer,
                      { x: 0,
@@ -320,24 +327,27 @@ function switchWorkspace(to, callback) {
                        transition: 'easeInOutQuad',
                        onComplete: () => {
                            toSpace.cloneContainer.raise_top();
+_
                            callback && callback();
                        }
                      });
 
-    let last = toSpace.cloneContainer.get_next_sibling();
-    if (last === null)
-        return;
-    let cloneParent = last.get_parent();
-    cloneParent.set_child_below_sibling(
-        toSpace.cloneContainer,
-        last);
+    let next = toSpace.cloneContainer.get_next_sibling();
 
-    Tweener.addTween(last,
-                     { x: xDest,
-                       y: yDest,
-                       scale_x: scale,
-                       scale_y: scale,
-                       time: 0.25,
-                       transition: 'easeInOutQuad',
-                     });
+    while (next !== null) {
+        Tweener.addTween(next,
+                         { x: xDest,
+                           y: yDest,
+                           scale_x: scale,
+                           scale_y: scale,
+                           time: 0.25,
+                           transition: 'easeInOutQuad',
+                           onComplete() {
+                               this.set_position(0, global.screen_height*0.1);
+                           },
+                           onCompleteScope: next
+                         });
+
+        next = next.get_next_sibling();
+    }
 }
