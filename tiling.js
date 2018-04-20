@@ -161,6 +161,34 @@ class Spaces extends Map {
 
     constructor() {
         super();
+
+        this.screenSignals = [
+                global.screen.connect(
+                    'notify::n-workspaces',
+                    Lang.bind(this,
+                              utils.dynamic_function_ref('workspacesChanged', this))),
+
+                global.screen.connect(
+                    'workspace-removed',
+                    utils.dynamic_function_ref('workspaceRemoved', this)),
+        ];
+
+        this.displaySignals = [
+            global.display.connect(
+                'window-created',
+                utils.dynamic_function_ref('window_created', this))
+        ];
+    }
+
+    destroy() {
+        this.screenSignals.forEach(id => global.screen.disconnect(id));
+        this.displaySignals.forEach(id => global.display.disconnect(id));
+
+        // Copy the old spaces.
+        oldSpaces = new Map(spaces);
+        for (let [workspace, space] of this) {
+            this.removeSpace(space);
+        }
     }
 
     workspacesChanged() {
@@ -206,8 +234,8 @@ class Spaces extends Map {
     };
 
     removeSpace(space) {
+        this.delete(space.workspace);
         space.destroy();
-        this.delete(workspace);
     };
 
     spaceOfWindow(meta_window) {
@@ -265,15 +293,6 @@ function enable() {
 
     global.screen[signals].push(
         global.screen.connect(
-            'notify::n-workspaces',
-            Lang.bind(spaces,
-                      utils.dynamic_function_ref('workspacesChanged', spaces))),
-
-        global.screen.connect(
-            'workspace-removed',
-            utils.dynamic_function_ref('workspaceRemoved', spaces)),
-
-        global.screen.connect(
             'workspace-switched',
             (screen, from, to) => {
                 Navigator.switchWorkspace(global.screen.get_workspace_by_index(to));
@@ -284,11 +303,6 @@ function enable() {
             function(screen) {
                 primary = Main.layoutManager.primaryMonitor;
             }));
-
-    global.display[signals].push(
-        global.display.connect(
-            'window-created',
-            utils.dynamic_function_ref('window_created', spaces)));
 
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
@@ -364,17 +378,11 @@ function disable () {
             actor.show();
         });
 
-    // Copy the old spaces.
-    oldSpaces = new Map(spaces);
+    spaces.destroy();
 
     // Disable workspace related signals
     global.screen[signals].forEach(id => global.screen.disconnect(id));
-    global.display[signals].forEach(id => global.display.disconnect(id));
     global.screen[signals] = [];
-    global.display[signals] = [];
-    for (let [workspace, space] of spaces) {
-        spaces.removeSpace(space);
-    }
 }
 
 /**
