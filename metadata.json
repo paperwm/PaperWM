@@ -4,5 +4,5 @@
   "description": "Tiling window manager with a twist",
   "url": "https://github.com/paperwm/PaperWM",
   "settings-schema": "org.gnome.shell.extensions.org-scrollwm",
-  "shell-version": [ "3.22" ]
+  "shell-version": [ "3.26", "3.28"]
 }
