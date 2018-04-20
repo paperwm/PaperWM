@@ -41,6 +41,106 @@ var primary = Main.layoutManager.primaryMonitor;
 
 var panelBox = Main.layoutManager.panelBox;
 
+// From https://developer.gnome.org/hig-book/unstable/design-color.html.en
+let colors = [
+    '#9DB8D2', '#7590AE', '#4B6983', '#314E6C',
+    '#EAE8E3', '#BAB5AB', '#807D74', '#565248',
+    '#C5D2C8', '#83A67F', '#5D7555', '#445632',
+    '#E0B6AF', '#C1665A', '#884631', '#663822',
+    '#ADA7C8', '#887FA3', '#625B81', '#494066',
+    '#EFE0CD', '#E0C39E', '#B39169', '#826647',
+    '#DF421E', '#990000', '#EED680', '#D1940C',
+    '#46A046', '#267726', '#ffffff', '#000000'
+];
+let color = 3; // light -> dark: 0 -> 3
+let containers = [];
+
+/**
+   Array used to store the scrolled tiling.
+ */
+class Space extends Array {
+    constructor (workspace) {
+        super(0);
+        this.workspace = workspace;
+        this.addSignal =
+            workspace.connect("window-added",
+                              utils.dynamic_function_ref("add_handler", Me));
+        this.removeSignal =
+            workspace.connect("window-removed",
+                              utils.dynamic_function_ref("remove_handler", Me));
+
+        let cloneContainer = new St.Widget();
+        let label = new St.Label();
+
+        label.text = Meta.prefs_get_workspace_name(workspace.index());
+        label.set_position(12, 6);
+        cloneContainer.add_actor(label);
+
+        this.cloneContainer = cloneContainer;
+
+        cloneContainer.set_size(global.screen_width, global.screen_height);
+        cloneContainer.set_clip(-10, -10,
+                                global.screen_width + 2*10,
+                                global.screen_height + 10);
+        cloneContainer.set_pivot_point(0.5, 0);
+
+        let cloneParent = backgroundGroup;
+        cloneParent.add_actor(cloneContainer);
+        cloneParent.set_child_above_sibling(
+            cloneContainer,
+            cloneParent.first_child);
+
+        cloneContainer.set_style(
+            `background: ${colors[color]};
+             box-shadow: 0px -10px 4px 2px black;
+             box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);
+             border-radius: 4px 4px 0 0;`);
+        color = (color + 4) % colors.length;
+
+        this.selectedWindow = null;
+        this.moving = false;
+        this.leftStack = 0; // not implemented
+        this.rightStack = 0; // not implemented
+    }
+
+    // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
+    static get [Symbol.species]() { return Array; }
+
+    selectedIndex () {
+        if (this.selectedWindow) {
+            return this.indexOf(this.selectedWindow);
+        } else {
+            return -1;
+        }
+    }
+
+    topOfLeftStack () {
+        // There's no left stack
+        if (!isStacked(this[0]))
+            return null;
+
+        for(let i = 0; i < this.length; i++) {
+            if (!isStacked(this[i])) {
+                return this[i - 1];
+            }
+        }
+        return null;
+    }
+
+    topOfRightStack () {
+        // There's no right stack
+        if (!isStacked(this[this.length-1]))
+            return null;
+
+        for(let i = this.length - 1; i >= 0; i--) {
+            if (!isStacked(this[i])) {
+                return this[i + 1];
+            }
+        }
+        return null;
+    }
+}
+
 // Symbol to retrieve the focus handler id
 var signals, oldSpaces, backgroundGroup;
 function init() {
@@ -164,106 +264,6 @@ function disable () {
     global.display[signals] = [];
     for (let [workspace, space] of spaces) {
         spaces.removeSpace(space);
-    }
-}
-
-// From https://developer.gnome.org/hig-book/unstable/design-color.html.en
-let colors = [
-    '#9DB8D2', '#7590AE', '#4B6983', '#314E6C',
-    '#EAE8E3', '#BAB5AB', '#807D74', '#565248',
-    '#C5D2C8', '#83A67F', '#5D7555', '#445632',
-    '#E0B6AF', '#C1665A', '#884631', '#663822',
-    '#ADA7C8', '#887FA3', '#625B81', '#494066',
-    '#EFE0CD', '#E0C39E', '#B39169', '#826647',
-    '#DF421E', '#990000', '#EED680', '#D1940C',
-    '#46A046', '#267726', '#ffffff', '#000000'
-];
-let color = 3; // light -> dark: 0 -> 3
-let containers = [];
-
-/**
-   Array used to store the scrolled tiling.
- */
-class Space extends Array {
-    constructor (workspace) {
-        super(0);
-        this.workspace = workspace;
-        this.addSignal =
-            workspace.connect("window-added",
-                              utils.dynamic_function_ref("add_handler", Me));
-        this.removeSignal =
-            workspace.connect("window-removed",
-                              utils.dynamic_function_ref("remove_handler", Me));
-
-        let cloneContainer = new St.Widget();
-        let label = new St.Label();
-
-        label.text = Meta.prefs_get_workspace_name(workspace.index());
-        label.set_position(12, 6);
-        cloneContainer.add_actor(label);
-
-        this.cloneContainer = cloneContainer;
-
-        cloneContainer.set_size(global.screen_width, global.screen_height);
-        cloneContainer.set_clip(-10, -10,
-                                global.screen_width + 2*10,
-                                global.screen_height + 10);
-        cloneContainer.set_pivot_point(0.5, 0);
-
-        let cloneParent = backgroundGroup;
-        cloneParent.add_actor(cloneContainer);
-        cloneParent.set_child_above_sibling(
-            cloneContainer,
-            cloneParent.first_child);
-
-        cloneContainer.set_style(
-            `background: ${colors[color]};
-             box-shadow: 0px -10px 4px 2px black;
-             box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);
-             border-radius: 4px 4px 0 0;`);
-        color = (color + 4) % colors.length;
-
-        this.selectedWindow = null;
-        this.moving = false;
-        this.leftStack = 0; // not implemented
-        this.rightStack = 0; // not implemented
-    }
-
-    // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
-    static get [Symbol.species]() { return Array; }
-
-    selectedIndex () {
-        if (this.selectedWindow) {
-            return this.indexOf(this.selectedWindow);
-        } else {
-            return -1;
-        }
-    }
-
-    topOfLeftStack () {
-        // There's no left stack
-        if (!isStacked(this[0]))
-            return null;
-
-        for(let i = 0; i < this.length; i++) {
-            if (!isStacked(this[i])) {
-                return this[i - 1];
-            }
-        }
-        return null;
-    }
-
-    topOfRightStack () {
-        // There's no right stack
-        if (!isStacked(this[this.length-1]))
-            return null;
-
-        for(let i = this.length - 1; i >= 0; i--) {
-            if (!isStacked(this[i])) {
-                return this[i + 1];
-            }
-        }
-        return null;
     }
 }
 
