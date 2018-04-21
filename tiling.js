@@ -421,8 +421,13 @@ class Spaces extends Map {
 
         debug('window-created', metaWindow.title);
         let signal = Symbol();
-        metaWindow[signal] = actor.connect('show',
-                                           Lang.bind({metaWindow, signal}, setInitialPosition));
+        metaWindow[signal] = actor.connect(
+            'show',
+            () =>  {
+                actor.disconnect(metaWindow[signal]);
+                delete metaWindow[signal];
+                insertWindow(metaWindow, {});
+            });
     };
 
 }
@@ -588,37 +593,21 @@ function remove_handler(workspace, meta_window) {
    TODO: move to `Space`
 */
 function add_handler(ws, metaWindow) {
-    debug("window-added", meta_window, meta_window.title, meta_window.window_type, ws.index());
+    debug("window-added", metaWindow, metaWindow.title, metaWindow.window_type, ws.index());
 
     let actor = metaWindow.get_compositor_private();
     if (actor) {
-        debug('attach window', metaWindow.title, metaWindow.has_focus())
         // Set position and hookup signals, with `existing` set to true
-        setInitialPosition.apply({metaWindow}, [ actor, true ]);
+        insertWindow(metaWindow, {existing: true});
     }
     // Otherwise we're dealing with a new window, so we let `window-created`
     // handle initial positioning.
 }
 
 /**
-   Weird utility to function that applies the any initial position on newly
-   added windows.
-
-   When dealing with a new window it's called from the actor's `show` signal.
-   For existing windows it's being called from the workspace's `window-added`
-   signal.
-
-   The main purpose is handling both newly created window and windows that are
-   moved into a workspace. This is probably pretty foolish.
-
-   NB: Needs to be called by {metaWindow, signal}
+   Insert the window into its space if appropriate.
 */
-function setInitialPosition(actor, existing) {
-    let {metaWindow, signal} = this;
-
-    let signalId = metaWindow[signal];
-    // check if we're in `first-frame` or `focus`
-    signalId && metaWindow.get_compositor_private().disconnect(signalId);
+function insertWindow(metaWindow, {existing}) {
 
     let space = spaces.spaceOfWindow(metaWindow);
 
@@ -637,66 +626,62 @@ function setInitialPosition(actor, existing) {
     }
     index++;
 
-    index = index || space.length;
     space.splice(index, 0, metaWindow);
 
     metaWindow.unmake_above();
 
+    let position;
     if (index == 0) {
         // If the workspace was empty the inserted window should be selected
         space.selectedWindow = metaWindow;
 
         let frame = metaWindow.get_frame_rect();
-        metaWindow.scrollwm_initial_position =
-            {x: primary.x + (primary.width - frame.width)/2,
-             y: primary.y + panelBox.height + margin_tb};
+        position = {x: primary.x + (primary.width - frame.width)/2,
+                    y: primary.y + panelBox.height + margin_tb};
     } else {
-        let frame = space[index - 1].get_frame_rect()
-        metaWindow.scrollwm_initial_position =
-            {x: primary.x + frame.x + frame.width + window_gap,
-             y: primary.y + panelBox.height + margin_tb};
-
+        let frame = space[index - 1].get_frame_rect();
+        position = {x: primary.x + frame.x + frame.width + window_gap,
+                    y: primary.y + panelBox.height + margin_tb};
     }
 
-    if(metaWindow.scrollwm_initial_position) {
-        debug("setting initial position", metaWindow.scrollwm_initial_position)
-        if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
-            metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
-            toggle_maximize_horizontally(metaWindow);
-            return;
-        }
+    debug("setting initial position", position)
+    if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
+        metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
+        toggle_maximize_horizontally(metaWindow);
+    }
 
+    let buffer = metaWindow.get_buffer_rect();
+    let frame = metaWindow.get_frame_rect();
+    let x_offset = frame.x - buffer.x;
+    let y_offset = frame.y - buffer.y;
+    let clone = metaWindow.clone;
+
+    space.cloneContainer.add_actor(clone);
+
+    if (!existing) {
         // Only move the frame when dealing with new windows
-        !existing && metaWindow.move_frame(true,
-                              metaWindow.scrollwm_initial_position.x,
-                              metaWindow.scrollwm_initial_position.y);
+        metaWindow.move_frame(true,
+                              position.x,
+                              position.y);
 
-        let buffer = metaWindow.get_buffer_rect();
-        let frame = metaWindow.get_frame_rect();
-        let x_offset = frame.x - buffer.x;
-        let y_offset = frame.y - buffer.y;
-        let clone = metaWindow.clone;
         clone.set_scale(0, 0);
         Tweener.addTween(clone, {
             scale_x: 1,
             scale_y: 1,
             time: 0.25
-        })
-        metaWindow.clone.set_position(
-            metaWindow.scrollwm_initial_position.x - x_offset,
-            metaWindow.scrollwm_initial_position.y - y_offset);
-
-        if (metaWindow.has_focus()) {
-            space.selectedWindow = metaWindow;
-            ensureViewport(metaWindow, space, true);
-        } else {
-            ensureViewport(space.selectedWindow, space);
-        }
-
-        delete metaWindow.scrollwm_initial_position;
+        });
     }
 
-    space.cloneContainer.add_actor(metaWindow.clone);
+    metaWindow.clone.set_position(
+        position.x - x_offset,
+        position.y - y_offset);
+
+    if (metaWindow.has_focus()) {
+        space.selectedWindow = metaWindow;
+        ensureViewport(metaWindow, space, true);
+    } else {
+        ensureViewport(space.selectedWindow, space);
+    }
 
     if (space.workspace === global.screen.get_active_workspace())
         Main.activateWindow(metaWindow);
