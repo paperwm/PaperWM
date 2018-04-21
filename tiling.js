@@ -419,10 +419,6 @@ class Spaces extends Map {
             actor.connect('show', showWrapper)
         ];
 
-        // Only run setInitialPosition on inserted windows
-        let space = spaces.spaceOfWindow(metaWindow);
-        if (space.indexOf(metaWindow) === -1)
-            return;
         debug('window-created', metaWindow.title);
         let signal = Symbol();
         metaWindow[signal] = actor.connect('show',
@@ -591,53 +587,10 @@ function remove_handler(workspace, meta_window) {
 
    TODO: move to `Space`
 */
-function add_handler(ws, meta_window) {
+function add_handler(ws, metaWindow) {
     debug("window-added", meta_window, meta_window.title, meta_window.window_type, ws.index());
-    if (!add_filter(meta_window)) {
-        return;
-    }
-
-    let space = spaces.spaceOf(ws);
-
-    // Don't add already added windows
-    if (space.indexOf(meta_window) != -1) {
-        return;
-    }
-
-    let insert_after_i = -1; // (-1 -> at beginning)
-    if (space.selectedWindow) {
-        insert_after_i = space.indexOf(space.selectedWindow);
-    }
-
-    insertWindow(space, meta_window, insert_after_i + 1);
-}
-
-// Insert @metaWindow in @space at @index, setting up focus handling
-function insertWindow(space, metaWindow, index) {
-    index = index || space.length;
-    space.splice(index, 0, metaWindow);
-
-    metaWindow.unmake_above();
-
-    if (index == 0) {
-        // If the workspace was empty the inserted window should be selected
-        space.selectedWindow = metaWindow;
-
-        let frame = metaWindow.get_frame_rect();
-        metaWindow.scrollwm_initial_position =
-            {x: primary.x + (primary.width - frame.width)/2,
-             y: primary.y + panelBox.height + margin_tb};
-    } else {
-        let frame = space[index - 1].get_frame_rect()
-        metaWindow.scrollwm_initial_position =
-            {x: primary.x + frame.x + frame.width + window_gap,
-             y: primary.y + panelBox.height + margin_tb};
-
-    }
 
     let actor = metaWindow.get_compositor_private();
-    // If the MetaWindowActor is available the window already exists and we can
-    // position it.
     if (actor) {
         debug('attach window', metaWindow.title, metaWindow.has_focus())
         // Set position and hookup signals, with `existing` set to true
@@ -663,7 +616,47 @@ function insertWindow(space, metaWindow, index) {
 function setInitialPosition(actor, existing) {
     let {metaWindow, signal} = this;
 
+    let signalId = metaWindow[signal];
+    // check if we're in `first-frame` or `focus`
+    signalId && metaWindow.get_compositor_private().disconnect(signalId);
+
     let space = spaces.spaceOfWindow(metaWindow);
+
+    if (!add_filter(metaWindow)) {
+        return;
+    }
+
+    // Don't add already added windows
+    if (space.indexOf(metaWindow) != -1) {
+        return;
+    }
+
+    let index = -1; // (-1 -> at beginning)
+    if (space.selectedWindow) {
+        index = space.indexOf(space.selectedWindow);
+    }
+    index++;
+
+    index = index || space.length;
+    space.splice(index, 0, metaWindow);
+
+    metaWindow.unmake_above();
+
+    if (index == 0) {
+        // If the workspace was empty the inserted window should be selected
+        space.selectedWindow = metaWindow;
+
+        let frame = metaWindow.get_frame_rect();
+        metaWindow.scrollwm_initial_position =
+            {x: primary.x + (primary.width - frame.width)/2,
+             y: primary.y + panelBox.height + margin_tb};
+    } else {
+        let frame = space[index - 1].get_frame_rect()
+        metaWindow.scrollwm_initial_position =
+            {x: primary.x + frame.x + frame.width + window_gap,
+             y: primary.y + panelBox.height + margin_tb};
+
+    }
 
     if(metaWindow.scrollwm_initial_position) {
         debug("setting initial position", metaWindow.scrollwm_initial_position)
@@ -703,15 +696,7 @@ function setInitialPosition(actor, existing) {
         delete metaWindow.scrollwm_initial_position;
     }
 
-    let signalId = metaWindow[signal];
-    // check if we're in `first-frame` or `focus`
-    if (actor.constructor == Meta.WindowActor) {
-        signalId && metaWindow.get_compositor_private().disconnect(signalId);
-
-        space.cloneContainer.add_actor(metaWindow.clone);
-    } else {
-        signalId && metaWindow.disconnect(signalId);
-    }
+    space.cloneContainer.add_actor(metaWindow.clone);
 
     if (space.workspace === global.screen.get_active_workspace())
         Main.activateWindow(metaWindow);
