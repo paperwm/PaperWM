@@ -669,6 +669,9 @@ function insertWindow(metaWindow, {existing}) {
         metaWindow.move_frame(true,
                               position.x,
                               position.y);
+        metaWindow.clone.set_position(
+            position.x - x_offset,
+            position.y - y_offset);
 
         clone.set_scale(0, 0);
         Tweener.addTween(clone, {
@@ -677,10 +680,6 @@ function insertWindow(metaWindow, {existing}) {
             time: 0.25
         });
     }
-
-    metaWindow.clone.set_position(
-        position.x - x_offset,
-        position.y - y_offset);
 
     if (metaWindow.has_focus()) {
         space.selectedWindow = metaWindow;
