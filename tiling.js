@@ -405,7 +405,8 @@ class Spaces extends Map {
         if (!metaWindow[signals]) {
             metaWindow[signals] = [
                 metaWindow.connect("focus", focus_wrapper),
-                metaWindow.connect('notify::minimized', minimizeWrapper)
+                metaWindow.connect('notify::minimized', minimizeWrapper),
+                metaWindow.connect('size-changed', sizeHandler)
             ];
         }
 
@@ -706,8 +707,6 @@ function setInitialPosition(actor, existing) {
     // check if we're in `first-frame` or `focus`
     if (actor.constructor == Meta.WindowActor) {
         signalId && metaWindow.get_compositor_private().disconnect(signalId);
-        metaWindow[signals].push(
-            metaWindow.connect('size-changed', sizeHandler));
 
         space.cloneContainer.add_actor(metaWindow.clone);
     } else {
