@@ -885,10 +885,7 @@ function propagateForward(space, n, x, gap) {
     if (actor) {
         // Anchor scaling/animation on the left edge for windows positioned to the right,
 
-        move(meta_window, { x,
-                            y: meta_window.fullscreen ?
-                            0 :
-                            panelBox.height + margin_tb,
+        move(meta_window, { x, y: panelBox.height + margin_tb,
                             stack
                           });
         propagateForward(space, n+1, x+meta_window.get_frame_rect().width + gap, gap);
@@ -920,9 +917,7 @@ function propagateBackward(space, n, x, gap) {
     if (actor) {
         x = x - meta_window.get_frame_rect().width
         // Anchor on the right edge for windows positioned to the left.
-        move(meta_window, { x, y: meta_window.fullscreen ?
-                            0 :
-                            panelBox.height + margin_tb,
+        move(meta_window, { x, y: panelBox.height + margin_tb,
                             stack
                           });
         propagateBackward(space, n-1, x - gap, gap);
