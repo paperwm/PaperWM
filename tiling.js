@@ -677,6 +677,13 @@ function setInitialPosition(actor, existing) {
                               metaWindow.scrollwm_initial_position.x,
                               metaWindow.scrollwm_initial_position.y);
 
+        let buffer = metaWindow.get_buffer_rect();
+        let frame = metaWindow.get_frame_rect();
+        let x_offset = frame.x - buffer.x;
+        let y_offset = frame.y - buffer.y;
+        metaWindow.clone.set_position(
+            metaWindow.scrollwm_initial_position.x - x_offset,
+            metaWindow.scrollwm_initial_position.y - y_offset);
 
         if (metaWindow.has_focus()) {
             space.selectedWindow = metaWindow;
