@@ -505,10 +505,16 @@ function disable () {
  */
 function add_filter(meta_window, startup) {
     let add = true;
-    if (meta_window.window_type != Meta.WindowType.NORMAL
-        || meta_window.get_transient_for() != null
-        || meta_window.is_on_all_workspaces()
-        ) {
+
+    if (meta_window.window_type != Meta.WindowType.NORMAL) {
+        if (meta_window.get_transient_for()) {
+            add = false;
+            // Note: Some dialog windows doesn't set the transient hint. Simply
+            // treat those as regular windows since it's hard to handle them as
+            // proper dialogs without the hint (eg. gnome-shell extension preference)
+        }
+    }
+    if (meta_window.is_on_all_workspaces()) {
         add = false;
     }
 
