@@ -259,22 +259,7 @@ class Spaces extends Map {
 
         // Clone and hook up existing windows
         global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
-            .forEach(metaWindow => {
-                let actor = metaWindow.get_compositor_private();
-                let clone = new Clutter.Clone({source: actor});
-                clone.set_position(actor.x, actor.y);
-                metaWindow.clone = clone;
-
-                metaWindow[signals] = [
-                    metaWindow.connect("focus", focus_wrapper),
-                    metaWindow.connect('notify::minimized', minimizeWrapper),
-                    metaWindow.connect('size-changed', sizeHandler),
-                    metaWindow.connect('notify::fullscreen', fullscreenWrapper)
-                ];
-                actor[signals] = [
-                    actor.connect('show', showWrapper)
-                ];
-            });
+            .forEach(registerWindow);
 
         // Hook up existing workspaces
         for (let i=0; i < global.screen.n_workspaces; i++) {
@@ -402,25 +387,10 @@ class Spaces extends Map {
     }
 
     window_created(display, metaWindow, user_data) {
-        if (!metaWindow[signals]) {
-            metaWindow[signals] = [
-                metaWindow.connect("focus", focus_wrapper),
-                metaWindow.connect('notify::minimized', minimizeWrapper),
-                metaWindow.connect('size-changed', sizeHandler),
-                metaWindow.connect('notify::fullscreen', fullscreenWrapper)
-            ];
-        }
-
-        let actor = metaWindow.get_compositor_private();
-        let clone = new Clutter.Clone({source: actor});
-        clone.set_position(actor.x, actor.y);
-        metaWindow.clone = clone;
-
-        actor[signals] = [
-            actor.connect('show', showWrapper)
-        ];
+        registerWindow(metaWindow);
 
         debug('window-created', metaWindow.title);
+        let actor = metaWindow.get_compositor_private();
         let signal = Symbol();
         metaWindow[signal] = actor.connect(
             'show',
@@ -432,6 +402,24 @@ class Spaces extends Map {
     };
 
 }
+
+function registerWindow(metaWindow) {
+    let actor = metaWindow.get_compositor_private();
+    let clone = new Clutter.Clone({source: actor});
+    clone.set_position(actor.x, actor.y);
+    metaWindow.clone = clone;
+
+    metaWindow[signals] = [
+        metaWindow.connect("focus", focus_wrapper),
+        metaWindow.connect('notify::minimized', minimizeWrapper),
+        metaWindow.connect('size-changed', sizeHandler),
+        metaWindow.connect('notify::fullscreen', fullscreenWrapper)
+    ];
+    actor[signals] = [
+        actor.connect('show', showWrapper)
+    ];
+}
+
 
 // Symbol to retrieve the focus handler id
 var signals, oldSpaces, backgroundGroup;
