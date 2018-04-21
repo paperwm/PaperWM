@@ -21,6 +21,13 @@ function init () {
 
 var panelBoxShowId, panelBoxHideId;
 function enable () {
+
+    // Force transparency
+    Main.panel.actor.set_style('background-color: rgba(0, 0, 0, 0.35);');
+    let cornerStyle = '-panel-corner-background-color: rgba(0, 0, 0, 0.35);';
+    [Main.panel._rightCorner, Main.panel._leftCorner].forEach(
+        c => c.actor.set_style(cornerStyle));
+
     screenSignals.push(
         global.screen.connect_after('workspace-switched',
                                     (screen, from, to) => {
@@ -41,6 +48,9 @@ function enable () {
 }
 
 function disable () {
+    [Main.panel, Main.panel._rightCorner, Main.panel._leftCorner]
+        .forEach(p => p.actor.set_style(''));
+
     screenSignals.forEach(id => global.screen.disconnect(id));
     screenSignals = [];
 

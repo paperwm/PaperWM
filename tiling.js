@@ -25,7 +25,6 @@ let preferences = Extension.imports.convenience.getSettings();
 var window_gap = preferences.get_int('window-gap');
 // Top/bottom margin
 var margin_tb = preferences.get_int('vertical-margin');
-margin_tb = 6
 // left/right margin
 var margin_lr = preferences.get_int('horizontal-margin');
 margin_lr = 30
