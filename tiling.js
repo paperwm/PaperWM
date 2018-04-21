@@ -268,7 +268,8 @@ class Spaces extends Map {
                 metaWindow[signals] = [
                     metaWindow.connect("focus", focus_wrapper),
                     metaWindow.connect('notify::minimized', minimizeWrapper),
-                    metaWindow.connect('size-changed', sizeHandler)
+                    metaWindow.connect('size-changed', sizeHandler),
+                    metaWindow.connect('notify::fullscreen', fullscreenWrapper)
                 ];
                 actor[signals] = [
                     actor.connect('show', showWrapper)
@@ -405,7 +406,8 @@ class Spaces extends Map {
             metaWindow[signals] = [
                 metaWindow.connect("focus", focus_wrapper),
                 metaWindow.connect('notify::minimized', minimizeWrapper),
-                metaWindow.connect('size-changed', sizeHandler)
+                metaWindow.connect('size-changed', sizeHandler),
+                metaWindow.connect('notify::fullscreen', fullscreenWrapper)
             ];
         }
 
@@ -715,12 +717,6 @@ function ensureViewport(meta_window, space, force) {
                                   frame.width,
                                   primary.height - panelBox.height - margin_tb*2);
 
-    // Hack to ensure the statusbar is visible while there's a fullscreen
-    // windows in the space.
-    if (!meta_window.fullscreen) {
-        TopBar.show();
-    }
-
     if (meta_window.destinationX !== undefined)
         // Use the destination of the window if available
         frame.x = meta_window.destinationX;
@@ -733,7 +729,6 @@ function ensureViewport(meta_window, space, force) {
     if (meta_window.fullscreen) {
         // Fullscreen takes highest priority
         x = 0, y = 0;
-        TopBar.hide();
     } else if (meta_window.maximized_vertically
                && meta_window.maximized_horizontally) {
         x = frame.x;
@@ -938,9 +933,14 @@ function sizeHandler(metaWindow) {
 function focus_handler(meta_window, user_data) {
     debug("focus:", meta_window.title, utils.framestr(meta_window.get_frame_rect()));
 
+    if (meta_window.fullscreen) {
+        TopBar.hide();
+    } else {
+        TopBar.show();
+    }
+
     if (Scratch.isScratchWindow(meta_window)) {
         Scratch.makeScratch(meta_window);
-        TopBar.show();
         return;
     }
 
@@ -965,6 +965,19 @@ function minimizeHandler(metaWindow) {
     }
 }
 let minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
+
+function fullscreenHandler(metaWindow) {
+    let space = spaces.spaceOfWindow(metaWindow);
+    if (space.selectedWindow !== metaWindow)
+        return;
+
+    if (metaWindow.fullscreen) {
+        TopBar.hide();
+    } else {
+        TopBar.show();
+    }
+}
+let fullscreenWrapper = utils.dynamic_function_ref('fullscreenHandler', Me);
 
 /**
   `WindowActor::show` handling

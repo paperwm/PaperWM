@@ -36,8 +36,7 @@ function enable () {
 
     panelBoxShowId =  panelBox.connect('show', show);
     panelBoxHideId = panelBox.connect('hide', () => {
-        let space = Tiling.spaces.spaceOf(global.screen.get_active_workspace());
-        if (space.selectedWindow.fullscreen) {
+        if (global.display.focus_window.fullscreen) {
             hide();
         } else {
             panelBox.show();

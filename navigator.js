@@ -28,6 +28,8 @@ var PreviewedWindowNavigator = new Lang.Class({
     _init: function() {
         this.parent();
 
+        TopBar.show();
+
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
 
@@ -282,15 +284,19 @@ var PreviewedWindowNavigator = new Lang.Class({
             Main.panel.statusArea.appMenu.container.show();
         debug('#preview', 'onDestroy', this.was_accepted);
 
+        let focus = global.display.focus_window;
         if(!this.was_accepted) {
             debug('#preview', 'Abort', global.display.focus_window.title);
-            let focus = global.display.focus_window;
-            let multimap = this.multimap;
-            let last = multimap.minimaps[multimap.selectedIndex - 1];
             if (focus.get_workspace() !== this.space.workspace) {
                 switchWorkspace(focus.get_workspace());
             }
             Tiling.ensureViewport(focus);
+        }
+
+        if (focus.fullscreen) {
+            TopBar.hide();
+        } else {
+            TopBar.show();
         }
 
         navigating = false;
