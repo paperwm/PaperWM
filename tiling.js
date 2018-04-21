@@ -681,6 +681,13 @@ function setInitialPosition(actor, existing) {
         let frame = metaWindow.get_frame_rect();
         let x_offset = frame.x - buffer.x;
         let y_offset = frame.y - buffer.y;
+        let clone = metaWindow.clone;
+        clone.set_scale(0, 0);
+        Tweener.addTween(clone, {
+            scale_x: 1,
+            scale_y: 1,
+            time: 0.25
+        })
         metaWindow.clone.set_position(
             metaWindow.scrollwm_initial_position.x - x_offset,
             metaWindow.scrollwm_initial_position.y - y_offset);
