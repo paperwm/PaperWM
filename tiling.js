@@ -860,7 +860,7 @@ function move(meta_window, {x, y,
                                  meta_window.destinationX = undefined;
                                  if(meta_window.get_compositor_private()) {
                                      // If the actor is gone, the window is in process of closing
-                                     if (!stack) {
+                                     if (!stack && !Navigator.navigating) {
                                          actor.set_position(clone.x, clone.y);
                                          clone.hide();
                                          actor.show();
