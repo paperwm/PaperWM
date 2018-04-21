@@ -662,6 +662,8 @@ function insertWindow(space, metaWindow, index) {
 function setInitialPosition(actor, existing) {
     let {metaWindow, signal} = this;
 
+    let space = spaces.spaceOfWindow(metaWindow);
+
     if(metaWindow.scrollwm_initial_position) {
         debug("setting initial position", metaWindow.scrollwm_initial_position)
         if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
@@ -669,7 +671,6 @@ function setInitialPosition(actor, existing) {
             toggle_maximize_horizontally(metaWindow);
             return;
         }
-        let space = spaces.spaceOfWindow(metaWindow);
 
         // Only move the frame when dealing with new windows
         !existing && metaWindow.move_frame(true,
@@ -694,11 +695,13 @@ function setInitialPosition(actor, existing) {
         metaWindow[signals].push(
             metaWindow.connect('size-changed', sizeHandler));
 
-        let space = spaces.spaceOfWindow(metaWindow);
         space.cloneContainer.add_actor(metaWindow.clone);
     } else {
         signalId && metaWindow.disconnect(signalId);
     }
+
+    if (space.workspace === global.screen.get_active_workspace())
+        Main.activateWindow(metaWindow);
 }
 
 
@@ -879,7 +882,6 @@ function propagateForward(space, n, x, gap) {
         return;
     }
     let meta_window = space[n];
-    let frame = meta_window.get_frame_rect();
     gap = gap || window_gap;
 
     let stack = false;
@@ -915,7 +917,6 @@ function propagateBackward(space, n, x, gap) {
         return;
     }
     let meta_window = space[n];
-    let frame = meta_window.get_frame_rect();
     gap = gap || window_gap;
 
     // Check if we should start stacking windows
