@@ -714,7 +714,7 @@ function ensureViewport(meta_window, space, force) {
         let frame = meta_window.get_frame_rect();
         return length + frame.width + window_gap;
     }, -window_gap);
-    if (meta_window.fullscreen) {
+    if (meta_window.fullscreen && !Navigator.workspaceMru) {
         // Fullscreen takes highest priority
         x = 0, y = 0;
     } else if (meta_window.maximized_vertically

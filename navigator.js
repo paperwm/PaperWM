@@ -18,6 +18,7 @@ const debug = utils.debug;
 
 var scale = 0.9;
 var navigating = false;
+var workspaceMru = false;
 
 var PreviewedWindowNavigator = new Lang.Class({
     Name: 'PreviewedWindowNavigator',
@@ -44,20 +45,26 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         let cloneParent = this.space.cloneContainer.get_parent();
         multimap.minimaps.forEach((m, i) => {
+            let space = m.space;
             let h = heights[i];
             if (h === undefined)
                 h = heights[heights.length-1];
-            m.space.cloneContainer.set_position(0, global.screen_height*h);
+            space.cloneContainer.set_position(0, global.screen_height*h);
 
-            m.space.cloneContainer.scale_y = scale + (1 - i)*0.01;
-            m.space.cloneContainer.scale_x = scale + (1 - i)*0.01;
+            space.cloneContainer.scale_y = scale + (1 - i)*0.01;
+            space.cloneContainer.scale_x = scale + (1 - i)*0.01;
             if (multimap.minimaps[i - 1] === undefined)
                 return;
             cloneParent.set_child_below_sibling(
-                m.space.cloneContainer,
+                space.cloneContainer,
                 multimap.minimaps[i - 1].space.cloneContainer
             );
-            m.space.cloneContainer.show();
+            space.cloneContainer.show();
+
+            let selected = space.selectedWindow;
+            if (selected && selected.fullscreen) {
+                selected.clone.y = Main.panel.actor.height + Tiling.margin_tb;
+            }
         });
         this.space.cloneContainer.scale_y = 1;
         this.space.cloneContainer.scale_x = 1;
@@ -118,6 +125,10 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     selectSpace: function(direction, move) {
         this._switcherList.actor.hide();
+
+        workspaceMru = true;
+        let metaWindow = this.space[this._selectedIndex];
+        metaWindow && Tiling.ensureViewport(metaWindow);
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.hide();
@@ -255,6 +266,9 @@ var PreviewedWindowNavigator = new Lang.Class({
     _finish: function(timestamp) {
         this.was_accepted = true;
 
+        let force = workspaceMru;
+        navigating = false; workspaceMru = false;
+
         switchWorkspace(this.space.workspace);
 
         if (this.space.length === 0) {
@@ -263,7 +277,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             Main.activateWindow(this.space[this._selectedIndex]);
             debug('#preview', 'Finish', this.space[this._selectedIndex].title, this._selectedIndex);
 
-            Tiling.ensureViewport(this.space[this._selectedIndex]);
+            Tiling.ensureViewport(this.space[this._selectedIndex], this.space, force);
         }
         // Finish workspace preview _after_ activate, that way the new animation
         // triggered by activate gets killed immediately
@@ -284,13 +298,16 @@ var PreviewedWindowNavigator = new Lang.Class({
             Main.panel.statusArea.appMenu.container.show();
         debug('#preview', 'onDestroy', this.was_accepted);
 
+        let force = workspaceMru;
+        navigating = false; workspaceMru = false;
+
         let focus = global.display.focus_window;
         if(!this.was_accepted) {
             debug('#preview', 'Abort', global.display.focus_window.title);
             if (focus.get_workspace() !== this.space.workspace) {
                 switchWorkspace(focus.get_workspace());
             }
-            Tiling.ensureViewport(focus);
+            Tiling.ensureViewport(focus, null, force);
         }
 
         if (focus.fullscreen) {
@@ -299,7 +316,6 @@ var PreviewedWindowNavigator = new Lang.Class({
             TopBar.show();
         }
 
-        navigating = false;
 
         Main.wm._blockAnimations = this._block;
 
