@@ -260,6 +260,8 @@ var PreviewedWindowNavigator = new Lang.Class({
         } else {
             Main.activateWindow(this.space[this._selectedIndex]);
             debug('#preview', 'Finish', this.space[this._selectedIndex].title, this._selectedIndex);
+
+            Tiling.ensureViewport(this.space[this._selectedIndex]);
         }
         // Finish workspace preview _after_ activate, that way the new animation
         // triggered by activate gets killed immediately
@@ -288,7 +290,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             if (focus.get_workspace() !== this.space.workspace) {
                 switchWorkspace(focus.get_workspace());
             }
-            Tiling.ensureViewport(focus, Tiling.spaces.spaceOfWindow(focus));
+            Tiling.ensureViewport(focus);
         }
 
         navigating = false;
