@@ -24,9 +24,8 @@ function enable () {
 
     // Force transparency
     Main.panel.actor.set_style('background-color: rgba(0, 0, 0, 0.35);');
-    let cornerStyle = '-panel-corner-background-color: rgba(0, 0, 0, 0.35);';
-    [Main.panel._rightCorner, Main.panel._leftCorner].forEach(
-        c => c.actor.set_style(cornerStyle));
+    [Main.panel._rightCorner, Main.panel._leftCorner]
+        .forEach(c => c.actor.hide());
 
     screenSignals.push(
         global.screen.connect_after('workspace-switched',
@@ -46,9 +45,10 @@ function enable () {
     updateWorkspaceIndicator(global.screen.get_active_workspace_index());
 }
 
-function disable () {
-    [Main.panel, Main.panel._rightCorner, Main.panel._leftCorner]
-        .forEach(p => p.actor.set_style(''));
+function disable() {
+    Main.panel.actor.set_style('');
+    [Main.panel._rightCorner, Main.panel._leftCorner]
+        .forEach(c => c.actor.show());
 
     screenSignals.forEach(id => global.screen.disconnect(id));
     screenSignals = [];
