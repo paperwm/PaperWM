@@ -315,9 +315,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         let focus = global.display.focus_window;
         if(!this.was_accepted) {
             debug('#preview', 'Abort', global.display.focus_window.title);
-            if (focus.get_workspace() !== this.space.workspace) {
-                switchWorkspace(focus.get_workspace());
-            }
+            switchWorkspace(focus.get_workspace());
             Tiling.ensureViewport(focus, null, force);
         }
 
