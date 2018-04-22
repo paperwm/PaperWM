@@ -30,7 +30,6 @@ function toggle(metaWindow) {
         hide();
     } else {
         makeScratch(metaWindow);
-        show();
     }
 }
 
