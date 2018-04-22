@@ -179,7 +179,7 @@ class Space extends Array {
             .filter(metaWindow => { return space.indexOf(metaWindow) !== -1; });
         if (tabList[0]) {
             space.selectedWindow = tabList[0]
-            ensureViewport(space.selectedWindow, space);
+            // ensureViewport(space.selectedWindow, space);
         }
     }
 
@@ -461,6 +461,9 @@ function enable() {
     function initWorkspaces() {
         spaces = new Spaces();
         Navigator.switchWorkspace(global.screen.get_active_workspace());
+        spaces.forEach(s => {
+            s.selectedWindow && ensureViewport(s.selectedWindow);
+        });
 
         if (!Scratch.isScratchActive()) {
             Scratch.getScratchWindows().forEach(
@@ -844,6 +847,10 @@ function move_to(space, meta_window, { x, y, delay, transition,
         );
     let index = space.indexOf(meta_window);
     let frame = meta_window.get_frame_rect();
+
+    StackOverlay.rightOverlay.setTarget(null);
+    StackOverlay.leftOverlay.setTarget(null);
+
     propagateForward(space, index + 1, x + frame.width + window_gap);
     propagateBackward(space, index - 1, x - window_gap);
     fixStack(space, index);
@@ -852,7 +859,6 @@ function move_to(space, meta_window, { x, y, delay, transition,
 // Place window's left edge at x
 function propagateForward(space, n, x, gap) {
     if (n < 0 || n >= space.length) {
-        StackOverlay.rightOverlay.setTarget(null);
         return;
     }
     let meta_window = space[n];
@@ -861,6 +867,9 @@ function propagateForward(space, n, x, gap) {
     let stack = meta_window.fullscreen;
     // Check if we should start stacking windows
     if (x > primary.width - stack_margin) {
+        if (x < primary.width) {
+            StackOverlay.rightOverlay.setTarget(meta_window);
+        }
         stack = true;
         meta_window._isStacked = true;
     } else {
@@ -884,7 +893,6 @@ function propagateForward(space, n, x, gap) {
 // Place window's right edge at x
 function propagateBackward(space, n, x, gap) {
     if (n < 0 || n >= space.length) {
-        StackOverlay.leftOverlay.setTarget(null);
         return;
     }
     let meta_window = space[n];
@@ -893,6 +901,9 @@ function propagateBackward(space, n, x, gap) {
     // Check if we should start stacking windows
     let stack = meta_window.fullscreen;
     if (x < stack_margin) {
+        if (x > 0) {
+            StackOverlay.leftOverlay.setTarget(meta_window);
+        }
         stack = true;
         meta_window._isStacked = true;
     } else {

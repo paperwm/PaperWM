@@ -5,6 +5,7 @@ const Tweener = imports.ui.tweener;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
+const Meta = imports.gi.Meta;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 const Minimap = Extension.imports.minimap;
@@ -58,8 +59,10 @@ function createAppIcon(metaWindow, size) {
 var StackOverlay = new Lang.Class({
     Name: 'Stackoverlay',
 
-    _init: function(showIcon) {
+    _init: function(direction, showIcon) {
         this.showIcon = showIcon;
+
+        this._direction = direction;
 
         let overlay = new Clutter.Actor({ reactive: true
                                           , name: "stack-overlay" });
@@ -113,7 +116,7 @@ var StackOverlay = new Lang.Class({
 
         this.overlay.add_child(icon);
     },
-    setTarget: function(metaWindow) {
+    setTarget: function(metaWindow, direction) {
         this.target = metaWindow;
 
         let bail = () => {
@@ -137,10 +140,7 @@ var StackOverlay = new Lang.Class({
         //       we must use destinationX and we might occationally get wrong y
         //       positions (icon) (since we don't track the y destination)
         //       We also assume window widths are are unchanging.
-        let destX = metaWindow.destinationX;
-        if (destX === undefined)
-            destX = frame.x;
-        if (destX < Tiling.stack_margin) {
+        if (this._direction === Meta.MotionDirection.LEFT) {
             let neighbour = space[space.indexOf(metaWindow) + 1]
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
@@ -189,8 +189,8 @@ var StackOverlay = new Lang.Class({
 var leftOverlay;
 var rightOverlay;
 function enable() {
-    leftOverlay  = new StackOverlay();
-    rightOverlay = new StackOverlay();
+    leftOverlay  = new StackOverlay(Meta.MotionDirection.LEFT);
+    rightOverlay = new StackOverlay(Meta.MotionDirection.RIGHT);
 }
 
 function disable() {
