@@ -864,9 +864,9 @@ function propagateForward(space, n, x, gap) {
     let meta_window = space[n];
     gap = gap || window_gap;
 
-    let stack = meta_window.fullscreen;
+    let stack = false;
     // Check if we should start stacking windows
-    if (x > primary.width - stack_margin) {
+    if (x > primary.width - stack_margin || meta_window.fullscreen) {
         if (x < primary.width) {
             StackOverlay.rightOverlay.setTarget(meta_window);
         }
@@ -899,8 +899,8 @@ function propagateBackward(space, n, x, gap) {
     gap = gap || window_gap;
 
     // Check if we should start stacking windows
-    let stack = meta_window.fullscreen;
-    if (x < stack_margin) {
+    let stack = false;
+    if (x < stack_margin || meta_window.fullscreen) {
         if (x > 0) {
             StackOverlay.leftOverlay.setTarget(meta_window);
         }

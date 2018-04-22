@@ -150,10 +150,7 @@ var StackOverlay = new Lang.Class({
                 neighbourX = neighbour.get_frame_rect().x;
 
             overlay.x = 0;
-            overlay.width = Math.min(
-                Tiling.stack_margin,
-                Math.max(0, neighbourX - resizeBorderWidth)
-            );
+            overlay.width = Math.max(0, neighbourX - resizeBorderWidth);
         } else {
             let neighbour = space[space.indexOf(metaWindow) - 1]
             if (!neighbour)
@@ -164,10 +161,7 @@ var StackOverlay = new Lang.Class({
             if (neighbourX === undefined)
                 neighbourX = neighbourFrame.x;
 
-            overlay.x = Math.max(
-                this.monitor.width - Tiling.stack_margin,
-                neighbourX + neighbourFrame.width + resizeBorderWidth
-            );
+            overlay.x = neighbourX + neighbourFrame.width + resizeBorderWidth;
             overlay.width = Math.max(0, this.monitor.width - overlay.x);
         }
 
