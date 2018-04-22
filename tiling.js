@@ -705,6 +705,10 @@ function ensureViewport(meta_window, space, force) {
                                   frame.width,
                                   primary.height - panelBox.height - margin_tb*2);
 
+    // Use monitor relative coordinates.
+    frame.x -= primary.x;
+    frame.y -= primary.y;
+
     if (meta_window.destinationX !== undefined)
         // Use the destination of the window if available
         frame.x = meta_window.destinationX;
