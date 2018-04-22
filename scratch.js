@@ -2,6 +2,7 @@ const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix
 const Meta = imports.gi.Meta;
 
 const TopBar = Extension.imports.topbar;
+const StackOverlay = Extension.imports.stackoverlay;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 let float;
@@ -12,6 +13,9 @@ function makeScratch(metaWindow) {
     metaWindow.stick();
     metaWindow.clone.hide();
     metaWindow.get_compositor_private().show();
+
+    StackOverlay.leftOverlay.setTarget(null);
+    StackOverlay.rightOverlay.setTarget(null);
 }
 
 function unmakeScratch(metaWindow) {
@@ -61,6 +65,8 @@ function show() {
             meta_window.get_compositor_private().show();
     });
     windows[0].activate(global.get_current_time());
+    StackOverlay.leftOverlay.setTarget(null);
+    StackOverlay.rightOverlay.setTarget(null);
 }
 
 function hide() {
