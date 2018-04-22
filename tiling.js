@@ -80,8 +80,8 @@ class Space extends Array {
         this.cloneContainer = cloneContainer;
 
         cloneContainer.set_size(global.screen_width, global.screen_height);
-        cloneContainer.set_clip(-10, -10,
-                                global.screen_width + 2*10,
+        cloneContainer.set_clip(-(window_gap - 2), -10,
+                                global.screen_width + 2*(window_gap - 2),
                                 global.screen_height + 10);
         cloneContainer.set_pivot_point(0.5, 0);
 
