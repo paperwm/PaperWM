@@ -136,35 +136,61 @@ The `notify` signal is emited on changes to all GObject properties. Listen to `n
 * Gnome-shell scene graph and GUI system
 NB: some details might differ with the wayland backend.
 
-Gnome shell use [[https://developer.gnome.org/clutter/stable/][Clutter]] to mange all visible components. Basic GUI components are provided by the [[https://developer.gnome.org/st/stable/][St]] (built on top of clutter).
+Gnome shell use [[https://developer.gnome.org/clutter/stable/][Clutter]] to mange all visible components including the window textures. Basic GUI components are provided by the [[https://developer.gnome.org/st/stable/][St]] (built on top of clutter).
 
 Low level window management and input handling happens through [[https://developer.gnome.org/meta/stable/][mutter/meta]]. Gnome-shell is technically a mutter plugin.
 
-Input handling can be directed through clutter by (at least) two means:
+** Input handling
 
-: Main.pushModal(actor)
-The clutter actor will receives all input until `Main.popModal` is called.
+(Also see [[Keybinding system]]) 
+
+Input is normally fully handled by X11. This means that even though gnome-shell use clutter (which have input mechanisms) inputs does not normally go through clutter.
+
+Ie. making an actor `reactive` is not enough to capture input reliable.
+
+Input handling can be directed through clutter by using:
 
 : Main.layoutManager._trackActor(actor)
 
-Gnome-shell will inform mutter[1] that mouse input in the actor's region should be sent through clutter. This allows the actor to capture input. Ie. setting `reactive` to true is not enough to capture mouse input.
+This informs mutter[1] that mouse input in the actor's region should be sent through clutter.
 
-It does not seem to be possible to propagate input captured by a tracked actor to a window actor below.
+Some higher-level interfaces:
+
+: Main.pushModal(actor)
+
+The clutter actor will receives all input until `Main.popModal` is called.
+
+: Main.layoutManager.trackChrome(actor)
+
+NB: It does not seem to be possible to propagate input captured by a tracked actor to a window actor below.
 
 NB! When a "tracked" actor is stacked below a _window actor_ it will still prevent the window actor from receiving input!
-
-Building `StWidget` detached from the stage are prone to result in the following warning:
-
-: st_widget_get_theme_node called on the widget [0x... St...] which is not in the stage.
-
-This is because a lot of actor properties depend on the style of the actor and that can depend on the ancestors of the actor. (`.parent .child { border: 2px; }`)
-
-So any code that try to access eg. height/width (unless these have been explicitly set beforehand) requires that the full style info is present.
 
 [1] By using `meta_set_stage_input_region` through `global.set_stage_input_region`
 
 ** `MetaWindow` and `MetaWindowActor`
-TODO: display_rect vs frame_rect vs actor.width. Gotchas when placing MetaWindowActors in containers, etc.
+WIP: display_rect vs frame_rect vs actor.width. Gotchas when placing MetaWindowActors in containers, etc.
+
+Warning: This is a somewhat confusing part of gnome-shell/mutter.
+
+A window is represented by two objects: a `MetaWindow` representing the underlying windowing system object (eg. a X11 window) and a `MetaWindowActor` which basically is the window texture/visible part.
+
+Both of these objects have a /geometry/ (size and position). The meta window geometry determines the input region, while the actor geometry determines the texture. Normally these geometries are kept in sync so the visible and input regions corresponds. It is however possible for these to drift: The thumb of rule is that changes to the meta window geometry is propagated to the actor, but not the other way.
+
+The coordinate system used is thankfully shared :)
+
+The size of the window actor is slightly bigger than the meta window since the actor includes border decorations and window-resize region. The size difference varies with the toolkit used to create the window.
+
+*** Basic operations
+To get the window actor of a meta window: `metaWindow.get_compositor_private()` 
+
+To get the meta window of a window actor: `windowActor.meta_window`
+
+The window actor geometry: `windowActor.size, windowActor.position` or `metaWindow.get_buffer_rect`
+
+The meta window geometry: `[[https://developer.gnome.org/meta/stable/MetaWindow.html#meta-window-get-frame-rect][metaWindow.get_frame_rect()]]`
+
+Changing the geometry of a window: `[[https://developer.gnome.org/meta/stable/MetaWindow.html#meta-window-move-frame][metaWindow.move_frame]]` or `[[https://developer.gnome.org/meta/stable/MetaWindow.html#meta-window-move-resize-frame][metaWindow.move_resize_frame]]`
 
 ** Stacking/"z-index"
 The "z-index" in clutter is controlled by the actors position in the scene graph. Ie. the actors are drawn in a depth first manner. So the last child of a parent will be drawn on top of all the other children, and so on.
@@ -174,6 +200,15 @@ To my knowledge there is no way to make a actor "break out" of its parent. If si
 NB: `ClutterActor.z-position` **don't** control the z-index. It is used to control the perspective of the actors (most relevant for rotated actors).
 
 A complication when using non-window actors inside `global.window_group` is that mutter keep restacking the window actors in a way that destroys the non-window actors z-index. Listening on the `restacked` signal of `global.screen` (`MetaScreen`) and restack the non-window actors in the handler is a workaround that seems to work.
+
+** Gotchas
+Building `StWidget` detached from the stage are prone to result in the following warning:
+
+: st_widget_get_theme_node called on the widget [0x... St...] which is not in the stage.
+
+This is because a lot of actor properties depend on the style of the actor and that can depend on the ancestors of the actor. (`.parent .child { border: 2px; }`)
+
+So any code that try to access eg. height/width (unless these have been explicitly set beforehand) requires that the full style info is present.
 * Extension system
 All extension objects are available using
 `imports.misc.extensionUtils.extensions[extensionUiid];`
