@@ -1,10 +1,54 @@
 #!/usr/bin/env zsh
 
+function skip-crap {
+    local crap_start=".*: Object [^ ]+ \(.*\), has been already finalized. Impossible to \w* any property \w* it.*"
 
+    local crap_continue=(
+        -e ".*: == Stack trace for context.*"
+        -e ".*: #[0-9]+ 0x.*"
+    )
+
+    local skip=0
+
+    # Could probably be done more elegantly with awk/sed ?
+    while read -r line; do
+        if echo $line | grep -E $crap_start --quiet; then
+            # echo setting skip
+            skip=1
+            continue
+        fi
+
+        if [[ $skip == 1 ]]; then
+            if echo $line | grep -E $crap_continue --quiet; then
+                # echo ignoring
+                continue
+            else
+                # echo reset skip
+                skip=0
+                printf 'Skipped "already finalized" crap\n'
+            fi
+        fi
+
+        printf "%s\n" $line
+    done
+}
+
+function date-on-separate-line {
+    # Use line buffering to be able to interactively grep the output
+    # (sed use line buffering when stdout is tty, but doesn't detect this
+    # transiently so `debug | grep foobar` will run without line buffering
+    # without the stdbuf stuff)
+    stdbuf -oL sed -e 's|\]:|]:\n  |'
+}
+
+function decode-multiline-message {
+    stdbuf -oL sed -e 's| |\n    |g'
+}
 
 # We use non-breaking space to encode newlines in multiline messages
 
 journalctl --follow \
            $(dirname =gnome-shell(:A))/.gnome-shell-wrapped \
-    | sed -e 's|\]:|]:\n  |' \
-          -e 's| |\n    |g'
+    | skip-crap                \
+    | date-on-separate-line    \
+    | decode-multiline-message
