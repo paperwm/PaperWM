@@ -866,7 +866,8 @@ function propagateForward(space, n, x, gap) {
 
     let stack = false;
     // Check if we should start stacking windows
-    if (x > primary.width - stack_margin || meta_window.fullscreen) {
+    if (x > primary.width - stack_margin || meta_window.fullscreen
+        || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
         if (x < primary.width) {
             StackOverlay.rightOverlay.setTarget(meta_window);
         }
@@ -900,7 +901,8 @@ function propagateBackward(space, n, x, gap) {
 
     // Check if we should start stacking windows
     let stack = false;
-    if (x < stack_margin || meta_window.fullscreen) {
+    if (x < stack_margin || meta_window.fullscreen
+        || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
         if (x > 0) {
             StackOverlay.leftOverlay.setTarget(meta_window);
         }
