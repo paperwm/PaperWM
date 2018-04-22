@@ -41,35 +41,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._switcherList = multimap;
         this.space = this._switcherList.getSelected().space;
 
-        let heights = [0].concat(this._yPositions.slice(1));
-
-        let cloneParent = this.space.cloneContainer.get_parent();
-        multimap.minimaps.forEach((m, i) => {
-            let space = m.space;
-            let h = heights[i];
-            if (h === undefined)
-                h = heights[heights.length-1];
-            space.cloneContainer.set_position(0, global.screen_height*h);
-
-            space.cloneContainer.scale_y = scale + (1 - i)*0.01;
-            space.cloneContainer.scale_x = scale + (1 - i)*0.01;
-            if (multimap.minimaps[i - 1] === undefined)
-                return;
-            cloneParent.set_child_below_sibling(
-                space.cloneContainer,
-                multimap.minimaps[i - 1].space.cloneContainer
-            );
-            space.cloneContainer.show();
-
-            let selected = space.selectedWindow;
-            if (selected && selected.fullscreen) {
-                selected.clone.y = Main.panel.actor.height + Tiling.margin_tb;
-            }
-        });
-        this.space.cloneContainer.scale_y = 1;
-        this.space.cloneContainer.scale_x = 1;
-
-
         this._switcherList.onlyShowSelected();
 
         // HACK: workaround to enable moving from empty workspace. See check in
@@ -123,12 +94,52 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._switcherList.highlight(targetIndex);
     },
 
+    _initSpaceMru() {
+        let heights = [0].concat(this._yPositions.slice(1));
+        let multimap = this.multimap;
+
+        let cloneParent = this.space.cloneContainer.get_parent();
+        multimap.minimaps.forEach((m, i) => {
+            let space = m.space;
+            let h = heights[i];
+            if (h === undefined)
+                h = heights[heights.length-1];
+            space.cloneContainer.set_position(0, global.screen_height*h);
+
+            space.cloneContainer.scale_y = scale + (1 - i)*0.01;
+            space.cloneContainer.scale_x = scale + (1 - i)*0.01;
+            if (multimap.minimaps[i - 1] === undefined)
+                return;
+            cloneParent.set_child_below_sibling(
+                space.cloneContainer,
+                multimap.minimaps[i - 1].space.cloneContainer
+            );
+            space.cloneContainer.show();
+
+            let selected = space.selectedWindow;
+            if (selected && selected.fullscreen) {
+                selected.clone.y = Main.panel.actor.height + Tiling.margin_tb;
+            }
+        });
+        this.space.cloneContainer.scale_y = 1;
+        this.space.cloneContainer.scale_x = 1;
+    },
+
     selectSpace: function(direction, move) {
         this._switcherList.actor.hide();
 
+        if (!workspaceMru) {
+            this._initSpaceMru();
+            let selected = this.space.selectedWindow;
+            if (selected && selected.fullscreen) {
+                Tweener.addTween(selected.clone, {
+                    y: Main.panel.actor.height + Tiling.margin_tb,
+                    time: 0.25
+                });
+            }
+        }
+
         workspaceMru = true;
-        let metaWindow = this.space[this._selectedIndex];
-        metaWindow && Tiling.ensureViewport(metaWindow);
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.hide();
