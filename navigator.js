@@ -276,22 +276,6 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     _finish: function(timestamp) {
         this.was_accepted = true;
-
-        let force = workspaceMru;
-        navigating = false; workspaceMru = false;
-
-        switchWorkspace(this.space.workspace);
-
-        if (this.space.length === 0) {
-            this.space.workspace.activate(global.get_current_time());
-        } else {
-            Main.activateWindow(this.space[this._selectedIndex]);
-            debug('#preview', 'Finish', this.space[this._selectedIndex].title, this._selectedIndex);
-
-            Tiling.ensureViewport(this.space[this._selectedIndex], this.space, force);
-        }
-        // Finish workspace preview _after_ activate, that way the new animation
-        // triggered by activate gets killed immediately
         this.parent(timestamp);
     },
 
@@ -305,26 +289,39 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     _onDestroy: function() {
+        debug('#preview', 'onDestroy', this.was_accepted);
+
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
-        debug('#preview', 'onDestroy', this.was_accepted);
 
         let force = workspaceMru;
         navigating = false; workspaceMru = false;
 
-        let focus = global.display.focus_window;
+        let from = this.multimap.minimaps[0].space;
         if(!this.was_accepted) {
-            debug('#preview', 'Abort', global.display.focus_window.title);
-            switchWorkspace(focus.get_workspace());
-            Tiling.ensureViewport(focus, null, force);
+            // Abort the navigation
+            this.space = from;
         }
 
-        if (focus.fullscreen) {
+        if (this.space === from) {
+            // We can't activate an already active workspace
+            switchWorkspace(this.space.workspace);
+        }
+
+        let selected = this.space.selectedWindow;
+        if (selected) {
+            Main.activateWindow(selected);
+            debug('#preview', 'Finish', selected.title, this._selectedIndex);
+            Tiling.ensureViewport(selected, this.space, force);
+        } else {
+            this.space.workspace.activate(global.get_current_time());
+        }
+
+        if (selected && selected.fullscreen) {
             TopBar.hide();
         } else {
             TopBar.show();
         }
-
 
         Main.wm._blockAnimations = this._block;
 
