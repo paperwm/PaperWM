@@ -112,7 +112,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             let h = heights[i];
             if (h === undefined)
                 h = heights[heights.length-1];
-            space.cloneContainer.set_position(0, global.screen_height*h);
+            space.cloneContainer.set_position(0, space.height*h);
 
             space.cloneContainer.scale_y = scale + (1 - i)*0.01;
             space.cloneContainer.scale_x = scale + (1 - i)*0.01;
@@ -198,7 +198,7 @@ var PreviewedWindowNavigator = new Lang.Class({
                 h = 1;
 
             Tweener.addTween(actor,
-                             {y: h*global.screen_height,
+                             {y: h*m.space.height,
                               time: 0.25,
                               scale_x: scale + (to - i)*0.01,
                               scale_y: scale + (to - i)*0.01,

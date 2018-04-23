@@ -66,16 +66,24 @@ class Space extends Array {
         let cloneContainer = new St.Widget();
         let label = new St.Label();
 
+        // Hardcoded to primary for now
+        let monitor = Main.layoutManager.primaryMonitor;
+        this.monitor = monitor;
+
+        // Make it easy to adjust for scaling in the future
+        this.width = monitor.width;
+        this.height = monitor.height;
+
         label.text = Meta.prefs_get_workspace_name(workspace.index());
         label.set_position(12, 6);
         cloneContainer.add_actor(label);
 
         this.cloneContainer = cloneContainer;
 
-        cloneContainer.set_size(global.screen_width, global.screen_height);
+        cloneContainer.set_size(this.width, this.height);
         cloneContainer.set_clip(-(window_gap - 2), -10,
-                                global.screen_width + 2*(window_gap - 2),
-                                global.screen_height + 10);
+                                this.width + 2*(window_gap - 2),
+                                this.height + 10);
         cloneContainer.set_pivot_point(0.5, 0);
 
         let cloneParent = backgroundGroup;
@@ -108,18 +116,18 @@ class Space extends Array {
         // On gnome-shell-restarts the windows are moved into the viewport, but
         // they're moved minimally and the stacking is not changed, so the tiling
         // order is preserved (sans full-width windows..)
-        function xz_comparator(windows) {
+        let xz_comparator = (windows) => {
             // Seems to be the only documented way to get stacking order?
             // Could also rely on the MetaWindowActor's index in it's parent
             // children array: That seem to correspond to clutters z-index (note:
             // z_position is something else)
             let z_sorted = global.display.sort_windows_by_stacking(windows);
-            function xkey(mw) {
+            let xkey = (mw) => {
                 let frame = mw.get_frame_rect();
                 if(frame.x <= 0)
                     return 0;
-                if(frame.x+frame.width == primary.width) {
-                    return primary.width;
+                if(frame.x+frame.width == this.width) {
+                    return this.width;
                 }
                 return frame.x;
             }
@@ -621,18 +629,19 @@ function insertWindow(metaWindow, {existing}) {
 
     metaWindow.unmake_above();
 
+    let monitor = space.monitor;
     let position;
     if (index == 0) {
         // If the workspace was empty the inserted window should be selected
         space.selectedWindow = metaWindow;
 
         let frame = metaWindow.get_frame_rect();
-        position = {x: primary.x + (primary.width - frame.width)/2,
-                    y: primary.y + panelBox.height + margin_tb};
+        position = {x: monitor.x + (monitor.width - frame.width)/2,
+                    y: monitor.y + panelBox.height + margin_tb};
     } else {
         let frame = space[index - 1].get_frame_rect();
-        position = {x: primary.x + frame.x + frame.width + window_gap,
-                    y: primary.y + panelBox.height + margin_tb};
+        position = {x: monitor.x + frame.x + frame.width + window_gap,
+                    y: monitor.y + panelBox.height + margin_tb};
     }
 
     debug("setting initial position", position)
@@ -695,14 +704,16 @@ function ensureViewport(meta_window, space, force) {
     debug('Moving', meta_window.title);
     meta_window._isStacked = false;
     space.selectedWindow = meta_window;
+
+    let monitor = space.monitor;
     let frame = meta_window.get_frame_rect();
     meta_window.move_resize_frame(true, frame.x, frame.y,
                                   frame.width,
-                                  primary.height - panelBox.height - margin_tb*2);
+                                  space.height - panelBox.height - margin_tb*2);
 
     // Use monitor relative coordinates.
-    frame.x -= primary.x;
-    frame.y -= primary.y;
+    frame.x -= monitor.x;
+    frame.y -= monitor.y;
 
     if (meta_window.destinationX !== undefined)
         // Use the destination of the window if available
@@ -720,8 +731,8 @@ function ensureViewport(meta_window, space, force) {
                && !meta_window.fullscreen) {
         x = frame.x;
         y = frame.y;
-    } else if (required_width <= primary.width) {
-        let leftovers = primary.width - required_width;
+    } else if (required_width <= space.width) {
+        let leftovers = space.width - required_width;
         let gaps = space.length + 1;
         let extra_gap = Math.floor(leftovers/gaps);
         debug('#extragap', extra_gap);
@@ -733,22 +744,22 @@ function ensureViewport(meta_window, space, force) {
         x = 0;
     } else if (index == space.length-1) {
         // Always align the first window to the display's right edge
-        x = primary.width - frame.width;
+        x = space.width - frame.width;
     } else if (frame.width >
-               primary.width - 2*(margin_lr + stack_margin + window_gap)) {
+               space.width - 2*(margin_lr + stack_margin + window_gap)) {
         // Consider the window to be wide and center it
-        x = Math.round((primary.width - frame.width)/2);
+        x = Math.round((space.width - frame.width)/2);
 
-    } else if (frame.x + frame.width > primary.width) {
+    } else if (frame.x + frame.width > space.width) {
         // Align to the right margin_lr
-        x = primary.width - margin_lr - frame.width;
+        x = space.width - margin_lr - frame.width;
     } else if (frame.x < 0) {
         // Align to the left margin_lr
         x = margin_lr;
-    } else if (frame.x + frame.width === primary.width) {
+    } else if (frame.x + frame.width === space.width) {
         // When opening new windows at the end, in the background, we want to
         // show some minimup margin
-        x = primary.width - minimumMargin - frame.width;
+        x = space.width - minimumMargin - frame.width;
     } else if (frame.x === 0) {
         // Same for the start (though the case isn't as common)
         x = minimumMargin;
@@ -765,18 +776,11 @@ function ensureViewport(meta_window, space, force) {
 
 
 /**
-   Animate @meta_window to (@x, @y) in primary relative coordinates.
-
-
-   FIXME: This should really be __monitor__ relative instead.
+   Animate @meta_window to (@x, @y) in @space.monitor relative coordinates.
  */
-function move(meta_window, {x, y,
-                            onComplete,
-                            onStart,
-                            delay,
-                            transition,
-                            stack
-                           }) {
+function move(meta_window, space,
+              { x, y, onComplete, onStart,
+                delay, transition, stack }) {
 
     onComplete = onComplete || (() => {});
     onStart = onStart || (() => {});
@@ -791,9 +795,6 @@ function move(meta_window, {x, y,
     clone.show();
     actor.hide();
 
-    // Set monitor offset
-    y += primary.y;
-    x += primary.x;
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
     meta_window.destinationX = x;
@@ -806,30 +807,35 @@ function move(meta_window, {x, y,
                              , transition: transition
                              , onStart: onStart
                              , onComplete: () => {
+                                 // If the actor is gone, the window is in
+                                 // process of closing
+                                 if(!meta_window.get_compositor_private())
+                                     return;
+
                                  meta_window.destinationX = undefined;
-                                 if(meta_window.get_compositor_private()) {
-                                     // If the actor is gone, the window is in process of closing
-                                     if (!stack && !Navigator.navigating) {
-                                         actor.set_position(clone.x, clone.y);
-                                         clone.hide();
-                                         actor.show();
-                                     }
-                                     meta_window.move_frame(true, x, y);
-                                     onComplete();
+                                 let monitor = space.monitor;
+                                 meta_window.move_frame(true,
+                                                        x + monitor.x,
+                                                        y + monitor.y);
+
+                                 if (!stack && !Navigator.navigating) {
+                                     clone.hide();
+                                     actor.show();
                                  }
+                                 onComplete();
                              }
-                            })
+                            });
 
 }
 
 // Move @meta_window to x, y and propagate the change in @space
 function move_to(space, meta_window, { x, y, delay, transition,
                                          onComplete, onStart }) {
-    move(meta_window, { x, y
-                        , onComplete
-                        , onStart
-                        , delay
-                        , transition }
+    move(meta_window, space, { x, y
+                               , onComplete
+                               , onStart
+                               , delay
+                               , transition }
         );
     let index = space.indexOf(meta_window);
     let frame = meta_window.get_frame_rect();
@@ -851,9 +857,9 @@ function propagateForward(space, n, x, gap) {
 
     let stack = false;
     // Check if we should start stacking windows
-    if (x > primary.width - stack_margin || meta_window.fullscreen
+    if (x > space.width - stack_margin || meta_window.fullscreen
         || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
-        if (x < primary.width) {
+        if (x < space.width) {
             StackOverlay.rightOverlay.setTarget(meta_window);
         }
         stack = true;
@@ -866,9 +872,8 @@ function propagateForward(space, n, x, gap) {
     if (actor) {
         // Anchor scaling/animation on the left edge for windows positioned to the right,
 
-        move(meta_window, { x, y: panelBox.height + margin_tb,
-                            stack
-                          });
+        move(meta_window, space,
+             { x, y: panelBox.height + margin_tb, stack });
         propagateForward(space, n+1, x+meta_window.get_frame_rect().width + gap, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
@@ -901,9 +906,8 @@ function propagateBackward(space, n, x, gap) {
     if (actor) {
         x = x - meta_window.get_frame_rect().width
         // Anchor on the right edge for windows positioned to the left.
-        move(meta_window, { x, y: panelBox.height + margin_tb,
-                            stack
-                          });
+        move(meta_window, space,
+             { x, y: panelBox.height + margin_tb, stack });
         propagateBackward(space, n-1, x - gap, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
@@ -1059,7 +1063,8 @@ function isUnStacked(metaWindow) {
 
 function isFullyVisible(metaWindow) {
     let frame = metaWindow.get_frame_rect();
-    return frame.x >= 0 && (frame.x + frame.width) <= primary.width;
+    let space = spaces.spaceOfWindow(metaWindow);
+    return frame.x >= 0 && (frame.x + frame.width) <= space.width;
 }
 
 // Detach meta_window or the focused window by default
@@ -1083,6 +1088,7 @@ function center(meta_window, zen) {
 
 function toggle_maximize_horizontally(meta_window) {
     meta_window = meta_window || global.display.focus_window;
+    let monitor = Main.layoutManager.monitors[meta_window.get_monitor()];
 
     // TODO: make some sort of animation
     // Note: should investigate best-practice for attaching extension-data to meta_windows
@@ -1095,7 +1101,7 @@ function toggle_maximize_horizontally(meta_window) {
     } else {
         let frame = meta_window.get_frame_rect();
         meta_window.unmaximized_rect = frame;
-        meta_window.move_resize_frame(true, minimumMargin, frame.y, primary.width - minimumMargin*2, frame.height);
+        meta_window.move_resize_frame(true, minimumMargin, frame.y, monitor.width - minimumMargin*2, frame.height);
     }
 }
 
@@ -1140,7 +1146,8 @@ function cycleWindowWidth(metaWindow) {
         return 0; // cycle
     }
     let frame = metaWindow.get_frame_rect();
-    let availableWidth = primary.width - minimumMargin*2;
+    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
+    let availableWidth = monitor.width - minimumMargin*2;
     let r = frame.width / availableWidth;
     let nextW = Math.floor(ratios[findNext(r)]*availableWidth);
     metaWindow.move_resize_frame(true, frame.x, frame.y, nextW, frame.height);
