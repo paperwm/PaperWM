@@ -14,8 +14,7 @@ function makeScratch(metaWindow) {
     metaWindow.clone.hide();
     metaWindow.get_compositor_private().show();
 
-    StackOverlay.leftOverlay.setTarget(null);
-    StackOverlay.rightOverlay.setTarget(null);
+    StackOverlay.reset();
 }
 
 function unmakeScratch(metaWindow) {
@@ -64,8 +63,7 @@ function show() {
             meta_window.get_compositor_private().show();
     });
     windows[0].activate(global.get_current_time());
-    StackOverlay.leftOverlay.setTarget(null);
-    StackOverlay.rightOverlay.setTarget(null);
+    StackOverlay.reset();
 }
 
 function hide() {

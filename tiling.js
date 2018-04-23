@@ -848,8 +848,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
     let index = space.indexOf(meta_window);
     let frame = meta_window.get_frame_rect();
 
-    StackOverlay.rightOverlay.setTarget(null);
-    StackOverlay.leftOverlay.setTarget(null);
+    StackOverlay.reset();
 
     propagateForward(space, index + 1, x + frame.width + window_gap);
     propagateBackward(space, index - 1, x - window_gap);

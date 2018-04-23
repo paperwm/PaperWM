@@ -11,6 +11,7 @@ const Clutter = imports.gi.Clutter;
 const Tweener = imports.ui.tweener;
 
 var TopBar = Extension.imports.topbar;
+var StackOverlay = Extension.imports.stackoverlay;
 const Minimap = Extension.imports.minimap;
 const Tiling = Extension.imports.tiling;
 const utils = Extension.imports.utils;
@@ -293,6 +294,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
+        StackOverlay.reset();
 
         let force = workspaceMru;
         navigating = false; workspaceMru = false;

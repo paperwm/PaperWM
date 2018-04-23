@@ -178,6 +178,11 @@ var StackOverlay = new Lang.Class({
     }
 });
 
+function reset() {
+    leftOverlay.setTarget(null);
+    rightOverlay.setTarget(null);
+}
+
 var leftOverlay;
 var rightOverlay;
 function enable() {
