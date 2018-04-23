@@ -360,7 +360,6 @@ function switchWorkspace(to, from, callback) {
                        transition: 'easeInOutQuad',
                        onComplete: () => {
                            toSpace.cloneContainer.raise_top();
-_
                            callback && callback();
                        }
                      });
