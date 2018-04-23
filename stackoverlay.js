@@ -71,9 +71,8 @@ var StackOverlay = new Lang.Class({
 
         let panelBox = Main.layoutManager.panelBox;
 
-        overlay.y = panelBox.height;
-        // global.window_group is below the panel so not really necessary to adjust height?
-        overlay.height = this.monitor.height - panelBox.height; 
+        overlay.y = panelBox.height + Tiling.margin_tb;
+        overlay.height = this.monitor.height - panelBox.height - Tiling.margin_tb;
         overlay.width = Tiling.stack_margin;
 
         overlay.hide();
@@ -133,7 +132,6 @@ var StackOverlay = new Lang.Class({
         let overlay = this.overlay;
         let actor = metaWindow.get_compositor_private();
         let frame = metaWindow.get_frame_rect();
-        let resizeBorderWidth = 5; // approx.
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
 
         // Note: Atm. this can be called when the windows are moving. Therefore
@@ -150,7 +148,7 @@ var StackOverlay = new Lang.Class({
                 neighbourX = neighbour.get_frame_rect().x;
 
             overlay.x = 0;
-            overlay.width = Math.max(0, neighbourX - resizeBorderWidth);
+            overlay.width = Math.max(0, neighbourX - Tiling.window_gap);
         } else {
             let neighbour = space[space.indexOf(metaWindow) - 1]
             if (!neighbour)
@@ -161,7 +159,7 @@ var StackOverlay = new Lang.Class({
             if (neighbourX === undefined)
                 neighbourX = neighbourFrame.x;
 
-            overlay.x = neighbourX + neighbourFrame.width + resizeBorderWidth;
+            overlay.x = neighbourX + neighbourFrame.width + Tiling.window_gap;
             overlay.width = Math.max(0, this.monitor.width - overlay.x);
         }
 
