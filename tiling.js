@@ -32,8 +32,6 @@ var stack_margin = 75;
 // Minimum margin
 var minimumMargin = 15;
 
-var primary = Main.layoutManager.primaryMonitor;
-
 var panelBox = Main.layoutManager.panelBox;
 
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
@@ -50,10 +48,19 @@ let colors = [
 let color;
 
 /**
-   Array used to store the scrolled tiling.
+   Scrolled and tiled per monitor workspace.
+
+   The structure is currently like this:
+
+   A @clip actor which spans the monitor and clips all its contents to the
+   monitor. The clip lives along side all other space's clips in an actor
+   spanning the whole global.screen
+
+   A @cloneContainer to hold all the WindowActor clones. The cloneContainer
+   lives inside the clip.
  */
 class Space extends Array {
-    constructor (workspace) {
+    constructor (workspace, container) {
         super(0);
         this.workspace = workspace;
         this.addSignal =
@@ -63,34 +70,27 @@ class Space extends Array {
             workspace.connect("window-removed",
                               utils.dynamic_function_ref("remove_handler", Me));
 
+        let clip = new Clutter.Actor();
+        this.clip = clip;
         let cloneContainer = new St.Widget();
+        this.cloneContainer = cloneContainer;
         let label = new St.Label();
+
+        clip.space = this;
+        cloneContainer.space = this;
+
+        container.add_actor(clip);
+        clip.add_actor(cloneContainer);
+        cloneContainer.add_actor(label);
 
         // Hardcoded to primary for now
         let monitor = Main.layoutManager.primaryMonitor;
-        this.monitor = monitor;
-
-        // Make it easy to adjust for scaling in the future
-        this.width = monitor.width;
-        this.height = monitor.height;
+        this.setMonitor(monitor);
 
         label.text = Meta.prefs_get_workspace_name(workspace.index());
         label.set_position(12, 6);
-        cloneContainer.add_actor(label);
 
-        this.cloneContainer = cloneContainer;
-
-        cloneContainer.set_size(this.width, this.height);
-        cloneContainer.set_clip(-(window_gap - 2), -10,
-                                this.width + 2*(window_gap - 2),
-                                this.height + 10);
         cloneContainer.set_pivot_point(0.5, 0);
-
-        let cloneParent = backgroundGroup;
-        cloneParent.add_actor(cloneContainer);
-        cloneParent.set_child_above_sibling(
-            cloneContainer,
-            cloneParent.first_child);
 
         cloneContainer.set_style(
             `background: ${colors[color]};
@@ -105,6 +105,30 @@ class Space extends Array {
         this.rightStack = 0; // not implemented
 
         this.addAll(oldSpaces.get(workspace));
+    }
+
+    setMonitor(monitor) {
+        let cloneContainer = this.cloneContainer;
+        let clip = this.clip;
+
+        this.monitor = monitor;
+        this.width = monitor.width;
+        this.height = monitor.height;
+
+        cloneContainer.set_scale(1, 1);
+
+        clip.set_position(monitor.x, monitor.y);
+        clip.set_size(monitor.width, monitor.height);
+        clip.set_clip(0, 0,
+                      monitor.width,
+                      monitor.height);
+
+        cloneContainer.set_position(0, 0);
+        cloneContainer.set_size(monitor.width, monitor.height);
+        cloneContainer.set_size(monitor.width, monitor.height);
+        cloneContainer.set_clip(-(window_gap - 2), -10,
+                                monitor.width + 2*(window_gap - 2),
+                                monitor.height + 10);
     }
 
     /**
@@ -242,14 +266,18 @@ class Spaces extends Map {
         super();
 
         this.screenSignals = [
-                global.screen.connect(
-                    'notify::n-workspaces',
-                    Lang.bind(this,
-                              utils.dynamic_function_ref('workspacesChanged', this))),
+            global.screen.connect(
+                'notify::n-workspaces',
+                Lang.bind(this,
+                          utils.dynamic_function_ref('workspacesChanged', this))),
 
-                global.screen.connect(
-                    'workspace-removed',
-                    utils.dynamic_function_ref('workspaceRemoved', this)),
+            global.screen.connect(
+                'workspace-removed',
+                utils.dynamic_function_ref('workspaceRemoved', this)),
+
+            global.screen.connect("monitors-changed",
+                                  this.monitorsChanged.bind(this)),
+
         ];
 
         this.displaySignals = [
@@ -262,15 +290,50 @@ class Spaces extends Map {
         global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(registerWindow);
 
+        let spaceContainer = new Clutter.Actor({name: 'spaceContainer'});
+        this.spaceContainer = spaceContainer;
+
+        backgroundGroup.add_actor(spaceContainer);
+        backgroundGroup.set_child_above_sibling(
+            spaceContainer,
+            backgroundGroup.last_child);
+
         // Hook up existing workspaces
         for (let i=0; i < global.screen.n_workspaces; i++) {
-            let workspace = global.screen.get_workspace_by_index(i)
+            let workspace = global.screen.get_workspace_by_index(i);
             this.addSpace(workspace);
             debug("workspace", workspace)
         }
+
+        this.monitorsChanged();
     }
 
+    /**
+     */
+    monitorsChanged() {
+        debug('#monitors changed');
+
+        this.spaceContainer.set_size(global.screen_width, global.screen_height);
+
+        let mru = this.mru();
+        let primary = Main.layoutManager.primaryMonitor;
+        let others = Main.layoutManager.monitors
+            .filter(m => m !== primary);
+
+        // Reset all monitors
+        this.forEach(s => s.setMonitor(primary));
+        let i = 1;
+        for (let monitor of others) {
+            // debug('monitor', monitor.index)
+            mru[i].setMonitor(monitor);
+            i++;
+        }
+    }
+
+
     destroy() {
+        this.spaceContainer.destroy();
+
         global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(metaWindow => {
                 let actor = metaWindow.get_compositor_private();
@@ -341,7 +404,7 @@ class Spaces extends Map {
     };
 
     addSpace(workspace) {
-        this.set(workspace, new Space(workspace));
+        this.set(workspace, new Space(workspace, this.spaceContainer));
     };
 
     removeSpace(space) {
@@ -435,6 +498,7 @@ function init() {
 }
 
 function enable() {
+    debug('#enable');
 
     color = 3;
 
@@ -446,12 +510,6 @@ function enable() {
                     global.screen.get_workspace_by_index(to),
                     global.screen.get_workspace_by_index(from)
                 );
-            }),
-
-        // Reset primary when monitors change
-        global.screen.connect("monitors-changed",
-            function(screen) {
-                primary = Main.layoutManager.primaryMonitor;
             }));
 
     // HACK: couldn't find an other way within a reasonable time budget
@@ -1072,18 +1130,6 @@ function isFullyVisible(metaWindow) {
 function detach (meta_window) {
     meta_window = meta_window || global.display.focus_window;
     remove_handler(meta_window.get_workspace(), meta_window)
-}
-
-function center(meta_window, zen) {
-    let frame = meta_window.get_frame_rect();
-    let x = Math.floor((primary.width - frame.width)/2)
-    move_to(undefined, meta_window, {x, y: frame.y})
-    let right = zen ? primary.width : x + frame.width + window_gap;
-    let left = zen ? -primary.width : x - window_gap;
-    let space = spaces.spaceOfWindow(meta_window);
-    let i = space.indexOf(meta_window);
-    propagateForward(space, i + 1, right);
-    propagateBackward(space, i - 1, left);
 }
 
 function toggle_maximize_horizontally(meta_window) {

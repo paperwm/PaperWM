@@ -106,7 +106,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             Scratch.makeScratch(this._moving);
         }
 
-        let cloneParent = this.space.cloneContainer.get_parent();
+        let cloneParent = this.space.clip.get_parent();
         multimap.minimaps.forEach((m, i) => {
             let space = m.space;
             let h = heights[i];
@@ -119,8 +119,8 @@ var PreviewedWindowNavigator = new Lang.Class({
             if (multimap.minimaps[i - 1] === undefined)
                 return;
             cloneParent.set_child_below_sibling(
-                space.cloneContainer,
-                multimap.minimaps[i - 1].space.cloneContainer
+                space.clip,
+                multimap.minimaps[i - 1].space.clip
             );
             space.cloneContainer.show();
 
@@ -385,15 +385,16 @@ function switchWorkspace(to, from, callback) {
                        onComplete: () => {
                            Meta.enable_unredirect_for_screen(global.screen);
 
-                           toSpace.cloneContainer.raise_top();
+                           toSpace.clip.raise_top();
                            callback && callback();
                        }
                      });
 
-    let next = toSpace.cloneContainer.get_next_sibling();
+    let next = toSpace.clip.get_next_sibling();
 
     while (next !== null) {
-        Tweener.addTween(next,
+        if (next.space.monitor === toSpace.monitor)
+        Tweener.addTween(next.first_child,
                          { x: xDest,
                            y: yDest,
                            scale_x: scale,
@@ -403,7 +404,7 @@ function switchWorkspace(to, from, callback) {
                            onComplete() {
                                this.set_position(0, global.screen_height*0.1);
                            },
-                           onCompleteScope: next
+                           onCompleteScope: next.first_child
                          });
 
         next = next.get_next_sibling();
