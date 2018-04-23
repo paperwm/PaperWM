@@ -687,14 +687,13 @@ function ensureViewport(meta_window, space, force) {
         debug('already moving', meta_window.title);
         return;
     }
-    debug('Moving', meta_window.title);
-
-    meta_window._isStacked = false;
 
     let index = space.indexOf(meta_window)
     if (index === -1)
         return;
 
+    debug('Moving', meta_window.title);
+    meta_window._isStacked = false;
     space.selectedWindow = meta_window;
     let frame = meta_window.get_frame_rect();
     meta_window.move_resize_frame(true, frame.x, frame.y,
