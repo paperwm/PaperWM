@@ -118,6 +118,7 @@ class Space extends Array {
         this.height = monitor.height;
 
         cloneContainer.set_scale(1, 1);
+        clip.set_scale(1, 1);
 
         clip.set_position(monitor.x, monitor.y);
         clip.set_size(monitor.width, monitor.height);

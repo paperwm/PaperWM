@@ -42,6 +42,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         this.multimap = multimap;
         this._switcherList = multimap;
         this.space = this._switcherList.getSelected().space;
+        this.monitor = this.space.monitor;
 
         this._switcherList.onlyShowSelected();
 
@@ -101,14 +102,29 @@ var PreviewedWindowNavigator = new Lang.Class({
         let multimap = this.multimap;
         Meta.disable_unredirect_for_screen(global.screen);
 
+        let visible = Main.layoutManager.monitors
+            .map(m => Tiling.spaces.monitors.get(m));
+
+        let top = multimap.minimaps[0];
+        multimap.minimaps = [top].concat(multimap.minimaps
+            .filter(m => visible.indexOf(m.space) === -1));
+
         if (move && !Scratch.isScratchActive()) {
             this._moving = this.space.selectedWindow;
             Scratch.makeScratch(this._moving);
         }
 
+        let monitor = this.monitor;
         let cloneParent = this.space.clip.get_parent();
-        multimap.minimaps.forEach((m, i) => {
+        multimap.minimaps .forEach((m, i) => {
             let space = m.space;
+
+            space.clip.set_position(monitor.x, monitor.y);
+
+            let scaleX = monitor.width/space.width;
+            let scaleY = monitor.height/space.height;
+            space.clip.set_scale(scaleX, scaleY);
+
             let h = heights[i];
             if (h === undefined)
                 h = heights[heights.length-1];
@@ -325,6 +341,8 @@ var PreviewedWindowNavigator = new Lang.Class({
             this.space = from;
             this.space.selectedWindow = from[this._startIndex];
         }
+
+        this.space.setMonitor(this.monitor);
 
         if (this.space === from && force) {
             // We can't activate an already active workspace
