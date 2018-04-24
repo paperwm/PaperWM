@@ -99,6 +99,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     _initSpaceMru(move) {
         let heights = [0].concat(this._yPositions.slice(1));
         let multimap = this.multimap;
+        Meta.disable_unredirect_for_screen(global.screen);
 
         if (move && !Scratch.isScratchActive()) {
             this._moving = this.space.selectedWindow;
@@ -371,6 +372,8 @@ function switchWorkspace(to, from, callback) {
                        time: 0.25,
                        transition: 'easeInOutQuad',
                        onComplete: () => {
+                           Meta.enable_unredirect_for_screen(global.screen);
+
                            toSpace.cloneContainer.raise_top();
                            callback && callback();
                        }
