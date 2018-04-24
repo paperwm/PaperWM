@@ -718,8 +718,8 @@ function ensureViewport(meta_window, space, force) {
     if (meta_window.fullscreen && !Navigator.workspaceMru) {
         // Fullscreen takes highest priority
         x = 0, y = 0;
-    } else if (meta_window.maximized_vertically
-               && meta_window.maximized_horizontally) {
+    } else if (meta_window.get_maximized() === Meta.MaximizeFlags.BOTH
+               && !meta_window.fullscreen) {
         x = frame.x;
         y = frame.y;
     } else if (required_width <= primary.width) {
