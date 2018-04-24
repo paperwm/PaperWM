@@ -2,10 +2,12 @@
 ** When window A is closed
 1. The next window, B, receives 'focus' (but the actor of A seems to be gone?)
 2. Workspace receives 'window-removed'. ('A' seems to have been stripped of signal handlers)
+3. on screen 'window-left-monitor', actor isn't available
 ** When window A is created
 1. on workspace "window-added" is run, actor isn't available
-2. on display "window-created is run, actor is available
-3. focus is run if the new window should be focused
+2. on screen "window-entered-monitor", actor isn't available
+3. on display "window-created" is run, actor is available
+4. focus is run if the new window should be focused
 * Keybinding system
 `Main.wm.addKeybinding` is used to register a named keybindable /action/ and it's handler. An numeric id is returned. (this is a thin wrapper around `[[https://developer.gnome.org/meta/stable/MetaDisplay.html#meta-display-add-keybinding][MetaDisplay.add_keybinding]]`)
 
