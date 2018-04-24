@@ -49,7 +49,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._items = [1];
 
         this._selectedIndex = this.space.selectedIndex();
-        // debug('#preview', 'Init', this.space[this._selectedIndex].title, this._selectedIndex);
+        this._startIndex  = this._selectedIndex;
     },
 
     _next: function() {
@@ -303,6 +303,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         if(!this.was_accepted) {
             // Abort the navigation
             this.space = from;
+            this.space.selectedWindow = from[this._startIndex];
         }
 
         if (this.space === from) {
