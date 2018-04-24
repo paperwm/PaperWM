@@ -17,8 +17,8 @@ var Minimap = Extension.imports.minimap;
 var Scratch = Extension.imports.scratch;
 var TopBar = Extension.imports.topbar;
 var Navigator = Extension.imports.navigator;
+var StackOverlay = Extension.imports.stackoverlay;
 var Me = Extension.imports.tiling;
-
 
 let preferences = Extension.imports.convenience.getSettings();
 // Gap between windows
@@ -32,12 +32,6 @@ margin_lr = 30
 var stack_margin = 75;
 // Minimum margin
 var minimumMargin = 30;
-
-// FIXME: stackoverlay have to be imported after certain global variables have been
-//        defined atm. Preferences should be accessed as preferences and globals
-//        such as stack_margin should probably not be in tiling.js
-const StackOverlay = Extension.imports.stackoverlay;
-
 
 var primary = Main.layoutManager.primaryMonitor;
 
