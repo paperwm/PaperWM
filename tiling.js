@@ -765,13 +765,7 @@ function ensureViewport(meta_window, space, force) {
     space.moving = meta_window;
     move_to(space, meta_window,
             { x, y,
-              onComplete: () => {
-                  space.moving = false;
-                  // Certain gnome-shell/mutter animations expect default
-                  // pivot point (eg. fullscreen)
-                  meta_window.get_compositor_private().set_pivot_point(0, 0);
-              },
-              onStart:() => { meta_window.raise(); }
+              onComplete: () => space.moving = false,
             });
     // Return x so we can position the minimap
     return x;
