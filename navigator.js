@@ -303,7 +303,8 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
-        StackOverlay.reset();
+        if (workspaceMru)
+            StackOverlay.reset();
 
         let force = workspaceMru;
         navigating = false; workspaceMru = false;
