@@ -12,6 +12,7 @@ const Tweener = imports.ui.tweener;
 
 var TopBar = Extension.imports.topbar;
 var StackOverlay = Extension.imports.stackoverlay;
+var Scratch = Extension.imports.scratch;
 const Minimap = Extension.imports.minimap;
 const Tiling = Extension.imports.tiling;
 const utils = Extension.imports.utils;
@@ -95,9 +96,14 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._switcherList.highlight(targetIndex);
     },
 
-    _initSpaceMru() {
+    _initSpaceMru(move) {
         let heights = [0].concat(this._yPositions.slice(1));
         let multimap = this.multimap;
+
+        if (move && !Scratch.isScratchActive()) {
+            this._moving = this.space.selectedWindow;
+            Scratch.makeScratch(this._moving);
+        }
 
         let cloneParent = this.space.cloneContainer.get_parent();
         multimap.minimaps.forEach((m, i) => {
@@ -130,7 +136,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._switcherList.actor.hide();
 
         if (!workspaceMru) {
-            this._initSpaceMru();
+            this._initSpaceMru(move);
             let selected = this.space.selectedWindow;
             if (selected && selected.fullscreen) {
                 Tweener.addTween(selected.clone, {
@@ -235,7 +241,9 @@ var PreviewedWindowNavigator = new Lang.Class({
             return true;
         } else {
             let action = paperActions.byId(mutterActionId);
-            if (action && action.name !== 'toggle-scratch-layer') {
+            if (action
+                && action.name !== 'toggle-scratch-layer'
+                && action.name !== 'toggle-scratch') {
                 let metaWindow = this.space[this._selectedIndex];
                 action.handler(null, null, metaWindow);
                 let minimap = this._switcherList.getSelected();
@@ -306,18 +314,22 @@ var PreviewedWindowNavigator = new Lang.Class({
             this.space.selectedWindow = from[this._startIndex];
         }
 
-        if (this.space === from) {
+        if (this.space === from && force) {
             // We can't activate an already active workspace
             switchWorkspace(this.space.workspace);
         }
 
         let selected = this.space.selectedWindow;
-        if (selected) {
+        if (selected && !Scratch.isScratchActive()) {
             Main.activateWindow(selected);
             debug('#preview', 'Finish', selected.title, this._selectedIndex);
             Tiling.ensureViewport(selected, this.space, force);
         } else {
             this.space.workspace.activate(global.get_current_time());
+        }
+
+        if (this._moving) {
+            Scratch.unmakeScratch(this._moving);
         }
 
         if (selected && selected.fullscreen) {
