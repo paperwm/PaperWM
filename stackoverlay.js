@@ -56,6 +56,54 @@ function createAppIcon(metaWindow, size) {
     return appIcon;
 }
 
+/**
+ */
+class ClickOverlay {
+    constructor(monitor) {
+        this.monitor = monitor;
+        this.left = new StackOverlay(Meta.MotionDirection.LEFT, monitor);
+        this.right = new StackOverlay(Meta.MotionDirection.RIGHT, monitor);
+
+        let enterMonitor = new Clutter.Actor({reactive: true});
+        this.enterMonitor = enterMonitor;
+        enterMonitor.set_position(monitor.x, monitor.y);
+
+        Main.uiGroup.add_actor(enterMonitor);
+
+        this.enterSignal = enterMonitor.connect(
+            'enter-event', () => {
+                this.reset();
+                let space = Tiling.spaces.monitors.get(this.monitor);
+                space.workspace.activate(global.get_current_time());
+                return Clutter.EVENT_STOP;
+            }
+        );
+    }
+
+    activate() {
+        let monitor = this.monitor;
+        this.enterMonitor.set_position(monitor.x, monitor.y);
+        this.enterMonitor.set_size(monitor.width, monitor.height);
+    }
+
+    reset() {
+        this.left.setTarget(null);
+        this.right.setTarget(null);
+        this.enterMonitor.set_size(0, 0);
+    }
+
+    destroy() {
+        for (let overlay of [this.left, this.right]) {
+            let actor = overlay.overlay;
+            actor.disconnect(overlay.pressId);
+            actor.disconnect(overlay.releaseId);
+            actor.destroy();
+        }
+        this.enterMonitor.disconnect(this.enterSignal);
+        this.enterMonitor.destroy();
+    }
+}
+
 var StackOverlay = new Lang.Class({
     Name: 'Stackoverlay',
 
