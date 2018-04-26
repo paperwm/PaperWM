@@ -340,6 +340,7 @@ class Spaces extends Map {
         for (let monitor of Main.layoutManager.monitors) {
             let overlay = new ClickOverlay(monitor);
             monitor.clickOverlay = overlay;
+            overlay.activate();
             this.clickOverlays.push(overlay);
         }
 
@@ -567,6 +568,8 @@ function enable() {
                 Navigator.switchWorkspace(to, from);
                 let toSpace = spaces.spaceOf(to);
                 spaces.monitors.set(toSpace.monitor, toSpace);
+
+                toSpace.monitor.clickOverlay.deactivate();
 
                 let display = Gdk.Display.get_default();
                 let deviceManager = display.get_device_manager();

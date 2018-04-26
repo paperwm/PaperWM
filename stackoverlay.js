@@ -72,7 +72,7 @@ class ClickOverlay {
 
         this.enterSignal = enterMonitor.connect(
             'enter-event', () => {
-                this.reset();
+                this.deactivate();
                 let space = Tiling.spaces.monitors.get(this.monitor);
                 space.workspace.activate(global.get_current_time());
                 return Clutter.EVENT_STOP;
@@ -86,10 +86,13 @@ class ClickOverlay {
         this.enterMonitor.set_size(monitor.width, monitor.height);
     }
 
+    deactivate() {
+        this.enterMonitor.set_size(0, 0);
+    }
+
     reset() {
         this.left.setTarget(null);
         this.right.setTarget(null);
-        this.enterMonitor.set_size(0, 0);
     }
 
     destroy() {
