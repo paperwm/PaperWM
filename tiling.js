@@ -11,6 +11,8 @@ const Gio = imports.gi.Gio;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 
+var Gdk = imports.gi.Gdk;
+
 var screen = global.screen;
 
 var spaces;
@@ -563,6 +565,22 @@ function enable() {
                 Navigator.switchWorkspace(to, from);
                 let toSpace = spaces.spaceOf(to);
                 spaces.monitors.set(toSpace.monitor, toSpace);
+
+                let display = Gdk.Display.get_default();
+                let deviceManager = display.get_device_manager();
+                let pointer = deviceManager.get_client_pointer();
+                let [gdkscreen, pointerX, pointerY] = pointer.get_position();
+
+                let monitor = toSpace.monitor;
+                pointerX -= monitor.x;
+                pointerY -= monitor.y;
+                if (pointerX < 0 ||
+                    pointerX > monitor.width ||
+                    pointerY < 0 ||
+                    pointerY > monitor.height)
+                    pointer.warp(gdkscreen,
+                                 monitor.x + Math.floor(monitor.width/2),
+                                 monitor.y + Math.floor(monitor.height/2));
 
                 for (let monitor of Main.layoutManager.monitors) {
                     if (monitor === toSpace.monitor)
