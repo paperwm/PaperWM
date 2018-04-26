@@ -11,7 +11,6 @@ const Clutter = imports.gi.Clutter;
 const Tweener = imports.ui.tweener;
 
 var TopBar = Extension.imports.topbar;
-var StackOverlay = Extension.imports.stackoverlay;
 var Scratch = Extension.imports.scratch;
 const Minimap = Extension.imports.minimap;
 const Tiling = Extension.imports.tiling;
