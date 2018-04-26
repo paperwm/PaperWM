@@ -59,7 +59,7 @@ function createAppIcon(metaWindow, size) {
 var StackOverlay = new Lang.Class({
     Name: 'Stackoverlay',
 
-    _init: function(direction, showIcon) {
+    _init: function(direction, monitor, showIcon) {
         this.showIcon = showIcon;
 
         this._direction = direction;
@@ -67,11 +67,11 @@ var StackOverlay = new Lang.Class({
         let overlay = new Clutter.Actor({ reactive: true
                                           , name: "stack-overlay" });
 
-        this.monitor = Main.layoutManager.primaryMonitor;
+        this.monitor = monitor;
 
         let panelBox = Main.layoutManager.panelBox;
 
-        overlay.y = panelBox.height + Tiling.margin_tb;
+        overlay.y = monitor.y + panelBox.height + Tiling.margin_tb;
         overlay.height = this.monitor.height - panelBox.height - Tiling.margin_tb;
         overlay.width = Tiling.stack_margin;
 
@@ -134,6 +134,8 @@ var StackOverlay = new Lang.Class({
         let frame = metaWindow.get_frame_rect();
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
 
+        overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + Tiling.margin_tb;
+
         // Note: Atm. this can be called when the windows are moving. Therefore
         //       we must use destinationX and we might occationally get wrong y
         //       positions (icon) (since we don't track the y destination)
@@ -147,7 +149,7 @@ var StackOverlay = new Lang.Class({
             if (neighbourX === undefined)
                 neighbourX = neighbour.get_frame_rect().x;
 
-            overlay.x = 0;
+            overlay.x = this.monitor.x;
             overlay.width = Math.max(0, neighbourX - Tiling.window_gap);
         } else {
             let neighbour = space[space.indexOf(metaWindow) - 1]
@@ -186,8 +188,9 @@ function reset() {
 var leftOverlay;
 var rightOverlay;
 function enable() {
-    leftOverlay  = new StackOverlay(Meta.MotionDirection.LEFT);
-    rightOverlay = new StackOverlay(Meta.MotionDirection.RIGHT);
+    let monitor = Main.layoutManager.primaryMonitor;
+    leftOverlay  = new StackOverlay(Meta.MotionDirection.LEFT, monitor);
+    rightOverlay = new StackOverlay(Meta.MotionDirection.RIGHT, monitor);
 }
 
 function disable() {
