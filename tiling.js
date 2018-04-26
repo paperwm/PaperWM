@@ -563,6 +563,12 @@ function enable() {
                 Navigator.switchWorkspace(to, from);
                 let toSpace = spaces.spaceOf(to);
                 spaces.monitors.set(toSpace.monitor, toSpace);
+
+                for (let monitor of Main.layoutManager.monitors) {
+                    if (monitor === toSpace.monitor)
+                        continue;
+                    monitor.clickOverlay.activate();
+                }
             }));
 
     // HACK: couldn't find an other way within a reasonable time budget
