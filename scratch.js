@@ -14,7 +14,7 @@ function makeScratch(metaWindow) {
     metaWindow.clone.hide();
     metaWindow.get_compositor_private().show();
 
-    StackOverlay.reset();
+    // StackOverlay.reset();
 }
 
 function unmakeScratch(metaWindow) {
@@ -63,7 +63,7 @@ function show() {
             meta_window.get_compositor_private().show();
     });
     windows[0].activate(global.get_current_time());
-    StackOverlay.reset();
+    // StackOverlay.reset();
 }
 
 function hide() {

@@ -227,26 +227,3 @@ var StackOverlay = new Lang.Class({
         Tweener.addTween(this.overlay, { opacity: 0, time: 0.25 });
     }
 });
-
-function reset() {
-    leftOverlay.setTarget(null);
-    rightOverlay.setTarget(null);
-}
-
-var leftOverlay;
-var rightOverlay;
-function enable() {
-    let monitor = Main.layoutManager.primaryMonitor;
-    leftOverlay  = new StackOverlay(Meta.MotionDirection.LEFT, monitor);
-    rightOverlay = new StackOverlay(Meta.MotionDirection.RIGHT, monitor);
-}
-
-function disable() {
-    // Disconnect the overlay
-    for (let overlay of [leftOverlay, rightOverlay]) {
-        let actor = overlay.overlay;
-        actor.disconnect(overlay.pressId);
-        actor.disconnect(overlay.releaseId);
-        actor.destroy();
-    }
-}

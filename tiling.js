@@ -269,6 +269,7 @@ class Spaces extends Map {
         super();
 
         this.monitors = new Map();
+        this.clickOverlays = [];
 
         this.screenSignals = [
             global.screen.connect(
@@ -330,6 +331,14 @@ class Spaces extends Map {
 
         this.spaceContainer.set_size(global.screen_width, global.screen_height);
 
+        for (let monitor of Main.layoutManager.monitors) {
+            if (!monitor.clickOverlay) {
+                let overlay = new StackOverlay.ClickOverlay(monitor);
+                monitor.clickOverlay = overlay;
+                this.clickOverlays.push(overlay);
+            }
+        }
+
         let mru = this.mru();
         let primary = Main.layoutManager.primaryMonitor;
         let others = Main.layoutManager.monitors
@@ -347,9 +356,15 @@ class Spaces extends Map {
         }
     }
 
-
     destroy() {
         this.spaceContainer.destroy();
+
+        for (let overlay of this.clickOverlays) {
+            overlay.destroy();
+        }
+        for (let monitor of Main.layoutManager.monitors) {
+            delete monitor.clickOverlay;
+        }
 
         global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(metaWindow => {
@@ -940,7 +955,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
     let index = space.indexOf(meta_window);
     let frame = meta_window.get_frame_rect();
 
-    StackOverlay.reset();
+    space.monitor.clickOverlay.reset();
 
     propagateForward(space, index + 1, x + frame.width + window_gap);
     propagateBackward(space, index - 1, x - window_gap);
@@ -960,7 +975,7 @@ function propagateForward(space, n, x, gap) {
     if (x > space.width - stack_margin || meta_window.fullscreen
         || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
         if (x < space.width) {
-            StackOverlay.rightOverlay.setTarget(meta_window);
+            space.monitor.clickOverlay.right.setTarget(meta_window);
         }
         stack = true;
         meta_window._isStacked = true;
@@ -994,7 +1009,7 @@ function propagateBackward(space, n, x, gap) {
     if (x < stack_margin || meta_window.fullscreen
         || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
         if (x > 0) {
-            StackOverlay.leftOverlay.setTarget(meta_window);
+            space.monitor.clickOverlay.left.setTarget(meta_window);
         }
         stack = true;
         meta_window._isStacked = true;
