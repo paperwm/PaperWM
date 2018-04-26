@@ -111,7 +111,7 @@ class Space extends Array {
         this.addAll(oldSpaces.get(workspace));
     }
 
-    setMonitor(monitor) {
+    setMonitor(monitor, animate) {
         let cloneContainer = this.cloneContainer;
         let clip = this.clip;
 
@@ -119,8 +119,14 @@ class Space extends Array {
         this.width = monitor.width;
         this.height = monitor.height;
 
-        cloneContainer.set_scale(1, 1);
-        clip.set_scale(1, 1);
+        let time = animate ? 0.25 : 0;
+
+        let transition = 'easeInOutQuad';
+        Tweener.addTween(cloneContainer,
+                        {x: 0, y: 0, scale_x: 1, scale_y: 1,
+                         time, transition});
+        Tweener.addTween(clip,
+                         {scale_x: 1, scale_y: 1, time});
 
         clip.set_position(monitor.x, monitor.y);
         clip.set_size(monitor.width, monitor.height);
@@ -128,7 +134,6 @@ class Space extends Array {
                       monitor.width,
                       monitor.height);
 
-        cloneContainer.set_position(0, 0);
         cloneContainer.set_size(monitor.width, monitor.height);
         cloneContainer.set_size(monitor.width, monitor.height);
         cloneContainer.set_clip(-(window_gap - 2), -10,

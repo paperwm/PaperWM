@@ -342,7 +342,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             this.space.selectedWindow = from[this._startIndex];
         }
 
-        this.space.setMonitor(this.monitor);
+        this.space.setMonitor(this.monitor, true);
 
         if (this.space === from && force) {
             // We can't activate an already active workspace
