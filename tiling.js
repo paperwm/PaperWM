@@ -21,7 +21,7 @@ var Minimap = Extension.imports.minimap;
 var Scratch = Extension.imports.scratch;
 var TopBar = Extension.imports.topbar;
 var Navigator = Extension.imports.navigator;
-var StackOverlay = Extension.imports.stackoverlay;
+var ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
 var Me = Extension.imports.tiling;
 
 let preferences = Extension.imports.convenience.getSettings();
@@ -333,12 +333,14 @@ class Spaces extends Map {
 
         this.spaceContainer.set_size(global.screen_width, global.screen_height);
 
+        for (let overlay of this.clickOverlays) {
+            overlay.destroy();
+        }
+        this.clickOverlays = [];
         for (let monitor of Main.layoutManager.monitors) {
-            if (!monitor.clickOverlay) {
-                let overlay = new StackOverlay.ClickOverlay(monitor);
-                monitor.clickOverlay = overlay;
-                this.clickOverlays.push(overlay);
-            }
+            let overlay = new ClickOverlay(monitor);
+            monitor.clickOverlay = overlay;
+            this.clickOverlays.push(overlay);
         }
 
         let mru = this.mru();
