@@ -60,8 +60,15 @@ var color;
    monitor. The clip lives along side all other space's clips in an actor
    spanning the whole global.screen
 
-   A @cloneContainer to hold all the WindowActor clones. The cloneContainer
-   lives inside the clip.
+   An @actor to hold everything visible, it contains a @background, a @label and
+   a @cloneContainer.
+
+   The @background is sized somewhat larger than the monitor, with the top left
+   and right corners rounded. It's positioned slightly above the monitor so the
+   corners aren't visible when the space is active.
+
+   The @cloneContainer holds all the WindowActor clones, clipping them to the
+   size of the monitor.
  */
 class Space extends Array {
     constructor (workspace, container) {
@@ -76,16 +83,22 @@ class Space extends Array {
 
         let clip = new Clutter.Actor();
         this.clip = clip;
+        let actor = new Clutter.Actor();
+        this.actor = actor;
         let cloneContainer = new St.Widget();
         this.cloneContainer = cloneContainer;
+        let background = new St.Widget();
+        this.background = background;
         let label = new St.Label();
 
         clip.space = this;
         cloneContainer.space = this;
 
         container.add_actor(clip);
-        clip.add_actor(cloneContainer);
-        cloneContainer.add_actor(label);
+        clip.add_actor(actor);
+        actor.add_actor(background);
+        actor.add_actor(label);
+        actor.add_actor(cloneContainer);
 
         // Hardcoded to primary for now
         let monitor = Main.layoutManager.primaryMonitor;
@@ -94,9 +107,10 @@ class Space extends Array {
         label.text = Meta.prefs_get_workspace_name(workspace.index());
         label.set_position(12, 6);
 
-        cloneContainer.set_pivot_point(0.5, 0);
+        actor.set_pivot_point(0.5, 0);
 
-        cloneContainer.set_style(
+        background.set_position(-8, -4);
+        background.set_style(
             `background: ${colors[color]};
              box-shadow: 0px -10px 4px 2px black;
              box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);
@@ -113,6 +127,7 @@ class Space extends Array {
 
     setMonitor(monitor, animate) {
         let cloneContainer = this.cloneContainer;
+        let background = this.background;
         let clip = this.clip;
 
         this.monitor = monitor;
@@ -122,7 +137,7 @@ class Space extends Array {
         let time = animate ? 0.25 : 0;
 
         let transition = 'easeInOutQuad';
-        Tweener.addTween(cloneContainer,
+        Tweener.addTween(this.actor,
                         {x: 0, y: 0, scale_x: 1, scale_y: 1,
                          time, transition});
         Tweener.addTween(clip,
@@ -134,11 +149,10 @@ class Space extends Array {
                       monitor.width,
                       monitor.height);
 
+        background.set_size(monitor.width + 8*2, monitor.height + 4);
+
         cloneContainer.set_size(monitor.width, monitor.height);
-        cloneContainer.set_size(monitor.width, monitor.height);
-        cloneContainer.set_clip(-(window_gap - 2), -10,
-                                monitor.width + 2*(window_gap - 2),
-                                monitor.height + 10);
+        cloneContainer.set_clip(0, 0, monitor.width, monitor.height);
     }
 
     /**
@@ -256,10 +270,13 @@ class Space extends Array {
     }
 
     destroy() {
+        this.background.destroy();
+        this.cloneContainer.destroy();
+        this.clip.destroy();
         let workspace = this.workspace;
+        debug('destroy', Meta.prefs_get_workspace_name(workspace.index()));
         workspace.disconnect(this.addSignal);
         workspace.disconnect(this.removeSignal);
-        this.cloneContainer.destroy();
     }
 }
 

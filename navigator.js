@@ -127,25 +127,25 @@ var PreviewedWindowNavigator = new Lang.Class({
             let h = heights[i];
             if (h === undefined)
                 h = heights[heights.length-1];
-            space.cloneContainer.set_position(0, space.height*h);
+            space.actor.set_position(0, space.height*h);
 
-            space.cloneContainer.scale_y = scale + (1 - i)*0.01;
-            space.cloneContainer.scale_x = scale + (1 - i)*0.01;
+            space.actor.scale_y = scale + (1 - i)*0.01;
+            space.actor.scale_x = scale + (1 - i)*0.01;
             if (multimap.minimaps[i - 1] === undefined)
                 return;
             cloneParent.set_child_below_sibling(
                 space.clip,
                 multimap.minimaps[i - 1].space.clip
             );
-            space.cloneContainer.show();
+            space.actor.show();
 
             let selected = space.selectedWindow;
             if (selected && selected.fullscreen) {
                 selected.clone.y = Main.panel.actor.height + Tiling.margin_tb;
             }
         });
-        this.space.cloneContainer.scale_y = 1;
-        this.space.cloneContainer.scale_x = 1;
+        this.space.actor.scale_y = 1;
+        this.space.actor.scale_x = 1;
     },
 
     selectSpace: function(direction, move) {
@@ -199,7 +199,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         let heights = this._yPositions;
 
         multimap.minimaps.forEach((m, i) => {
-            let actor = m.space.cloneContainer;
+            let actor = m.space.actor;
             let h;
             if (to === i)
                 h = heights[1];
@@ -392,7 +392,7 @@ function switchWorkspace(to, from, callback) {
         });
     }
 
-    Tweener.addTween(toSpace.cloneContainer,
+    Tweener.addTween(toSpace.actor,
                      { x: 0,
                        y: 0,
                        scale_x: 1,
