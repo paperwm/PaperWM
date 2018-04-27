@@ -367,8 +367,6 @@ class Spaces extends Map {
     }
 
     destroy() {
-        this.spaceContainer.destroy();
-
         for (let overlay of this.clickOverlays) {
             overlay.destroy();
         }
@@ -386,9 +384,6 @@ class Spaces extends Map {
                     actor[signals].forEach(id => actor.disconnect(id));
                 }
 
-                if (metaWindow.clone)
-                    metaWindow.clone.destroy();
-
                 if (metaWindow[signals]) {
                     metaWindow[signals].forEach(id => metaWindow.disconnect(id));
                     delete metaWindow[signals];
@@ -405,6 +400,8 @@ class Spaces extends Map {
         for (let [workspace, space] of this) {
             this.removeSpace(space);
         }
+
+        this.spaceContainer.destroy();
     }
 
     workspacesChanged() {
