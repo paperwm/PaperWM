@@ -11,6 +11,8 @@ const Gio = imports.gi.Gio;
 const utils = Extension.imports.utils;
 const debug = utils.debug;
 
+var screen = global.screen;
+
 var spaces;
 
 var Minimap = Extension.imports.minimap;
@@ -265,6 +267,8 @@ class Spaces extends Map {
     constructor() {
         super();
 
+        this.monitors = new Map();
+
         this.screenSignals = [
             global.screen.connect(
                 'notify::n-workspaces',
@@ -322,10 +326,12 @@ class Spaces extends Map {
 
         // Reset all monitors
         this.forEach(s => s.setMonitor(primary));
+        this.monitors.set(primary, mru[0]);
         let i = 1;
         for (let monitor of others) {
             // debug('monitor', monitor.index)
             mru[i].setMonitor(monitor);
+            this.monitors.set(monitor, mru[i]);
             i++;
         }
     }
@@ -505,11 +511,12 @@ function enable() {
     global.screen[signals].push(
         global.screen.connect(
             'workspace-switched',
-            (screen, from, to) => {
-                Navigator.switchWorkspace(
-                    global.screen.get_workspace_by_index(to),
-                    global.screen.get_workspace_by_index(from)
-                );
+            (screen, fromIndex, toIndex) => {
+                let to = screen.get_workspace_by_index(toIndex);
+                let from = screen.get_workspace_by_index(fromIndex);
+                Navigator.switchWorkspace(to, from);
+                let toSpace = spaces.spaceOf(to);
+                spaces.monitors.set(toSpace.monitor, toSpace);
             }));
 
     // HACK: couldn't find an other way within a reasonable time budget
