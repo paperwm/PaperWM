@@ -872,7 +872,7 @@ function ensureViewport(meta_window, space, force) {
     let frame = meta_window.get_frame_rect();
     let width = Math.min(space.monitor.width - 2*minimumMargin, frame.width);
     meta_window.move_resize_frame(true, frame.x, frame.y, width,
-                                  space.height - panelBox.height - margin_tb*2);
+                                  space.height - panelBox.height - margin_tb);
 
     // Use monitor relative coordinates.
     frame.x -= monitor.x;
