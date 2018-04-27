@@ -999,11 +999,13 @@ function propagateForward(space, n, x, gap) {
         return;
     }
     let meta_window = space[n];
+    let frame = meta_window.get_frame_rect();
     gap = gap || window_gap;
 
     let stack = false;
     // Check if we should start stacking windows
-    if (x > space.width - stack_margin || meta_window.fullscreen
+    if (x + frame.width > space.width
+        || meta_window.fullscreen
         || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
         if (x < space.width) {
             space.monitor.clickOverlay.right.setTarget(meta_window);
@@ -1020,7 +1022,7 @@ function propagateForward(space, n, x, gap) {
 
         move(meta_window, space,
              { x, y: panelBox.height + margin_tb, stack });
-        propagateForward(space, n+1, x+meta_window.get_frame_rect().width + gap, gap);
+        propagateForward(space, n+1, x+frame.width + gap, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
         propagateForward(space, n+1, x, gap);
@@ -1033,11 +1035,12 @@ function propagateBackward(space, n, x, gap) {
         return;
     }
     let meta_window = space[n];
+    let frame = meta_window.get_frame_rect();
     gap = gap || window_gap;
 
     // Check if we should start stacking windows
     let stack = false;
-    if (x < stack_margin || meta_window.fullscreen
+    if (x - frame.width < 0 || meta_window.fullscreen
         || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
         if (x > 0) {
             space.monitor.clickOverlay.left.setTarget(meta_window);
@@ -1050,7 +1053,7 @@ function propagateBackward(space, n, x, gap) {
 
     let actor = meta_window.get_compositor_private();
     if (actor) {
-        x = x - meta_window.get_frame_rect().width
+        x = x - frame.width;
         // Anchor on the right edge for windows positioned to the left.
         move(meta_window, space,
              { x, y: panelBox.height + margin_tb, stack });
