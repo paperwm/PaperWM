@@ -409,20 +409,25 @@ function switchWorkspace(to, from, callback) {
 
     let next = toSpace.clip.get_next_sibling();
 
+    let visible = new Map();
+    for (let [monitor, space] of Tiling.spaces.monitors) {
+        visible.set(space, true);
+    }
     while (next !== null) {
-        if (next.space.monitor === toSpace.monitor)
-        Tweener.addTween(next.first_child,
-                         { x: xDest,
-                           y: yDest,
-                           scale_x: scale,
-                           scale_y: scale,
-                           time: 0.25,
-                           transition: 'easeInOutQuad',
-                           onComplete() {
-                               this.set_position(0, global.screen_height*0.1);
-                           },
-                           onCompleteScope: next.first_child
-                         });
+        if (!visible.get(next.space))
+            Tweener.addTween(
+                next.first_child,
+                { x: xDest,
+                  y: yDest,
+                  scale_x: scale,
+                  scale_y: scale,
+                  time: 0.25,
+                  transition: 'easeInOutQuad',
+                  onComplete() {
+                      this.set_position(0, global.screen_height*0.1);
+                  },
+                  onCompleteScope: next.first_child
+                });
 
         next = next.get_next_sibling();
     }
