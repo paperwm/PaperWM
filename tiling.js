@@ -27,11 +27,10 @@ var window_gap = preferences.get_int('window-gap');
 var margin_tb = preferences.get_int('vertical-margin');
 // left/right margin
 var margin_lr = preferences.get_int('horizontal-margin');
-margin_lr = 30
 // How much the stack should protrude from the side
 var stack_margin = 75;
 // Minimum margin
-var minimumMargin = 30;
+var minimumMargin = 15;
 
 var primary = Main.layoutManager.primaryMonitor;
 
