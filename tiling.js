@@ -584,9 +584,14 @@ function enable() {
             (screen, fromIndex, toIndex) => {
                 let to = screen.get_workspace_by_index(toIndex);
                 let from = screen.get_workspace_by_index(fromIndex);
-                Navigator.switchWorkspace(to, from);
                 let toSpace = spaces.spaceOf(to);
                 spaces.monitors.set(toSpace.monitor, toSpace);
+
+                Navigator.switchWorkspace(to, from);
+
+                let fromSpace = spaces.spaceOf(from);
+                if (toSpace.monitor === fromSpace.monitor)
+                    return;
 
                 toSpace.monitor.clickOverlay.deactivate();
 
