@@ -2,12 +2,12 @@
   Functionality related to the top bar, often called the statusbar.
  */
 
-const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
-const Meta = imports.gi.Meta;
-const Main = imports.ui.main;
-const Tweener = imports.ui.tweener;
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Meta = imports.gi.Meta;
+var Main = imports.ui.main;
+var Tweener = imports.ui.tweener;
 
-const Tiling = Extension.imports.tiling;
+var Tiling = Extension.imports.tiling;
 
 var panelBox = Main.layoutManager.panelBox;
 

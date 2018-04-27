@@ -1,16 +1,16 @@
-const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
-const Clutter = imports.gi.Clutter;
-const Tweener = imports.ui.tweener;
-const Lang = imports.lang;
-const St = imports.gi.St;
-const Workspace = imports.ui.workspace;
-const Background = imports.ui.background;
-const Meta = imports.gi.Meta;
-const Pango = imports.gi.Pango;
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
+var Clutter = imports.gi.Clutter;
+var Tweener = imports.ui.tweener;
+var Lang = imports.lang;
+var St = imports.gi.St;
+var Workspace = imports.ui.workspace;
+var Background = imports.ui.background;
+var Meta = imports.gi.Meta;
+var Pango = imports.gi.Pango;
 
-const Tiling = Extension.imports.tiling;
-const utils = Extension.imports.utils;
-const debug = utils.debug;
+var Tiling = Extension.imports.tiling;
+var utils = Extension.imports.utils;
+var debug = utils.debug;
 
 var MINIMAP_SCALE = 0.15;
 
@@ -497,5 +497,5 @@ var MultiMap = new Lang.Class({
     }
 })
 
-const Signals = imports.signals;
+var Signals = imports.signals;
 Signals.addSignalMethods(MultiMap.prototype);

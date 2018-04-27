@@ -2,8 +2,8 @@
   Application functionality, like global new window actions etc.
  */
 
-const Shell = imports.gi.Shell;
-const Tracker = Shell.WindowTracker.get_default();
+var Shell = imports.gi.Shell;
+var Tracker = Shell.WindowTracker.get_default();
 
 function newWindow(metaWindow) {
     metaWindow = metaWindow || global.display.focus_window;

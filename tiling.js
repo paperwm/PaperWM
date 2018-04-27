@@ -1,15 +1,15 @@
-const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
-const GLib = imports.gi.GLib;
-const Tweener = imports.ui.tweener;
-const Lang = imports.lang;
-const Meta = imports.gi.Meta;
-const Clutter = imports.gi.Clutter;
-const St = imports.gi.St;
-const Main = imports.ui.main;
-const Shell = imports.gi.Shell;
-const Gio = imports.gi.Gio;
-const utils = Extension.imports.utils;
-const debug = utils.debug;
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var GLib = imports.gi.GLib;
+var Tweener = imports.ui.tweener;
+var Lang = imports.lang;
+var Meta = imports.gi.Meta;
+var Clutter = imports.gi.Clutter;
+var St = imports.gi.St;
+var Main = imports.ui.main;
+var Shell = imports.gi.Shell;
+var Gio = imports.gi.Gio;
+var utils = Extension.imports.utils;
+var debug = utils.debug;
 
 var Gdk = imports.gi.Gdk;
 
@@ -24,7 +24,7 @@ var Navigator = Extension.imports.navigator;
 var ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
 var Me = Extension.imports.tiling;
 
-let preferences = Extension.imports.convenience.getSettings();
+var preferences = Extension.imports.convenience.getSettings();
 // Gap between windows
 var window_gap = preferences.get_int('window-gap');
 // Top/bottom margin
@@ -39,7 +39,7 @@ var minimumMargin = 15;
 var panelBox = Main.layoutManager.panelBox;
 
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
-let colors = [
+var colors = [
     '#9DB8D2', '#7590AE', '#4B6983', '#314E6C',
     '#EAE8E3', '#BAB5AB', '#807D74', '#565248',
     '#C5D2C8', '#83A67F', '#5D7555', '#445632',
@@ -49,7 +49,7 @@ let colors = [
     '#DF421E', '#990000', '#EED680', '#D1940C',
     '#46A046', '#267726', '#ffffff', '#000000'
 ];
-let color;
+var color;
 
 /**
    Scrolled and tiled per monitor workspace.

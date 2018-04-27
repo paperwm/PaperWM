@@ -4,9 +4,9 @@
   around these problems.
  */
 
-const Meta = imports.gi.Meta;
+var Meta = imports.gi.Meta;
 
-let orgUpdateState;
+var orgUpdateState;
 function init() {
     orgUpdateState = imports.ui.messageTray.MessageTray.prototype._updateState;
 }

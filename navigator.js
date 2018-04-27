@@ -2,20 +2,20 @@
   Navigation and previewing functionality.
  */
 
-const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
-const SwitcherPopup = imports.ui.switcherPopup;
-const Lang = imports.lang;
-const Meta = imports.gi.Meta;
-const Main = imports.ui.main;
-const Clutter = imports.gi.Clutter;
-const Tweener = imports.ui.tweener;
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var SwitcherPopup = imports.ui.switcherPopup;
+var Lang = imports.lang;
+var Meta = imports.gi.Meta;
+var Main = imports.ui.main;
+var Clutter = imports.gi.Clutter;
+var Tweener = imports.ui.tweener;
 
 var TopBar = Extension.imports.topbar;
 var Scratch = Extension.imports.scratch;
-const Minimap = Extension.imports.minimap;
-const Tiling = Extension.imports.tiling;
-const utils = Extension.imports.utils;
-const debug = utils.debug;
+var Minimap = Extension.imports.minimap;
+var Tiling = Extension.imports.tiling;
+var utils = Extension.imports.utils;
+var debug = utils.debug;
 
 var scale = 0.9;
 var navigating = false;

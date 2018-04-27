@@ -1,14 +1,14 @@
-const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
-const Tiling = Extension.imports.tiling;
-const Clutter = imports.gi.Clutter;
-const Tweener = imports.ui.tweener;
-const Lang = imports.lang;
-const Main = imports.ui.main;
-const Shell = imports.gi.Shell;
-const Meta = imports.gi.Meta;
-const utils = Extension.imports.utils;
-const debug = utils.debug;
-const Minimap = Extension.imports.minimap;
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Tiling = Extension.imports.tiling;
+var Clutter = imports.gi.Clutter;
+var Tweener = imports.ui.tweener;
+var Lang = imports.lang;
+var Main = imports.ui.main;
+var Shell = imports.gi.Shell;
+var Meta = imports.gi.Meta;
+var utils = Extension.imports.utils;
+var debug = utils.debug;
+var Minimap = Extension.imports.minimap;
 
 /*
   The stack overlay decorates the top stacked window with its icon and

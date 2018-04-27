@@ -1,27 +1,27 @@
-const Extension = imports.misc.extensionUtils.getCurrentExtension();
-const convenience = Extension.imports.convenience;
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
+var convenience = Extension.imports.convenience;
 
-const modules = [
+var modules = [
     Extension.imports.tiling, Extension.imports.scratch,
     Extension.imports.liveAltTab, Extension.imports.utils,
     Extension.imports.stackoverlay, Extension.imports.app,
     Extension.imports.kludges, Extension.imports.topbar,
     Extension.imports.navigator
 ];
-const [ Tiling, Scratch, LiveAltTab,
+var [ Tiling, Scratch, LiveAltTab,
         utils, StackOverlay,
         App, Kludges, TopBar,
         Navigator
       ] = modules;
 
-const debug = utils.debug;
+var debug = utils.debug;
 
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const Meta = imports.gi.Meta;
-const Main = imports.ui.main;
-const Shell = imports.gi.Shell;
-const Lang = imports.lang;
+var Gio = imports.gi.Gio;
+var GLib = imports.gi.GLib;
+var Meta = imports.gi.Meta;
+var Main = imports.ui.main;
+var Shell = imports.gi.Shell;
+var Lang = imports.lang;
 
 let SESSIONID = ""+(new Date().getTime());
 // The extension sometimes go through multiple init -> enable -> disable cycles..

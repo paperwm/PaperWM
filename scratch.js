@@ -1,10 +1,10 @@
-const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
-const Meta = imports.gi.Meta;
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Meta = imports.gi.Meta;
 
-const TopBar = Extension.imports.topbar;
-const utils = Extension.imports.utils;
-const debug = utils.debug;
-let float;
+var TopBar = Extension.imports.topbar;
+var utils = Extension.imports.utils;
+var debug = utils.debug;
+var float;
 
 function makeScratch(metaWindow) {
     metaWindow[float] = true;
@@ -70,10 +70,10 @@ function hide() {
 }
 
 // Monkey patch the alt-space menu
-const Lang = imports.lang;
-const PopupMenu = imports.ui.popupMenu;
-const WindowMenu = imports.ui.windowMenu;
-const originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
+var Lang = imports.lang;
+var PopupMenu = imports.ui.popupMenu;
+var WindowMenu = imports.ui.windowMenu;
+var originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
 
 function init() {
     float = Symbol();

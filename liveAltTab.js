@@ -1,14 +1,14 @@
-const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
-const Clutter = imports.gi.Clutter;
-const Lang = imports.lang;
-const Meta = imports.gi.Meta;
-const AltTab = imports.ui.altTab;
-const Main = imports.ui.main;
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Clutter = imports.gi.Clutter;
+var Lang = imports.lang;
+var Meta = imports.gi.Meta;
+var AltTab = imports.ui.altTab;
+var Main = imports.ui.main;
 
-const Scratch = Extension.imports.scratch;
-const Tiling = Extension.imports.tiling;
-const utils = Extension.imports.utils;
-const debug = utils.debug;
+var Scratch = Extension.imports.scratch;
+var Tiling = Extension.imports.tiling;
+var utils = Extension.imports.utils;
+var debug = utils.debug;
 
 var LiveAltTab = Lang.Class({
     Name: 'LiveAltTab',
