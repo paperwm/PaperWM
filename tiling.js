@@ -282,6 +282,11 @@ class Spaces extends Map {
             global.screen.connect("monitors-changed",
                                   this.monitorsChanged.bind(this)),
 
+            global.screen.connect("window-left-monitor",
+                                  this.windowLeftMonitor.bind(this)),
+
+            global.screen.connect("window-entered-monitor",
+                                  this.windowEnteredMonitor.bind(this))
         ];
 
         this.displaySignals = [
@@ -315,7 +320,12 @@ class Spaces extends Map {
     /**
      */
     monitorsChanged() {
-        debug('#monitors changed');
+        debug('#monitors changed', Main.layoutManager.primaryIndex);
+
+        this.get(screen.get_active_workspace()).forEach(w => {
+            w.get_compositor_private().hide();
+            w.clone.show();
+        });
 
         this.spaceContainer.set_size(global.screen_width, global.screen_height);
 
@@ -471,6 +481,26 @@ class Spaces extends Map {
             });
     };
 
+    windowLeftMonitor(screen, index, metaWindow) {
+        debug('window-left-monitor', index, metaWindow.title);
+    }
+
+    windowEnteredMonitor(screen, index, metaWindow) {
+        debug('window-entered-monitor', index, metaWindow.title);
+        if (!metaWindow.get_compositor_private()
+            || !metaWindow.clone
+            || metaWindow.clone.visible)
+            return;
+
+        let monitor = Main.layoutManager.monitors[index];
+        let space = this.monitors.get(monitor);
+        let focus = metaWindow.has_focus();
+
+        metaWindow.change_workspace(space.workspace);
+
+        if (focus)
+            Main.activateWindow(metaWindow);
+    }
 }
 
 function registerWindow(metaWindow) {
@@ -674,6 +704,11 @@ function add_handler(ws, metaWindow) {
 function insertWindow(metaWindow, {existing}) {
 
     let space = spaces.spaceOfWindow(metaWindow);
+    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
+
+    if (monitor !== space.monitor) {
+        return;
+    }
 
     if (!add_filter(metaWindow)) {
         return;
@@ -694,7 +729,6 @@ function insertWindow(metaWindow, {existing}) {
 
     metaWindow.unmake_above();
 
-    let monitor = space.monitor;
     let position;
     if (index == 0) {
         // If the workspace was empty the inserted window should be selected
@@ -721,7 +755,7 @@ function insertWindow(metaWindow, {existing}) {
     let y_offset = frame.y - buffer.y;
     let clone = metaWindow.clone;
 
-    space.cloneContainer.add_actor(clone);
+    clone.reparent(space.cloneContainer);
 
     if (!existing) {
         // Only move the frame when dealing with new windows
