@@ -1091,8 +1091,16 @@ function propagateBackward(space, n, x, gap) {
 function sizeHandler(metaWindow) {
     debug('size-changed', metaWindow.title);
     let space = spaces.spaceOfWindow(metaWindow);
-    if (space.selectedWindow === metaWindow)
-        ensureViewport(metaWindow, space, true);
+    if (space.selectedWindow === metaWindow) {
+        let index = space.indexOf(metaWindow);
+        let frame = metaWindow.get_frame_rect();
+        let monitor = space.monitor;
+        frame.x -= monitor.x; frame.y -= monitor.y;
+
+        space.monitor.clickOverlay.reset();
+        propagateForward(space, index + 1, frame.x + frame.width + window_gap);
+        propagateBackward(space, index - 1, frame.x - window_gap);
+    }
 }
 
 // `MetaWindow::focus` handling
