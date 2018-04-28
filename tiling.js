@@ -960,6 +960,11 @@ function move(meta_window, space,
     let buffer = meta_window.get_buffer_rect();
     let frame = meta_window.get_frame_rect();
     let clone = meta_window.clone;
+    let monitor = space.monitor;
+
+    if (actor.visible) {
+        clone.set_position(actor.x - monitor.x, actor.y - monitor.y);
+    }
 
     clone.show();
     actor.hide();
