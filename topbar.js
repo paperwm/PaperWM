@@ -97,3 +97,9 @@ function setWorkspaceName (name) {
     let label = Main.panel.statusArea.activities.actor.first_child;
     label.text = name;
 }
+
+function setMonitor(monitor) {
+    let panelBox = Main.layoutManager.panelBox;
+    panelBox.set_position(monitor.x, monitor.y);
+    panelBox.width = monitor.width;
+}

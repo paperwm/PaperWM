@@ -593,6 +593,7 @@ function enable() {
                 if (toSpace.monitor === fromSpace.monitor)
                     return;
 
+                TopBar.setMonitor(toSpace.monitor);
                 toSpace.monitor.clickOverlay.deactivate();
 
                 let display = Gdk.Display.get_default();
