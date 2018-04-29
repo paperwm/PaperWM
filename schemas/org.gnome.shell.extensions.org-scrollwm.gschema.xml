@@ -50,7 +50,7 @@
     </key>
 
     <key type="as" name="toggle-scratch-layer">
-      <default><![CDATA[['<Super>e']]]></default>
+      <default><![CDATA[['<Super>e', '<Super>Escape']]]></default>
       <summary>Toggles the floating scratch layer</summary>
     </key>
 
