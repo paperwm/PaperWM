@@ -233,8 +233,6 @@ function enable() {
     killKeybinding('restore-shortcuts',
                    new Gio.Settings({ schema_id: "org.gnome.mutter.wayland.keybindings"}));
 
-    shellSettings.set_strv("toggle-overview", ["<super>space"])
-
     enabled = true;
 
     loadRcFile();
