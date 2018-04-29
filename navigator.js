@@ -213,6 +213,16 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     _doAction: function(mutterActionId) {
         let paperActions = Extension.imports.extension.paperActions;
+
+        switch (mutterActionId) {
+        case Meta.KeyBindingAction.SWITCH_GROUP:
+            mutterActionId = paperActions.idOf('previous-workspace');
+            break;
+        case Meta.KeyBindingAction.SWITCH_GROUP_BACKWARD:
+            mutterActionId = paperActions.idOf('previous-workspace-backward');
+            break;
+        }
+
         if (mutterActionId === paperActions.idOf("switch-next")) {
             this._select(this._next());
             return true;

@@ -189,6 +189,10 @@ function restoreKeybindings() {
     }
 }
 
+function setKeybinding(name, func) {
+    Main.wm.setCustomKeybindingHandler(name, Shell.ActionMode.NORMAL, func);
+}
+
 let nWorkspacesSignal;
 let workspaceRemovedSignal;
 let windowCreatedSignal;
@@ -210,13 +214,21 @@ function enable() {
     settings.set_strv("maximize-horizontally", ['<super>f'])
     settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
 
-    // We want to use 
-    killKeybinding('switch-applications', wmSettings);
-    killKeybinding('switch-applications-backward', wmSettings);
-    killKeybinding('switch-group', wmSettings);
-    killKeybinding('switch-group-backward', wmSettings);
-    // Super-n is used for new-window
-    killKeybinding('focus-active-notification', shellSettings);
+    setKeybinding('switch-applications',
+                  utils.dynamic_function_ref('liveAltTab',
+                                             LiveAltTab));
+    setKeybinding('switch-applications-backward',
+                  utils.dynamic_function_ref('liveAltTab',
+                                             LiveAltTab));
+    setKeybinding('switch-group',
+                          utils.dynamic_function_ref("preview_navigate",
+                                                     Navigator));
+    setKeybinding('switch-group-backward',
+                          utils.dynamic_function_ref("preview_navigate",
+                                                     Navigator));
+
+    setKeybinding('focus-active-notification', // `<Super>N`
+                  utils.as_key_handler('newWindow', App));
     // Switched to '<super>escape' in 3.28
     killKeybinding('restore-shortcuts',
                    new Gio.Settings({ schema_id: "org.gnome.mutter.wayland.keybindings"}));
@@ -234,14 +246,21 @@ function disable() {
     debug("disable", SESSIONID);
     // Disconnect focus and reset scale and pivot
 
+    setKeybinding('switch-applications',
+                  Main.wm._startSwitcher.bind(Main.wm));
+    setKeybinding('switch-applications-backward',
+                  Main.wm._startSwitcher.bind(Main.wm));
+    setKeybinding('switch-group',
+                  Main.wm._startSwitcher.bind(Main.wm));
+    setKeybinding('switch-group-backward',
+                  Main.wm._startSwitcher.bind(Main.wm));
+
+    Main.wm.setCustomKeybindingHandler('focus-active-notification',
+                                       Shell.ActionMode.NORMAL |
+                                       Shell.ActionMode.OVERVIEW,
+                                       Main.messageTray._expandActiveNotification.bind(Main.messageTray));
+
     modules.forEach(m => m.disable && m.disable());
-
-    // Restore default gnome bindings
-    // restoreKeybindings(wmSettings);
-
-    // Kill our custom bindings
-    // killKeybinding('live-alt-tab', paperSettings)
-    // killKeybinding('live-alt-tab-backward', paperSettings)
 
     enabled = false;
 }

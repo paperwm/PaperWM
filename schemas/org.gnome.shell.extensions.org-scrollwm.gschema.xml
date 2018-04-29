@@ -23,20 +23,20 @@
     </key>
 
     <key type="as" name="live-alt-tab">
-      <default><![CDATA[['<Super>Tab']]]></default>
+      <default><![CDATA[[]]]></default>
       <summary>Switch to previously used window</summary>
     </key>
     <key type="as" name="live-alt-tab-backward">
-      <default><![CDATA[['<Super><Shift>Tab']]]></default>
+      <default><![CDATA[[]]]></default>
       <summary>Switch to previously used window, backward order</summary>
     </key>
 
     <key type="as" name="previous-workspace">
-      <default><![CDATA[['<Super>d', '<Super>Above_Tab']]]></default>
+      <default><![CDATA[['<Super>d']]]></default>
       <summary>Switch to previously used workspace</summary>
     </key>
     <key type="as" name="previous-workspace-backward">
-      <default><![CDATA[['<Super>u', '<Super><Shift>Above_Tab']]]></default>
+      <default><![CDATA[['<Super>u']]]></default>
       <summary>Switch to the previously used workspace, backward order</summary>
     </key>
 
