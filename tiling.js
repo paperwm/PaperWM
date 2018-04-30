@@ -368,11 +368,17 @@ class Spaces extends Map {
 
         let mru = this.mru();
         let primary = Main.layoutManager.primaryMonitor;
-        let others = Main.layoutManager.monitors
-            .filter(m => m !== primary);
+        let monitors = Main.layoutManager.monitors;
+        let others = monitors.filter(m => m !== primary);
 
-        // Reset all monitors
-        this.forEach(s => s.setMonitor(primary));
+        // Reset all removed monitors
+        this.forEach(space => {
+            if (monitors.indexOf(space.monitor) === -1) {
+                space.setMonitor(primary);
+                this.monitors.set(primary, space);
+            }
+        });
+        });
         this.monitors.set(primary, mru[0]);
         let i = 1;
         for (let monitor of others) {
