@@ -378,15 +378,20 @@ class Spaces extends Map {
                 this.monitors.set(primary, space);
             }
         });
+
+        // Populate all monitors with existing worspaces
+        mru.slice(1).forEach((space, i) => {
+            let monitor = monitors[i];
+            if (!monitor)
+                return;
+            space.setMonitor(monitor);
+            this.monitors.set(monitor, space);
         });
-        this.monitors.set(primary, mru[0]);
-        let i = 1;
-        for (let monitor of others) {
-            // debug('monitor', monitor.index)
-            mru[i].setMonitor(monitor);
-            this.monitors.set(monitor, mru[i]);
-            i++;
-        }
+
+        // Let the active workspace follow the primary monitor
+        let active = mru[0];
+        active.setMonitor(primary);
+        this.monitors.set(primary, active);
     }
 
     destroy() {
