@@ -103,6 +103,8 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         let visible = Main.layoutManager.monitors
             .map(m => Tiling.spaces.monitors.get(m));
+        Main.layoutManager.monitors
+            .forEach(m => m.clickOverlay.deactivate());
 
         let top = multimap.minimaps[0];
         multimap.minimaps = [top].concat(multimap.minimaps
@@ -341,8 +343,15 @@ var PreviewedWindowNavigator = new Lang.Class({
             this.space.selectedWindow = from[this._startIndex];
         }
 
-        if (this.monitor !== this.space.monitor)
+        if (this.monitor !== this.space.monitor) {
             this.space.setMonitor(this.monitor, true);
+        }
+
+        for (let monitor of Main.layoutManager.monitors) {
+            if (monitor === this.monitor)
+                continue;
+            monitor.clickOverlay.activate();
+        }
 
         if (this.space === from && force) {
             // We can't activate an already active workspace
