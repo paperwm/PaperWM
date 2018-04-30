@@ -549,8 +549,9 @@ class Spaces extends Map {
 
         metaWindow.change_workspace(space.workspace);
 
-        if (focus)
-            Main.activateWindow(metaWindow);
+        // This doesn't play nice with the clickoverlay, disable for now
+        // if (focus)
+        //     Main.activateWindow(metaWindow);
     }
 }
 
