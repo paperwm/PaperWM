@@ -1,7 +1,7 @@
 const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
 
-var debug_all = true; // Consider the default value in `debug_filter` to be true
-var debug_filter = { "#preview": false };
+var debug_all = false; // Turn off by default
+var debug_filter = {};
 function debug() {
     let keyword = arguments[0];
     let filter = debug_filter[keyword];
