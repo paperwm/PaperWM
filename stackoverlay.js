@@ -118,6 +118,10 @@ var StackOverlay = new Lang.Class({
         let overlay = new Clutter.Actor({ reactive: true
                                           , name: "stack-overlay" });
 
+        // Uncomment to debug the overlays
+        // overlay.background_color = Clutter.color_from_string('green')[1];
+        // overlay.opacity = 100;
+
         this.monitor = monitor;
 
         let panelBox = Main.layoutManager.panelBox;
@@ -182,7 +186,6 @@ var StackOverlay = new Lang.Class({
 
         let overlay = this.overlay;
         let actor = metaWindow.get_compositor_private();
-        let frame = metaWindow.get_frame_rect();
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
 
         overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + Tiling.margin_tb;
@@ -192,27 +195,20 @@ var StackOverlay = new Lang.Class({
         //       positions (icon) (since we don't track the y destination)
         //       We also assume window widths are are unchanging.
         if (this._direction === Meta.MotionDirection.LEFT) {
-            let neighbour = space[space.indexOf(metaWindow) + 1]
+            let neighbour = space[space.indexOf(metaWindow) + 1];
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
- 
-            let neighbourX = neighbour.destinationX;
-            if (neighbourX === undefined)
-                neighbourX = neighbour.get_frame_rect().x;
 
+            let frame = neighbour.get_frame_rect();
             overlay.x = this.monitor.x;
-            overlay.width = Math.max(0, neighbourX - Tiling.window_gap);
+            overlay.width = Math.max(0, frame.x - Tiling.window_gap);
         } else {
-            let neighbour = space[space.indexOf(metaWindow) - 1]
+            let neighbour = space[space.indexOf(metaWindow) - 1];
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
 
-            let neighbourFrame = neighbour.get_frame_rect();
-            let neighbourX = neighbour.destinationX;
-            if (neighbourX === undefined)
-                neighbourX = neighbourFrame.x;
-
-            overlay.x = neighbourX + neighbourFrame.width + Tiling.window_gap;
+            let frame = neighbour.get_frame_rect();
+            overlay.x = frame.x + frame.width + Tiling.window_gap;
             overlay.width = Math.max(0, this.monitor.width - overlay.x);
         }
 

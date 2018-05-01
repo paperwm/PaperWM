@@ -276,7 +276,7 @@ var PreviewedWindowNavigator = new Lang.Class({
                 action.handler(null, null, metaWindow);
                 let minimap = this._switcherList.getSelected();
                 minimap.layout();
-                minimap.sync(metaWindow.destinationX);
+                minimap.sync(metaWindow.get_frame_rect().x);
                 this._switcherList.highlight(this._selectedIndex);
                 return true;
             }

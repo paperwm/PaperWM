@@ -896,9 +896,6 @@ function ensureViewport(meta_window, space, force) {
     frame.x -= monitor.x;
     frame.y -= monitor.y;
 
-    if (meta_window.destinationX !== undefined)
-        // Use the destination of the window if available
-        frame.x = meta_window.destinationX;
     let x = frame.x;
     let y = panelBox.height + margin_tb;
     let required_width = space.reduce((length, meta_window) => {
@@ -981,9 +978,14 @@ function move(meta_window, space,
     clone.show();
     actor.hide();
 
+    // Move the frame before animation to indicate where it's actually going.
+    // The animation being purely cosmetic.
+    meta_window.move_frame(true,
+                           x + monitor.x,
+                           y + monitor.y);
+
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
-    meta_window.destinationX = x;
     Tweener.addTween(clone, {x: x - x_offset
                              , y: y - y_offset
                              , time: 0.25 - delay
@@ -997,13 +999,7 @@ function move(meta_window, space,
                                  // process of closing
                                  if(!meta_window.get_compositor_private())
                                      return;
-
-                                 meta_window.destinationX = undefined;
                                  let monitor = space.monitor;
-                                 meta_window.move_frame(true,
-                                                        x + monitor.x,
-                                                        y + monitor.y);
-
                                  if (!stack && !Navigator.navigating) {
                                      clone.hide();
                                      actor.show();
@@ -1047,9 +1043,6 @@ function propagateForward(space, n, x, gap) {
     if (x + frame.width > space.width
         || meta_window.fullscreen
         || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
-        if (x < space.width) {
-            space.monitor.clickOverlay.right.setTarget(meta_window);
-        }
         stack = true;
         meta_window._isStacked = true;
     } else {
@@ -1062,6 +1055,9 @@ function propagateForward(space, n, x, gap) {
 
         move(meta_window, space,
              { x, y: panelBox.height + margin_tb, stack });
+        if (stack && x < space.width) {
+            space.monitor.clickOverlay.right.setTarget(meta_window);
+        }
         propagateForward(space, n+1, x+frame.width + gap, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
@@ -1082,9 +1078,6 @@ function propagateBackward(space, n, x, gap) {
     let stack = false;
     if (x - frame.width < 0 || meta_window.fullscreen
         || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
-        if (x > 0) {
-            space.monitor.clickOverlay.left.setTarget(meta_window);
-        }
         stack = true;
         meta_window._isStacked = true;
     } else {
@@ -1093,11 +1086,13 @@ function propagateBackward(space, n, x, gap) {
 
     let actor = meta_window.get_compositor_private();
     if (actor) {
-        x = x - frame.width;
         // Anchor on the right edge for windows positioned to the left.
         move(meta_window, space,
-             { x, y: panelBox.height + margin_tb, stack });
-        propagateBackward(space, n-1, x - gap, gap);
+             { x: x - frame.width, y: panelBox.height + margin_tb, stack });
+        if (stack && x > 0) {
+            space.monitor.clickOverlay.left.setTarget(meta_window);
+        }
+        propagateBackward(space, n-1, x - frame.width - gap, gap);
     } else {
         // If the window doesn't have an actor we should just skip it
         propagateBackward(space, n-1, x, gap);
