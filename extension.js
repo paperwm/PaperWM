@@ -37,11 +37,10 @@ var paperSettings;
 var paperActions;
 function init() {
     SESSIONID += "#"
-    debug('init', SESSIONID);
+    log(`init: ${SESSIONID}`);
 
     if(initRun) {
-        debug("#startup",
-              "Reinitialized against our will! Skip adding bindings again to not cause trouble. ('disable()' isn't fully implemented yet)")
+        log(`#startup Reinitialized against our will! Skip adding bindings again to not cause trouble.`);
         return;
     }
     initRun = true;
@@ -198,15 +197,13 @@ let workspaceRemovedSignal;
 let windowCreatedSignal;
 function enable() {
     // Only enable after disable have been run
-    if (enabled)
+    if (enabled) {
+        log('enable called without calling disable');
         return;
+    }
+    log(`enabled ${SESSIONID}`);
 
     modules.forEach(m => m.enable && m.enable());
-
-    debug('enable', SESSIONID);
-
-    // Restore settings if we've reloaded
-    // restoreKeybindings(paperSettings);
 
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
@@ -241,7 +238,7 @@ function enable() {
 function disable() {
     if (!enabled)
         return;
-    debug("disable", SESSIONID);
+    log(`disable ${SESSIONID}`);
     // Disconnect focus and reset scale and pivot
 
     setKeybinding('switch-applications',
