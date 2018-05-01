@@ -1,5 +1,11 @@
 <schemalist>
   <schema id="org.gnome.shell.extensions.org-scrollwm" path="/org/gnome/shell/extensions/org-scrollwm/">
+
+    <key type="b" name="has-installed-config-template">
+      <default>false</default>
+      <summary>Have we installed the user.js template in ~/.config/paperwm ?</summary>
+    </key>
+
     <!-- Settings -->
     <key type="i" name="horizontal-margin">
       <default>20</default>

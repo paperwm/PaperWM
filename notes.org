@@ -221,3 +221,5 @@ The /current/ extension object is usually found like this:
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 #+END_SRC
+
+The absolute path of the an extension: `Extension.dir.get_path()`

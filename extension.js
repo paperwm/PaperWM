@@ -45,13 +45,30 @@ function init() {
     }
     initRun = true;
 
+    paperSettings = convenience.getSettings();
+
+    if (!paperSettings.get_boolean("has-installed-config-template")) {
+        installConfig();
+        // IMPROVEMENT: notify user
+    }
+
+    if (hasUserConfigFile()) {
+        Extension.imports.searchPath.push(getConfigDir().get_path());
+        try {
+            const userModule = Extension.imports.user;
+            modules.push(userModule);
+        } catch(e) {
+            utils.debug("#rc", "User config failed", e.message);
+            utils.print_stacktrace(e);
+        }
+    }
+
     modules.forEach(m => m.init && m.init());
 
     wmSettings =
         new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
     shellSettings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
-    paperSettings = convenience.getSettings();
 
     /*
       Keep track of some mappings mutter doesn't do/expose
@@ -231,8 +248,6 @@ function enable() {
                    new Gio.Settings({ schema_id: "org.gnome.mutter.wayland.keybindings"}));
 
     enabled = true;
-
-    loadRcFile();
 }
 
 function disable() {
@@ -295,25 +310,36 @@ function registerMutterAction(action_name, handler, flags) {
     }
 }
 
-function loadRcFile() {
+
+function getConfigDir() {
+    return Gio.file_new_for_path(GLib.getenv('HOME') + '/.config/paperwm');
+}
+
+function hasUserConfigFile() {
+    return getConfigDir().get_child("user.js").query_exists(null);
+}
+
+function installConfig() {
     try {
-        // https://github.com/coolwanglu/gnome-shell-extension-rc/blob/master/extension.js
-        // But since we want to be sure that our extension is loaded at the time 
-        // we load our own. 
-        //
-        // Note that `imports.misc.extensionUtils.getCurrentExtension();` works
-        // inside the rc file
-        const rcpath = GLib.getenv('HOME') + '/.config/' + "paperwm-rc.js"
-        if (GLib.file_test(rcpath, GLib.FileTest.IS_REGULAR)) {
-            const [success, rcCodeBytes] = GLib.file_get_contents(rcpath);
-            if (success) {
-                debug("Loading rcfile:", rcpath)
-                eval(rcCodeBytes.toString());
-            } else {
-                debug("Failed to read rcfile");
-            }
-        }
+        utils.debug("#rc", "Installing config")
+        const configDir = getConfigDir();
+        configDir.make_directory_with_parents(null);
+
+        // We copy metadata.json to the config directory so gnome-shell-mode
+        // know which extension the files belong to (ideally we'd symlink, but
+        // that trips up the importer: Extension.imports.<complete> in
+        // gnome-shell-mode crashes gnome-shell..)
+        const metadata = Extension.dir.get_child("metadata.json");
+        metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.NONE, null, null);
+
+        // Copy the user.js template to the config directory
+        const user = Extension.dir.get_child("examples/user.js");
+        user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
+
+        const settings = convenience.getSettings()
+        settings.set_boolean("has-installed-config-template", true);
+
     } catch(e) {
-        debug("rcfile error", e.message, e.stack);
+        utils.debug("#rc", "Install failed", e.message);
     }
 }
