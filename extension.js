@@ -45,30 +45,13 @@ function init() {
     }
     initRun = true;
 
-    paperSettings = convenience.getSettings();
-
-    if (!paperSettings.get_boolean("has-installed-config-template")) {
-        installConfig();
-        // IMPROVEMENT: notify user
-    }
-
-    if (hasUserConfigFile()) {
-        Extension.imports.searchPath.push(getConfigDir().get_path());
-        try {
-            const userModule = Extension.imports.user;
-            modules.push(userModule);
-        } catch(e) {
-            utils.debug("#rc", "User config failed", e.message);
-            utils.print_stacktrace(e);
-        }
-    }
-
     modules.forEach(m => m.init && m.init());
 
     wmSettings =
         new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
     shellSettings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
+    paperSettings = convenience.getSettings();
 
     /*
       Keep track of some mappings mutter doesn't do/expose
@@ -179,7 +162,11 @@ function init() {
                           as_key_handler('newWindow',
                                          App),
                           Meta.KeyBindingFlags.PER_WINDOW);
+
+
+    initUserConfig();
 }
+
 
 let originalBindings = new Map();
 function killKeybinding (key, settings) {
@@ -341,5 +328,51 @@ function installConfig() {
 
     } catch(e) {
         utils.debug("#rc", "Install failed", e.message);
+    }
+}
+
+function errorWrappedModule(module) {
+    function safeCall(method) {
+        try {
+            utils.debug("#rc", `calling ${method}`);
+            module[method].call(module)
+        } catch(e) {
+            utils.debug("#rc", `${method} failed`, e.message);
+            utils.print_stacktrace(e);
+        }
+    }
+    return {
+        init: () => {
+            safeCall("init");
+        },
+        enable: () => {
+            safeCall("enable");
+        },
+        disable: () => {
+            safeCall("disable");
+        }
+    };
+}
+
+function initUserConfig() {
+    const paperSettings = convenience.getSettings();
+
+    if (!paperSettings.get_boolean("has-installed-config-template")) {
+        installConfig();
+        // IMPROVEMENT: notify user
+    }
+
+    if (hasUserConfigFile()) {
+        Extension.imports.searchPath.push(getConfigDir().get_path());
+        try {
+            utils.debug("#rc", "Loading config file");
+            const userModule = errorWrappedModule(Extension.imports.user);
+            modules.push(userModule);
+            userModule.init();
+        } catch(e) {
+            utils.debug("#rc", "Loading config failed", e.message);
+            utils.print_stacktrace(e);
+            return;
+        }
     }
 }
