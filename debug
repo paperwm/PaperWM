@@ -5,27 +5,31 @@ function skip-crap {
 
     local crap_continue=(
         -e ".*: == Stack trace for context.*"
-        -e ".*: #[0-9]+ 0x.*"
+        -e ".*: #[0-9]+\s*0x.*"
     )
 
     local skip=0
+    local skipped=0
 
     # Could probably be done more elegantly with awk/sed ?
     while read -r line; do
         if echo $line | grep -E $crap_start --quiet; then
             # echo setting skip
             skip=1
+            ((skipped += 1))
             continue
         fi
 
         if [[ $skip == 1 ]]; then
             if echo $line | grep -E $crap_continue --quiet; then
                 # echo ignoring
+                ((skipped += 1))
                 continue
             else
                 # echo reset skip
+                printf "Skipped \"already finalized\" crap ($skipped lines)\n"
                 skip=0
-                printf 'Skipped "already finalized" crap\n'
+                skipped=0
             fi
         fi
 
