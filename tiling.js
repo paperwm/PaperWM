@@ -1335,7 +1335,15 @@ function cycleWindowWidth(metaWindow) {
     let availableWidth = monitor.width - minimumMargin*2;
     let r = frame.width / availableWidth;
     let nextW = Math.floor(ratios[findNext(r)]*availableWidth);
-    metaWindow.move_resize_frame(true, frame.x, frame.y, nextW, frame.height);
+    let nextX = frame.x;
+
+    if (nextX+nextW > monitor.x+monitor.width - minimumMargin) {
+        // Move the window so it remains fully visible
+        nextX = monitor.x+monitor.width - minimumMargin - nextW;
+    }
+
+    // WEAKNESS: When the navigator is open the window is not moved until the navigator is closed
+    metaWindow.move_resize_frame(true, nextX, frame.y, nextW, frame.height);
 
     delete metaWindow.unmaximized_rect;
 }
