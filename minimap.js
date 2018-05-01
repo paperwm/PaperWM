@@ -496,6 +496,3 @@ var MultiMap = new Lang.Class({
                          })
     }
 })
-
-var Signals = imports.signals;
-Signals.addSignalMethods(MultiMap.prototype);

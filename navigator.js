@@ -9,6 +9,7 @@ var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
 var Clutter = imports.gi.Clutter;
 var Tweener = imports.ui.tweener;
+var Signals = imports.signals;
 
 var TopBar = Extension.imports.topbar;
 var Scratch = Extension.imports.scratch;
@@ -21,6 +22,14 @@ var scale = 0.9;
 var navigating = false;
 var workspaceMru = false;
 
+// Dummy class to satisfy `SwitcherPopup.SwitcherPopup`
+class SwitcherList {
+    constructor() {
+        this.actor = new Clutter.Actor();
+    }
+}
+Signals.addSignalMethods(SwitcherList.prototype);
+
 var PreviewedWindowNavigator = new Lang.Class({
     Name: 'PreviewedWindowNavigator',
     Extends: SwitcherPopup.SwitcherPopup,
@@ -28,29 +37,20 @@ var PreviewedWindowNavigator = new Lang.Class({
     _yPositions: [0.95, 0.10, 0.035, 0.01],
 
     _init: function() {
-        this.parent();
-
-        TopBar.show();
-
-        this._block = Main.wm._blockAnimations;
-        Main.wm._blockAnimations = true;
-
-        navigating = true;
-
-        let multimap = new Minimap.MultiMap(true);
-        this.multimap = multimap;
-        this._switcherList = multimap;
-        this.space = this._switcherList.getSelected().space;
-        this.monitor = this.space.monitor;
-
-        this._switcherList.onlyShowSelected();
+        // Do the absolute minimal here, as `parent.show` is buggy and can
+        // return early making cleanup hard. We do most initialization in
+        // `_initialSelection` instead.
 
         // HACK: workaround to enable moving from empty workspace. See check in
         // SwitcherPopup.show
-        this._items = [1];
+        this.parent([1]);
+        this._switcherList = new SwitcherList();
+        debug('#preview', 'init', this._switcherList);
 
+        this.space = Tiling.spaces.spaceOf(global.screen.get_active_workspace());
         this._selectedIndex = this.space.selectedIndex();
         this._startIndex  = this._selectedIndex;
+
     },
 
     _next: function() {
@@ -61,6 +61,26 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     _initialSelection: function(backward, actionName) {
+        debug('#preview', '_initialSelection');
+        TopBar.show();
+
+        navigating = true;
+        this._block = Main.wm._blockAnimations;
+        Main.wm._blockAnimations = true;
+
+        let multimap = new Minimap.MultiMap(true);
+        this.multimap = multimap;
+        this.monitor = this.space.monitor;
+        this.multimap.onlyShowSelected();
+
+        multimap.actor.opacity = 0;
+        this.space.actor.add_actor(multimap.actor);
+        multimap.actor.set_position(
+            Math.floor((this.monitor.width - multimap.actor.width)/2),
+            Math.floor((this.monitor.height - multimap.actor.height)/2));
+        Tweener.addTween(multimap.actor,
+                         {opacity: 255, time: 0.25, transition: 'easeInQuad'});
+
         let paperActions = Extension.imports.extension.paperActions;
         let actionId = paperActions.idOf(actionName);
         if(actionId === Meta.KeyBindingAction.NONE) {
@@ -92,8 +112,8 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         this._selectedIndex = targetIndex;
 
-        this._switcherList.getSelected().reorder(index, targetIndex, newX);
-        this._switcherList.highlight(targetIndex);
+        this.multimap.getSelected().reorder(index, targetIndex, newX);
+        this.multimap.highlight(targetIndex);
     },
 
     _initSpaceMru(move) {
@@ -151,7 +171,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     selectSpace: function(direction, move) {
-        this._switcherList.actor.hide();
+        this.multimap.actor.hide();
 
         if (!workspaceMru) {
             this._initSpaceMru(move);
@@ -169,7 +189,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.hide();
 
-        let multimap = this._switcherList;
+        let multimap = this.multimap;
 
         let from = multimap.selectedIndex;
         let to;
@@ -274,10 +294,10 @@ var PreviewedWindowNavigator = new Lang.Class({
                 && action.name !== 'toggle-scratch') {
                 let metaWindow = this.space[this._selectedIndex];
                 action.handler(null, null, metaWindow);
-                let minimap = this._switcherList.getSelected();
+                let minimap = this.multimap.getSelected();
                 minimap.layout();
                 minimap.sync(metaWindow.get_frame_rect().x);
-                this._switcherList.highlight(this._selectedIndex);
+                this.multimap.highlight(this._selectedIndex);
                 return true;
             }
         }
@@ -300,18 +320,15 @@ var PreviewedWindowNavigator = new Lang.Class({
             this.space.selectedWindow = metaWindow;
             let newX = Tiling.ensureViewport(metaWindow, this.space);
             if (newX !== undefined) {
-                this._switcherList.getSelected().sync(newX);
+                this.multimap.getSelected().sync(newX);
             }
         }
         this._selectedIndex = index;
-        this._switcherList.highlight(index);
-    },
-
-    destroy: function() {
-        this.parent();
+        this.multimap.highlight(index);
     },
 
     _finish: function(timestamp) {
+        debug('#preview', 'finish');
         this.was_accepted = true;
         this.parent(timestamp);
     },
@@ -325,8 +342,13 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
     },
 
-    _onDestroy: function() {
-        debug('#preview', 'onDestroy', this.was_accepted);
+    destroy: function() {
+        debug('#preview', 'destroy');
+
+        Tweener.addTween(this.multimap.actor,
+                         {opacity: 0,
+                          time: 0.25,
+                          onComplete: () => this.multimap.actor.destroy});
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
