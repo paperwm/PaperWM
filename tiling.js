@@ -828,7 +828,7 @@ function insertWindow(metaWindow, {existing}) {
     debug("setting initial position", position)
     if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
         metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
-        toggle_maximize_horizontally(metaWindow);
+        toggleMaximizeHorizontally(metaWindow);
     }
 
     let buffer = metaWindow.get_buffer_rect();
@@ -1271,22 +1271,22 @@ function detach (meta_window) {
     remove_handler(meta_window.get_workspace(), meta_window)
 }
 
-function toggle_maximize_horizontally(meta_window) {
-    meta_window = meta_window || global.display.focus_window;
-    let monitor = Main.layoutManager.monitors[meta_window.get_monitor()];
+function toggleMaximizeHorizontally(metaWindow) {
+    metaWindow = metaWindow || global.display.focus_window;
+    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
 
     // TODO: make some sort of animation
     // Note: should investigate best-practice for attaching extension-data to meta_windows
-    if(meta_window.unmaximized_rect) {
-        let unmaximized_rect = meta_window.unmaximized_rect;
-        meta_window.move_resize_frame(true,
-                                      unmaximized_rect.x, unmaximized_rect.y,
-                                      unmaximized_rect.width, unmaximized_rect.height)
-        meta_window.unmaximized_rect = undefined;
+    if(metaWindow.unmaximizedRect) {
+        let unmaximizedRect = metaWindow.unmaximizedRect;
+        metaWindow.move_resize_frame(true,
+                                      unmaximizedRect.x, unmaximizedRect.y,
+                                      unmaximizedRect.width, unmaximizedRect.height)
+        metaWindow.unmaximizedRect = undefined;
     } else {
-        let frame = meta_window.get_frame_rect();
-        meta_window.unmaximized_rect = frame;
-        meta_window.move_resize_frame(true, minimumMargin, frame.y, monitor.width - minimumMargin*2, frame.height);
+        let frame = metaWindow.get_frame_rect();
+        metaWindow.unmaximizedRect = frame;
+        metaWindow.move_resize_frame(true, minimumMargin, frame.y, monitor.width - minimumMargin*2, frame.height);
     }
 }
 

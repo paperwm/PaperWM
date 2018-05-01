@@ -100,7 +100,7 @@ function init() {
 
     // Or use "toggle-maximize"?
     Meta.keybindings_set_custom_handler("maximize-horizontally",
-                                        as_key_handler("toggle_maximize_horizontally",
+                                        as_key_handler("toggleMaximizeHorizontally",
                                                        Tiling));
 
     paperActions.register('live-alt-tab',
