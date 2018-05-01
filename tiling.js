@@ -1103,15 +1103,28 @@ function propagateBackward(space, n, x, gap) {
 function sizeHandler(metaWindow) {
     debug('size-changed', metaWindow.title);
     let space = spaces.spaceOfWindow(metaWindow);
-    if (space.selectedWindow === metaWindow) {
-        let index = space.indexOf(metaWindow);
-        let frame = metaWindow.get_frame_rect();
-        let monitor = space.monitor;
-        frame.x -= monitor.x; frame.y -= monitor.y;
+    if (space.selectedWindow !== metaWindow)
+        return;
 
-        space.monitor.clickOverlay.reset();
-        propagateForward(space, index + 1, frame.x + frame.width + window_gap);
-        propagateBackward(space, index - 1, frame.x - window_gap);
+    let index = space.indexOf(metaWindow);
+    let frame = metaWindow.get_frame_rect();
+    let monitor = space.monitor;
+    frame.x -= monitor.x; frame.y -= monitor.y;
+
+    space.monitor.clickOverlay.reset();
+    propagateForward(space, index + 1, frame.x + frame.width + window_gap);
+    propagateBackward(space, index - 1, frame.x - window_gap);
+
+    // Sync clone position
+    let clone = metaWindow.clone;
+    if (clone.visible) {
+        // Note we can't rely on the actors position being set here.
+        let buffer = metaWindow.get_buffer_rect();
+        let x_offset = frame.x - buffer.x;
+        let y_offset = frame.y - buffer.y;
+        Tweener.removeTweens(clone);
+        clone.set_position(frame.x - monitor.x - x_offset,
+                           frame.y - monitor.y - y_offset);
     }
 }
 
