@@ -401,6 +401,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         Main.wm._blockAnimations = this._block;
 
+        this.actor.hide(); // Prevents finalized crap
         this.parent();
     }
 });
