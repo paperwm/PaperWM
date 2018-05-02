@@ -840,6 +840,7 @@ function insertWindow(metaWindow, {existing}) {
     clone.reparent(space.cloneContainer);
 
     if (!existing) {
+        metaWindow.get_compositor_private().hide();
         // Only move the frame when dealing with new windows
         metaWindow.move_frame(true,
                               position.x,
