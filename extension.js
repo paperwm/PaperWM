@@ -207,8 +207,6 @@ function enable() {
     }
     log(`enabled ${SESSIONID}`);
 
-    modules.forEach(m => m.enable && m.enable());
-
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
     settings.set_strv("close", ['<super>c'])
@@ -233,6 +231,8 @@ function enable() {
     // Switched to '<super>escape' in 3.28
     killKeybinding('restore-shortcuts',
                    new Gio.Settings({ schema_id: "org.gnome.mutter.wayland.keybindings"}));
+
+    modules.forEach(m => m.enable && m.enable());
 
     enabled = true;
 }
