@@ -1,5 +1,6 @@
 var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 var Meta = imports.gi.Meta;
+var Main = imports.ui.main;
 
 var TopBar = Extension.imports.topbar;
 var utils = Extension.imports.utils;
@@ -12,6 +13,10 @@ function makeScratch(metaWindow) {
     metaWindow.stick();
     metaWindow.clone.hide();
     metaWindow.get_compositor_private().show();
+
+    let monitor = Main.layoutManager.focusMonitor;
+    if (monitor.clickOverlay)
+        monitor.clickOverlay.reset();
 }
 
 function unmakeScratch(metaWindow) {
@@ -60,6 +65,10 @@ function show() {
             meta_window.get_compositor_private().show();
     });
     windows[0].activate(global.get_current_time());
+
+    let monitor = Main.layoutManager.focusMonitor;
+    if (monitor.clickOverlay)
+        monitor.clickOverlay.reset();
 }
 
 function hide() {
