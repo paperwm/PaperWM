@@ -68,7 +68,9 @@ var WindowCloneLayout = new Lang.Class({
             // if (child == container._delegate._windowClone)
             //     realWindow = container._delegate.realWindow;
             // else
-                realWindow = child.source;
+            realWindow = child.source;
+            if (!realWindow)
+                return;
 
             child.allocate(this._makeBoxForWindow(realWindow.meta_window),
                            flags);
