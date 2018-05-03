@@ -665,6 +665,19 @@ function enable() {
 function disable () {
     spaces.destroy();
 
+    oldSpaces.forEach(space => {
+        let selected = space.selectedIndex();
+        if (selected === -1)
+            return;
+        // Stack windows correctly for controlled restarts
+        for (let i=selected; i<space.length; i++) {
+            space[i].lower();
+        }
+        for (let i=selected; i>=0; i--) {
+            space[i].lower();
+        }
+    });
+
     // Disable workspace related signals
     global.screen[signals].forEach(id => global.screen.disconnect(id));
     global.screen[signals] = [];
