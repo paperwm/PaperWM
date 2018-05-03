@@ -200,13 +200,6 @@ let nWorkspacesSignal;
 let workspaceRemovedSignal;
 let windowCreatedSignal;
 function enable() {
-    // Only enable after disable have been run
-    if (enabled) {
-        log('enable called without calling disable');
-        return;
-    }
-    log(`enabled ${SESSIONID}`);
-
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
     settings.set_strv("close", ['<super>c'])
@@ -228,6 +221,14 @@ function enable() {
 
     setKeybinding('focus-active-notification', // `<Super>N`
                   utils.as_key_handler('newWindow', App));
+
+    // Only enable modules after disable have been run
+    if (enabled) {
+        log('enable called without calling disable');
+        return;
+    }
+    log(`enabled ${SESSIONID}`);
+
     // Switched to '<super>escape' in 3.28
     killKeybinding('restore-shortcuts',
                    new Gio.Settings({ schema_id: "org.gnome.mutter.wayland.keybindings"}));
@@ -238,11 +239,6 @@ function enable() {
 }
 
 function disable() {
-    if (!enabled)
-        return;
-    log(`disable ${SESSIONID}`);
-    // Disconnect focus and reset scale and pivot
-
     setKeybinding('switch-applications',
                   Main.wm._startSwitcher.bind(Main.wm));
     setKeybinding('switch-applications-backward',
@@ -256,6 +252,9 @@ function disable() {
                                        Shell.ActionMode.NORMAL |
                                        Shell.ActionMode.OVERVIEW,
                                        Main.messageTray._expandActiveNotification.bind(Main.messageTray));
+    if (!enabled)
+        return;
+    log(`disable ${SESSIONID}`);
 
     modules.forEach(m => m.disable && m.disable());
 
