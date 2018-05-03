@@ -67,6 +67,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         navigating = true;
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
+        Meta.disable_unredirect_for_screen(global.screen);
 
         let multimap = new Minimap.MultiMap(true);
         this.multimap = multimap;
@@ -119,7 +120,6 @@ var PreviewedWindowNavigator = new Lang.Class({
     _initSpaceMru(move) {
         let heights = [0].concat(this._yPositions.slice(1));
         let multimap = this.multimap;
-        Meta.disable_unredirect_for_screen(global.screen);
 
         let visible = Main.layoutManager.monitors
             .map(m => Tiling.spaces.monitors.get(m));

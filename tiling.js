@@ -960,7 +960,11 @@ function ensureViewport(meta_window, space, force) {
     space.moving = meta_window;
     move_to(space, meta_window,
             { x, y,
-              onComplete: () => space.moving = false,
+              onComplete: () => {
+                  space.moving = false;
+                  if (!Navigator.navigating)
+                      Meta.enable_unredirect_for_screen(global.screen);
+              },
             });
     // Return x so we can position the minimap
     return x;
