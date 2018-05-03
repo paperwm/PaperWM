@@ -876,12 +876,12 @@ function ensureViewport(meta_window, space, force) {
     space = space || spaces.spaceOfWindow(meta_window);
     if (space.moving == meta_window && !force) {
         debug('already moving', meta_window.title);
-        return;
+        return undefined;
     }
 
     let index = space.indexOf(meta_window)
     if (index === -1)
-        return;
+        return undefined;
 
     debug('Moving', meta_window.title);
     meta_window._isStacked = false;
@@ -1027,7 +1027,6 @@ function move_to(space, meta_window, { x, y, delay, transition,
 
     propagateForward(space, index + 1, x + frame.width + window_gap);
     propagateBackward(space, index - 1, x - window_gap);
-    fixStack(space, index);
 }
 
 // Place window's left edge at x
@@ -1133,7 +1132,7 @@ function focus_handler(meta_window, user_data) {
     }
 
     let space = spaces.spaceOfWindow(meta_window);
-    ensureViewport(meta_window, space);
+    ensureViewport(meta_window, space) !== undefined && fixStack(space, space.indexOf(meta_window));
 }
 let focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
 
