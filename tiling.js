@@ -924,8 +924,7 @@ function ensureViewport(meta_window, space, force) {
     } else if (index == space.length-1) {
         // Always align the first window to the display's right edge
         x = space.width - frame.width;
-    } else if (frame.width >
-               space.width - 2*(margin_lr + stack_margin + window_gap)) {
+    } else if (frame.width > space.width*0.9 - 2*(margin_lr + window_gap)) {
         // Consider the window to be wide and center it
         x = Math.round((space.width - frame.width)/2);
 
