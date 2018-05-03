@@ -123,6 +123,7 @@ class Space extends Array {
         this.rightStack = 0; // not implemented
 
         this.addAll(oldSpaces.get(workspace));
+        oldSpaces.delete(workspace);
     }
 
     setMonitor(monitor, animate) {
