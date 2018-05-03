@@ -959,7 +959,7 @@ function ensureViewport(meta_window, space, force) {
  */
 function move(meta_window, space,
               { x, y, onComplete, onStart,
-                delay, transition, stack }) {
+                delay, transition, visible }) {
 
     onComplete = onComplete || (() => {});
     onStart = onStart || (() => {});
@@ -1001,7 +1001,7 @@ function move(meta_window, space,
                                  if(!meta_window.get_compositor_private())
                                      return;
                                  let monitor = space.monitor;
-                                 if (!stack && !Navigator.navigating) {
+                                 if (visible && !Navigator.navigating) {
                                      clone.hide();
                                      actor.show();
                                  }
@@ -1018,7 +1018,8 @@ function move_to(space, meta_window, { x, y, delay, transition,
                                , onComplete
                                , onStart
                                , delay
-                               , transition }
+                               , transition
+                               , visible: true}
         );
     let index = space.indexOf(meta_window);
     let frame = meta_window.get_frame_rect();
@@ -1038,12 +1039,10 @@ function propagateForward(space, n, x, gap) {
     let frame = meta_window.get_frame_rect();
     gap = gap || window_gap;
 
-    let stack = false;
+    let visible = true;
     // Check if we should start stacking windows
-    if (x + frame.width > space.width
-        || meta_window.fullscreen
-        || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
-        stack = true;
+    if (x + frame.width > space.width) {
+        visible = false;
         meta_window._isStacked = true;
     } else {
         meta_window._isStacked = false;
@@ -1054,8 +1053,8 @@ function propagateForward(space, n, x, gap) {
         // Anchor scaling/animation on the left edge for windows positioned to the right,
 
         move(meta_window, space,
-             { x, y: panelBox.height + margin_tb, stack });
-        if (stack && x < space.width) {
+             { x, y: panelBox.height + margin_tb, visible });
+        if (!visible && x < space.width) {
             space.monitor.clickOverlay.right.setTarget(meta_window);
         }
         propagateForward(space, n+1, x+frame.width + gap, gap);
@@ -1074,11 +1073,11 @@ function propagateBackward(space, n, x, gap) {
     let frame = meta_window.get_frame_rect();
     gap = gap || window_gap;
 
-    // Check if we should start stacking windows
-    let stack = false;
+    // Check if the window is fully visible
+    let visible = true;
     if (x - frame.width < 0 || meta_window.fullscreen
         || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
-        stack = true;
+        visible = false;
         meta_window._isStacked = true;
     } else {
         meta_window._isStacked = false;
@@ -1088,8 +1087,8 @@ function propagateBackward(space, n, x, gap) {
     if (actor) {
         // Anchor on the right edge for windows positioned to the left.
         move(meta_window, space,
-             { x: x - frame.width, y: panelBox.height + margin_tb, stack });
-        if (stack && x > 0) {
+             { x: x - frame.width, y: panelBox.height + margin_tb, visible });
+        if (!visible && x > 0) {
             space.monitor.clickOverlay.left.setTarget(meta_window);
         }
         propagateBackward(space, n-1, x - frame.width - gap, gap);
