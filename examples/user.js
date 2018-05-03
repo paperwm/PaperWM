@@ -1,3 +1,5 @@
+// -*- mode: gnome-shell -*-
+
 var Extension;
 function init() {
   // Runs _only_ once on startup
