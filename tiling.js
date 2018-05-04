@@ -8,6 +8,7 @@ var St = imports.gi.St;
 var Main = imports.ui.main;
 var Shell = imports.gi.Shell;
 var Gio = imports.gi.Gio;
+var Signals = imports.signals;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
 
@@ -81,6 +82,10 @@ class Space extends Array {
             workspace.connect("window-removed",
                               utils.dynamic_function_ref("remove_handler", Me));
 
+        // The windows that should be represented by their WindowActor
+        this.visible = [];
+        this._moveDoneId = this.connect('move-done', this._moveDone.bind(this));
+
         let clip = new Clutter.Actor();
         this.clip = clip;
         let actor = new Clutter.Actor();
@@ -126,6 +131,19 @@ class Space extends Array {
 
         this.addAll(oldSpaces.get(workspace));
         oldSpaces.delete(workspace);
+    }
+
+    _moveDone() {
+        debug('#move-done');
+        if (Navigator.navigating) {
+            this.delayed = true;
+            return;
+        }
+        this.visible.forEach(w => {
+            let actor = w.get_compositor_private();
+            w.clone.hide();
+            actor && actor.show();
+        });
     }
 
     setMonitor(monitor, animate) {
@@ -280,8 +298,10 @@ class Space extends Array {
         debug('destroy', Meta.prefs_get_workspace_name(workspace.index()));
         workspace.disconnect(this.addSignal);
         workspace.disconnect(this.removeSignal);
+        this.disconnect(this._moveDoneId);
     }
 }
+Signals.addSignalMethods(Space.prototype);
 
 /**
    A `Map` to store all `Spaces`'s, indexed by the corresponding workspace.
@@ -964,6 +984,7 @@ function ensureViewport(meta_window, space, force) {
             { x, y,
               onComplete: () => {
                   space.moving = false;
+                  space.emit('move-done');
                   if (!Navigator.navigating)
                       Meta.enable_unredirect_for_screen(global.screen);
               },
@@ -998,6 +1019,10 @@ function move(meta_window, space,
     clone.show();
     actor.hide();
 
+    if (visible) {
+        space.visible.push(meta_window);
+    }
+
     // Move the frame before animation to indicate where it's actually going.
     // The animation being purely cosmetic.
     meta_window.move_frame(true,
@@ -1020,11 +1045,6 @@ function move(meta_window, space,
                           // process of closing
                           if(!meta_window.get_compositor_private())
                               return;
-                          let monitor = space.monitor;
-                          if (visible && !Navigator.navigating) {
-                              clone.hide();
-                              actor.show();
-                          }
                           onComplete();
                       }
                      });
@@ -1034,6 +1054,10 @@ function move(meta_window, space,
 // Move @meta_window to x, y and propagate the change in @space
 function move_to(space, meta_window, { x, y, delay, transition,
                                          onComplete, onStart }) {
+
+    space.visible = [];
+    space.delayed = false;
+
     move(meta_window, space, { x, y
                                , onComplete
                                , onStart

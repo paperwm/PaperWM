@@ -369,6 +369,9 @@ var PreviewedWindowNavigator = new Lang.Class({
             this.space.setMonitor(this.monitor, true);
         }
 
+        if (this.space.delayed)
+            this.space.emit('move-done');
+
         for (let monitor of Main.layoutManager.monitors) {
             if (monitor === this.monitor)
                 continue;
@@ -384,7 +387,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         if (selected && !Scratch.isScratchActive()) {
             Main.activateWindow(selected);
             debug('#preview', 'Finish', selected.title, this._selectedIndex);
-            Tiling.ensureViewport(selected, this.space, force);
         } else {
             this.space.workspace.activate(global.get_current_time());
         }
