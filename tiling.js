@@ -1118,7 +1118,9 @@ function sizeHandler(metaWindow) {
         return;
 
     let frame = metaWindow.get_frame_rect();
-    move_to(space, metaWindow, {x: frame.x, y: frame.y});
+    let monitor = space.monitor;
+    move_to(space, metaWindow, {x: frame.x - monitor.x, y: frame.y - monitor.y,
+                                onComplete: () => space.emit('move-done')});
 }
 
 // `MetaWindow::focus` handling
