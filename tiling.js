@@ -1004,27 +1004,28 @@ function move(meta_window, space,
 
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
-    Tweener.addTween(clone, {x: x - x_offset
-                             , y: y - y_offset
-                             , time: 0.25 - delay
-                             , delay: delay
-                             , scale_y: 1
-                             , scale_x: 1
-                             , transition: transition
-                             , onStart: onStart
-                             , onComplete: () => {
-                                 // If the actor is gone, the window is in
-                                 // process of closing
-                                 if(!meta_window.get_compositor_private())
-                                     return;
-                                 let monitor = space.monitor;
-                                 if (visible && !Navigator.navigating) {
-                                     clone.hide();
-                                     actor.show();
-                                 }
-                                 onComplete();
-                             }
-                            });
+    Tweener.addTween(clone,
+                     {x: x - x_offset
+                      , y: y - y_offset
+                      , time: 0.25 - delay
+                      , delay: delay
+                      , scale_y: 1
+                      , scale_x: 1
+                      , transition: transition
+                      , onStart: onStart
+                      , onComplete: () => {
+                          // If the actor is gone, the window is in
+                          // process of closing
+                          if(!meta_window.get_compositor_private())
+                              return;
+                          let monitor = space.monitor;
+                          if (visible && !Navigator.navigating) {
+                              clone.hide();
+                              actor.show();
+                          }
+                          onComplete();
+                      }
+                     });
 
 }
 
