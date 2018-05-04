@@ -211,18 +211,6 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         TopBar.updateWorkspaceIndicator(newMap.space.workspace.index());
 
-        let spaces = [
-            multimap.minimaps[to],
-            multimap.minimaps[to - 1],
-            multimap.minimaps[to + 1]
-        ].filter(x => x)
-            .map(x => x.space);
-
-        spaces.forEach(space => space.forEach(w => {
-            w.get_compositor_private().hide();
-            w.clone.show();
-        }));
-
         let heights = this._yPositions;
 
         multimap.minimaps.forEach((m, i) => {
