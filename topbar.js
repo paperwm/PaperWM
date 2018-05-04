@@ -11,6 +11,8 @@ var Tiling = Extension.imports.tiling;
 
 var panelBox = Main.layoutManager.panelBox;
 
+var screen = global.screen;
+
 var orginalActivitiesText;
 var screenSignals;
 function init () {
@@ -28,7 +30,7 @@ function enable () {
         .forEach(c => c.actor.opacity = 0);
 
     screenSignals.push(
-        global.screen.connect_after('workspace-switched',
+        screen.connect_after('workspace-switched',
                                     (screen, from, to) => {
                                         updateWorkspaceIndicator(to);
                                     }));
@@ -42,7 +44,7 @@ function enable () {
         }
     });
     // Update the worksapce name on startup
-    updateWorkspaceIndicator(global.screen.get_active_workspace_index());
+    updateWorkspaceIndicator(screen.get_active_workspace_index());
 }
 
 function disable() {
@@ -50,7 +52,7 @@ function disable() {
     [Main.panel._rightCorner, Main.panel._leftCorner]
         .forEach(c => c.actor.opacity = 255);
 
-    screenSignals.forEach(id => global.screen.disconnect(id));
+    screenSignals.forEach(id => screen.disconnect(id));
     screenSignals = [];
 
     setWorkspaceName(orginalActivitiesText);
@@ -91,6 +93,16 @@ function hide() {
 function updateWorkspaceIndicator (workspaceIndex) {
     let name = Meta.prefs_get_workspace_name(workspaceIndex);
     setWorkspaceName(name);
+
+    let workspace = screen.get_active_workspace_index(workspaceIndex);
+    if (!Tiling.spaces)
+        return;
+    let space = Tiling.spaces.spaceOf(workspace);
+    if (!space)
+        return;
+    space.label.text = name;
+    space.label.set_position(
+        ...Main.panel.statusArea.activities._label.get_position());
 };
 
 function setWorkspaceName (name) {

@@ -90,6 +90,8 @@ class Space extends Array {
         let background = new St.Widget();
         this.background = background;
         let label = new St.Label();
+        this.label = label;
+        label.set_style('font-weight: bold; height: 1.86em;');
 
         clip.space = this;
         cloneContainer.space = this;
