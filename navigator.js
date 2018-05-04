@@ -82,6 +82,11 @@ var PreviewedWindowNavigator = new Lang.Class({
         Tweener.addTween(multimap.actor,
                          {opacity: 255, time: 0.25, transition: 'easeInQuad'});
 
+        this.space.visible.forEach(w => {
+            w.get_compositor_private().hide();
+            w.clone.show();
+        });
+
         let paperActions = Extension.imports.extension.paperActions;
         let actionId = paperActions.idOf(actionName);
         if(actionId === Meta.KeyBindingAction.NONE) {
@@ -387,6 +392,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         if (selected && !Scratch.isScratchActive()) {
             Main.activateWindow(selected);
             debug('#preview', 'Finish', selected.title, this._selectedIndex);
+            Tiling.ensureViewport(selected, this.space, force);
         } else {
             this.space.workspace.activate(global.get_current_time());
         }

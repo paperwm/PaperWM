@@ -663,7 +663,7 @@ function enable() {
         spaces = new Spaces();
         Navigator.switchWorkspace(global.screen.get_active_workspace());
         spaces.forEach(s => {
-            s.selectedWindow && ensureViewport(s.selectedWindow);
+            s.selectedWindow && ensureViewport(s.selectedWindow, s, true);
         });
 
         if (!Scratch.isScratchActive()) {
@@ -939,21 +939,23 @@ function ensureViewport(meta_window, space, force) {
         let frame = meta_window.get_frame_rect();
         return length + frame.width + window_gap;
     }, -window_gap);
-    if (meta_window.fullscreen && !Navigator.workspaceMru) {
-        // Fullscreen takes highest priority
-        x = 0, y = 0;
-    } else if (meta_window.get_maximized() === Meta.MaximizeFlags.BOTH
-               && !meta_window.fullscreen) {
-        x = frame.x;
-        y = frame.y;
+    if (!Navigator.workspaceMru && (meta_window.fullscreen ||
+        meta_window.get_maximized() === Meta.MaximizeFlags.BOTH)) {
+        x = frame.x; y = frame.y;
+        force = true;
     } else if (required_width <= space.width) {
         let leftovers = space.width - required_width;
         let gaps = space.length + 1;
-        let extra_gap = Math.floor(leftovers/gaps);
-        debug('#extragap', extra_gap);
-        propagateForward(space, 0, extra_gap, extra_gap + window_gap);
-        propagateBackward(space, -1);
-        return;
+        let gap = Math.floor(leftovers/gaps);
+        move_to(space, space[0],
+                {x: gap, y, gap,
+                 onComplete: () => {
+                     space.moving = false;
+                     space.emit('move-done');
+                     if (!Navigator.navigating)
+                         Meta.enable_unredirect_for_screen(global.screen);
+                 }});
+        return meta_window.get_frame_rect().x;
     } else if (index == 0) {
         // Always align the first window to the display's left edge
         x = 0;
@@ -977,6 +979,10 @@ function ensureViewport(meta_window, space, force) {
     } else if (frame.x === 0) {
         // Same for the start (though the case isn't as common)
         x = minimumMargin;
+    }
+    if (!force && frame.x === x && frame.y === y) {
+        space.emit('move-done');
+        return x;
     }
 
     space.moving = meta_window;
@@ -1053,7 +1059,7 @@ function move(meta_window, space,
 
 // Move @meta_window to x, y and propagate the change in @space
 function move_to(space, meta_window, { x, y, delay, transition,
-                                         onComplete, onStart }) {
+                                       onComplete, onStart, gap }) {
 
     space.visible = [];
     space.delayed = false;
@@ -1070,8 +1076,9 @@ function move_to(space, meta_window, { x, y, delay, transition,
 
     space.monitor.clickOverlay.reset();
 
-    propagateForward(space, index + 1, x + frame.width + window_gap);
-    propagateBackward(space, index - 1, x - window_gap);
+    gap = gap || window_gap;
+    propagateForward(space, index + 1, x + frame.width + gap, gap);
+    propagateBackward(space, index - 1, x - gap, gap);
 }
 
 // Place window's left edge at x
