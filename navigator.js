@@ -73,7 +73,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         this.monitor = this.space.monitor;
 
         // Set up the minimap
-        let multimap = new Minimap.MultiMap(true);
+        let multimap = new Minimap.MultiMap(this.space);
         this.multimap = multimap;
         multimap.onlyShowSelected();
         multimap.actor.opacity = 0;
@@ -316,7 +316,8 @@ var PreviewedWindowNavigator = new Lang.Class({
             }
         }
         this._selectedIndex = index;
-        this.multimap.highlight(index);
+        if (!workspaceMru)
+            this.multimap.highlight(index);
     },
 
     _finish: function(timestamp) {

@@ -269,7 +269,7 @@ var Minimap = new Lang.Class({
 var MultiMap = new Lang.Class({
     Name: 'MultiMap',
 
-    _init: function(mru) {
+    _init: function(space) {
         this.actor = new St.Widget({ name: "multimap-viewport" });
         this.container = new St.BoxLayout({ name: "multimap-container" });
         this.actor.add_actor(this.container);
@@ -277,20 +277,10 @@ var MultiMap = new Lang.Class({
         this.container.remove_all_children()
         this.minimaps = [];
 
-        if (mru) {
-            this.selectedIndex = 0;
-            Tiling.spaces.mru()
-                .forEach((s, i) => this.addSpace(s, i));
-        } else {
-            this.selectedIndex = global.screen.get_active_workspace_index();
-            let nWorkspaces = global.screen.n_workspaces;
-            for (let i=0; i < nWorkspaces; i++) {
-                let workspace = global.screen.get_workspace_by_index(i);
-                let space = Tiling.spaces.spaceOf(workspace);
-                this.addSpace(space, i);
-            }
-        }
+        this.addSpace(space, 0);
+        this.selectedIndex = 0;
         this.rowHeight = this.container.first_child.height;
+
         this.actor.height = this.rowHeight;
         this.actor.width = this.container.first_child.width;
 
@@ -343,6 +333,7 @@ var MultiMap = new Lang.Class({
             Math.ceil(minimap.actor.height * minimap.actor.scale_y) + 38;
 
         let workspaceLabel = new St.Label({ style_class: "window-caption" });
+        workspaceLabel.hide();
         workspaceLabel.text = Meta.prefs_get_workspace_name(space.workspace.index());
         if (i == this.selectedIndex) {
             workspaceLabel.opacity = 0;
