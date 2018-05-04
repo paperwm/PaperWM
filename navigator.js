@@ -47,10 +47,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._switcherList = new SwitcherList();
         debug('#preview', 'init', this._switcherList);
 
-        this.space = Tiling.spaces.spaceOf(global.screen.get_active_workspace());
-        this._selectedIndex = this.space.selectedIndex();
-        this._startIndex  = this._selectedIndex;
-
     },
 
     _next: function() {
@@ -69,11 +65,17 @@ var PreviewedWindowNavigator = new Lang.Class({
         Main.wm._blockAnimations = true;
         Meta.disable_unredirect_for_screen(global.screen);
 
+        this.space = Tiling.spaces.spaceOf(global.screen.get_active_workspace());
+
+        this._selectedIndex = this.space.selectedIndex();
+        this._startIndex  = this._selectedIndex;
+        this.from = this.space;
+        this.monitor = this.space.monitor;
+
+        // Set up the minimap
         let multimap = new Minimap.MultiMap(true);
         this.multimap = multimap;
-        this.monitor = this.space.monitor;
-        this.multimap.onlyShowSelected();
-
+        multimap.onlyShowSelected();
         multimap.actor.opacity = 0;
         this.space.actor.add_actor(multimap.actor);
         multimap.actor.set_position(
@@ -131,9 +133,9 @@ var PreviewedWindowNavigator = new Lang.Class({
         Main.layoutManager.monitors
             .forEach(m => m.clickOverlay.deactivate());
 
-        let top = multimap.minimaps[0];
-        multimap.minimaps = [top].concat(multimap.minimaps
-            .filter(m => visible.indexOf(m.space) === -1));
+        let mru = [this.space].concat(
+            Tiling.spaces.mru().filter(space => !visible.includes(space)));
+        this.mru = mru;
 
         if (move && !Scratch.isScratchActive()) {
             this._moving = this.space.selectedWindow;
@@ -142,9 +144,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         let monitor = this.monitor;
         let cloneParent = this.space.clip.get_parent();
-        multimap.minimaps .forEach((m, i) => {
-            let space = m.space;
-
+        mru.forEach((space, i) => {
             space.clip.set_position(monitor.x, monitor.y);
 
             let scaleX = monitor.width/space.width;
@@ -158,11 +158,11 @@ var PreviewedWindowNavigator = new Lang.Class({
 
             space.actor.scale_y = scale + (1 - i)*0.01;
             space.actor.scale_x = scale + (1 - i)*0.01;
-            if (multimap.minimaps[i - 1] === undefined)
+            if (mru[i - 1] === undefined)
                 return;
             cloneParent.set_child_below_sibling(
                 space.clip,
-                multimap.minimaps[i - 1].space.clip
+                mru[i - 1].clip
             );
             space.actor.show();
 
@@ -188,33 +188,32 @@ var PreviewedWindowNavigator = new Lang.Class({
                 });
             }
         }
+        let mru = this.mru;
 
         workspaceMru = true;
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.hide();
 
-        let multimap = this.multimap;
-
-        let from = multimap.selectedIndex;
+        let from = mru.indexOf(this.space);
         let to;
         if (direction === Meta.MotionDirection.DOWN)
             to = from + 1;
         else
             to = from - 1;
-        if (to < 0 || to >= multimap.minimaps.length) {
+        if (to < 0 || to >= mru.length) {
             this._select(this.space.selectedIndex());
             return true;
         }
-        let oldMap = multimap.getSelected();
-        let newMap = multimap.setSelected(to);
+        let oldSpace = this.space;
+        let newSpace = mru[to];
 
-        TopBar.updateWorkspaceIndicator(newMap.space.workspace.index());
+        TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
         let heights = this._yPositions;
 
-        multimap.minimaps.forEach((m, i) => {
-            let actor = m.space.actor;
+        mru.forEach((space, i) => {
+            let actor = space.actor;
             let h;
             if (to === i)
                 h = heights[1];
@@ -228,7 +227,7 @@ var PreviewedWindowNavigator = new Lang.Class({
                 h = 1;
 
             Tweener.addTween(actor,
-                             {y: h*m.space.height,
+                             {y: h*space.height,
                               time: 0.25,
                               scale_x: scale + (to - i)*0.01,
                               scale_y: scale + (to - i)*0.01,
@@ -237,7 +236,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         });
 
-        this.space = newMap.space;
+        this.space = newSpace;
         this._selectedIndex = this.space.selectedIndex();
     },
 
@@ -351,7 +350,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         let force = workspaceMru;
         navigating = false; workspaceMru = false;
 
-        let from = this.multimap.minimaps[0].space;
+        let from = this.from;
         if(!this.was_accepted) {
             // Abort the navigation
             this.space = from;
