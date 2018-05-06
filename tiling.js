@@ -893,15 +893,12 @@ function insertWindow(metaWindow, {existing}) {
         });
     }
 
-    if (metaWindow.has_focus()) {
-        space.selectedWindow = metaWindow;
+    if (space.workspace === global.screen.get_active_workspace()) {
         ensureViewport(metaWindow, space, true);
-    } else {
-        ensureViewport(space.selectedWindow, space, true);
-    }
-
-    if (space.workspace === global.screen.get_active_workspace())
         Main.activateWindow(metaWindow);
+    } else {
+        ensureViewport(space.selectedWindow, space);
+    }
 }
 
 
