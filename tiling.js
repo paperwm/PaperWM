@@ -897,7 +897,7 @@ function insertWindow(metaWindow, {existing}) {
         space.selectedWindow = metaWindow;
         ensureViewport(metaWindow, space, true);
     } else {
-        ensureViewport(space.selectedWindow, space);
+        ensureViewport(space.selectedWindow, space, true);
     }
 
     if (space.workspace === global.screen.get_active_workspace())
