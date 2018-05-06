@@ -73,15 +73,15 @@ var PreviewedWindowNavigator = new Lang.Class({
         this.monitor = this.space.monitor;
 
         // Set up the minimap
-        let multimap = new Minimap.MultiMap(this.space);
-        this.multimap = multimap;
-        multimap.onlyShowSelected();
-        multimap.actor.opacity = 0;
-        this.space.actor.add_actor(multimap.actor);
-        multimap.actor.set_position(
-            Math.floor((this.monitor.width - multimap.actor.width)/2),
-            Math.floor((this.monitor.height - multimap.actor.height)/2));
-        Tweener.addTween(multimap.actor,
+        let minimap = new Minimap.Minimap(this.space);
+        this.minimap = minimap;
+        minimap.actor.opacity = 0;
+        this.space.actor.add_actor(minimap.actor);
+        minimap.show();
+        minimap.actor.set_position(
+            Math.floor((this.monitor.width - minimap.actor.width)/2),
+            Math.floor((this.monitor.height - minimap.actor.height)/2));
+        Tweener.addTween(minimap.actor,
                          {opacity: 255, time: 0.25, transition: 'easeInQuad'});
 
         this.space.visible.forEach(w => {
@@ -120,13 +120,12 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         this._selectedIndex = targetIndex;
 
-        this.multimap.getSelected().reorder(index, targetIndex, newX);
-        this.multimap.highlight(targetIndex);
+        this.minimap.reorder(index, targetIndex);
     },
 
     _initSpaceMru(move) {
         let heights = [0].concat(this._yPositions.slice(1));
-        let multimap = this.multimap;
+        let minimap = this.minimap;
 
         let visible = Main.layoutManager.monitors
             .map(m => Tiling.spaces.monitors.get(m));
@@ -176,7 +175,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     selectSpace: function(direction, move) {
-        this.multimap.actor.hide();
+        this.minimap.actor.hide();
 
         if (!workspaceMru) {
             this._initSpaceMru(move);
@@ -286,10 +285,9 @@ var PreviewedWindowNavigator = new Lang.Class({
                 && action.name !== 'toggle-scratch') {
                 let metaWindow = this.space[this._selectedIndex];
                 action.handler(null, null, metaWindow);
-                let minimap = this.multimap.getSelected();
-                minimap.layout();
-                minimap.sync(metaWindow.get_frame_rect().x);
-                this.multimap.highlight(this._selectedIndex);
+                let minimap = this.minimap;
+                minimap.layout(false);
+                this.minimap.select(this._selectedIndex);
                 return true;
             }
         }
@@ -310,14 +308,11 @@ var PreviewedWindowNavigator = new Lang.Class({
         let metaWindow = this.space[index];
         if (metaWindow) {
             this.space.selectedWindow = metaWindow;
-            let newX = Tiling.ensureViewport(metaWindow, this.space);
-            if (newX !== undefined) {
-                this.multimap.getSelected().sync(newX);
-            }
+            Tiling.ensureViewport(metaWindow, this.space);
         }
         this._selectedIndex = index;
         if (!workspaceMru)
-            this.multimap.highlight(index);
+            this.minimap.select(index);
     },
 
     _finish: function(timestamp) {

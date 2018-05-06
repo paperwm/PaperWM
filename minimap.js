@@ -3,9 +3,6 @@ var Clutter = imports.gi.Clutter;
 var Tweener = imports.ui.tweener;
 var Lang = imports.lang;
 var St = imports.gi.St;
-var Workspace = imports.ui.workspace;
-var Background = imports.ui.background;
-var Meta = imports.gi.Meta;
 var Pango = imports.gi.Pango;
 
 var Tiling = Extension.imports.tiling;
@@ -45,159 +42,87 @@ var WindowCloneLayout = new Lang.Class({
 
         let box = new Clutter.ActorBox();
 
-        box.set_origin((inputRect.x - frame.x),
-                       (inputRect.y - frame.y));
-        box.set_size(inputRect.width, inputRect.height);
+        box.set_origin(((inputRect.x - frame.x)*MINIMAP_SCALE),
+                       (inputRect.y - frame.y)*MINIMAP_SCALE);
+        box.set_size(inputRect.width*MINIMAP_SCALE,
+                     inputRect.height*MINIMAP_SCALE);
 
         return box;
     },
 
     vfunc_get_preferred_height: function(container, forWidth) {
         let frame = container.get_first_child().meta_window.get_frame_rect();
-        return [frame.height, frame.height];
+        return [MINIMAP_SCALE*frame.height, MINIMAP_SCALE*frame.height];
     },
 
     vfunc_get_preferred_width: function(container, forHeight) {
         let frame = container.get_first_child().meta_window.get_frame_rect();
-        return [frame.width, frame.width];
+        return [MINIMAP_SCALE*frame.width, MINIMAP_SCALE*frame.width];
     },
 
     vfunc_allocate: function(container, box, flags) {
-        container.get_children().forEach(Lang.bind(this, function (child) {
-            let realWindow;
-            // if (child == container._delegate._windowClone)
-            //     realWindow = container._delegate.realWindow;
-            // else
-            realWindow = child.source;
-            if (!realWindow)
-                return;
+        let child = container.first_child;
+        let realWindow = child.source;
+        if (!realWindow)
+            return;
 
-            child.allocate(this._makeBoxForWindow(realWindow.meta_window),
-                           flags);
-        }));
+        child.allocate(this._makeBoxForWindow(realWindow.meta_window),
+                       flags);
     }
 });
 
-var Minimap = new Lang.Class({
-    Name: 'Minimap',
-
-    _init: function(space) {
-        this.actor = new Clutter.Actor({ name: "minimap-this" });
+class Minimap {
+    constructor(space) {
         this.space = space;
-        this.minimapActor = new Clutter.Actor({ name: "minimap-container"} );
+        let actor = new St.Widget({name: 'minimap-background',
+                                    style_class: 'switcher-list'});
+        this.actor = actor;
+        actor.height = space.height*0.20;
 
-        this.clones = [];
-        this.actor.set_scale(MINIMAP_SCALE, MINIMAP_SCALE);
-        this.actor.height = space.height;
-        this.actor.width = space.width;
-        this.actor.add_actor(this.minimapActor);
+        let highlight = new St.Widget({name: 'minimap-highlight',
+                                       style_class: 'tile-preview'});
+        this.highlight = highlight;
+        let label = new St.Label();
+        label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
+        this.label = label;;
 
-    },
+        let clip = new St.Widget({name: 'container-clip'});
+        this.clip = clip;
+        let container = new St.Widget({name: 'minimap-container'});
+        this.container = container;
+        container.height = Math.round(space.height*MINIMAP_SCALE);
 
-    createClones: function(windows) {
+        actor.add_actor(highlight);
+        actor.add_actor(label);
+        actor.add_actor(clip);
+        clip.add_actor(container);
+        clip.set_position(12 + Tiling.window_gap, 15 + 10);
+        highlight.y = clip.y - 10;
+    }
+
+    show() {
+        this.clones = this.createClones(this.space);
+        this.restack();
+        this.layout(false);
+    }
+
+    createClones(windows) {
         return windows.map((mw) => {
-            let windowActor = mw.get_compositor_private()
+            let windowActor = mw.get_compositor_private();
             let clone = new Clutter.Clone({ source: windowActor });
-            let container = new Clutter.Actor({ layout_manager: new WindowCloneLayout(),
-                                                name: "window-clone-container"
-                                              });
+            let container = new Clutter.Actor({
+                layout_manager: new WindowCloneLayout(),
+                name: "window-clone-container"
+            });
             clone.meta_window = mw;
-
+            container.meta_window = mw;
             container.add_actor(clone);
+
             return container;
         });
+    }
 
-    },
-
-    restack: function (around) {
-        this.minimapActor.remove_all_children();
-        let clones = this.clones;
-
-        for (let i=0; i < around; i++) {
-            this.minimapActor.add_actor(clones[i]);
-        }
-        for (let i=clones.length-1; i>around; i--) {
-            this.minimapActor.add_actor(clones[i]);
-        }
-        this.minimapActor.add_actor(clones[around]);
-    },
-
-    fold: function (around, animate = true) {
-        around = around || this.space.indexOf(this.space.selectedWindow);
-        if (around < 0) {
-            return;
-        }
-
-        let time = 0;
-        if (animate) {
-            time = 0.25;
-        }
-
-        this.restack(around);
-        let clones = this.clones;
-
-        let maxProtrusion = 500;
-        let leftStackGap = maxProtrusion/(around);
-        let rightStackGap = maxProtrusion/(clones.length - 1 - around);
-        for (let i=0; i < around; i++) {
-            let clone = clones[i];
-            clone.set_pivot_point(0, 0.5);
-            if (clone.x + this.minimapActor.x <= -maxProtrusion) {
-                let scale = 1 - 0.02*(around - i);
-                Tweener.addTween(clone, {x: -this.minimapActor.x
-                                         - (maxProtrusion - i*leftStackGap)
-                                         , scale_x: scale
-                                         , scale_y: scale
-                                         , transition: "easeInOutQuad"
-                                         , time: time});
-            } else {
-                this.minimapActor
-                    .set_child_above_sibling(clone,
-                                             this.minimapActor.last_child);
-            }
-        }
-        for (let i=clones.length-1; i>around; i--) {
-            let clone = clones[i];
-            clone.set_pivot_point(1, 0.5);
-            if (clone.x + clone.width + this.minimapActor.x >= this.space.width + maxProtrusion) {
-                let scale = 1 - 0.02*(i - around);
-                Tweener.addTween(clone, {x: -this.minimapActor.x
-                                         + this.space.width
-                                         + (maxProtrusion - (clones.length-1 - i)*rightStackGap) - clone.width
-                                         , scale_x: scale
-                                         , scale_y: scale
-                                         , transition: "easeInOutQuad"
-                                         , time: time});
-            }
-        }
-    },
-
-    unfold: function (animate = true) {
-        this.layout(animate);
-    },
-
-    toggle: function() {
-        if (!this.visible) {
-            this.refresh();
-        }
-        this.actor.visible = !this.actor.visible;
-    },
-
-    refresh: function() {
-        this.clones = this.createClones(this.space);
-        let selectedIndex = this.space.selectedIndex();
-        if(selectedIndex > -1) {
-            this.restack(selectedIndex);
-            this.layout(false);
-            let frame = this.space.selectedWindow.get_frame_rect();
-            this.sync(frame.x, false);
-        } else {
-            // We're in an empty workspace so can just remove what's left
-            this.minimapActor.remove_all_children();
-        }
-    },
-
-    layout: function(animate = true) {
+    layout(animate = true) {
         let actors = this.clones;
         function tweenTo(actor, x) {
             let time = 0;
@@ -206,11 +131,11 @@ var Minimap = new Lang.Class({
             }
             actor.destinationX = x;
             Tweener.addTween(actor, { x: actor.destinationX
-                                        , y: 0
-                                        , scale_x: 1
-                                        , scale_y: 1
-                                        , time: time
-                                        , transition: "easeInOutQuad"});
+                                      , y: 0
+                                      , scale_x: 1
+                                      , scale_y: 1
+                                      , time: time
+                                      , transition: "easeInOutQuad"});
         }
 
         function propagate_forward(i, leftEdge, gap) {
@@ -222,270 +147,84 @@ var Minimap = new Lang.Class({
 
             tweenTo(actor, x);
 
-            propagate_forward(i+1, x + w + gap, gap);
+            propagate_forward(i+1, Math.round(x + w + gap), gap);
         }
 
-        propagate_forward(0, 0, 5*Tiling.window_gap);
-    },
+        propagate_forward(0, 0, Tiling.window_gap);
+        this.clip.width = Math.min(this.container.width,
+                                    this.space.width - this.clip.x*2);
+        this.actor.width = this.clip.width + this.clip.x*2;
+        this.clip.set_clip(0, 0, this.clip.width, this.clip.height);
+        this.label.set_style(`max-width: ${this.clip.width}px;`);
+    }
 
-    reorder: function(index, targetIndex, targetX) {
+    restack() {
+        this.container.remove_all_children();
+        let clones = this.clones;
+
+        for (let i=0; i < clones.length; i++) {
+            this.container.add_actor(clones[i]);
+        }
+    }
+
+    reorder(index, targetIndex) {
         // targetX is the destination of the moving window in viewport
         // coordinates
 
         let movingClone = this.clones[index];
+        let next = this.clones[targetIndex];
+
 
         // Make sure the moving window is on top
-        this.minimapActor.set_child_above_sibling(movingClone, this.minimapActor.last_child);
+        this.container.set_child_above_sibling(
+            movingClone, this.container.last_child);
 
         let temp = this.clones[index];
         this.clones[index] = this.clones[targetIndex];
         this.clones[targetIndex] = temp;
 
-        this.layout();
-
-        // this.layout sets destinationX
-        this.minimapActor.destinationX = -(movingClone.destinationX - targetX);
-        Tweener.addTween(this.minimapActor
-                         , { x: this.minimapActor.destinationX 
-                             , time: 0.25, transition: 'easeInOutQuad'
-                           });
-
-    },
-
-    sync: function(selectedWindowX, animate=true) {
-        let time = 0;
-        if (animate)
-            time = 0.25
-        let selectedIndex = this.space.selectedIndex();
-        let clone = this.clones[selectedIndex];
-        this.minimapActor.destinationX = -(clone.destinationX - selectedWindowX);
-        Tweener.addTween(this.minimapActor
-                         , { x: this.minimapActor.destinationX
-                             , time: time, transition: 'easeInOutQuad' });
-    },
-})
-
-
-var MultiMap = new Lang.Class({
-    Name: 'MultiMap',
-
-    _init: function(space) {
-        this.actor = new St.Widget({ name: "multimap-viewport" });
-        this.container = new St.BoxLayout({ name: "multimap-container" });
-        this.actor.add_actor(this.container);
-        this.container.set_vertical(true)
-        this.container.remove_all_children()
-        this.minimaps = [];
-
-        this.addSpace(space, 0);
-        this.selectedIndex = 0;
-        this.rowHeight = this.container.first_child.height;
-
-        this.actor.height = this.rowHeight;
-        this.actor.width = this.container.first_child.width;
-
-        let minimap = this.setSelected(this.selectedIndex, false);
-
-        this.selectionChrome = new St.Widget({ style_class: 'window-clone-border'});
-        let label = new St.Label({ style_class: "window-caption"});
-        this.selectionChrome.add_child(label);
-        label.y = Math.round(this.rowHeight / 2 - 30);
-       // label.x = 4 + 2;
-
-        label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
-        this.selectionChrome.label = label;
-        this.actor.add_child(this.selectionChrome);
-
-
-        // let chrome = new St.Widget();
-        // this.actor.add_child(chrome);
-        // chrome.set_size(this.actor.width + 2*4, this.actor.height + 2*4);
-        // chrome.set_position(-4, -4);
-        // chrome.set_style('border: 4px #454f52; border-radius: 8px;');
-    },
-
-    addSpace: function(space, i) {
-        let wrapper = new St.Widget({ name: "minimap-wrapper-"+i });
-        let minimap = new Minimap(space);
-
-        // Create the background, see overview.js
-        let background = new Meta.BackgroundGroup();
-        let bgManager = new Background.BackgroundManager({ container: background,
-                                                           monitorIndex: 0,
-                                                           vignette: false });
-
-
-        let chrome = new St.Widget();
-        let padding = new St.Widget({style_class: 'modal-dialog'});
-
-        wrapper.add_child(padding);
-        wrapper.add_child(background);
-        wrapper.add_child(chrome);
-
-        minimap.actor.reparent(wrapper);
-        this.container.add_child(wrapper);
-        minimap.actor.visible = true;
-        minimap.refresh();
-        minimap.fold(undefined, false);
-        wrapper.width =
-            Math.ceil(minimap.actor.width * minimap.actor.scale_x) + 20;
-        wrapper.height =
-            Math.ceil(minimap.actor.height * minimap.actor.scale_y) + 38;
-
-        let workspaceLabel = new St.Label({ style_class: "window-caption" });
-        workspaceLabel.hide();
-        workspaceLabel.text = Meta.prefs_get_workspace_name(space.workspace.index());
-        if (i == this.selectedIndex) {
-            workspaceLabel.opacity = 0;
-        }
-        wrapper.add_child(workspaceLabel)
-        wrapper.workspaceLabel = workspaceLabel;
-
-        let chromeBorder = 2;
-        chrome.set_size(wrapper.width + 2*chromeBorder, wrapper.height + chromeBorder);
-        chrome.set_position(-chromeBorder, -chromeBorder);
-        chrome.set_style('border: 2px #454f52; border-radius: 6px;');
-        let backgroundScaleX = wrapper.width/background.width;
-        let backgroundScaleY = wrapper.height/background.height;
-        padding.set_size(wrapper.width + 2*(500*0.15), wrapper.height + 4);
-        padding.set_position(-(500*0.15), -chromeBorder);
-        background.set_scale(backgroundScaleX, backgroundScaleY);
-        minimap.actor.set_position(10, 8);
-        this.minimaps.push(minimap);
-    },
-
-    setSelected: function(i, animate = true) {
-        if (i >= this.container.get_children().length ||
-            i < 0) {
-            return;
-        }
-        if (i !== this.selectedIndex) {
-            this.minimaps[this.selectedIndex].fold(undefined, animate);
-            Tweener.addTween(this.container.get_children()[this.selectedIndex].workspaceLabel,
-                             { opacity: 255, time: 0.25, transition: 'linear' });
-        }
-
-        this.selectedIndex = i;
-        let time = 0;
-        if (animate)
-            time = 0.25;
-        Tweener.addTween(this.container, { y: -i*this.rowHeight, time: time, transition: 'easeInOutQuad' });
-        this.minimaps[this.selectedIndex].unfold(animate);
-        Tweener.addTween(this.container.get_children()[this.selectedIndex].workspaceLabel,
-                         { opacity: 0, time: 0.50, transition: 'linear' });
-
-        return this.minimaps[this.selectedIndex];
-    },
-
-    getSelected: function() {
-        return this.minimaps[this.selectedIndex];
-    },
-
-    onlyShowSelected: function() {
-        this.container.get_children().forEach((wrapper, i) => {
-            if (i !== this.selectedIndex) {
-                wrapper.hide();
-            }
-        });
-        this.container.y = 0;
-    },
-
-    showAll: function() {
-        this.container.get_children().forEach((wrapper, i) => {
-            wrapper.show();
-            let workspaceLabel = wrapper.workspaceLabel;
-            workspaceLabel.x = Math.round((wrapper.width - workspaceLabel.width) / 2);
-            workspaceLabel.y = Math.round((wrapper.height - 38 - workspaceLabel.height) / 2)
-                + this.minimaps[i].actor.y;
-
-        });
-        this.setSelected(this.selectedIndex, false);
-    },
-
-    highlight: function(index) {
-        // Note that both the minimapActor and the clone could be moving at this
-        // point.
-        //
-        // For some reason Clutter.Actor.apply_relative_transform_to_point
-        // fail to work when changing workspace.. (ie. when going from only one
-        // minimap visible to all visible)
-
-        /**
-         * Transformation a point in `actor`-relative coordinates to `ancestor`
-         * relative coordinates. (NB: ignores rotations for now)
-         * Uses actor's `destinationX/Y` if set.
-         */
-        function transform(actor, ancestor, x, y) {
-            if (actor === ancestor || !actor)
-                return [x, y];
-
-            let actorX = actor.x;
-            if (actor.destinationX !== undefined)
-                actorX = actor.destinationX;
-
-            let actorY = actor.y;
-            if (actor.destinationY !== undefined)
-                actorX = actor.destinationY;
-
-            return transform(actor.get_parent(), ancestor,
-                             x*actor.scale_x + actorX,
-                             y*actor.scale_y + actorY);
-        }
-
-        let minimap = this.getSelected();
-        let clone = minimap.clones[index];
-        let label = this.selectionChrome.label;
-
-        let size, x, y, newWidth;
-        if (clone) {
-            // Calculate destinationX of selected clone in viewport coordinates and
-            // tween the chrome there
-            [x, y] = transform(minimap.minimapActor, this.actor, clone.destinationX, 0);
-            x = Math.round(x);
-            y = 4;
-            size = clone.get_transformed_size();
-
-            // When width have been set on the label we can't get the
-            // required width out anymore. Easiest workaround is making
-            // a new label. This enables animating the width.
-            let newLabel = new St.Label({
-                text: clone.first_child.meta_window.title,
-                style_class: "window-caption"});
-
-            newLabel.set_position(label.x, label.y);
-
-            this.selectionChrome.add_child(newLabel);
-            this.selectionChrome.label = newLabel;
-
-            newWidth = newLabel.width;
-            newLabel.width = label.width;
-            label.destroy();
-            label = newLabel;
-        } else {
-            // We're in an empty workspace
-            size = this.actor.get_size();
-            // Apply correction due to overlapping borders
-            size[1] -= 4;
-            x = 0;
-            y = -4;
-            newWidth = 0;
-            label.hide();
-        }
-
-        Tweener.addTween(label, {x: Math.round((size[0] + 8 - newWidth)/2),
-                                 y: Math.round(size[1] + 4),
-                                 width: newWidth,
-                                 time: 0.25,
-                                 transition: 'easeInOutQuad'
-                                });
-
-        Tweener.addTween(this.selectionChrome,
-                         {x: x - 4,
-                          y: y,
-                          width: Math.round(size[0] + 8),
-                          height: Math.round(size[1] + 8),
-                          time: 0.25,
-                          transition: 'easeInOutQuad'
-                         })
+        this.layout(false);
+        this.select(targetIndex);
     }
-})
+
+    select(index) {
+        let clip = this.clip;
+        let container = this.container;
+        let highlight = this.highlight;
+        let label = this.label;
+        let selected = this.clones[index];
+        if (!selected)
+            return;
+
+        label.text = selected.meta_window.title;
+
+        if (selected.x + selected.width + container.x > clip.width)
+            container.x -= selected.width + 500;
+        if (selected.x + container.x < 0)
+            container.x += selected.width + 500;
+
+        if (container.x + container.width < clip.width)
+            container.x = clip.width - container.width;
+
+        if (container.x > 0)
+            container.x = 0;
+
+        let gap = Tiling.window_gap;
+        highlight.x = clip.x + container.x + Math.round(selected.destinationX)
+            - Math.round(gap/2);
+        highlight.set_size(selected.width + gap, clip.height + 20);
+
+        let x = Math.round(highlight.x)
+            + Math.round((highlight.width - label.width)/2);
+        if (x + label.width > clip.x + clip.width)
+            x = clip.x + clip.width - label.width + 5;
+        if (x < 0)
+            x = clip.x - 5;
+
+        label.set_position(
+            x,
+            clip.y + Math.round(clip.height + 20));
+
+        this.actor.height = this.label.y + this.label.height + 12;
+    }
+}
