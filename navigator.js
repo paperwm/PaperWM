@@ -362,7 +362,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             this.space.setMonitor(this.monitor, true);
         }
 
-        if (this.space.delayed)
+        if (this.space.delayed && !force)
             this.space.emit('move-done');
 
         for (let monitor of Main.layoutManager.monitors) {
@@ -380,7 +380,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         if (selected && !Scratch.isScratchActive()) {
             Main.activateWindow(selected);
             debug('#preview', 'Finish', selected.title, this._selectedIndex);
-            Tiling.ensureViewport(selected, this.space, force);
         } else {
             this.space.workspace.activate(global.get_current_time());
         }
@@ -413,6 +412,9 @@ function switchWorkspace(to, from, callback) {
     let xDest = 0, yDest = global.screen_height;
 
     let toSpace = Tiling.spaces.spaceOf(to);
+    let selected = toSpace.selectedWindow;
+    if (selected)
+        Tiling.ensureViewport(selected, this.space, true);
 
     if (from) {
         Tiling.spaces.spaceOf(from).forEach(w => {
