@@ -941,6 +941,7 @@ function ensureViewport(meta_window, space, force) {
 
     let x = frame.x;
     let y = panelBox.height + margin_tb;
+    let gap = window_gap;
     let required_width = space.reduce((length, meta_window) => {
         let frame = meta_window.get_frame_rect();
         return length + frame.width + window_gap;
@@ -952,16 +953,9 @@ function ensureViewport(meta_window, space, force) {
     } else if (required_width <= space.width) {
         let leftovers = space.width - required_width;
         let gaps = space.length + 1;
-        let gap = Math.floor(leftovers/gaps);
-        move_to(space, space[0],
-                {x: gap, y, gap,
-                 onComplete: () => {
-                     space.moving = false;
-                     space.emit('move-done');
-                     if (!Navigator.navigating)
-                         Meta.enable_unredirect_for_screen(global.screen);
-                 }});
-        return meta_window.get_frame_rect().x;
+        gap = Math.floor(leftovers/gaps);
+        x = gap;
+        meta_window = space[0];
     } else if (index == 0) {
         // Always align the first window to the display's left edge
         x = 0;
@@ -987,33 +981,34 @@ function ensureViewport(meta_window, space, force) {
         x = minimumMargin;
     }
 
+    if (!force && frame.x === x && frame.y === y) {
+        space.emit('move-done');
+    } else {
+        space.moving = space.selectedWindow;
+        move_to(space, meta_window,
+                { x, y,
+                  gap,
+                  onComplete: () => {
+                      space.moving = false;
+                      space.emit('move-done');
+                      if (!Navigator.navigating)
+                          Meta.enable_unredirect_for_screen(global.screen);
+                  },
+                });
+    }
+
+    let selectedFrame = space.selectedWindow.get_frame_rect();
     Navigator.navigating && space.selection.show();
     Tweener.addTween(space.selection,
-                     {x: x - 5,
-                      y: y - 5,
-                      width: frame.width + 10,
-                      height: frame.height + 10,
+                     {x: selectedFrame.x - 5,
+                      y: selectedFrame.y - 5,
+                      width: selectedFrame.width + 10,
+                      height: selectedFrame.height + 10,
                       time: 0.25,
                       transition: 'easeInOutQuad'});
 
-
-    if (!force && frame.x === x && frame.y === y) {
-        space.emit('move-done');
-        return x;
-    }
-
-    space.moving = meta_window;
-    move_to(space, meta_window,
-            { x, y,
-              onComplete: () => {
-                  space.moving = false;
-                  space.emit('move-done');
-                  if (!Navigator.navigating)
-                      Meta.enable_unredirect_for_screen(global.screen);
-              },
-            });
     // Return x so we can position the minimap
-    return x;
+    return selectedFrame.x;
 }
 
 
