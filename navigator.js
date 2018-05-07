@@ -237,7 +237,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         });
 
         this.space = newSpace;
-        this._selectedIndex = this.space.selectedIndex();
+        this._select(this.space.selectedIndex());
     },
 
     _doAction: function(mutterActionId) {
