@@ -149,7 +149,7 @@ class Space extends Array {
             w.clone.hide();
             actor && actor.show();
         });
-        this.selection.hide();
+        // this.selection.hide();
     }
 
     setMonitor(monitor, animate) {
@@ -1176,6 +1176,9 @@ function sizeHandler(metaWindow) {
     let monitor = space.monitor;
     move_to(space, metaWindow, {x: frame.x - monitor.x, y: frame.y - monitor.y,
                                 onComplete: () => space.emit('move-done')});
+    Tweener.removeTweens(space.selection);
+    space.selection.width = frame.width + window_gap;
+    space.selection.x = frame.x - Math.round(window_gap/2);
 }
 
 // `MetaWindow::focus` handling
