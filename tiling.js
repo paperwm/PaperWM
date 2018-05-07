@@ -121,7 +121,7 @@ class Space extends Array {
 
         actor.set_pivot_point(0.5, 0);
 
-        background.set_position(-8, -4);
+        background.set_position(-8 - Math.round(window_gap/2), -4);
         background.set_style(
             `background: ${colors[color]};
              box-shadow: 0px -10px 4px 2px black;
@@ -176,10 +176,10 @@ class Space extends Array {
                       monitor.width,
                       monitor.height);
 
-        background.set_size(monitor.width + 8*2, monitor.height + 4);
+        background.set_size(monitor.width + 8*2 + window_gap, monitor.height + 4);
 
         cloneContainer.set_size(monitor.width, monitor.height);
-        cloneContainer.set_clip(0, 0, monitor.width, monitor.height);
+        cloneContainer.set_clip(-Math.round(window_gap/2), 0, monitor.width + window_gap, monitor.height);
     }
 
     /**
