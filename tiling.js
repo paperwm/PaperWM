@@ -98,7 +98,7 @@ class Space extends Array {
         this.label = label;
         label.set_style('font-weight: bold; height: 1.86em;');
 
-        let selection = new St.Widget({style_class: 'window-clone-border'});
+        let selection = new St.Widget({style_class: 'tile-preview'});
         this.selection = selection;
         selection.hide();
 
@@ -936,8 +936,9 @@ function ensureViewport(meta_window, space, force) {
     frame.x -= monitor.x;
     frame.y -= monitor.y;
 
-    space.selection.set_position(frame.x - 5, frame.y - 5);
-    space.selection.set_size(frame.width + 10, frame.height + 10);
+    space.selection.set_position(frame.x - Math.round(window_gap/2),
+                                 panelBox.height);
+    space.selection.set_size(frame.width + window_gap, space.height - panelBox.height);
 
     let x = frame.x;
     let y = panelBox.height + margin_tb;
@@ -1000,10 +1001,10 @@ function ensureViewport(meta_window, space, force) {
     let selectedFrame = space.selectedWindow.get_frame_rect();
     Navigator.navigating && space.selection.show();
     Tweener.addTween(space.selection,
-                     {x: selectedFrame.x - 5,
-                      y: selectedFrame.y - 5,
-                      width: selectedFrame.width + 10,
-                      height: selectedFrame.height + 10,
+                     {x: selectedFrame.x - Math.round(window_gap/2),
+                      y: panelBox.height,
+                      width: selectedFrame.width + window_gap,
+                      height: space.height - panelBox.height,
                       time: 0.25,
                       transition: 'easeInOutQuad'});
 
