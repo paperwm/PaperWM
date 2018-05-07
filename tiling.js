@@ -98,6 +98,10 @@ class Space extends Array {
         this.label = label;
         label.set_style('font-weight: bold; height: 1.86em;');
 
+        let selection = new St.Widget({style_class: 'window-clone-border'});
+        this.selection = selection;
+        selection.hide();
+
         clip.space = this;
         cloneContainer.space = this;
 
@@ -106,6 +110,7 @@ class Space extends Array {
         actor.add_actor(background);
         actor.add_actor(label);
         actor.add_actor(cloneContainer);
+        cloneContainer.add_actor(selection);
 
         // Hardcoded to primary for now
         let monitor = Main.layoutManager.primaryMonitor;
@@ -144,6 +149,7 @@ class Space extends Array {
             w.clone.hide();
             actor && actor.show();
         });
+        this.selection.hide();
     }
 
     setMonitor(monitor, animate) {
@@ -930,6 +936,9 @@ function ensureViewport(meta_window, space, force) {
     frame.x -= monitor.x;
     frame.y -= monitor.y;
 
+    space.selection.set_position(frame.x - 5, frame.y - 5);
+    space.selection.set_size(frame.width + 10, frame.height + 10);
+
     let x = frame.x;
     let y = panelBox.height + margin_tb;
     let required_width = space.reduce((length, meta_window) => {
@@ -977,6 +986,17 @@ function ensureViewport(meta_window, space, force) {
         // Same for the start (though the case isn't as common)
         x = minimumMargin;
     }
+
+    Navigator.navigating && space.selection.show();
+    Tweener.addTween(space.selection,
+                     {x: x - 5,
+                      y: y - 5,
+                      width: frame.width + 10,
+                      height: frame.height + 10,
+                      time: 0.25,
+                      transition: 'easeInOutQuad'});
+
+
     if (!force && frame.x === x && frame.y === y) {
         space.emit('move-done');
         return x;
