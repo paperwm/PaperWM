@@ -133,11 +133,11 @@ var StackOverlay = new Lang.Class({
         overlay.hide();
 
         this.pressId = overlay.connect('button-press-event', () => {
+            Main.activateWindow(this.target);
             return true;
         });
         this.releaseId = overlay.connect('button-release-event', () => {
             // this.fadeOut();
-            Main.activateWindow(this.target);
             return true;
         });
 
