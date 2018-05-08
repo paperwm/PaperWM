@@ -355,6 +355,7 @@ class Spaces extends Map {
             .forEach(registerWindow);
 
         let spaceContainer = new Clutter.Actor({name: 'spaceContainer'});
+        spaceContainer.hide();
         this.spaceContainer = spaceContainer;
 
         backgroundGroup.add_actor(spaceContainer);
@@ -421,6 +422,8 @@ class Spaces extends Map {
         let active = mru[0];
         active.setMonitor(primary);
         this.monitors.set(primary, active);
+
+        this.spaceContainer.show();
     }
 
     destroy() {
