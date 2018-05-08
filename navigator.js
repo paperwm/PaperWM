@@ -338,10 +338,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     destroy: function() {
         debug('#preview', 'destroy');
 
-        Tweener.addTween(this.multimap.actor,
-                         {opacity: 0,
-                          time: 0.25,
-                          onComplete: () => this.multimap.actor.destroy});
+        this.minimap.actor.destroy();
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
