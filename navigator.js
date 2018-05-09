@@ -405,6 +405,7 @@ function preview_navigate(display, screen, meta_window, binding) {
 
 function switchWorkspace(to, from, callback) {
     TopBar.updateWorkspaceIndicator(to.index());
+    TopBar.updateIndicatorPosition(to);
 
     let xDest = 0, yDest = global.screen_height;
 

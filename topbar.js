@@ -93,17 +93,20 @@ function hide() {
 function updateWorkspaceIndicator (workspaceIndex) {
     let name = Meta.prefs_get_workspace_name(workspaceIndex);
     setWorkspaceName(name);
+};
 
-    let workspace = screen.get_active_workspace_index(workspaceIndex);
+function updateIndicatorPosition(workspace) {
     if (!Tiling.spaces)
         return;
     let space = Tiling.spaces.spaceOf(workspace);
     if (!space)
         return;
-    space.label.text = name;
+    let position = Main.panel.statusArea.activities._label.get_position();
+    if (position[0] === 0)
+        return;
     space.label.set_position(
-        ...Main.panel.statusArea.activities._label.get_position());
-};
+        ...position);
+}
 
 function setWorkspaceName (name) {
     let label = Main.panel.statusArea.activities.actor.first_child;
