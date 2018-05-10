@@ -784,6 +784,8 @@ function remove_handler(workspace, meta_window) {
     space.splice(removed_i, 1)
 
     space.cloneContainer.remove_actor(meta_window.clone);
+    space.selection.width = 0;
+    space.visible = [];
 
     if (space.selectedWindow === meta_window) {
         // Window closed or moved when other workspace is active so no new focus
