@@ -167,31 +167,6 @@ function init() {
     initUserConfig();
 }
 
-
-let originalBindings = new Map();
-function killKeybinding (key, settings) {
-    settings = settings
-        || new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
-    if (!originalBindings.get(settings))
-        originalBindings.set(settings, {});
-    let store = originalBindings.get(settings);
-    store[key] = settings.get_user_value(key);
-    settings.set_strv(key, []);
-}
-
-function restoreKeybindings() {
-    for (let [settings, store] of originalBindings) {
-        for (let key in store) {
-            // Reset the key to its default value
-            settings.reset(key);
-            let userValue = store[key];
-            if (userValue) {
-                settings.set_strv(key, userValue.unpack());
-            }
-        }
-    }
-}
-
 function setKeybinding(name, func) {
     Main.wm.setCustomKeybindingHandler(name, Shell.ActionMode.NORMAL, func);
 }
@@ -206,13 +181,13 @@ function enable() {
     settings.set_strv("maximize-horizontally", ['<super>f'])
     settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
 
-    setKeybinding('switch-applications',
+    setKeybinding('switch-applications', // <Super>Tab
                   utils.dynamic_function_ref('liveAltTab',
                                              LiveAltTab));
     setKeybinding('switch-applications-backward',
                   utils.dynamic_function_ref('liveAltTab',
                                              LiveAltTab));
-    setKeybinding('switch-group',
+    setKeybinding('switch-group', // <Super>Above_tab
                           utils.dynamic_function_ref("preview_navigate",
                                                      Navigator));
     setKeybinding('switch-group-backward',
@@ -222,16 +197,16 @@ function enable() {
     setKeybinding('focus-active-notification', // `<Super>N`
                   utils.as_key_handler('newWindow', App));
 
+    setKeybinding('restore-shortcuts', // `<Super>Escape`
+                  utils.dynamic_function_ref("toggleScratch",
+                                             Scratch));
+
     // Only enable modules after disable have been run
     if (enabled) {
         log('enable called without calling disable');
         return;
     }
     log(`enabled ${SESSIONID}`);
-
-    // Switched to '<super>escape' in 3.28
-    killKeybinding('restore-shortcuts',
-                   new Gio.Settings({ schema_id: "org.gnome.mutter.wayland.keybindings"}));
 
     modules.forEach(m => m.enable && m.enable());
 
