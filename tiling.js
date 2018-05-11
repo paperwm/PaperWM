@@ -893,8 +893,8 @@ function insertWindow(metaWindow, {existing}) {
                               position.x,
                               position.y);
         metaWindow.clone.set_position(
-            position.x - x_offset,
-            position.y - y_offset);
+            position.x - monitor.x - x_offset,
+            position.y - monitor.y - y_offset);
 
         clone.set_scale(0, 0);
         Tweener.addTween(clone, {
