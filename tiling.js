@@ -622,10 +622,11 @@ function enable() {
 
     color = 3;
 
-    global.screen[signals].push(
-        global.screen.connect(
-            'workspace-switched',
-            (screen, fromIndex, toIndex) => {
+    global.window_manager[signals] = [
+        global.window_manager.connect(
+            'switch-workspace',
+            (wm, fromIndex, toIndex) => {
+                log('workpace-switched');
                 let to = screen.get_workspace_by_index(toIndex);
                 let from = screen.get_workspace_by_index(fromIndex);
                 let toSpace = spaces.spaceOf(to);
@@ -661,8 +662,8 @@ function enable() {
                         continue;
                     monitor.clickOverlay.activate();
                 }
-            }));
-
+            })
+    ];
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
     // windows are not accessible yet for instance.
@@ -711,8 +712,7 @@ function disable () {
     });
 
     // Disable workspace related signals
-    global.screen[signals].forEach(id => global.screen.disconnect(id));
-    global.screen[signals] = [];
+    global.window_manager[signals].forEach(id => global.window_manager.disconnect(id));
 }
 
 /**
