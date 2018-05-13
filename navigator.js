@@ -252,6 +252,12 @@ var PreviewedWindowNavigator = new Lang.Class({
         case Meta.KeyBindingAction.SWITCH_GROUP_BACKWARD:
             mutterActionId = paperActions.idOf('previous-workspace-backward');
             break;
+        case Meta.KeyBindingAction.TOGGLE_TILED_RIGHT:
+            mutterActionId = paperActions.idOf('switch-next');
+            break;
+        case Meta.KeyBindingAction.TOGGLE_TILED_LEFT:
+            mutterActionId = paperActions.idOf('switch-previous');
+            break;
         }
 
         if (mutterActionId === paperActions.idOf("switch-next")) {

@@ -208,6 +208,13 @@ function enable() {
                   utils.dynamic_function_ref("toggleScratch",
                                              Scratch));
 
+    setKeybinding('toggle-tiled-right', // <Super>Right
+                  utils.dynamic_function_ref('preview_navigate', Navigator));
+
+    setKeybinding('toggle-tiled-left', // <Super>Left
+                  utils.dynamic_function_ref('preview_navigate', Navigator));
+
+
     // Only enable modules after disable have been run
     if (enabled) {
         log('enable called without calling disable');
