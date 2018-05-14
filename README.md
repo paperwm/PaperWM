@@ -46,6 +46,7 @@ A minimap will be shown when <kbd>Super</kbd> is continually being pressed, as c
 | <kbd>Super</kbd><kbd>F</kbd>                                                                   | Maximize the width of a window                              |
 | <kbd>Super</kbd><kbd>Shift</kbd><kbd>F</kbd>                                                   | Toggle fullscreen                                           |
 | <kbd>Super</kbd><kbd>N</kbd>                                                                   | Create a new window from the active application             |
+| <kbd>Super</kbd><kbd>C</kbd> or <kbd>Super</kbd><kbd>Backspace</kbd>                           | Close the active window                                     |
 
 
 ### The workspace stack & monitors ###
