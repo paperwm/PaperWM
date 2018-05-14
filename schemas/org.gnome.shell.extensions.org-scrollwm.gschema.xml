@@ -99,5 +99,10 @@
         Develop: set various global js variables. Eg. `metaWindow` to the focused window
       </summary>
     </key>
+
+    <key type="as" name="close-window">
+      <default><![CDATA[['<Super>c', '<Super>Backspace']]]></default>
+      <summary>Close the current window</summary>
+    </key>
   </schema>
 </schemalist>

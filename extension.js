@@ -163,6 +163,12 @@ function init() {
                                          App),
                           Meta.KeyBindingFlags.PER_WINDOW);
 
+    paperActions.register('close-window',
+                          as_key_handler(
+                              (metaWindow) =>
+                                  metaWindow.delete(global.get_current_time())),
+                          Meta.KeyBindingFlags.PER_WINDOW);
+
 
     initUserConfig();
 }
@@ -177,7 +183,6 @@ let windowCreatedSignal;
 function enable() {
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
-    settings.set_strv("close", ['<super>c'])
     settings.set_strv("maximize-horizontally", ['<super>f'])
     settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
 
