@@ -105,11 +105,7 @@ class Space extends Array {
 
         background.set_position(-8 - Math.round(prefs.window_gap/2), -4);
         let color = prefs.workspace_colors[workspace.index() % prefs.workspace_colors.length];
-        background.set_style(
-            `background: ${color};
-             box-shadow: 0px -10px 4px 2px black;
-             box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);
-             border-radius: 4px 4px 0 0;`);
+        this.setColor(color);
 
         this.selectedWindow = null;
         this.moving = false;
@@ -132,6 +128,14 @@ class Space extends Array {
             actor && actor.show();
         });
         // this.selection.hide();
+    }
+
+    setColor(color) {
+        this.background.set_style(
+            `background: ${color};
+             box-shadow: 0px -10px 4px 2px black;
+             box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);
+             border-radius: 4px 4px 0 0;`);
     }
 
     setMonitor(monitor, animate) {
