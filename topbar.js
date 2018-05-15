@@ -104,7 +104,11 @@ class ColorEntry {
         let index = global.screen.get_active_workspace_index();
         var settings = Extension.imports.convenience.getSettings();
         let colors = prefs.workspace_colors;
-        for (let i=0; i < index - colors.length; i++) {
+
+        if (index >= colors.length) {
+            for (let i=colors.length; i < index; i++) {
+                colors[i] = '';
+            }
         }
 
         let color = this.entry.actor.text;
