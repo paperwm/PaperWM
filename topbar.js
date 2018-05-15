@@ -88,9 +88,8 @@ class ColorEntry {
         }
 
         this.entry = new PopupMenuEntry('', 'Set color');
-        this.entry.actor.connect(
-            'notify::text',
-            () => {
+        this.entry.actor.clutter_text.connect(
+            'text-changed', () => {
                 let color = this.entry.actor.text;
                 this.entry.actor.set_style(`color: ${color}; `);
             });
