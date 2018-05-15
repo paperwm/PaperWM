@@ -136,6 +136,15 @@ class WorkspaceMenu extends PanelMenu.Button {
             let name = this.entry.text;
             let index = global.screen.get_active_workspace_index();
             let names = settings.get_strv('workspace-names');
+
+            if (index >= names.length) {
+                // workspace-names can't contain undefined names
+                // Set the missing names to the default name.
+                for(let i = names.length; i < index; i++) {
+                    names[i] = Meta.prefs_get_workspace_name(i);
+                }
+            }
+
             names[index] = name;
             settings.set_strv('workspace-names', names);
         }
