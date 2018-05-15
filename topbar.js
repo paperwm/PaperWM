@@ -43,6 +43,11 @@ class PopupMenuEntry {
         this.button = new St.Button({label,
                                     style_class: 'modal-dialog-button button'});
         this.actor.set_secondary_icon(this.button);
+
+        this.entry.clutter_text.set_activatable(true);
+        this.entry.clutter_text.connect('activate', () => {
+            this.button.emit('clicked', null);
+        });
         // this.actor.add_child(this.button);
     }
 }
