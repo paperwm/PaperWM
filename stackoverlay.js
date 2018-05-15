@@ -10,6 +10,8 @@ var utils = Extension.imports.utils;
 var debug = utils.debug;
 var Minimap = Extension.imports.minimap;
 
+var prefs = Extension.imports.prefs.prefs;
+
 /*
   The stack overlay decorates the top stacked window with its icon and
   captures mouse input such that a mouse click only _activates_ the
@@ -126,8 +128,8 @@ var StackOverlay = new Lang.Class({
 
         let panelBox = Main.layoutManager.panelBox;
 
-        overlay.y = monitor.y + panelBox.height + Tiling.margin_tb;
-        overlay.height = this.monitor.height - panelBox.height - Tiling.margin_tb;
+        overlay.y = monitor.y + panelBox.height + Tiling.vertical_margin;
+        overlay.height = this.monitor.height - panelBox.height - Tiling.vertical_margin;
         overlay.width = Tiling.stack_margin;
 
         overlay.hide();
@@ -153,7 +155,7 @@ var StackOverlay = new Lang.Class({
         }
 
         let iconMarginX = 2;
-        let iconSize = margin_lr;
+        let iconSize = horizontal_margin;
         let icon = createAppIcon(this.target, iconSize);
         this.icon = icon;
 
@@ -188,7 +190,7 @@ var StackOverlay = new Lang.Class({
         let actor = metaWindow.get_compositor_private();
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
 
-        overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + Tiling.margin_tb;
+        overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + Tiling.vertical_margin;
 
         // Note: Atm. this can be called when the windows are moving. Therefore
         //       we must use destinationX and we might occationally get wrong y
@@ -201,14 +203,14 @@ var StackOverlay = new Lang.Class({
 
             let frame = neighbour.get_frame_rect();
             overlay.x = this.monitor.x;
-            overlay.width = Math.max(0, frame.x - Tiling.window_gap);
+            overlay.width = Math.max(0, frame.x - prefs.window_gap);
         } else {
             let neighbour = space[space.indexOf(metaWindow) - 1];
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
 
             let frame = neighbour.get_frame_rect();
-            overlay.x = frame.x + frame.width + Tiling.window_gap;
+            overlay.x = frame.x + frame.width + prefs.window_gap;
             overlay.width = Math.max(0, this.monitor.width - overlay.x);
         }
 

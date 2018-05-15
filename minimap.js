@@ -9,6 +9,8 @@ var Tiling = Extension.imports.tiling;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
 
+var prefs = Extension.imports.prefs.prefs;
+
 var MINIMAP_SCALE = 0.15;
 
 function calcOffset(metaWindow) {
@@ -96,7 +98,7 @@ class Minimap {
         actor.add_actor(label);
         actor.add_actor(clip);
         clip.add_actor(container);
-        clip.set_position(12 + Tiling.window_gap, 15 + 10);
+        clip.set_position(12 + prefs.window_gap, 15 + 10);
         highlight.y = clip.y - 10;
     }
 
@@ -150,7 +152,7 @@ class Minimap {
             propagate_forward(i+1, Math.round(x + w + gap), gap);
         }
 
-        propagate_forward(0, 0, Tiling.window_gap);
+        propagate_forward(0, 0, prefs.window_gap);
         this.clip.width = Math.min(this.container.width,
                                     this.space.width - this.clip.x*2);
         this.actor.width = this.clip.width + this.clip.x*2;
@@ -209,7 +211,7 @@ class Minimap {
         if (container.x > 0)
             container.x = 0;
 
-        let gap = Tiling.window_gap;
+        let gap = prefs.window_gap;
         highlight.x = clip.x + container.x + Math.round(selected.destinationX)
             - Math.round(gap/2);
         highlight.set_size(selected.width + gap, clip.height + 20);

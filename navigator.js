@@ -18,6 +18,8 @@ var Tiling = Extension.imports.tiling;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
 
+var prefs = Extension.imports.prefs.prefs;
+
 var scale = 0.9;
 var navigating = false;
 var workspaceMru = false;
@@ -167,7 +169,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
             let selected = space.selectedWindow;
             if (selected && selected.fullscreen) {
-                selected.clone.y = Main.panel.actor.height + Tiling.margin_tb;
+                selected.clone.y = Main.panel.actor.height + prefs.vertical_margin;
             }
         });
         this.space.actor.scale_y = 1;
@@ -182,7 +184,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             let selected = this.space.selectedWindow;
             if (selected && selected.fullscreen) {
                 Tweener.addTween(selected.clone, {
-                    y: Main.panel.actor.height + Tiling.margin_tb,
+                    y: Main.panel.actor.height + prefs.vertical_margin,
                     time: 0.25
                 });
             }

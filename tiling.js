@@ -25,32 +25,14 @@ var Navigator = Extension.imports.navigator;
 var ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
 var Me = Extension.imports.tiling;
 
-var preferences = Extension.imports.convenience.getSettings();
-// Gap between windows
-var window_gap = preferences.get_int('window-gap');
-// Top/bottom margin
-var margin_tb = preferences.get_int('vertical-margin');
-// left/right margin
-var margin_lr = preferences.get_int('horizontal-margin');
+var prefs = Extension.imports.prefs.prefs;
+
 // How much the stack should protrude from the side
 var stack_margin = 75;
 // Minimum margin
 var minimumMargin = 15;
 
 var panelBox = Main.layoutManager.panelBox;
-
-// From https://developer.gnome.org/hig-book/unstable/design-color.html.en
-var colors = [
-    '#9DB8D2', '#7590AE', '#4B6983', '#314E6C',
-    '#EAE8E3', '#BAB5AB', '#807D74', '#565248',
-    '#C5D2C8', '#83A67F', '#5D7555', '#445632',
-    '#E0B6AF', '#C1665A', '#884631', '#663822',
-    '#ADA7C8', '#887FA3', '#625B81', '#494066',
-    '#EFE0CD', '#E0C39E', '#B39169', '#826647',
-    '#DF421E', '#990000', '#EED680', '#D1940C',
-    '#46A046', '#267726', '#ffffff', '#000000'
-];
-var color;
 
 /**
    Scrolled and tiled per monitor workspace.
@@ -121,13 +103,13 @@ class Space extends Array {
 
         actor.set_pivot_point(0.5, 0);
 
-        background.set_position(-8 - Math.round(window_gap/2), -4);
+        background.set_position(-8 - Math.round(prefs.window_gap/2), -4);
+        let color = prefs.workspace_colors[workspace.index() % prefs.workspace_colors.length];
         background.set_style(
-            `background: ${colors[color]};
+            `background: ${color};
              box-shadow: 0px -10px 4px 2px black;
              box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);
              border-radius: 4px 4px 0 0;`);
-        color = (color + 4) % colors.length;
 
         this.selectedWindow = null;
         this.moving = false;
@@ -176,10 +158,10 @@ class Space extends Array {
                       monitor.width,
                       monitor.height);
 
-        background.set_size(monitor.width + 8*2 + window_gap, monitor.height + 4);
+        background.set_size(monitor.width + 8*2 + prefs.window_gap, monitor.height + 4);
 
         cloneContainer.set_size(monitor.width, monitor.height);
-        cloneContainer.set_clip(-Math.round(window_gap/2), 0, monitor.width + window_gap, monitor.height);
+        cloneContainer.set_clip(-Math.round(prefs.window_gap/2), 0, monitor.width + prefs.window_gap, monitor.height);
     }
 
     /**
@@ -620,8 +602,6 @@ function init() {
 function enable() {
     debug('#enable');
 
-    color = 3;
-
     global.window_manager[signals] = [
         global.window_manager.connect(
             'switch-workspace',
@@ -865,11 +845,11 @@ function insertWindow(metaWindow, {existing}) {
 
         let frame = metaWindow.get_frame_rect();
         position = {x: monitor.x + (monitor.width - frame.width)/2,
-                    y: monitor.y + panelBox.height + margin_tb};
+                    y: monitor.y + panelBox.height + prefs.vertical_margin};
     } else {
         let frame = space[index - 1].get_frame_rect();
-        position = {x: monitor.x + frame.x + frame.width + window_gap,
-                    y: monitor.y + panelBox.height + margin_tb};
+        position = {x: monitor.x + frame.x + frame.width + prefs.window_gap,
+                    y: monitor.y + panelBox.height + prefs.vertical_margin};
     }
 
     debug("setting initial position", position)
@@ -935,23 +915,23 @@ function ensureViewport(meta_window, space, force) {
     let frame = meta_window.get_frame_rect();
     let width = Math.min(space.monitor.width - 2*minimumMargin, frame.width);
     meta_window.move_resize_frame(true, frame.x, frame.y, width,
-                                  space.height - panelBox.height - margin_tb);
+                                  space.height - panelBox.height - prefs.vertical_margin);
 
     // Use monitor relative coordinates.
     frame.x -= monitor.x;
     frame.y -= monitor.y;
 
-    space.selection.set_position(frame.x - Math.round(window_gap/2),
+    space.selection.set_position(frame.x - Math.round(prefs.window_gap/2),
                                  panelBox.height);
-    space.selection.set_size(frame.width + window_gap, space.height - panelBox.height);
+    space.selection.set_size(frame.width + prefs.window_gap, space.height - panelBox.height);
 
     let x = frame.x;
-    let y = panelBox.height + margin_tb;
-    let gap = window_gap;
+    let y = panelBox.height + prefs.vertical_margin;
+    let gap = prefs.window_gap;
     let required_width = space.reduce((length, meta_window) => {
         let frame = meta_window.get_frame_rect();
-        return length + frame.width + window_gap;
-    }, -window_gap);
+        return length + frame.width + prefs.window_gap;
+    }, -prefs.window_gap);
     if (!Navigator.workspaceMru && (meta_window.fullscreen ||
         meta_window.get_maximized() === Meta.MaximizeFlags.BOTH)) {
         x = frame.x; y = frame.y;
@@ -968,16 +948,16 @@ function ensureViewport(meta_window, space, force) {
     } else if (index == space.length-1) {
         // Always align the first window to the display's right edge
         x = space.width - frame.width;
-    } else if (frame.width > space.width*0.9 - 2*(margin_lr + window_gap)) {
+    } else if (frame.width > space.width*0.9 - 2*(prefs.horizontal_margin + prefs.window_gap)) {
         // Consider the window to be wide and center it
         x = Math.round((space.width - frame.width)/2);
 
     } else if (frame.x + frame.width > space.width) {
-        // Align to the right margin_lr
-        x = space.width - margin_lr - frame.width;
+        // Align to the right prefs.horizontal_margin
+        x = space.width - prefs.horizontal_margin - frame.width;
     } else if (frame.x < 0) {
-        // Align to the left margin_lr
-        x = margin_lr;
+        // Align to the left prefs.horizontal_margin
+        x = prefs.horizontal_margin;
     } else if (frame.x + frame.width === space.width) {
         // When opening new windows at the end, in the background, we want to
         // show some minimup margin
@@ -1006,9 +986,9 @@ function ensureViewport(meta_window, space, force) {
     let selectedFrame = space.selectedWindow.get_frame_rect();
     Navigator.navigating && space.selection.show();
     Tweener.addTween(space.selection,
-                     {x: selectedFrame.x - Math.round(window_gap/2),
+                     {x: selectedFrame.x - Math.round(prefs.window_gap/2),
                       y: panelBox.height,
-                      width: selectedFrame.width + window_gap,
+                      width: selectedFrame.width + prefs.window_gap,
                       height: space.height - panelBox.height,
                       time: 0.25,
                       transition: 'easeInOutQuad'});
@@ -1094,7 +1074,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
 
     space.monitor.clickOverlay.reset();
 
-    gap = gap || window_gap;
+    gap = gap || prefs.window_gap;
     propagateForward(space, index + 1, x + frame.width + gap, gap);
     propagateBackward(space, index - 1, x - gap, gap);
 }
@@ -1106,7 +1086,7 @@ function propagateForward(space, n, x, gap) {
     }
     let meta_window = space[n];
     let frame = meta_window.get_frame_rect();
-    gap = gap || window_gap;
+    gap = gap || prefs.window_gap;
 
     let visible = true;
     // Check if we should start stacking windows
@@ -1122,7 +1102,7 @@ function propagateForward(space, n, x, gap) {
         // Anchor scaling/animation on the left edge for windows positioned to the right,
 
         move(meta_window, space,
-             { x, y: panelBox.height + margin_tb, visible });
+             { x, y: panelBox.height + prefs.vertical_margin, visible });
         if (!visible && x < space.width) {
             space.monitor.clickOverlay.right.setTarget(meta_window);
         }
@@ -1140,7 +1120,7 @@ function propagateBackward(space, n, x, gap) {
     }
     let meta_window = space[n];
     let frame = meta_window.get_frame_rect();
-    gap = gap || window_gap;
+    gap = gap || prefs.window_gap;
 
     // Check if the window is fully visible
     let visible = true;
@@ -1156,7 +1136,7 @@ function propagateBackward(space, n, x, gap) {
     if (actor) {
         // Anchor on the right edge for windows positioned to the left.
         move(meta_window, space,
-             { x: x - frame.width, y: panelBox.height + margin_tb, visible });
+             { x: x - frame.width, y: panelBox.height + prefs.vertical_margin, visible });
         if (!visible && x > 0) {
             space.monitor.clickOverlay.left.setTarget(meta_window);
         }
@@ -1179,8 +1159,8 @@ function sizeHandler(metaWindow) {
     move_to(space, metaWindow, {x: frame.x - monitor.x, y: frame.y - monitor.y,
                                 onComplete: () => space.emit('move-done')});
     Tweener.removeTweens(space.selection);
-    space.selection.width = frame.width + window_gap;
-    space.selection.x = frame.x - Math.round(window_gap/2);
+    space.selection.width = frame.width + prefs.window_gap;
+    space.selection.x = frame.x - Math.round(prefs.window_gap/2);
 }
 
 // `MetaWindow::focus` handling
@@ -1362,7 +1342,7 @@ function tileVisible(metaWindow) {
     let active = space.filter(isUnStacked);
     let requiredWidth =
         utils.sum(active.map(mw => mw.get_frame_rect().width))
-        + (active.length-1)*window_gap + minimumMargin*2;
+        + (active.length-1)*prefs.window_gap + minimumMargin*2;
     let deficit = requiredWidth - primary.width;
     if (deficit > 0) {
         let perWindowReduction = Math.ceil(deficit/active.length);
