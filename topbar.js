@@ -128,8 +128,7 @@ class WorkspaceMenu extends PanelMenu.Button {
             y_align: Clutter.ActorAlign.CENTER });
 
         this.actor.add_actor(this._label);
-        // this.actor.label_actor = this._label;
-        this.actor.connect("destroy", this.destroy.bind(this));
+        this.actor.connect("destroy", this.destroy.bind(this)); // Needed?
 
         this._workspaceSwitchedSignal = global.screen.connect(
             'workspace-switched', this.workspaceSwitched.bind(this));
@@ -185,7 +184,10 @@ class WorkspaceMenu extends PanelMenu.Button {
         if (!this.namesChangedId) {
             let settings = new Gio.Settings({
                 schema_id: 'org.gnome.desktop.wm.preferences'});
-            this.namesChangedId = settings.connect('changed', this.namesChanged.bind(this));
+            this.namesChangedId = [
+                settings,
+                settings.connect('changed', this.namesChanged.bind(this))
+            ];
         }
 
         let index = global.screen.get_active_workspace_index();
@@ -202,8 +204,11 @@ class WorkspaceMenu extends PanelMenu.Button {
     }
 
     destroy() {
-        utils.debug("#wsm", "destroyed");
+        super.destroy();
         global.screen.disconnect(this._workspaceSwitchedSignal);
+        if (this.namesChangedId) {
+            this.namesChangedId[0].disconnect(this.namesChangedId[1]);
+        }
     }
 };
 
@@ -214,14 +219,14 @@ function init () {
     let label = Main.panel.statusArea.activities.actor.first_child;
     orginalActivitiesText = label.text;
     screenSignals = [];
-
-    menu = new WorkspaceMenu();
-    Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
 }
 
 var panelBoxShowId, panelBoxHideId;
 function enable () {
     Main.panel.statusArea.activities.actor.hide();
+
+    menu = new WorkspaceMenu();
+    Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.actor.show();
 
     // Force transparency
@@ -248,8 +253,8 @@ function enable () {
 }
 
 function disable() {
+    menu.destroy();
     Main.panel.statusArea.activities.actor.show();
-    menu.actor.hide();
     Main.panel.actor.set_style('');
     [Main.panel._rightCorner, Main.panel._leftCorner]
         .forEach(c => c.actor.opacity = 255);
