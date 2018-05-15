@@ -128,8 +128,8 @@ var StackOverlay = new Lang.Class({
 
         let panelBox = Main.layoutManager.panelBox;
 
-        overlay.y = monitor.y + panelBox.height + Tiling.vertical_margin;
-        overlay.height = this.monitor.height - panelBox.height - Tiling.vertical_margin;
+        overlay.y = monitor.y + panelBox.height + prefs.vertical_margin;
+        overlay.height = this.monitor.height - panelBox.height - prefs.vertical_margin;
         overlay.width = Tiling.stack_margin;
 
         overlay.hide();
@@ -190,7 +190,7 @@ var StackOverlay = new Lang.Class({
         let actor = metaWindow.get_compositor_private();
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
 
-        overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + Tiling.vertical_margin;
+        overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + prefs.vertical_margin;
 
         // Note: Atm. this can be called when the windows are moving. Therefore
         //       we must use destinationX and we might occationally get wrong y
