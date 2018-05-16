@@ -231,6 +231,11 @@ function enable () {
     menu = new WorkspaceMenu();
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.actor.show();
+    let id = panelBox.connect('parent-set', (actor) => {
+        log(`id: ${id}`);
+        actor.disconnect(id);
+        updateWorkspaceIndicator(global.screen.get_active_workspace());
+    });
 
     // Force transparency
     Main.panel.actor.set_style('background-color: rgba(0, 0, 0, 0.35);');
@@ -309,11 +314,20 @@ function updateIndicatorPosition(workspace) {
     let space = Tiling.spaces.spaceOf(workspace);
     if (!space)
         return;
-    let position = menu._label.get_position();
-    if (position[0] === 0)
+    if (!menu._label)
         return;
-    space.label.set_position(
-        ...position);
+    space.label.show();
+    let p = menu._label.get_position();
+    let point = new Clutter.Vertex({
+        x: p[0],
+        y: p[1]
+    });
+    if (!menu._label || !menu._label.get_parent())
+        return;
+    let r = menu._label.get_parent().apply_relative_transform_to_point(Main.panel.actor,
+                                                          point);
+
+    space.label.set_position(r.x, r.y);
 }
 
 function setWorkspaceName (name) {

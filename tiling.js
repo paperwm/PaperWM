@@ -79,6 +79,7 @@ class Space extends Array {
         let label = new St.Label();
         this.label = label;
         label.set_style('font-weight: bold; height: 1.86em;');
+        label.hide();
 
         let selection = new St.Widget({style_class: 'tile-preview'});
         this.selection = selection;
@@ -99,7 +100,6 @@ class Space extends Array {
         this.setMonitor(monitor);
 
         label.text = Meta.prefs_get_workspace_name(workspace.index());
-        label.set_position(12, 6);
 
         actor.set_pivot_point(0.5, 0);
 

@@ -146,6 +146,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         let monitor = this.monitor;
         let cloneParent = this.space.clip.get_parent();
         mru.forEach((space, i) => {
+            TopBar.updateIndicatorPosition(space.workspace);
             space.clip.set_position(monitor.x, monitor.y);
 
             let scaleX = monitor.width/space.width;
@@ -402,7 +403,6 @@ function preview_navigate(display, screen, meta_window, binding) {
 
 function switchWorkspace(to, from, callback) {
     TopBar.updateWorkspaceIndicator(to.index());
-    TopBar.updateIndicatorPosition(to);
 
     let xDest = 0, yDest = global.screen_height;
 
