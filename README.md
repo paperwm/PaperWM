@@ -55,9 +55,11 @@ A minimap will be shown when <kbd>Super</kbd> is continually being pressed, as c
 
 Pressing <kbd>Super</kbd><kbd>Above_Tab</kbd> will slide the active workspace down revealing the stack as shown in the above screenshot. You can then flip through the most recently used workspaces with repeated <kbd>Above_Tab</kbd> presses while holding <kbd>Super</kbd> downe. <kbd>Above_Tab</kbd> is the key above <kbd>Tab</kbd> (<kbd>\`</kbd> in a US qwerty layout). Like alt-tab <kbd>Shift</kbd> is added to move in reverse order.
 
-Workspaces contain a single scrollable window tiling, shown on a single monitor. Adding another monitor simply makes it possible to have another workspace visible. The workspace stack is shared among all the monitors, windows being resized vertically as necessary when workspace is displayed on another monitor.
+A workspace has a name and background color. Clicking on the workspace name lets you change them easily:
 
-The top bar (statusbar) is always shown on the active monitor. The name of the workspace is shown instead of the `Activities` text in the top left corner.
+![The workspace menu](https://github.com/paperwm/media/blob/master/menu.png)
+
+There's a single scrollable tiling per workspace. Adding another monitor simply makes it possible to have another workspace visible. The workspace stack is shared among all the monitors, windows being resized vertically as necessary when workspace is displayed on another monitor.
 
 | Keybindings                                          |                                                                         |
 | ------                                               | -------                                                                 |
