@@ -32,7 +32,6 @@ var colors = [
     '#DF421E', '#990000', '#EED680', '#D1940C',
     '#46A046', '#267726', '#ffffff', '#000000'
 ];
-var color;
 
 class PopupMenuEntry {
     constructor (text, label) {
@@ -48,7 +47,6 @@ class PopupMenuEntry {
         this.entry.clutter_text.connect('activate', () => {
             this.button.emit('clicked', null);
         });
-        // this.actor.add_child(this.button);
     }
 }
 
@@ -131,7 +129,6 @@ class WorkspaceMenu extends PanelMenu.Button {
             y_align: Clutter.ActorAlign.CENTER });
 
         this.actor.add_actor(this._label);
-        this.actor.connect("destroy", this.destroy.bind(this)); // Needed?
 
         this._workspaceSwitchedSignal = global.screen.connect(
             'workspace-switched', this.workspaceSwitched.bind(this));
