@@ -1189,7 +1189,8 @@ function focus_handler(meta_window, user_data) {
     }
 
     let space = spaces.spaceOfWindow(meta_window);
-    ensureViewport(meta_window, space) !== undefined && fixStack(space, space.indexOf(meta_window));
+    ensureViewport(meta_window, space);
+    fixStack(space, space.indexOf(meta_window));
 }
 let focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
 
@@ -1241,6 +1242,7 @@ let showWrapper = utils.dynamic_function_ref('showHandler', Me);
   stack, not the mru, when auto choosing focus after closing a window.
  */
 function fixStack(space, around) {
+    utils.debug("stack", "fix stack");
     let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
                                           space.workspace);
 
