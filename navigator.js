@@ -367,13 +367,20 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
 
         if (this.space === from && force) {
-            // We can't activate an already active workspace
+            // Animate the selected space into full view - normally this
+            // happens on workspace switch, but activating the same workspace
+            // again doesn't trigger a switch signal
             switchWorkspace(this.space.workspace);
         }
 
         let selected = this.space.selectedWindow;
         if (selected && !Scratch.isScratchActive()) {
-            Main.activateWindow(selected);
+            if (selected !== global.display.focus_window) {
+                Main.activateWindow(selected);
+            } else {
+                // Typically on cancel - just make sure the window is in view
+                Tiling.ensureViewport(selected, this.space); 
+            }
             debug('#preview', 'Finish', selected.title, this._selectedIndex);
         } else {
             this.space.workspace.activate(global.get_current_time());
