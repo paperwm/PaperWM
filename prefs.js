@@ -12,7 +12,7 @@ var prefs = {
 
 function setState(_, key) {
     let value = settings.get_value(key);
-    let name = key.replace('-', '_');
+    let name = key.replace(/-/g, '_');
     switch (value.get_type_string()) {
     case 'i':
         prefs[name] = settings.get_int(key);
