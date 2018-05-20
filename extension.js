@@ -24,8 +24,10 @@ var Shell = imports.gi.Shell;
 var Lang = imports.lang;
 
 let SESSIONID = ""+(new Date().getTime());
-// The extension sometimes go through multiple init -> enable -> disable cycles..
-// Keep track of the count here.
+/**
+ * The extension sometimes go through multiple init -> enable -> disable
+ * cycles. So we need to keep track of whether we're initialized..
+ */
 let initRun;
 let enabled = false;
 
@@ -318,6 +320,10 @@ function errorWrappedModule(module) {
         } catch(e) {
             utils.debug("#rc", `${method} failed`, e.message);
             utils.print_stacktrace(e);
+            errorNotification("PaperWM",
+                `Error occured in user.js@${method}:\n\n${e.message}`,
+                e.stack
+            );
         }
     }
     return {
@@ -338,7 +344,12 @@ function initUserConfig() {
 
     if (!paperSettings.get_boolean("has-installed-config-template")) {
         installConfig();
-        // IMPROVEMENT: notify user
+        const configDir = getConfigDir().get_path();
+        const notification = notify("PaperWM", `Installed user configuration in ${configDir}`);
+        notification.connect('activated', () => {
+            imports.misc.util.spawn(["nautilus", configDir]);
+            notification.destroy();
+        });
     }
 
     if (hasUserConfigFile()) {
@@ -351,7 +362,41 @@ function initUserConfig() {
         } catch(e) {
             utils.debug("#rc", "Loading config failed", e.message);
             utils.print_stacktrace(e);
+            errorNotification("PaperWM", `Loading user.js failed:\n\n${e.message}`, e.stack);
             return;
         }
     }
+}
+
+/**
+ * Our own version of imports.ui.main.notify allowing more control over the
+ * notification 
+ */
+function notify(msg, details, params) {
+    const MessageTray = imports.ui.messageTray;
+    let source = new MessageTray.SystemNotificationSource();
+    // note-to-self: the source is automatically destroyed when all its
+    // notifications are removed.
+    Main.messageTray.add(source);
+    let notification = new MessageTray.Notification(source, msg, details, params);
+    notification.setResident(true); // Usually more annoying that the notification disappear than not
+    source.notify(notification);
+    return notification;
+}
+
+function spawnPager(content) {
+    const quoted = GLib.shell_quote(content);
+    imports.misc.util.spawn(["sh", "-c", `echo -En ${quoted} | gedit --new-window -`])
+}
+
+/**
+ * Show an notification opening a the full message in dedicated window upon
+ * activation
+ */
+function errorNotification(title, message, fullMessage) {
+    const notification = notify(title, message);
+    notification.connect('activated', () => {
+        spawnPager([title, message, "", fullMessage].join("\n"));
+        notification.destroy();
+    });
 }
