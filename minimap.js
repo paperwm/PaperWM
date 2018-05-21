@@ -212,19 +212,20 @@ class Minimap {
             container.x = 0;
 
         let gap = prefs.window_gap;
-        highlight.x = clip.x + container.x + Math.round(selected.destinationX)
-            - Math.round(gap/2);
-        highlight.set_size(selected.width + gap, clip.height + 20);
+        highlight.x = Math.round(
+            clip.x + container.x + selected.destinationX - gap/2);
+        highlight.set_size(Math.round(selected.width + gap),
+                           Math.round(clip.height + 20));
 
-        let x = Math.round(highlight.x)
-            + Math.round((highlight.width - label.width)/2);
+        let x = highlight.x
+            + (highlight.width - label.width)/2;
         if (x + label.width > clip.x + clip.width)
             x = clip.x + clip.width - label.width + 5;
         if (x < 0)
             x = clip.x - 5;
 
         label.set_position(
-            x,
+            Math.round(x),
             clip.y + Math.round(clip.height + 20));
 
         this.actor.height = this.label.y + this.label.height + 12;
