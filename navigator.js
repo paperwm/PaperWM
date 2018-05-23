@@ -416,7 +416,7 @@ function switchWorkspace(to, from, callback) {
     let toSpace = Tiling.spaces.spaceOf(to);
     let selected = toSpace.selectedWindow;
     if (selected)
-        Tiling.ensureViewport(selected, this.space, true);
+        Tiling.ensureViewport(selected, toSpace, true);
 
     if (from) {
         Tiling.spaces.spaceOf(from).forEach(w => {
