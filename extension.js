@@ -186,6 +186,10 @@ function enable() {
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
     settings.set_strv("maximize-horizontally", ['<super>f'])
+
+    setKeybinding('maximize', utils.as_key_handler("toggleMaximizeHorizontally",
+                                                   Tiling));
+
     settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
 
     setKeybinding('switch-applications', // <Super>Tab
@@ -241,6 +245,11 @@ function disable() {
                                        Shell.ActionMode.NORMAL |
                                        Shell.ActionMode.OVERVIEW,
                                        Main.messageTray._expandActiveNotification.bind(Main.messageTray));
+
+    setKeybinding('maximize', utils.as_key_handler(metaWindow => {
+        metaWindow.maximize(Meta.MaximizeFlags.BOTH);
+    } ));
+
     if (!enabled)
         return;
     log(`disable ${SESSIONID}`);
