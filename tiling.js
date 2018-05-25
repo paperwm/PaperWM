@@ -83,7 +83,7 @@ class Space extends Array {
 
         let selection = new St.Widget({style_class: 'tile-preview'});
         this.selection = selection;
-        selection.hide();
+        selection.width = 0;
 
         clip.space = this;
         cloneContainer.space = this;
@@ -768,6 +768,7 @@ function remove_handler(workspace, meta_window) {
     space.splice(removed_i, 1)
 
     space.cloneContainer.remove_actor(meta_window.clone);
+    Tweener.removeTweens(space.selection);
     space.selection.width = 0;
     space.visible = [];
 
@@ -988,7 +989,6 @@ function ensureViewport(meta_window, space, force) {
     }
 
     let selectedFrame = space.selectedWindow.get_frame_rect();
-    Navigator.navigating && space.selection.show();
     Tweener.addTween(space.selection,
                      {x: selectedFrame.x - Math.round(prefs.window_gap/2),
                       y: panelBox.height,
