@@ -287,7 +287,6 @@ class Space extends Array {
         this.cloneContainer.destroy();
         this.clip.destroy();
         let workspace = this.workspace;
-        debug('destroy', Meta.prefs_get_workspace_name(workspace.index()));
         workspace.disconnect(this.addSignal);
         workspace.disconnect(this.removeSignal);
         this.disconnect(this._moveDoneId);
