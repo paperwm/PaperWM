@@ -95,6 +95,9 @@ class Space extends Array {
         actor.add_actor(cloneContainer);
         cloneContainer.add_actor(selection);
 
+        container.set_child_below_sibling(clip,
+                                          container.first_child);
+
         // Hardcoded to primary for now
         let monitor = Main.layoutManager.primaryMonitor;
         this.setMonitor(monitor);
