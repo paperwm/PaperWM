@@ -30,6 +30,8 @@ Action names are global. (note that the mutter documentation mostly refers to ac
 
 `Meta.keybindings_set_custom_handler` is used to change a action handler. Despite what the documentation suggests this works for non-builtin actions too.
 
+If the action is a mutter built-in (one of `Meta.KeyBindingAction.*`, setting the custom handler to `null` restores the default handler.
+
 Action handlers fire on key-down.
 
 Mutter itself does not support key-release sensitive bindings, but it's possible to create a Clutter actor in response to a key-down binding, which temporarily take over the keyboard. Clutter can listen for key-up/key-release events.

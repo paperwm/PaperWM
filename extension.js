@@ -246,9 +246,9 @@ function disable() {
                                        Shell.ActionMode.OVERVIEW,
                                        Main.messageTray._expandActiveNotification.bind(Main.messageTray));
 
-    setKeybinding('maximize', utils.as_key_handler(metaWindow => {
-        metaWindow.maximize(Meta.MaximizeFlags.BOTH);
-    } ));
+    Meta.keybindings_set_custom_handler('toggle-tiled-left', null);
+    Meta.keybindings_set_custom_handler('toggle-tiled-right', null);
+    Meta.keybindings_set_custom_handler('maximize', null);
 
     if (!enabled)
         return;
