@@ -249,6 +249,7 @@ function disable() {
     Meta.keybindings_set_custom_handler('toggle-tiled-left', null);
     Meta.keybindings_set_custom_handler('toggle-tiled-right', null);
     Meta.keybindings_set_custom_handler('maximize', null);
+    Meta.keybindings_set_custom_handler('restore-shortcuts', null);
 
     if (!enabled)
         return;
