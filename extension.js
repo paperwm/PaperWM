@@ -187,9 +187,6 @@ function enable() {
 
     settings.set_strv("maximize-horizontally", ['<super>f'])
 
-    setKeybinding('maximize', utils.as_key_handler("toggleMaximizeHorizontally",
-                                                   Tiling));
-
     settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
 
     setKeybinding('switch-applications', // <Super>Tab
@@ -204,6 +201,12 @@ function enable() {
     setKeybinding('switch-group-backward',
                           utils.dynamic_function_ref("preview_navigate",
                                                      Navigator));
+    setKeybinding('maximize', // <Super>Up
+                  utils.dynamic_function_ref("preview_navigate",
+                                             Navigator));
+    setKeybinding('unmaximize', // <Super>Down
+                  utils.dynamic_function_ref("preview_navigate",
+                                             Navigator));
 
     setKeybinding('focus-active-notification', // `<Super>N`
                   utils.as_key_handler('newWindow', App));
@@ -257,6 +260,7 @@ function disable() {
     Meta.keybindings_set_custom_handler('toggle-tiled-left', null);
     Meta.keybindings_set_custom_handler('toggle-tiled-right', null);
     Meta.keybindings_set_custom_handler('maximize', null);
+    Meta.keybindings_set_custom_handler('unmaximize', null);
     Meta.keybindings_set_custom_handler('restore-shortcuts', null);
     Meta.keybindings_set_custom_handler('switch-to-workspace-1', null);
     Meta.keybindings_set_custom_handler('switch-to-workspace-last', null);

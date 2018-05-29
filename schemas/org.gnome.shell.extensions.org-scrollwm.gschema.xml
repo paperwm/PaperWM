@@ -55,11 +55,11 @@
     </key>
 
     <key type="as" name="move-previous-workspace">
-      <default><![CDATA[['<Super><Ctrl>Above_Tab', '<Super><Ctrl>d', '<Super><Shift>d']]]></default>
+      <default><![CDATA[['<Super><Ctrl>Above_Tab', '<Super><Ctrl>Down']]]></default>
       <summary>Move current window to the previously used workspace</summary>
     </key>
     <key type="as" name="move-previous-workspace-backward">
-      <default><![CDATA[['<Super><Shift><Ctrl>Above_Tab', '<Super><Ctrl>u', '<Super><Shift>u']]]></default>
+      <default><![CDATA[['<Super><Shift><Ctrl>Above_Tab', '<Super><Ctrl>Up']]]></default>
       <summary>Move current window to the previously used workspace, backward order</summary>
     </key>
 

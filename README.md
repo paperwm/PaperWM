@@ -63,11 +63,12 @@ A workspace has a name and background color. Clicking on the workspace name lets
 
 There's a single scrollable tiling per workspace. Adding another monitor simply makes it possible to have another workspace visible. The workspace stack is shared among all the monitors, windows being resized vertically as necessary when workspace is displayed on another monitor.
 
-| Keybindings                                          |                                                                         |
-| ------                                               | -------                                                                 |
-| <kbd>Super</kbd><kbd>Above_Tab</kbd>                 | Cycle through the most recently used workspaces                         |
-| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Above_Tab</kbd> | Cycle backwards through the most recently used workspaces               |
-| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Above_Tab</kbd>  | Cycle through the most recently used, taking the active window with you |
+| Keybindings                                                                                                         |                                                                                   |
+| ------                                                                                                              | -------                                                                           |
+| <kbd>Super</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Down</kbd>                                             | Cycle through the most recently used workspaces                                   |
+| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Up</kbd>                               | Cycle backwards through the most recently used workspaces                         |
+| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Down</kbd>               | Cycle through the most recently used, taking the active window with you           |
+| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Up</kbd> | Cycle backwards through the most recently used, taking the active window with you |
 
 Note: Multi monitor support only works when Gnome Shell is configured to use the `Workspaces span displays` option in Gnome Tweaks (under the `Workspaces` heading).
 
