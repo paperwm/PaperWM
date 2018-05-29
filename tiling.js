@@ -659,7 +659,7 @@ function enable() {
     function initWorkspaces() {
         spaces = new Spaces();
         Navigator.switchWorkspace(global.screen.get_active_workspace());
-        spaces.forEach(s => {
+        spaces.mru().reverse().forEach(s => {
             s.selectedWindow && ensureViewport(s.selectedWindow, s, true);
         });
 
