@@ -36,17 +36,18 @@ A minimap will be shown when <kbd>Super</kbd> is continually being pressed, as c
 
 <kbd>Alt</kbd><kbd>Tab</kbd> is of course also available.
 
-| Keybindings                                                                                    |                                                             |
-| ------                                                                                         | -------                                                     |
-| <kbd>Super</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>.</kbd>                                   | Activate the left <kbd>,</kbd> or right <kbd>.</kbd> window |
-| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>.</kbd>     | Move the current window to the left or right                |
-| <kbd>Super</kbd><kbd>Tab</kbd> or <kbd>Alt</kbd><kbd>Tab</kbd>                                 | Cycle through the most recently used windows                |
-| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> or <kbd>Alt</kbd><kbd>Shift</kbd><kbd>Tab</kbd> | Cycle backwards through the most recently used windows      |
-| <kbd>Super</kbd><kbd>R</kbd>                                                                   | Resize the window (cycles through useful widths)            |
-| <kbd>Super</kbd><kbd>F</kbd>                                                                   | Maximize the width of a window                              |
-| <kbd>Super</kbd><kbd>Shift</kbd><kbd>F</kbd>                                                   | Toggle fullscreen                                           |
-| <kbd>Super</kbd><kbd>N</kbd>                                                                   | Create a new window from the active application             |
-| <kbd>Super</kbd><kbd>C</kbd> or <kbd>Super</kbd><kbd>Backspace</kbd>                           | Close the active window                                     |
+| Keybindings                                                                                    |                                                        |
+| ------                                                                                         | -------                                                |
+| <kbd>Super</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>Left</kbd>                                | Activate the window to the left                        |
+| <kbd>Super</kbd><kbd>.</kbd> or <kbd>Super</kbd><kbd>Right</kbd>                               | Activate the window to the right                       |
+| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>.</kbd>     | Move the current window to the left or right           |
+| <kbd>Super</kbd><kbd>Tab</kbd> or <kbd>Alt</kbd><kbd>Tab</kbd>                                 | Cycle through the most recently used windows           |
+| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> or <kbd>Alt</kbd><kbd>Shift</kbd><kbd>Tab</kbd> | Cycle backwards through the most recently used windows |
+| <kbd>Super</kbd><kbd>R</kbd>                                                                   | Resize the window (cycles through useful widths)       |
+| <kbd>Super</kbd><kbd>F</kbd>                                                                   | Maximize the width of a window                         |
+| <kbd>Super</kbd><kbd>Shift</kbd><kbd>F</kbd>                                                   | Toggle fullscreen                                      |
+| <kbd>Super</kbd><kbd>N</kbd>                                                                   | Create a new window from the active application        |
+| <kbd>Super</kbd><kbd>C</kbd> or <kbd>Super</kbd><kbd>Backspace</kbd>                           | Close the active window                                |
 
 
 ### The workspace stack & monitors ###
