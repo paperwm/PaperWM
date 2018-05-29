@@ -585,6 +585,7 @@ function registerWindow(metaWindow) {
         metaWindow.connect("focus", focus_wrapper),
         metaWindow.connect('notify::minimized', minimizeWrapper),
         metaWindow.connect('size-changed', sizeHandler),
+        metaWindow.connect('position-changed', moveHandler),
         metaWindow.connect('notify::fullscreen', fullscreenWrapper)
     ];
     actor[signals] = [
@@ -1009,7 +1010,7 @@ function ensureViewport(meta_window, space, force) {
  */
 function move(meta_window, space,
               { x, y, onComplete, onStart,
-                delay, transition, visible }) {
+                delay, transition, visible, noAnimate }) {
 
     onComplete = onComplete || (() => {});
     onStart = onStart || (() => {});
@@ -1033,6 +1034,10 @@ function move(meta_window, space,
         space.visible.push(meta_window);
     }
 
+    let time = 0.25;
+    if (noAnimate)
+        time = 0;
+
     // Move the frame before animation to indicate where it's actually going.
     // The animation being purely cosmetic.
     meta_window.move_frame(true,
@@ -1044,7 +1049,7 @@ function move(meta_window, space,
     Tweener.addTween(clone,
                      {x: x - x_offset
                       , y: y - y_offset
-                      , time: 0.25 - delay
+                      , time
                       , delay: delay
                       , scale_y: 1
                       , scale_x: 1
@@ -1063,7 +1068,8 @@ function move(meta_window, space,
 
 // Move @meta_window to x, y and propagate the change in @space
 function move_to(space, meta_window, { x, y, delay, transition,
-                                       onComplete, onStart, gap }) {
+                                       onComplete, onStart, gap,
+                                       noAnimate }) {
 
     space.visible = [];
     space.delayed = false;
@@ -1072,7 +1078,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
                                , onComplete
                                , onStart
                                , delay
-                               , transition
+                               , transition, noAnimate
                                , visible: true}
         );
     let index = space.indexOf(meta_window);
@@ -1100,7 +1106,8 @@ function move_to(space, meta_window, { x, y, delay, transition,
             // Anchor scaling/animation on the left edge for windows positioned to the right,
 
             move(meta_window, space,
-                 { x: X, y: panelBox.height + prefs.vertical_margin, visible });
+                 { x: X, y: panelBox.height + prefs.vertical_margin, visible,
+                   noAnimate });
             if (!visible && X < space.width) {
                 space.monitor.clickOverlay.right.setTarget(meta_window);
             }
@@ -1126,7 +1133,9 @@ function move_to(space, meta_window, { x, y, delay, transition,
         if (actor) {
             // Anchor on the right edge for windows positioned to the left.
             move(meta_window, space,
-                 { x: X - frame.width, y: panelBox.height + prefs.vertical_margin, visible });
+                 { x: X - frame.width,
+                   y: panelBox.height + prefs.vertical_margin, visible,
+                   noAnimate});
             if (!visible && X > 0) {
                 space.monitor.clickOverlay.left.setTarget(meta_window);
             }
@@ -1146,6 +1155,23 @@ function sizeHandler(metaWindow) {
     let monitor = space.monitor;
     move_to(space, metaWindow, {x: frame.x - monitor.x, y: frame.y - monitor.y,
                                 onComplete: () => space.emit('move-done')});
+    Tweener.removeTweens(space.selection);
+    space.selection.width = frame.width + prefs.window_gap;
+    space.selection.x = frame.x - Math.round(prefs.window_gap/2);
+}
+
+function moveHandler(metaWindow) {
+    let space = spaces.spaceOfWindow(metaWindow);
+    if (space.selectedWindow !== metaWindow
+        || space.moving === metaWindow)
+        return;
+
+    let frame = metaWindow.get_frame_rect();
+    let monitor = space.monitor;
+    move_to(space, metaWindow,
+            { x: frame.x - monitor.x,
+              y: panelBox.height + prefs.vertical_margin - monitor.y, noAnimate: true,
+              onComplete: () => space.emit('move-done')});
     Tweener.removeTweens(space.selection);
     space.selection.width = frame.width + prefs.window_gap;
     space.selection.x = frame.x - Math.round(prefs.window_gap/2);
