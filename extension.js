@@ -218,6 +218,11 @@ function enable() {
     setKeybinding('toggle-tiled-left', // <Super>Left
                   utils.dynamic_function_ref('preview_navigate', Navigator));
 
+    setKeybinding('switch-to-workspace-1', // <Super>Home
+                  Tiling.activateFirstWindow);
+    setKeybinding('switch-to-workspace-last', // <Super>End
+                  Tiling.activateLastWindow);
+
     paperActions.actions.forEach(a => {
         setKeybinding(a.name, a.handler);
     });
@@ -253,6 +258,8 @@ function disable() {
     Meta.keybindings_set_custom_handler('toggle-tiled-right', null);
     Meta.keybindings_set_custom_handler('maximize', null);
     Meta.keybindings_set_custom_handler('restore-shortcuts', null);
+    Meta.keybindings_set_custom_handler('switch-to-workspace-1', null);
+    Meta.keybindings_set_custom_handler('switch-to-workspace-last', null);
 
     paperActions.actions.forEach(a => {
         setKeybinding(a.name, () => {});

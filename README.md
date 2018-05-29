@@ -40,6 +40,7 @@ A minimap will be shown when <kbd>Super</kbd> is continually being pressed, as c
 | ------                                                                                         | -------                                                |
 | <kbd>Super</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>Left</kbd>                                | Activate the window to the left                        |
 | <kbd>Super</kbd><kbd>.</kbd> or <kbd>Super</kbd><kbd>Right</kbd>                               | Activate the window to the right                       |
+| <kbd>Super</kbd><kbd>Home</kbd> or <kbd>Super</kbd><kbd>End</kbd>                              | Activate the first or last window                      |
 | <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>.</kbd>     | Move the current window to the left or right           |
 | <kbd>Super</kbd><kbd>Tab</kbd> or <kbd>Alt</kbd><kbd>Tab</kbd>                                 | Cycle through the most recently used windows           |
 | <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> or <kbd>Alt</kbd><kbd>Shift</kbd><kbd>Tab</kbd> | Cycle backwards through the most recently used windows |

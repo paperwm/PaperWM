@@ -1398,3 +1398,20 @@ function cycleWindowWidth(metaWindow) {
 
     delete metaWindow.unmaximized_rect;
 }
+
+function activateNthWindow(n, space) {
+    space = space || spaces.spaceOf(screen.get_active_workspace());
+    let nth = space[n];
+    if (nth)
+        Main.activateWindow(nth);
+}
+
+function activateFirstWindow() {
+    let space = spaces.spaceOf(screen.get_active_workspace());
+    activateNthWindow(0, space);
+}
+
+function activateLastWindow() {
+    let space = spaces.spaceOf(screen.get_active_workspace());
+    activateNthWindow(space.length - 1, space);
+}
