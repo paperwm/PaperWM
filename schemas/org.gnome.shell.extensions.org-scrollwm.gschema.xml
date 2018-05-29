@@ -83,11 +83,11 @@
     </key>
 
     <key type="as" name="move-right">
-        <default><![CDATA[['<Super><Ctrl>period', '<Super><Shift>period', '<Super><Shift>Right']]]></default>
+        <default><![CDATA[['<Super><Ctrl>period', '<Super><Shift>period', '<Super><Ctrl>Right']]]></default>
       <summary>Move the focused window right in the tiling</summary>
     </key>
     <key type="as" name="move-left">
-        <default><![CDATA[['<Super><Ctrl>comma', '<Super><Shift>comma', '<Super><Shift>Left']]]></default>
+        <default><![CDATA[['<Super><Ctrl>comma', '<Super><Shift>comma', '<Super><Ctrl>Left']]]></default>
       <summary>Move the focused window left in the tiling</summary>
     </key>
 
