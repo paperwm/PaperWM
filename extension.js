@@ -218,6 +218,9 @@ function enable() {
     setKeybinding('toggle-tiled-left', // <Super>Left
                   utils.dynamic_function_ref('preview_navigate', Navigator));
 
+    paperActions.actions.forEach(a => {
+        setKeybinding(a.name, a.handler);
+    });
 
     // Only enable modules after disable have been run
     if (enabled) {
@@ -250,6 +253,10 @@ function disable() {
     Meta.keybindings_set_custom_handler('toggle-tiled-right', null);
     Meta.keybindings_set_custom_handler('maximize', null);
     Meta.keybindings_set_custom_handler('restore-shortcuts', null);
+
+    paperActions.actions.forEach(a => {
+        setKeybinding(a.name, () => {});
+    });
 
     if (!enabled)
         return;
