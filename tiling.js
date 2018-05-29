@@ -1081,75 +1081,57 @@ function move_to(space, meta_window, { x, y, delay, transition,
     space.monitor.clickOverlay.reset();
 
     gap = gap || prefs.window_gap;
-    propagateForward(space, index + 1, x + frame.width + gap, gap);
-    propagateBackward(space, index - 1, x - gap, gap);
-}
 
-// Place window's left edge at x
-function propagateForward(space, n, x, gap) {
-    if (n < 0 || n >= space.length) {
-        return;
-    }
-    let meta_window = space[n];
-    let frame = meta_window.get_frame_rect();
-    gap = gap || prefs.window_gap;
+    for (let n=index+1, X = x + frame.width + gap; n < space.length; n++) {
+        let meta_window = space[n];
+        let frame = meta_window.get_frame_rect();
 
-    let visible = true;
-    // Check if we should start stacking windows
-    if (x + frame.width > space.width) {
-        visible = false;
-        meta_window._isStacked = true;
-    } else {
-        meta_window._isStacked = false;
-    }
-
-    let actor = meta_window.get_compositor_private();
-    if (actor) {
-        // Anchor scaling/animation on the left edge for windows positioned to the right,
-
-        move(meta_window, space,
-             { x, y: panelBox.height + prefs.vertical_margin, visible });
-        if (!visible && x < space.width) {
-            space.monitor.clickOverlay.right.setTarget(meta_window);
+        let visible = true;
+        // Check if we should start stacking windows
+        if (X + frame.width > space.width) {
+            visible = false;
+            meta_window._isStacked = true;
+        } else {
+            meta_window._isStacked = false;
         }
-        propagateForward(space, n+1, x+frame.width + gap, gap);
-    } else {
-        // If the window doesn't have an actor we should just skip it
-        propagateForward(space, n+1, x, gap);
-    }
-}
 
-// Place window's right edge at x
-function propagateBackward(space, n, x, gap) {
-    if (n < 0 || n >= space.length) {
-        return;
-    }
-    let meta_window = space[n];
-    let frame = meta_window.get_frame_rect();
-    gap = gap || prefs.window_gap;
+        let actor = meta_window.get_compositor_private();
+        if (actor) {
+            // Anchor scaling/animation on the left edge for windows positioned to the right,
 
-    // Check if the window is fully visible
-    let visible = true;
-    if (x - frame.width < 0 || meta_window.fullscreen
-        || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
-        visible = false;
-        meta_window._isStacked = true;
-    } else {
-        meta_window._isStacked = false;
-    }
-
-    let actor = meta_window.get_compositor_private();
-    if (actor) {
-        // Anchor on the right edge for windows positioned to the left.
-        move(meta_window, space,
-             { x: x - frame.width, y: panelBox.height + prefs.vertical_margin, visible });
-        if (!visible && x > 0) {
-            space.monitor.clickOverlay.left.setTarget(meta_window);
+            move(meta_window, space,
+                 { x: X, y: panelBox.height + prefs.vertical_margin, visible });
+            if (!visible && X < space.width) {
+                space.monitor.clickOverlay.right.setTarget(meta_window);
+            }
+            X += frame.width + gap;
         }
-        propagateBackward(space, n-1, x - frame.width - gap, gap);
-    } else {
-        // If the window doesn't have an actor we should just skip it
-        propagateBackward(space, n-1, x, gap);
+    }
+
+    for (let n=index-1, X = x - gap; n >= 0; n--) {
+        let meta_window = space[n];
+        let frame = meta_window.get_frame_rect();
+
+        // Check if the window is fully visible
+        let visible = true;
+        if (X - frame.width < 0 || meta_window.fullscreen
+            || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
+            visible = false;
+            meta_window._isStacked = true;
+        } else {
+            meta_window._isStacked = false;
+        }
+
+        let actor = meta_window.get_compositor_private();
+        if (actor) {
+            // Anchor on the right edge for windows positioned to the left.
+            move(meta_window, space,
+                 { x: X - frame.width, y: panelBox.height + prefs.vertical_margin, visible });
+            if (!visible && X > 0) {
+                space.monitor.clickOverlay.left.setTarget(meta_window);
+            }
+            X -= frame.width + gap;
+        }
     }
 }
 
