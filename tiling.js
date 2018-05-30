@@ -661,6 +661,7 @@ function enable() {
         Navigator.switchWorkspace(global.screen.get_active_workspace());
         spaces.mru().reverse().forEach(s => {
             s.selectedWindow && ensureViewport(s.selectedWindow, s, true);
+            s.monitor.clickOverlay.show();
         });
 
         if (!Scratch.isScratchActive()) {
@@ -1199,6 +1200,7 @@ function focus_handler(meta_window, user_data) {
     }
 
     let space = spaces.spaceOfWindow(meta_window);
+    space.monitor.clickOverlay.show();
     ensureViewport(meta_window, space);
     fixStack(space, space.indexOf(meta_window));
 }

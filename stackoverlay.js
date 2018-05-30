@@ -97,6 +97,16 @@ class ClickOverlay {
         this.right.setTarget(null);
     }
 
+    hide() {
+        this.left.overlay.hide();
+        this.right.overlay.hide();
+    }
+
+    show() {
+        this.left.overlay.show();
+        this.right.overlay.show();
+    }
+
     destroy() {
         for (let overlay of [this.left, this.right]) {
             let actor = overlay.overlay;
@@ -132,8 +142,6 @@ var StackOverlay = new Lang.Class({
         overlay.height = this.monitor.height - panelBox.height - prefs.vertical_margin;
         overlay.width = Tiling.stack_margin;
 
-        overlay.hide();
-
         this.pressId = overlay.connect('button-press-event', () => {
             Main.activateWindow(this.target);
             return true;
@@ -144,7 +152,7 @@ var StackOverlay = new Lang.Class({
         });
 
         global.window_group.add_child(overlay);
-        Main.layoutManager._trackActor(overlay)
+        Main.layoutManager.trackChrome(overlay);
 
         this.overlay = overlay;
     },
@@ -177,7 +185,7 @@ var StackOverlay = new Lang.Class({
 
         let bail = () => {
             this.target = null;
-            this.overlay.hide();
+            this.overlay.width = 0;
             return false;
         }
 
@@ -221,7 +229,6 @@ var StackOverlay = new Lang.Class({
         global.window_group.set_child_above_sibling(overlay, actor);
 
         // Tweener.addTween(this.overlay, { opacity: 255, time: 0.25 });
-        overlay.show();
         return true;
     },
     fadeOut: function() {

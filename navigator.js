@@ -353,7 +353,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
         if (workspaceMru)
-            this.space.monitor.clickOverlay.reset();
+            this.space.monitor.clickOverlay.hide();
 
         let force = workspaceMru;
         navigating = false; workspaceMru = false;
@@ -390,8 +390,9 @@ var PreviewedWindowNavigator = new Lang.Class({
             if (selected !== global.display.focus_window) {
                 Main.activateWindow(selected);
             } else {
-                // Typically on cancel - just make sure the window is in view
-                Tiling.ensureViewport(selected, this.space); 
+                // Typically on cancel - the `focus` signal won't run
+                // automatically, so we run it manually
+                Tiling.focus_handler(selected);
             }
             debug('#preview', 'Finish', selected.title, this._selectedIndex);
         } else {

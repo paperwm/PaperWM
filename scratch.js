@@ -16,7 +16,7 @@ function makeScratch(metaWindow) {
 
     let monitor = Main.layoutManager.focusMonitor;
     if (monitor.clickOverlay)
-        monitor.clickOverlay.reset();
+        monitor.clickOverlay.hide();
 }
 
 function unmakeScratch(metaWindow) {
@@ -68,7 +68,7 @@ function show() {
 
     let monitor = Main.layoutManager.focusMonitor;
     if (monitor.clickOverlay)
-        monitor.clickOverlay.reset();
+        monitor.clickOverlay.hide();
 }
 
 function hide() {
