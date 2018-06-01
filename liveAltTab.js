@@ -18,14 +18,18 @@ var LiveAltTab = Lang.Class({
         let tabList = global.display.get_tab_list(Meta.TabList.NORMAL_ALL,
                                                   global.screen.get_active_workspace());
 
-        this._block = Main.wm._blockAnimations;
-        Main.wm._blockAnimations = true;
-
         if (Scratch.isScratchActive()) {
             return Scratch.getScratchWindows();
         } else {
             return tabList;
         }
+    },
+
+    _initialSelection: function(backward, actionName) {
+        this._block = Main.wm._blockAnimations;
+        Main.wm._blockAnimations = true;
+
+        this.parent(backward, actionName);
     },
 
     _keyPressHandler: function(keysym, action) {
