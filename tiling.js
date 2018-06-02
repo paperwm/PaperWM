@@ -1089,13 +1089,16 @@ function move_to(space, meta_window, { x, y, delay, transition,
 
     gap = gap || prefs.window_gap;
 
-    for (let n=index+1, X = x + frame.width + gap; n < space.length; n++) {
+    for (let X = x + frame.width + gap,
+             targetSet = false,
+             n=index+1 ; n < space.length; n++) {
         let meta_window = space[n];
         let frame = meta_window.get_frame_rect();
 
         let visible = true;
         // Check if we should start stacking windows
-        if (X + frame.width > space.width) {
+        if (X > space.width - stack_margin || meta_window.fullscreen
+            || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
             visible = false;
             meta_window._isStacked = true;
         } else {
@@ -1109,20 +1112,24 @@ function move_to(space, meta_window, { x, y, delay, transition,
             move(meta_window, space,
                  { x: X, y: panelBox.height + prefs.vertical_margin, visible,
                    noAnimate });
-            if (!visible && X < space.width) {
+
+            if (!targetSet && X + frame.width > space.width) {
                 space.monitor.clickOverlay.right.setTarget(meta_window);
+                targetSet = true;
             }
             X += frame.width + gap;
         }
     }
 
-    for (let n=index-1, X = x - gap; n >= 0; n--) {
+    for (let X = x - gap,
+             targetSet = false,
+             n=index-1; n >= 0; n--) {
         let meta_window = space[n];
         let frame = meta_window.get_frame_rect();
 
         // Check if the window is fully visible
         let visible = true;
-        if (X - frame.width < 0 || meta_window.fullscreen
+        if (X < stack_margin || meta_window.fullscreen
             || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
             visible = false;
             meta_window._isStacked = true;
@@ -1132,15 +1139,18 @@ function move_to(space, meta_window, { x, y, delay, transition,
 
         let actor = meta_window.get_compositor_private();
         if (actor) {
+            X -= frame.width;
             // Anchor on the right edge for windows positioned to the left.
             move(meta_window, space,
-                 { x: X - frame.width,
+                 { x: X,
                    y: panelBox.height + prefs.vertical_margin, visible,
                    noAnimate});
-            if (!visible && X > 0) {
+
+            if (!targetSet && X < 0) {
                 space.monitor.clickOverlay.left.setTarget(meta_window);
+                targetSet = true;
             }
-            X -= frame.width + gap;
+            X -= gap;
         }
     }
 }

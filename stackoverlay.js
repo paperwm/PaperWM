@@ -210,15 +210,23 @@ var StackOverlay = new Lang.Class({
                 return bail(); // Should normally have a neighbour. Bail!
 
             let frame = neighbour.get_frame_rect();
+            let max = 75;
+            if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH
+                || metaWindow.fullscreen)
+                max = frame.x - prefs.window_gap;
             overlay.x = this.monitor.x;
-            overlay.width = Math.max(0, frame.x - prefs.window_gap);
+            overlay.width = Math.min(Math.max(0, frame.x), max);
         } else {
             let neighbour = space[space.indexOf(metaWindow) - 1];
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
 
             let frame = neighbour.get_frame_rect();
-            overlay.x = frame.x + frame.width + prefs.window_gap;
+            let max = this.monitor.x + this.monitor.width - 75;
+            if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH
+                || metaWindow.fullscreen)
+                max = frame.x + frame.width + prefs.window_gap;
+            overlay.x = Math.max(max, frame.x + frame.width);
             overlay.width = Math.max(0, this.monitor.width - overlay.x);
         }
 
