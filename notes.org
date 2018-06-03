@@ -87,11 +87,11 @@ window B ->        | ---------------- |
 `imports.NAME` reflects the directories and javascript files present in `imports.searchPath`.
 To add a path, simply do `imports.searchPath.push(PATH)`
 
-The entries can also(?) be special uri's referring to directories with .gir/.typelib files(?)
+Environment variable `GJS_PATH` initializes `imports.searchPath`.
 
-Or maybe more likely: `imports.gi.` contains everything that's exposed through .gir/.typelib files.
-
-`GJS_PATH` might be used too.
+The special property `imports.gi` expose gobject-introspectable libraries.
+Another search path controls which libraries are available:
+`imports.gi.GIRepository.Repository.get_search_path()` initialized by environment variable `GI_TYPELIB_PATH` (`Repository` is the global instance of [[https://developer.gnome.org/gi/stable/GIRepository.html][GIRepository]])
 
 *** Reloading modules
 Modules **can't** be reloaded, but writing to `imports.myModule.myVariable` works. Eg.
