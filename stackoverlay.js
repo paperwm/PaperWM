@@ -110,8 +110,8 @@ class ClickOverlay {
     destroy() {
         for (let overlay of [this.left, this.right]) {
             let actor = overlay.overlay;
-            actor.disconnect(overlay.pressId);
-            actor.disconnect(overlay.releaseId);
+            [overlay.pressId, overlay.releaseId, overlay.enterId,
+             overlay.leaveId].forEach(id => actor.disconnect(id));
             actor.destroy();
         }
         this.enterMonitor.disconnect(this.enterSignal);
@@ -144,11 +144,34 @@ var StackOverlay = new Lang.Class({
 
         this.pressId = overlay.connect('button-press-event', () => {
             Main.activateWindow(this.target);
+            if (this.clone)
+                this.clone.destroy();
             return true;
         });
         this.releaseId = overlay.connect('button-release-event', () => {
             // this.fadeOut();
             return true;
+        });
+
+        this.enterId = overlay.connect('enter-event', () => {
+            if (this.clone)
+                this.clone.destroy();
+
+            let [x, y, mask] = global.get_pointer();
+            let clone = new Clutter.Clone({
+                source: this.target.get_compositor_private()});
+            this.clone = clone;
+            clone.set_scale(0.15, 0.15);
+            Main.uiGroup.add_actor(clone);
+
+            if (this._direction === Meta.MotionDirection.RIGHT)
+                x = monitor.x + monitor.width - clone.get_transformed_size()[0];
+            else
+                x = monitor.x;
+            clone.set_position(x, y);
+        });
+        this.leaveId = overlay.connect('leave-event', () => {
+            this.clone.destroy();
         });
 
         global.window_group.add_child(overlay);
