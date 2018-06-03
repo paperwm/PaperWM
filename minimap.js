@@ -200,10 +200,16 @@ class Minimap {
 
         label.text = selected.meta_window.title;
 
-        if (selected.x + selected.width + container.x > clip.width)
-            container.x -= selected.width + 500;
-        if (selected.x + container.x < 0)
-            container.x += selected.width + 500;
+        if (selected.x + selected.width + container.x > clip.width) {
+            // Align right edge of selected with the clip
+            container.x = clip.width - (selected.x + selected.width)
+            container.x -= 500; // margin
+        }
+        if (selected.x + container.x < 0) {
+            // Align left edge of selected with the clip
+            container.x = -selected.x
+            container.x += 500; // margin
+        }
 
         if (container.x + container.width < clip.width)
             container.x = clip.width - container.width;
