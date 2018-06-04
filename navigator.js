@@ -138,12 +138,23 @@ var PreviewedWindowNavigator = new Lang.Class({
             Tiling.spaces.mru().filter(space => !visible.includes(space)));
         this.mru = mru;
 
+        let monitor = this.monitor;
         if (move && !Scratch.isScratchActive()) {
             this._moving = this.space.selectedWindow;
+            let moving = this._moving;
             Scratch.makeScratch(this._moving);
+            let actor = moving.get_compositor_private();
+            Main.uiGroup.add_actor(this._moving.clone);
+            moving.clone.set_position(...actor.get_position());
+            moving.clone.show();
+            moving.get_compositor_private().hide();
+            Tweener.addTween(moving.clone,
+                             {y: Math.round(monitor.y + monitor.height/2),
+                              time: 0.25,
+                              transition: 'easeInOutQuad'
+                             });
         }
 
-        let monitor = this.monitor;
         let cloneParent = this.space.clip.get_parent();
         mru.forEach((space, i) => {
             TopBar.updateIndicatorPosition(space.workspace);
