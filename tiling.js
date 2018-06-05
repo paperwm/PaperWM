@@ -1181,7 +1181,7 @@ function moveHandler(metaWindow) {
     let monitor = space.monitor;
     move_to(space, metaWindow,
             { x: frame.x - monitor.x,
-              y: panelBox.height + prefs.vertical_margin - monitor.y,
+              y: panelBox.height + prefs.vertical_margin,
               noAnimate: true });
     space.emit('move-done');
     Tweener.removeTweens(space.selection);
