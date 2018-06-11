@@ -437,8 +437,11 @@ class Spaces extends Map {
                     delete metaWindow[signals];
                 }
 
-                if (metaWindow.get_workspace() === screen.get_active_workspace())
+                if (metaWindow.get_workspace() === screen.get_active_workspace()
+                   && !metaWindow.minimized)
                     actor.show();
+                else
+                    actor.hide();
             });
 
         this.screenSignals.forEach(id => global.screen.disconnect(id));
