@@ -82,7 +82,8 @@ class Minimap {
         actor.height = space.height*0.20;
 
         let highlight = new St.Widget({name: 'minimap-highlight',
-                                       style_class: 'tile-preview'});
+                                       style_class: 'item-box'});
+        highlight.add_style_pseudo_class('selected');
         this.highlight = highlight;
         let label = new St.Label();
         label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
