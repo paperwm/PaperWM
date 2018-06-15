@@ -113,6 +113,30 @@ It's possible to create simple rules for placing new windows. Currently mostly u
     });
 ```
 
+The `wm_class` of a window can be looked up by clicking <kbd>Super</kbd><kbd>Insert</kbd> and then checking the value of `metaWindow.wm_class` in emacs or looking glass.
+
+### New Window Handlers
+
+If opening a new application window with <kbd>Super</kbd><kbd>N</kbd> isn't doing exactly what you want you can create custom functions to fit your needs. Say you want new emacs windows to open the current buffer by default, or have new terminals inherit the current directory:
+
+```javascript
+    let App = Extension.imports.app;
+    App.customHandlers['emacs.desktop'] =
+        () => imports.misc.util.spawn(['emacsclient', '--eval', '(make-frame)']);
+    App.customHandlers['org.gnome.Terminal.desktop'] =
+        (metaWindow, app) => app.action_group.activate_action(
+          "win.new-terminal",
+          new imports.gi.GLib.Variant("(ss)", ["window", "current"]));
+```
+
+The app id of a window can be looked up like this:
+
+```javascript
+var Shell = imports.gi.Shell;
+var Tracker = Shell.WindowTracker.get_default();
+Tracker.get_window_app(metaWindow);
+```
+
 
 ## Prior work ##
 
