@@ -6,10 +6,6 @@ var Shell = imports.gi.Shell;
 var Tracker = Shell.WindowTracker.get_default();
 
 function newGnomeTerminal(metaWindow, app) {
-    if (app.get_id() !== "org.gnome.Terminal.desktop") {
-        return false;
-    }
-
     /* Note: this action activation is _not_ bound to the window - instead it
        relies on the window being active when called. 
 
@@ -17,7 +13,6 @@ function newGnomeTerminal(metaWindow, app) {
        because 'vte.sh' haven't been sourced by the shell in this terminal */
     app.action_group.activate_action(
         "win.new-terminal", new imports.gi.GLib.Variant("(ss)", ["window", "current"]));
-    return true;
 }
 
 function defaultHandler(metaWindow, app) {
@@ -30,15 +25,15 @@ function defaultHandler(metaWindow, app) {
     return true;
 }
 
-// Handlers are called in turn until one returns true
-var customHandlers = [newGnomeTerminal, defaultHandler];
+// Lookup table for custom handlers, keys being the app id
+var customHandlers = { 'org.gnome.Terminal.desktop': newGnomeTerminal };
 
 function newWindow(metaWindow) {
     metaWindow = metaWindow || global.display.focus_window;
     let app = Tracker.get_window_app(metaWindow);
-    for (let i = 0; i < customHandlers.length; i++) {
-        if (customHandlers[i](metaWindow, app)) {
-            break;
-        }
-    }
+    let handler = customHandlers[app.get_id()];
+    if (handler)
+        handler(metaWindow, app);
+    else
+        defaultHandler(metaWindow, app);
 }
