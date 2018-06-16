@@ -134,7 +134,13 @@ The app id of a window can be looked up like this:
 ```javascript
 var Shell = imports.gi.Shell;
 var Tracker = Shell.WindowTracker.get_default();
-Tracker.get_window_app(metaWindow);
+var app = Tracker.get_window_app(metaWindow);
+app.get_id();
+```
+
+Available application actions can be listed like this:
+```javascript
+app.action_group.list_actions();
 ```
 
 
