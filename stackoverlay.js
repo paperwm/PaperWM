@@ -112,6 +112,8 @@ class ClickOverlay {
             let actor = overlay.overlay;
             [overlay.pressId, overlay.releaseId, overlay.enterId,
              overlay.leaveId].forEach(id => actor.disconnect(id));
+            if (overlay.clone)
+                overlay.clone.destroy();
             actor.destroy();
         }
         this.enterMonitor.disconnect(this.enterSignal);
