@@ -966,9 +966,9 @@ function ensureViewport(meta_window, space, force) {
         x = frame.x; y = frame.y;
         force = true;
     } else if (required_width <= space.width) {
-        let leftovers = space.width - required_width;
+        let leftovers = space.width - required_width - prefs.horizontal_margin;
         let gaps = space.length + 1;
-        gap = Math.floor(leftovers/gaps);
+        gap = Math.floor(leftovers/gaps) + prefs.window_gap;
         x = gap;
         meta_window = space[0][0];
     } else if (index == 0 && frame.x <= 0) {
