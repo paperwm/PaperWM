@@ -1443,3 +1443,17 @@ function activateLastWindow() {
     let space = spaces.spaceOf(screen.get_active_workspace());
     activateNthWindow(space.length - 1, space);
 }
+
+function centerWindowHorizontally(metaWindow) {
+    const frame = metaWindow.get_frame_rect();
+    const space = spaces.spaceOfWindow(metaWindow);
+    const monitor = space.monitor;
+    const targetX = (monitor.width/2 - frame.width/2)
+    const dx = (targetX + monitor.x) - frame.x;
+    utils.warpPointerRelative(dx, 0);
+    move_to(space, metaWindow, { x: targetX, y: frame.y });
+    space.emit('move-done');
+    Tweener.removeTweens(space.selection);
+    space.selection.width = frame.width + prefs.window_gap;
+    space.selection.x = targetX + monitor.x - Math.round(prefs.window_gap/2);
+}

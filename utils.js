@@ -1,4 +1,5 @@
 const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
+const Gdk = imports.gi.Gdk;
 
 var debug_all = false; // Turn off by default
 var debug_filter = {};
@@ -146,4 +147,12 @@ function setWorkspaceName(name, workspace) {
     settings.set_strv('workspace-names', names);
 
     return oldName;
+}
+
+function warpPointerRelative(dx, dy) {
+    let display = Gdk.Display.get_default();
+    let deviceManager = display.get_device_manager();
+    let pointer = deviceManager.get_client_pointer();
+    let [gdkscreen, pointerX, pointerY] = pointer.get_position();
+    pointer.warp(gdkscreen, pointerX + dx, pointerY + dy);
 }

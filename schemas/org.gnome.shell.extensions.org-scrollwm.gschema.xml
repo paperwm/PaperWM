@@ -96,6 +96,11 @@
       <summary>Cycle through a pre-determined list of window widths</summary>
     </key>
 
+    <key type="as" name="center-horizontally">
+      <default><![CDATA[['<Super>w']]]></default>
+      <summary>Center window horizontally and preserving relative mouse position</summary>
+    </key>
+
     <key type="as" name="tile-visible">
       <default><![CDATA[['<Super>t']]]></default>
       <summary>Squeeze all visible windows fully into the view</summary>

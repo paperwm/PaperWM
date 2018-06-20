@@ -155,6 +155,12 @@ function init() {
                           as_key_handler("cycleWindowWidth",
                                          Tiling),
                           Meta.KeyBindingFlags.PER_WINDOW);
+
+    paperActions.register("center-horizontally",
+                          as_key_handler("centerWindowHorizontally",
+                                         Tiling),
+                          Meta.KeyBindingFlags.PER_WINDOW);
+
     paperActions.register("tile-visible",
                           as_key_handler("tileVisible",
                                          Tiling),
