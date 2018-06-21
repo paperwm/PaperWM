@@ -1087,6 +1087,9 @@ function move_to(space, meta_window, { x, y, delay, transition,
                                , visible: true}
         );
     let index = space.indexOf(meta_window);
+    if (index === -1)
+        return;
+
     let frame = meta_window.get_frame_rect();
 
     space.monitor.clickOverlay.reset();
