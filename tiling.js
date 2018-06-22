@@ -1272,6 +1272,8 @@ let showWrapper = utils.dynamic_function_ref('showHandler', Me);
   stack, not the mru, when auto choosing focus after closing a window.
  */
 function fixStack(space, around) {
+    if (around < 0 || around >= space.length)
+        return;
     utils.debug("stack", "fix stack");
     let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
                                           space.workspace);
