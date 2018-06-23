@@ -115,12 +115,8 @@ class Space extends Array {
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
 
-        let oldSpace = oldSpaces.get(workspace);
-        if (oldSpace)
-            this.addAll(oldSpace.getWindows());
-        else
-            this.addAll();
-        oldSpaces.delete(workspace);
+        this.addAll(oldSpaces.get(workspace));
+        oldSpaces.delete(oldSpaces.get(workspace));
     }
 
     getWindows() {
@@ -225,7 +221,7 @@ class Space extends Array {
        Add any existing windows on `workspace` to the corresponding `Space`,
        optionally using `windows` as a preferred order.
     */
-    addAll(windows = []) {
+    addAll(oldSpace) {
 
         // On gnome-shell-restarts the windows are moved into the viewport, but
         // they're moved minimally and the stacking is not changed, so the tiling
@@ -267,15 +263,19 @@ class Space extends Array {
             };
         }
 
-        let space = this;
-        let workspace = space.workspace;
-        windows = windows.concat(
-            // Add all the other windows as we want to support someone disabling
-            // the extension, and enabling it after using the session for a
-            // while
-            workspace.list_windows()
-                .filter(w => windows.indexOf(w) === -1)
-                .sort(xz_comparator(workspace.list_windows())));
+        if (oldSpace) {
+            for (let i=0; i < oldSpace.length; i++) {
+                let column = oldSpace[i];
+                for(let j=0; j < column.length; j++) {
+                    let metaWindow = column[j];
+                    this.addWindow(metaWindow, i, j);
+                }
+            }
+        }
+
+        let workspace = this.workspace;
+        let windows = workspace.list_windows()
+            .sort(xz_comparator(workspace.list_windows()));
 
         windows.forEach((meta_window, i) => {
             if (meta_window.above || meta_window.minimized) {
@@ -283,17 +283,17 @@ class Space extends Array {
                 Scratch.makeScratch(meta_window);
                 return;
             }
-            if(space.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
+            if(this.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
                 // Using add_handler is unreliable since it interacts with focus.
-                space.addWindow(meta_window, space.length);
-                space.cloneContainer.add_actor(meta_window.clone);
+                this.addWindow(meta_window, this.length);
+                this.cloneContainer.add_actor(meta_window.clone);
             }
         })
 
         let tabList = global.display.get_tab_list(Meta.TabList.NORMAL, workspace)
-            .filter(metaWindow => { return space.indexOf(metaWindow) !== -1; });
+            .filter(metaWindow => { return this.indexOf(metaWindow) !== -1; });
         if (tabList[0]) {
-            space.selectedWindow = tabList[0]
+            this.selectedWindow = tabList[0]
             // ensureViewport(space.selectedWindow, space);
         }
     }
