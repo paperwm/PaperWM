@@ -960,7 +960,7 @@ function ensureViewport(meta_window, space, force) {
     } else if (index == 0) {
         // Always align the first window to the display's left edge
         x = 0;
-    } else if (index == space.length-1) {
+    } else if (index == space.length-1 && x + frame.width >= space.width) {
         // Always align the first window to the display's right edge
         x = space.width - frame.width;
     } else if (frame.width > space.width*0.9 - 2*(prefs.horizontal_margin + prefs.window_gap)) {
