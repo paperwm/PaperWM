@@ -57,9 +57,14 @@ function toggleScratch() {
 
 function show() {
     let windows = getScratchWindows();
+    if (windows.length === 0) {
+        return;
+    }
+
     TopBar.show();
+
     windows.slice().reverse()
-        . map(function(meta_window) {
+        .map(function(meta_window) {
             meta_window.unminimize();
             meta_window.make_above();
             meta_window.get_compositor_private().show();
