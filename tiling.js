@@ -957,7 +957,7 @@ function ensureViewport(meta_window, space, force) {
         gap = Math.floor(leftovers/gaps);
         x = gap;
         meta_window = space[0];
-    } else if (index == 0) {
+    } else if (index == 0 && frame.x <= 0) {
         // Always align the first window to the display's left edge
         x = 0;
     } else if (index == space.length-1 && x + frame.width >= space.width) {
