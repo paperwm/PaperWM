@@ -1045,7 +1045,7 @@ function updateSelection(space) {
  */
 function move(meta_window, space,
               { x, y, onComplete, onStart,
-                delay, transition, visible, noAnimate }) {
+                delay, transition, visible }) {
 
     onComplete = onComplete || (() => {});
     onStart = onStart || (() => {});
@@ -1110,8 +1110,7 @@ function move(meta_window, space,
 
 // Move @meta_window to x, y and propagate the change in @space
 function move_to(space, meta_window, { x, y, delay, transition,
-                                       onComplete, onStart, gap,
-                                       noAnimate }) {
+                                       onComplete, onStart, gap }) {
 
     space.visible = [];
     space.delayed = false;
@@ -1120,7 +1119,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
                                , onComplete
                                , onStart
                                , delay
-                               , transition, noAnimate
+                               , transition
                                , visible: true}
         );
     let index = space.indexOf(meta_window);
@@ -1131,7 +1130,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
     // NB: onComplete have already run if noAnimate is true!
     space[index].forEach(mw => {
         if (mw !== meta_window)
-            move(mw, space, { x, delay, transition, noAnimate, visible: true })
+            move(mw, space, { x, delay, transition, visible: true })
     });
 
     let frame = meta_window.get_frame_rect();
