@@ -1114,6 +1114,13 @@ function move_to(space, meta_window, { x, y, delay, transition,
     if (index === -1)
         return;
 
+    // Move rest of column
+    // NB: onComplete have already run if noAnimate is true!
+    space[index].forEach(mw => {
+        if (mw !== meta_window)
+            move(mw, space, { x, delay, transition, noAnimate, visible: true })
+    });
+
     let frame = meta_window.get_frame_rect();
 
     space.monitor.clickOverlay.reset();
