@@ -1186,7 +1186,8 @@ function grabEnd(screen, display, metaWindow, type) {
 function moveSizeHandler(metaWindow) {
     debug('size-changed', metaWindow.title);
     let space = spaces.spaceOfWindow(metaWindow);
-    if (space.selectedWindow !== metaWindow)
+    if (space.selectedWindow !== metaWindow
+        || space.moving === metaWindow)
         return;
 
     let frame = metaWindow.get_frame_rect();
