@@ -104,7 +104,7 @@ class Minimap {
     }
 
     show() {
-        this.clones = this.createClones(this.space.getWindows());
+        this.clones = this.createClones(this.space.map(col => col[0]));
         this.restack();
         this.layout(false);
     }
