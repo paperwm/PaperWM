@@ -335,7 +335,9 @@ class Spaces extends Map {
         this.displaySignals = [
             global.display.connect(
                 'window-created',
-                utils.dynamic_function_ref('window_created', this))
+                utils.dynamic_function_ref('window_created', this)),
+            global.display.connect('grab-op-begin', grabBegin),
+            global.display.connect('grab-op-end', grabEnd),
         ];
 
         // Clone and hook up existing windows
@@ -588,8 +590,8 @@ function registerWindow(metaWindow) {
     metaWindow[signals] = [
         metaWindow.connect("focus", focus_wrapper),
         metaWindow.connect('notify::minimized', minimizeWrapper),
-        metaWindow.connect('size-changed', sizeHandler),
-        metaWindow.connect('position-changed', moveHandler),
+        metaWindow.connect('size-changed', moveSizeHandler),
+        metaWindow.connect('position-changed', moveSizeHandler),
         metaWindow.connect('notify::fullscreen', fullscreenWrapper)
     ];
     actor[signals] = [
@@ -1162,8 +1164,26 @@ function move_to(space, meta_window, { x, y, delay, transition,
     }
 }
 
+let noAnimate = false;
+function grabBegin(screen, display, metaWindow, type) {
+    // Don't handle pushModal grabs
+    if (type === Meta.GrabOp.COMPOSITOR)
+        return;
+    // Turn size/position animation off when grabbing a window with the mouse
+    noAnimate = true;
+}
+
+function grabEnd(screen, display, metaWindow, type) {
+    if (type === Meta.GrabOp.COMPOSITOR)
+        return;
+    noAnimate = false;
+    let space = spaces.spaceOfWindow(metaWindow);
+    ensureViewport(metaWindow, space, true);
+}
+
+
 // `MetaWindow::size-changed` handling
-function sizeHandler(metaWindow) {
+function moveSizeHandler(metaWindow) {
     debug('size-changed', metaWindow.title);
     let space = spaces.spaceOfWindow(metaWindow);
     if (space.selectedWindow !== metaWindow)
@@ -1172,25 +1192,8 @@ function sizeHandler(metaWindow) {
     let frame = metaWindow.get_frame_rect();
     let monitor = space.monitor;
     move_to(space, metaWindow, {x: frame.x - monitor.x, y: frame.y - monitor.y,
-                                onComplete: () => space.emit('move-done')});
-    Tweener.removeTweens(space.selection);
-    space.selection.width = frame.width + prefs.window_gap;
-    space.selection.x = frame.x - Math.round(prefs.window_gap/2);
-}
-
-function moveHandler(metaWindow) {
-    let space = spaces.spaceOfWindow(metaWindow);
-    if (space.selectedWindow !== metaWindow
-        || space.moving === metaWindow)
-        return;
-
-    let frame = metaWindow.get_frame_rect();
-    let monitor = space.monitor;
-    move_to(space, metaWindow,
-            { x: frame.x - monitor.x,
-              y: panelBox.height + prefs.vertical_margin,
-              noAnimate: true });
-    space.emit('move-done');
+                                noAnimate,
+                                onComplete: () => !noAnimate && space.emit('move-done')});
     Tweener.removeTweens(space.selection);
     space.selection.width = frame.width + prefs.window_gap;
     space.selection.x = frame.x - Math.round(prefs.window_gap/2);
