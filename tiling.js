@@ -1205,7 +1205,7 @@ function moveSizeHandler(metaWindow) {
     let monitor = space.monitor;
     const x = frame.x - monitor.x;
     const y = frame.y - monitor.y;
-    move_to(space, metaWindow, {x: x, y: y,
+    move_to(space, metaWindow, {x: x, y: panelBox.height + prefs.vertical_margin,
                                 noAnimate,
                                 onComplete: () => !noAnimate && space.emit('move-done')});
 
