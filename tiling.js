@@ -959,7 +959,7 @@ function ensureViewport(meta_window, space, force) {
     space.selection.set_size(selW + prefs.window_gap, space.height - panelBox.height);
 
     let x = frame.x;
-    let y = frame.y;
+    let y = panelBox.height + prefs.vertical_margin;
     let gap = prefs.window_gap;
     let required_width = space.getWindows().reduce((length, meta_window) => {
         let frame = meta_window.get_frame_rect();
@@ -1115,23 +1115,10 @@ function move_to(space, meta_window, { x, y, delay, transition,
     space.visible = [];
     space.delayed = false;
 
-    move(meta_window, space, { x, y
-                               , onComplete
-                               , onStart
-                               , delay
-                               , transition
-                               , visible: true}
-        );
     let index = space.indexOf(meta_window);
     if (index === -1)
         return;
-
-    // Move rest of column
-    // NB: onComplete have already run if noAnimate is true!
-    space[index].forEach(mw => {
-        if (mw !== meta_window)
-            move(mw, space, { x, delay, transition, visible: true })
-    });
+    fixColumn(space, index, x, y, onComplete);
 
     let frame = meta_window.get_frame_rect();
 
@@ -1142,7 +1129,8 @@ function move_to(space, meta_window, { x, y, delay, transition,
     for (let X = x + frame.width + gap,
              targetSet = false,
              n=index+1 ; n < space.length; n++) {
-        let width = fixColumn(space, n, X);
+        let width = fixColumn(space, n, X,
+                              panelBox.height + prefs.vertical_margin);
         if (!targetSet && X + width > space.width) {
             space.monitor.clickOverlay.right.setTarget(meta_window);
             targetSet = true;
@@ -1155,7 +1143,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
              n=index-1; n >= 0; n--) {
         let width = Math.max(...space[n].map(w => w.get_frame_rect().width));
         X -= gap + width;
-        fixColumn(space, n, X);
+        fixColumn(space, n, X, panelBox.height + prefs.vertical_margin);
 
         if (!targetSet && X - width < 0) {
             space.monitor.clickOverlay.left.setTarget(meta_window);
@@ -1164,10 +1152,9 @@ function move_to(space, meta_window, { x, y, delay, transition,
     }
 }
 
-function fixColumn(space, index, x) {
+function fixColumn(space, index, x, y, onComplete) {
     let column = space[index];
     let width = 0;
-    let y = panelBox.height + prefs.vertical_margin;
 
     for (let r=0; r < column.length; r++) {
         let meta_window = column[r];
@@ -1184,7 +1171,7 @@ function fixColumn(space, index, x) {
         let actor = meta_window.get_compositor_private();
         if (actor) {
             // Anchor on the right edge for windows positioned to the left.
-            move(meta_window, space, { x, y, visible});
+            move(meta_window, space, { x, y, visible, onComplete});
 
         }
         y += frame.height + prefs.window_gap;
