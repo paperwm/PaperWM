@@ -1510,3 +1510,15 @@ function centerWindowHorizontally(metaWindow) {
     space.selection.width = frame.width + prefs.window_gap;
     space.selection.x = targetX + monitor.x - Math.round(prefs.window_gap/2);
 }
+
+function slurp(metaWindow) {
+    let space = spaces.spaceOfWindow(metaWindow)
+    let index = space.indexOf(metaWindow);
+    let rightNeigbour = index < space.length ? space[index+1][0] : null;
+    if(!rightNeigbour)
+        return;
+    detach(rightNeigbour)
+    let col = space.indexOf(metaWindow)
+    space.addWindow(rightNeigbour, col, 1)
+    ensureViewport(global.display.focus_window, spaces.spaceOfWindow(global.display.focus_window), true)
+}
