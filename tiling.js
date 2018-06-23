@@ -951,9 +951,12 @@ function ensureViewport(meta_window, space, force) {
     frame.x -= monitor.x;
     frame.y -= monitor.y;
 
-    space.selection.set_position(frame.x - Math.round(prefs.window_gap/2),
+    const selectedColumn = space[space.selectedIndex()];
+    const selW = Math.max(...selectedColumn.map(mw => mw.get_frame_rect().width));
+    const selX = Math.min(...selectedColumn.map(mw => mw.get_frame_rect().x));
+    space.selection.set_position(selX - Math.round(prefs.window_gap/2),
                                  panelBox.height);
-    space.selection.set_size(frame.width + prefs.window_gap, space.height - panelBox.height);
+    space.selection.set_size(selW + prefs.window_gap, space.height - panelBox.height);
 
     let x = frame.x;
     let y = frame.y;
@@ -1013,17 +1016,27 @@ function ensureViewport(meta_window, space, force) {
                 });
     }
 
-    let selectedFrame = space.selectedWindow.get_frame_rect();
-    Tweener.addTween(space.selection,
-                     {x: selectedFrame.x - Math.round(prefs.window_gap/2),
-                      y: panelBox.height,
-                      width: selectedFrame.width + prefs.window_gap,
-                      height: space.height - panelBox.height,
-                      time: 0.25,
-                      transition: 'easeInOutQuad'});
+    updateSelection(space);
 
     // Return x so we can position the minimap
-    return selectedFrame.x;
+    // return selectedFrame.x;
+}
+
+function updateSelection(space) {
+    if (space.length === 0)
+        return;
+
+    const selectedFrame = space.selectedWindow.get_frame_rect();
+    const selectedColumn = space[space.selectedIndex()];
+    const w = Math.max(...selectedColumn.map(mw => mw.get_frame_rect().width));
+    const x = Math.min(...selectedColumn.map(mw => mw.get_frame_rect().x));
+    Tweener.addTween(space.selection,
+                     {x: x - Math.round(prefs.window_gap/2),
+                      y: panelBox.height,
+                      width: w + prefs.window_gap,
+                      height: space.height - panelBox.height,
+                      time: noAnimate ? 0 :0.25,
+                      transition: 'easeInOutQuad'});
 }
 
 
@@ -1235,12 +1248,17 @@ function moveSizeHandler(metaWindow) {
 
     let frame = metaWindow.get_frame_rect();
     let monitor = space.monitor;
-    move_to(space, metaWindow, {x: frame.x - monitor.x, y: frame.y - monitor.y,
+    const x = frame.x - monitor.x;
+    const y = frame.y - monitor.y;
+    move_to(space, metaWindow, {x: x, y: y,
                                 noAnimate,
                                 onComplete: () => !noAnimate && space.emit('move-done')});
-    Tweener.removeTweens(space.selection);
-    space.selection.width = frame.width + prefs.window_gap;
-    space.selection.x = frame.x - Math.round(prefs.window_gap/2);
+
+
+    updateSelection(space);
+    // Tweener.removeTweens(space.selection);
+    // space.selection.width = frame.width + prefs.window_gap;
+    // space.selection.x = frame.x - Math.round(prefs.window_gap/2);
 }
 var moveSizeHandlerWrapper = utils.dynamic_function_ref("moveSizeHandler", Me);
 
