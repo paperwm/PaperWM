@@ -1045,6 +1045,13 @@ function move(meta_window, space,
     let clone = meta_window.clone;
     let monitor = space.monitor;
 
+    if (y === undefined) {
+        y = frame.y - monitor.y;
+    }
+    if (x === undefined) {
+        x = frame.x - monitor.x;
+    }
+
     if (actor.visible) {
         clone.set_position(actor.x - monitor.x, actor.y - monitor.y);
     }
