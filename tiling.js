@@ -951,12 +951,7 @@ function ensureViewport(meta_window, space, force) {
     frame.x -= monitor.x;
     frame.y -= monitor.y;
 
-    const selectedColumn = space[space.selectedIndex()];
-    const selW = Math.max(...selectedColumn.map(mw => mw.get_frame_rect().width));
-    const selX = Math.min(...selectedColumn.map(mw => mw.get_frame_rect().x));
-    space.selection.set_position(selX - Math.round(prefs.window_gap/2),
-                                 panelBox.height);
-    space.selection.set_size(selW + prefs.window_gap, space.height - panelBox.height);
+    updateSelection(space, true);
 
     let x = frame.x;
     let y = panelBox.height + prefs.vertical_margin;
@@ -1016,25 +1011,23 @@ function ensureViewport(meta_window, space, force) {
                 });
     }
 
-    updateSelection(space);
+    updateSelection(space, noAnimate);
 
     // Return x so we can position the minimap
     // return selectedFrame.x;
 }
 
-function updateSelection(space) {
+function updateSelection(space, noAnimate) {
     if (space.length === 0)
         return;
 
-    const selectedFrame = space.selectedWindow.get_frame_rect();
-    const selectedColumn = space[space.selectedIndex()];
-    const w = Math.max(...selectedColumn.map(mw => mw.get_frame_rect().width));
-    const x = Math.min(...selectedColumn.map(mw => mw.get_frame_rect().x));
+    const frame = space.selectedWindow.get_frame_rect();
+    let protrusion = Math.round(prefs.window_gap/2);
     Tweener.addTween(space.selection,
-                     {x: x - Math.round(prefs.window_gap/2),
-                      y: panelBox.height,
-                      width: w + prefs.window_gap,
-                      height: space.height - panelBox.height,
+                     {x: frame.x - protrusion,
+                      y: frame.y - protrusion,
+                      width: frame.width + prefs.window_gap,
+                      height: frame.height + prefs.window_gap,
                       time: noAnimate ? 0 :0.25,
                       transition: 'easeInOutQuad'});
 }
@@ -1217,7 +1210,7 @@ function moveSizeHandler(metaWindow) {
                                 onComplete: () => !noAnimate && space.emit('move-done')});
 
 
-    updateSelection(space);
+    updateSelection(space, noAnimate);
     // Tweener.removeTweens(space.selection);
     // space.selection.width = frame.width + prefs.window_gap;
     // space.selection.x = frame.x - Math.round(prefs.window_gap/2);
