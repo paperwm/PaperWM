@@ -1163,8 +1163,8 @@ function fixColumn(space, index, x, y, onComplete) {
 
         // Check if the window is fully visible
         let visible = true;
-        if (x < stack_margin
-            || x + frame.width > space.width - stack_margin) {
+        if (x + frame.width < stack_margin
+            || x > space.width - stack_margin) {
             visible = false;
         }
 
