@@ -1155,6 +1155,8 @@ function move_to(space, meta_window, { x, y, delay, transition,
 function fixColumn(space, index, x, y, onComplete) {
     let column = space[index];
     let width = Math.max(...space[index].map(w => w.get_frame_rect().width));
+    let height = Math.round(
+        (space.height - y - prefs.window_gap*(column.length - 1))/column.length) ;
     if (column.includes(space.selectedWindow))
         width = space.selectedWindow.get_frame_rect().width;
 
@@ -1173,9 +1175,9 @@ function fixColumn(space, index, x, y, onComplete) {
         if (actor) {
             // Anchor on the right edge for windows positioned to the left.
             move(meta_window, space, { x, y, visible, onComplete});
-            meta_window.move_resize_frame(true, x, y, width, frame.height);
+            meta_window.move_resize_frame(true, x, y, width, height);
         }
-        y += frame.height + prefs.window_gap;
+        y += height + prefs.window_gap;
     }
     return width;
 }
