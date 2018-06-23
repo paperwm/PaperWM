@@ -115,7 +115,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         swapArray(this.space, index, targetIndex);
 
-        let metaWindow = this.space[targetIndex];
+        let metaWindow = this.space[targetIndex][0];
         metaWindow.clone.raise_top();
 
         let newX = Tiling.ensureViewport(metaWindow, this.space, true);
@@ -309,7 +309,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             if (action
                 && action.name !== 'toggle-scratch-layer'
                 && action.name !== 'toggle-scratch') {
-                let metaWindow = this.space[this._selectedIndex];
+                let metaWindow = this.space[this._selectedIndex][0];
                 action.handler(null, null, metaWindow);
                 let minimap = this.minimap;
                 minimap.layout(false);
@@ -330,8 +330,8 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     _select: function(index) {
-        // debug('#preview', 'Select', this.space[index].title, index);
-        let metaWindow = this.space[index];
+        // debug('#preview', 'Select', this.space[index][0].title, index);
+        let metaWindow = this.space[index][0];
         if (metaWindow) {
             this.space.selectedWindow = metaWindow;
             Tiling.ensureViewport(metaWindow, this.space);
@@ -444,7 +444,7 @@ function switchWorkspace(to, from, callback) {
         Tiling.ensureViewport(selected, toSpace, true);
 
     if (from) {
-        Tiling.spaces.spaceOf(from).forEach(w => {
+        Tiling.spaces.spaceOf(from).getWindows().forEach(w => {
             w.get_compositor_private().hide();
             w.clone.show();
         });

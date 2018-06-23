@@ -115,8 +115,58 @@ class Space extends Array {
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
 
-        this.addAll(oldSpaces.get(workspace));
+        let oldSpace = oldSpaces.get(workspace);
+        if (oldSpace)
+            this.addAll(oldSpace.getWindows());
+        else
+            this.addAll();
         oldSpaces.delete(workspace);
+    }
+
+    getWindows() {
+        return this.reduce((ws, column) => ws.concat(column), []);
+    }
+
+    addWindow(metaWindow, index, row) {
+        if (this.indexOf(metaWindow) !== -1)
+            return;
+        if (row !== undefined && this[index]) {
+            let column = this[index];
+            column.splice(row, 0, metaWindow);
+        } else {
+            row = row || 0;
+            this.splice(index, 0, [metaWindow]);
+        }
+        metaWindow.clone.reparent(this.cloneContainer);
+    }
+
+    removeWindow(metaWindow) {
+        let index = this.indexOf(metaWindow);
+        if (index === -1)
+            return false;
+        let column = this[index];
+        let row = column.indexOf(metaWindow);
+        column.splice(row, 1);
+        if (column.length === 0)
+            this.splice(index, 1);
+        this.cloneContainer.remove_actor(metaWindow.clone);
+        Tweener.removeTweens(this.selection);
+        this.selection.width = 0;
+        this.visible = [];
+        return true;
+    }
+
+    indexOf(metaWindow) {
+        for (let i=0; i < this.length; i++) {
+            if (this[i].includes(metaWindow))
+                return i;
+        }
+        return -1;
+    }
+
+    rowOf(metaWindow) {
+        let column = this[this.indexOf(metaWindow)];
+        return column.indexOf(metaWindow);
     }
 
     _moveDone() {
@@ -235,7 +285,7 @@ class Space extends Array {
             }
             if(space.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
                 // Using add_handler is unreliable since it interacts with focus.
-                space.push(meta_window);
+                space.addWindow(meta_window, space.length);
                 space.cloneContainer.add_actor(meta_window.clone);
             }
         })
@@ -257,32 +307,6 @@ class Space extends Array {
         } else {
             return -1;
         }
-    }
-
-    topOfLeftStack () {
-        // There's no left stack
-        if (!isStacked(this[0]))
-            return null;
-
-        for(let i = 0; i < this.length; i++) {
-            if (!isStacked(this[i])) {
-                return this[i - 1];
-            }
-        }
-        return null;
-    }
-
-    topOfRightStack () {
-        // There's no right stack
-        if (!isStacked(this[this.length-1]))
-            return null;
-
-        for(let i = this.length - 1; i >= 0; i--) {
-            if (!isStacked(this[i])) {
-                return this[i + 1];
-            }
-        }
-        return null;
     }
 
     destroy() {
@@ -368,7 +392,7 @@ class Spaces extends Map {
     monitorsChanged() {
         debug('#monitors changed', Main.layoutManager.primaryIndex);
 
-        this.get(screen.get_active_workspace()).forEach(w => {
+        this.get(screen.get_active_workspace()).getWindows().forEach(w => {
             w.get_compositor_private().hide();
             w.clone.show();
         });
@@ -698,10 +722,10 @@ function disable () {
             return;
         // Stack windows correctly for controlled restarts
         for (let i=selected; i<space.length; i++) {
-            space[i].lower();
+            space[i][0].lower();
         }
         for (let i=selected; i>=0; i--) {
-            space[i].lower();
+            space[i][0].lower();
         }
     });
 
@@ -772,15 +796,8 @@ function remove_handler(workspace, meta_window) {
     // Not sure if we can check directly if _this_ window had focus when closed.
 
     let space = spaces.spaceOf(workspace);
-    let removed_i = space.indexOf(meta_window)
-    if (removed_i < 0)
-        return
-    space.splice(removed_i, 1)
-
-    space.cloneContainer.remove_actor(meta_window.clone);
-    Tweener.removeTweens(space.selection);
-    space.selection.width = 0;
-    space.visible = [];
+    if (!space.removeWindow(meta_window))
+        return;
 
     if (space.selectedWindow === meta_window) {
         // Window closed or moved when other workspace is active so no new focus
@@ -849,7 +866,7 @@ function insertWindow(metaWindow, {existing}) {
     }
     index++;
 
-    space.splice(index, 0, metaWindow);
+    space.addWindow(metaWindow, index);
 
     metaWindow.unmake_above();
 
@@ -862,7 +879,7 @@ function insertWindow(metaWindow, {existing}) {
         position = {x: monitor.x + (monitor.width - frame.width)/2,
                     y: monitor.y + panelBox.height + prefs.vertical_margin};
     } else {
-        let frame = space[index - 1].get_frame_rect();
+        let frame = space[index - 1][0].get_frame_rect();
         position = {x: monitor.x + frame.x + frame.width + prefs.window_gap,
                     y: monitor.y + panelBox.height + prefs.vertical_margin};
     }
@@ -878,8 +895,6 @@ function insertWindow(metaWindow, {existing}) {
     let x_offset = frame.x - buffer.x;
     let y_offset = frame.y - buffer.y;
     let clone = metaWindow.clone;
-
-    clone.reparent(space.cloneContainer);
 
     if (!existing) {
         metaWindow.get_compositor_private().hide();
@@ -929,8 +944,8 @@ function ensureViewport(meta_window, space, force) {
     let monitor = space.monitor;
     let frame = meta_window.get_frame_rect();
     let width = Math.min(space.monitor.width - 2*minimumMargin, frame.width);
-    meta_window.move_resize_frame(true, frame.x, frame.y, width,
-                                  space.height - panelBox.height - prefs.vertical_margin);
+    // meta_window.move_resize_frame(true, frame.x, frame.y, width,
+    //                               space.height - panelBox.height - prefs.vertical_margin);
 
     // Use monitor relative coordinates.
     frame.x -= monitor.x;
@@ -943,7 +958,7 @@ function ensureViewport(meta_window, space, force) {
     let x = frame.x;
     let y = panelBox.height + prefs.vertical_margin;
     let gap = prefs.window_gap;
-    let required_width = space.reduce((length, meta_window) => {
+    let required_width = space.getWindows().reduce((length, meta_window) => {
         let frame = meta_window.get_frame_rect();
         return length + frame.width + prefs.window_gap;
     }, -prefs.window_gap);
@@ -956,7 +971,7 @@ function ensureViewport(meta_window, space, force) {
         let gaps = space.length + 1;
         gap = Math.floor(leftovers/gaps);
         x = gap;
-        meta_window = space[0];
+        meta_window = space[0][0];
     } else if (index == 0 && frame.x <= 0) {
         // Always align the first window to the display's left edge
         x = 0;
@@ -1101,7 +1116,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
     for (let X = x + frame.width + gap,
              targetSet = false,
              n=index+1 ; n < space.length; n++) {
-        let meta_window = space[n];
+        let meta_window = space[n][0];
         let frame = meta_window.get_frame_rect();
 
         let visible = true;
@@ -1133,7 +1148,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
     for (let X = x - gap,
              targetSet = false,
              n=index-1; n >= 0; n--) {
-        let meta_window = space[n];
+        let meta_window = space[n][0];
         let frame = meta_window.get_frame_rect();
 
         // Check if the window is fully visible
@@ -1275,16 +1290,19 @@ let showWrapper = utils.dynamic_function_ref('showHandler', Me);
   We need to stack windows in mru order, since mutter picks from the
   stack, not the mru, when auto choosing focus after closing a window.
  */
-function fixStack(space, around) {
-    if (around < 0 || around >= space.length)
+function fixStack(space, metaWindow) {
+    let windows = space.getWindows();
+    let around = windows.indexOf(metaWindow);
+    if (around === -1)
         return;
+
     utils.debug("stack", "fix stack");
     let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
                                           space.workspace);
 
     for (let i=1; i >= 0; i--) {
-        let leftWindow = space[around - i];
-        let rightWindow = space[around + i];
+        let leftWindow = windows[around - i];
+        let rightWindow = windows[around + i];
         mru.filter(w => w === leftWindow || w === rightWindow)
             .reverse()
             .forEach(w => w && w.raise());
@@ -1435,7 +1453,7 @@ function cycleWindowWidth(metaWindow) {
 
 function activateNthWindow(n, space) {
     space = space || spaces.spaceOf(screen.get_active_workspace());
-    let nth = space[n];
+    let nth = space[n][0];
     if (nth)
         Main.activateWindow(nth);
 }

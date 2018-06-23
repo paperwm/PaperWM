@@ -230,7 +230,8 @@ var StackOverlay = new Lang.Class({
         //       positions (icon) (since we don't track the y destination)
         //       We also assume window widths are are unchanging.
         if (this._direction === Meta.MotionDirection.LEFT) {
-            let neighbour = space[space.indexOf(metaWindow) + 1];
+            let column = space[space.indexOf(metaWindow) + 1];
+            let neighbour = column && column[0];
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
 
@@ -242,7 +243,8 @@ var StackOverlay = new Lang.Class({
             overlay.x = this.monitor.x;
             overlay.width = Math.min(Math.max(0, frame.x), max);
         } else {
-            let neighbour = space[space.indexOf(metaWindow) - 1];
+            let column = space[space.indexOf(metaWindow) - 1];
+            let neighbour = column && column[0];
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
 
