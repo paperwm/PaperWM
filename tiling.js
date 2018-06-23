@@ -614,8 +614,8 @@ function registerWindow(metaWindow) {
     metaWindow[signals] = [
         metaWindow.connect("focus", focus_wrapper),
         metaWindow.connect('notify::minimized', minimizeWrapper),
-        metaWindow.connect('size-changed', moveSizeHandler),
-        metaWindow.connect('position-changed', moveSizeHandler),
+        metaWindow.connect('size-changed', moveSizeHandlerWrapper),
+        metaWindow.connect('position-changed', moveSizeHandlerWrapper),
         metaWindow.connect('notify::fullscreen', fullscreenWrapper)
     ];
     actor[signals] = [
@@ -1242,6 +1242,7 @@ function moveSizeHandler(metaWindow) {
     space.selection.width = frame.width + prefs.window_gap;
     space.selection.x = frame.x - Math.round(prefs.window_gap/2);
 }
+var moveSizeHandlerWrapper = utils.dynamic_function_ref("moveSizeHandler", Me);
 
 // `MetaWindow::focus` handling
 function focus_handler(meta_window, user_data) {
