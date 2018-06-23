@@ -956,7 +956,7 @@ function ensureViewport(meta_window, space, force) {
     space.selection.set_size(frame.width + prefs.window_gap, space.height - panelBox.height);
 
     let x = frame.x;
-    let y = panelBox.height + prefs.vertical_margin;
+    let y = frame.y;
     let gap = prefs.window_gap;
     let required_width = space.getWindows().reduce((length, meta_window) => {
         let frame = meta_window.get_frame_rect();
@@ -1116,66 +1116,80 @@ function move_to(space, meta_window, { x, y, delay, transition,
     for (let X = x + frame.width + gap,
              targetSet = false,
              n=index+1 ; n < space.length; n++) {
-        let meta_window = space[n][0];
-        let frame = meta_window.get_frame_rect();
+        let column = space[n];
+        let width = 0;
+        let Y = panelBox.height + prefs.vertical_margin;
 
-        let visible = true;
-        // Check if we should start stacking windows
-        if (X > space.width - stack_margin || meta_window.fullscreen
-            || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
-            visible = false;
-            meta_window._isStacked = true;
-        } else {
-            meta_window._isStacked = false;
-        }
+        for (let r=0; r < column.length; r++) {
+            let meta_window = column[r];
+            let frame = meta_window.get_frame_rect();
+            width = Math.max(frame.width, width);
 
-        let actor = meta_window.get_compositor_private();
-        if (actor) {
-            // Anchor scaling/animation on the left edge for windows positioned to the right,
-
-            move(meta_window, space,
-                 { x: X, y: panelBox.height + prefs.vertical_margin, visible,
-                   noAnimate });
-
-            if (!targetSet && X + frame.width > space.width) {
-                space.monitor.clickOverlay.right.setTarget(meta_window);
-                targetSet = true;
+            let visible = true;
+            // Check if we should start stacking windows
+            if (X > space.width - stack_margin || meta_window.fullscreen
+                || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
+                visible = false;
+                meta_window._isStacked = true;
+            } else {
+                meta_window._isStacked = false;
             }
-            X += frame.width + gap;
+
+            let actor = meta_window.get_compositor_private();
+            if (actor) {
+                move(meta_window, space,
+                     { x: X, y: Y, visible,
+                       noAnimate });
+
+                Y += frame.height + prefs.window_gap;
+            }
         }
+        if (!targetSet && X + frame.width > space.width) {
+            space.monitor.clickOverlay.right.setTarget(meta_window);
+            targetSet = true;
+        }
+        X += width + gap;
     }
 
     for (let X = x - gap,
              targetSet = false,
              n=index-1; n >= 0; n--) {
-        let meta_window = space[n][0];
-        let frame = meta_window.get_frame_rect();
+        let column = space[n];
+        let width = 0;
+        let Y = panelBox.height + prefs.vertical_margin;
 
-        // Check if the window is fully visible
-        let visible = true;
-        if (X < stack_margin || meta_window.fullscreen
-            || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
-            visible = false;
-            meta_window._isStacked = true;
-        } else {
-            meta_window._isStacked = false;
-        }
+        for (let r=0; r < column.length; r++) {
 
-        let actor = meta_window.get_compositor_private();
-        if (actor) {
-            X -= frame.width;
-            // Anchor on the right edge for windows positioned to the left.
-            move(meta_window, space,
-                 { x: X,
-                   y: panelBox.height + prefs.vertical_margin, visible,
-                   noAnimate});
+            let meta_window = column[r];
+            let frame = meta_window.get_frame_rect();
+            width = Math.max(frame.width, width);
 
-            if (!targetSet && X < 0) {
-                space.monitor.clickOverlay.left.setTarget(meta_window);
-                targetSet = true;
+            // Check if the window is fully visible
+            let visible = true;
+            if (X < stack_margin || meta_window.fullscreen
+                || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
+                visible = false;
+                meta_window._isStacked = true;
+            } else {
+                meta_window._isStacked = false;
             }
-            X -= gap;
+
+            let actor = meta_window.get_compositor_private();
+            if (actor) {
+                // Anchor on the right edge for windows positioned to the left.
+                move(meta_window, space,
+                     { x: X - frame.width,
+                       y: Y, visible,
+                       noAnimate});
+
+            }
+            Y += frame.height + prefs.window_gap;
         }
+        if (!targetSet && X - frame.width < 0) {
+            space.monitor.clickOverlay.left.setTarget(meta_window);
+            targetSet = true;
+        }
+        X -= gap + width;
     }
 }
 
