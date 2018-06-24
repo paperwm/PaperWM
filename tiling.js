@@ -1018,7 +1018,7 @@ function updateSelection(space, noAnimate) {
     let protrusion = Math.round(prefs.window_gap/2);
     Tweener.addTween(space.selection,
                      {x: frame.x - protrusion,
-                      y: frame.y - protrusion,
+                      y: Math.max(frame.y, panelBox.height + prefs.vertical_margin) - protrusion,
                       width: frame.width + prefs.window_gap,
                       height: frame.height + prefs.window_gap,
                       time: noAnimate ? 0 : 0.25,
