@@ -1028,7 +1028,7 @@ function updateSelection(space, noAnimate) {
                       y: frame.y - protrusion,
                       width: frame.width + prefs.window_gap,
                       height: frame.height + prefs.window_gap,
-                      time: noAnimate ? 0 :0.25,
+                      time: noAnimate ? 0 : 0.25,
                       transition: 'easeInOutQuad'});
 }
 
@@ -1101,7 +1101,10 @@ function move(meta_window, space,
 
 }
 
-// Move @meta_window to x, y and propagate the change in @space
+/**
+ * Move the column containing @meta_window to x, y and propagate the change in @space.
+ * Coordinates are relative to monitor and y is optional.
+ */
 function move_to(space, meta_window, { x, y, delay, transition,
                                        onComplete, onStart, gap }) {
 
@@ -1113,7 +1116,14 @@ function move_to(space, meta_window, { x, y, delay, transition,
         return;
 
     const columnTop = panelBox.height + prefs.vertical_margin;
-    fixColumn(space, index, x, columnTop, onComplete);
+
+    if (y === undefined) {
+        let top = space[index][0];
+        let topFrame = top.get_frame_rect();
+        y = topFrame.y - space.monitor.y
+    }
+
+    fixColumn(space, index, x, y, onComplete);
 
     let frame = meta_window.get_frame_rect();
 
@@ -1204,29 +1214,21 @@ function grabEnd(screen, display, metaWindow, type) {
 }
 
 
-// `MetaWindow::size-changed` handling
+// `MetaWindow::size-changed` and `MetaWindow::position-changed` handling
 function moveSizeHandler(metaWindow) {
-    debug('size-changed', metaWindow.title);
+    debug('move-or-resize', metaWindow.title);
     let space = spaces.spaceOfWindow(metaWindow);
     if (space.selectedWindow !== metaWindow
         || space.moving === metaWindow)
         return;
 
-    let index = space.selectedIndex();
-    let top = space[index][0];
-    let frame = top.get_frame_rect();
+    let frame = metaWindow.get_frame_rect();
     let monitor = space.monitor;
     const x = frame.x - monitor.x;
-    const y = frame.y - monitor.y;
-    move_to(space, metaWindow, {x: x, y,
-                                noAnimate,
+    move_to(space, metaWindow, {x: x,
                                 onComplete: () => !noAnimate && space.emit('move-done')});
 
-
     updateSelection(space, noAnimate);
-    // Tweener.removeTweens(space.selection);
-    // space.selection.width = frame.width + prefs.window_gap;
-    // space.selection.x = frame.x - Math.round(prefs.window_gap/2);
 }
 var moveSizeHandlerWrapper = utils.dynamic_function_ref("moveSizeHandler", Me);
 
@@ -1493,11 +1495,9 @@ function centerWindowHorizontally(metaWindow) {
     if (space.indexOf(metaWindow) === -1) {
         metaWindow.move_frame(true, targetX + monitor.x, frame.y);
     } else {
-        move_to(space, metaWindow, { x: targetX, y: frame.y - monitor.y,
+        move_to(space, metaWindow, { x: targetX,
                                      onComplete: () => space.emit('move-done')});
-        Tweener.removeTweens(space.selection);
-        space.selection.width = frame.width + prefs.window_gap;
-        space.selection.x = targetX + monitor.x - Math.round(prefs.window_gap/2);
+        updateSelection(space);
     }
 }
 
