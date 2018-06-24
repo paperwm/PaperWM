@@ -104,13 +104,13 @@ class Minimap {
     }
 
     show() {
-        this.clones = this.createClones(this.space.map(col => col[0]));
+        this.clones = this.createClones();
         this.restack();
         this.layout(false);
     }
 
-    createClones(windows) {
-        return windows.map((mw) => {
+    createClones() {
+        return this.space.map(column => column.map((mw) => {
             let windowActor = mw.get_compositor_private();
             let clone = new Clutter.Clone({ source: windowActor });
             let container = new Clutter.Actor({
@@ -122,34 +122,23 @@ class Minimap {
             container.add_actor(clone);
 
             return container;
-        });
+        }));
     }
 
     layout(animate = true) {
-        let actors = this.clones;
-        function tweenTo(actor, x) {
-            let time = 0;
-            if (animate) {
-                time = 0.25;
-            }
-            actor.destinationX = x;
-            Tweener.addTween(actor, { x: actor.destinationX
-                                      , y: 0
-                                      , scale_x: 1
-                                      , scale_y: 1
-                                      , time: time
-                                      , transition: "easeInOutQuad"});
-        }
+        let cloneSpace = this.clones;
 
         function propagate_forward(i, leftEdge, gap) {
-            if(i < 0 || i >= actors.length)
+            if(i < 0 || i >= cloneSpace.length)
                 return;
-            let actor = actors[i];
-            let w = actor.width;
+            let column = cloneSpace[i];
+            let w = Math.max(...column.map(c => c.width));
             let x = leftEdge;
-
-            tweenTo(actor, x);
-
+            let y = 0;
+            column.forEach(c => {
+                c.set_position(x, y);
+                y += c.height + gap;
+            });
             propagate_forward(i+1, Math.round(x + w + gap), gap);
         }
 
@@ -165,9 +154,8 @@ class Minimap {
         this.container.remove_all_children();
         let clones = this.clones;
 
-        for (let i=0; i < clones.length; i++) {
-            this.container.add_actor(clones[i]);
-        }
+        clones.reduce((ws, column) => ws.concat(column), [])
+            .forEach(c => this.container.add_actor(c));
     }
 
     reorder(index, targetIndex) {
@@ -190,12 +178,14 @@ class Minimap {
         this.select(targetIndex);
     }
 
-    select(index) {
+    select() {
         let clip = this.clip;
         let container = this.container;
         let highlight = this.highlight;
         let label = this.label;
-        let selected = this.clones[index];
+        let index = this.space.selectedIndex();
+        let row = this.space[index].indexOf(this.space.selectedWindow);
+        let selected = this.clones[index][row];
         if (!selected)
             return;
 
@@ -220,9 +210,11 @@ class Minimap {
 
         let gap = prefs.window_gap;
         highlight.x = Math.round(
-            clip.x + container.x + selected.destinationX - gap/2);
+            clip.x + container.x + selected.x - gap/2);
+        highlight.y = Math.round(
+            clip.y + selected.y - 10);
         highlight.set_size(Math.round(selected.width + gap),
-                           Math.round(clip.height + 20));
+                           Math.round(selected.height + 20));
 
         let x = highlight.x
             + (highlight.width - label.width)/2;
