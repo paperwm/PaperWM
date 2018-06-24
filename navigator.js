@@ -107,21 +107,28 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._doAction(actionId);
     },
 
-    _reorder: function (index, targetIndex) {
+    _reorder: function (direction) {
         function swapArray(array, i, j) {
             let temp = array[i];
             array[i] = array[j];
             array[j] = temp;
         }
 
+        let metaWindow = this.space.selectedWindow;
+        let index = this.space.indexOf(metaWindow);
+        let targetIndex = index;
+        if (direction === Meta.MotionDirection.LEFT)
+            targetIndex--;
+        else
+            targetIndex++;
+
+        this.space[index].forEach(w => w.clone.raise_top());
+
         swapArray(this.space, index, targetIndex);
 
-        let metaWindow = this.space[targetIndex][0];
-        metaWindow.clone.raise_top();
-
         let newX = Tiling.ensureViewport(metaWindow, this.space, true);
-
-        this._selectedIndex = targetIndex;
+        this.windows = this.space.getWindows();
+        this._selectedIndex = this.windows.indexOf(metaWindow);
 
         this.minimap.reorder(index, targetIndex);
     },
@@ -286,10 +293,10 @@ var PreviewedWindowNavigator = new Lang.Class({
             this._select(this._previous());
             return true;
         } else if (mutterActionId === paperActions.idOf("move-left")) {
-            this._reorder(this._selectedIndex, this._previous());
+            this._reorder(Meta.MotionDirection.LEFT);
             return true;
         } else if (mutterActionId === paperActions.idOf("move-right")) {
-            this._reorder(this._selectedIndex, this._next());
+            this._reorder(Meta.MotionDirection.RIGHT);
             return true;
         } else if (mutterActionId
                    === paperActions.idOf('previous-workspace-backward')) {

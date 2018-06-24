@@ -165,11 +165,6 @@ class Minimap {
         let movingClone = this.clones[index];
         let next = this.clones[targetIndex];
 
-
-        // Make sure the moving window is on top
-        this.container.set_child_above_sibling(
-            movingClone, this.container.last_child);
-
         let temp = this.clones[index];
         this.clones[index] = this.clones[targetIndex];
         this.clones[targetIndex] = temp;
