@@ -1377,13 +1377,6 @@ function isFullyVisible(metaWindow) {
     return frame.x >= 0 && (frame.x + frame.width) <= space.width;
 }
 
-// Detach meta_window or the focused window by default
-// Can be used from the looking glass
-function detach (meta_window) {
-    meta_window = meta_window || global.display.focus_window;
-    remove_handler(meta_window.get_workspace(), meta_window)
-}
-
 function toggleMaximizeHorizontally(metaWindow) {
     metaWindow = metaWindow || global.display.focus_window;
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
@@ -1500,7 +1493,7 @@ function slurp(metaWindow) {
     let rightNeigbour = index < space.length ? space[index+1][0] : null;
     if(!rightNeigbour)
         return;
-    detach(rightNeigbour);
+    space.removeWindow(rightNeigbour);
     let column = space[index];
     space.addWindow(rightNeigbour, index, column.length);
     ensureViewport(global.display.focus_window, spaces.spaceOfWindow(global.display.focus_window), true);
@@ -1517,7 +1510,7 @@ function barf(metaWindow) {
         return;
 
     let bottom = column[column.length - 1];
-    detach(bottom);
+    space.removeWindow(bottom);
     space.addWindow(bottom, index + 1);
     ensureViewport(global.display.focus_window, spaces.spaceOfWindow(global.display.focus_window), true);
 }
