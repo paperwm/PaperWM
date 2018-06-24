@@ -1168,7 +1168,9 @@ function fixColumn(space, index, x, y, onComplete) {
         // Check if the window is fully visible
         let visible = true;
         if (x + frame.width < stack_margin
-            || x > space.width - stack_margin) {
+            || x > space.width - stack_margin
+            || meta_window.fullscreen
+            || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
             visible = false;
         }
 
@@ -1209,11 +1211,13 @@ function moveSizeHandler(metaWindow) {
         || space.moving === metaWindow)
         return;
 
-    let frame = metaWindow.get_frame_rect();
+    let index = space.selectedIndex();
+    let top = space[index][0];
+    let frame = top.get_frame_rect();
     let monitor = space.monitor;
     const x = frame.x - monitor.x;
     const y = frame.y - monitor.y;
-    move_to(space, metaWindow, {x: x, y: panelBox.height + prefs.vertical_margin,
+    move_to(space, metaWindow, {x: x, y,
                                 noAnimate,
                                 onComplete: () => !noAnimate && space.emit('move-done')});
 
