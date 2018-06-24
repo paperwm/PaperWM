@@ -153,6 +153,12 @@ function init() {
     paperActions.register("move-right",
                           dynamic_function_ref("preview_navigate",
                                                Navigator));
+    paperActions.register("move-up",
+                          dynamic_function_ref("preview_navigate",
+                                               Navigator));
+    paperActions.register("move-down",
+                          dynamic_function_ref("preview_navigate",
+                                               Navigator));
     paperActions.register("toggle-scratch-layer",
                           dynamic_function_ref("toggleScratch",
                                                Scratch));

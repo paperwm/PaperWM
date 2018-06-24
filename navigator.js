@@ -117,10 +117,14 @@ var PreviewedWindowNavigator = new Lang.Class({
         let metaWindow = this.space.selectedWindow;
         let index = this.space.indexOf(metaWindow);
         let targetIndex = index;
-        if (direction === Meta.MotionDirection.LEFT)
+        switch (direction) {
+        case Meta.MotionDirection.LEFT:
             targetIndex--;
-        else
+            break;
+        case Meta.MotionDirection.RIGHT:
             targetIndex++;
+            break;
+        }
 
         if (targetIndex < 0 || targetIndex >= this.space.length)
             return;
@@ -134,6 +138,41 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._selectedIndex = this.windows.indexOf(metaWindow);
 
         this.minimap.reorder(index, targetIndex);
+    },
+
+    _reorderColumn(direction) {
+        function swapArray(array, i, j) {
+            let temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+
+        let space = this.space;
+        let metaWindow = space.selectedWindow;
+        let index = space.indexOf(metaWindow);
+        let column = space[index];
+        let row = column.indexOf(metaWindow);
+        let targetRow = row;
+
+        switch (direction) {
+        case Meta.MotionDirection.DOWN:
+            targetRow++;
+            break;
+        case Meta.MotionDirection.UP:
+            targetRow--;
+            break;
+        }
+        if (targetRow < 0 || targetRow >= column.length)
+            return;
+
+        metaWindow.clone.raise_top();
+
+        swapArray(column, row, targetRow);
+        this.minimap.show();
+        this.windows = this.space.getWindows();
+        this._selectedIndex = this.windows.indexOf(metaWindow);
+        Tiling.ensureViewport(metaWindow, space, true);
+        this.minimap.select();
     },
 
     _initSpaceMru(move) {
@@ -318,6 +357,12 @@ var PreviewedWindowNavigator = new Lang.Class({
             return true;
         } else if (mutterActionId === paperActions.idOf("move-right")) {
             this._reorder(Meta.MotionDirection.RIGHT);
+            return true;
+        } else if (mutterActionId === paperActions.idOf("move-up")) {
+            this._reorderColumn(Meta.MotionDirection.UP);
+            return true;
+        } else if (mutterActionId === paperActions.idOf("move-down")) {
+            this._reorderColumn(Meta.MotionDirection.DOWN);
             return true;
         } else if (mutterActionId
                    === paperActions.idOf('previous-workspace-backward')) {
