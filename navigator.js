@@ -122,6 +122,9 @@ var PreviewedWindowNavigator = new Lang.Class({
         else
             targetIndex++;
 
+        if (targetIndex < 0 || targetIndex >= this.space.length)
+            return;
+
         this.space[index].forEach(w => w.clone.raise_top());
 
         swapArray(this.space, index, targetIndex);
