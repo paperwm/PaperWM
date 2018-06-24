@@ -1111,7 +1111,9 @@ function move_to(space, meta_window, { x, y, delay, transition,
     let index = space.indexOf(meta_window);
     if (index === -1)
         return;
-    fixColumn(space, index, x, y, onComplete);
+
+    const columnTop = panelBox.height + prefs.vertical_margin;
+    fixColumn(space, index, x, columnTop, onComplete);
 
     let frame = meta_window.get_frame_rect();
 
@@ -1122,8 +1124,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
     for (let X = x + frame.width + gap,
              targetSet = false,
              n=index+1 ; n < space.length; n++) {
-        let width = fixColumn(space, n, X,
-                              panelBox.height + prefs.vertical_margin);
+        let width = fixColumn(space, n, X, columnTop);
         if (!targetSet && X + width > space.width) {
             let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
                                                   space.workspace);
@@ -1140,7 +1141,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
              n=index-1; n >= 0; n--) {
         let width = Math.max(...space[n].map(w => w.get_frame_rect().width));
         X -= gap + width;
-        fixColumn(space, n, X, panelBox.height + prefs.vertical_margin);
+        fixColumn(space, n, X, columnTop);
 
         if (!targetSet && X < 0) {
             let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
