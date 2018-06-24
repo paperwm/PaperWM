@@ -47,14 +47,15 @@ var WindowCloneLayout = new Lang.Class({
         box.set_origin(((inputRect.x - frame.x)*MINIMAP_SCALE),
                        (inputRect.y - frame.y)*MINIMAP_SCALE);
         box.set_size(inputRect.width*MINIMAP_SCALE,
-                     inputRect.height*MINIMAP_SCALE);
+                     inputRect.height*MINIMAP_SCALE - prefs.window_gap);
 
         return box;
     },
 
     vfunc_get_preferred_height: function(container, forWidth) {
         let frame = container.get_first_child().meta_window.get_frame_rect();
-        return [MINIMAP_SCALE*frame.height, MINIMAP_SCALE*frame.height];
+        return [MINIMAP_SCALE*frame.height,
+                MINIMAP_SCALE*frame.height - prefs.window_gap];
     },
 
     vfunc_get_preferred_width: function(container, forHeight) {
@@ -93,7 +94,7 @@ class Minimap {
         this.clip = clip;
         let container = new St.Widget({name: 'minimap-container'});
         this.container = container;
-        container.height = Math.round(space.height*MINIMAP_SCALE);
+        container.height = Math.round(space.height*MINIMAP_SCALE) - prefs.window_gap;
 
         actor.add_actor(highlight);
         actor.add_actor(label);
@@ -137,7 +138,7 @@ class Minimap {
             let y = 0;
             column.forEach(c => {
                 c.set_position(x, y);
-                y += c.height + gap;
+                y += c.height;
             });
             propagate_forward(i+1, Math.round(x + w + gap), gap);
         }
@@ -209,7 +210,7 @@ class Minimap {
         highlight.y = Math.round(
             clip.y + selected.y - 10);
         highlight.set_size(Math.round(selected.width + gap),
-                           Math.round(selected.height + 20));
+                           Math.round(selected.height + prefs.window_gap));
 
         let x = highlight.x
             + (highlight.width - label.width)/2;
