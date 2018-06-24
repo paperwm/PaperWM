@@ -55,11 +55,11 @@
     </key>
 
     <key type="as" name="move-previous-workspace">
-      <default><![CDATA[['<Super><Ctrl>Above_Tab', '<Super><Ctrl>Down']]]></default>
+      <default><![CDATA[['<Super><Ctrl>Above_Tab', '<Super><Ctrl>Page_Down']]]></default>
       <summary>Move current window to the previously used workspace</summary>
     </key>
     <key type="as" name="move-previous-workspace-backward">
-      <default><![CDATA[['<Super><Shift><Ctrl>Above_Tab', '<Super><Ctrl>Up']]]></default>
+      <default><![CDATA[['<Super><Shift><Ctrl>Above_Tab', '<Super><Ctrl>Page_Up']]]></default>
       <summary>Move current window to the previously used workspace, backward order</summary>
     </key>
 
@@ -74,12 +74,29 @@
     </key>
 
     <key type="as" name="switch-next">
-      <default><![CDATA[['<Super>period', '<Super>Right']]]></default>
+      <default><![CDATA[['<Super>period']]]></default>
       <summary>Switch to the next window</summary>
     </key>
     <key type="as" name="switch-previous">
-      <default><![CDATA[['<Super>comma', '<Super>Left']]]></default>
-      <summary>Scroll to the previous window</summary>
+      <default><![CDATA[['<Super>comma']]]></default>
+      <summary>Switch to the previous window</summary>
+    </key>
+
+    <key type="as" name="switch-right">
+        <default><![CDATA[['<Super>Right']]]></default>
+        <summary>Switch to the right column of windows</summary>
+    </key>
+    <key type="as" name="switch-left">
+        <default><![CDATA[['<Super>Left']]]></default>
+        <summary>Switch to the left column of windows</summary>
+    </key>
+    <key type="as" name="switch-up">
+        <default><![CDATA[['<Super>Up']]]></default>
+        <summary>Switch to the right column of windows</summary>
+    </key>
+    <key type="as" name="switch-down">
+        <default><![CDATA[['<Super>Down']]]></default>
+        <summary>Switch to the right column of windows</summary>
     </key>
 
     <key type="as" name="move-right">
@@ -89,6 +106,14 @@
     <key type="as" name="move-left">
         <default><![CDATA[['<Super><Ctrl>comma', '<Super><Shift>comma', '<Super><Ctrl>Left']]]></default>
       <summary>Move the focused window left in the tiling</summary>
+    </key>
+    <key type="as" name="move-up">
+        <default><![CDATA[['<Super><Ctrl>Up']]]></default>
+        <summary>Move the focused window up in the tiling</summary>
+    </key>
+    <key type="as" name="move-down">
+        <default><![CDATA[['<Super><Ctrl>Down']]]></default>
+        <summary>Move the focused window down in the tiling</summary>
     </key>
 
     <key type="as" name="cycle-width">
