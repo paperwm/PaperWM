@@ -7,6 +7,11 @@ var utils = Extension.imports.utils;
 var debug = utils.debug;
 var float;
 
+
+function focusMonitor() {
+    return Main.layoutManager.monitors[global.display.focus_window.get_monitor()]
+}
+
 function makeScratch(metaWindow) {
     metaWindow[float] = true;
     metaWindow.make_above();
@@ -14,7 +19,7 @@ function makeScratch(metaWindow) {
     metaWindow.clone.hide();
     metaWindow.get_compositor_private().show();
 
-    let monitor = Main.layoutManager.focusMonitor;
+    let monitor = focusMonitor();
     if (monitor.clickOverlay)
         monitor.clickOverlay.hide();
 }
@@ -71,7 +76,7 @@ function show() {
     });
     windows[0].activate(global.get_current_time());
 
-    let monitor = Main.layoutManager.focusMonitor;
+    let monitor = focusMonitor();
     if (monitor.clickOverlay)
         monitor.clickOverlay.hide();
 }
