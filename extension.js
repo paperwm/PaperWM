@@ -104,61 +104,34 @@ function init() {
                                         as_key_handler("toggleMaximizeHorizontally",
                                                        Tiling));
 
+    let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
+    let previewNavigate = dynamic_function_ref("preview_navigate", Navigator);
+
     paperActions.register('live-alt-tab',
-                          dynamic_function_ref('liveAltTab',
-                                               LiveAltTab))
+                          liveAltTab);
     paperActions.register('live-alt-tab-backward',
-                          dynamic_function_ref('liveAltTab',
-                                               LiveAltTab),
+                          liveAltTab,
                           Meta.KeyBindingFlags.IS_REVERSED);
 
-    paperActions.register('previous-workspace',
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator));
-    paperActions.register('previous-workspace-backward',
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator));
-    paperActions.register('move-previous-workspace',
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator));
-    paperActions.register('move-previous-workspace-backward',
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator));
-    paperActions.register("switch-next",
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator));
-    paperActions.register("switch-previous",
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator),
-                          Meta.KeyBindingFlags.IS_REVERSED);
+    paperActions.register('previous-workspace', previewNavigate);
+    paperActions.register('previous-workspace-backward', previewNavigate);
 
-    paperActions.register("switch-right",
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator));
-    paperActions.register("switch-left",
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator),
-                          Meta.KeyBindingFlags.IS_REVERSED);
-    paperActions.register("switch-up",
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator));
-    paperActions.register("switch-down",
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator),
-                          Meta.KeyBindingFlags.IS_REVERSED);
+    paperActions.register('move-previous-workspace', previewNavigate);
+    paperActions.register('move-previous-workspace-backward', previewNavigate);
 
-    paperActions.register("move-left",
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator));
-    paperActions.register("move-right",
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator));
-    paperActions.register("move-up",
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator));
-    paperActions.register("move-down",
-                          dynamic_function_ref("preview_navigate",
-                                               Navigator));
+    paperActions.register("switch-next", previewNavigate);
+    paperActions.register("switch-previous", previewNavigate);
+
+    paperActions.register("switch-right", previewNavigate);
+    paperActions.register("switch-left", previewNavigate);
+    paperActions.register("switch-up", previewNavigate);
+    paperActions.register("switch-down", previewNavigate);
+
+    paperActions.register("move-left", previewNavigate);
+    paperActions.register("move-right", previewNavigate);
+    paperActions.register("move-up", previewNavigate);
+    paperActions.register("move-down", previewNavigate);
+
     paperActions.register("toggle-scratch-layer",
                           dynamic_function_ref("toggleScratch",
                                                Scratch));
@@ -227,44 +200,36 @@ function enable() {
     settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
 
     setKeybinding('switch-applications', // <Super>Tab
-                  utils.dynamic_function_ref('liveAltTab',
-                                             LiveAltTab));
+                  paperActions.byName('live-alt-tab').handler);
     setKeybinding('switch-applications-backward',
-                  utils.dynamic_function_ref('liveAltTab',
-                                             LiveAltTab));
-    setKeybinding('switch-group', // <Super>Above_tab
-                          utils.dynamic_function_ref("preview_navigate",
-                                                     Navigator));
-    setKeybinding('switch-group-backward',
-                          utils.dynamic_function_ref("preview_navigate",
-                                                     Navigator));
-    setKeybinding('maximize', // <Super>Up
-                  utils.dynamic_function_ref("preview_navigate",
-                                             Navigator));
-    setKeybinding('unmaximize', // <Super>Down
-                  utils.dynamic_function_ref("preview_navigate",
-                                             Navigator));
+                  paperActions.byName('live-alt-tab-backward').handler);
 
+    setKeybinding('switch-group', // <Super>Above_tab
+                  paperActions.byName('previous-workspace').handler);
+    setKeybinding('switch-group-backward',
+                  paperActions.byName('previous-workspace-backward').handler);
     setKeybinding('switch-to-workspace-down', // <Super>Page_Down
-                  utils.dynamic_function_ref("preview_navigate",
-                                             Navigator));
+                  paperActions.byName('previous-workspace').handler);
 
     setKeybinding('switch-to-workspace-up', // <Super>Page_Up
-                  utils.dynamic_function_ref("preview_navigate",
-                                             Navigator));
+                  paperActions.byName('previous-workspace-backward').handler);
+
+    setKeybinding('maximize', // <Super>Up
+                  paperActions.byName('switch-up').handler);
+    setKeybinding('unmaximize', // <Super>Down
+                  paperActions.byName('switch-down').handler);
 
     setKeybinding('focus-active-notification', // `<Super>N`
-                  utils.as_key_handler('newWindow', App));
+                  paperActions.byName('new-window').handler);
 
     setKeybinding('restore-shortcuts', // `<Super>Escape`
-                  utils.dynamic_function_ref("toggleScratch",
-                                             Scratch));
+                  paperActions.byName('toggle-scratch-layer').handler);
 
     setKeybinding('toggle-tiled-right', // <Super>Right
-                  utils.dynamic_function_ref('preview_navigate', Navigator));
+                  paperActions.byName('switch-right').handler);
 
     setKeybinding('toggle-tiled-left', // <Super>Left
-                  utils.dynamic_function_ref('preview_navigate', Navigator));
+                  paperActions.byName('switch-left').handler);
 
 
     setKeybinding('switch-to-workspace-1', // <Super>Home
