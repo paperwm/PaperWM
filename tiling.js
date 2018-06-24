@@ -1489,11 +1489,15 @@ function centerWindowHorizontally(metaWindow) {
     const targetX = Math.round(monitor.width/2 - frame.width/2);
     const dx = (targetX + monitor.x) - frame.x;
     utils.warpPointerRelative(dx, 0);
-    move_to(space, metaWindow, { x: targetX, y: frame.y,
-                                 onComplete: () => space.emit('move-done')});
-    Tweener.removeTweens(space.selection);
-    space.selection.width = frame.width + prefs.window_gap;
-    space.selection.x = targetX + monitor.x - Math.round(prefs.window_gap/2);
+    if (space.indexOf(metaWindow) === -1) {
+        metaWindow.move_frame(true, targetX + monitor.x, frame.y);
+    } else {
+        move_to(space, metaWindow, { x: targetX, y: frame.y - monitor.y,
+                                     onComplete: () => space.emit('move-done')});
+        Tweener.removeTweens(space.selection);
+        space.selection.width = frame.width + prefs.window_gap;
+        space.selection.x = targetX + monitor.x - Math.round(prefs.window_gap/2);
+    }
 }
 
 function slurp(metaWindow) {
