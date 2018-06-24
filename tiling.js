@@ -1218,8 +1218,9 @@ function moveSizeHandler(metaWindow) {
     let frame = metaWindow.get_frame_rect();
     let monitor = space.monitor;
     const x = frame.x - monitor.x;
+    let onComplete = !noAnimate && (() => space.emit('move-done'));
     move_to(space, metaWindow, {x: x,
-                                onComplete: () => !noAnimate && space.emit('move-done')});
+                                onComplete});
 
     updateSelection(space, noAnimate);
 }
