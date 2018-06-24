@@ -132,6 +132,21 @@ function init() {
                                                Navigator),
                           Meta.KeyBindingFlags.IS_REVERSED);
 
+    paperActions.register("switch-right",
+                          dynamic_function_ref("preview_navigate",
+                                               Navigator));
+    paperActions.register("switch-left",
+                          dynamic_function_ref("preview_navigate",
+                                               Navigator),
+                          Meta.KeyBindingFlags.IS_REVERSED);
+    paperActions.register("switch-up",
+                          dynamic_function_ref("preview_navigate",
+                                               Navigator));
+    paperActions.register("switch-down",
+                          dynamic_function_ref("preview_navigate",
+                                               Navigator),
+                          Meta.KeyBindingFlags.IS_REVERSED);
+
     paperActions.register("move-left",
                           dynamic_function_ref("preview_navigate",
                                                Navigator));
@@ -214,6 +229,14 @@ function enable() {
                   utils.dynamic_function_ref("preview_navigate",
                                              Navigator));
 
+    setKeybinding('switch-to-workspace-down', // <Super>Page_Down
+                  utils.dynamic_function_ref("preview_navigate",
+                                             Navigator));
+
+    setKeybinding('switch-to-workspace-up', // <Super>Page_Up
+                  utils.dynamic_function_ref("preview_navigate",
+                                             Navigator));
+
     setKeybinding('focus-active-notification', // `<Super>N`
                   utils.as_key_handler('newWindow', App));
 
@@ -226,6 +249,7 @@ function enable() {
 
     setKeybinding('toggle-tiled-left', // <Super>Left
                   utils.dynamic_function_ref('preview_navigate', Navigator));
+
 
     setKeybinding('switch-to-workspace-1', // <Super>Home
                   Tiling.activateFirstWindow);
@@ -270,6 +294,8 @@ function disable() {
     Meta.keybindings_set_custom_handler('restore-shortcuts', null);
     Meta.keybindings_set_custom_handler('switch-to-workspace-1', null);
     Meta.keybindings_set_custom_handler('switch-to-workspace-last', null);
+    Meta.keybindings_set_custom_handler('switch-to-workspace-down', null);
+    Meta.keybindings_set_custom_handler('switch-to-workspace-up', null);
 
     paperActions.actions.forEach(a => {
         setKeybinding(a.name, () => {});

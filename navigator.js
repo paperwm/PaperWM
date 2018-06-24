@@ -275,17 +275,23 @@ var PreviewedWindowNavigator = new Lang.Class({
         case Meta.KeyBindingAction.SWITCH_GROUP_BACKWARD:
             mutterActionId = paperActions.idOf('previous-workspace-backward');
             break;
-        case Meta.KeyBindingAction.MAXIMIZE:
+        case Meta.KeyBindingAction.WORKSPACE_UP: // PageUp
             mutterActionId = paperActions.idOf('previous-workspace-backward');
             break;
-        case Meta.KeyBindingAction.UNMAXIMIZE:
+        case Meta.KeyBindingAction.WORKSPACE_DOWN: // PageDown
             mutterActionId = paperActions.idOf('previous-workspace');
             break;
-        case Meta.KeyBindingAction.TOGGLE_TILED_RIGHT:
-            mutterActionId = paperActions.idOf('switch-next');
+        case Meta.KeyBindingAction.TOGGLE_TILED_RIGHT: // Right
+            mutterActionId = paperActions.idOf('switch-right');
             break;
-        case Meta.KeyBindingAction.TOGGLE_TILED_LEFT:
-            mutterActionId = paperActions.idOf('switch-previous');
+        case Meta.KeyBindingAction.TOGGLE_TILED_LEFT: // Left
+            mutterActionId = paperActions.idOf('switch-left');
+            break;
+        case Meta.KeyBindingAction.MAXIMIZE: // Up
+            mutterActionId = paperActions.idOf('switch-up');
+            break;
+        case Meta.KeyBindingAction.UNMAXIMIZE: // Down
+            mutterActionId = paperActions.idOf('switch-down');
             break;
         }
 
@@ -294,6 +300,18 @@ var PreviewedWindowNavigator = new Lang.Class({
             return true;
         } else if (mutterActionId === paperActions.idOf("switch-previous")) {
             this._select(this._previous());
+            return true;
+        } else if (mutterActionId === paperActions.idOf("switch-right")) {
+            this._switch(Meta.MotionDirection.RIGHT);
+            return true;
+        } else if (mutterActionId === paperActions.idOf("switch-left")) {
+            this._switch(Meta.MotionDirection.LEFT);
+            return true;
+        } else if (mutterActionId === paperActions.idOf("switch-up")) {
+            this._switch(Meta.MotionDirection.UP);
+            return true;
+        } else if (mutterActionId === paperActions.idOf("switch-down")) {
+            this._switch(Meta.MotionDirection.DOWN);
             return true;
         } else if (mutterActionId === paperActions.idOf("move-left")) {
             this._reorder(Meta.MotionDirection.LEFT);
@@ -331,6 +349,44 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
 
         return false;
+    },
+
+    _switch(direction) {
+        let space = this.space;
+        let index = space.selectedIndex();
+        let row = space[index].indexOf(space.selectedWindow);
+        switch (direction) {
+        case Meta.MotionDirection.RIGHT:
+            index++;
+            row = -1;
+            break;;
+        case Meta.MotionDirection.LEFT:
+            index--;
+            row = -1;
+        }
+        if (index < 0 || index >= space.length)
+            return;
+
+        let column = space[index];
+
+        if (row === -1) {
+            let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
+                                                  space.workspace);
+            let selected = mru.filter(w => column.includes(w))[0];
+            row = column.indexOf(selected);
+        }
+
+        switch (direction) {
+        case Meta.MotionDirection.UP:
+            row--;
+            break;;
+        case Meta.MotionDirection.DOWN:
+            row++;
+        }
+        if (row < 0 || row >= column.length)
+            return;
+
+        this._select(this.windows.indexOf(column[row]));
     },
 
     _keyPressHandler: function(keysym, action) {
