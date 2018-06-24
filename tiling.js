@@ -145,6 +145,14 @@ class Space extends Array {
         column.splice(row, 1);
         if (column.length === 0)
             this.splice(index, 1);
+
+        if (this.selectedWindow === metaWindow) {
+            // Select a new window using the stack ordering;
+            let stack = global.display.sort_windows_by_stacking(this.getWindows());
+            this.selectedWindow = stack[stack.length - 1];
+        }
+
+
         this.cloneContainer.remove_actor(metaWindow.clone);
         Tweener.removeTweens(this.selection);
         this.selection.width = 0;
@@ -799,26 +807,11 @@ function remove_handler(workspace, meta_window) {
     if (!space.removeWindow(meta_window))
         return;
 
-    if (space.selectedWindow === meta_window) {
-        // Window closed or moved when other workspace is active so no new focus
-        // has been assigned in this workspace.
-        // Ideally we'd get the window that will get focus when this workspace
-        // is activated again, but the function mutter use doesn't seem to be
-        // exposed to javascript.
-
-        // Use the top window in the MRU list as a proxy:
-        let mru_list = global.display.get_tab_list(Meta.TabList.NORMAL, workspace);
-        // The mru list might contain needy windows from other workspaces
-        space.selectedWindow =
-            mru_list.filter(w => w.get_workspace() === workspace
-                            && space.indexOf(w) !== -1 )[0];
-    }
-
     // (could be an empty workspace)
     if (space.selectedWindow) {
         // Force a new ensure, since the focus_handler is run before
         // window-removed
-        ensureViewport(space.selectedWindow, space, true)
+        ensureViewport(space.selectedWindow, space, true);
     }
 }
 
