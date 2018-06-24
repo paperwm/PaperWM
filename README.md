@@ -28,11 +28,11 @@ Window management and navigation is based around the three following concepts.
 
 ![The window tiling with the minimap shown](https://github.com/paperwm/media/blob/master/tiling.png)
 
-New windows are automatically tiled to the right of the active window. <kbd>Super</kbd><kbd>N</kbd> will open a new window of the same type as the active window.
+New windows are automatically tiled to the right of the active window, taking up as much height as possible. <kbd>Super</kbd><kbd>N</kbd> will open a new window of the same type as the active window.
 
-Activating a window will ensure it's fully visible, scrolling the tiling if necessary. Pressing <kbd>Super</kbd><kbd>.</kbd> activates the window to the right. <kbd>Super</kbd><kbd>,</kbd> activates the window to the left. On a US keyboard these keys are intuitively marked by <kbd><</kbd> and <kbd>></kbd>, they are also ordered the same way on almost all keyboard layouts.
+Activating a window will ensure it's fully visible, scrolling the tiling if necessary. Pressing <kbd>Super</kbd><kbd>.</kbd> activates the window to the right. <kbd>Super</kbd><kbd>,</kbd> activates the window to the left. On a US keyboard these keys are intuitively marked by <kbd><</kbd> and <kbd>></kbd>, they are also ordered the same way on almost all keyboard layouts. A minimap will be shown when <kbd>Super</kbd> is continually being pressed, as can be seen in the above screenshot.
 
-A minimap will be shown when <kbd>Super</kbd> is continually being pressed, as can be seen in the above screenshot.
+Pressing <kbd>Super</kbd><kbd>I</kbd> will move the window to the right below the active window, tiling them vertically in a column. <kbd>Super</kbd><kbd>O</kbd> will do the opposite, pushing the bottom window out of the current column.
 
 <kbd>Alt</kbd><kbd>Tab</kbd> is of course also available.
 
@@ -52,6 +52,8 @@ A minimap will be shown when <kbd>Super</kbd> is continually being pressed, as c
 | <kbd>Super</kbd><kbd>Shift</kbd><kbd>F</kbd>                                                      | Toggle fullscreen                                      |
 | <kbd>Super</kbd><kbd>N</kbd>                                                                      | Create a new window from the active application        |
 | <kbd>Super</kbd><kbd>C</kbd> or <kbd>Super</kbd><kbd>Backspace</kbd>                              | Close the active window                                |
+| <kbd>Super</kbd><kbd>I</kbd>                                                                      | Absorb the window to the right into the active column  |
+| <kbd>Super</kbd><kbd>O</kbd>                                                                      | Expel the bottom window out to the right               |
 
 
 ### The workspace stack & monitors ###
