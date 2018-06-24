@@ -725,15 +725,16 @@ function disable () {
     spaces.destroy();
 
     oldSpaces.forEach(space => {
-        let selected = space.selectedIndex();
+        let windows = space.getWindows();
+        let selected = windows.indexOf(space.selectedWindow);
         if (selected === -1)
             return;
         // Stack windows correctly for controlled restarts
-        for (let i=selected; i<space.length; i++) {
-            space[i][0].lower();
+        for (let i=selected; i<windows.length; i++) {
+            windows[i].lower();
         }
         for (let i=selected; i>=0; i--) {
-            space[i][0].lower();
+            windows[i].lower();
         }
     });
 
