@@ -1249,7 +1249,7 @@ function focus_handler(meta_window, user_data) {
     let space = spaces.spaceOfWindow(meta_window);
     space.monitor.clickOverlay.show();
     ensureViewport(meta_window, space);
-    fixStack(space, space.indexOf(meta_window));
+    fixStack(space, meta_window);
 }
 let focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
 
