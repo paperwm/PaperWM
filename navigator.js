@@ -52,7 +52,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     _next: function() {
-        return Math.min(this.space.length-1, this._selectedIndex+1)
+        return Math.min(this.windows.length-1, this._selectedIndex+1)
     },
     _previous: function() {
         return Math.max(0, this._selectedIndex-1)
@@ -68,8 +68,9 @@ var PreviewedWindowNavigator = new Lang.Class({
         Meta.disable_unredirect_for_screen(global.screen);
 
         this.space = Tiling.spaces.spaceOf(global.screen.get_active_workspace());
+        this.windows = this.space.getWindows();
 
-        this._selectedIndex = this.space.selectedIndex();
+        this._selectedIndex = this.windows.indexOf(this.space.selectedWindow);
         this._startIndex  = this._selectedIndex;
         this.from = this.space;
         this.monitor = this.space.monitor;
@@ -215,7 +216,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         else
             to = from - 1;
         if (to < 0 || to >= mru.length) {
-            this._select(this.space.selectedIndex());
+            this._select(this._selectedIndex);
             return true;
         }
         let oldSpace = this.space;
@@ -250,7 +251,8 @@ var PreviewedWindowNavigator = new Lang.Class({
         });
 
         this.space = newSpace;
-        this._select(this.space.selectedIndex());
+        this.windows = this.space.getWindows();
+        this._select(this.windows.indexOf(this.space.selectedWindow));
     },
 
     _doAction: function(mutterActionId) {
@@ -309,7 +311,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             if (action
                 && action.name !== 'toggle-scratch-layer'
                 && action.name !== 'toggle-scratch') {
-                let metaWindow = this.space[this._selectedIndex][0];
+                let metaWindow = this.windows[this._selectedIndex];
                 action.handler(null, null, metaWindow);
                 let minimap = this.minimap;
                 minimap.layout(false);
@@ -331,7 +333,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     _select: function(index) {
         // debug('#preview', 'Select', this.space[index][0].title, index);
-        let metaWindow = this.space[index][0];
+        let metaWindow = this.windows[index];
         if (metaWindow) {
             this.space.selectedWindow = metaWindow;
             Tiling.ensureViewport(metaWindow, this.space);
@@ -357,7 +359,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     destroy: function() {
-        debug('#preview', 'destroy');
+        debug('#preview', 'destroy', this.space.actor);
 
         this.minimap.actor.destroy();
 
@@ -373,7 +375,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         if(!this.was_accepted) {
             // Abort the navigation
             this.space = from;
-            this.space.selectedWindow = from[this._startIndex];
+            this.space.selectedWindow = from.getWindows()[this._startIndex];
         }
 
         if (this.monitor !== this.space.monitor) {
