@@ -116,6 +116,15 @@
         <summary>Move the focused window down in the tiling</summary>
     </key>
 
+    <key type="as" name="slurp-in">
+        <default><![CDATA[['<Super>i']]]></default>
+        <summary>Consume the window to right into the current column</summary>
+    </key>
+    <key type="as" name="barf-out">
+        <default><![CDATA[['<Super>o']]]></default>
+        <summary>Expel the bottom window into it's own column</summary>
+    </key>
+
     <key type="as" name="cycle-width">
       <default><![CDATA[['<Super>r']]]></default>
       <summary>Cycle through a pre-determined list of window widths</summary>

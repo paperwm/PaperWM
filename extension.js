@@ -198,6 +198,16 @@ function init() {
                                   metaWindow.delete(global.get_current_time())),
                           Meta.KeyBindingFlags.PER_WINDOW);
 
+    paperActions.register('slurp-in',
+                          as_key_handler('slurp',
+                                         Tiling),
+                          Meta.KeyBindingFlags.PER_WINDOW);
+
+    paperActions.register('barf-out',
+                          as_key_handler('barf',
+                                         Tiling),
+                          Meta.KeyBindingFlags.PER_WINDOW);
+
 
     initUserConfig();
 }

@@ -1497,13 +1497,29 @@ function centerWindowHorizontally(metaWindow) {
 }
 
 function slurp(metaWindow) {
-    let space = spaces.spaceOfWindow(metaWindow)
+    let space = spaces.spaceOfWindow(metaWindow);
     let index = space.indexOf(metaWindow);
     let rightNeigbour = index < space.length ? space[index+1][0] : null;
     if(!rightNeigbour)
         return;
-    detach(rightNeigbour)
-    let col = space.indexOf(metaWindow)
-    space.addWindow(rightNeigbour, col, 1)
-    ensureViewport(global.display.focus_window, spaces.spaceOfWindow(global.display.focus_window), true)
+    detach(rightNeigbour);
+    let column = space[index];
+    space.addWindow(rightNeigbour, index, column.length);
+    ensureViewport(global.display.focus_window, spaces.spaceOfWindow(global.display.focus_window), true);
+}
+
+function barf(metaWindow) {
+    let space = spaces.spaceOfWindow(metaWindow);
+    let index = space.indexOf(metaWindow);
+    if (index === -1)
+        return;
+
+    let column = space[index];
+    if (column.length < 2)
+        return;
+
+    let bottom = column[column.length - 1];
+    detach(bottom);
+    space.addWindow(bottom, index + 1);
+    ensureViewport(global.display.focus_window, spaces.spaceOfWindow(global.display.focus_window), true);
 }
