@@ -1129,12 +1129,9 @@ function move_to(space, meta_window, { x, y, delay, transition,
              targetSet = false,
              n=index+1 ; n < space.length; n++) {
         let width = fixColumn(space, n, X, columnTop);
+
         if (!targetSet && X + width > space.width) {
-            let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
-                                                  space.workspace);
-            let column = space[n];
-            let target = mru.filter(w => column.includes(w))[0];
-            space.monitor.clickOverlay.right.setTarget(target);
+            space.monitor.clickOverlay.right.setTarget(space, n);
             targetSet = true;
         }
         X += width + gap;
@@ -1148,11 +1145,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
         fixColumn(space, n, X, columnTop);
 
         if (!targetSet && X < 0) {
-            let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
-                                                  space.workspace);
-            let column = space[n];
-            let target = mru.filter(w => column.includes(w))[0];
-            space.monitor.clickOverlay.left.setTarget(target);
+            space.monitor.clickOverlay.left.setTarget(space, n);
             targetSet = true;
         }
     }

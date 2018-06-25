@@ -205,8 +205,7 @@ var StackOverlay = new Lang.Class({
 
         this.overlay.add_child(icon);
     },
-    setTarget: function(metaWindow, direction) {
-        this.target = metaWindow;
+    setTarget: function(space, index) {
 
         let bail = () => {
             this.target = null;
@@ -214,14 +213,19 @@ var StackOverlay = new Lang.Class({
             return false;
         }
 
-        if (!metaWindow) {
+        if (space === null) {
             // No target. Eg. if we're at the left- or right-most window
             return bail();
         }
 
+        let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
+                                              space.workspace);
+        let column = space[index];
+        this.target = mru.filter(w => column.includes(w))[0];
+        let metaWindow = this.target;
+
         let overlay = this.overlay;
         let actor = metaWindow.get_compositor_private();
-        let space = Tiling.spaces.spaceOfWindow(metaWindow);
 
         overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + prefs.vertical_margin;
 
