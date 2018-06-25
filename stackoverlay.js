@@ -229,10 +229,6 @@ var StackOverlay = new Lang.Class({
 
         overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + prefs.vertical_margin;
 
-        // Note: Atm. this can be called when the windows are moving. Therefore
-        //       we must use destinationX and we might occationally get wrong y
-        //       positions (icon) (since we don't track the y destination)
-        //       We also assume window widths are are unchanging.
         if (this._direction === Meta.MotionDirection.LEFT) {
             let column = space[space.indexOf(metaWindow) + 1];
             let neighbour = column && column[0];
@@ -241,11 +237,13 @@ var StackOverlay = new Lang.Class({
 
             let frame = neighbour.get_frame_rect();
             let max = 75;
-            if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH
-                || metaWindow.fullscreen)
-                max = frame.x - prefs.window_gap;
+            let width = frame.x - this.monitor.x;
+            if (space.visible.includes(metaWindow))
+                width = Math.min(width, 75);
+            if (width > 75)
+                width -= prefs.window_gap;
             overlay.x = this.monitor.x;
-            overlay.width = Math.min(Math.max(0, frame.x), max);
+            overlay.width = width;
         } else {
             let column = space[space.indexOf(metaWindow) - 1];
             let neighbour = column && column[0];
@@ -253,12 +251,13 @@ var StackOverlay = new Lang.Class({
                 return bail(); // Should normally have a neighbour. Bail!
 
             let frame = neighbour.get_frame_rect();
-            let max = this.monitor.x + this.monitor.width - 75;
-            if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH
-                || metaWindow.fullscreen)
-                max = frame.x + frame.width + prefs.window_gap;
-            overlay.x = Math.max(max, frame.x + frame.width);
-            overlay.width = Math.max(0, this.monitor.width - overlay.x);
+            let width = (this.monitor.x + this.monitor.width) - (frame.x + frame.width);
+            if (space.visible.includes(metaWindow))
+                width = Math.min(width, 75);
+            if (width > 75)
+                width -= prefs.window_gap;
+            overlay.x = this.monitor.x + this.monitor.width - width;
+            overlay.width = width;
         }
 
         if (this.showIcon) {
