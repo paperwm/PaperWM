@@ -438,6 +438,7 @@ function switchWorkspace(to, from, callback) {
     let xDest = 0, yDest = global.screen_height;
 
     let toSpace = Tiling.spaces.spaceOf(to);
+    toSpace.actor.show();
     let selected = toSpace.selectedWindow;
     if (selected)
         Tiling.ensureViewport(selected, toSpace, true);
@@ -482,6 +483,7 @@ function switchWorkspace(to, from, callback) {
                   transition: 'easeInOutQuad',
                   onComplete() {
                       this.set_position(0, global.screen_height*0.1);
+                      this.hide();                     
                   },
                   onCompleteScope: next.first_child
                 });
