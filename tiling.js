@@ -1015,8 +1015,9 @@ function updateSelection(space, noAnimate) {
     const frame = space.selectedWindow.get_frame_rect();
     let protrusion = Math.round(prefs.window_gap/2);
     Tweener.addTween(space.selection,
-                     {x: frame.x - protrusion,
-                      y: Math.max(frame.y, panelBox.height + prefs.vertical_margin) - protrusion,
+                     {x: frame.x - space.monitor.x - protrusion,
+                      y: Math.max(frame.y - space.monitor.y,
+                                  panelBox.height + prefs.vertical_margin) - protrusion,
                       width: frame.width + prefs.window_gap,
                       height: frame.height + prefs.window_gap,
                       time: noAnimate ? 0 : 0.25,
@@ -1169,7 +1170,10 @@ function fixColumn(space, index, x, y, onComplete) {
         if (meta_window.get_compositor_private()) {
             // Anchor on the right edge for windows positioned to the left.
             move(meta_window, space, { x, y, visible, onComplete});
-            meta_window.move_resize_frame(true, x, y, width, height);
+            meta_window.move_resize_frame(true,
+                                          x + space.monitor.x,
+                                          y + space.monitor.y,
+                                          width, height);
         }
         y += height + prefs.window_gap;
     }
