@@ -133,7 +133,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         swapArray(this.space, index, targetIndex);
 
-        let newX = Tiling.ensureViewport(metaWindow, this.space, true);
+        Tiling.ensureViewport(metaWindow, this.space, true);
         this.windows = this.space.getWindows();
         this._selectedIndex = this.windows.indexOf(metaWindow);
 

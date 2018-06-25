@@ -1006,9 +1006,6 @@ function ensureViewport(meta_window, space, force) {
     }
 
     updateSelection(space, noAnimate);
-
-    // Return x so we can position the minimap
-    // return selectedFrame.x;
 }
 
 function updateSelection(space, noAnimate) {
