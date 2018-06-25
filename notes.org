@@ -68,20 +68,6 @@ global.display.connect(
     })
 #+END_SRC
 
-* Stack level
-
-  There's not enough room for a maximized window to slide above another maximized window if they move at the same speed:
-#+BEGIN_SRC
-                          front
-window A ->        | ---------------- |
-window B           |              ----|-----------
-                   
-                      select window B
-                         
-                          front                   
-        -----------|----              |    window A
-window B ->        | ---------------- |
-#+END_SRC 
 * GJS
 ** import system / module system
 `imports.NAME` reflects the directories and javascript files present in `imports.searchPath`.
