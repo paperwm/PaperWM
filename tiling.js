@@ -1126,27 +1126,25 @@ function move_to(space, meta_window, { x, y, delay, transition,
     gap = gap || prefs.window_gap;
 
     for (let X = x + frame.width + gap,
-             targetSet = false,
+             overlay = space.monitor.clickOverlay.right,
              n=index+1 ; n < space.length; n++) {
         let width = fixColumn(space, n, X, columnTop);
 
-        if (!targetSet && X + width > space.width) {
-            space.monitor.clickOverlay.right.setTarget(space, n);
-            targetSet = true;
+        if (!overlay.target && X + width > space.width) {
+            overlay.setTarget(space, n);
         }
         X += width + gap;
     }
 
     for (let X = x,
-             targetSet = false,
+             overlay = space.monitor.clickOverlay.left,
              n=index-1; n >= 0; n--) {
         let width = Math.max(...space[n].map(w => w.get_frame_rect().width));
         X -= gap + width;
         fixColumn(space, n, X, columnTop);
 
-        if (!targetSet && X < 0) {
-            space.monitor.clickOverlay.left.setTarget(space, n);
-            targetSet = true;
+        if (!overlay.target && X < 0) {
+            overlay.setTarget(space, n);
         }
     }
 }
