@@ -1157,21 +1157,19 @@ function fixColumn(space, index, x, y, onComplete) {
     if (column.includes(space.selectedWindow))
         width = space.selectedWindow.get_frame_rect().width;
 
+    // Check if the window is fully visible
+    let visible = true;
+    if (x + width < stack_margin
+        || x > space.width - stack_margin
+        || column[0].fullscreen
+        || column[0].get_maximized() === Meta.MaximizeFlags.BOTH) {
+        visible = false;
+    }
+
     for (let r=0; r < column.length; r++) {
         let meta_window = column[r];
         let frame = meta_window.get_frame_rect();
-
-        // Check if the window is fully visible
-        let visible = true;
-        if (x + frame.width < stack_margin
-            || x > space.width - stack_margin
-            || meta_window.fullscreen
-            || meta_window.get_maximized() === Meta.MaximizeFlags.BOTH) {
-            visible = false;
-        }
-
-        let actor = meta_window.get_compositor_private();
-        if (actor) {
+        if (meta_window.get_compositor_private()) {
             // Anchor on the right edge for windows positioned to the left.
             move(meta_window, space, { x, y, visible, onComplete});
             meta_window.move_resize_frame(true, x, y, width, height);
