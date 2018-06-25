@@ -105,9 +105,11 @@ class Space extends Array {
         container.set_child_below_sibling(clip,
                                           container.first_child);
 
-        // Hardcoded to primary for now
         let monitor = Main.layoutManager.primaryMonitor;
-        this.setMonitor(monitor);
+        let oldSpace = oldSpaces.get(workspace);
+        if (oldSpace)
+            monitor = Main.layoutManager.monitors[oldSpace.monitor.index];
+        this.setMonitor(monitor, false);
 
         label.text = Meta.prefs_get_workspace_name(workspace.index());
 
@@ -122,8 +124,8 @@ class Space extends Array {
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
 
-        this.addAll(oldSpaces.get(workspace));
-        oldSpaces.delete(oldSpaces.get(workspace));
+        this.addAll(oldSpace);
+        oldSpaces.delete(workspace);
     }
 
     getWindows() {
@@ -348,7 +350,6 @@ class Spaces extends Map {
     constructor() {
         super();
 
-        this.monitors = new Map();
         this.clickOverlays = [];
 
         this.screenSignals = [
@@ -360,9 +361,6 @@ class Spaces extends Map {
             global.screen.connect(
                 'workspace-removed',
                 utils.dynamic_function_ref('workspaceRemoved', this)),
-
-            global.screen.connect("monitors-changed",
-                                  this.monitorsChanged.bind(this)),
 
             global.screen.connect("window-left-monitor",
                                   this.windowLeftMonitor.bind(this)),
@@ -377,6 +375,11 @@ class Spaces extends Map {
                 utils.dynamic_function_ref('window_created', this)),
             global.display.connect('grab-op-begin', grabBegin),
             global.display.connect('grab-op-end', grabEnd),
+        ];
+
+        this.layoutManagerSignals = [
+            Main.layoutManager.connect("monitors-changed",
+                                       this.monitorsChanged.bind(this)),
         ];
 
         // Clone and hook up existing windows
@@ -403,10 +406,20 @@ class Spaces extends Map {
     }
 
     /**
+       The monitors-changed signal can trigger _many_ times when
+       connection/disconnecting monitors.
+
+       Monitors also doesn't seem to have a stable identity, which means we're
+       left with heuristics.
      */
     monitorsChanged() {
-        debug('#monitors changed', Main.layoutManager.primaryIndex);
+        log('#monitors changed');
+        log(Main.layoutManager.primaryIndex)
 
+        if (this.monitors)
+            oldMonitors = this.monitors;
+
+        this.monitors = new Map();
         this.get(screen.get_active_workspace()).getWindows().forEach(w => {
             w.get_compositor_private().hide();
             w.clone.show();
@@ -426,31 +439,57 @@ class Spaces extends Map {
         }
 
         let mru = this.mru();
+        log('#mru before')
+        log(mru.map(s => s.actor));
         let primary = Main.layoutManager.primaryMonitor;
         let monitors = Main.layoutManager.monitors;
-        let others = monitors.filter(m => m !== primary);
 
-        // Reset all removed monitors
-        this.forEach(space => {
-            if (monitors.indexOf(space.monitor) === -1) {
-                space.setMonitor(primary);
-                this.monitors.set(primary, space);
+        // Persist as many monitors as possible
+        for (let [oldMonitor, oldSpace] of oldMonitors) {
+            let monitor = monitors[oldMonitor.index];
+            if (monitor &&
+                oldMonitor.width === monitor.width &&
+                oldMonitor.height === monitor.height &&
+                oldMonitor.x === monitor.x &&
+                oldMonitor.y === monitor.y) {
+                let space = this.get(oldSpace.workspace);
+                this.monitors.set(monitor, space);
+                log(`persist: ${monitor.index} ${space.actor}`);
+                space.setMonitor(monitor, false);
+                mru = mru.filter(s => s !== space);
+            }
+            oldMonitors.delete(oldMonitor);
+        }
+
+        // Populate any remaining monitors
+        for (let monitor of monitors) {
+            if (this.monitors.get(monitor) === undefined) {
+                let space = mru[0];
+                log(`remaining: ${monitor.index} ${space.actor}`);
+                this.monitors.set(monitor, space);
+                space.setMonitor(monitor, false);
+                mru = mru.slice(1);
+            }
+        }
+
+        // Reset any removed monitors
+        mru.forEach(space => {
+            if (!monitors.includes(space.monitor)) {
+                let monitor = monitors[space.monitor.index];
+                if (!monitor)
+                    monitor = primary;
+                log(`removed: ${monitor.index} ${space.actor}`);
+                space.setMonitor(monitor, false);
             }
         });
+        log('#mru after')
+        log(mru.map(s => s.actor));
 
-        // Populate all monitors with existing worspaces
-        mru.slice(1).forEach((space, i) => {
-            let monitor = monitors[i];
-            if (!monitor)
-                return;
-            space.setMonitor(monitor);
-            this.monitors.set(monitor, space);
-        });
-
-        // Let the active workspace follow the primary monitor
-        let active = mru[0];
-        active.setMonitor(primary);
-        this.monitors.set(primary, active);
+        let activeSpace = this.get(global.screen.get_active_workspace());
+        this.monitors.set(activeSpace.monitor, activeSpace);
+        for (let [monitor, space] of this.monitors) {
+            space.clip.raise_top();
+        }
 
         this.spaceContainer.show();
     }
@@ -487,8 +526,12 @@ class Spaces extends Map {
 
         this.screenSignals.forEach(id => global.screen.disconnect(id));
         this.displaySignals.forEach(id => global.display.disconnect(id));
+        this.displaySignals.forEach(id => global.display.disconnect(id));
+        this.layoutManagerSignals
+            .forEach(id => Main.layoutManager.disconnect(id));
 
         // Copy the old spaces.
+        oldMonitors = this.monitors;
         oldSpaces = new Map(spaces);
         for (let [workspace, space] of this) {
             this.removeSpace(space);
@@ -640,10 +683,11 @@ function registerWindow(metaWindow) {
 
 
 // Symbol to retrieve the focus handler id
-var signals, oldSpaces, backgroundGroup;
+var signals, oldSpaces, backgroundGroup, oldMonitors;
 function init() {
     signals = Symbol();
     oldSpaces = new Map();
+    oldMonitors = new Map();
 
     backgroundGroup = global.window_group.first_child;
 
