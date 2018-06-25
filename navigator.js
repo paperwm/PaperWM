@@ -386,9 +386,11 @@ var PreviewedWindowNavigator = new Lang.Class({
                 && action.name !== 'toggle-scratch') {
                 let metaWindow = this.windows[this._selectedIndex];
                 action.handler(null, null, metaWindow);
+                this.windows = this.space.getWindows();
+                this._selectedIndex = this.windows.indexOf(this.space.selectedWindow);
                 let minimap = this.minimap;
-                minimap.layout(false);
-                this.minimap.select(this._selectedIndex);
+                minimap.show();
+                minimap.select();
                 return true;
             }
         }

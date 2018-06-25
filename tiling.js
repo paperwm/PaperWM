@@ -1487,7 +1487,7 @@ function slurp(metaWindow) {
     space.removeWindow(rightNeigbour);
     let column = space[index];
     space.addWindow(rightNeigbour, index, column.length);
-    ensureViewport(global.display.focus_window, spaces.spaceOfWindow(global.display.focus_window), true);
+    ensureViewport(space.selectedWindow, space, true);
 }
 
 function barf(metaWindow) {
@@ -1503,5 +1503,5 @@ function barf(metaWindow) {
     let bottom = column[column.length - 1];
     space.removeWindow(bottom);
     space.addWindow(bottom, index + 1);
-    ensureViewport(global.display.focus_window, spaces.spaceOfWindow(global.display.focus_window), true);
+    ensureViewport(space.selectedWindow, space, true);
 }
