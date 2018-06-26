@@ -76,7 +76,13 @@ class ClickOverlay {
             'enter-event', () => {
                 this.deactivate();
                 let space = Tiling.spaces.monitors.get(this.monitor);
-                space.workspace.activate(global.get_current_time());
+                if (space.selectedWindow) {
+                    space.workspace.activate_with_focus(
+                        space.selectedWindow,
+                        global.get_current_time());
+                } else {
+                    space.workspace.activate(global.get_current_time());
+                }
                 return Clutter.EVENT_STOP;
             }
         );
