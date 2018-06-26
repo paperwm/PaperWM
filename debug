@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 
+# Ref: https://gitlab.gnome.org/GNOME/gnome-shell/issues/1
 function skip-crap {
     local crap_start=".*: Object [^ ]+ \(.*\), has been already finalized. Impossible to \w* any property \w* it.*"
 
@@ -45,14 +46,20 @@ function date-on-separate-line {
     stdbuf -oL sed -e 's|\]:|]:\n  |'
 }
 
+# We use non-breaking space to encode newlines in multiline messages
 function decode-multiline-message {
     stdbuf -oL sed -e 's| |\n    |g'
 }
 
-# We use non-breaking space to encode newlines in multiline messages
+function gnome-shell-exe-path {
+    if uname -a | grep --silent "NixOS"; then
+        echo $(dirname =gnome-shell(:A))/.gnome-shell-wrapped
+    else
+        echo =gnome-shell
+    fi
+}
 
-journalctl --follow \
-           $(dirname =gnome-shell(:A))/.gnome-shell-wrapped \
+journalctl --follow --lines 400 $(gnome-shell-exe-path) \
     | skip-crap                \
     | date-on-separate-line    \
     | decode-multiline-message
