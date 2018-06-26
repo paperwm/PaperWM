@@ -37,21 +37,28 @@ var panelBox = Main.layoutManager.panelBox;
 /**
    Scrolled and tiled per monitor workspace.
 
-   The structure is currently like this:
+   The tiling is composed of an array of columns. A column being an array of
+   MetaWindows. Ie. the type being [[MetaWindow]].
+
+   A Space also contains a visual representation of the tiling. The structure is
+   currently like this:
 
    A @clip actor which spans the monitor and clips all its contents to the
    monitor. The clip lives along side all other space's clips in an actor
    spanning the whole global.screen
 
-   An @actor to hold everything visible, it contains a @background, a @label and
-   a @cloneContainer.
+   An @actor to hold everything that's visible, it contains a @background,
+   a @label and a @cloneContainer.
 
    The @background is sized somewhat larger than the monitor, with the top left
    and right corners rounded. It's positioned slightly above the monitor so the
    corners aren't visible when the space is active.
 
    The @cloneContainer holds all the WindowActor clones, clipping them to the
-   size of the monitor.
+   size of the monitor. Window clones are necessary due to mutter restricting
+   how far a window can stick out of the screen (hardcoded to 75 pixels). The
+   clones are also useful when constructing the workspace stack as it's easier
+   to scale and move the space.actor in one go.
  */
 class Space extends Array {
     constructor (workspace, container) {
