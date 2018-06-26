@@ -676,6 +676,8 @@ class Spaces extends Map {
     windowEnteredMonitor(screen, index, metaWindow) {
         debug('window-entered-monitor', index, metaWindow.title);
         if (!metaWindow.get_compositor_private()
+            || Scratch.isScratchWindow(metaWindow)
+            || metaWindow.is_on_all_workspaces()
             || !metaWindow.clone
             || metaWindow.clone.visible)
             return;
