@@ -451,6 +451,10 @@ class Spaces extends Map {
             for (let [monitor, space] of this.monitors) {
                 space.clip.raise_top();
             }
+            let selected = activeSpace.selectedWindow;
+            if (selected) {
+                ensureViewport(selected, activeSpace, true);
+            }
             this.spaceContainer.show();
         };
 
