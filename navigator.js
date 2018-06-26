@@ -227,6 +227,7 @@ var PreviewedWindowNavigator = new Lang.Class({
                 space.clip,
                 mru[i - 1].clip
             );
+            Tweener.removeTweens(space.actor);
             space.actor.show();
 
             let selected = space.selectedWindow;
@@ -598,7 +599,7 @@ function switchWorkspace(to, from, callback) {
                   transition: 'easeInOutQuad',
                   onComplete() {
                       this.set_position(0, global.screen_height*0.1);
-                      this.hide();                     
+                      this.hide();
                   },
                   onCompleteScope: next.first_child
                 });
