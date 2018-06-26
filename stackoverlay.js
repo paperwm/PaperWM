@@ -71,6 +71,7 @@ class ClickOverlay {
         enterMonitor.set_position(monitor.x, monitor.y);
 
         Main.uiGroup.add_actor(enterMonitor);
+        Main.layoutManager.trackChrome(enterMonitor);
 
         this.enterSignal = enterMonitor.connect(
             'enter-event', () => {
