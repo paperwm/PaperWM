@@ -382,6 +382,14 @@ class Spaces extends Map {
                                        this.monitorsChanged.bind(this)),
         ];
 
+        const OVERRIDE_SCHEMA = 'org.gnome.shell.overrides';
+        this.overrideSettings = new Gio.Settings({ schema_id: OVERRIDE_SCHEMA });
+        this.settingsSignals = [
+            this.overrideSettings.connect(
+                'changed::workspaces-only-on-primary',
+                this.monitorsChanged.bind(this))
+        ];
+
         // Clone and hook up existing windows
         global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(registerWindow);
@@ -431,6 +439,33 @@ class Spaces extends Map {
             overlay.destroy();
         }
         this.clickOverlays = [];
+        let mru = this.mru();
+        log('#mru before')
+        log(mru.map(s => s.actor));
+        let primary = Main.layoutManager.primaryMonitor;
+        let monitors = Main.layoutManager.monitors;
+
+        let finish = () => {
+            let activeSpace = this.get(global.screen.get_active_workspace());
+            this.monitors.set(activeSpace.monitor, activeSpace);
+            for (let [monitor, space] of this.monitors) {
+                space.clip.raise_top();
+            }
+            this.spaceContainer.show();
+        };
+
+        if (this.overrideSettings.get_boolean('workspaces-only-on-primary')) {
+            this.forEach(space => {
+                space.setMonitor(primary, false);
+            });
+            this.monitors.set(primary, mru[0]);
+            let overlay = new ClickOverlay(primary);
+            primary.clickOverlay = overlay;
+            this.clickOverlays.push(overlay);
+            finish();
+            return;
+        }
+
         for (let monitor of Main.layoutManager.monitors) {
             let overlay = new ClickOverlay(monitor);
             monitor.clickOverlay = overlay;
@@ -438,11 +473,6 @@ class Spaces extends Map {
             this.clickOverlays.push(overlay);
         }
 
-        let mru = this.mru();
-        log('#mru before')
-        log(mru.map(s => s.actor));
-        let primary = Main.layoutManager.primaryMonitor;
-        let monitors = Main.layoutManager.monitors;
 
         // Persist as many monitors as possible
         for (let [oldMonitor, oldSpace] of oldMonitors) {
@@ -485,13 +515,7 @@ class Spaces extends Map {
         log('#mru after')
         log(mru.map(s => s.actor));
 
-        let activeSpace = this.get(global.screen.get_active_workspace());
-        this.monitors.set(activeSpace.monitor, activeSpace);
-        for (let [monitor, space] of this.monitors) {
-            space.clip.raise_top();
-        }
-
-        this.spaceContainer.show();
+        finish();
     }
 
     destroy() {
@@ -529,8 +553,9 @@ class Spaces extends Map {
         this.displaySignals.forEach(id => global.display.disconnect(id));
         this.layoutManagerSignals
             .forEach(id => Main.layoutManager.disconnect(id));
+        this.settingsSignals.forEach(id => this.overrideSettings.disconnect(id));
 
-        // Copy the old spaces.
+        // Hold onto a copy of the old monitors and spaces to support reload.
         oldMonitors = this.monitors;
         oldSpaces = new Map(spaces);
         for (let [workspace, space] of this) {

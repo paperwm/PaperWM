@@ -181,8 +181,8 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         let visible = Main.layoutManager.monitors
             .map(m => Tiling.spaces.monitors.get(m));
-        Main.layoutManager.monitors
-            .forEach(m => m.clickOverlay.deactivate());
+        Tiling.spaces.clickOverlays
+            .forEach(overlay => overlay.deactivate());
 
         let mru = [this.space].concat(
             Tiling.spaces.mru().filter(space => !visible.includes(space)));
@@ -500,7 +500,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             this.space.emit('move-done');
 
         for (let monitor of Main.layoutManager.monitors) {
-            if (monitor === this.monitor)
+            if (monitor === this.monitor || !monitor.clickOverlay)
                 continue;
             monitor.clickOverlay.activate();
         }
