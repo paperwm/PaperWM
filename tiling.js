@@ -919,11 +919,7 @@ function add_handler(ws, metaWindow) {
 function insertWindow(metaWindow, {existing}) {
 
     let space = spaces.spaceOfWindow(metaWindow);
-    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
-
-    if (monitor !== space.monitor) {
-        return;
-    }
+    let monitor = space.monitor;
 
     if (!add_filter(metaWindow)) {
         return;
