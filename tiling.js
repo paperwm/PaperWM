@@ -687,8 +687,8 @@ class Spaces extends Map {
         metaWindow.change_workspace(space.workspace);
 
         // This doesn't play nice with the clickoverlay, disable for now
-        // if (focus)
-        //     Main.activateWindow(metaWindow);
+        if (focus)
+            Main.activateWindow(metaWindow);
     }
 }
 
@@ -984,11 +984,12 @@ function insertWindow(metaWindow, {existing}) {
         });
     }
 
-    if (space.workspace === global.screen.get_active_workspace()) {
+    if (metaWindow === global.display.focus_window ||
+        space.workspace === global.screen.get_active_workspace()) {
         ensureViewport(metaWindow, space, true);
         Main.activateWindow(metaWindow);
     } else {
-        ensureViewport(space.selectedWindow, space);
+        ensureViewport(space.selectedWindow, space, true);
     }
 }
 
@@ -1284,11 +1285,15 @@ function moveSizeHandler(metaWindow) {
 
     let frame = metaWindow.get_frame_rect();
     let monitor = space.monitor;
+    if (frame.x + frame.width <= monitor.x ||
+        frame.y + frame.height <= monitor.y ||
+        frame.x >= monitor.x + monitor.width ||
+        frame.y >= monitor.y + monitor.height)
+        return;
     const x = frame.x - monitor.x;
     let onComplete = !noAnimate && (() => space.emit('move-done'));
     move_to(space, metaWindow, {x: x,
                                 onComplete});
-
     updateSelection(space, noAnimate);
 }
 var moveSizeHandlerWrapper = utils.dynamic_function_ref("moveSizeHandler", Me);
