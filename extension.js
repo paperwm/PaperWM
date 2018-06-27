@@ -1,4 +1,4 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 var convenience = Extension.imports.convenience;
 
 var modules = [
@@ -38,7 +38,7 @@ var shellSettings;
 var paperSettings;
 var paperActions;
 function init() {
-    SESSIONID += "#"
+    SESSIONID += "#";
     log(`init: ${SESSIONID}`);
 
     if(initRun) {
@@ -189,13 +189,10 @@ function setKeybinding(name, func) {
     Main.wm.setCustomKeybindingHandler(name, Shell.ActionMode.NORMAL, func);
 }
 
-let nWorkspacesSignal;
-let workspaceRemovedSignal;
-let windowCreatedSignal;
 function enable() {
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
-    settings.set_strv("maximize-horizontally", ['<super>f'])
+    settings.set_strv("maximize-horizontally", ['<super>f']);
 
     settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
 
@@ -337,7 +334,7 @@ function hasUserConfigFile() {
 
 function installConfig() {
     try {
-        utils.debug("#rc", "Installing config")
+        utils.debug("#rc", "Installing config");
         const configDir = getConfigDir();
         configDir.make_directory_with_parents(null);
 
@@ -352,7 +349,7 @@ function installConfig() {
         const user = Extension.dir.get_child("examples/user.js");
         user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
 
-        const settings = convenience.getSettings()
+        const settings = convenience.getSettings();
         settings.set_boolean("has-installed-config-template", true);
 
     } catch(e) {
@@ -364,7 +361,7 @@ function errorWrappedModule(module) {
     function safeCall(method) {
         try {
             utils.debug("#rc", `calling ${method}`);
-            module[method].call(module)
+            module[method].call(module);
         } catch(e) {
             utils.debug("#rc", `${method} failed`, e.message);
             utils.print_stacktrace(e);
@@ -434,7 +431,7 @@ function notify(msg, details, params) {
 
 function spawnPager(content) {
     const quoted = GLib.shell_quote(content);
-    imports.misc.util.spawn(["sh", "-c", `echo -En ${quoted} | gedit --new-window -`])
+    imports.misc.util.spawn(["sh", "-c", `echo -En ${quoted} | gedit --new-window -`]);
 }
 
 /**

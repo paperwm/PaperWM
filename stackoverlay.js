@@ -131,8 +131,7 @@ class ClickOverlay {
 var StackOverlay = new Lang.Class({
     Name: 'Stackoverlay',
 
-    _init: function(direction, monitor, showIcon) {
-        this.showIcon = showIcon;
+    _init: function(direction, monitor) {
 
         this._direction = direction;
 
@@ -158,7 +157,6 @@ var StackOverlay = new Lang.Class({
             return true;
         });
         this.releaseId = overlay.connect('button-release-event', () => {
-            // this.fadeOut();
             return true;
         });
 
@@ -188,37 +186,14 @@ var StackOverlay = new Lang.Class({
 
         this.overlay = overlay;
     },
-    updateIcon: function() {
-        if (this.icon) {
-            this.icon.destroy();
-            this.icon = null;
-        }
 
-        let iconMarginX = 2;
-        let iconSize = horizontal_margin;
-        let icon = createAppIcon(this.target, iconSize);
-        this.icon = icon;
-
-        let actor = this.target.get_compositor_private();
-
-        if (actor.x <= Tiling.stack_margin) {
-            icon.x = iconMarginX;
-        } else {
-            icon.x = this.overlay.width - iconMarginX - iconSize; 
-        }
-
-        let [dx, dy] = Minimap.calcOffset(this.target);
-        icon.y = actor.y + dy + 4 - this.overlay.y;
-
-        this.overlay.add_child(icon);
-    },
     setTarget: function(space, index) {
 
         let bail = () => {
             this.target = null;
             this.overlay.width = 0;
             return false;
-        }
+        };
 
         if (space === null) {
             // No target. Eg. if we're at the left- or right-most window
@@ -267,16 +242,8 @@ var StackOverlay = new Lang.Class({
             overlay.width = width;
         }
 
-        if (this.showIcon) {
-            this.updateIcon();
-        }
-
         global.window_group.set_child_above_sibling(overlay, actor);
 
-        // Tweener.addTween(this.overlay, { opacity: 255, time: 0.25 });
         return true;
     },
-    fadeOut: function() {
-        Tweener.addTween(this.overlay, { opacity: 0, time: 0.25 });
-    }
 });

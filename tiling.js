@@ -34,6 +34,19 @@ var minimumMargin = 15;
 
 var panelBox = Main.layoutManager.panelBox;
 
+var signals, oldSpaces, backgroundGroup, oldMonitors;
+function init() {
+    // Symbol to retrieve the focus handler id
+    signals = Symbol();
+    oldSpaces = new Map();
+    oldMonitors = new Map();
+
+    backgroundGroup = global.window_group.first_child;
+
+    global.screen[signals] = [];
+    global.display[signals] = [];
+}
+
 /**
    Scrolled and tiled per monitor workspace.
 
@@ -235,8 +248,8 @@ class Space extends Array {
     }
 
     /**
-       Add any existing windows on `workspace` to the corresponding `Space`,
-       optionally using `windows` as a preferred order.
+       Add existing windows on workspace to the space. Restore the
+       layout of oldSpace if present.
     */
     addAll(oldSpace) {
 
@@ -712,20 +725,6 @@ function registerWindow(metaWindow) {
     ];
 }
 
-
-// Symbol to retrieve the focus handler id
-var signals, oldSpaces, backgroundGroup, oldMonitors;
-function init() {
-    signals = Symbol();
-    oldSpaces = new Map();
-    oldMonitors = new Map();
-
-    backgroundGroup = global.window_group.first_child;
-
-    global.screen[signals] = [];
-    global.display[signals] = [];
-}
-
 function enable() {
     debug('#enable');
 
@@ -877,8 +876,6 @@ function add_filter(meta_window, startup) {
 
 /**
    Handle windows leaving workspaces.
-
-   TODO: move to `Space`
  */
 function remove_handler(workspace, meta_window) {
     debug("window-removed", meta_window, meta_window.title, workspace.index());
@@ -900,8 +897,6 @@ function remove_handler(workspace, meta_window) {
 
 /**
    Handle windows entering workspaces.
-
-   TODO: move to `Space`
 */
 function add_handler(ws, metaWindow) {
     debug("window-added", metaWindow, metaWindow.title, metaWindow.window_type, ws.index());
@@ -916,7 +911,11 @@ function add_handler(ws, metaWindow) {
 }
 
 /**
-   Insert the window into its space if appropriate.
+   Insert the window into its space if appropriate. Requires MetaWindowActor
+
+   This gets called from `Workspace::window-added` if the window already exists,
+   and `Display::window-created` through `WindowActor::show` if window is newly
+   created to ensure that the WindowActor exists.
 */
 function insertWindow(metaWindow, {existing}) {
 
@@ -1006,7 +1005,7 @@ function ensureViewport(meta_window, space, force) {
         return undefined;
     }
 
-    let index = space.indexOf(meta_window)
+    let index = space.indexOf(meta_window);
     if (index === -1)
         return undefined;
 
@@ -1173,8 +1172,8 @@ function move(meta_window, space,
 }
 
 /**
- * Move the column containing @meta_window to x, y and propagate the change in @space.
- * Coordinates are relative to monitor and y is optional.
+ * Move the column containing @meta_window to x, y and propagate the change
+ * in @space. Coordinates are relative to monitor and y is optional.
  */
 function move_to(space, meta_window, { x, y, delay, transition,
                                        onComplete, onStart, gap }) {
@@ -1191,7 +1190,7 @@ function move_to(space, meta_window, { x, y, delay, transition,
     if (y === undefined) {
         let top = space[index][0];
         let topFrame = top.get_frame_rect();
-        y = topFrame.y - space.monitor.y
+        y = topFrame.y - space.monitor.y;
     }
 
     fixColumn(space, index, x, y, onComplete);
@@ -1326,7 +1325,7 @@ function focus_handler(meta_window, user_data) {
     ensureViewport(meta_window, space);
     fixStack(space, meta_window);
 }
-let focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
+var focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
 
 /**
    Push all minimized windows to the scratch layer
@@ -1337,7 +1336,7 @@ function minimizeHandler(metaWindow) {
         Scratch.makeScratch(metaWindow);
     }
 }
-let minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
+var minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
 
 function fullscreenHandler(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
@@ -1350,7 +1349,7 @@ function fullscreenHandler(metaWindow) {
         TopBar.show();
     }
 }
-let fullscreenWrapper = utils.dynamic_function_ref('fullscreenHandler', Me);
+var fullscreenWrapper = utils.dynamic_function_ref('fullscreenHandler', Me);
 
 /**
   `WindowActor::show` handling
@@ -1369,7 +1368,7 @@ function showHandler(actor) {
         metaWindow.clone.show();
     }
 }
-let showWrapper = utils.dynamic_function_ref('showHandler', Me);
+var showWrapper = utils.dynamic_function_ref('showHandler', Me);
 
 /**
   We need to stack windows in mru order, since mutter picks from the
@@ -1460,9 +1459,9 @@ function toggleMaximizeHorizontally(metaWindow) {
     // Note: should investigate best-practice for attaching extension-data to meta_windows
     if(metaWindow.unmaximizedRect) {
         let unmaximizedRect = metaWindow.unmaximizedRect;
-        metaWindow.move_resize_frame(true,
-                                      unmaximizedRect.x, unmaximizedRect.y,
-                                      unmaximizedRect.width, unmaximizedRect.height)
+        metaWindow.move_resize_frame(
+            true, unmaximizedRect.x, unmaximizedRect.y,
+            unmaximizedRect.width, unmaximizedRect.height);
         metaWindow.unmaximizedRect = undefined;
     } else {
         let frame = metaWindow.get_frame_rect();

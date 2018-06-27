@@ -1,5 +1,8 @@
-/*
+/**
   Navigation and previewing functionality.
+
+  This is a somewhat messy tangle of functionality relying on
+  `SwitcherPopup.SwitcherPopup` when we really should just take full control.
  */
 
 var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
@@ -449,7 +452,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         // debug('#preview', 'Select', this.space[index][0].title, index);
         let metaWindow = this.windows[index];
         if (metaWindow) {
-            this.space.selectedWindow = metaWindow;
             Tiling.ensureViewport(metaWindow, this.space);
         }
         this._selectedIndex = index;
@@ -545,7 +547,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
 function preview_navigate(display, screen, meta_window, binding) {
     let tabPopup = new PreviewedWindowNavigator();
-    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask())
+    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
 
 function switchWorkspace(to, from, callback) {
