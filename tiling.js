@@ -86,7 +86,6 @@ class Space extends Array {
 
         // The windows that should be represented by their WindowActor
         this.visible = [];
-        this._moveDoneId = this.connect('move-done', this._moveDone.bind(this));
 
         let clip = new Clutter.Actor();
         this.clip = clip;
@@ -195,7 +194,7 @@ class Space extends Array {
         return column.indexOf(metaWindow);
     }
 
-    _moveDone() {
+    moveDone() {
         debug('#move-done');
         if (Navigator.navigating) {
             this.delayed = true;
@@ -206,7 +205,7 @@ class Space extends Array {
             w.clone.hide();
             actor && actor.show();
         });
-        // this.selection.hide();
+        this.emit('move-done');
     }
 
     setColor(color) {
@@ -346,7 +345,6 @@ class Space extends Array {
         let workspace = this.workspace;
         workspace.disconnect(this.addSignal);
         workspace.disconnect(this.removeSignal);
-        this.disconnect(this._moveDoneId);
     }
 }
 Signals.addSignalMethods(Space.prototype);
@@ -1068,7 +1066,7 @@ function ensureViewport(meta_window, space, force) {
     }
 
     if (!force && frame.x === x && frame.y === y) {
-        space.emit('move-done');
+        space.moveDone();
     } else {
         space.moving = space.selectedWindow;
         move_to(space, meta_window,
@@ -1076,7 +1074,7 @@ function ensureViewport(meta_window, space, force) {
                   gap,
                   onComplete: () => {
                       space.moving = false;
-                      space.emit('move-done');
+                      space.moveDone();
                       if (!Navigator.navigating)
                           Meta.enable_unredirect_for_screen(global.screen);
                   },
@@ -1292,7 +1290,7 @@ function moveSizeHandler(metaWindow) {
         frame.y >= monitor.y + monitor.height)
         return;
     const x = frame.x - monitor.x;
-    let onComplete = !noAnimate && (() => space.emit('move-done'));
+    let onComplete = !noAnimate && space.moveDone.bind(space);
     move_to(space, metaWindow, {x: x,
                                 onComplete});
     updateSelection(space, noAnimate);
@@ -1556,7 +1554,7 @@ function centerWindowHorizontally(metaWindow) {
         metaWindow.move_frame(true, targetX + monitor.x, frame.y);
     } else {
         move_to(space, metaWindow, { x: targetX,
-                                     onComplete: () => space.emit('move-done')});
+                                     onComplete: () => space.moveDone()});
         updateSelection(space);
     }
 }

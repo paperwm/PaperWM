@@ -499,7 +499,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
 
         if (this.space.delayed && !force)
-            this.space.emit('move-done');
+            this.space.moveDone();
 
         for (let monitor of Main.layoutManager.monitors) {
             if (monitor === this.monitor || !monitor.clickOverlay)
