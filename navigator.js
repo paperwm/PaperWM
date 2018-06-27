@@ -55,10 +55,34 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     _next: function() {
-        return Math.min(this.windows.length-1, this._selectedIndex+1)
+        let index = this.space.selectedIndex();
+        let column = this.space[index];
+        if (!column)
+            return false;
+        let row = column.indexOf(this.space.selectedWindow);
+        if (row + 1 >= column.length) {
+            index = Math.min(this.space.length-1, index + 1);
+            row = 0;
+        } else {
+            row++;
+        }
+        return [index, row];
     },
+
     _previous: function() {
-        return Math.max(0, this._selectedIndex-1)
+        let index = this.space.selectedIndex();
+        let column = this.space[index];
+        if (!column)
+            return false;
+        let row = column.indexOf(this.space.selectedWindow);
+        if (row - 1 < 0) {
+            index = Math.max(0, index - 1);
+            column = this.space[index];
+            row = column.length - 1;
+        } else {
+            row--;
+        }
+        return [index, row];
     },
 
     _initialSelection: function(backward, actionName) {
@@ -71,10 +95,8 @@ var PreviewedWindowNavigator = new Lang.Class({
         Meta.disable_unredirect_for_screen(global.screen);
 
         this.space = Tiling.spaces.spaceOf(global.screen.get_active_workspace());
-        this.windows = this.space.getWindows();
 
-        this._selectedIndex = this.windows.indexOf(this.space.selectedWindow);
-        this._startIndex  = this._selectedIndex;
+        this._startWindow = this.space.selectedWindow;
         this.from = this.space;
         this.monitor = this.space.monitor;
 
@@ -137,9 +159,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         swapArray(this.space, index, targetIndex);
 
         Tiling.ensureViewport(metaWindow, this.space, true);
-        this.windows = this.space.getWindows();
-        this._selectedIndex = this.windows.indexOf(metaWindow);
-
         this.minimap.reorder(index, targetIndex);
     },
 
@@ -172,8 +191,6 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         swapArray(column, row, targetRow);
         this.minimap.show();
-        this.windows = this.space.getWindows();
-        this._selectedIndex = this.windows.indexOf(metaWindow);
         Tiling.ensureViewport(metaWindow, space, true);
         this.minimap.select();
     },
@@ -269,7 +286,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         else
             to = from - 1;
         if (to < 0 || to >= mru.length) {
-            this._select(this._selectedIndex);
+            this._select(this.space.positionOf());
             return true;
         }
         let oldSpace = this.space;
@@ -304,8 +321,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         });
 
         this.space = newSpace;
-        this.windows = this.space.getWindows();
-        this._select(this.windows.indexOf(this.space.selectedWindow));
+        this._select(this.space.positionOf());
     },
 
     _doAction: function(mutterActionId) {
@@ -391,7 +407,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             if (action
                 && action.name !== 'toggle-scratch-layer'
                 && action.name !== 'toggle-scratch') {
-                let metaWindow = this.windows[this._selectedIndex];
+                let metaWindow = this.space.selectedWindow;
                 action.handler(null, null, metaWindow);
                 this.windows = this.space.getWindows();
                 this._selectedIndex = this.windows.indexOf(this.space.selectedWindow);
@@ -440,7 +456,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         if (row < 0 || row >= column.length)
             return;
 
-        this._select(this.windows.indexOf(column[row]));
+        this._select([index, row]);
     },
 
     _keyPressHandler: function(keysym, action) {
@@ -451,15 +467,16 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
     },
 
-    _select: function(index) {
+    _select: function(position) {
         // debug('#preview', 'Select', this.space[index][0].title, index);
-        let metaWindow = this.windows[index];
+        if (!position)
+            return;
+        let metaWindow = this.space.getWindow(...position);
         if (metaWindow) {
             Tiling.ensureViewport(metaWindow, this.space);
         }
-        this._selectedIndex = index;
         if (!workspaceMru)
-            this.minimap.select(index);
+            this.minimap.select();
     },
 
     _finish: function(timestamp) {
@@ -494,7 +511,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         if(!this.was_accepted) {
             // Abort the navigation
             this.space = from;
-            this.space.selectedWindow = from.getWindows()[this._startIndex];
+            this.space.selectedWindow = this._startWindow;
         }
 
         if (this.monitor !== this.space.monitor) {
@@ -526,7 +543,7 @@ var PreviewedWindowNavigator = new Lang.Class({
                 // automatically, so we run it manually
                 Tiling.focus_handler(selected);
             }
-            debug('#preview', 'Finish', selected.title, this._selectedIndex);
+            debug('#preview', 'Finish', selected.title);
         } else {
             this.space.workspace.activate(global.get_current_time());
         }
