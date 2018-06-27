@@ -144,6 +144,16 @@ class Space extends Array {
         return this.reduce((ws, column) => ws.concat(column), []);
     }
 
+    getWindow(index, row) {
+        if (row < 0 || index < 0 || index >= this.length)
+            return false;
+
+        let column = this[index];
+        if (row >= column.length)
+            return false;
+        return column[row];
+    }
+
     addWindow(metaWindow, index, row) {
         if (this.indexOf(metaWindow) !== -1)
             return;
@@ -179,6 +189,16 @@ class Space extends Array {
         this.selection.width = 0;
         this.visible = [];
         return true;
+    }
+
+    positionOf(metaWindow) {
+        metaWindow = metaWindow || this.selectedWindow;
+        let index, row;
+        for (let i=0; i < this.length; i++) {
+            if (this[i].includes(metaWindow))
+                return [i, this[i].indexOf(metaWindow)];
+        }
+        return false;
     }
 
     indexOf(metaWindow) {
