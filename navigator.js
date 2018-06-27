@@ -192,7 +192,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         swapArray(column, row, targetRow);
         this.minimap.show();
         Tiling.ensureViewport(metaWindow, space, true);
-        this.minimap.select();
     },
 
     _initSpaceMru(move) {
@@ -409,11 +408,6 @@ var PreviewedWindowNavigator = new Lang.Class({
                 && action.name !== 'toggle-scratch') {
                 let metaWindow = this.space.selectedWindow;
                 action.handler(null, null, metaWindow);
-                this.windows = this.space.getWindows();
-                this._selectedIndex = this.windows.indexOf(this.space.selectedWindow);
-                let minimap = this.minimap;
-                minimap.show();
-                minimap.select();
                 return true;
             }
         }
@@ -475,8 +469,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         if (metaWindow) {
             Tiling.ensureViewport(metaWindow, this.space);
         }
-        if (!workspaceMru)
-            this.minimap.select();
     },
 
     _finish: function(timestamp) {
@@ -497,7 +489,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     destroy: function() {
         debug('#preview', 'destroy', this.space.actor);
 
-        this.minimap.actor.destroy();
+        this.minimap.destroy();
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();

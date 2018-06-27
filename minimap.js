@@ -25,8 +25,9 @@ var WindowCloneLayout = new Lang.Class({
     Name: 'PaperWindowCloneLayout',
     Extends: Clutter.LayoutManager,
 
-    _init: function() {
+    _init: function(minimap) {
         this.parent();
+        this.minimap = minimap;
     },
 
     _makeBoxForWindow: function(window) {
@@ -71,6 +72,7 @@ var WindowCloneLayout = new Lang.Class({
 
         child.allocate(this._makeBoxForWindow(realWindow.meta_window),
                        flags);
+        this.minimap.layout();
     }
 });
 
@@ -102,6 +104,32 @@ class Minimap {
         clip.add_actor(container);
         clip.set_position(12 + prefs.window_gap, 15 + 10);
         highlight.y = clip.y - 10;
+        this.signals = [
+            space.connect('select', this.select.bind(this)),
+            space.connect('window-added', this.addWindow.bind(this)),
+            space.connect('window-removed', this.removeWindow.bind(this)),
+        ];
+    }
+
+    addWindow(space, metaWindow, index, row) {
+        let clone = this.createClone(metaWindow);
+        if (row !== undefined && this.clones[index]) {
+            let column = this.clones[index];
+            column.splice(row, 0, clone);
+        } else {
+            row = row || 0;
+            this.clones.splice(index, 0, [clone]);
+        }
+        this.container.add_actor(clone);
+    }
+
+    removeWindow(space, metaWindow, index, row) {
+        let clone = this.clones[index][row];
+        let column = this.clones[index];
+        column.splice(row, 1);
+        if (column.length === 0)
+            this.clones.splice(index, 1);
+        this.container.remove_child(clone);
     }
 
     show() {
@@ -111,19 +139,21 @@ class Minimap {
     }
 
     createClones() {
-        return this.space.map(column => column.map((mw) => {
-            let windowActor = mw.get_compositor_private();
-            let clone = new Clutter.Clone({ source: windowActor });
-            let container = new Clutter.Actor({
-                layout_manager: new WindowCloneLayout(),
-                name: "window-clone-container"
-            });
-            clone.meta_window = mw;
-            container.meta_window = mw;
-            container.add_actor(clone);
+        return this.space.map(column =>
+                              column.map(this.createClone.bind(this)));
+    }
 
-            return container;
-        }));
+    createClone(mw) {
+        let windowActor = mw.get_compositor_private();
+        let clone = new Clutter.Clone({ source: windowActor });
+        let container = new Clutter.Actor({
+            layout_manager: new WindowCloneLayout(this),
+            name: "window-clone-container"
+        });
+        clone.meta_window = mw;
+        container.meta_window = mw;
+        container.add_actor(clone);
+        return container;
     }
 
     layout(animate = true) {
@@ -149,6 +179,7 @@ class Minimap {
         this.actor.width = this.clip.width + this.clip.x*2;
         this.clip.set_clip(0, 0, this.clip.width, this.clip.height);
         this.label.set_style(`max-width: ${this.clip.width}px;`);
+        this.select();
     }
 
     restack() {
@@ -175,12 +206,14 @@ class Minimap {
     }
 
     select() {
+        let position = this.space.positionOf();
+        if (!position)
+            return;
+        let [index, row] = position;
         let clip = this.clip;
         let container = this.container;
         let highlight = this.highlight;
         let label = this.label;
-        let index = this.space.selectedIndex();
-        let row = this.space[index].indexOf(this.space.selectedWindow);
         let selected = this.clones[index][row];
         if (!selected)
             return;
@@ -224,5 +257,10 @@ class Minimap {
             clip.y + Math.round(clip.height + 20));
 
         this.actor.height = this.label.y + this.label.height + 12;
+    }
+
+    destroy() {
+        this.actor.destroy();
+        this.signals.forEach(id => this.space.disconnect(id));
     }
 }

@@ -161,10 +161,10 @@ class Space extends Array {
             let column = this[index];
             column.splice(row, 0, metaWindow);
         } else {
-            row = row || 0;
             this.splice(index, 0, [metaWindow]);
         }
         metaWindow.clone.reparent(this.cloneContainer);
+        this.emit('window-added', metaWindow, index, row);
     }
 
     removeWindow(metaWindow) {
@@ -188,6 +188,7 @@ class Space extends Array {
         Tweener.removeTweens(this.selection);
         this.selection.width = 0;
         this.visible = [];
+        this.emit('window-removed', metaWindow, index, row);
         return true;
     }
 
@@ -264,6 +265,8 @@ class Space extends Array {
 
         cloneContainer.set_size(monitor.width, monitor.height);
         cloneContainer.set_clip(-Math.round(prefs.window_gap/2), 0, monitor.width + prefs.window_gap, monitor.height);
+
+        this.emit('monitor-changed');
     }
 
     /**
@@ -1100,6 +1103,7 @@ function ensureViewport(meta_window, space, force) {
                   },
                 });
     }
+    space.emit('select');
 
     updateSelection(space, noAnimate);
 }
