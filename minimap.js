@@ -108,6 +108,7 @@ class Minimap {
             space.connect('select', this.select.bind(this)),
             space.connect('window-added', this.addWindow.bind(this)),
             space.connect('window-removed', this.removeWindow.bind(this)),
+            space.connect('swapped', this.swapped.bind(this)),
         ];
     }
 
@@ -130,6 +131,13 @@ class Minimap {
         if (column.length === 0)
             this.clones.splice(index, 1);
         this.container.remove_child(clone);
+    }
+
+    swapped(space, index, targetIndex, row, targetRow) {
+        let column = this.clones[index];
+        utils.swap(column, row, targetRow);
+        utils.swap(this.clones, index, targetIndex);
+        this.layout();
     }
 
     show() {
@@ -192,21 +200,6 @@ class Minimap {
 
         clones.reduce((ws, column) => ws.concat(column), [])
             .forEach(c => this.container.add_actor(c));
-    }
-
-    reorder(index, targetIndex) {
-        // targetX is the destination of the moving window in viewport
-        // coordinates
-
-        let movingClone = this.clones[index];
-        let next = this.clones[targetIndex];
-
-        let temp = this.clones[index];
-        this.clones[index] = this.clones[targetIndex];
-        this.clones[targetIndex] = temp;
-
-        this.layout(false);
-        this.select(targetIndex);
     }
 
     select() {

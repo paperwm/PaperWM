@@ -192,6 +192,39 @@ class Space extends Array {
         return true;
     }
 
+    swap(direction, metaWindow) {
+        metaWindow = metaWindow || this.selectedWindow;
+
+        let [index, row] = this.positionOf(metaWindow);
+        let targetIndex = index;
+        let targetRow = row;
+        switch (direction) {
+        case Meta.MotionDirection.LEFT:
+            targetIndex--;
+            break;
+        case Meta.MotionDirection.RIGHT:
+            targetIndex++;
+            break;
+        case Meta.MotionDirection.DOWN:
+            targetRow++;
+            break;
+        case Meta.MotionDirection.UP:
+            targetRow--;
+            break;
+        }
+        let column = this[index];
+        if (targetIndex < 0 || targetIndex >= this.length
+            || targetRow < 0 || targetRow >= column.length)
+            return;
+
+        utils.swap(this[index], row, targetRow);
+        utils.swap(this, index, targetIndex);
+        metaWindow.clone.raise_top();
+
+        this.emit('swapped', index, targetIndex, row, targetRow);
+        ensureViewport(this.selectedWindow, this, true);
+    }
+
     positionOf(metaWindow) {
         metaWindow = metaWindow || this.selectedWindow;
         let index, row;

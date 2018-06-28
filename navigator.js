@@ -128,68 +128,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._doAction(actionId);
     },
 
-    _reorder: function (direction) {
-        function swapArray(array, i, j) {
-            let temp = array[i];
-            array[i] = array[j];
-            array[j] = temp;
-        }
-
-        let metaWindow = this.space.selectedWindow;
-        let index = this.space.indexOf(metaWindow);
-        let targetIndex = index;
-        switch (direction) {
-        case Meta.MotionDirection.LEFT:
-            targetIndex--;
-            break;
-        case Meta.MotionDirection.RIGHT:
-            targetIndex++;
-            break;
-        }
-
-        if (targetIndex < 0 || targetIndex >= this.space.length)
-            return;
-
-        this.space[index].forEach(w => w.clone.raise_top());
-
-        swapArray(this.space, index, targetIndex);
-
-        Tiling.ensureViewport(metaWindow, this.space, true);
-        this.minimap.reorder(index, targetIndex);
-    },
-
-    _reorderColumn(direction) {
-        function swapArray(array, i, j) {
-            let temp = array[i];
-            array[i] = array[j];
-            array[j] = temp;
-        }
-
-        let space = this.space;
-        let metaWindow = space.selectedWindow;
-        let index = space.indexOf(metaWindow);
-        let column = space[index];
-        let row = column.indexOf(metaWindow);
-        let targetRow = row;
-
-        switch (direction) {
-        case Meta.MotionDirection.DOWN:
-            targetRow++;
-            break;
-        case Meta.MotionDirection.UP:
-            targetRow--;
-            break;
-        }
-        if (targetRow < 0 || targetRow >= column.length)
-            return;
-
-        metaWindow.clone.raise_top();
-
-        swapArray(column, row, targetRow);
-        this.minimap.show();
-        Tiling.ensureViewport(metaWindow, space, true);
-    },
-
     _initSpaceMru(move) {
         let heights = [0].concat(this._yPositions.slice(1));
         let minimap = this.minimap;
@@ -371,16 +309,16 @@ var PreviewedWindowNavigator = new Lang.Class({
             this._switch(Meta.MotionDirection.DOWN);
             return true;
         } else if (mutterActionId === paperActions.idOf("move-left")) {
-            this._reorder(Meta.MotionDirection.LEFT);
+            this.space.swap(Meta.MotionDirection.LEFT);
             return true;
         } else if (mutterActionId === paperActions.idOf("move-right")) {
-            this._reorder(Meta.MotionDirection.RIGHT);
+            this.space.swap(Meta.MotionDirection.RIGHT);
             return true;
         } else if (mutterActionId === paperActions.idOf("move-up")) {
-            this._reorderColumn(Meta.MotionDirection.UP);
+            this.space.swap(Meta.MotionDirection.UP);
             return true;
         } else if (mutterActionId === paperActions.idOf("move-down")) {
-            this._reorderColumn(Meta.MotionDirection.DOWN);
+            this.space.swap(Meta.MotionDirection.DOWN);
             return true;
         } else if (mutterActionId
                    === paperActions.idOf('previous-workspace-backward')) {
