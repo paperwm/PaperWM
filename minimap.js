@@ -76,8 +76,9 @@ var WindowCloneLayout = new Lang.Class({
     }
 });
 
-class Minimap {
+class Minimap extends Array {
     constructor(space) {
+        super();
         this.space = space;
         let actor = new St.Widget({name: 'minimap-background',
                                     style_class: 'switcher-list'});
@@ -112,44 +113,46 @@ class Minimap {
         ];
     }
 
+    static get [Symbol.species]() { return Array; }
+
     addWindow(space, metaWindow, index, row) {
         let clone = this.createClone(metaWindow);
-        if (row !== undefined && this.clones[index]) {
-            let column = this.clones[index];
+        if (row !== undefined && this[index]) {
+            let column = this[index];
             column.splice(row, 0, clone);
         } else {
             row = row || 0;
-            this.clones.splice(index, 0, [clone]);
+            this.splice(index, 0, [clone]);
         }
-        this.container.add_actor(clone);
+        this.layout();
     }
 
     removeWindow(space, metaWindow, index, row) {
-        let clone = this.clones[index][row];
-        let column = this.clones[index];
+        let clone = this[index][row];
+        let column = this[index];
         column.splice(row, 1);
         if (column.length === 0)
-            this.clones.splice(index, 1);
+            this.splice(index, 1);
         this.container.remove_child(clone);
     }
 
     swapped(space, index, targetIndex, row, targetRow) {
-        let column = this.clones[index];
+        let column = this[index];
+        utils.swap(this, index, targetIndex);
         utils.swap(column, row, targetRow);
-        utils.swap(this.clones, index, targetIndex);
         this.layout();
     }
 
     show() {
         this.space.actor.add_actor(this.actor);
-        this.clones = this.createClones();
-        this.restack();
-        this.layout(false);
+        this.createClones();
+        this.layout();
     }
 
     createClones() {
-        return this.space.map(column =>
-                              column.map(this.createClone.bind(this)));
+        for (let column of this.space) {
+            this.push(column.map(this.createClone.bind(this)));
+        }
     }
 
     createClone(mw) {
@@ -162,16 +165,15 @@ class Minimap {
         clone.meta_window = mw;
         container.meta_window = mw;
         container.add_actor(clone);
+        this.container.add_actor(container);
         return container;
     }
 
-    layout(animate = true) {
-        let cloneSpace = this.clones;
-
-        function propagate_forward(i, leftEdge, gap) {
-            if(i < 0 || i >= cloneSpace.length)
+    layout() {
+        let propagate_forward = (i, leftEdge, gap) => {
+            if(i < 0 || i >= this.length)
                 return;
-            let column = cloneSpace[i];
+            let column = this[i];
             let w = Math.max(...column.map(c => c.width));
             let x = leftEdge;
             let y = 0;
@@ -194,14 +196,6 @@ class Minimap {
         this.select();
     }
 
-    restack() {
-        this.container.remove_all_children();
-        let clones = this.clones;
-
-        clones.reduce((ws, column) => ws.concat(column), [])
-            .forEach(c => this.container.add_actor(c));
-    }
-
     select() {
         let position = this.space.positionOf();
         if (!position)
@@ -211,7 +205,7 @@ class Minimap {
         let container = this.container;
         let highlight = this.highlight;
         let label = this.label;
-        let selected = this.clones[index][row];
+        let selected = this[index][row];
         if (!selected)
             return;
 
