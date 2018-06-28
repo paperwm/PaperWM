@@ -336,6 +336,9 @@ var PreviewedWindowNavigator = new Lang.Class({
         case Meta.KeyBindingAction.UNMAXIMIZE: // Down
             mutterActionId = paperActions.idOf('switch-down');
             break;
+        case Meta.KeyBindingAction.CLOSE:
+            mutterActionId = paperActions.idOf('close-window');
+            break;
         }
 
         if (mutterActionId === paperActions.idOf("switch-next")) {
