@@ -104,11 +104,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         let minimap = new Minimap.Minimap(this.space);
         this.minimap = minimap;
         minimap.actor.opacity = 0;
-        this.space.actor.add_actor(minimap.actor);
         minimap.show();
-        minimap.actor.set_position(
-            Math.floor((this.monitor.width - minimap.actor.width)/2),
-            Math.floor((this.monitor.height - minimap.actor.height)/2));
         Tweener.addTween(minimap.actor,
                          {opacity: 255, time: 0.25, transition: 'easeInQuad'});
 

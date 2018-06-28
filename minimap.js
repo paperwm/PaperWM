@@ -133,6 +133,7 @@ class Minimap {
     }
 
     show() {
+        this.space.actor.add_actor(this.actor);
         this.clones = this.createClones();
         this.restack();
         this.layout(false);
@@ -179,6 +180,9 @@ class Minimap {
         this.actor.width = this.clip.width + this.clip.x*2;
         this.clip.set_clip(0, 0, this.clip.width, this.clip.height);
         this.label.set_style(`max-width: ${this.clip.width}px;`);
+        this.actor.set_position(
+            Math.floor((this.space.monitor.width - this.actor.width)/2),
+            Math.floor((this.space.monitor.height - this.actor.height)/2));
         this.select();
     }
 
