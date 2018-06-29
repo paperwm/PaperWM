@@ -1258,6 +1258,7 @@ function fixColumn(space, index, x, y, onComplete) {
         if (meta_window.get_compositor_private()) {
             // Anchor on the right edge for windows positioned to the left.
             move(meta_window, space, { x, y, visible, onComplete});
+            onComplete = undefined;
             meta_window.move_resize_frame(true,
                                           x + space.monitor.x,
                                           y + space.monitor.y,
