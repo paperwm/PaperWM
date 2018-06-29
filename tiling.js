@@ -37,14 +37,11 @@ var panelBox = Main.layoutManager.panelBox;
 var signals, oldSpaces, backgroundGroup, oldMonitors;
 function init() {
     // Symbol to retrieve the focus handler id
-    signals = Symbol();
+    signals = new utils.Signals();
     oldSpaces = new Map();
     oldMonitors = new Map();
 
     backgroundGroup = global.window_group.first_child;
-
-    global.screen[signals] = [];
-    global.display[signals] = [];
 }
 
 /**
@@ -77,12 +74,11 @@ class Space extends Array {
     constructor (workspace, container) {
         super(0);
         this.workspace = workspace;
-        this.addSignal =
-            workspace.connect("window-added",
-                              utils.dynamic_function_ref("add_handler", Me));
-        this.removeSignal =
-            workspace.connect("window-removed",
-                              utils.dynamic_function_ref("remove_handler", Me));
+
+        this.signals = new utils.Signals();
+        this.signals.connect(workspace, "window-added", utils.dynamic_function_ref("add_handler", Me));
+        this.signals.connect(workspace, "window-removed",
+                             utils.dynamic_function_ref("remove_handler", Me));
 
         // The windows that should be represented by their WindowActor
         this.visible = [];
@@ -399,8 +395,7 @@ class Space extends Array {
         this.cloneContainer.destroy();
         this.clip.destroy();
         let workspace = this.workspace;
-        workspace.disconnect(this.addSignal);
-        workspace.disconnect(this.removeSignal);
+        this.signals.destroy();
     }
 }
 Signals.addSignalMethods(Space.prototype);
@@ -419,43 +414,27 @@ class Spaces extends Map {
 
         this.clickOverlays = [];
 
-        this.screenSignals = [
-            global.screen.connect(
-                'notify::n-workspaces',
-                Lang.bind(this,
-                          utils.dynamic_function_ref('workspacesChanged', this))),
+        let signals = new utils.Signals();
+        this.signals = signals;
 
-            global.screen.connect(
-                'workspace-removed',
-                utils.dynamic_function_ref('workspaceRemoved', this)),
+        signals.connect(screen, 'notify::n-workspaces',
+                        utils.dynamic_function_ref('workspacesChanged', this).bind(this));
+        signals.connect(screen, 'workspace-removed',
+                        utils.dynamic_function_ref('workspaceRemoved', this));
+        signals.connect(screen, 'window-left-monitor', this.windowLeftMonitor.bind(this));
+        signals.connect(screen, "window-entered-monitor", this.windowEnteredMonitor.bind(this));
 
-            global.screen.connect("window-left-monitor",
-                                  this.windowLeftMonitor.bind(this)),
+        signals.connect(global.display, 'window-created',
+                        utils.dynamic_function_ref('window_created', this));
+        signals.connect(global.display, 'grab-op-begin', grabBegin);
+        signals.connect(global.display, 'grab-op-end', grabEnd);
 
-            global.screen.connect("window-entered-monitor",
-                                  this.windowEnteredMonitor.bind(this))
-        ];
-
-        this.displaySignals = [
-            global.display.connect(
-                'window-created',
-                utils.dynamic_function_ref('window_created', this)),
-            global.display.connect('grab-op-begin', grabBegin),
-            global.display.connect('grab-op-end', grabEnd),
-        ];
-
-        this.layoutManagerSignals = [
-            Main.layoutManager.connect("monitors-changed",
-                                       this.monitorsChanged.bind(this)),
-        ];
+        signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChanged.bind(this));
 
         const OVERRIDE_SCHEMA = 'org.gnome.shell.overrides';
         this.overrideSettings = new Gio.Settings({ schema_id: OVERRIDE_SCHEMA });
-        this.settingsSignals = [
-            this.overrideSettings.connect(
-                'changed::workspaces-only-on-primary',
-                this.monitorsChanged.bind(this))
-        ];
+        signals.connect(this.overrideSettings, 'changed::workspaces-only-on-primary',
+                        this.monitorsChanged.bind(this));
 
         // Clone and hook up existing windows
         global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
@@ -600,17 +579,6 @@ class Spaces extends Map {
         global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(metaWindow => {
                 let actor = metaWindow.get_compositor_private();
-                actor.set_scale(1, 1);
-                actor.set_pivot_point(0, 0);
-
-                if (actor[signals]) {
-                    actor[signals].forEach(id => actor.disconnect(id));
-                }
-
-                if (metaWindow[signals]) {
-                    metaWindow[signals].forEach(id => metaWindow.disconnect(id));
-                    delete metaWindow[signals];
-                }
 
                 if (metaWindow.get_workspace() === screen.get_active_workspace()
                    && !metaWindow.minimized)
@@ -619,12 +587,7 @@ class Spaces extends Map {
                     actor.hide();
             });
 
-        this.screenSignals.forEach(id => global.screen.disconnect(id));
-        this.displaySignals.forEach(id => global.display.disconnect(id));
-        this.displaySignals.forEach(id => global.display.disconnect(id));
-        this.layoutManagerSignals
-            .forEach(id => Main.layoutManager.disconnect(id));
-        this.settingsSignals.forEach(id => this.overrideSettings.disconnect(id));
+        this.signals.destroy();
 
         // Hold onto a copy of the old monitors and spaces to support reload.
         oldMonitors = this.monitors;
@@ -726,12 +689,10 @@ class Spaces extends Map {
 
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
-        let signal = Symbol();
-        metaWindow[signal] = actor.connect(
+        let signal = actor.connect(
             'show',
             () =>  {
-                actor.disconnect(metaWindow[signal]);
-                delete metaWindow[signal];
+                actor.disconnect(signal);
                 insertWindow(metaWindow, {});
             });
     };
@@ -767,63 +728,59 @@ function registerWindow(metaWindow) {
     clone.set_position(actor.x, actor.y);
     metaWindow.clone = clone;
 
-    metaWindow[signals] = [
-        metaWindow.connect("focus", focus_wrapper),
-        metaWindow.connect('notify::minimized', minimizeWrapper),
-        metaWindow.connect('size-changed', moveSizeHandlerWrapper),
-        metaWindow.connect('position-changed', moveSizeHandlerWrapper),
-        metaWindow.connect('notify::fullscreen', fullscreenWrapper)
-    ];
-    actor[signals] = [
-        actor.connect('show', showWrapper)
-    ];
+    signals.connect(metaWindow, "focus", focus_wrapper);
+    signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
+    signals.connect(metaWindow, 'size-changed', moveSizeHandlerWrapper);
+    signals.connect(metaWindow, 'position-changed', moveSizeHandlerWrapper);
+    signals.connect(metaWindow, 'notify::fullscreen', fullscreenWrapper);
+    signals.connect(actor, 'show', showWrapper);
 }
 
 function enable() {
     debug('#enable');
 
-    global.window_manager[signals] = [
-        global.window_manager.connect(
-            'switch-workspace',
-            (wm, fromIndex, toIndex) => {
-                log('workpace-switched');
-                let to = screen.get_workspace_by_index(toIndex);
-                let from = screen.get_workspace_by_index(fromIndex);
-                let toSpace = spaces.spaceOf(to);
-                spaces.monitors.set(toSpace.monitor, toSpace);
+    signals.connect(
+        global.window_manager,
+        'switch-workspace',
+        (wm, fromIndex, toIndex) => {
+            log('workpace-switched');
+            let to = screen.get_workspace_by_index(toIndex);
+            let from = screen.get_workspace_by_index(fromIndex);
+            let toSpace = spaces.spaceOf(to);
+            spaces.monitors.set(toSpace.monitor, toSpace);
 
-                Navigator.switchWorkspace(to, from);
+            Navigator.switchWorkspace(to, from);
 
-                let fromSpace = spaces.spaceOf(from);
-                if (toSpace.monitor === fromSpace.monitor)
-                    return;
+            let fromSpace = spaces.spaceOf(from);
+            if (toSpace.monitor === fromSpace.monitor)
+                return;
 
-                TopBar.setMonitor(toSpace.monitor);
-                toSpace.monitor.clickOverlay.deactivate();
+            TopBar.setMonitor(toSpace.monitor);
+            toSpace.monitor.clickOverlay.deactivate();
 
-                let display = Gdk.Display.get_default();
-                let deviceManager = display.get_device_manager();
-                let pointer = deviceManager.get_client_pointer();
-                let [gdkscreen, pointerX, pointerY] = pointer.get_position();
+            let display = Gdk.Display.get_default();
+            let deviceManager = display.get_device_manager();
+            let pointer = deviceManager.get_client_pointer();
+            let [gdkscreen, pointerX, pointerY] = pointer.get_position();
 
-                let monitor = toSpace.monitor;
-                pointerX -= monitor.x;
-                pointerY -= monitor.y;
-                if (pointerX < 0 ||
-                    pointerX > monitor.width ||
-                    pointerY < 0 ||
-                    pointerY > monitor.height)
-                    pointer.warp(gdkscreen,
-                                 monitor.x + Math.floor(monitor.width/2),
-                                 monitor.y + Math.floor(monitor.height/2));
+            let monitor = toSpace.monitor;
+            pointerX -= monitor.x;
+            pointerY -= monitor.y;
+            if (pointerX < 0 ||
+                pointerX > monitor.width ||
+                pointerY < 0 ||
+                pointerY > monitor.height)
+                pointer.warp(gdkscreen,
+                             monitor.x + Math.floor(monitor.width/2),
+                             monitor.y + Math.floor(monitor.height/2));
 
-                for (let monitor of Main.layoutManager.monitors) {
-                    if (monitor === toSpace.monitor)
-                        continue;
-                    monitor.clickOverlay.activate();
-                }
-            })
-    ];
+            for (let monitor of Main.layoutManager.monitors) {
+                if (monitor === toSpace.monitor)
+                    continue;
+                monitor.clickOverlay.activate();
+            }
+        });
+
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
     // windows are not accessible yet for instance.
@@ -857,6 +814,7 @@ function enable() {
 }
 
 function disable () {
+    signals.destroy();
     spaces.destroy();
 
     oldSpaces.forEach(space => {
@@ -872,9 +830,6 @@ function disable () {
             windows[i].lower();
         }
     });
-
-    // Disable workspace related signals
-    global.window_manager[signals].forEach(id => global.window_manager.disconnect(id));
 }
 
 /**

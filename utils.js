@@ -156,3 +156,23 @@ function warpPointerRelative(dx, dy) {
     let [gdkscreen, pointerX, pointerY] = pointer.get_position();
     pointer.warp(gdkscreen, pointerX + dx, pointerY + dy);
 }
+
+class Signals extends Map {
+    static get [Symbol.species]() { return Map; }
+
+    connect(object, signal, handler) {
+        let signals = this.get(object);
+        if (!signals) {
+            signals = [];
+            this.set(object, signals);
+        }
+        signals.push(object.connect(signal, handler));
+    }
+
+    destroy() {
+        for (let [object, signals] of this) {
+            signals.forEach(id => object.disconnect(id));
+            this.delete(object);
+        }
+    }
+}

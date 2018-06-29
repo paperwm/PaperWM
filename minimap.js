@@ -110,12 +110,12 @@ class Minimap extends Array {
         Main.uiGroup.add_actor(this.actor);
         this.actor.opacity = 0;
         this.createClones();
-        this.signals = [
-            space.connect('select', this.select.bind(this)),
-            space.connect('window-added', this.addWindow.bind(this)),
-            space.connect('window-removed', this.removeWindow.bind(this)),
-            space.connect('swapped', this.swapped.bind(this)),
-        ];
+
+        this.signals = new utils.Signals();
+        this.signals.connect(space, 'select', this.select.bind(this));
+        this.signals.connect(space, 'window-added', this.addWindow.bind(this));
+        this.signals.connect(space, 'window-removed', this.removeWindow.bind(this));
+        this.signals.connect(space, 'swapped', this.swapped.bind(this));
         this.layout();
     }
 
@@ -263,6 +263,6 @@ class Minimap extends Array {
 
     destroy() {
         this.actor.destroy();
-        this.signals.forEach(id => this.space.disconnect(id));
+        this.signals.destroy();
     }
 }
