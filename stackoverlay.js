@@ -218,8 +218,9 @@ var StackOverlay = new Lang.Class({
                 return bail(); // Should normally have a neighbour. Bail!
 
             let frame = neighbour.get_frame_rect();
+            frame.x = neighbour.clone.targetX + space.targetX;
             let max = 75;
-            let width = frame.x - this.monitor.x;
+            let width = frame.x;
             if (space.visible.includes(metaWindow))
                 width = Math.min(width, 75);
             if (width > 75)
@@ -233,7 +234,8 @@ var StackOverlay = new Lang.Class({
                 return bail(); // Should normally have a neighbour. Bail!
 
             let frame = neighbour.get_frame_rect();
-            let width = (this.monitor.x + this.monitor.width) - (frame.x + frame.width);
+            frame.x = neighbour.clone.targetX + space.targetX;
+            let width = this.monitor.width - (frame.x + frame.width);
             if (space.visible.includes(metaWindow))
                 width = Math.min(width, 75);
             if (width > 75)

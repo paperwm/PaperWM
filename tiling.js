@@ -83,10 +83,13 @@ class Space extends Array {
         // The windows that should be represented by their WindowActor
         this.visible = [];
 
+
         let clip = new Clutter.Actor();
         this.clip = clip;
         let actor = new Clutter.Actor();
         this.actor = actor;
+        let cloneClip = new Clutter.Actor();
+        this.cloneClip = cloneClip;
         let cloneContainer = new St.Widget();
         this.cloneContainer = cloneContainer;
         let background = new St.Widget();
@@ -107,7 +110,8 @@ class Space extends Array {
         clip.add_actor(actor);
         actor.add_actor(background);
         actor.add_actor(label);
-        actor.add_actor(cloneContainer);
+        actor.add_actor(cloneClip);
+        cloneClip.add_actor(cloneContainer);
         cloneContainer.add_actor(selection);
 
         container.set_child_below_sibling(clip,
@@ -115,8 +119,12 @@ class Space extends Array {
 
         let monitor = Main.layoutManager.primaryMonitor;
         let oldSpace = oldSpaces.get(workspace);
-        if (oldSpace)
+        this.targetX = 0;
+        if (oldSpace) {
             monitor = Main.layoutManager.monitors[oldSpace.monitor.index];
+            this.targetX = oldSpace.targetX;
+            cloneContainer.x = this.targetX;
+        }
         this.setMonitor(monitor, false);
 
         label.text = Meta.prefs_get_workspace_name(workspace.index());
@@ -195,8 +203,10 @@ class Space extends Array {
     }
 
     addWindow(metaWindow, index, row) {
+        if (!this.selectedWindow)
+            this.selectedWindow = metaWindow;
         if (this.indexOf(metaWindow) !== -1)
-            return;
+            return false;
         if (row !== undefined && this[index]) {
             let column = this[index];
             column.splice(row, 0, metaWindow);
@@ -204,7 +214,9 @@ class Space extends Array {
             this.splice(index, 0, [metaWindow]);
         }
         metaWindow.clone.reparent(this.cloneContainer);
+        this.layout();
         this.emit('window-added', metaWindow, index, row);
+        return true;
     }
 
     removeWindow(metaWindow) {
@@ -227,7 +239,7 @@ class Space extends Array {
         this.cloneContainer.remove_actor(metaWindow.clone);
         Tweener.removeTweens(this.selection);
         this.selection.width = 0;
-        this.visible = [];
+        this.visible = this.visible.filter(w => w !== metaWindow);
         this.emit('window-removed', metaWindow, index, row);
         return true;
     }
@@ -261,6 +273,7 @@ class Space extends Array {
         utils.swap(this, index, targetIndex);
         metaWindow.clone.raise_top();
 
+        this.layout();
         this.emit('swapped', index, targetIndex, row, targetRow);
         ensureViewport(this.selectedWindow, this, true);
     }
@@ -294,11 +307,33 @@ class Space extends Array {
             this.delayed = true;
             return;
         }
+        this.getWindows().forEach(w => {
+            if (!w.get_compositor_private())
+                return;
+            let unMovable = w.fullscreen ||
+                w.get_maximized() === Meta.MaximizeFlags.BOTH;
+            if (unMovable)
+                return;
+
+            let clone = w.clone;
+            let frame = w.get_frame_rect();
+            let buffer = w.get_buffer_rect();
+
+            let dX = frame.x - buffer.x, dY = frame.y - buffer.y;
+            let x = this.monitor.x + Math.round(clone.x) + dX
+                + this.targetX;
+            let y = this.monitor.y + Math.round(clone.y) + dY;
+            w.move_frame(true, x, y);
+
+        });
+
         this.visible.forEach(w => {
-            let actor = w.get_compositor_private();
             w.clone.hide();
+            let actor = w.get_compositor_private();
             actor && actor.show();
         });
+
+        this.delayed = false;
         this.emit('move-done');
     }
 
@@ -336,8 +371,8 @@ class Space extends Array {
 
         background.set_size(monitor.width + 8*2 + prefs.window_gap, monitor.height + 4);
 
-        cloneContainer.set_size(monitor.width, monitor.height);
-        cloneContainer.set_clip(-Math.round(prefs.window_gap/2), 0, monitor.width + prefs.window_gap, monitor.height);
+        this.cloneClip.set_size(monitor.width, monitor.height);
+        this.cloneClip.set_clip(-Math.round(prefs.window_gap/2), 0, monitor.width + prefs.window_gap, monitor.height);
 
         this.emit('monitor-changed');
     }
@@ -541,7 +576,7 @@ class Spaces extends Map {
                 space.clip.raise_top();
             }
             this.forEach(space => {
-                space.layout();
+                space.layout(false);
                 let selected = activeSpace.selectedWindow;
                 if (selected) {
                     ensureViewport(selected, space, true);
@@ -776,10 +811,15 @@ function registerWindow(metaWindow) {
 
     signals.connect(metaWindow, "focus", focus_wrapper);
     signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
-    signals.connect(metaWindow, 'size-changed', moveSizeHandlerWrapper);
-    signals.connect(metaWindow, 'position-changed', moveSizeHandlerWrapper);
+    signals.connect(metaWindow, 'size-changed', resizeHandler);
     signals.connect(metaWindow, 'notify::fullscreen', fullscreenWrapper);
     signals.connect(actor, 'show', showWrapper);
+}
+
+function resizeHandler(metaWindow) {
+    let space = spaces.spaceOfWindow(metaWindow);
+    space.layout(!noAnimate);
+    !noAnimate && ensureViewport(space.selectedWindow, space, true);
 }
 
 function enable() {
@@ -980,36 +1020,16 @@ function insertWindow(metaWindow, {existing}) {
     let space = spaces.spaceOfWindow(metaWindow);
     let monitor = space.monitor;
 
-    // Don't add already added windows
-    if (space.indexOf(metaWindow) != -1) {
-        return;
-    }
-
     let index = -1; // (-1 -> at beginning)
     if (space.selectedWindow) {
         index = space.indexOf(space.selectedWindow);
     }
     index++;
 
-    space.addWindow(metaWindow, index);
+    if (!space.addWindow(metaWindow, index))
+        return;
 
     metaWindow.unmake_above();
-
-    let position;
-    if (index == 0) {
-        // If the workspace was empty the inserted window should be selected
-        space.selectedWindow = metaWindow;
-
-        let frame = metaWindow.get_frame_rect();
-        position = {x: monitor.x + (monitor.width - frame.width)/2,
-                    y: monitor.y + panelBox.height + prefs.vertical_margin};
-    } else {
-        let frame = space[index - 1][0].get_frame_rect();
-        position = {x: monitor.x + frame.x + frame.width + prefs.window_gap,
-                    y: monitor.y + panelBox.height + prefs.vertical_margin};
-    }
-
-    debug("setting initial position", position)
     if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
         metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
         toggleMaximizeHorizontally(metaWindow);
@@ -1021,22 +1041,23 @@ function insertWindow(metaWindow, {existing}) {
     let y_offset = frame.y - buffer.y;
     let clone = metaWindow.clone;
 
+    let actor = metaWindow.get_compositor_private();
+    actor.hide();
     if (!existing) {
-        metaWindow.get_compositor_private().hide();
-        // Only move the frame when dealing with new windows
-        metaWindow.move_frame(true,
-                              position.x,
-                              position.y);
-        metaWindow.clone.set_position(
-            position.x - monitor.x - x_offset,
-            position.y - monitor.y - y_offset);
-
+        clone.set_position(clone.targetX,
+                           panelBox.height + prefs.vertical_margin);
         clone.set_scale(0, 0);
         Tweener.addTween(clone, {
             scale_x: 1,
             scale_y: 1,
-            time: 0.25
+            time: 0.25,
+            transition: 'easeInOutQuad'
         });
+    } else {
+        clone.set_position(
+            frame.x - monitor.x - x_offset - space.cloneContainer.x,
+            frame.y - monitor.y - y_offset + space.cloneContainer.y);
+        clone.show();
     }
 
     if (metaWindow === global.display.focus_window ||
@@ -1046,6 +1067,19 @@ function insertWindow(metaWindow, {existing}) {
     } else {
         ensureViewport(space.selectedWindow, space, true);
     }
+}
+
+function animateDown(metaWindow) {
+
+    let frame = metaWindow.get_frame_rect();
+    let buffer = metaWindow.get_buffer_rect();
+    let clone = metaWindow.clone;
+    let dY = frame.y - buffer.y;
+    Tweener.addTween(metaWindow.clone, {
+        y: panelBox.height + prefs.vertical_margin - dY,
+        time: 0.25,
+        transition: 'easeInOutQuad'
+    });
 }
 
 
@@ -1060,43 +1094,33 @@ function ensureViewport(meta_window, space, force) {
     }
 
     let index = space.indexOf(meta_window);
-    if (index === -1)
+    if (index === -1 || space.length === 0)
         return undefined;
 
     debug('Moving', meta_window.title);
-    meta_window._isStacked = false;
+
+    if (space.selectedWindow.fullscreen ||
+        space.selectedWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
+        animateDown(space.selectedWindow);
+    }
+
     space.selectedWindow = meta_window;
 
     let monitor = space.monitor;
     let frame = meta_window.get_frame_rect();
-    let width = Math.min(space.monitor.width - 2*minimumMargin, frame.width);
-    // meta_window.move_resize_frame(true, frame.x, frame.y, width,
-    //                               space.height - panelBox.height - prefs.vertical_margin);
-
-    // Use monitor relative coordinates.
-    frame.x -= monitor.x;
-    frame.y -= monitor.y;
+    let buffer = meta_window.get_buffer_rect();
+    let clone = meta_window.clone;
+    let dX = frame.x - buffer.x;
 
     updateSelection(space, true);
 
-    let x = frame.x;
+    let x = Math.round(clone.targetX) + space.targetX;
     let y = panelBox.height + prefs.vertical_margin;
     let gap = prefs.window_gap;
-    let required_width = space.getWindows().reduce((length, meta_window) => {
-        let frame = meta_window.get_frame_rect();
-        return length + frame.width + prefs.window_gap;
-    }, -prefs.window_gap);
-    if (!Navigator.workspaceMru && (meta_window.fullscreen ||
-        meta_window.get_maximized() === Meta.MaximizeFlags.BOTH)) {
-        x = frame.x; y = frame.y;
-        force = true;
-    } else if (required_width <= space.width) {
-        let leftovers = space.width - required_width - prefs.horizontal_margin;
-        let gaps = space.length + 1;
-        gap = Math.floor(leftovers/gaps) + prefs.window_gap;
-        x = gap;
-        meta_window = space[0][0];
-    } else if (index == 0 && frame.x <= 0) {
+    if (space.cloneContainer.width < monitor.width) {
+        x = Math.round((monitor.width - space.cloneContainer.width)/2);
+        meta_window  = space[0][0];
+    } else if (index == 0 && x <= 0) {
         // Always align the first window to the display's left edge
         x = 0;
     } else if (index == space.length-1 && x + frame.width >= space.width) {
@@ -1106,49 +1130,52 @@ function ensureViewport(meta_window, space, force) {
         // Consider the window to be wide and center it
         x = Math.round((space.width - frame.width)/2);
 
-    } else if (frame.x + frame.width > space.width) {
+    } else if (x + frame.width > space.width) {
         // Align to the right prefs.horizontal_margin
         x = space.width - prefs.horizontal_margin - frame.width;
-    } else if (frame.x < 0) {
+    } else if (x < 0) {
         // Align to the left prefs.horizontal_margin
         x = prefs.horizontal_margin;
-    } else if (frame.x + frame.width === space.width) {
+    } else if (x + frame.width === space.width) {
         // When opening new windows at the end, in the background, we want to
         // show some minimup margin
         x = space.width - minimumMargin - frame.width;
-    } else if (frame.x === 0) {
+    } else if (x === 0) {
         // Same for the start (though the case isn't as common)
         x = minimumMargin;
     }
 
-    if (!force && frame.x === x && frame.y === y) {
-        space.moveDone();
-    } else {
-        space.moving = space.selectedWindow;
-        move_to(space, meta_window,
-                { x, y,
-                  gap,
-                  onComplete: () => {
-                      space.moving = false;
-                      space.moveDone();
-                      if (!Navigator.navigating)
-                          Meta.enable_unredirect_for_screen(global.screen);
-                  },
-                });
-    }
-    space.emit('select');
 
+    let selected = space.selectedWindow;
+    if (!Navigator.workspaceMru && (selected.fullscreen
+        || selected.get_maximized() === Meta.MaximizeFlags.BOTH)) {
+        Tweener.addTween(selected.clone,
+                         { y: frame.y - monitor.y,
+                           time: 0.25,
+                           transition: 'easeInOutQuad',
+                         });
+    }
+    space.moving = selected;
+    move_to(space, meta_window, {
+        x, y, force
+    });
+
+    space.emit('select');
     updateSelection(space, noAnimate);
 }
 
 function updateSelection(space, noAnimate) {
-    if (space.length === 0)
+    if (!space.selectedWindow)
         return;
 
+    let metaWindow = space.selectedWindow;
+    let clone = metaWindow.clone;
     const frame = space.selectedWindow.get_frame_rect();
+    const buffer = space.selectedWindow.get_buffer_rect();
+    const dX = frame.x - buffer.x, dY = frame.x - buffer.y;
     let protrusion = Math.round(prefs.window_gap/2);
     Tweener.addTween(space.selection,
-                     {x: frame.x - space.monitor.x - protrusion,
+                     {x: clone.targetX - protrusion,
                       y: Math.max(frame.y - space.monitor.y,
                                   panelBox.height + prefs.vertical_margin) - protrusion,
                       width: frame.width + prefs.window_gap,
@@ -1159,159 +1186,84 @@ function updateSelection(space, noAnimate) {
 
 
 /**
-   Animate @meta_window to (@x, @y) in @space.monitor relative coordinates.
- */
-function move(meta_window, space,
-              { x, y, onComplete, onStart,
-                delay, transition, visible }) {
-
-    onComplete = onComplete || (() => {});
-    onStart = onStart || (() => {});
-    delay = delay || 0;
-    transition = transition || 'easeInOutQuad';
-
-    let actor = meta_window.get_compositor_private();
-    let buffer = meta_window.get_buffer_rect();
-    let frame = meta_window.get_frame_rect();
-    let clone = meta_window.clone;
-    let monitor = space.monitor;
-
-    if (y === undefined) {
-        y = frame.y - monitor.y;
-    }
-    if (x === undefined) {
-        x = frame.x - monitor.x;
-    }
-
-    if (actor.visible) {
-        clone.set_position(actor.x - monitor.x, actor.y - monitor.y);
-    }
-
-    clone.show();
-    actor.hide();
-
-    if (visible) {
-        space.visible.push(meta_window);
-    }
-
-    let time = 0.25;
-    if (noAnimate)
-        time = 0;
-
-    // Move the frame before animation to indicate where it's actually going.
-    // The animation being purely cosmetic.
-    meta_window.move_frame(true,
-                           x + monitor.x,
-                           y + monitor.y);
-
-    let x_offset = frame.x - buffer.x;
-    let y_offset = frame.y - buffer.y;
-    Tweener.addTween(clone,
-                     {x: x - x_offset
-                      , y: y - y_offset
-                      , time
-                      , delay: delay
-                      , scale_y: 1
-                      , scale_x: 1
-                      , transition: transition
-                      , onStart: onStart
-                      , onComplete: () => {
-                          // If the actor is gone, the window is in
-                          // process of closing
-                          if(!meta_window.get_compositor_private())
-                              return;
-                          onComplete();
-                      }
-                     });
-
-}
-
-/**
  * Move the column containing @meta_window to x, y and propagate the change
  * in @space. Coordinates are relative to monitor and y is optional.
  */
-function move_to(space, meta_window, { x, y, delay, transition,
-                                       onComplete, onStart, gap }) {
-
-    space.visible = [];
+function move_to(space, metaWindow, { x, y, delay, transition,
+                                       onComplete, onStart, gap, force }) {
     space.delayed = false;
 
-    let index = space.indexOf(meta_window);
+    let index = space.indexOf(metaWindow);
     if (index === -1)
         return;
 
-    const columnTop = panelBox.height + prefs.vertical_margin;
-
-    if (y === undefined) {
-        let top = space[index][0];
-        let topFrame = top.get_frame_rect();
-        y = topFrame.y - space.monitor.y;
+    let clone = metaWindow.clone;
+    let delta = Math.round(clone.targetX) + space.targetX - x;
+    let target = space.targetX - delta;
+    if (!Navigator.workspaceMru && delta === 0 && !force) {
+        space.moveDone();
+        return;
     }
 
-    fixColumn(space, index, x, y, onComplete);
+    space.targetX = target;
+    Tweener.addTween(space.cloneContainer,
+                     { x: target,
+                       time: 0.25,
+                       transition: 'easeInOutQuad',
+                       onComplete: () => {
+                           space.moving = false;
+                           space.moveDone();
+                       }
+                     });
 
-    let frame = meta_window.get_frame_rect();
+    space.visible.forEach(w => {
+        w.get_compositor_private().hide();
+        w.clone.show();
+    });
 
     space.monitor.clickOverlay.reset();
+    space.visible = [...space[index]];
 
-    gap = gap || prefs.window_gap;
-
-    for (let X = x + frame.width + gap,
-             overlay = space.monitor.clickOverlay.right,
+    for (let overlay = space.monitor.clickOverlay.right,
              n=index+1 ; n < space.length; n++) {
-        let width = fixColumn(space, n, X, columnTop);
 
-        if (!overlay.target && X + width > space.width) {
-            overlay.setTarget(space, n);
+        let metaWindow = space[n][0];
+        let clone = metaWindow.clone;
+        let frame = metaWindow.get_frame_rect();
+        let x = clone.targetX + target;
+
+        if (!(x + frame.width < stack_margin
+              || x > space.width - stack_margin
+              || metaWindow.fullscreen
+              || metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH)) {
+            space.visible.push(...space[n]);
         }
-        X += width + gap;
+        if (!overlay.target && x + frame.width > space.width) {
+            overlay.setTarget(space, n);
+            break;
+        }
     }
 
-    for (let X = x,
-             overlay = space.monitor.clickOverlay.left,
+    for (let overlay = space.monitor.clickOverlay.left,
              n=index-1; n >= 0; n--) {
-        let width = Math.max(...space[n].map(w => w.get_frame_rect().width));
-        X -= gap + width;
-        fixColumn(space, n, X, columnTop);
+        // let width = Math.max(...space[n].map(w => w.get_frame_rect().width));
 
-        if (!overlay.target && X < 0) {
+        let metaWindow = space[n][0];
+        let clone = metaWindow.clone;
+        let frame = metaWindow.get_frame_rect();
+        let x = clone.targetX + target;
+
+        if (!(x + frame.width < stack_margin
+            || x > space.width - stack_margin
+            || metaWindow.fullscreen
+            || metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH)) {
+            space.visible.push(...space[n]);
+        }
+        if (!overlay.target && x < 0) {
             overlay.setTarget(space, n);
+            break;
         }
     }
-}
-
-function fixColumn(space, index, x, y, onComplete) {
-    let column = space[index];
-    let width = Math.max(...space[index].map(w => w.get_frame_rect().width));
-    let height = Math.round(
-        (space.height - y - prefs.window_gap*(column.length - 1))/column.length) ;
-    if (column.includes(space.selectedWindow))
-        width = space.selectedWindow.get_frame_rect().width;
-
-    // Check if the window is fully visible
-    let visible = true;
-    if (x + width < stack_margin
-        || x > space.width - stack_margin
-        || column[0].fullscreen
-        || column[0].get_maximized() === Meta.MaximizeFlags.BOTH) {
-        visible = false;
-    }
-
-    for (let r=0; r < column.length; r++) {
-        let meta_window = column[r];
-        let frame = meta_window.get_frame_rect();
-        if (meta_window.get_compositor_private()) {
-            // Anchor on the right edge for windows positioned to the left.
-            move(meta_window, space, { x, y, visible, onComplete});
-            onComplete = undefined;
-            meta_window.move_resize_frame(true,
-                                          x + space.monitor.x,
-                                          y + space.monitor.y,
-                                          width, height);
-        }
-        y += height + prefs.window_gap;
-    }
-    return width;
 }
 
 let noAnimate = false;
@@ -1331,29 +1283,6 @@ function grabEnd(screen, display, metaWindow, type) {
     ensureViewport(metaWindow, space, true);
 }
 
-
-// `MetaWindow::size-changed` and `MetaWindow::position-changed` handling
-function moveSizeHandler(metaWindow) {
-    debug('move-or-resize', metaWindow.title);
-    let space = spaces.spaceOfWindow(metaWindow);
-    if (space.selectedWindow !== metaWindow
-        || space.moving === metaWindow)
-        return;
-
-    let frame = metaWindow.get_frame_rect();
-    let monitor = space.monitor;
-    if (frame.x + frame.width <= monitor.x ||
-        frame.y + frame.height <= monitor.y ||
-        frame.x >= monitor.x + monitor.width ||
-        frame.y >= monitor.y + monitor.height)
-        return;
-    const x = frame.x - monitor.x;
-    let onComplete = !noAnimate && space.moveDone.bind(space);
-    move_to(space, metaWindow, {x: x,
-                                onComplete});
-    updateSelection(space, noAnimate);
-}
-var moveSizeHandlerWrapper = utils.dynamic_function_ref("moveSizeHandler", Me);
 
 // `MetaWindow::focus` handling
 function focus_handler(meta_window, user_data) {
@@ -1606,7 +1535,7 @@ function centerWindowHorizontally(metaWindow) {
     const space = spaces.spaceOfWindow(metaWindow);
     const monitor = space.monitor;
     const targetX = Math.round(monitor.width/2 - frame.width/2);
-    const dx = (targetX + monitor.x) - frame.x;
+    const dx = (targetX + monitor.x) - metaWindow.clone.targetX;
     utils.warpPointerRelative(dx, 0);
     if (space.indexOf(metaWindow) === -1) {
         metaWindow.move_frame(true, targetX + monitor.x, frame.y);
