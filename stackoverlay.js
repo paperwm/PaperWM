@@ -181,7 +181,7 @@ var StackOverlay = new Lang.Class({
             this.clone.destroy();
         });
 
-        global.window_group.add_child(overlay);
+        Main.uiGroup.add_child(overlay);
         Main.layoutManager.trackChrome(overlay);
 
         this.overlay = overlay;
