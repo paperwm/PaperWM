@@ -1,6 +1,7 @@
 var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
 var Clutter = imports.gi.Clutter;
 var Tweener = imports.ui.tweener;
+var Main = imports.ui.main;
 var Lang = imports.lang;
 var St = imports.gi.St;
 var Pango = imports.gi.Pango;
@@ -77,9 +78,10 @@ var WindowCloneLayout = new Lang.Class({
 });
 
 class Minimap extends Array {
-    constructor(space) {
+    constructor(space, monitor) {
         super();
         this.space = space;
+        this.monitor = monitor;
         let actor = new St.Widget({name: 'minimap-background',
                                     style_class: 'switcher-list'});
         this.actor = actor;
@@ -105,12 +107,16 @@ class Minimap extends Array {
         clip.add_actor(container);
         clip.set_position(12 + prefs.window_gap, 15 + 10);
         highlight.y = clip.y - 10;
+        Main.uiGroup.add_actor(this.actor);
+        this.actor.opacity = 0;
+        this.createClones();
         this.signals = [
             space.connect('select', this.select.bind(this)),
             space.connect('window-added', this.addWindow.bind(this)),
             space.connect('window-removed', this.removeWindow.bind(this)),
             space.connect('swapped', this.swapped.bind(this)),
         ];
+        this.layout();
     }
 
     static get [Symbol.species]() { return Array; }
@@ -143,10 +149,18 @@ class Minimap extends Array {
         this.layout();
     }
 
-    show() {
-        this.space.actor.add_actor(this.actor);
-        this.createClones();
-        this.layout();
+    show(animate) {
+        let time = animate ? 0.25 : 0;
+        this.actor.show();
+        Tweener.addTween(this.actor,
+                         {opacity: 255, time, transition: 'easeInQuad'});
+    }
+
+    hide(animate) {
+        let time = animate ? 0.25 : 0;
+        Tweener.addTween(this.actor,
+                         {opacity: 0, time, transition: 'easeInQuad',
+                          onComplete: () => this.actor.hide() });
     }
 
     createClones() {
@@ -183,13 +197,13 @@ class Minimap extends Array {
         }
 
         this.clip.width = Math.min(this.container.width,
-                                    this.space.width - this.clip.x*2);
+                                    this.monitor.width - this.clip.x*2);
         this.actor.width = this.clip.width + this.clip.x*2;
         this.clip.set_clip(0, 0, this.clip.width, this.clip.height);
         this.label.set_style(`max-width: ${this.clip.width}px;`);
         this.actor.set_position(
-            Math.floor((this.space.monitor.width - this.actor.width)/2),
-            Math.floor((this.space.monitor.height - this.actor.height)/2));
+            Math.floor((this.monitor.width - this.actor.width)/2),
+            Math.floor((this.monitor.height - this.actor.height)/2));
         this.select();
     }
 

@@ -99,14 +99,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         this._startWindow = this.space.selectedWindow;
         this.from = this.space;
         this.monitor = this.space.monitor;
-
-        // Set up the minimap
-        let minimap = new Minimap.Minimap(this.space);
-        this.minimap = minimap;
-        minimap.actor.opacity = 0;
-        minimap.show();
-        Tweener.addTween(minimap.actor,
-                         {opacity: 255, time: 0.25, transition: 'easeInQuad'});
+        this.minimaps = new Map();
 
         this.space.visible.forEach(w => {
             w.get_compositor_private().hide();
@@ -130,7 +123,6 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     _initSpaceMru(move) {
         let heights = [0].concat(this._yPositions.slice(1));
-        let minimap = this.minimap;
 
         let visible = Main.layoutManager.monitors
             .map(m => Tiling.spaces.monitors.get(m));
@@ -193,7 +185,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     selectSpace: function(direction, move) {
-        this.minimap.actor.hide();
+        this._hideMinimap();
 
         if (!workspaceMru) {
             this._initSpaceMru(move);
@@ -219,7 +211,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         else
             to = from - 1;
         if (to < 0 || to >= mru.length) {
-            this._select(this.space.positionOf());
+            Tiling.ensureViewport(this.space.selectedWindow);
             return true;
         }
         let oldSpace = this.space;
@@ -254,7 +246,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         });
 
         this.space = newSpace;
-        this._select(this.space.positionOf());
+        Tiling.ensureViewport(this.space.selectedWindow);
     },
 
     _doAction: function(mutterActionId) {
@@ -395,12 +387,30 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
     },
 
+    _showMinimap() {
+        let minimap = this.minimaps.get(this.space);
+        if (!minimap) {
+            minimap = new Minimap.Minimap(this.space, this.monitor);
+            this.minimaps.set(this.space, minimap);
+            minimap.show(true);
+        } else {
+            minimap.show();
+        }
+    },
+
+    _hideMinimap() {
+        let minimap = this.minimaps.get(this.space);
+        if (minimap)
+            minimap.hide();
+    },
+
     _select: function(position) {
         // debug('#preview', 'Select', this.space[index][0].title, index);
         if (!position)
             return;
         let metaWindow = this.space.getWindow(...position);
         if (metaWindow) {
+            this._showMinimap();
             Tiling.ensureViewport(metaWindow, this.space);
         }
     },
@@ -423,7 +433,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     destroy: function() {
         debug('#preview', 'destroy', this.space.actor);
 
-        this.minimap.destroy();
+        this.minimaps.forEach(m => m.destroy());
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
