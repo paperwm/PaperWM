@@ -170,21 +170,18 @@ class Minimap extends Array {
     }
 
     layout() {
-        let propagate_forward = (i, leftEdge, gap) => {
-            if(i < 0 || i >= this.length)
-                return;
-            let column = this[i];
-            let w = Math.max(...column.map(c => c.width));
-            let x = leftEdge;
-            let y = 0;
-            column.forEach(c => {
+        let gap = prefs.window_gap;
+        let x = 0;
+        for (let column of this) {
+            let y = 0, w = 0;
+            for (let c of column) {
                 c.set_position(x, y);
+                w = Math.max(w, c.width);
                 y += c.height;
-            });
-            propagate_forward(i+1, Math.round(x + w + gap), gap);
+            }
+            x += w + gap;
         }
 
-        propagate_forward(0, 0, prefs.window_gap);
         this.clip.width = Math.min(this.container.width,
                                     this.space.width - this.clip.x*2);
         this.actor.width = this.clip.width + this.clip.x*2;
