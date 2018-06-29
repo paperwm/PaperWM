@@ -303,7 +303,7 @@ class Space extends Array {
 
     moveDone() {
         debug('#move-done');
-        if (Navigator.navigating) {
+        if (Navigator.navigating || noAnimate) {
             this.delayed = true;
             return;
         }
@@ -1266,11 +1266,30 @@ function move_to(space, metaWindow, { x, y, delay, transition,
     }
 }
 
-let noAnimate = false;
+var noAnimate = false;
+var grabSignals = new utils.Signals();
 function grabBegin(screen, display, metaWindow, type) {
     // Don't handle pushModal grabs
     if (type === Meta.GrabOp.COMPOSITOR)
         return;
+    let space = spaces.spaceOfWindow(metaWindow);
+    if (space.indexOf(metaWindow) === -1)
+        return;
+    for (let w of space.visible) {
+        if (w === metaWindow) {
+            w.clone.hide();
+            w.get_compositor_private().show();
+        } else {
+            w.clone.show();
+            w.get_compositor_private().hide();
+        }
+    }
+    let frame = metaWindow.get_frame_rect();
+    let anchor = metaWindow.clone.targetX;
+    let handler = getGrab(space, anchor);
+    log(`anchor: ${anchor}`);
+    grabSignals.connect(metaWindow, 'position-changed', handler);
+    Tweener.removeTweens(space.cloneContainer);
     // Turn size/position animation off when grabbing a window with the mouse
     noAnimate = true;
 }
@@ -1278,11 +1297,26 @@ function grabBegin(screen, display, metaWindow, type) {
 function grabEnd(screen, display, metaWindow, type) {
     if (type === Meta.GrabOp.COMPOSITOR)
         return;
-    noAnimate = false;
     let space = spaces.spaceOfWindow(metaWindow);
+    if (space.indexOf(metaWindow) === -1)
+        return;
+    grabSignals.destroy();
+    noAnimate = false;
+    let buffer = metaWindow.get_buffer_rect();
+    let clone = metaWindow.clone;
+    space.targetX = space.cloneContainer.x;
+    clone.set_position(buffer.x - space.targetX, buffer.y);
+    space.layout();
     ensureViewport(metaWindow, space, true);
 }
-
+function getGrab(space, anchor) {
+    let gap = Math.round(prefs.window_gap/2);
+    return (metaWindow) => {
+        let frame = metaWindow.get_frame_rect();
+        space.cloneContainer.x = frame.x - anchor;
+        space.selection.y = frame.y - gap;
+    };
+}
 
 // `MetaWindow::focus` handling
 function focus_handler(meta_window, user_data) {
