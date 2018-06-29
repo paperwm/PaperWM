@@ -136,6 +136,50 @@ class Space extends Array {
         oldSpaces.delete(workspace);
     }
 
+    layout(animate = true) {
+        let time = animate ? 0.25 : 0;
+        let gap = prefs.window_gap;
+        let x = 0;
+        this.visible.forEach(w => {
+            w.clone.show();
+            w.get_compositor_private().hide();
+        });
+        for (let column of this) {
+            let y = panelBox.height + prefs.vertical_margin;
+            let width = Math.max(...column.map(w => w.get_frame_rect().width));
+            if (column.includes(this.selectedWindow))
+                width = this.selectedWindow.get_frame_rect().width;
+            width = Math.min(width, this.width);
+            let height = Math.round(
+                (this.height - panelBox.height - prefs.vertical_margin
+                 - prefs.window_gap*(column.length - 1))/column.length) ;
+
+            for (let w of column) {
+                if (!w.get_compositor_private())
+                    continue;
+                let f = w.get_frame_rect();
+                let b = w.get_buffer_rect();
+
+                w.move_resize_frame(true, f.x, f.y, width, height);
+
+                let c = w.clone;
+                c.targetX = x;
+                c.targetY = y;
+                let dX = f.x - b.x, dY = f.y - b.y;
+                Tweener.addTween(c, {
+                    x: x - dX,
+                    y: y - dY,
+                    time,
+                    transition: 'easeInOutQuad',
+                    onComplete: this.moveDone.bind(this)
+                });
+
+                y += height + gap;
+            }
+            x += width + gap;
+        }
+    }
+
     getWindows() {
         return this.reduce((ws, column) => ws.concat(column), []);
     }
@@ -467,7 +511,7 @@ class Spaces extends Map {
      */
     monitorsChanged() {
         log('#monitors changed');
-        log(Main.layoutManager.primaryIndex)
+        log(Main.layoutManager.primaryIndex);
 
         if (this.monitors)
             oldMonitors = this.monitors;
@@ -485,7 +529,7 @@ class Spaces extends Map {
         }
         this.clickOverlays = [];
         let mru = this.mru();
-        log('#mru before')
+        log('#mru before');
         log(mru.map(s => s.actor));
         let primary = Main.layoutManager.primaryMonitor;
         let monitors = Main.layoutManager.monitors;
@@ -496,10 +540,13 @@ class Spaces extends Map {
             for (let [monitor, space] of this.monitors) {
                 space.clip.raise_top();
             }
-            let selected = activeSpace.selectedWindow;
-            if (selected) {
-                ensureViewport(selected, activeSpace, true);
-            }
+            this.forEach(space => {
+                space.layout();
+                let selected = activeSpace.selectedWindow;
+                if (selected) {
+                    ensureViewport(selected, space, true);
+                }
+            });
             this.spaceContainer.show();
         };
 
@@ -868,6 +915,7 @@ function remove_handler(workspace, meta_window) {
     let space = spaces.spaceOf(workspace);
     if (!space.removeWindow(meta_window))
         return;
+    space.layout();
 
     // (could be an empty workspace)
     if (space.selectedWindow) {
