@@ -202,8 +202,8 @@ class Minimap extends Array {
         this.clip.set_clip(0, 0, this.clip.width, this.clip.height);
         this.label.set_style(`max-width: ${this.clip.width}px;`);
         this.actor.set_position(
-            Math.floor((this.monitor.width - this.actor.width)/2),
-            Math.floor((this.monitor.height - this.actor.height)/2));
+            this.monitor.x + Math.floor((this.monitor.width - this.actor.width)/2),
+            this.monitor.y + Math.floor((this.monitor.height - this.actor.height)/2));
         this.select();
     }
 
