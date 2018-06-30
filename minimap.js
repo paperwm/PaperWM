@@ -140,6 +140,7 @@ class Minimap extends Array {
         if (column.length === 0)
             this.splice(index, 1);
         this.container.remove_child(clone);
+        this.layout();
     }
 
     swapped(space, index, targetIndex, row, targetRow) {
