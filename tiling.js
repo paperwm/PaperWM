@@ -1104,6 +1104,10 @@ function ensureViewport(meta_window, space, force) {
         animateDown(space.selectedWindow);
     }
 
+    if (space.selectedWindow !== meta_window) {
+        updateSelection(space, meta_window, true);
+    }
+
     space.selectedWindow = meta_window;
 
     let monitor = space.monitor;
@@ -1111,8 +1115,6 @@ function ensureViewport(meta_window, space, force) {
     let buffer = meta_window.get_buffer_rect();
     let clone = meta_window.clone;
     let dX = frame.x - buffer.x;
-
-    updateSelection(space, true);
 
     let x = Math.round(clone.targetX) + space.targetX;
     let y = panelBox.height + prefs.vertical_margin;
@@ -1160,24 +1162,23 @@ function ensureViewport(meta_window, space, force) {
         x, y, force
     });
 
+    updateSelection(space);
     space.emit('select');
-    updateSelection(space, noAnimate);
 }
 
-function updateSelection(space, noAnimate) {
-    if (!space.selectedWindow)
+function updateSelection(space, metaWindow, noAnimate){
+    metaWindow = metaWindow || space.selectedWindow;
+    if (!metaWindow)
         return;
 
-    let metaWindow = space.selectedWindow;
     let clone = metaWindow.clone;
-    const frame = space.selectedWindow.get_frame_rect();
-    const buffer = space.selectedWindow.get_buffer_rect();
-    const dX = frame.x - buffer.x, dY = frame.x - buffer.y;
+    const frame = metaWindow.get_frame_rect();
+    const buffer = metaWindow.get_buffer_rect();
+    const dX = frame.x - buffer.x, dY = frame.y - buffer.y;
     let protrusion = Math.round(prefs.window_gap/2);
     Tweener.addTween(space.selection,
                      {x: clone.targetX - protrusion,
-                      y: Math.max(frame.y - space.monitor.y,
-                                  panelBox.height + prefs.vertical_margin) - protrusion,
+                      y: clone.targetY - protrusion,
                       width: frame.width + prefs.window_gap,
                       height: frame.height + prefs.window_gap,
                       time: noAnimate ? 0 : 0.25,
