@@ -242,8 +242,6 @@ var StackOverlay = new Lang.Class({
             overlay.width = width;
         }
 
-        global.window_group.set_child_above_sibling(overlay, actor);
-
         return true;
     },
 });
