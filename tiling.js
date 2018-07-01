@@ -918,6 +918,9 @@ function insertWindow(metaWindow, {existing}) {
 
         if (addToScratch) {
             Scratch.makeScratch(metaWindow);
+            if (scratchIsFocused) {
+                Main.activateWindow(metaWindow);
+            }
             return;
         }
     }
