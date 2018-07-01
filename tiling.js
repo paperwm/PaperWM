@@ -188,6 +188,13 @@ class Space extends Array {
             }
             x += width + gap;
         }
+        if (x < this.width) {
+            this.targetX = Math.round((this.width - x)/2);
+            Tweener.addTween(this.cloneContainer,
+                             { x: this.targetX,
+                               time: 0.25,
+                               transition: 'easeInOutQuad'});
+        }
     }
 
     getWindows() {
@@ -1136,10 +1143,7 @@ function ensureViewport(meta_window, space, force) {
     let x = Math.round(clone.targetX) + space.targetX;
     let y = panelBox.height + prefs.vertical_margin;
     let gap = prefs.window_gap;
-    if (space.cloneContainer.width < monitor.width) {
-        x = Math.round((monitor.width - space.cloneContainer.width)/2);
-        meta_window  = space[0][0];
-    } else if (index == 0 && x <= 0) {
+    if (index == 0 && x <= 0) {
         // Always align the first window to the display's left edge
         x = 0;
     } else if (index == space.length-1 && x + frame.width >= space.width) {
