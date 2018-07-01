@@ -169,6 +169,14 @@ class Signals extends Map {
         signals.push(object.connect(signal, handler));
     }
 
+    disconnect(object) {
+        let ids = this.get(object);
+        if (ids) {
+            ids.forEach(id => object.disconnect(id));
+            this.delete(object);
+        }
+    }
+
     destroy() {
         for (let [object, signals] of this) {
             signals.forEach(id => object.disconnect(id));

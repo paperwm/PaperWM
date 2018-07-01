@@ -826,6 +826,12 @@ function registerWindow(metaWindow) {
     signals.connect(metaWindow, 'notify::fullscreen', fullscreenWrapper);
     signals.connect(metaWindow, 'size-changed', resizeHandler);
     signals.connect(actor, 'show', showWrapper);
+
+    signals.connect(actor, 'destroy', destroyHandler);
+}
+
+function destroyHandler(actor) {
+    signals.disconnect(actor);
 }
 
 function cloneSizeHandler(metaWindow) {
@@ -978,6 +984,9 @@ function remove_handler(workspace, meta_window) {
     if (!space.removeWindow(meta_window))
         return;
     space.layout();
+
+    if (!meta_window.get_compositor_private())
+        signals.disconnect(meta_window);
 
     // (could be an empty workspace)
     if (space.selectedWindow) {
