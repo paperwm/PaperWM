@@ -353,7 +353,10 @@ class Space extends Array {
         this.visible.forEach(w => {
             w.clone.hide();
             let actor = w.get_compositor_private();
-            actor && actor.show();
+            if (!actor)
+                return;
+            clipWindowActor(actor, this.monitor);
+            actor.show();
         });
 
         this.delayed = false;
@@ -363,11 +366,17 @@ class Space extends Array {
     startAnimate(grabWindow) {
         this.visible.forEach(w => {
             let actor = w.get_compositor_private();
-            if (!actor || w === grabWindow)
+            if (!actor)
                 return;
+            actor.remove_clip();
+            if (w === grabWindow) {
+                w.clone.hide();
+                actor.show();
+                return;
+            }
             actor.hide();
             w.clone.show();
-        })
+        });
     }
 
     setColor(color) {
@@ -685,6 +694,7 @@ class Spaces extends Map {
         global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(metaWindow => {
                 let actor = metaWindow.get_compositor_private();
+                actor.remove_clip();
 
                 if (metaWindow.get_workspace() === screen.get_active_workspace()
                    && !metaWindow.minimized)
@@ -1645,4 +1655,16 @@ function barf(metaWindow) {
     space.removeWindow(bottom);
     space.addWindow(bottom, index + 1);
     ensureViewport(space.selectedWindow, space, true);
+}
+
+function clipWindowActor(actor, monitor) {
+    const x = Math.max(0, monitor.x - actor.x);
+    const y = Math.max(0, monitor.y - actor.y);
+
+    const w = actor.width - x
+          - Math.max(0, (actor.x + actor.width) - (monitor.x + monitor.width));
+    const h = actor.height - y
+          - Math.max(0, (actor.y + actor.height) - (monitor.y + monitor.height));
+
+    actor.set_clip(x, y, w, h);
 }

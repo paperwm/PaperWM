@@ -171,8 +171,12 @@ var StackOverlay = new Lang.Class({
                 this.clone.destroy();
 
             let [x, y, mask] = global.get_pointer();
-            let clone = new Clutter.Clone({
-                source: this.target.get_compositor_private()});
+            let actor = this.target.get_compositor_private();
+            let clone = new Clutter.Clone({source: actor});
+            let space = Tiling.spaces.spaceOfWindow(this.target);
+            // Remove any window clips, and show the metaWindow.clone's
+            space.startAnimate();
+
             this.clone = clone;
             clone.set_scale(0.15, 0.15);
             Main.uiGroup.add_actor(clone);
@@ -183,8 +187,16 @@ var StackOverlay = new Lang.Class({
                 x = monitor.x;
             clone.set_position(x, y);
         });
+
         this.leaveId = overlay.connect('leave-event', () => {
+            if (!this.clone)
+                return;
+
             this.clone.destroy();
+            delete this.clone;
+            let space = Tiling.spaces.spaceOfWindow(this.target);
+            // Show the WindowActors again and re-apply clipping
+            space.moveDone();
         });
 
         Main.uiGroup.add_child(overlay);
@@ -194,6 +206,11 @@ var StackOverlay = new Lang.Class({
     },
 
     setTarget: function(space, index) {
+
+        if (this.clone) {
+            this.clone.destroy();
+            delete this.clone;
+        }
 
         let bail = () => {
             this.target = null;

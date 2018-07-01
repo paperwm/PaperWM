@@ -298,15 +298,19 @@ var PreviewedWindowNavigator = new Lang.Class({
             this._switch(Meta.MotionDirection.DOWN);
             return true;
         } else if (mutterActionId === paperActions.idOf("move-left")) {
+            this._showMinimap();
             this.space.swap(Meta.MotionDirection.LEFT);
             return true;
         } else if (mutterActionId === paperActions.idOf("move-right")) {
+            this._showMinimap();
             this.space.swap(Meta.MotionDirection.RIGHT);
             return true;
         } else if (mutterActionId === paperActions.idOf("move-up")) {
+            this._showMinimap();
             this.space.swap(Meta.MotionDirection.UP);
             return true;
         } else if (mutterActionId === paperActions.idOf("move-down")) {
+            this._showMinimap();
             this.space.swap(Meta.MotionDirection.DOWN);
             return true;
         } else if (mutterActionId
@@ -387,6 +391,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         if (!minimap) {
             minimap = new Minimap.Minimap(this.space, this.monitor);
             this.minimaps.set(this.space, minimap);
+            this.space.startAnimate();
             minimap.show(true);
         } else {
             minimap.show();
