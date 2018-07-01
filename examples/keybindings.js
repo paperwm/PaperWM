@@ -39,3 +39,13 @@ function swapNeighbours() {
 function showNavigator() {
     Keybindings.bindkey("<Super>j", () => null, { opensNavigator: true })
 }
+
+// listFreeBindings("<super>").join("\n")
+function listFreeBindings(modifierString) {
+    let free = [];
+    const chars = "abcdefghijklmnopqrstuvxyz1234567890".split("")
+    const symbols = ["minus", "comma", "period", "plus"]
+    return [].concat(chars, symbols).filter(
+        key => Keybindings.getBoundActionId(modifierString+key) === 0
+    ).map(key => modifierString+key)
+}
