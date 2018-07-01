@@ -120,6 +120,15 @@ function openNavigatorHandler(actionName, keystr) {
     }
 }
 
+function getBoundActionId(keystr) {
+    let [dontcare, keycodes, mask] =
+        Gtk.accelerator_parse_with_keycode(keystr);
+    if(keycodes.length > 1) {
+        throw new Error("Multiple keycodes " + keycodes + " " + keystr);
+    }
+    const rawMask = devirtualizeMask(mask);
+    return global.display.get_keybinding_action(keycodes[0], rawMask);
+}
 
 function handleAccelerator(display, actionId, deviceId, timestamp) {
     const action = actionIdMap[actionId];
