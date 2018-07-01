@@ -8,14 +8,17 @@ var Main = imports.ui.main;
 var Shell = imports.gi.Shell;
 
 // Extension local imports
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Me = Extension.imports.user;
-var Tiling = Extension.imports.tiling;
-var Utils = Extension.imports.utils;
-var App = Extension.imports.app;
+var Extension, Me, Tiling, Utils, App;
 
 function init() {
     // Runs _only_ once on startup
+
+    // Initialize extension imports here to make gnome-shell-reload work
+    Extension = imports.misc.extensionUtils.getCurrentExtension();
+    Me = Extension.imports.user;
+    Tiling = Extension.imports.tiling;
+    Utils = Extension.imports.utils;
+    App = Extension.imports.app;
 }
 
 function enable() {
