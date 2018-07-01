@@ -331,6 +331,8 @@ var PreviewedWindowNavigator = new Lang.Class({
         } else {
             let action = paperActions.byId(mutterActionId);
             if (action) {
+                log("Show minimap and do action..")
+                this._showMinimap();
                 let metaWindow = this.space.selectedWindow;
                 action.handler(null, null, metaWindow);
                 return true;

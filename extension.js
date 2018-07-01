@@ -64,6 +64,22 @@ function init() {
     paperActions = {
         actions: [],
         nameMap: {},
+        unregisterSchemaless(actionId) {
+            const i = this.actions.findIndex(a => a.id === actionId);
+            if (i < 0) {
+                log("Tried to remove un registered action", actionId);
+                return;
+            }
+            delete this.nameMap[this.actions[i].name];
+            this.actions.splice(i, 1);
+        },
+        registerSchemaless(actionId, actionName, handler) {
+            let action = {
+                id: actionId, name: actionName, handler
+            }
+            this.actions.push(action);
+            this.nameMap[actionName] = action;
+        },
         register: function(actionName, handler, metaKeyBindingFlags) {
             let id = registerMutterAction(actionName,
                                           handler,
@@ -362,6 +378,7 @@ function installConfig() {
         settings.set_boolean("has-installed-config-template", true);
 
     } catch(e) {
+        errorNotification("PaperWM", "Failed to install user config", e.stack);
         utils.debug("#rc", "Install failed", e.message);
     }
 }
