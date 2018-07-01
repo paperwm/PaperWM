@@ -82,6 +82,7 @@ class Space extends Array {
 
         // The windows that should be represented by their WindowActor
         this.visible = [];
+        this._populated = false;
 
 
         let clip = new Clutter.Actor();
@@ -141,6 +142,7 @@ class Space extends Array {
         this.rightStack = 0; // not implemented
 
         this.addAll(oldSpace);
+        this._populated = true;
         oldSpaces.delete(workspace);
     }
 
@@ -214,7 +216,7 @@ class Space extends Array {
             this.splice(index, 0, [metaWindow]);
         }
         metaWindow.clone.reparent(this.cloneContainer);
-        this.layout();
+        this._populated && this.layout();
         this.emit('window-added', metaWindow, index, row);
         return true;
     }
