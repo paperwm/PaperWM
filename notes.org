@@ -8,6 +8,9 @@
 2. on screen "window-entered-monitor", actor isn't available
 3. on display "window-created" is run, actor is available
 4. focus is run if the new window should be focused
+** Toggle "Always on visible workspace" (scratch windows)
+- window-removed on workspace of window
+- window-added on all workspaces
 * Keybinding system
 `Main.wm.addKeybinding` is used to register a named keybindable /action/ and it's handler. An numeric id is returned. (this is a thin wrapper around `[[https://developer.gnome.org/meta/stable/MetaDisplay.html#meta-display-add-keybinding][MetaDisplay.add_keybinding]]`)
 

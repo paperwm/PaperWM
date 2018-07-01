@@ -364,8 +364,7 @@ class Space extends Array {
                 Scratch.makeScratch(meta_window);
                 return;
             }
-            if(this.indexOf(meta_window) < 0 && add_filter(meta_window, true)) {
-                // Using add_handler is unreliable since it interacts with focus.
+            if(this.indexOf(meta_window) < 0 && add_filter(meta_window)) {
                 this.addWindow(meta_window, this.length);
                 this.cloneContainer.add_actor(meta_window.clone);
             }
@@ -835,7 +834,7 @@ function disable () {
 /**
    Types of windows which never should be tiled.
  */
-function add_filter(meta_window, startup) {
+function add_filter(meta_window) {
     let add = true;
 
     if (meta_window.window_type != Meta.WindowType.NORMAL) {
@@ -849,33 +848,7 @@ function add_filter(meta_window, startup) {
     if (meta_window.is_on_all_workspaces()) {
         add = false;
     }
-
-    let winprop = find_winprop(meta_window);
-    if (winprop) {
-        if (winprop.oneshot) {
-            // untested :)
-            winprops.splice(winprops.indexOf(winprop), 1);
-        }
-        if (winprop.float) {
-            // Let gnome-shell handle the placement
-            add = false;
-        }
-        if (winprop.scratch_layer) {
-            Scratch.makeScratch(meta_window);
-            add = false;
-        }
-    }
-
-    // If we're focusing a scratch window make on top and return
-    let focus_window = global.display.focus_window;
-    if (Scratch.isScratchWindow(focus_window) && !startup) {
-        Scratch.makeScratch(meta_window);
-        add = false;
-    }
-
-    // If the window is a scratch window make it always on top
     if (Scratch.isScratchWindow(meta_window)) {
-        meta_window.make_above();
         add = false;
     }
 
@@ -928,12 +901,33 @@ function add_handler(ws, metaWindow) {
 */
 function insertWindow(metaWindow, {existing}) {
 
-    let space = spaces.spaceOfWindow(metaWindow);
-    let monitor = space.monitor;
+    if (!existing) {
+        let scratchIsFocused = Scratch.isScratchWindow(global.display.focus_window);
+        let addToScratch = scratchIsFocused;
+
+        let winprop = find_winprop(metaWindow);
+        if (winprop) {
+            if (winprop.oneshot) {
+                winprops.splice(winprops.indexOf(winprop), 1);
+            }
+            if (winprop.scratch_layer) {
+                debug("#winprops", `Move ${metaWindow.title} to scratch`);
+                addToScratch = true;
+            }
+        }
+
+        if (addToScratch) {
+            Scratch.makeScratch(metaWindow);
+            return;
+        }
+    }
 
     if (!add_filter(metaWindow)) {
         return;
     }
+
+    let space = spaces.spaceOfWindow(metaWindow);
+    let monitor = space.monitor;
 
     // Don't add already added windows
     if (space.indexOf(metaWindow) != -1) {
