@@ -518,7 +518,10 @@ class Spaces extends Map {
 
         // Clone and hook up existing windows
         global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
-            .forEach(registerWindow);
+            .forEach(w => {
+                registerWindow(w);
+                signals.connect(w, 'size-changed', cloneSizeHandler);
+            });
 
         let spaceContainer = new Clutter.Actor({name: 'spaceContainer'});
         spaceContainer.hide();
@@ -813,13 +816,23 @@ function registerWindow(metaWindow) {
 
     signals.connect(metaWindow, "focus", focus_wrapper);
     signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
-    signals.connect(metaWindow, 'size-changed', resizeHandler);
     signals.connect(metaWindow, 'notify::fullscreen', fullscreenWrapper);
+    signals.connect(metaWindow, 'size-changed', resizeHandler);
     signals.connect(actor, 'show', showWrapper);
+}
+
+function cloneSizeHandler(metaWindow) {
+    // On wayland the clone size doesn't seem to update properly if the window
+    // actor is hidden.
+    let b = metaWindow.get_buffer_rect();
+    metaWindow.clone.set_size(b.width, b.height);
 }
 
 function resizeHandler(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
+    if (metaWindow !== space.selectedWindow)
+        return;
+
     space.layout(!noAnimate);
     !noAnimate && ensureViewport(space.selectedWindow, space, true);
 }
@@ -1016,6 +1029,7 @@ function insertWindow(metaWindow, {existing}) {
     }
 
     if (!add_filter(metaWindow)) {
+        !existing && signals.connect(metaWindow, 'size-changed', cloneSizeHandler);
         return;
     }
 
@@ -1053,7 +1067,8 @@ function insertWindow(metaWindow, {existing}) {
             scale_x: 1,
             scale_y: 1,
             time: 0.25,
-            transition: 'easeInOutQuad'
+            transition: 'easeInOutQuad',
+            onComplete: () => signals.connect(metaWindow, 'size-changed', cloneSizeHandler)
         });
     } else {
         clone.set_position(
