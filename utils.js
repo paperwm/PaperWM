@@ -71,6 +71,11 @@ function in_bounds(array, i) {
     return i >= 0 && i < array.length;
 }
 
+function isPointInsideActor(actor, x, y) {
+    return (actor.x <= x && x <= actor.x+actor.width)
+        && (actor.y <= y && y <= actor.y+actor.height);
+}
+
 
 //// Debug and development utils
 
@@ -149,12 +154,19 @@ function setWorkspaceName(name, workspace) {
     return oldName;
 }
 
-function warpPointerRelative(dx, dy) {
+function getPointerPosition() {
     let display = Gdk.Display.get_default();
     let deviceManager = display.get_device_manager();
     let pointer = deviceManager.get_client_pointer();
-    let [gdkscreen, pointerX, pointerY] = pointer.get_position();
-    pointer.warp(gdkscreen, pointerX + dx, pointerY + dy);
+    let [gdkscreen, x, y] = pointer.get_position();
+    return [x, y, gdkscreen, pointer]
+}
+
+function warpPointer(x, y) {
+    let display = Gdk.Display.get_default();
+    let deviceManager = display.get_device_manager();
+    let pointer = deviceManager.get_client_pointer();
+    pointer.warp(Gdk.Screen.get_default(), x, y)
 }
 
 class Signals extends Map {
