@@ -1614,8 +1614,8 @@ function centerWindowHorizontally(metaWindow) {
     const space = spaces.spaceOfWindow(metaWindow);
     const monitor = space.monitor;
     const targetX = Math.round(monitor.width/2 - frame.width/2);
-    const dx = (targetX + monitor.x) - (metaWindow.clone.targetX + space.targetX);
     utils.warpPointerRelative(dx, 0);
+    const dx = targetX - (metaWindow.clone.targetX + space.targetX);
     if (space.indexOf(metaWindow) === -1) {
         metaWindow.move_frame(true, targetX + monitor.x, frame.y);
     } else {
