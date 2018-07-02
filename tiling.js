@@ -232,24 +232,35 @@ class Space extends Array {
         let index = this.indexOf(metaWindow);
         if (index === -1)
             return false;
+
+        let selected = this.selectedWindow;
+        if (selected === metaWindow) {
+            // Select a new window using the stack ordering;
+            let windows = this.getWindows();
+            let i = windows.indexOf(metaWindow);
+            let neighbours = [windows[i - 1], windows[i + 1]].filter(w => w);
+            let stack = global.display.sort_windows_by_stacking(neighbours);
+            selected = stack[stack.length - 1];
+        }
+
         let column = this[index];
         let row = column.indexOf(metaWindow);
         column.splice(row, 1);
         if (column.length === 0)
             this.splice(index, 1);
 
-        if (this.selectedWindow === metaWindow) {
-            // Select a new window using the stack ordering;
-            let stack = global.display.sort_windows_by_stacking(this.getWindows());
-            this.selectedWindow = stack[stack.length - 1];
-        }
-
 
         this.cloneContainer.remove_actor(metaWindow.clone);
         Tweener.removeTweens(this.selection);
         this.selection.width = 0;
         this.visible = this.visible.filter(w => w !== metaWindow);
+
+        this.layout();
         this.emit('window-removed', metaWindow, index, row);
+        if (selected)
+            ensureViewport(selected, this, true);
+        else
+            this.selectedWindow = null;
         return true;
     }
 
@@ -987,21 +998,13 @@ function remove_handler(workspace, meta_window) {
     // window has already received the `focus` signal at this point.
     // Not sure if we can check directly if _this_ window had focus when closed.
 
-    let space = spaces.spaceOf(workspace);
-    if (!space.removeWindow(meta_window))
-        return;
-    space.layout();
-
     if (!meta_window.get_compositor_private())
         signals.disconnect(meta_window);
 
-    // (could be an empty workspace)
-    if (space.selectedWindow) {
-        // Force a new ensure, since the focus_handler is run before
-        // window-removed
-        ensureViewport(space.selectedWindow, space, true);
-    }
+    let space = spaces.spaceOf(workspace);
+    space.removeWindow(meta_window);
 }
+
 
 /**
    Handle windows entering workspaces.
@@ -1200,6 +1203,7 @@ function ensureViewport(meta_window, space, force) {
     });
 
     updateSelection(space);
+    selected.raise();
     space.emit('select');
 }
 
