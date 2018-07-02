@@ -73,8 +73,11 @@ class ClickOverlay {
         Main.uiGroup.add_actor(enterMonitor);
         Main.layoutManager.trackChrome(enterMonitor);
 
-        this.enterSignal = enterMonitor.connect(
-            'enter-event', () => {
+        this.signals = new utils.Signals();
+
+        this.signals.connect(
+            enterMonitor, 'enter-event',
+            () => {
                 this.deactivate();
                 let space = Tiling.spaces.monitors.get(this.monitor);
                 if (space.selectedWindow) {
@@ -87,6 +90,9 @@ class ClickOverlay {
                 return Clutter.EVENT_STOP;
             }
         );
+
+        this.signals.connect(Main.overview, 'showing', this.hide.bind(this));
+        this.signals.connect(Main.overview, 'hidden', this.show.bind(this));
     }
 
     activate() {
@@ -123,7 +129,7 @@ class ClickOverlay {
                 overlay.clone.destroy();
             actor.destroy();
         }
-        this.enterMonitor.disconnect(this.enterSignal);
+        this.signals.destroy();
         this.enterMonitor.destroy();
     }
 }
