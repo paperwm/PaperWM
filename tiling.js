@@ -865,6 +865,7 @@ function resizeHandler(metaWindow) {
 
     if (noAnimate) {
         space.layout(false);
+        space.selection.width = metaWindow.get_frame_rect().width + prefs.window_gap;
     } else {
         // Restore window position when eg. exiting fullscreen
         !Navigator.navigating
