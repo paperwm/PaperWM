@@ -101,10 +101,7 @@ var PreviewedWindowNavigator = new Lang.Class({
         this.monitor = this.space.monitor;
         this.minimaps = new Map();
 
-        this.space.visible.forEach(w => {
-            w.get_compositor_private().hide();
-            w.clone.show();
-        });
+        this.space.startAnimate();
 
         let paperActions = Extension.imports.extension.paperActions;
         let actionId = paperActions.idOf(actionName);
@@ -518,10 +515,7 @@ function switchWorkspace(to, from, callback) {
         Tiling.ensureViewport(selected, toSpace, true);
 
     if (from) {
-        Tiling.spaces.spaceOf(from).getWindows().forEach(w => {
-            w.get_compositor_private().hide();
-            w.clone.show();
-        });
+        Tiling.spaces.spaceOf(from).startAnimate();
     }
 
     Tweener.addTween(toSpace.actor,

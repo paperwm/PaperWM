@@ -150,10 +150,7 @@ class Space extends Array {
         let time = animate ? 0.25 : 0;
         let gap = prefs.window_gap;
         let x = 0;
-        this.visible.forEach(w => {
-            w.clone.show();
-            w.get_compositor_private().hide();
-        });
+        this.startAnimate();
         for (let column of this) {
             let y = panelBox.height + prefs.vertical_margin;
             let width = Math.max(...column.map(w => w.get_frame_rect().width));
@@ -355,6 +352,16 @@ class Space extends Array {
 
         this.delayed = false;
         this.emit('move-done');
+    }
+
+    startAnimate(grabWindow) {
+        this.visible.forEach(w => {
+            let actor = w.get_compositor_private();
+            if (!actor || w === grabWindow)
+                return;
+            actor.hide();
+            w.clone.show();
+        })
     }
 
     setColor(color) {
@@ -1248,6 +1255,7 @@ function move_to(space, metaWindow, { x, y, delay, transition,
     }
 
     space.targetX = target;
+    space.startAnimate();
     Tweener.addTween(space.cloneContainer,
                      { x: target,
                        time: 0.25,
@@ -1258,10 +1266,6 @@ function move_to(space, metaWindow, { x, y, delay, transition,
                        }
                      });
 
-    space.visible.forEach(w => {
-        w.get_compositor_private().hide();
-        w.clone.show();
-    });
 
     space.monitor.clickOverlay.reset();
     space.visible = [...space[index]];
@@ -1317,15 +1321,7 @@ function grabBegin(screen, display, metaWindow, type) {
     let space = spaces.spaceOfWindow(metaWindow);
     if (space.indexOf(metaWindow) === -1)
         return;
-    for (let w of space.visible) {
-        if (w === metaWindow) {
-            w.clone.hide();
-            w.get_compositor_private().show();
-        } else {
-            w.clone.show();
-            w.get_compositor_private().hide();
-        }
-    }
+    space.startAnimate(metaWindow);
     let frame = metaWindow.get_frame_rect();
     let anchor = metaWindow.clone.targetX;
     let handler = getGrab(space, anchor);
