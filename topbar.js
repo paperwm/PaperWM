@@ -229,7 +229,6 @@ function enable () {
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.actor.show();
     let id = panelBox.connect('parent-set', (actor) => {
-        log(`id: ${id}`);
         actor.disconnect(id);
         updateWorkspaceIndicator(global.screen.get_active_workspace());
     });

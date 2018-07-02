@@ -580,9 +580,6 @@ class Spaces extends Map {
        left with heuristics.
      */
     monitorsChanged() {
-        log('#monitors changed');
-        log(Main.layoutManager.primaryIndex);
-
         if (this.monitors)
             oldMonitors = this.monitors;
 
@@ -599,8 +596,6 @@ class Spaces extends Map {
         }
         this.clickOverlays = [];
         let mru = this.mru();
-        log('#mru before');
-        log(mru.map(s => s.actor));
         let primary = Main.layoutManager.primaryMonitor;
         let monitors = Main.layoutManager.monitors;
 
@@ -650,7 +645,6 @@ class Spaces extends Map {
                 oldMonitor.y === monitor.y) {
                 let space = this.get(oldSpace.workspace);
                 this.monitors.set(monitor, space);
-                log(`persist: ${monitor.index} ${space.actor}`);
                 space.setMonitor(monitor, false);
                 mru = mru.filter(s => s !== space);
             }
@@ -661,7 +655,6 @@ class Spaces extends Map {
         for (let monitor of monitors) {
             if (this.monitors.get(monitor) === undefined) {
                 let space = mru[0];
-                log(`remaining: ${monitor.index} ${space.actor}`);
                 this.monitors.set(monitor, space);
                 space.setMonitor(monitor, false);
                 mru = mru.slice(1);
@@ -674,12 +667,9 @@ class Spaces extends Map {
                 let monitor = monitors[space.monitor.index];
                 if (!monitor)
                     monitor = primary;
-                log(`removed: ${monitor.index} ${space.actor}`);
                 space.setMonitor(monitor, false);
             }
         });
-        log('#mru after')
-        log(mru.map(s => s.actor));
 
         finish();
     }
@@ -889,7 +879,6 @@ function enable() {
         global.window_manager,
         'switch-workspace',
         (wm, fromIndex, toIndex) => {
-            log('workpace-switched');
             let to = screen.get_workspace_by_index(toIndex);
             let from = screen.get_workspace_by_index(fromIndex);
             let toSpace = spaces.spaceOf(to);
@@ -1332,7 +1321,6 @@ function grabBegin(screen, display, metaWindow, type) {
     let frame = metaWindow.get_frame_rect();
     let anchor = metaWindow.clone.targetX;
     let handler = getGrab(space, anchor);
-    log(`anchor: ${anchor}`);
     grabSignals.connect(metaWindow, 'position-changed', handler);
     Tweener.removeTweens(space.cloneContainer);
     // Turn size/position animation off when grabbing a window with the mouse
