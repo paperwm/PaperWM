@@ -64,11 +64,17 @@ function init() {
    and right corners rounded. It's positioned slightly above the monitor so the
    corners aren't visible when the space is active.
 
-   The @cloneContainer holds all the WindowActor clones, clipping them to the
-   size of the monitor. Window clones are necessary due to mutter restricting
-   how far a window can stick out of the screen (hardcoded to 75 pixels). The
-   clones are also useful when constructing the workspace stack as it's easier
-   to scale and move the space.actor in one go.
+   The @cloneContainer holds all the WindowActor clones, it's clipped
+   by @cloneClip to avoid protruding into neighbouringing monitors.
+
+   Clones are necessary due to restrictions mutter places on MetaWindowActors
+   MetaWindowActors can only live in the `global.window_group` and can't be
+   moved reliably off screen. We create a Clutter.Clone for every window which
+   live in its @cloneContainer to avoid these problems. Scrolling to a window in
+   the tiling can then be done by simply moving the @cloneContainer.
+
+   The clones are also useful when constructing the workspace stack as it's
+   easier to scale and move the whole @actor in one go.
  */
 class Space extends Array {
     constructor (workspace, container) {
