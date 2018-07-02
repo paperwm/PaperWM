@@ -454,7 +454,6 @@ class Space extends Array {
             }
             if(this.indexOf(meta_window) < 0 && add_filter(meta_window)) {
                 this.addWindow(meta_window, this.length);
-                this.cloneContainer.add_actor(meta_window.clone);
             }
         })
 
