@@ -845,8 +845,16 @@ function resizeHandler(metaWindow) {
     if (metaWindow !== space.selectedWindow)
         return;
 
-    space.layout(!noAnimate);
-    !noAnimate && ensureViewport(space.selectedWindow, space, true);
+    if (noAnimate) {
+        space.layout(false);
+    } else {
+        // Restore window position when eg. exiting fullscreen
+        !Navigator.navigating
+            && move_to(space, metaWindow, {x: metaWindow.get_frame_rect().x});
+
+        space.layout(true);
+        ensureViewport(space.selectedWindow, space, true);
+    }
 }
 
 function enable() {
