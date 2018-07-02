@@ -25,7 +25,7 @@ var Navigator = Extension.imports.navigator;
 var ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
 var Me = Extension.imports.tiling;
 
-var prefs = Extension.imports.prefs.prefs;
+var prefs = Extension.imports.settings.prefs;
 
 // How much the stack should protrude from the side
 var stack_margin = 75;

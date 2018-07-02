@@ -21,7 +21,7 @@ var Tiling = Extension.imports.tiling;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
 
-var prefs = Extension.imports.prefs.prefs;
+var prefs = Extension.imports.settings.prefs;
 
 var scale = 0.9;
 var navigating = false;

@@ -14,7 +14,7 @@ var Tweener = imports.ui.tweener;
 
 var Tiling = Extension.imports.tiling;
 
-var prefs = Extension.imports.prefs.prefs;
+var prefs = Extension.imports.settings.prefs;
 
 var panelBox = Main.layoutManager.panelBox;
 

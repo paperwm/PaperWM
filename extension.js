@@ -6,7 +6,7 @@ var modules = [
     Extension.imports.liveAltTab, Extension.imports.utils,
     Extension.imports.stackoverlay, Extension.imports.app,
     Extension.imports.kludges, Extension.imports.topbar,
-    Extension.imports.navigator, Extension.imports.prefs
+    Extension.imports.navigator, Extension.imports.settings
 ];
 var [ Tiling, Scratch, LiveAltTab,
         utils, StackOverlay,

@@ -10,7 +10,7 @@ var utils = Extension.imports.utils;
 var debug = utils.debug;
 var Minimap = Extension.imports.minimap;
 
-var prefs = Extension.imports.prefs.prefs;
+var prefs = Extension.imports.settings.prefs;
 
 /*
   The stack overlay decorates the top stacked window with its icon and
