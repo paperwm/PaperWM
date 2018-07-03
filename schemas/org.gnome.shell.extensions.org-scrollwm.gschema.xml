@@ -160,7 +160,7 @@
     </key>
 
     <key type="i" name="vertical-margin">
-      <default>2</default>
+      <default>5</default>
       <summary>Minimum margin from windows top and bottom edge</summary>
     </key>
 
