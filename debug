@@ -1,22 +1,27 @@
 #!/usr/bin/env zsh
 
+indent="  "
+
 # Ref: https://gitlab.gnome.org/GNOME/gnome-shell/issues/1
 function skip-crap {
-    local crap_start=".*: Object [^ ]+ \(.*\), has been already finalized. Impossible to \w* any property \w* it.*"
+    local crap_start="Object [^ ]+ \(.*\), has been already finalized. Impossible to \w* any property \w* it.*"
 
     local crap_continue=(
-        -e ".*: == Stack trace for context.*"
-        -e ".*: #[0-9]+\s*0x.*"
+        -e "== Stack trace for context.*"
+        -e "#[0-9]+\s*0x.*"
     )
 
     local skip=0
     local skipped=0
+    local begin_skip_date
 
     # Could probably be done more elegantly with awk/sed ?
-    while read -r line; do
+    while read -r date; do
+        read -r line
         if echo $line | grep -E $crap_start --quiet; then
             # echo setting skip
             skip=1
+            begin_skip_date=$date
             ((skipped += 1))
             continue
         fi
@@ -28,13 +33,36 @@ function skip-crap {
                 continue
             else
                 # echo reset skip
-                printf "Skipped \"already finalized\" crap ($skipped lines)\n"
+                printf "%s\n" $begin_skip_date
+                printf "${indent}Skipped \"already finalized\" crap ($skipped lines)\n"
                 skip=0
                 skipped=0
             fi
         fi
 
-        printf "%s\n" $line
+        printf "%s\n%s\n" $date $line
+    done
+}
+
+function group-stack-traces {
+    local addr="0x[0-9a-z]+"
+    local start_pattern="== Stack trace for context ($addr) =="
+    local stackframe="^#[0-9]+\s*${addr}"
+    local in_group=0
+    while read -r date; do
+        read -r line;
+
+        if [[ $line =~ $start_pattern ]]; then
+            in_group=1
+        elif ! [[ $line =~ $stackframe ]]; then
+            in_group=0
+        fi
+
+        if [[ $in_group == 0 ]]; then
+            printf "%s\n" $date
+        fi
+
+        printf "${indent}%s\n" $line
     done
 }
 
@@ -43,7 +71,7 @@ function date-on-separate-line {
     # (sed use line buffering when stdout is tty, but doesn't detect this
     # transiently so `debug | grep foobar` will run without line buffering
     # without the stdbuf stuff)
-    stdbuf -oL sed -e 's|\]:|]:\n  |'
+    stdbuf -oL sed -e "s|\]:|]:\n${indent}|"
 }
 
 # We use non-breaking space to encode newlines in multiline messages
@@ -59,7 +87,15 @@ function gnome-shell-exe-path {
     fi
 }
 
-journalctl --follow --lines 400 $(gnome-shell-exe-path) \
-    | skip-crap                \
+# Skip journalctl "logs start at.." to not disrupt date,line,date,line stream
+function skip-header {
+    stdbuf -oL tail -n +2
+}
+
+journalctl --follow --lines 400 $@ $(gnome-shell-exe-path) \
+    | skip-header              \
     | date-on-separate-line    \
-    | decode-multiline-message
+    | skip-crap                \
+    | group-stack-traces       \
+    | decode-multiline-message 
+
