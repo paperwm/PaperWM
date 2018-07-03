@@ -184,7 +184,6 @@ class Space extends Array {
                     y: y - dY,
                     time,
                     transition: 'easeInOutQuad',
-                    onComplete: this.moveDone.bind(this)
                 });
 
                 y += height + gap;
@@ -193,11 +192,13 @@ class Space extends Array {
         }
         if (x < this.width) {
             this.targetX = Math.round((this.width - x)/2);
-            Tweener.addTween(this.cloneContainer,
-                             { x: this.targetX,
-                               time: 0.25,
-                               transition: 'easeInOutQuad'});
         }
+        Tweener.addTween(this.cloneContainer,
+                         { x: this.targetX,
+                           time: 0.25,
+                           transition: 'easeInOutQuad',
+                           onComplete: this.moveDone.bind(this)
+                         });
     }
 
     getWindows() {
