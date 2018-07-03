@@ -4,26 +4,27 @@
 
   <schema id="org.gnome.Shell.Extensions.PaperWM.Keybindings"
           path="/org/gnome/shell/extensions/paperwm/keybindings/">
+
     <key type="as" name="new-window">
-      <default><![CDATA[['<Super>n']]]></default>
+      <default><![CDATA[['<Super>n', '<Super>Return']]]></default>
       <summary>Open new window</summary>
     </key>
 
     <key type="as" name="live-alt-tab">
-      <default><![CDATA[[]]]></default>
+      <default><![CDATA[['<Super>Tab']]]></default>
       <summary>Switch to previously used window</summary>
     </key>
     <key type="as" name="live-alt-tab-backward">
-      <default><![CDATA[[]]]></default>
+      <default><![CDATA[['<Super><Shift>Tab']]]></default>
       <summary>Switch to previously used window, backward order</summary>
     </key>
 
     <key type="as" name="previous-workspace">
-      <default><![CDATA[['<Super>d']]]></default>
+      <default><![CDATA[['<Super>Above_Tab', '<Super>Page_Down']]]></default>
       <summary>Switch to previously used workspace</summary>
     </key>
     <key type="as" name="previous-workspace-backward">
-      <default><![CDATA[['<Super>u']]]></default>
+      <default><![CDATA[['<Super><Shift>Above_Tab',  '<Super>Page_Up']]]></default>
       <summary>Switch to the previously used workspace, backward order</summary>
     </key>
 
@@ -37,7 +38,7 @@
     </key>
 
     <key type="as" name="toggle-scratch-layer">
-      <default><![CDATA[['<Super>e', '<Super>Escape']]]></default>
+      <default><![CDATA[['<Super>Escape']]]></default>
       <summary>Toggles the floating scratch layer</summary>
     </key>
 
@@ -72,12 +73,21 @@
         <summary>Switch to the right column of windows</summary>
     </key>
 
+    <key type="as" name="switch-first">
+        <default><![CDATA[['<Super>Home']]]></default>
+        <summary>Switch to the first window</summary>
+    </key>
+    <key type="as" name="switch-last">
+        <default><![CDATA[['<Super>End']]]></default>
+        <summary>Switch to the last window</summary>
+    </key>
+
     <key type="as" name="move-right">
-        <default><![CDATA[['<Super><Ctrl>period', '<Super><Shift>period', '<Super><Ctrl>Right']]]></default>
+      <default><![CDATA[['<Super><Ctrl>period', '<Super><Shift>period', '<Super><Ctrl>Right']]]></default>
       <summary>Move the focused window right in the tiling</summary>
     </key>
     <key type="as" name="move-left">
-        <default><![CDATA[['<Super><Ctrl>comma', '<Super><Shift>comma', '<Super><Ctrl>Left']]]></default>
+      <default><![CDATA[['<Super><Ctrl>comma', '<Super><Shift>comma', '<Super><Ctrl>Left']]]></default>
       <summary>Move the focused window left in the tiling</summary>
     </key>
     <key type="as" name="move-up">
@@ -106,6 +116,16 @@
     <key type="as" name="center-horizontally">
       <default><![CDATA[['<Super>w']]]></default>
       <summary>Center window horizontally and preserving relative mouse position</summary>
+    </key>
+
+    <key type="as" name="toggle-maximize-width">
+      <default><![CDATA[['<Super>f']]]></default>
+      <summary>Maximize the width of the active window</summary>
+    </key>
+
+    <key type="as" name="paper-toggle-fullscreen">
+      <default><![CDATA[['<Super><shift>f']]]></default>
+      <summary>Toggle fullscreen</summary>
     </key>
 
     <key type="as" name="tile-visible">

@@ -99,11 +99,6 @@ function init() {
     let dynamic_function_ref = utils.dynamic_function_ref;
     let as_key_handler = utils.as_key_handler;
 
-    // Or use "toggle-maximize"?
-    Meta.keybindings_set_custom_handler("maximize-horizontally",
-                                        as_key_handler("toggleMaximizeHorizontally",
-                                                       Tiling));
-
     let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
     let previewNavigate = dynamic_function_ref("preview_navigate", Navigator);
 
@@ -121,6 +116,9 @@ function init() {
 
     paperActions.register("switch-next", previewNavigate);
     paperActions.register("switch-previous", previewNavigate);
+
+    paperActions.register("switch-first", Tiling.activateFirstWindow);
+    paperActions.register("switch-last", Tiling.activateLastWindow);
 
     paperActions.register("switch-right", previewNavigate);
     paperActions.register("switch-left", previewNavigate);
@@ -181,6 +179,19 @@ function init() {
                                          Tiling),
                           Meta.KeyBindingFlags.PER_WINDOW);
 
+    paperActions.register('toggle-maximize-width',
+                          as_key_handler("toggleMaximizeHorizontally",
+                                         Tiling),
+                          Meta.KeyBindingFlags.PER_WINDOW);
+
+    paperActions.register('paper-toggle-fullscreen',
+                          as_key_handler(
+                              (metaWindow) => {
+                                  if (metaWindow.fullscreen)
+                                      metaWindow.unmake_fullscreen();
+                                  else
+                                      metaWindow.make_fullscreen();
+                              }), Meta.KeyBindingFlags.PER_WINDOW);
 
     initUserConfig();
 }
@@ -191,10 +202,6 @@ function setKeybinding(name, func) {
 
 function enable() {
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
-
-    settings.set_strv("maximize-horizontally", ['<super>f']);
-
-    settings.set_strv("toggle-fullscreen", ['<super><shift>f']);
 
     setKeybinding('switch-applications', // <Super>Tab
                   paperActions.byName('live-alt-tab').handler);
@@ -230,9 +237,9 @@ function enable() {
 
 
     setKeybinding('switch-to-workspace-1', // <Super>Home
-                  Tiling.activateFirstWindow);
+                  paperActions.byName('switch-first').handler);
     setKeybinding('switch-to-workspace-last', // <Super>End
-                  Tiling.activateLastWindow);
+                  paperActions.byName('switch-last').handler);
 
     paperActions.actions.forEach(a => {
         setKeybinding(a.name, a.handler);
