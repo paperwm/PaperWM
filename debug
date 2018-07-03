@@ -4,11 +4,11 @@ indent="  "
 
 # Ref: https://gitlab.gnome.org/GNOME/gnome-shell/issues/1
 function skip-crap {
-    local crap_start="Object [^ ]+ \(.*\), has been already finalized. Impossible to \w* any property \w* it.*"
+    local crap_start="^Object [^ ]+ \(.*\), has been already finalized. Impossible to \w* any property \w* it.*"
 
     local crap_continue=(
-        -e "== Stack trace for context.*"
-        -e "#[0-9]+\s*0x.*"
+        "^== Stack trace for context.*"
+        "^#[0-9]+\s*0x.*"
     )
 
     local skip=0
@@ -18,7 +18,7 @@ function skip-crap {
     # Could probably be done more elegantly with awk/sed ?
     while read -r date; do
         read -r line
-        if echo $line | grep -E $crap_start --quiet; then
+        if [[ $line =~ $crap_start ]]; then
             # echo setting skip
             skip=1
             begin_skip_date=$date
@@ -27,8 +27,8 @@ function skip-crap {
         fi
 
         if [[ $skip == 1 ]]; then
-            if echo $line | grep -E $crap_continue --quiet; then
-                # echo ignoring
+            if [[ ($line =~ $crap_continue[1]) ||
+                      ($line =~ $crap_continue[2]) ]]; then
                 ((skipped += 1))
                 continue
             else
