@@ -1,36 +1,9 @@
 <schemalist>
-  <schema id="org.gnome.shell.extensions.org-scrollwm" path="/org/gnome/shell/extensions/org-scrollwm/">
 
-    <key type="b" name="has-installed-config-template">
-      <default>false</default>
-      <summary>Have we installed the user.js template in ~/.config/paperwm ?</summary>
-    </key>
+  <!-- Keybindings -->
 
-    <!-- Settings -->
-    <key type="i" name="horizontal-margin">
-      <default>20</default>
-      <summary>Minimum margin from windows left and right edge</summary>
-    </key>
-
-    <key type="i" name="vertical-margin">
-      <default>2</default>
-      <summary>Minimum margin from windows top and bottom edge</summary>
-    </key>
-
-    <key type="i" name="window-gap">
-      <default>10</default>
-      <summary>Minimum gap between windows</summary>
-    </key>
-
-    <key type="as" name="workspace-colors">
-        <default><![CDATA[['#314E6C', '#565248', '#445632', '#663822',
-         '#494066', '#826647', '#4B6983', '#807D74', '#5D7555', '#884631',
-         '#625B81', '#B39169', '#7590AE', '#BAB5AB', '#83A67F', '#C1665A',
-         '#887FA3', '#E0C39E']]]></default>
-        <summary>Minimum gap between windows</summary>
-    </key>
-
-    <!-- Keybindings -->
+  <schema id="org.gnome.Shell.Extensions.PaperWM.Keybindings"
+          path="/org/gnome/shell/extensions/paperwm/keybindings/">
     <key type="as" name="new-window">
       <default><![CDATA[['<Super>n']]]></default>
       <summary>Open new window</summary>
@@ -152,4 +125,40 @@
       <summary>Close the current window</summary>
     </key>
   </schema>
+
+  <schema id="org.gnome.Shell.Extensions.PaperWM" path="/org/gnome/shell/extensions/paperwm/">
+
+    <key type="b" name="has-installed-config-template">
+      <default>false</default>
+      <summary>Have we installed the user.js template in ~/.config/paperwm ?</summary>
+    </key>
+
+    <!-- Settings -->
+    <key type="i" name="horizontal-margin">
+      <default>20</default>
+      <summary>Minimum margin from windows left and right edge</summary>
+    </key>
+
+    <key type="i" name="vertical-margin">
+      <default>2</default>
+      <summary>Minimum margin from windows top and bottom edge</summary>
+    </key>
+
+    <key type="i" name="window-gap">
+      <default>10</default>
+      <summary>Minimum gap between windows</summary>
+    </key>
+
+    <key type="as" name="workspace-colors">
+      <default><![CDATA[['#314E6C', '#565248', '#445632', '#663822',
+       '#494066', '#826647', '#4B6983', '#807D74', '#5D7555', '#884631',
+       '#625B81', '#B39169', '#7590AE', '#BAB5AB', '#83A67F', '#C1665A',
+       '#887FA3', '#E0C39E']]]></default>
+      <summary>Minimum gap between windows</summary>
+    </key>
+
+    <child name="keybindings" schema="org.gnome.Shell.Extensions.PaperWM.Keybindings"/>
+
+  </schema>
+
 </schemalist>
