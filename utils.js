@@ -1,5 +1,6 @@
 const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
 const Gdk = imports.gi.Gdk;
+var Meta = imports.gi.Meta;
 
 var debug_all = false; // Turn off by default
 var debug_filter = {};
@@ -109,7 +110,7 @@ function toggleWindowBoxes(metaWindow) {
     let actor = metaWindow.get_compositor_private();
 
     makeFrameBox = function({x, y, width, height}, color) {
-        let frameBox = new St.Widget();
+        let frameBox = new imports.gi.St.Widget();
         frameBox.set_position(x, y)
         frameBox.set_size(width, height)
         frameBox.set_style("border: 2px" + color + " solid");
@@ -131,6 +132,34 @@ function toggleWindowBoxes(metaWindow) {
     metaWindow._paperDebugBoxes = boxes;
     return boxes;
 }
+
+var markNewClonesSignalId = null;
+function toggleCloneMarks() {
+    // NB: doesn't clean up signal on disable
+
+    function markCloneOf(metaWindow) {
+        if (metaWindow.clone)
+            metaWindow.clone.opacity = 190;
+    }
+    function unmarkCloneOf(metaWindow) {
+        if (metaWindow.clone)
+            metaWindow.clone.opacity = 255;
+    }
+
+    let windows = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
+
+    if (markNewClonesSignalId) {
+        global.display.disconnect(markNewClonesSignalId);
+        markNewClonesSignalId = null;
+        windows.forEach(unmarkCloneOf);
+    } else {
+        markNewClonesSignalId = global.display.connect_after(
+            "window-created", (_, mw) => markCloneOf(mw))
+
+        windows.forEach(markCloneOf);
+    }
+}
+
 
 function sum(array) {
     return array.reduce((a, b) => a + b, 0);
