@@ -223,6 +223,61 @@ class Space extends Array {
                            onComplete: this.moveDone.bind(this)
                          });
         this._inLayout = false;
+        if (animate) {
+            this.fixVisible();
+            updateSelection(this);
+        }
+    }
+
+    fixVisible() {
+        let index = this.indexOf(this.selectedWindow);
+        if (index === -1)
+            return;
+        let target = this.targetX;
+
+        this.monitor.clickOverlay.reset();
+        this.visible = [...this[index]];
+
+        for (let overlay = this.monitor.clickOverlay.right,
+                 n=index+1 ; n < this.length; n++) {
+
+            let metaWindow = this[n][0];
+            let clone = metaWindow.clone;
+            let frame = metaWindow.get_frame_rect();
+            let x = clone.targetX + target;
+
+            if (!(x + frame.width < stack_margin
+                  || x > this.width - stack_margin
+                  || metaWindow.fullscreen
+                  || metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH)) {
+                this.visible.push(...this[n]);
+            }
+            if (!overlay.target && x + frame.width > this.width) {
+                overlay.setTarget(this, n);
+                break;
+            }
+        }
+
+        for (let overlay = this.monitor.clickOverlay.left,
+                 n=index-1; n >= 0; n--) {
+            // let width = Math.max(...this[n].map(w => w.get_frame_rect().width));
+
+            let metaWindow = this[n][0];
+            let clone = metaWindow.clone;
+            let frame = metaWindow.get_frame_rect();
+            let x = clone.targetX + target;
+
+            if (!(x + frame.width < stack_margin
+                  || x > this.width - stack_margin
+                  || metaWindow.fullscreen
+                  || metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH)) {
+                this.visible.push(...this[n]);
+            }
+            if (!overlay.target && x < 0) {
+                overlay.setTarget(this, n);
+                break;
+            }
+        }
     }
 
     getWindows() {
@@ -281,7 +336,6 @@ class Space extends Array {
         this.cloneContainer.remove_actor(metaWindow.clone);
         Tweener.removeTweens(this.selection);
         this.selection.width = 0;
-        this.visible = this.visible.filter(w => w !== metaWindow);
 
         this.layout();
         this.emit('window-removed', metaWindow, index, row);
@@ -1298,49 +1352,7 @@ function move_to(space, metaWindow, { x, y, delay, transition,
                      });
 
 
-    space.monitor.clickOverlay.reset();
-    space.visible = [...space[index]];
-
-    for (let overlay = space.monitor.clickOverlay.right,
-             n=index+1 ; n < space.length; n++) {
-
-        let metaWindow = space[n][0];
-        let clone = metaWindow.clone;
-        let frame = metaWindow.get_frame_rect();
-        let x = clone.targetX + target;
-
-        if (!(x + frame.width < stack_margin
-              || x > space.width - stack_margin
-              || metaWindow.fullscreen
-              || metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH)) {
-            space.visible.push(...space[n]);
-        }
-        if (!overlay.target && x + frame.width > space.width) {
-            overlay.setTarget(space, n);
-            break;
-        }
-    }
-
-    for (let overlay = space.monitor.clickOverlay.left,
-             n=index-1; n >= 0; n--) {
-        // let width = Math.max(...space[n].map(w => w.get_frame_rect().width));
-
-        let metaWindow = space[n][0];
-        let clone = metaWindow.clone;
-        let frame = metaWindow.get_frame_rect();
-        let x = clone.targetX + target;
-
-        if (!(x + frame.width < stack_margin
-            || x > space.width - stack_margin
-            || metaWindow.fullscreen
-            || metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH)) {
-            space.visible.push(...space[n]);
-        }
-        if (!overlay.target && x < 0) {
-            overlay.setTarget(space, n);
-            break;
-        }
-    }
+    space.fixVisible();
 }
 
 var noAnimate = false;
