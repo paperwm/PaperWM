@@ -8,10 +8,105 @@ var Utils = Extension.imports.utils;
 var Main = imports.ui.main;
 var Shell = imports.gi.Shell;
 
+var convenience = Extension.imports.convenience;
 var signals = new Utils.Signals();
 
 var Navigator = Extension.imports.navigator;
-var paperActions = Extension.imports.extension.paperActions;
+
+/*
+    Keep track of some mappings mutter doesn't do/expose
+    - action-name -> action-id mapping
+    - action-id   -> action mapping
+    - action      -> handler
+*/
+var paperActions = {
+    actions: [],
+    nameMap: {},
+    unregisterSchemaless(actionId) {
+        const i = this.actions.findIndex(a => a.id === actionId);
+        if (i < 0) {
+            log("Tried to remove un registered action", actionId);
+            return;
+        }
+        delete this.nameMap[this.actions[i].name];
+        this.actions.splice(i, 1);
+    },
+    registerSchemaless(actionId, actionName, handler) {
+        let action = {
+            id: actionId, name: actionName, handler
+        }
+        this.actions.push(action);
+        this.nameMap[actionName] = action;
+    },
+    register: function(actionName, handler, metaKeyBindingFlags) {
+        let id = registerMutterAction(actionName,
+                                        handler,
+                                        metaKeyBindingFlags);
+        // If the id is NONE the action is already registered
+        if (id === Meta.KeyBindingAction.NONE)
+            return null;
+
+        let action = { id: id
+                        , name: actionName
+                        , handler: handler
+                        };
+        this.actions.push(action);
+        this.nameMap[actionName] = action;
+        return action;
+    },
+    idOf: function(name) {
+        let action = this.byName(name);
+        if (action) {
+            return action.id;
+        } else {
+            return Meta.KeyBindingAction.NONE;
+        }
+    },
+    byName: function(name) {
+        return this.nameMap[name];
+    },
+    byId: function(mutterId) {
+        return this.actions.find(action => action.id == mutterId);
+    }
+};
+
+/**
+ * Register a key-bindable action (from our own schema) in mutter.
+ *
+ * Return the assigned numeric id.
+ *
+ * NB: use `Meta.keybindings_set_custom_handler` to re-assign the handler.
+ */
+function registerMutterAction(action_name, handler, flags) {
+    // Ripped from https://github.com/negesti/gnome-shell-extensions-negesti 
+    // Handles multiple gnome-shell versions
+    flags = flags || Meta.KeyBindingFlags.NONE;
+
+    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings')
+
+    if (Main.wm.addKeybinding && Shell.ActionMode){ // introduced in 3.16
+        return Main.wm.addKeybinding(action_name,
+                                     settings, flags,
+                                     Shell.ActionMode.NORMAL,
+                                     handler
+                                    );
+    } else if (Main.wm.addKeybinding && Shell.KeyBindingMode) { // introduced in 3.7.5
+        // Shell.KeyBindingMode.NORMAL | Shell.KeyBindingMode.MESSAGE_TRAY,
+        return Main.wm.addKeybinding(action_name,
+                                     settings, flags,
+                                     Shell.KeyBindingMode.NORMAL,
+                                     handler
+                                    );
+    } else {
+        return global.display.add_keybinding(
+            action_name,
+            settings,
+            flags,
+            handler
+        );
+    }
+}
+
 
 var actionIdMap = {}; // actionID -> handler
 var keycomboMap = {}
