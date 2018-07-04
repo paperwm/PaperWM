@@ -153,16 +153,27 @@ class Space extends Array {
     }
 
     layout(animate = true) {
+        // Guard against recursively calling layout
+        if (this._inLayout)
+            return;
+        this._inLayout = true;
+
         let time = animate ? 0.25 : 0;
         let gap = prefs.window_gap;
         let x = 0;
         this.startAnimate();
-        for (let column of this) {
+
+        for (let i=0; i<this.length; i++) {
+            let column = this[i];
+            let widthChanged = false;
+
             let y = panelBox.height + prefs.vertical_margin;
-            let width = Math.max(...column.map(w => w.get_frame_rect().width));
+
+            let targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
             if (column.includes(this.selectedWindow))
-                width = this.selectedWindow.get_frame_rect().width;
-            width = Math.min(width, this.width);
+                targetWidth = this.selectedWindow.get_frame_rect().width;
+
+            targetWidth = Math.min(targetWidth, this.width);
             let height = Math.round(
                 (this.height - panelBox.height - prefs.vertical_margin
                  - prefs.window_gap*(column.length - 1))/column.length) ;
@@ -173,7 +184,12 @@ class Space extends Array {
                 let f = w.get_frame_rect();
                 let b = w.get_buffer_rect();
 
-                w.move_resize_frame(true, f.x, f.y, width, height);
+                w.move_resize_frame(true, f.x, f.y, targetWidth, height);
+                // When resize is synchronous, ie. for X11 windows
+                let newWidth = w.get_frame_rect().width;
+                if (newWidth !== targetWidth && newWidth !== f.width) {
+                    widthChanged = true;
+                }
 
                 let c = w.clone;
                 c.targetX = x;
@@ -188,8 +204,15 @@ class Space extends Array {
 
                 y += height + gap;
             }
-            x += width + gap;
+
+            if (widthChanged) {
+                // Redo current column
+                i--;
+            } else {
+                x += targetWidth + gap;
+            }
         }
+
         if (x < this.width) {
             this.targetX = Math.round((this.width - x)/2);
         }
@@ -199,6 +222,7 @@ class Space extends Array {
                            transition: 'easeInOutQuad',
                            onComplete: this.moveDone.bind(this)
                          });
+        this._inLayout = false;
     }
 
     getWindows() {
