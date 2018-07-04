@@ -326,9 +326,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             return true;
         } else {
             let action = paperActions.byId(mutterActionId);
-            if (action
-                && action.name !== 'toggle-scratch-layer'
-                && action.name !== 'toggle-scratch') {
+            if (action) {
                 let metaWindow = this.space.selectedWindow;
                 action.handler(null, null, metaWindow);
                 return true;
@@ -377,7 +375,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     _keyPressHandler: function(keysym, action) {
-        if (this._doAction(action)) {
+        if (keysym !== Clutter.KEY_Escape && this._doAction(action)) {
             return Clutter.EVENT_STOP;
         } else {
             return Clutter.EVENT_PROPAGATE;
