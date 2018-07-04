@@ -1,6 +1,7 @@
 var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 var Keybindings = Extension.imports.keybindings;
 var Main = imports.ui.main;
+var Tiling = Extension.imports.tiling;
 
 
 function windowMarks() {
@@ -11,11 +12,22 @@ function windowMarks() {
     }
 
     function gotoMark(k) {
-        return () => marks[k] && Main.activateWindow(marks[k])
+        return () => {
+            let metaWindow = marks[k];
+            if (!metaWindow)
+                return;
+
+            if (metaWindow.has_focus()) {
+                // Can happen when navigator is open
+                Tiling.ensureViewport(metaWindow);
+            } else {
+                Main.activateWindow(metaWindow);
+            }
+        }
     }
 
     for(let k = 0; k < 9; k++) {
-        Keybindings.bindkey(`<Super>${k}`, gotoMark(k))
+        Keybindings.bindkey(`<Super>${k}`, gotoMark(k), {activeInNavigator: true})
         Keybindings.bindkey(`<Super><Shift>${k}`, setMark(k),
                             {activeInNavigator: true})
     }
