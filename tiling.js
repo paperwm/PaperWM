@@ -334,15 +334,16 @@ class Space extends Array {
 
 
         this.cloneContainer.remove_actor(metaWindow.clone);
-        Tweener.removeTweens(this.selection);
-        this.selection.width = 0;
 
         this.layout();
         this.emit('window-removed', metaWindow, index, row);
-        if (selected)
+        if (selected) {
             ensureViewport(selected, this, true);
-        else
+        } else {
             this.selectedWindow = null;
+            Tweener.removeTweens(this.selection);
+            this.selection.width = 0;
+        }
         return true;
     }
 
