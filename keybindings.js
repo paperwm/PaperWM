@@ -78,33 +78,14 @@ var paperActions = {
  * NB: use `Meta.keybindings_set_custom_handler` to re-assign the handler.
  */
 function registerMutterAction(action_name, handler, flags) {
-    // Ripped from https://github.com/negesti/gnome-shell-extensions-negesti 
-    // Handles multiple gnome-shell versions
     flags = flags || Meta.KeyBindingFlags.NONE;
 
     let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings')
 
-    if (Main.wm.addKeybinding && Shell.ActionMode){ // introduced in 3.16
-        return Main.wm.addKeybinding(action_name,
-                                     settings, flags,
-                                     Shell.ActionMode.NORMAL,
-                                     handler
-                                    );
-    } else if (Main.wm.addKeybinding && Shell.KeyBindingMode) { // introduced in 3.7.5
-        // Shell.KeyBindingMode.NORMAL | Shell.KeyBindingMode.MESSAGE_TRAY,
-        return Main.wm.addKeybinding(action_name,
-                                     settings, flags,
-                                     Shell.KeyBindingMode.NORMAL,
-                                     handler
-                                    );
-    } else {
-        return global.display.add_keybinding(
-            action_name,
-            settings,
-            flags,
-            handler
-        );
-    }
+    return Main.wm.addKeybinding(action_name,
+                                 settings, flags,
+                                 Shell.ActionMode.NORMAL,
+                                 handler);
 }
 
 
