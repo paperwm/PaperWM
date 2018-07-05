@@ -38,7 +38,15 @@ var wmSettings;
 var shellSettings;
 var paperSettings;
 
-var paperActions = Extension.imports.keybindings.paperActions;
+var Keybindings = Extension.imports.keybindings;
+
+function registerPaperAction(actionName, handler, flags) {
+    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    Keybindings.registerAction(
+        actionName,
+        handler,
+        {settings: settings, mutterFlags: flags, activeInNavigator: true})
+}
 
 function init() {
     SESSIONID += "#";
@@ -64,96 +72,96 @@ function init() {
     let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
     let previewNavigate = dynamic_function_ref("preview_navigate", Navigator);
 
-    paperActions.register('live-alt-tab',
+    registerPaperAction('live-alt-tab',
                           liveAltTab);
-    paperActions.register('live-alt-tab-backward',
+    registerPaperAction('live-alt-tab-backward',
                           liveAltTab,
                           Meta.KeyBindingFlags.IS_REVERSED);
 
-    paperActions.register('previous-workspace', previewNavigate);
-    paperActions.register('previous-workspace-backward', previewNavigate);
+    registerPaperAction('previous-workspace', previewNavigate);
+    registerPaperAction('previous-workspace-backward', previewNavigate);
 
-    paperActions.register('move-previous-workspace', previewNavigate);
-    paperActions.register('move-previous-workspace-backward', previewNavigate);
+    registerPaperAction('move-previous-workspace', previewNavigate);
+    registerPaperAction('move-previous-workspace-backward', previewNavigate);
 
-    paperActions.register("switch-next", previewNavigate);
-    paperActions.register("switch-previous", previewNavigate);
+    registerPaperAction("switch-next", previewNavigate);
+    registerPaperAction("switch-previous", previewNavigate);
 
-    paperActions.register("switch-first", Tiling.activateFirstWindow);
-    paperActions.register("switch-last", Tiling.activateLastWindow);
+    registerPaperAction("switch-first", Tiling.activateFirstWindow);
+    registerPaperAction("switch-last", Tiling.activateLastWindow);
 
-    paperActions.register("switch-right", previewNavigate);
-    paperActions.register("switch-left", previewNavigate);
-    paperActions.register("switch-up", previewNavigate);
-    paperActions.register("switch-down", previewNavigate);
+    registerPaperAction("switch-right", previewNavigate);
+    registerPaperAction("switch-left", previewNavigate);
+    registerPaperAction("switch-up", previewNavigate);
+    registerPaperAction("switch-down", previewNavigate);
 
-    paperActions.register("move-left", previewNavigate);
-    paperActions.register("move-right", previewNavigate);
-    paperActions.register("move-up", previewNavigate);
-    paperActions.register("move-down", previewNavigate);
+    registerPaperAction("move-left", previewNavigate);
+    registerPaperAction("move-right", previewNavigate);
+    registerPaperAction("move-up", previewNavigate);
+    registerPaperAction("move-down", previewNavigate);
 
-    paperActions.register("toggle-scratch-layer",
-                          dynamic_function_ref("toggleScratch",
-                                               Scratch));
+    registerPaperAction("toggle-scratch-layer",
+                        dynamic_function_ref("toggleScratch",
+                                             Scratch));
 
-    paperActions.register("toggle-scratch",
-                          utils.as_key_handler("toggle",
-                                               Scratch),
-                          Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction("toggle-scratch",
+                        utils.as_key_handler("toggle",
+                                             Scratch),
+                        Meta.KeyBindingFlags.PER_WINDOW);
 
-    paperActions.register("develop-set-globals",
-                          dynamic_function_ref("setDevGlobals",
-                                               utils));
+    registerPaperAction("develop-set-globals",
+                        dynamic_function_ref("setDevGlobals",
+                                             utils));
 
-    paperActions.register("cycle-width",
-                          as_key_handler("cycleWindowWidth",
-                                         Tiling),
-                          Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction("cycle-width",
+                        as_key_handler("cycleWindowWidth",
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
 
-    paperActions.register("center-horizontally",
-                          as_key_handler("centerWindowHorizontally",
-                                         Tiling),
-                          Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction("center-horizontally",
+                        as_key_handler("centerWindowHorizontally",
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
 
-    paperActions.register("tile-visible",
-                          as_key_handler("tileVisible",
-                                         Tiling),
-                          Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction("tile-visible",
+                        as_key_handler("tileVisible",
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
 
-    paperActions.register('new-window',
-                          as_key_handler('newWindow',
-                                         App),
-                          Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction('new-window',
+                        as_key_handler('newWindow',
+                                       App),
+                        Meta.KeyBindingFlags.PER_WINDOW);
 
-    paperActions.register('close-window',
-                          as_key_handler(
-                              (metaWindow) =>
-                                  metaWindow.delete(global.get_current_time())),
-                          Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction('close-window',
+                        as_key_handler(
+                            (metaWindow) =>
+                                metaWindow.delete(global.get_current_time())),
+                        Meta.KeyBindingFlags.PER_WINDOW);
 
-    paperActions.register('slurp-in',
-                          as_key_handler('slurp',
-                                         Tiling),
-                          Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction('slurp-in',
+                        as_key_handler('slurp',
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
 
-    paperActions.register('barf-out',
-                          as_key_handler('barf',
-                                         Tiling),
-                          Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction('barf-out',
+                        as_key_handler('barf',
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
 
-    paperActions.register('toggle-maximize-width',
-                          as_key_handler("toggleMaximizeHorizontally",
-                                         Tiling),
-                          Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction('toggle-maximize-width',
+                        as_key_handler("toggleMaximizeHorizontally",
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
 
-    paperActions.register('paper-toggle-fullscreen',
-                          as_key_handler(
-                              (metaWindow) => {
-                                  if (metaWindow.fullscreen)
-                                      metaWindow.unmake_fullscreen();
-                                  else
-                                      metaWindow.make_fullscreen();
-                              }), Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction('paper-toggle-fullscreen',
+                        as_key_handler(
+                            (metaWindow) => {
+                                if (metaWindow.fullscreen)
+                                    metaWindow.unmake_fullscreen();
+                                else
+                                    metaWindow.make_fullscreen();
+                            }), Meta.KeyBindingFlags.PER_WINDOW);
 
     initUserConfig();
 }
@@ -166,44 +174,44 @@ function enable() {
     let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
 
     setKeybinding('switch-applications', // <Super>Tab
-                  paperActions.byName('live-alt-tab').handler);
+                  Keybindings.byMutterName('live-alt-tab').handler);
     setKeybinding('switch-applications-backward',
-                  paperActions.byName('live-alt-tab-backward').handler);
+                  Keybindings.byMutterName('live-alt-tab-backward').handler);
 
     setKeybinding('switch-group', // <Super>Above_tab
-                  paperActions.byName('previous-workspace').handler);
+                  Keybindings.byMutterName('previous-workspace').handler);
     setKeybinding('switch-group-backward',
-                  paperActions.byName('previous-workspace-backward').handler);
+                  Keybindings.byMutterName('previous-workspace-backward').handler);
     setKeybinding('switch-to-workspace-down', // <Super>Page_Down
-                  paperActions.byName('previous-workspace').handler);
+                  Keybindings.byMutterName('previous-workspace').handler);
 
     setKeybinding('switch-to-workspace-up', // <Super>Page_Up
-                  paperActions.byName('previous-workspace-backward').handler);
+                  Keybindings.byMutterName('previous-workspace-backward').handler);
 
     setKeybinding('maximize', // <Super>Up
-                  paperActions.byName('switch-up').handler);
+                  Keybindings.byMutterName('switch-up').handler);
     setKeybinding('unmaximize', // <Super>Down
-                  paperActions.byName('switch-down').handler);
+                  Keybindings.byMutterName('switch-down').handler);
 
     setKeybinding('focus-active-notification', // `<Super>N`
-                  paperActions.byName('new-window').handler);
+                  Keybindings.byMutterName('new-window').handler);
 
     setKeybinding('restore-shortcuts', // `<Super>Escape`
-                  paperActions.byName('toggle-scratch-layer').handler);
+                  Keybindings.byMutterName('toggle-scratch-layer').handler);
 
     setKeybinding('toggle-tiled-right', // <Super>Right
-                  paperActions.byName('switch-right').handler);
+                  Keybindings.byMutterName('switch-right').handler);
 
     setKeybinding('toggle-tiled-left', // <Super>Left
-                  paperActions.byName('switch-left').handler);
+                  Keybindings.byMutterName('switch-left').handler);
 
 
     setKeybinding('switch-to-workspace-1', // <Super>Home
-                  paperActions.byName('switch-first').handler);
+                  Keybindings.byMutterName('switch-first').handler);
     setKeybinding('switch-to-workspace-last', // <Super>End
-                  paperActions.byName('switch-last').handler);
+                  Keybindings.byMutterName('switch-last').handler);
 
-    paperActions.actions.forEach(a => {
+    Keybindings.actions.forEach(a => {
         setKeybinding(a.name, a.handler);
     });
 
@@ -244,7 +252,7 @@ function disable() {
     Meta.keybindings_set_custom_handler('switch-to-workspace-down', null);
     Meta.keybindings_set_custom_handler('switch-to-workspace-up', null);
 
-    paperActions.actions.forEach(a => {
+    Keybindings.actions.forEach(a => {
         setKeybinding(a.name, () => {});
     });
 

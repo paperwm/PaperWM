@@ -60,7 +60,7 @@ function swapNeighbours() {
     var Tiling = Extension.imports.tiling;
     var Meta = imports.gi.Meta;
 
-    Keybindings.bindkey("<Super>y", (mw) => {
+    Keybindings.bindkey("<Super>y", "swap-neighbours", (mw) => {
         let space = Tiling.spaces.spaceOfWindow(mw)
         let i = space.indexOf(mw);
         if (space[i+1]) {
@@ -71,7 +71,7 @@ function swapNeighbours() {
 
 
 function showNavigator() {
-    Keybindings.bindkey("<Super>j", () => null, { opensNavigator: true })
+    Keybindings.bindkey("<Super>j", "show-minimap", () => null, { opensNavigator: true })
 }
 
 // listFreeBindings("<super>").join("\n")

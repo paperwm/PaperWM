@@ -9,89 +9,173 @@ var Main = imports.ui.main;
 var Shell = imports.gi.Shell;
 
 var convenience = Extension.imports.convenience;
-var signals = new Utils.Signals();
 
 var Navigator = Extension.imports.navigator;
 
-/*
-    Keep track of some mappings mutter doesn't do/expose
-    - action-name -> action-id mapping
-    - action-id   -> action mapping
-    - action      -> handler
-*/
-var paperActions = {
-    actions: [],
-    nameMap: {},
-    unregisterSchemaless(actionId) {
-        const i = this.actions.findIndex(a => a.id === actionId);
-        if (i < 0) {
-            log("Tried to remove un registered action", actionId);
-            return;
-        }
-        delete this.nameMap[this.actions[i].name];
-        this.actions.splice(i, 1);
-    },
-    registerSchemaless(actionId, actionName, handler) {
-        let action = {
-            id: actionId, name: actionName, handler
-        }
-        this.actions.push(action);
-        this.nameMap[actionName] = action;
-    },
-    register: function(actionName, handler, metaKeyBindingFlags) {
-        let id = registerMutterAction(actionName,
-                                        handler,
-                                        metaKeyBindingFlags);
-        // If the id is NONE the action is already registered
-        if (id === Meta.KeyBindingAction.NONE)
-            return null;
-
-        let action = { id: id
-                        , name: actionName
-                        , handler: handler
-                        };
-        this.actions.push(action);
-        this.nameMap[actionName] = action;
-        return action;
-    },
-    idOf: function(name) {
-        let action = this.byName(name);
-        if (action) {
-            return action.id;
-        } else {
-            return Meta.KeyBindingAction.NONE;
-        }
-    },
-    byName: function(name) {
-        return this.nameMap[name];
-    },
-    byId: function(mutterId) {
-        return this.actions.find(action => action.id == mutterId);
-    }
-};
-
-/**
- * Register a key-bindable action (from our own schema) in mutter.
- *
- * Return the assigned numeric id.
- *
- * NB: use `Meta.keybindings_set_custom_handler` to re-assign the handler.
- */
-function registerMutterAction(action_name, handler, flags) {
-    flags = flags || Meta.KeyBindingFlags.NONE;
-
-    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings')
-
-    return Main.wm.addKeybinding(action_name,
-                                 settings, flags,
-                                 Shell.ActionMode.NORMAL,
-                                 handler);
+var signals, actions, nameMap, actionIdMap, keycomboMap;
+function init() {
+    signals = new Utils.Signals();
+    actions = [];
+    nameMap = {};     // mutter keybinding action name -> action
+    actionIdMap = {}; // actionID   -> action
+    keycomboMap = {}; // keycombo   -> action
 }
 
+function idOf(mutterName) {
+    let action = this.byMutterName(mutterName);
+    if (action) {
+        return action.id;
+    } else {
+        return Meta.KeyBindingAction.NONE;
+    }
+}
 
-var actionIdMap = {}; // actionID -> handler
-var keycomboMap = {}
-var actions = [];
+function byMutterName(name) {
+    return nameMap[name];
+}
+
+function byId(mutterId) {
+    return actions.find(action => action.id == mutterId);
+}
+
+/**
+ * NB: handler interface not stabilized: atm. its the same as mutter keyhandler
+ * interface, but we'll change that in the future
+ *
+ * handler: function(ignored, ignored, metaWindow) -> ignored
+ */
+function registerAction(actionName, handler, options) {
+    options = Object.assign({}, options);
+
+    if (options.opensNavigator)
+        options.activeInNavigator = true;
+
+    let {
+        settings,
+        mutterFlags, // Only relevant for "schema-actions"
+        // The navigator should open when the action is invoked (through a keybinding?)
+        opensNavigator,
+        activeInNavigator, // The action makes sense when the navigator is open
+        activeInScratch,
+    } = options;
+
+    let actionId, mutterName, keyHandler;
+    if (settings) {
+        Utils.assert(actionName, "Schema action must have a name");
+        mutterName = actionName;
+        keyHandler = opensNavigator ? Navigator.preview_navigate : handler;
+
+        actionId = Main.wm.addKeybinding(
+            actionName,
+            settings, mutterFlags || Meta.KeyBindingFlags.NONE,
+            Shell.ActionMode.NORMAL,
+            keyHandler);
+
+        // If the id is NONE the action is already registered
+        if (actionId === Meta.KeyBindingAction.NONE)
+            return null;
+    } else {
+        // actionId, mutterName and keyHandler will be set if/when the action is bound
+    }
+
+    let action = {
+        id: actionId, // mutter action
+        name: actionName,
+        mutterName: mutterName,
+        keyHandler: keyHandler,
+        handler: handler,
+        options: options,
+    };
+
+    actions.push(action);
+    if (actionName)
+        nameMap[actionName] = action;
+    if (actionId)
+        actionIdMap[actionId] = action;
+
+    return action;
+}
+    
+/**
+ * Bind a key to an action (possibly creating a new action)
+ */
+function bindkey(keystr, actionName=null, handler=null, options=null) {
+    let action = actionName && actions.find(a => a.name === actionName);
+
+    if (!action) {
+        action = registerAction(actionName, Utils.as_key_handler(handler), options);
+    } else {
+        // Maybe nicer to simply update the action?
+        Utils.assert(!handler && !options, "Action already registered, rebind instead",
+                     actionName);
+    }
+
+    Utils.assert(!action.settings,
+                 "Can only bind schemaless actions - change action's settings instead",
+                 actionName);
+
+    let keycombo = keystrToKeycombo(keystr);
+    let boundAction = keycomboMap[keycombo]
+    if (boundAction) {
+        log("Rebinding", keystr, "to", actionName, "from", boundAction.name);
+        unbindkey(boundAction.id)
+    }
+
+    let actionId = global.display.grab_accelerator(keystr);
+    if (actionId === Meta.KeyBindingAction.NONE) {
+        // Failed to grab. Binding probably already taken.
+        log("Failed to grab")
+        return null;
+    }
+
+    let mutterName = Meta.external_binding_name_for_action(actionId);
+
+    action.id = actionId;
+    action.mutterName = mutterName;
+
+    if (action.options.opensNavigator) {
+        action.keyHandler = openNavigatorHandler(mutterName, keystr);
+    } else {
+        action.keyHandler = Utils.as_key_handler(handler);
+    }
+
+    Main.wm.allowKeybinding(action.mutterName, Shell.ActionMode.ALL);
+
+    nameMap[mutterName] = action;
+    actionIdMap[actionId] = action;
+    keycomboMap[keycombo] = action;
+
+    return actionId;
+}
+
+function unbindkey(actionIdOrKeystr) {
+    let actionId;
+    if (typeof(actionId) === "string") {
+        const action = keycomboMap[keystrToKeycombo(actionIdOrKeystr)];
+        actionId = action && action.id
+    } else {
+        actionId = actionIdOrKeystr;
+    }
+
+    const action = actionIdMap[actionId];
+    Utils.assert(!action.settings,
+                 "Can not unbind schema-actions",
+                 action.name, actionIdOrKeystr);
+
+    if (!action) {
+        log("Attempted to unbind unbound keystr/action", actionIdOrKeystr);
+        return null;
+    }
+
+    if (!action.name) {
+        // anonymous action -> remove the action too
+        delete keycomboMap[action.combo];
+        delete actionIdMap[action.id];
+        delete nameMap[action.mutterName];
+    }
+
+    return global.display.ungrab_accelerator(actionId);
+}
 
 function devirtualizeMask(gdkVirtualMask) {
     const keymap = Gdk.Keymap.get_default();
@@ -114,72 +198,6 @@ function keystrToKeycombo(keystr) {
     // ASSUMPTION: Gtk parses accelerators mostly the same as mutter
     let [key, mask] = Gtk.accelerator_parse(keystr);
     return `${key}|${mask}`; // Since js doesn't have a mapable tuple type
-}
-
-function bindkey(keystr, handler, options={}) {
-    let { opensNavigator, activeInNavigator, name } = options;
-    if (opensNavigator)
-        activeInNavigator = true;
-
-    let keycombo = keystrToKeycombo(keystr);
-    let boundAction = keycomboMap[keycombo]
-    if (boundAction) {
-        log("Rebinding", keystr);
-        unbindkey(boundAction.id)
-    }
-    handler = Utils.as_key_handler(handler)
-
-    let actionId = global.display.grab_accelerator(keystr);
-    if (actionId === Meta.KeyBindingAction.NONE) {
-        // Failed to grab. Binding probably already taken.
-        log("Failed to grab")
-        return null;
-    }
-    let actionName = Meta.external_binding_name_for_action(actionId);
-
-    let action = {
-        id: actionId,
-        combo: keycombo,
-        name: actionName,
-        handler: opensNavigator
-            ? openNavigatorHandler(actionName, keystr)
-            : handler,
-        options: options,
-    };
-
-    Main.wm.allowKeybinding(actionName, Shell.ActionMode.ALL);
-    actionIdMap[actionId] = action;
-    keycomboMap[keycombo] = action;
-
-    if (activeInNavigator) {
-        paperActions.registerSchemaless(actionId, actionName, handler);
-    }
-
-    return actionId;
-}
-
-function unbindkey(actionIdOrKeystr) {
-    let actionId;
-    if (typeof(actionId) === "string") {
-        const action = keycomboMap[keystrToKeycombo(actionIdOrKeystr)];
-        actionId = action && action.id
-    } else {
-        actionId = actionIdOrKeystr;
-    }
-
-    const action = actionIdMap[actionId];
-    if (!action) {
-        log("Attempted to unbind unbound keystr/action", actionIdOrKeystr);
-        return null;
-    }
-
-    delete keycomboMap[action.combo];
-    delete actionIdMap[action.id];
-    if (action.options.navigator) {
-        paperActions.unregisterSchemaless(action.id);
-    }
-    
-    return global.display.ungrab_accelerator(actionId);
 }
 
 function openNavigatorHandler(actionName, keystr) {
@@ -209,8 +227,9 @@ function getBoundActionId(keystr) {
 function handleAccelerator(display, actionId, deviceId, timestamp) {
     const action = actionIdMap[actionId];
     if (action) {
-        log("user.js keybinding activated", actionId, action.handler);
-        action.handler(display, null, global.display.focus_window);
+        Utils.debug("#keybindings", "Schemaless keybinding activated",
+                    actionId, action.name);
+        action.keyHandler(display, null, global.display.focus_window);
     }
 }
 

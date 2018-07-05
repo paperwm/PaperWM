@@ -13,6 +13,12 @@ function debug() {
         print(Array.prototype.join.call(arguments, " | "));
 }
 
+function assert(condition, message, ...dump) {
+    if (!condition) {
+        throw new Error(message + "\n", dump);
+    }
+}
+
 function print_stacktrace(error) {
     let trace;
     if (!error) {
