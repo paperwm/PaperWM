@@ -3,6 +3,27 @@ var Keybindings = Extension.imports.keybindings;
 var Main = imports.ui.main;
 var Tiling = Extension.imports.tiling;
 
+function gotoByIndex() {
+    function goto(k) {
+        return () => {
+            let space = Tiling.spaces.get(global.screen.get_active_workspace());
+            let metaWindow = space.getWindow(k, 0)
+            if (!metaWindow)
+                return;
+
+            if (metaWindow.has_focus()) {
+                // Can happen when navigator is open
+                Tiling.ensureViewport(metaWindow);
+            } else {
+                Main.activateWindow(metaWindow);
+            }
+        }
+    }
+    for(let k = 1; k <= 9; k++) {
+        Keybindings.bindkey(`<Super>${k}`, `goto-coloumn-${i}`,
+                            goto(k-1), {activeInNavigator: true})
+    }
+}
 
 function windowMarks() {
     var marks = {}
@@ -26,10 +47,11 @@ function windowMarks() {
         }
     }
 
-    for(let k = 0; k < 9; k++) {
-        Keybindings.bindkey(`<Super>${k}`, gotoMark(k), {activeInNavigator: true})
-        Keybindings.bindkey(`<Super><Shift>${k}`, setMark(k),
-                            {activeInNavigator: true})
+    for(let k = 0; k <= 9; k++) {
+        Keybindings.bindkey(`<Super>${k}`, `goto-mark-${k}`,
+                            gotoMark(k), {activeInNavigator: true})
+        Keybindings.bindkey(`<Super><Shift>${k}`, `set-mark-${k}`,
+                            setMark(k), {activeInNavigator: true})
     }
 }
 
