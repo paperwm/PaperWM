@@ -18,6 +18,7 @@ var TopBar = Extension.imports.topbar;
 var Scratch = Extension.imports.scratch;
 var Minimap = Extension.imports.minimap;
 var Tiling = Extension.imports.tiling;
+var Keybindings = Extension.imports.keybindings;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
 
@@ -103,8 +104,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         this.space.startAnimate();
 
-        let paperActions = Extension.imports.extension.paperActions;
-        let actionId = paperActions.idOf(actionName);
+        let actionId = Keybindings.idOf(actionName);
         if(actionId === Meta.KeyBindingAction.NONE) {
             try {
                 // Check for built-in actions
@@ -247,90 +247,88 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     _doAction: function(mutterActionId) {
-        let paperActions = Extension.imports.extension.paperActions;
-
         switch (mutterActionId) {
         case Meta.KeyBindingAction.SWITCH_GROUP:
-            mutterActionId = paperActions.idOf('previous-workspace');
+            mutterActionId = Keybindings.idOf('previous-workspace');
             break;
         case Meta.KeyBindingAction.SWITCH_GROUP_BACKWARD:
-            mutterActionId = paperActions.idOf('previous-workspace-backward');
+            mutterActionId = Keybindings.idOf('previous-workspace-backward');
             break;
         case Meta.KeyBindingAction.WORKSPACE_UP: // PageUp
-            mutterActionId = paperActions.idOf('previous-workspace-backward');
+            mutterActionId = Keybindings.idOf('previous-workspace-backward');
             break;
         case Meta.KeyBindingAction.WORKSPACE_DOWN: // PageDown
-            mutterActionId = paperActions.idOf('previous-workspace');
+            mutterActionId = Keybindings.idOf('previous-workspace');
             break;
         case Meta.KeyBindingAction.TOGGLE_TILED_RIGHT: // Right
-            mutterActionId = paperActions.idOf('switch-right');
+            mutterActionId = Keybindings.idOf('switch-right');
             break;
         case Meta.KeyBindingAction.TOGGLE_TILED_LEFT: // Left
-            mutterActionId = paperActions.idOf('switch-left');
+            mutterActionId = Keybindings.idOf('switch-left');
             break;
         case Meta.KeyBindingAction.MAXIMIZE: // Up
-            mutterActionId = paperActions.idOf('switch-up');
+            mutterActionId = Keybindings.idOf('switch-up');
             break;
         case Meta.KeyBindingAction.UNMAXIMIZE: // Down
-            mutterActionId = paperActions.idOf('switch-down');
+            mutterActionId = Keybindings.idOf('switch-down');
             break;
         case Meta.KeyBindingAction.CLOSE:
-            mutterActionId = paperActions.idOf('close-window');
+            mutterActionId = Keybindings.idOf('close-window');
             break;
         }
 
-        if (mutterActionId === paperActions.idOf("switch-next")) {
+        if (mutterActionId === Keybindings.idOf("switch-next")) {
             this._select(this._next());
             return true;
-        } else if (mutterActionId === paperActions.idOf("switch-previous")) {
+        } else if (mutterActionId === Keybindings.idOf("switch-previous")) {
             this._select(this._previous());
             return true;
-        } else if (mutterActionId === paperActions.idOf("switch-right")) {
+        } else if (mutterActionId === Keybindings.idOf("switch-right")) {
             this._switch(Meta.MotionDirection.RIGHT);
             return true;
-        } else if (mutterActionId === paperActions.idOf("switch-left")) {
+        } else if (mutterActionId === Keybindings.idOf("switch-left")) {
             this._switch(Meta.MotionDirection.LEFT);
             return true;
-        } else if (mutterActionId === paperActions.idOf("switch-up")) {
+        } else if (mutterActionId === Keybindings.idOf("switch-up")) {
             this._switch(Meta.MotionDirection.UP);
             return true;
-        } else if (mutterActionId === paperActions.idOf("switch-down")) {
+        } else if (mutterActionId === Keybindings.idOf("switch-down")) {
             this._switch(Meta.MotionDirection.DOWN);
             return true;
-        } else if (mutterActionId === paperActions.idOf("move-left")) {
+        } else if (mutterActionId === Keybindings.idOf("move-left")) {
             this._showMinimap();
             this.space.swap(Meta.MotionDirection.LEFT);
             return true;
-        } else if (mutterActionId === paperActions.idOf("move-right")) {
+        } else if (mutterActionId === Keybindings.idOf("move-right")) {
             this._showMinimap();
             this.space.swap(Meta.MotionDirection.RIGHT);
             return true;
-        } else if (mutterActionId === paperActions.idOf("move-up")) {
+        } else if (mutterActionId === Keybindings.idOf("move-up")) {
             this._showMinimap();
             this.space.swap(Meta.MotionDirection.UP);
             return true;
-        } else if (mutterActionId === paperActions.idOf("move-down")) {
+        } else if (mutterActionId === Keybindings.idOf("move-down")) {
             this._showMinimap();
             this.space.swap(Meta.MotionDirection.DOWN);
             return true;
         } else if (mutterActionId
-                   === paperActions.idOf('previous-workspace-backward')) {
+                   === Keybindings.idOf('previous-workspace-backward')) {
             this.selectSpace(Meta.MotionDirection.UP);
             return true;
-        } else if (mutterActionId === paperActions.idOf('previous-workspace')) {
+        } else if (mutterActionId === Keybindings.idOf('previous-workspace')) {
             this.selectSpace(Meta.MotionDirection.DOWN);
             return true;
         } else if (mutterActionId
-                   === paperActions.idOf('move-previous-workspace')) {
+                   === Keybindings.idOf('move-previous-workspace')) {
             this.selectSpace(Meta.MotionDirection.DOWN, true);
             return true;
         } else if (mutterActionId
-                   === paperActions.idOf('move-previous-workspace-backward')) {
+                   === Keybindings.idOf('move-previous-workspace-backward')) {
             this.selectSpace(Meta.MotionDirection.UP, true);
             return true;
         } else {
-            let action = paperActions.byId(mutterActionId);
-            if (action) {
+            let action = Keybindings.byId(mutterActionId);
+            if (action && action.options.activeInNavigator) {
                 log("Show minimap and do action..")
                 this._showMinimap();
                 let metaWindow = this.space.selectedWindow;
