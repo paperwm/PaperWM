@@ -1,7 +1,13 @@
 var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Gio = imports.gi.Gio;
+var GLib = imports.gi.GLib;
 var settings = Extension.imports.convenience.getSettings();
+var Tiling = Extension.imports.tiling;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
+
+var WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
+var WORKSPACE_LIST_KEY = 'org.gnome.Shell.Extensions.PaperWM.WorkspaceList';
 
 var prefs = {
     window_gap: settings.get_int('window-gap'),
@@ -29,10 +35,66 @@ function setState(_, key) {
     }
 }
 
+var schemaSource, workspaceList;
 function init() {
     settings.connect('changed::window-gap', setState);
     settings.connect('changed::horizontal-margin', setState);
     settings.connect('changed::vertical-margin', setVerticalMargin);
     setVerticalMargin();
     settings.connect('changed::workspace-colors', setState);
+}
+
+function enable() {
+    schemaSource = Gio.SettingsSchemaSource.new_from_directory(
+        GLib.build_filenamev([Extension.path, "schemas"]),
+        Gio.SettingsSchemaSource.get_default(),
+        false
+    );
+
+    workspaceList = new Gio.Settings({
+        settings_schema: schemaSource.lookup(WORKSPACE_LIST_KEY, true)
+    });
+}
+
+function getWorkspaceSettings(space) {
+    let index = space.workspace.index();
+    let list = workspaceList.get_strv('list');
+    for (let uuid of list) {
+        let settings = getWorkspaceSettingsByUUID(uuid);
+        if (settings.get_int('index') === index) {
+            return [uuid, settings];
+        }
+    }
+    return getNewWorkspaceSettings(space);
+}
+
+function getNewWorkspaceSettings(space) {
+    let uuid = GLib.uuid_string_random();
+    let settings = getWorkspaceSettingsByUUID(uuid);
+    let id = space.signals.connect(settings, 'changed', () => {
+        settings.disconnect(id);
+
+        let list = workspaceList.get_strv('list');
+        list.push(uuid);
+        workspaceList.set_strv('list', list);
+
+        let index = space.workspace.index();
+        if (settings.get_int('index') === -1) {
+            settings.set_int('index', index);
+        } else {
+            index = settings.get_int('index');
+        }
+
+        if (settings.get_string('name') === '')
+            settings.set_string('name', space.name);
+        if (settings.get_string('color') === '')
+            settings.set_string('color', space.color);
+    });
+    return [uuid, settings];
+}
+
+function getWorkspaceSettingsByUUID(uuid) {
+    return new Gio.Settings({
+        settings_schema: schemaSource.lookup(WORKSPACE_KEY, true),
+        path: `/org/gnome/shell/extensions/paperwm/workspaces/${uuid}/`});
 }

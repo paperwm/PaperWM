@@ -99,22 +99,9 @@ class ColorEntry {
     }
 
     clicked() {
-        let index = global.screen.get_active_workspace_index();
-        var settings = Extension.imports.convenience.getSettings();
-        let colors = prefs.workspace_colors;
-
-        if (index >= colors.length) {
-            for (let i=colors.length; i < index; i++) {
-                colors[i] = '';
-            }
-        }
-
+        let space = Tiling.spaces.spaceOf(screen.get_active_workspace());
         let color = this.entry.actor.text;
-        colors[index] = color;
-        settings.set_strv('workspace-colors', colors);
-
-        let space = Tiling.spaces.spaceOf(global.screen.get_active_workspace());
-        space.setColor(color);
+        space.settings.set_string('color', color);
     }
 }
 
@@ -134,24 +121,12 @@ class WorkspaceMenu extends PanelMenu.Button {
             'workspace-switched', this.workspaceSwitched.bind(this));
 
         this.entry = new PopupMenuEntry(this._label.text, 'Set name');
-        function clicked() {
-            let settings = new Gio.Settings({
-                schema_id: 'org.gnome.desktop.wm.preferences'});
-            let name = this.entry.text;
-            let index = global.screen.get_active_workspace_index();
-            let names = settings.get_strv('workspace-names');
-
-            if (index >= names.length) {
-                // workspace-names can't contain undefined names
-                // Set the missing names to the default name.
-                for(let i = names.length; i < index; i++) {
-                    names[i] = Meta.prefs_get_workspace_name(i);
-                }
-            }
-
-            names[index] = name;
-            settings.set_strv('workspace-names', names);
-        }
+        let clicked = () => {
+            let name = this.entry.entry.text;
+            let space = Tiling.spaces.spaceOf(screen.get_active_workspace());
+            space.settings.set_string('name', name);
+            this._label.text = name;
+        };
         this.entry.button.connect('clicked', clicked.bind(this.entry));
 
         this.colors = new ColorEntry();
@@ -167,48 +142,23 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.colors.entry.actor.width = this.colors.actor.width;
     }
 
-    namesChanged(settings, key) {
-        if (key !== 'workspace-names')
-            return;
-        let index = global.screen.get_active_workspace_index();
-        let name = Meta.prefs_get_workspace_name(index);
-        this._label.text = name;
-        let space = Tiling.spaces.spaceOf(global.screen.get_active_workspace());
-        space.label.text = name;
-    }
-
     _onOpenStateChanged(menu, open) {
         if (!open)
             return;
 
-        if (!this.namesChangedId) {
-            let settings = new Gio.Settings({
-                schema_id: 'org.gnome.desktop.wm.preferences'});
-            this.namesChangedId = [
-                settings,
-                settings.connect('changed', this.namesChanged.bind(this))
-            ];
-        }
-
-        let index = global.screen.get_active_workspace_index();
-        let name = Meta.prefs_get_workspace_name(index);
-        let colors = prefs.workspace_colors;
-        let color = colors[index % colors.length];
-        this.entry.actor.text = name;
-
-        this.colors.entry.actor.text = color;
+        let space = Tiling.spaces.spaceOf(screen.get_active_workspace());
+        this.entry.actor.text = space.name;
+        this.colors.entry.actor.text = space.color;
     }
 
     workspaceSwitched(screen, fromIndex, toIndex) {
-        this._label.set_text(Meta.prefs_get_workspace_name(toIndex));
+        let space = Tiling.spaces.spaceOf(screen.get_workspace_by_index(toIndex));
+        this._label.set_text(space.name);
     }
 
     destroy() {
         super.destroy();
-        global.screen.disconnect(this._workspaceSwitchedSignal);
-        if (this.namesChangedId) {
-            this.namesChangedId[0].disconnect(this.namesChangedId[1]);
-        }
+        screen.disconnect(this._workspaceSwitchedSignal);
     }
 };
 
@@ -252,8 +202,6 @@ function enable () {
             panelBox.show();
         }
     });
-    // Update the worksapce name on startup
-    updateWorkspaceIndicator(screen.get_active_workspace_index());
 }
 
 function disable() {
@@ -299,9 +247,9 @@ function hide() {
    Override the activities label with the workspace name.
    let workspaceIndex = 0
 */
-function updateWorkspaceIndicator (workspaceIndex) {
-    let name = Meta.prefs_get_workspace_name(workspaceIndex);
-    setWorkspaceName(name);
+function updateWorkspaceIndicator (index) {
+    let space = Tiling.spaces.spaceOf(screen.get_workspace_by_index(index));
+    setWorkspaceName(space.name);
 };
 
 function updateIndicatorPosition(workspace) {

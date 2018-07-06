@@ -217,7 +217,9 @@ class Signals extends Map {
             signals = [];
             this.set(object, signals);
         }
-        signals.push(object.connect(signal, handler));
+        let id = object.connect(signal, handler);
+        signals.push(id);
+        return id;
     }
 
     disconnect(object) {

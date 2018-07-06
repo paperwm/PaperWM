@@ -23,9 +23,10 @@ var Scratch = Extension.imports.scratch;
 var TopBar = Extension.imports.topbar;
 var Navigator = Extension.imports.navigator;
 var ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
+var Settings = Extension.imports.settings;
 var Me = Extension.imports.tiling;
 
-var prefs = Extension.imports.settings.prefs;
+var prefs = Settings.prefs;
 
 // How much the stack should protrude from the side
 var stack_margin = 75;
@@ -134,13 +135,20 @@ class Space extends Array {
         }
         this.setMonitor(monitor, false);
 
-        label.text = Meta.prefs_get_workspace_name(workspace.index());
+        [this.uuid, this.settings] =
+            Settings.getWorkspaceSettings(this);
+
+        this.updateColor();
+        this.updateName();
+        this.signals.connect(this.settings, 'changed::name',
+                             this.updateName.bind(this));
+        this.signals.connect(this.settings, 'changed::color',
+                             this.updateColor.bind(this));
+
 
         actor.set_pivot_point(0.5, 0);
 
         background.set_position(-8 - Math.round(prefs.window_gap/2), -4);
-        let color = prefs.workspace_colors[workspace.index() % prefs.workspace_colors.length];
-        this.setColor(color);
 
         this.selectedWindow = null;
         this.moving = false;
@@ -457,12 +465,29 @@ class Space extends Array {
         });
     }
 
-    setColor(color) {
+    updateColor() {
+        let color = this.settings.get_string('color');
+        if (color === '') {
+            let colors = prefs.workspace_colors;
+            let index = this.workspace.index() % prefs.workspace_colors.length;
+            color = colors[index];
+        }
+        this.color = color;
+
         this.background.set_style(
             `background: ${color};
              box-shadow: 0px -10px 4px 2px black;
              box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);
              border-radius: 4px 4px 0 0;`);
+    }
+
+    updateName() {
+        let name = this.settings.get_string('name');
+        if (name === '')
+            name = Meta.prefs_get_workspace_name(this.workspace.index());
+        Meta.prefs_change_workspace_name(this.workspace.index(), name);
+        this.label.text = name;
+        this.name = name;
     }
 
     setMonitor(monitor, animate) {
