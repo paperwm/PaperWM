@@ -58,37 +58,6 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     },
 
-    _next: function() {
-        let index = this.space.selectedIndex();
-        let column = this.space[index];
-        if (!column)
-            return false;
-        let row = column.indexOf(this.space.selectedWindow);
-        if (row + 1 >= column.length) {
-            index = Math.min(this.space.length-1, index + 1);
-            row = 0;
-        } else {
-            row++;
-        }
-        return [index, row];
-    },
-
-    _previous: function() {
-        let index = this.space.selectedIndex();
-        let column = this.space[index];
-        if (!column)
-            return false;
-        let row = column.indexOf(this.space.selectedWindow);
-        if (row - 1 < 0) {
-            index = Math.max(0, index - 1);
-            column = this.space[index];
-            row = column.length - 1;
-        } else {
-            row--;
-        }
-        return [index, row];
-    },
-
     _initialSelection: function(backward, actionName) {
         debug('#preview', '_initialSelection');
         TopBar.show();
@@ -280,13 +249,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             break;
         }
 
-        if (mutterActionId === Keybindings.idOf("switch-next")) {
-            this._select(this._next());
-            return true;
-        } else if (mutterActionId === Keybindings.idOf("switch-previous")) {
-            this._select(this._previous());
-            return true;
-        } else if (mutterActionId
+        if (mutterActionId
                    === Keybindings.idOf('previous-workspace-backward')) {
             this.selectSpace(Meta.MotionDirection.UP);
             return true;
