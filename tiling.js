@@ -1367,7 +1367,7 @@ function grabBegin(screen, display, metaWindow, type) {
         return;
     space.startAnimate(metaWindow);
     let frame = metaWindow.get_frame_rect();
-    let anchor = metaWindow.clone.targetX;
+    let anchor = metaWindow.clone.targetX + space.monitor.x;
     let handler = getGrab(space, anchor);
     grabSignals.connect(metaWindow, 'position-changed', handler);
     Tweener.removeTweens(space.cloneContainer);
@@ -1386,7 +1386,7 @@ function grabEnd(screen, display, metaWindow, type) {
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
     space.targetX = space.cloneContainer.x;
-    clone.set_position(buffer.x - space.targetX, buffer.y);
+    clone.set_position(buffer.x - space.monitor.x - space.targetX, buffer.y);
     space.layout();
     ensureViewport(metaWindow, space, true);
 }
