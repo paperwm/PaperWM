@@ -99,10 +99,14 @@ function init() {
     registerNavigatorAction("switch-up", (mw, space) => space.switchUp());
     registerNavigatorAction("switch-down", (mw, space) => space.switchDown());
 
-    registerPaperAction("move-left", previewNavigate);
-    registerPaperAction("move-right", previewNavigate);
-    registerPaperAction("move-up", previewNavigate);
-    registerPaperAction("move-down", previewNavigate);
+    registerNavigatorAction("move-left", 
+                        (mw, space) => space.swap(Meta.MotionDirection.LEFT));
+    registerNavigatorAction("move-right", 
+                        (mw, space) => space.swap(Meta.MotionDirection.RIGHT));
+    registerNavigatorAction("move-up", 
+                        (mw, space) => space.swap(Meta.MotionDirection.UP));
+    registerNavigatorAction("move-down", 
+                        (mw, space) => space.swap(Meta.MotionDirection.DOWN));
 
     registerPaperAction("toggle-scratch-layer",
                         dynamic_function_ref("toggleScratch",
