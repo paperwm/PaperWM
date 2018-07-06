@@ -286,18 +286,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         } else if (mutterActionId === Keybindings.idOf("switch-previous")) {
             this._select(this._previous());
             return true;
-        } else if (mutterActionId === Keybindings.idOf("switch-right")) {
-            this._switch(Meta.MotionDirection.RIGHT);
-            return true;
-        } else if (mutterActionId === Keybindings.idOf("switch-left")) {
-            this._switch(Meta.MotionDirection.LEFT);
-            return true;
-        } else if (mutterActionId === Keybindings.idOf("switch-up")) {
-            this._switch(Meta.MotionDirection.UP);
-            return true;
-        } else if (mutterActionId === Keybindings.idOf("switch-down")) {
-            this._switch(Meta.MotionDirection.DOWN);
-            return true;
         } else if (mutterActionId === Keybindings.idOf("move-left")) {
             this._showMinimap();
             this.space.swap(Meta.MotionDirection.LEFT);
@@ -335,50 +323,12 @@ var PreviewedWindowNavigator = new Lang.Class({
                 log("Show minimap and do action..")
                 this._showMinimap();
                 let metaWindow = this.space.selectedWindow;
-                action.handler(null, null, metaWindow);
+                action.handler(metaWindow, this.space);
                 return true;
             }
         }
 
         return false;
-    },
-
-    _switch(direction) {
-        let space = this.space;
-        let index = space.selectedIndex();
-        let row = space[index].indexOf(space.selectedWindow);
-        switch (direction) {
-        case Meta.MotionDirection.RIGHT:
-            index++;
-            row = -1;
-            break;;
-        case Meta.MotionDirection.LEFT:
-            index--;
-            row = -1;
-        }
-        if (index < 0 || index >= space.length)
-            return;
-
-        let column = space[index];
-
-        if (row === -1) {
-            let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
-                                                  space.workspace);
-            let selected = mru.filter(w => column.includes(w))[0];
-            row = column.indexOf(selected);
-        }
-
-        switch (direction) {
-        case Meta.MotionDirection.UP:
-            row--;
-            break;;
-        case Meta.MotionDirection.DOWN:
-            row++;
-        }
-        if (row < 0 || row >= column.length)
-            return;
-
-        this._select([index, row]);
     },
 
     _keyPressHandler: function(keysym, action) {
@@ -504,7 +454,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     }
 });
 
-function preview_navigate(display, screen, meta_window, binding) {
+function preview_navigate(meta_window, space, {display, screen, binding}) {
     let tabPopup = new PreviewedWindowNavigator();
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }

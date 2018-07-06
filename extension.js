@@ -48,6 +48,14 @@ function registerPaperAction(actionName, handler, flags) {
         {settings: settings, mutterFlags: flags, activeInNavigator: true})
 }
 
+function registerNavigatorAction(name, handler) {
+    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    Keybindings.registerAction(
+        name,
+        handler,
+        {settings: settings, opensNavigator: true})
+}
+
 function init() {
     SESSIONID += "#";
     log(`init: ${SESSIONID}`);
@@ -86,10 +94,10 @@ function init() {
     registerPaperAction("switch-first", Tiling.activateFirstWindow);
     registerPaperAction("switch-last", Tiling.activateLastWindow);
 
-    registerPaperAction("switch-right", previewNavigate);
-    registerPaperAction("switch-left", previewNavigate);
-    registerPaperAction("switch-up", previewNavigate);
-    registerPaperAction("switch-down", previewNavigate);
+    registerNavigatorAction("switch-right", (mw, space) => space.switchRight());
+    registerNavigatorAction("switch-left", (mw, space) => space.switchLeft());
+    registerNavigatorAction("switch-up", (mw, space) => space.switchUp());
+    registerNavigatorAction("switch-down", (mw, space) => space.switchDown());
 
     registerPaperAction("move-left", previewNavigate);
     registerPaperAction("move-right", previewNavigate);
@@ -101,7 +109,7 @@ function init() {
                                              Scratch));
 
     registerPaperAction("toggle-scratch",
-                        utils.as_key_handler("toggle",
+                        dynamic_function_ref("toggle",
                                              Scratch),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
@@ -110,54 +118,52 @@ function init() {
                                              utils));
 
     registerPaperAction("cycle-width",
-                        as_key_handler("cycleWindowWidth",
+                        dynamic_function_ref("cycleWindowWidth",
                                        Tiling),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("center-horizontally",
-                        as_key_handler("centerWindowHorizontally",
+                        dynamic_function_ref("centerWindowHorizontally",
                                        Tiling),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("tile-visible",
-                        as_key_handler("tileVisible",
+                        dynamic_function_ref("tileVisible",
                                        Tiling),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('new-window',
-                        as_key_handler('newWindow',
+                        dynamic_function_ref('newWindow',
                                        App),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('close-window',
-                        as_key_handler(
-                            (metaWindow) =>
-                                metaWindow.delete(global.get_current_time())),
+                        (metaWindow) =>
+                        metaWindow.delete(global.get_current_time()),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('slurp-in',
-                        as_key_handler('slurp',
-                                       Tiling),
+                        dynamic_function_ref('slurp',
+                                             Tiling),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('barf-out',
-                        as_key_handler('barf',
-                                       Tiling),
+                        dynamic_function_ref('barf',
+                                             Tiling),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('toggle-maximize-width',
-                        as_key_handler("toggleMaximizeHorizontally",
-                                       Tiling),
+                        dynamic_function_ref("toggleMaximizeHorizontally",
+                                             Tiling),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('paper-toggle-fullscreen',
-                        as_key_handler(
                             (metaWindow) => {
                                 if (metaWindow.fullscreen)
                                     metaWindow.unmake_fullscreen();
                                 else
                                     metaWindow.make_fullscreen();
-                            }), Meta.KeyBindingFlags.PER_WINDOW);
+                            }, Meta.KeyBindingFlags.PER_WINDOW);
 
     initUserConfig();
 }

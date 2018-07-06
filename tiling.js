@@ -391,6 +391,49 @@ class Space extends Array {
         ensureViewport(this.selectedWindow, this, true);
     }
 
+    switchLeft() { this.switch(Meta.MotionDirection.LEFT) }
+    switchRight() { this.switch(Meta.MotionDirection.RIGHT) }
+    switchUp() { this.switch(Meta.MotionDirection.UP) }
+    switchDown() { this.switch(Meta.MotionDirection.DOWN) }
+    switch(direction) {
+        let space = this;
+        let index = space.selectedIndex();
+        let row = space[index].indexOf(space.selectedWindow);
+        switch (direction) {
+        case Meta.MotionDirection.RIGHT:
+            index++;
+            row = -1;
+            break;;
+        case Meta.MotionDirection.LEFT:
+            index--;
+            row = -1;
+        }
+        if (index < 0 || index >= space.length)
+            return;
+
+        let column = space[index];
+
+        if (row === -1) {
+            let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
+                                                  space.workspace);
+            let selected = mru.filter(w => column.includes(w))[0];
+            row = column.indexOf(selected);
+        }
+
+        switch (direction) {
+        case Meta.MotionDirection.UP:
+            row--;
+            break;;
+        case Meta.MotionDirection.DOWN:
+            row++;
+        }
+        if (row < 0 || row >= column.length)
+            return;
+
+        let metaWindow = space.getWindow(index, row);
+        ensureViewport(metaWindow, space);
+    }
+
     positionOf(metaWindow) {
         metaWindow = metaWindow || this.selectedWindow;
         let index, row;
