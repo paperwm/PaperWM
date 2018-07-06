@@ -47,11 +47,14 @@ function byId(mutterId) {
     return actions.find(action => action.id == mutterId);
 }
 
+function asKeyHandler(actionHandler) {
+    return (display, screen, mw, binding) => {
+        return actionHandler(mw, null, {display, screen, binding});   
+    }
+}
+
 /**
- * NB: handler interface not stabilized: atm. its the same as mutter keyhandler
- * interface, but we'll change that in the future
- *
- * handler: function(ignored, ignored, metaWindow) -> ignored
+ * handler: function(metaWindow, space, {binding, display, screen}) -> ignored
  */
 function registerAction(actionName, handler, options) {
     options = Object.assign({}, options);
@@ -72,7 +75,9 @@ function registerAction(actionName, handler, options) {
     if (settings) {
         Utils.assert(actionName, "Schema action must have a name");
         mutterName = actionName;
-        keyHandler = opensNavigator ? Navigator.preview_navigate : handler;
+        keyHandler = opensNavigator
+            ? asKeyHandler(Navigator.preview_navigate)
+            : asKeyHandler(handler)
     } else {
         // actionId, mutterName and keyHandler will be set if/when the action is bound
     }
@@ -137,7 +142,7 @@ function bindkey(keystr, actionName=null, handler=null, options=null) {
     if (action.options.opensNavigator) {
         action.keyHandler = openNavigatorHandler(mutterName, keystr);
     } else {
-        action.keyHandler = Utils.as_key_handler(handler);
+        action.keyHandler = asKeyHandler(handler);
     }
 
     Main.wm.allowKeybinding(action.mutterName, Shell.ActionMode.ALL);
@@ -195,14 +200,14 @@ function rawMaskOfKeystr(keystr) {
 function openNavigatorHandler(actionName, keystr) {
     const mask = rawMaskOfKeystr(keystr) & 0xff;
 
-    const dummyEvent = {
+    const binding = {
         get_name: () => actionName,
         get_mask: () => mask,
         is_reversed: () => false,
     }
     return function(display, screen, metaWindow) {
         return Navigator.preview_navigate(
-            display, screen, metaWindow, dummyEvent);
+            metaWindow, null, {screen, display, binding});
     }
 }
 
