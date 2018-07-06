@@ -46,7 +46,7 @@ function skip-crap {
 
 function group-stack-traces {
     local addr="0x[0-9a-z]+"
-    local start_pattern="== Stack trace for context ($addr) =="
+    local start_pattern="== Stack trace for context ${addr} =="
     local stackframe="^#[0-9]+\s*${addr}"
     local in_group=0
     while read -r date; do
