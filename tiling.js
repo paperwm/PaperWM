@@ -391,6 +391,29 @@ class Space extends Array {
         ensureViewport(this.selectedWindow, this, true);
     }
 
+    switchLinear(dir) {
+        let index = this.selectedIndex();
+        let column = this[index];
+        if (!column)
+            return false;
+        let row = column.indexOf(this.selectedWindow);
+        if (utils.in_bounds(column, row + dir) == false) {
+            index += dir;
+            if (dir === 1) {
+                if (index < this.length) row = 0;
+            } else {
+                if (index >= 0)
+                    row = this[index].length - 1
+            }
+        } else {
+            row += dir;
+        }
+
+        let metaWindow = this.getWindow(index, row);
+        ensureViewport(metaWindow, this);
+        return true;
+    }
+
     switchLeft() { this.switch(Meta.MotionDirection.LEFT) }
     switchRight() { this.switch(Meta.MotionDirection.RIGHT) }
     switchUp() { this.switch(Meta.MotionDirection.UP) }

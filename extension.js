@@ -88,8 +88,8 @@ function init() {
     registerPaperAction('move-previous-workspace', previewNavigate);
     registerPaperAction('move-previous-workspace-backward', previewNavigate);
 
-    registerPaperAction("switch-next", previewNavigate);
-    registerPaperAction("switch-previous", previewNavigate);
+    registerNavigatorAction("switch-next", (mw, space) => space.switchLinear(1));
+    registerNavigatorAction("switch-previous", (mw, space) => space.switchLinear(-1));
 
     registerPaperAction("switch-first", Tiling.activateFirstWindow);
     registerPaperAction("switch-last", Tiling.activateLastWindow);
