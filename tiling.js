@@ -1120,6 +1120,10 @@ function add_handler(ws, metaWindow) {
 */
 function insertWindow(metaWindow, {existing}) {
 
+    let connectSizeChanged = () => {
+        !existing && signals.connect(metaWindow, 'size-changed', resizeHandler);
+    };
+
     if (!existing) {
         let scratchIsFocused = Scratch.isScratchWindow(global.display.focus_window);
         let addToScratch = scratchIsFocused;
@@ -1136,6 +1140,7 @@ function insertWindow(metaWindow, {existing}) {
         }
 
         if (addToScratch) {
+            connectSizeChanged();
             Scratch.makeScratch(metaWindow);
             if (scratchIsFocused) {
                 Main.activateWindow(metaWindow);
@@ -1145,7 +1150,7 @@ function insertWindow(metaWindow, {existing}) {
     }
 
     if (!add_filter(metaWindow)) {
-        !existing && signals.connect(metaWindow, 'size-changed', resizeHandler);
+        connectSizeChanged();
         return;
     }
 
@@ -1186,7 +1191,7 @@ function insertWindow(metaWindow, {existing}) {
             transition: 'easeInOutQuad',
             onComplete: () => {
                 space.layout();
-                signals.connect(metaWindow, 'size-changed', resizeHandler);
+                connectSizeChanged();
             }
         });
     } else {
