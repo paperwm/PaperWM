@@ -1386,7 +1386,8 @@ function grabEnd(screen, display, metaWindow, type) {
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
     space.targetX = space.cloneContainer.x;
-    clone.set_position(buffer.x - space.monitor.x - space.targetX, buffer.y);
+    clone.set_position(buffer.x - space.monitor.x - space.targetX,
+                       buffer.y - space.monitor.y);
     space.layout();
     ensureViewport(metaWindow, space, true);
 }
@@ -1395,7 +1396,7 @@ function getGrab(space, anchor) {
     return (metaWindow) => {
         let frame = metaWindow.get_frame_rect();
         space.cloneContainer.x = frame.x - anchor;
-        space.selection.y = frame.y - gap;
+        space.selection.y = frame.y - space.monitor.y - gap;
     };
 }
 
