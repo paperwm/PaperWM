@@ -148,6 +148,26 @@ Available application actions can be listed like this:
 app.action_group.list_actions();
 ```
 
+### User-defined keybindings
+
+`Extension.imports.keybindings.bindkey(keystr, name, handler, options)`
+
+Option              | Values              | Meaning
+--------------------|---------------------|------------------------------------
+`activeInNavigator` | `true`, **`false`** | The keybinding is active when the minimap/navigator is open
+`opensNavigator`    | `true`, **`false`** | The minimap will open when the keybinding is invoked
+
+```javascript
+let Keybindings = Extension.imports.keybindings;
+Keybindings.bindkey("<Super>j", "my-favorite-width", 
+                    (metaWindow) => {
+                        let f = metaWindow.get_frame_rect();
+                        metaWindow.move_resize_frame(true, f.x, f.y, 500, f.h);
+                    },
+                    { activeInNavigator: true });
+```
+
+See 'examples/keybindings.js' for more examples.
 
 ## Prior work ##
 
