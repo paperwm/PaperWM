@@ -59,27 +59,17 @@ function registerAction(actionName, handler, options) {
         activeInScratch,
     } = options;
 
-    let actionId, mutterName, keyHandler;
+    let mutterName, keyHandler;
     if (settings) {
         Utils.assert(actionName, "Schema action must have a name");
         mutterName = actionName;
         keyHandler = opensNavigator ? Navigator.preview_navigate : handler;
-
-        actionId = Main.wm.addKeybinding(
-            actionName,
-            settings, mutterFlags || Meta.KeyBindingFlags.NONE,
-            Shell.ActionMode.NORMAL,
-            keyHandler);
-
-        // If the id is NONE the action is already registered
-        if (actionId === Meta.KeyBindingAction.NONE)
-            return null;
     } else {
         // actionId, mutterName and keyHandler will be set if/when the action is bound
     }
 
     let action = {
-        id: actionId, // mutter action
+        id: Meta.KeyBindingAction.NONE,
         name: actionName,
         mutterName: mutterName,
         keyHandler: keyHandler,
@@ -87,15 +77,17 @@ function registerAction(actionName, handler, options) {
         options: options,
     };
 
+    enableAction(action); // sets `action.id`
+
     actions.push(action);
     if (actionName)
         nameMap[actionName] = action;
-    if (actionId)
-        actionIdMap[actionId] = action;
+    if (action.id)
+        actionIdMap[action.id] = action;
 
     return action;
 }
-    
+
 /**
  * Bind a key to an action (possibly creating a new action)
  */
@@ -233,14 +225,50 @@ function handleAccelerator(display, actionId, deviceId, timestamp) {
     }
 }
 
+
+function disableAction(action) {
+    if (action.options.settings) {
+        Main.wm.removeKeybinding(action.mutterName);
+        action.id = Meta.KeyBindingAction.NONE;
+    } else {
+        // Should only be called in disable/enable - schemaless actions are
+        // disabled/enabled by other means
+    }
+}
+
+function enableAction(action) {
+    if (action.id !== Meta.KeyBindingAction.NONE)
+        return; // Already enabled (happens on enable right after init)
+
+    if (action.options.settings) {
+        let actionId = Main.wm.addKeybinding(
+            action.mutterName,
+            action.options.settings,
+            action.options.mutterFlags || Meta.KeyBindingFlags.NONE,
+            Shell.ActionMode.NORMAL,
+            action.keyHandler);
+
+        if (actionId !== Meta.KeyBindingAction.NONE)
+            action.id = actionId;
+        else
+            Utils.warn("Could not enable action", action.name);
+
+    } else {
+        // Should only be called in disable/enable - schemaless actions are
+        // disabled/enabled by other means
+    }
+}
+
 function enable() {
     signals.connect(
         global.display,
         'accelerator-activated',
         Utils.dynamic_function_ref(handleAccelerator.name, Me)
     );
+    actions.forEach(enableAction);
 }
 
 function disable() {
     signals.destroy();
+    actions.forEach(disableAction);
 }

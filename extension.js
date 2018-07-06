@@ -211,10 +211,6 @@ function enable() {
     setKeybinding('switch-to-workspace-last', // <Super>End
                   Keybindings.byMutterName('switch-last').handler);
 
-    Keybindings.actions.forEach(a => {
-        setKeybinding(a.name, a.handler);
-    });
-
     // Only enable modules after disable have been run
     if (enabled) {
         log('enable called without calling disable');
@@ -251,10 +247,6 @@ function disable() {
     Meta.keybindings_set_custom_handler('switch-to-workspace-last', null);
     Meta.keybindings_set_custom_handler('switch-to-workspace-down', null);
     Meta.keybindings_set_custom_handler('switch-to-workspace-up', null);
-
-    Keybindings.actions.forEach(a => {
-        setKeybinding(a.name, () => {});
-    });
 
     if (!enabled)
         return;

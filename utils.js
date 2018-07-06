@@ -13,6 +13,10 @@ function debug() {
         print(Array.prototype.join.call(arguments, " | "));
 }
 
+function warn(...args) {
+    print("WARNING:", ...args);
+}
+
 function assert(condition, message, ...dump) {
     if (!condition) {
         throw new Error(message + "\n", dump);
