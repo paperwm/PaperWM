@@ -286,22 +286,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         } else if (mutterActionId === Keybindings.idOf("switch-previous")) {
             this._select(this._previous());
             return true;
-        } else if (mutterActionId === Keybindings.idOf("move-left")) {
-            this._showMinimap();
-            this.space.swap(Meta.MotionDirection.LEFT);
-            return true;
-        } else if (mutterActionId === Keybindings.idOf("move-right")) {
-            this._showMinimap();
-            this.space.swap(Meta.MotionDirection.RIGHT);
-            return true;
-        } else if (mutterActionId === Keybindings.idOf("move-up")) {
-            this._showMinimap();
-            this.space.swap(Meta.MotionDirection.UP);
-            return true;
-        } else if (mutterActionId === Keybindings.idOf("move-down")) {
-            this._showMinimap();
-            this.space.swap(Meta.MotionDirection.DOWN);
-            return true;
         } else if (mutterActionId
                    === Keybindings.idOf('previous-workspace-backward')) {
             this.selectSpace(Meta.MotionDirection.UP);
