@@ -1192,6 +1192,10 @@ function insertWindow(metaWindow, {existing}) {
                 connectSizeChanged();
             }
         });
+        space.selection.set_scale(0, 0);
+        Tweener.addTween(space.selection, {
+            scale_x: 1, scale_y: 1, time: 0.25, transition: 'easeInOutQuad'
+        });
     } else {
         clone.set_position(
             frame.x - monitor.x - x_offset - space.cloneContainer.x,
