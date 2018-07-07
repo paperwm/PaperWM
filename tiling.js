@@ -100,8 +100,17 @@ class Space extends Array {
         this.cloneClip = cloneClip;
         let cloneContainer = new St.Widget();
         this.cloneContainer = cloneContainer;
-        let background = new St.Widget();
+
+        let metaBackground = new Meta.Background({meta_screen: screen});
+        const GDesktopEnums = imports.gi.GDesktopEnums;
+        let background = new Meta.BackgroundActor({
+            meta_screen: screen, monitor: 0, background: metaBackground});
         this.background = background;
+        this.shadow = new St.Widget();;
+        this.shadow.set_style(
+            `background: black;
+             box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);`);
+
         let label = new St.Label();
         this.label = label;
         label.set_style('font-weight: bold; height: 1.86em;');
@@ -116,7 +125,8 @@ class Space extends Array {
 
         container.add_actor(clip);
         clip.add_actor(actor);
-        actor.add_actor(background);
+        actor.add_actor(this.shadow);
+        this.shadow.add_actor(background);
         actor.add_actor(label);
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
@@ -139,16 +149,19 @@ class Space extends Array {
             Settings.getWorkspaceSettings(this);
 
         this.updateColor();
+        this.updateBackground();
         this.updateName();
         this.signals.connect(this.settings, 'changed::name',
                              this.updateName.bind(this));
         this.signals.connect(this.settings, 'changed::color',
                              this.updateColor.bind(this));
+        this.signals.connect(this.settings, 'changed::background',
+                             this.updateBackground.bind(this));
 
 
         actor.set_pivot_point(0.5, 0);
 
-        background.set_position(-8 - Math.round(prefs.window_gap/2), -4);
+        this.shadow.set_position(-8 - Math.round(prefs.window_gap/2), -4);
 
         this.selectedWindow = null;
         this.moving = false;
@@ -473,12 +486,17 @@ class Space extends Array {
             color = colors[index];
         }
         this.color = color;
+        this.background.background.set_color(Clutter.color_from_string(color)[1]);
+    }
 
-        this.background.set_style(
-            `background: ${color};
-             box-shadow: 0px -10px 4px 2px black;
-             box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);
-             border-radius: 4px 4px 0 0;`);
+    updateBackground() {
+        let path = this.settings.get_string('background');
+        let file = Gio.File.new_for_path(path);
+        if (path === '' || !file.query_exists(null)) {
+            file = Gio.File.new_for_uri('resource:///org/gnome/shell/theme/noise-texture.png');
+        }
+        const GDesktopEnums = imports.gi.GDesktopEnums;
+        this.background.background.set_file(file, GDesktopEnums.BackgroundStyle.WALLPAPER);
     }
 
     updateName() {
@@ -514,7 +532,8 @@ class Space extends Array {
                       monitor.width,
                       monitor.height);
 
-        background.set_size(monitor.width + 8*2 + prefs.window_gap, monitor.height + 4);
+        this.shadow.set_size(monitor.width + 8*2 + prefs.window_gap, monitor.height + 4);
+        background.set_size(this.shadow.width, this.shadow.height);
 
         this.cloneClip.set_size(monitor.width, monitor.height);
         this.cloneClip.set_clip(-Math.round(prefs.window_gap/2), 0, monitor.width + prefs.window_gap, monitor.height);
