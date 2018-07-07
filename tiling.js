@@ -405,9 +405,8 @@ class Space extends Array {
     }
 
     moveDone() {
-        debug('#move-done');
-        if (Navigator.navigating || noAnimate) {
-            this.delayed = true;
+        if (this.cloneContainer.x !== this.targetX
+            || Navigator.navigating || noAnimate) {
             return;
         }
         this.getWindows().forEach(w => {
@@ -439,7 +438,6 @@ class Space extends Array {
             actor.show();
         });
 
-        this.delayed = false;
         this.emit('move-done');
     }
 
@@ -1295,7 +1293,6 @@ function ensureViewport(meta_window, space, force) {
                            transition: 'easeInOutQuad',
                          });
     }
-    space.moving = selected;
     move_to(space, meta_window, {
         x, y, force
     });
@@ -1331,8 +1328,6 @@ function updateSelection(space, metaWindow, noAnimate){
  */
 function move_to(space, metaWindow, { x, y, delay, transition,
                                        onComplete, onStart, gap, force }) {
-    space.delayed = false;
-
     let index = space.indexOf(metaWindow);
     if (index === -1)
         return;
@@ -1347,6 +1342,7 @@ function move_to(space, metaWindow, { x, y, delay, transition,
 
     space.targetX = target;
     space.startAnimate();
+    space.moving = metaWindow;
     Tweener.addTween(space.cloneContainer,
                      { x: target,
                        time: 0.25,
