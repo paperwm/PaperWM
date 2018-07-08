@@ -64,18 +64,6 @@ function dynamic_function_ref(handler_name, owner_obj) {
     }
 }
 
-/**
- * Adapts a function operating on a meta_window to a key handler
- */
-function as_key_handler(fn, owner_obj = window) {
-    if(typeof(fn) === "string") {
-        fn = dynamic_function_ref(fn, owner_obj);
-    }
-    return function(screen, monitor, meta_window, binding) {
-        return fn(meta_window);
-    }
-}
-
 function swap(array, i, j) {
     let temp = array[i];
     array[i] = array[j];
