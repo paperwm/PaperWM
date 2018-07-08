@@ -145,19 +145,7 @@ class Space extends Array {
         }
         this.setMonitor(monitor, false);
 
-        [this.uuid, this.settings] =
-            Settings.getWorkspaceSettings(this);
-
-        this.updateColor();
-        this.updateBackground();
-        this.updateName();
-        this.signals.connect(this.settings, 'changed::name',
-                             this.updateName.bind(this));
-        this.signals.connect(this.settings, 'changed::color',
-                             this.updateColor.bind(this));
-        this.signals.connect(this.settings, 'changed::background',
-                             this.updateBackground.bind(this));
-
+        this.setSettings(Settings.getWorkspaceSettings(this));
 
         actor.set_pivot_point(0.5, 0);
 
@@ -478,6 +466,22 @@ class Space extends Array {
         });
     }
 
+    setSettings([uuid, settings]) {
+        this.signals.disconnect(this.settings);
+
+        this.settings = settings;
+        this.uuid = uuid;
+        this.updateColor();
+        this.updateBackground();
+        this.updateName();
+        this.signals.connect(this.settings, 'changed::name',
+                             this.updateName.bind(this));
+        this.signals.connect(this.settings, 'changed::color',
+                             this.updateColor.bind(this));
+        this.signals.connect(this.settings, 'changed::background',
+                             this.updateBackground.bind(this));
+    }
+
     updateColor() {
         let color = this.settings.get_string('color');
         if (color === '') {
@@ -506,6 +510,10 @@ class Space extends Array {
         Meta.prefs_change_workspace_name(this.workspace.index(), name);
         this.label.text = name;
         this.name = name;
+
+        if (this.workspace === screen.get_active_workspace()) {
+            TopBar.setWorkspaceName(this.name);
+        }
     }
 
     setMonitor(monitor, animate) {

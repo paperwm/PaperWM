@@ -1,10 +1,13 @@
 var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
+
 var settings = Extension.imports.convenience.getSettings();
-var Tiling = Extension.imports.tiling;
 var utils = Extension.imports.utils;
+var Tiling = Extension.imports.tiling;
+
 var debug = utils.debug;
+var screen = global.screen;
 
 var WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
 var WORKSPACE_LIST_KEY = 'org.gnome.Shell.Extensions.PaperWM.WorkspaceList';
@@ -44,6 +47,7 @@ function init() {
     settings.connect('changed::workspace-colors', setState);
 }
 
+var id;
 function enable() {
     schemaSource = Gio.SettingsSchemaSource.new_from_directory(
         GLib.build_filenamev([Extension.path, "schemas"]),
@@ -54,6 +58,23 @@ function enable() {
     workspaceList = new Gio.Settings({
         settings_schema: schemaSource.lookup(WORKSPACE_LIST_KEY, true)
     });
+
+    // Update workspace settings if it's changed from the preference UI
+    id = workspaceList.connect('changed::list', () => {
+        for (let uuid of workspaceList.get_strv('list')) {
+            let settings = getWorkspaceSettingsByUUID(uuid);
+            let index = settings.get_int('index');
+            let workspace = screen.get_workspace_by_index(index);
+            if (!workspace)
+                continue;
+            let space = Tiling.spaces.spaceOf(workspace);
+            space.setSettings([uuid, settings]);
+        }
+    });
+}
+
+function disable() {
+    workspaceList.disconnect(id);
 }
 
 function getWorkspaceSettings(space) {
