@@ -47,6 +47,9 @@ function byId(mutterId) {
     return actions.find(action => action.id == mutterId);
 }
 
+/**
+ * Adapts an paperwm action handler to mutter's keybinding handler signature
+ */
 function asKeyHandler(actionHandler) {
     return (display, screen, mw, binding) => {
         return actionHandler(mw, null, {display, screen, binding});   
@@ -109,7 +112,7 @@ function bindkey(keystr, actionName=null, handler=null, options=null) {
     let action = actionName && actions.find(a => a.name === actionName);
 
     if (!action) {
-        action = registerAction(actionName, Utils.as_key_handler(handler), options);
+        action = registerAction(actionName, asKeyHandler(handler), options);
     } else {
         // Maybe nicer to simply update the action?
         Utils.assert(!handler && !options, "Action already registered, rebind instead",

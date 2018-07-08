@@ -71,7 +71,6 @@ function init() {
     paperSettings = convenience.getSettings();
 
     let dynamic_function_ref = utils.dynamic_function_ref;
-    let as_key_handler = utils.as_key_handler;
 
     let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
     let previewNavigate = dynamic_function_ref("preview_navigate", Navigator);
