@@ -142,6 +142,19 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.colors.entry.actor.width = this.colors.actor.width;
     }
 
+    _onEvent(actor, event) {
+        if (this.menu &&
+            (event.type() == Clutter.EventType.TOUCH_BEGIN ||
+             event.type() == Clutter.EventType.BUTTON_PRESS)) {
+            if (event.get_button() === Clutter.BUTTON_SECONDARY)
+                this.menu.toggle();
+            else
+                Main.overview.toggle();
+        }
+
+        return Clutter.EVENT_PROPAGATE;
+    }
+
     _onOpenStateChanged(menu, open) {
         if (!open)
             return;
