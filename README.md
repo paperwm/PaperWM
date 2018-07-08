@@ -50,7 +50,7 @@ Pressing <kbd>Super</kbd><kbd>I</kbd> will move the window to the right below th
 | <kbd>Super</kbd><kbd>R</kbd>                                                                      | Resize the window (cycles through useful widths)       |
 | <kbd>Super</kbd><kbd>F</kbd>                                                                      | Maximize the width of a window                         |
 | <kbd>Super</kbd><kbd>Shift</kbd><kbd>F</kbd>                                                      | Toggle fullscreen                                      |
-| <kbd>Super</kbd><kbd>N</kbd>                                                                      | Create a new window from the active application        |
+| <kbd>Super</kbd><kbd>N</kbd> or <kbd>Super</kbd><kbd>Return</kbd>                                 | Create a new window from the active application        |
 | <kbd>Super</kbd><kbd>C</kbd> or <kbd>Super</kbd><kbd>Backspace</kbd>                              | Close the active window                                |
 | <kbd>Super</kbd><kbd>I</kbd>                                                                      | Absorb the window to the right into the active column  |
 | <kbd>Super</kbd><kbd>O</kbd>                                                                      | Expel the bottom window out to the right               |
@@ -62,7 +62,7 @@ Pressing <kbd>Super</kbd><kbd>I</kbd> will move the window to the right below th
 
 Pressing <kbd>Super</kbd><kbd>Above_Tab</kbd> will slide the active workspace down revealing the stack as shown in the above screenshot. You can then flip through the most recently used workspaces with repeated <kbd>Above_Tab</kbd> presses while holding <kbd>Super</kbd> downe. <kbd>Above_Tab</kbd> is the key above <kbd>Tab</kbd> (<kbd>\`</kbd> in a US qwerty layout). Like alt-tab <kbd>Shift</kbd> is added to move in reverse order.
 
-A workspace has a name and background color. Clicking on the workspace name lets you change them easily:
+A workspace has a name and background color. Right-clicking the workspace name lets you change them easily:
 
 ![The workspace menu](https://github.com/paperwm/media/blob/master/menu.png)
 
@@ -122,7 +122,7 @@ The `wm_class` of a window can be looked up by clicking <kbd>Super</kbd><kbd>Ins
 
 ### New Window Handlers
 
-If opening a new application window with <kbd>Super</kbd><kbd>N</kbd> isn't doing exactly what you want you can create custom functions to fit your needs. Say you want new emacs windows to open the current buffer by default, or have new terminals inherit the current directory:
+If opening a new application window with <kbd>Super</kbd><kbd>Return</kbd> isn't doing exactly what you want you can create custom functions to fit your needs. Say you want new emacs windows to open the current buffer by default, or have new terminals inherit the current directory:
 
 ```javascript
     let App = Extension.imports.app;
