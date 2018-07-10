@@ -1530,17 +1530,11 @@ function fixStack(space, metaWindow) {
     if (around === -1)
         return;
 
-    utils.debug("stack", "fix stack");
-    let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
-                                          space.workspace);
+    let neighbours = [windows[around - 1], windows[around + 1]].filter(w => w);
+    let stack = global.display.sort_windows_by_stacking(neighbours);
 
-    for (let i=1; i >= 0; i--) {
-        let leftWindow = windows[around - i];
-        let rightWindow = windows[around + i];
-        mru.filter(w => w === leftWindow || w === rightWindow)
-            .reverse()
-            .forEach(w => w && w.raise());
-    }
+    stack.forEach(w => w.raise());
+    metaWindow.raise();
 }
 
 /**
