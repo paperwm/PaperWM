@@ -12,10 +12,20 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 
 const WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
+const KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
 const WORKSPACE_LIST_KEY = 'org.gnome.Shell.Extensions.PaperWM.WorkspaceList';
 
 const wmSettings = new Gio.Settings({ schema_id:
                                     'org.gnome.desktop.wm.preferences'});
+
+let _ = s => s;
+
+// TreeStore model
+const COLUMN_ID          = 0;
+const COLUMN_INDEX       = 1;
+const COLUMN_DESCRIPTION = 2;
+const COLUMN_KEY         = 3;
+const COLUMN_MODS        = 4;
 
 const schemaSource = Gio.SettingsSchemaSource.new_from_directory(
     GLib.build_filenamev([Me.path, "schemas"]),
@@ -60,6 +70,14 @@ function getNewWorkspaceSettings(index) {
 
     });
     return [uuid, settings];
+}
+
+function ok(okValue) {
+    if(okValue[0]) {
+        return okValue[1]
+    } else {
+        return null
+    }
 }
 
 class SettingsWidget {
@@ -125,8 +143,51 @@ class SettingsWidget {
         workspaceCombo.set_active(0);
 
 
-        createRow('foo', new Gtk.ColorButton());
+        // Keybindings
 
+        let settings = Convenience.getSettings(KEYBINDINGS_KEY);
+        let box = this.builder.get_object('keybindings');
+        box.spacing = 12;
+
+        let windowFrame = new Gtk.Frame({label: _('Windows'),
+                                         label_xalign: 0.5});
+        let windows = createKeybindingWidget(settings);
+        box.add(windowFrame);
+        windowFrame.add(windows);
+
+        ['new-window', 'close-window', 'switch-next', 'switch-previous',
+         'switch-left', 'switch-right', 'switch-up', 'switch-down',
+         'switch-first', 'switch-last', 'live-alt-tab', 'live-alt-tab-backward',
+         'move-left', 'move-right', 'move-up', 'move-down',
+         'slurp-in', 'barf-out', 'center-horizontally',
+         'paper-toggle-fullscreen', 'toggle-maximize-width', 'cycle-width']
+            .forEach(k => {
+            addKeybinding(windows.model, settings, k);
+        });
+
+        let workspaceFrame = new Gtk.Frame({label: _('Workspaces'),
+                                            label_xalign: 0.5});
+        let workspaces = createKeybindingWidget(settings);
+        box.add(workspaceFrame);
+        workspaceFrame.add(workspaces);
+
+        ['previous-workspace', 'previous-workspace-backward',
+         'move-previous-workspace', 'move-previous-workspace-backward' ]
+            .forEach(k => {
+                addKeybinding(workspaces.model, settings, k);
+            });
+
+
+        let scratchFrame = new Gtk.Frame({label: _('Scratch layer'),
+                                          label_xalign: 0.5});
+        let scratch = createKeybindingWidget(settings);
+        box.add(scratchFrame);
+        scratchFrame.add(scratch);
+
+        ['toggle-scratch-layer', 'toggle-scratch']
+            .forEach(k => {
+                addKeybinding(scratch.model, settings, k);
+            });
     }
 
     createWorkspacePage(settings, index) {
@@ -219,7 +280,199 @@ function createRow(text, widget, signal, handler) {
     row.add(box);
 
     return row;
+}
 
+function createKeybindingWidget(settings) {
+    let model = new Gtk.TreeStore();
+
+    model.set_column_types(
+            [GObject.TYPE_STRING, // COLUMN_ID
+             GObject.TYPE_INT,    // COLUMN_INDEX
+             GObject.TYPE_STRING, // COLUMN_DESCRIPTION
+             GObject.TYPE_INT,    // COLUMN_KEY
+             GObject.TYPE_INT]);  // COLUMN_MODS
+
+    let treeView = new Gtk.TreeView();
+    treeView.model = model;
+    treeView.headers_visible = false;
+    treeView.margin_start = 12;
+    treeView.margin_end = 12;
+    treeView.search_column = COLUMN_DESCRIPTION;
+    treeView.enable_search = true;
+
+    let descriptionRenderer = new Gtk.CellRendererText();
+    let descriptionColumn = new Gtk.TreeViewColumn();
+    descriptionColumn.expand = true;
+    descriptionColumn.pack_start(descriptionRenderer, true);
+    descriptionColumn.add_attribute(descriptionRenderer, "text", COLUMN_DESCRIPTION);
+
+    treeView.append_column(descriptionColumn);
+
+    let accelRenderer = new Gtk.CellRendererAccel();
+    accelRenderer.accel_mode = Gtk.CellRendererAccelMode.GTK;
+    accelRenderer.editable = true;
+
+    accelRenderer.connect("accel-edited",
+            (accelRenderer, path, key, mods, hwCode) => {
+                let iter = ok(model.get_iter_from_string(path));
+                if(!iter)
+                    return;
+
+                // Update the UI.
+                model.set(iter, [COLUMN_KEY, COLUMN_MODS], [key, mods]);
+
+                // Update the stored setting.
+                let id = model.get_value(iter, COLUMN_ID);
+                let index = model.get_value(iter, COLUMN_INDEX);
+                let accelString = Gtk.accelerator_name(key, mods);
+
+                let accels = settings.get_strv(id);
+
+                if (index === -1) {
+                    accels.push(accelString);
+                } else {
+                    accels[index] = accelString
+                }
+                settings.set_strv(id, accels);
+
+                let newEmptyRow = null, parent;
+                if (index === -1) {
+                    model.set_value(iter, COLUMN_INDEX, accels.length-1);
+                    model.set_value(iter, COLUMN_DESCRIPTION, "");
+
+                    let parent = ok(model.iter_parent(iter));
+                    newEmptyRow = model.insert_after(parent, iter);
+                } else if (index === 0 && accels.length === 1) {
+                    newEmptyRow = model.insert(iter, -1);
+                }
+
+                if (newEmptyRow) {
+                    model.set(newEmptyRow, ...transpose([
+                        [COLUMN_ID, id],
+                        [COLUMN_INDEX, -1],
+                        [COLUMN_DESCRIPTION, "New binding"],
+                        [COLUMN_KEY, 0],
+                        [COLUMN_MODS, 0],
+                    ]));
+                }
+
+            });
+
+    accelRenderer.connect("accel-cleared",
+            (accelRenderer, path) => {
+                let iter = ok(model.get_iter_from_string(path));
+                if(!iter)
+                    return;
+
+
+                let index = model.get_value(iter, COLUMN_INDEX);
+
+                // Update the UI.
+                model.set(iter, [COLUMN_KEY, COLUMN_MODS], [0, 0]);
+
+                if (index === -1) {
+                    // Clearing the empty row
+                    return;
+                }
+
+                let id = model.get_value(iter, COLUMN_ID);
+                let accels = settings.get_strv(id);
+                accels.splice(index, 1);
+
+                let parent, nextSibling;
+                // Simply rebuild the model for this action
+                if (index === 0) {
+                    parent = iter.copy();
+                } else {
+                    parent = ok(model.iter_parent(iter));
+                }
+                nextSibling = parent.copy();
+
+                if(!model.iter_next(nextSibling))
+                    nextSibling = null;
+
+                model.remove(parent);
+
+                // Update the stored setting.
+                settings.set_strv(id, accels);
+
+                let recreated = addKeybinding(model, settings, id, nextSibling);
+                let selection = treeView.get_selection();
+                selection.select_iter(recreated);
+            });
+
+    let accelColumn = new Gtk.TreeViewColumn();
+    accelColumn.pack_end(accelRenderer, false);
+    accelColumn.add_attribute(accelRenderer, "accel-key", COLUMN_KEY);
+    accelColumn.add_attribute(accelRenderer, "accel-mods", COLUMN_MODS);
+
+    treeView.append_column(accelColumn);
+
+    return treeView;
+}
+
+function parseAccelerator(accelerator) {
+    let key, mods;
+    if (accelerator == null)
+        [key, mods] = [0, 0];
+    else
+        [key, mods] = Gtk.accelerator_parse(accelerator);
+    return [key, mods];
+}
+
+function transpose(colValPairs) {
+    let colKeys = [], values = [];
+    colValPairs.forEach(([k, v]) => {
+        colKeys.push(k); values.push(v);
+    })
+    return [colKeys, values];
+}
+
+function addKeybinding(model, settings, id, position=null) {
+    let accels = settings.get_strv(id);
+    let accelerator = accels[0];
+
+    let schema = settings.settings_schema;
+    let schemaKey = schema.get_key(id);
+    let description = _(schemaKey.get_summary());
+
+    // Add a row for the keybinding.
+    let [key, mods] = parseAccelerator(accelerator);
+    let row = model.insert_before(null, position);
+    model.set(row, ...transpose([
+        [COLUMN_ID, id],
+        [COLUMN_INDEX, 0],
+        [COLUMN_DESCRIPTION, description],
+        [COLUMN_KEY, key],
+        [COLUMN_MODS, mods],
+    ]));
+
+    // Add one subrow for each additional keybinding
+    accels.slice(1).forEach((accelerator, i) => {
+        let [key, mods] = parseAccelerator(accelerator);
+        let subrow = model.insert(row, 0);
+        model.set(subrow, ...transpose([
+            [COLUMN_ID, id],
+            [COLUMN_INDEX, i+1],
+            [COLUMN_DESCRIPTION, ""],
+            [COLUMN_KEY, key],
+            [COLUMN_MODS, mods],
+        ]));
+    })
+
+    if (accelerator) {
+        // Add an empty row used for adding new bindings
+        let emptyRow = model.append(row);
+        model.set(emptyRow, ...transpose([
+            [COLUMN_ID, id],
+            [COLUMN_INDEX, -1],
+            [COLUMN_DESCRIPTION, "New binding"],
+            [COLUMN_KEY, 0],
+            [COLUMN_MODS, 0],
+        ]));
+    }
+
+    return row;
 }
 
 function init() {
