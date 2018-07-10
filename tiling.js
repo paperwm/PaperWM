@@ -233,18 +233,18 @@ class Space extends Array {
                 x += targetWidth + gap;
             }
         }
+        this._inLayout = false;
 
         if (x < this.width) {
             this.targetX = Math.round((this.width - x)/2);
         }
-        Tweener.addTween(this.cloneContainer,
-                         { x: this.targetX,
-                           time: 0.25,
-                           transition: 'easeInOutQuad',
-                           onComplete: this.moveDone.bind(this)
-                         });
-        this._inLayout = false;
         if (animate) {
+            Tweener.addTween(this.cloneContainer,
+                             { x: this.targetX,
+                               time: 0.25,
+                               transition: 'easeInOutQuad',
+                               onComplete: this.moveDone.bind(this)
+                             });
             this.fixVisible();
             updateSelection(this);
         }
