@@ -3,10 +3,7 @@ var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
 
 var settings = Extension.imports.convenience.getSettings();
-var utils = Extension.imports.utils;
-var Tiling = Extension.imports.tiling;
 
-var debug = utils.debug;
 var screen = global.screen;
 
 var WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
@@ -39,6 +36,18 @@ function setState(_, key) {
 }
 
 var schemaSource, workspaceList;
+function setSchemas() {
+    schemaSource = Gio.SettingsSchemaSource.new_from_directory(
+        GLib.build_filenamev([Extension.path, "schemas"]),
+        Gio.SettingsSchemaSource.get_default(),
+        false
+    );
+
+    workspaceList = new Gio.Settings({
+        settings_schema: schemaSource.lookup(WORKSPACE_LIST_KEY, true)
+    });
+}
+setSchemas(); // Initialize imediately so prefs.js can import properly
 function init() {
     settings.connect('changed::window-gap', setState);
     settings.connect('changed::horizontal-margin', setState);
@@ -49,36 +58,13 @@ function init() {
 
 var id;
 function enable() {
-    schemaSource = Gio.SettingsSchemaSource.new_from_directory(
-        GLib.build_filenamev([Extension.path, "schemas"]),
-        Gio.SettingsSchemaSource.get_default(),
-        false
-    );
-
-    workspaceList = new Gio.Settings({
-        settings_schema: schemaSource.lookup(WORKSPACE_LIST_KEY, true)
-    });
-
-    // Update workspace settings if it's changed from the preference UI
-    id = workspaceList.connect('changed::list', () => {
-        for (let uuid of workspaceList.get_strv('list')) {
-            let settings = getWorkspaceSettingsByUUID(uuid);
-            let index = settings.get_int('index');
-            let workspace = screen.get_workspace_by_index(index);
-            if (!workspace)
-                continue;
-            let space = Tiling.spaces.spaceOf(workspace);
-            space.setSettings([uuid, settings]);
-        }
-    });
+    setSchemas();
 }
 
 function disable() {
-    workspaceList.disconnect(id);
 }
 
-function getWorkspaceSettings(space) {
-    let index = space.workspace.index();
+function getWorkspaceSettings(index) {
     let list = workspaceList.get_strv('list');
     for (let uuid of list) {
         let settings = getWorkspaceSettingsByUUID(uuid);
@@ -86,31 +72,16 @@ function getWorkspaceSettings(space) {
             return [uuid, settings];
         }
     }
-    return getNewWorkspaceSettings(space);
+    return getNewWorkspaceSettings(index);
 }
 
-function getNewWorkspaceSettings(space) {
+function getNewWorkspaceSettings(index) {
     let uuid = GLib.uuid_string_random();
     let settings = getWorkspaceSettingsByUUID(uuid);
-    let id = space.signals.connect(settings, 'changed', () => {
-        settings.disconnect(id);
-
-        let list = workspaceList.get_strv('list');
-        list.push(uuid);
-        workspaceList.set_strv('list', list);
-
-        let index = space.workspace.index();
-        if (settings.get_int('index') === -1) {
-            settings.set_int('index', index);
-        } else {
-            index = settings.get_int('index');
-        }
-
-        if (settings.get_string('name') === '')
-            settings.set_string('name', space.name);
-        if (settings.get_string('color') === '')
-            settings.set_string('color', space.color);
-    });
+    let list = workspaceList.get_strv('list');
+    list.push(uuid);
+    workspaceList.set_strv('list', list);
+    settings.set_int('index', index);
     return [uuid, settings];
 }
 

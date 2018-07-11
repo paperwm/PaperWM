@@ -8,12 +8,11 @@ const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 
 const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Convenience = Extension.imports.convenience;
 
 const WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
 const KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
-const WORKSPACE_LIST_KEY = 'org.gnome.Shell.Extensions.PaperWM.WorkspaceList';
 
 const wmSettings = new Gio.Settings({ schema_id:
                                     'org.gnome.desktop.wm.preferences'});
@@ -27,50 +26,10 @@ const COLUMN_DESCRIPTION = 2;
 const COLUMN_KEY         = 3;
 const COLUMN_MODS        = 4;
 
-const schemaSource = Gio.SettingsSchemaSource.new_from_directory(
-    GLib.build_filenamev([Me.path, "schemas"]),
-    Gio.SettingsSchemaSource.get_default(),
-    false
-);
-
-const workspaceList = new Gio.Settings({
-    settings_schema: schemaSource.lookup(WORKSPACE_LIST_KEY, true)
-});
-
-function getWorkspaceSettingsByUUID(uuid) {
-    return new Gio.Settings({
-        settings_schema: schemaSource.lookup(WORKSPACE_KEY, true),
-        path: `/org/gnome/shell/extensions/paperwm/workspaces/${uuid}/`});
-}
-
-function getWorkspaceSettings(index) {
-    let list = workspaceList.get_strv('list');
-    for (let uuid of list) {
-        let settings = getWorkspaceSettingsByUUID(uuid);
-        if (settings.get_int('index') === index) {
-            return [uuid, settings];
-        }
-    }
-    return getNewWorkspaceSettings(index);
-}
-
-function getNewWorkspaceSettings(index) {
-    let uuid = GLib.uuid_string_random();
-    let settings = getWorkspaceSettingsByUUID(uuid);
-    let id = settings.connect('changed', () => {
-        settings.disconnect(id);
-
-        if (settings.get_int('index') === -1) {
-            settings.set_int('index', index);
-        }
-
-        let list = workspaceList.get_strv('list');
-        list.push(uuid);
-        workspaceList.set_strv('list', list);
-
-    });
-    return [uuid, settings];
-}
+const Settings = Extension.imports.settings;
+let getWorkspaceSettings = Settings.getWorkspaceSettings;
+let getNewWorkspaceSettings = Settings.getNewWorkspaceSettings;
+let getWorkspaceSettingsByUUID = Settings.getWorkspaceSettingsByUUID;
 
 function ok(okValue) {
     if(okValue[0]) {
@@ -83,10 +42,9 @@ function ok(okValue) {
 class SettingsWidget {
     constructor() {
         this._settings = Convenience.getSettings();
-        this._workspaceList = workspaceList;
 
         this.builder = new Gtk.Builder();
-        this.builder.add_from_file(Me.path + '/Settings.ui');
+        this.builder.add_from_file(Extension.path + '/Settings.ui');
 
         this.widget = new Gtk.ScrolledWindow({ hscrollbar_policy: Gtk.PolicyType.NEVER });
         this._notebook = this.builder.get_object('paperwm_settings');

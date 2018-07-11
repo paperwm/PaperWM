@@ -145,7 +145,7 @@ class Space extends Array {
         }
         this.setMonitor(monitor, false);
 
-        this.setSettings(Settings.getWorkspaceSettings(this));
+        this.setSettings(Settings.getWorkspaceSettings(this.workspace.index()));
 
         actor.set_pivot_point(0.5, 0);
 
