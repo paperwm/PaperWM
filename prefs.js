@@ -342,7 +342,7 @@ function createKeybindingWidget(settings) {
 
                     let parent = ok(model.iter_parent(iter));
                     newEmptyRow = model.insert_after(parent, iter);
-                } else if (index === 0 && accels.length === 1) {
+                } else if (index === 0 && !model.iter_has_child(iter)) {
                     newEmptyRow = model.insert(iter, -1);
                 }
 
@@ -458,9 +458,9 @@ function addKeybinding(model, settings, id, position=null) {
             [COLUMN_KEY, key],
             [COLUMN_MODS, mods],
         ]));
-    })
+    });
 
-    if (accelerator) {
+    if (accels.length !== 0) {
         // Add an empty row used for adding new bindings
         let emptyRow = model.append(row);
         model.set(emptyRow, ...transpose([
