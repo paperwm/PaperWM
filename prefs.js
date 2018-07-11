@@ -413,6 +413,13 @@ function createKeybindingWidget(settings) {
 
 function parseAccelerator(accelerator) {
     let key, mods;
+    if (accelerator.match(/Above_Tab/)) {
+        let keymap = Gdk.Keymap.get_default();
+        let entries = keymap.get_entries_for_keycode(49)[1];
+        let keyval = keymap.lookup_key(entries[0]);
+        let name = Gtk.accelerator_name(keyval, 0);
+        accelerator = accelerator.replace('Above_Tab', name);
+    }
     if (accelerator == null)
         [key, mods] = [0, 0];
     else
