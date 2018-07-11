@@ -6,35 +6,35 @@
           path="/org/gnome/shell/extensions/paperwm/keybindings/">
 
     <key type="as" name="new-window">
-      <default><![CDATA[['<Super>n', '<Super>Return']]]></default>
+      <default><![CDATA[['<Super>Return', '<Super>n']]]></default>
       <summary>Open new window</summary>
     </key>
 
     <key type="as" name="live-alt-tab">
       <default><![CDATA[['<Super>Tab']]]></default>
-      <summary>Switch to previously used window</summary>
+      <summary>Switch to previously active window</summary>
     </key>
     <key type="as" name="live-alt-tab-backward">
       <default><![CDATA[['<Super><Shift>Tab']]]></default>
-      <summary>Switch to previously used window, backward order</summary>
+      <summary>Switch to previously active window, backward order</summary>
     </key>
 
     <key type="as" name="previous-workspace">
       <default><![CDATA[['<Super>Above_Tab', '<Super>Page_Down']]]></default>
-      <summary>Switch to previously used workspace</summary>
+      <summary>Switch to previously active workspace</summary>
     </key>
     <key type="as" name="previous-workspace-backward">
       <default><![CDATA[['<Super><Shift>Above_Tab',  '<Super>Page_Up']]]></default>
-      <summary>Switch to the previously used workspace, backward order</summary>
+      <summary>Switch to the previously active workspace, backward order</summary>
     </key>
 
     <key type="as" name="move-previous-workspace">
       <default><![CDATA[['<Super><Ctrl>Above_Tab', '<Super><Ctrl>Page_Down']]]></default>
-      <summary>Move current window to the previously used workspace</summary>
+      <summary>Move the active window to the previously active workspace</summary>
     </key>
     <key type="as" name="move-previous-workspace-backward">
       <default><![CDATA[['<Super><Shift><Ctrl>Above_Tab', '<Super><Ctrl>Page_Up']]]></default>
-      <summary>Move current window to the previously used workspace, backward order</summary>
+      <summary>Move the active window to the previously active workspace, backward order</summary>
     </key>
 
     <key type="as" name="toggle-scratch-layer">
@@ -44,7 +44,7 @@
 
     <key type="as" name="toggle-scratch">
         <default><![CDATA[['<Super><Ctrl>Escape']]]></default>
-        <summary>Attach/detach the current window into the scratch layer</summary>
+        <summary>Attach/detach the active window into the scratch layer</summary>
     </key>
 
     <key type="as" name="switch-next">
@@ -58,19 +58,19 @@
 
     <key type="as" name="switch-right">
         <default><![CDATA[['<Super>Right']]]></default>
-        <summary>Switch to the right column of windows</summary>
+        <summary>Switch to the right window</summary>
     </key>
     <key type="as" name="switch-left">
         <default><![CDATA[['<Super>Left']]]></default>
-        <summary>Switch to the left column of windows</summary>
+        <summary>Switch to the left window</summary>
     </key>
     <key type="as" name="switch-up">
         <default><![CDATA[['<Super>Up']]]></default>
-        <summary>Switch to the right column of windows</summary>
+        <summary>Switch to the above window</summary>
     </key>
     <key type="as" name="switch-down">
         <default><![CDATA[['<Super>Down']]]></default>
-        <summary>Switch to the right column of windows</summary>
+        <summary>Switch to the below window</summary>
     </key>
 
     <key type="as" name="switch-first">
@@ -84,24 +84,24 @@
 
     <key type="as" name="move-right">
       <default><![CDATA[['<Super><Ctrl>period', '<Super><Shift>period', '<Super><Ctrl>Right']]]></default>
-      <summary>Move the focused window right in the tiling</summary>
+      <summary>Move the active window to the right</summary>
     </key>
     <key type="as" name="move-left">
       <default><![CDATA[['<Super><Ctrl>comma', '<Super><Shift>comma', '<Super><Ctrl>Left']]]></default>
-      <summary>Move the focused window left in the tiling</summary>
+      <summary>Move the active window to the left</summary>
     </key>
     <key type="as" name="move-up">
         <default><![CDATA[['<Super><Ctrl>Up']]]></default>
-        <summary>Move the focused window up in the tiling</summary>
+        <summary>Move the active window up</summary>
     </key>
     <key type="as" name="move-down">
         <default><![CDATA[['<Super><Ctrl>Down']]]></default>
-        <summary>Move the focused window down in the tiling</summary>
+        <summary>Move the active window down</summary>
     </key>
 
     <key type="as" name="slurp-in">
         <default><![CDATA[['<Super>i']]]></default>
-        <summary>Consume the window to right into the current column</summary>
+        <summary>Consume the window to right into the active column</summary>
     </key>
     <key type="as" name="barf-out">
         <default><![CDATA[['<Super>o']]]></default>
@@ -110,12 +110,12 @@
 
     <key type="as" name="cycle-width">
       <default><![CDATA[['<Super>r']]]></default>
-      <summary>Cycle through a pre-determined list of window widths</summary>
+      <summary>Cycle through useful window widths</summary>
     </key>
 
     <key type="as" name="center-horizontally">
       <default><![CDATA[['<Super>w']]]></default>
-      <summary>Center window horizontally and preserving relative mouse position</summary>
+      <summary>Center window horizontally</summary>
     </key>
 
     <key type="as" name="toggle-maximize-width">
@@ -136,13 +136,13 @@
     <key type="as" name="develop-set-globals">
       <default><![CDATA[['<Super>Insert']]]></default>
       <summary>
-        Develop: set various global js variables. Eg. `metaWindow` to the focused window
+        Develop: set various global js variables. Eg. `metaWindow` to the active window
       </summary>
     </key>
 
     <key type="as" name="close-window">
-      <default><![CDATA[['<Super>c', '<Super>Backspace']]]></default>
-      <summary>Close the current window</summary>
+      <default><![CDATA[['<Super>BackSpace', '<Super>c']]]></default>
+      <summary>Close the active window</summary>
     </key>
   </schema>
 
