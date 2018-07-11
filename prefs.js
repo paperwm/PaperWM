@@ -378,10 +378,8 @@ function parseAccelerator(accelerator) {
         let name = Gtk.accelerator_name(keyval, 0);
         accelerator = accelerator.replace('Above_Tab', name);
     }
-    if (accelerator == null)
-        [key, mods] = [0, 0];
-    else
-        [key, mods] = Gtk.accelerator_parse(accelerator);
+
+    [key, mods] = Gtk.accelerator_parse(accelerator);
     return [key, mods];
 }
 
@@ -395,14 +393,14 @@ function transpose(colValPairs) {
 
 function addKeybinding(model, settings, id, position=null) {
     let accels = settings.get_strv(id);
-    let accelerator = accels[0];
 
     let schema = settings.settings_schema;
     let schemaKey = schema.get_key(id);
     let description = _(schemaKey.get_summary());
 
+    let accelerator = accels.length > 0 ? accels[0] : null;
     // Add a row for the keybinding.
-    let [key, mods] = parseAccelerator(accelerator);
+    let [key, mods] = accelerator ? parseAccelerator(accelerator) : [0, 0];
     let row = model.insert_before(null, position);
     model.set(row, ...transpose([
         [COLUMN_ID, id],
