@@ -338,7 +338,7 @@ function createKeybindingWidget(settings) {
                 let newEmptyRow = null, parent;
                 if (index === -1) {
                     model.set_value(iter, COLUMN_INDEX, accels.length-1);
-                    model.set_value(iter, COLUMN_DESCRIPTION, "");
+                    model.set_value(iter, COLUMN_DESCRIPTION, "...");
 
                     let parent = ok(model.iter_parent(iter));
                     newEmptyRow = model.insert_after(parent, iter);
@@ -454,7 +454,7 @@ function addKeybinding(model, settings, id, position=null) {
         model.set(subrow, ...transpose([
             [COLUMN_ID, id],
             [COLUMN_INDEX, i+1],
-            [COLUMN_DESCRIPTION, ""],
+            [COLUMN_DESCRIPTION, "..."],
             [COLUMN_KEY, key],
             [COLUMN_MODS, mods],
         ]));
