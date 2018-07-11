@@ -447,7 +447,10 @@ var PreviewedWindowNavigator = new Lang.Class({
         if(!this.was_accepted) {
             // Abort the navigation
             this.space = from;
-            this.space.selectedWindow = this._startWindow;
+            if (this._startWindow.get_compositor_private())
+                this.space.selectedWindow = this._startWindow;
+            else
+                this.space.selectedWindow = global.display.focus_window;
         }
 
         if (this.monitor !== this.space.monitor) {
