@@ -107,11 +107,14 @@ class SettingsWidget {
         let box = this.builder.get_object('keybindings');
         box.spacing = 12;
 
+        let searchEntry = this.builder.get_object('keybinding_search');
+
         let windowFrame = new Gtk.Frame({label: _('Windows'),
                                          label_xalign: 0.5});
-        let windows = createKeybindingWidget(settings);
+        let windows = createKeybindingWidget(settings, searchEntry);
         box.add(windowFrame);
         windowFrame.add(windows);
+
 
         ['new-window', 'close-window', 'switch-next', 'switch-previous',
          'switch-left', 'switch-right', 'switch-up', 'switch-down',
@@ -120,32 +123,37 @@ class SettingsWidget {
          'slurp-in', 'barf-out', 'center-horizontally',
          'paper-toggle-fullscreen', 'toggle-maximize-width', 'cycle-width']
             .forEach(k => {
-            addKeybinding(windows.model, settings, k);
+            addKeybinding(windows.model.child_model, settings, k);
         });
 
         let workspaceFrame = new Gtk.Frame({label: _('Workspaces'),
                                             label_xalign: 0.5});
-        let workspaces = createKeybindingWidget(settings);
+        let workspaces = createKeybindingWidget(settings, searchEntry);
         box.add(workspaceFrame);
         workspaceFrame.add(workspaces);
 
         ['previous-workspace', 'previous-workspace-backward',
          'move-previous-workspace', 'move-previous-workspace-backward' ]
             .forEach(k => {
-                addKeybinding(workspaces.model, settings, k);
+                addKeybinding(workspaces.model.child_model, settings, k);
             });
 
 
         let scratchFrame = new Gtk.Frame({label: _('Scratch layer'),
                                           label_xalign: 0.5});
-        let scratch = createKeybindingWidget(settings);
+        let scratch = createKeybindingWidget(settings, searchEntry);
         box.add(scratchFrame);
         scratchFrame.add(scratch);
 
         ['toggle-scratch-layer', 'toggle-scratch']
             .forEach(k => {
-                addKeybinding(scratch.model, settings, k);
+                addKeybinding(scratch.model.child_model, settings, k);
             });
+
+
+        searchEntry.connect('changed', () => {
+            [windows, workspaces, scratch].map(tw => tw.model).forEach(m => m.refilter());
+        });
 
 
         // About
@@ -246,18 +254,34 @@ function createRow(text, widget, signal, handler) {
     return row;
 }
 
-function createKeybindingWidget(settings) {
+function createKeybindingWidget(settings, searchEntry) {
     let model = new Gtk.TreeStore();
+    let filteredModel = new Gtk.TreeModelFilter({child_model: model});
+    filteredModel.set_visible_func(
+        (model, iter) => {
+            let desc = model.get_value(iter, COLUMN_DESCRIPTION);
+
+            if(ok(model.iter_parent(iter))) {
+                return true;
+            }
+
+            let query = searchEntry.get_chars(0, -1).toLowerCase();
+
+            return desc === null || desc.toLowerCase().indexOf(query) > -1;
+        }
+    );
 
     model.set_column_types(
-            [GObject.TYPE_STRING, // COLUMN_ID
+            [
+             // GObject.TYPE_BOOLEAN, // COLUMN_VISIBLE
+             GObject.TYPE_STRING, // COLUMN_ID
              GObject.TYPE_INT,    // COLUMN_INDEX
              GObject.TYPE_STRING, // COLUMN_DESCRIPTION
              GObject.TYPE_INT,    // COLUMN_KEY
              GObject.TYPE_INT]);  // COLUMN_MODS
 
     let treeView = new Gtk.TreeView();
-    treeView.model = model;
+    treeView.model = filteredModel;
     treeView.headers_visible = false;
     treeView.margin_start = 12;
     treeView.margin_end = 12;
@@ -278,9 +302,11 @@ function createKeybindingWidget(settings) {
 
     accelRenderer.connect("accel-edited",
             (accelRenderer, path, key, mods, hwCode) => {
-                let iter = ok(model.get_iter_from_string(path));
+                let iter = ok(filteredModel.get_iter_from_string(path));
                 if(!iter)
                     return;
+
+                iter = filteredModel.convert_iter_to_child_iter(iter);
 
                 // Update the UI.
                 model.set(iter, [COLUMN_KEY, COLUMN_MODS], [key, mods]);
@@ -324,10 +350,11 @@ function createKeybindingWidget(settings) {
 
     accelRenderer.connect("accel-cleared",
             (accelRenderer, path) => {
-                let iter = ok(model.get_iter_from_string(path));
+                let iter = ok(filteredModel.get_iter_from_string(path));
                 if(!iter)
                     return;
 
+                iter = filteredModel.convert_iter_to_child_iter(iter);
 
                 let index = model.get_value(iter, COLUMN_INDEX);
 
