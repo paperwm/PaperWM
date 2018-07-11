@@ -146,6 +146,12 @@ class SettingsWidget {
             .forEach(k => {
                 addKeybinding(scratch.model, settings, k);
             });
+
+
+        // About
+        let versionLabel = this.builder.get_object('extension_version');
+        let version = Extension.metadata.version.toString();
+        versionLabel.set_text(version);
     }
 
     createWorkspacePage(settings, index) {
