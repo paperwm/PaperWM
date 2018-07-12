@@ -276,22 +276,110 @@ function resolveConflicts() {
 function resetConflicts() {
     let names = overrides.reduce((sum, add) => sum.concat(add.conflicts), []);
     for (let name of names) {
-        // Some actions need a custom reset, this might break other extensions
-        // overeride
+        // Bultin mutter actions can be reset by setting their custom handler to
+        // null. However gnome-shell often sets a custom handler of its own,
+        // which means we most often can't rely on that
+        if (name.startsWith('switch-to-workspace-') ||
+            name.startsWith('move-to-workspace-')) {
+            Main.wm.setCustomKeybindingHandler(
+                name,
+                Shell.ActionMode.NORMAL |
+                    Shell.ActionMode.OVERVIEW,
+                Main.wm._showWorkspaceSwitcher.bind(Main.wm));
+            continue;
+        }
         switch (name) {
-        case 'switch-applications':
-        case 'switch-applications-backward':
-        case 'switch-group':
-        case 'switch-group-backward':
-            setKeybinding(name,
-                          Main.wm._startSwitcher.bind(Main.wm));
+        case 'cycle-group': case 'cycle-group-backwards':
+        case 'cycle-windows': case 'cycle-windows-backwards':
+        case 'switch-applications': case 'switch-applications-backward':
+        case 'switch-group': case 'switch-group-backward':
+            setKeybinding(name, Main.wm._startSwitcher.bind(Main.wm));
+            break;
+        case 'switch-panels': case 'switch-panels-backwards':
+            Main.wm.setCustomKeybindingHandler(
+                name,
+                Shell.ActionMode.NORMAL |
+                    Shell.ActionMode.OVERVIEW |
+                    Shell.ActionMode.LOCK_SCREEN |
+                    Shell.ActionMode.UNLOCK_SCREEN |
+                    Shell.ActionMode.LOGIN_SCREEN,
+                Main.wm._startA11ySwitcher.bind(Main.wm));
+            break;
+        case 'switch-monitor':
+            Main.wm.setCustomKeybindingHandler(
+                name,
+                Shell.ActionMode.NORMAL |
+                    Shell.ActionMode.OVERVIEW,
+                Main.wm._startSwitcher.bind(Main.wm));
             break;
         case 'focus-active-notification':
             Main.wm.setCustomKeybindingHandler(
-                'focus-active-notification',
+                name,
                 Shell.ActionMode.NORMAL |
                     Shell.ActionMode.OVERVIEW,
                 Main.messageTray._expandActiveNotification.bind(Main.messageTray));
+            break;
+        case 'pause-resume-tweens':
+            Main.wm.setCustomKeybindingHandler(
+                name,
+                Shell.ActionMode.NORMAL |
+                    Shell.ActionMode.OVERVIEW |
+                    Shell.ActionMode.POPUP,
+                Main.wm._toggleCalendar.bind(Main.wm));
+            break;
+        case 'open-application-menu':
+            Main.wm.setCustomKeybindingHandler(
+                name,
+                Shell.ActionMode.NORMAL |
+                    Shell.ActionMode.POPUP,
+                Main.wm._toggleAppMenu.bind(Main.wm));
+            break;
+        case 'toggle-message-tray':
+            Main.wm.setCustomKeybindingHandler(
+                name,
+                Shell.ActionMode.NORMAL |
+                    Shell.ActionMode.OVERVIEW |
+                    Shell.ActionMode.POPUP,
+                Main.wm._toggleCalendar.bind(Main.wm));
+            break;
+        case  'toggle-application-view':
+            const viewSelector = Main.overview._controls.viewSelector;
+            Main.wm.setCustomKeybindingHandler(
+                name,
+                Shell.ActionMode.NORMAL |
+                    Shell.ActionMode.OVERVIEW,
+                viewSelector._toggleAppsPage.bind(viewSelector));
+            break;
+        case 'toggle-overview':
+            Main.wm.setCustomKeybindingHandler(
+                name,
+                Shell.ActionMode.NORMAL |
+                    Shell.ActionMode.OVERVIEW,
+                Main.overview.toggle.bind(Main.overview));
+            break;
+        case 'switch-input-source':
+        case 'switch-input-source-backward':
+            const inputSourceIndicator = Main.inputMethod._inputSourceManager;
+            Main.wm.setCustomKeybindingHandler(
+                name,
+                Shell.ActionMode.ALL,
+                inputSourceIndicator._switchInputSource.bind(inputSourceIndicator));
+            break;
+        case 'panel-main-menu':
+            const sessionMode = Main.sessionMode;
+            const overview = Main.overview;
+            Main.wm.setCustomKeybindingHandler(
+                name,
+                Shell.ActionMode.NORMAL |
+                    Shell.ActionMode.OVERVIEW,
+                sessionMode.hasOverview ? overview.toggle.bind(overview) : null);
+            break;
+        case 'panel-run-dialog':
+            Main.wm.setCustomKeybindingHandler(
+                name,
+                Shell.ActionMode.NORMAL |
+                    Shell.ActionMode.OVERVIEW,
+                Main.sessionMode.hasRunDialog ? Main.openRunDialog : null);
             break;
         default:
             Meta.keybindings_set_custom_handler(name, null);
