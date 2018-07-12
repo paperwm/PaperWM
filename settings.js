@@ -1,13 +1,22 @@
+/**
+
+   Settings utility shared between the running extension and the preference UI.
+
+ */
 var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
+var Gtk = imports.gi.Gtk;
 
-var settings = Extension.imports.convenience.getSettings();
-
-var screen = global.screen;
+var Convenience = Extension.imports.convenience;
+var settings = Convenience.getSettings();
 
 var WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
 var WORKSPACE_LIST_KEY = 'org.gnome.Shell.Extensions.PaperWM.WorkspaceList';
+var KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
+
+// This is the value mutter uses for the keyvalue of above_tab
+var META_KEY_ABOVE_TAB = 0x2f7259c9;
 
 var prefs = {
     window_gap: settings.get_int('window-gap'),
@@ -35,8 +44,16 @@ function setState(_, key) {
     }
 }
 
-var schemaSource, workspaceList;
+var schemaSource, workspaceList, conflictSettings;
 function setSchemas() {
+    // Schemas that may contain conflicting keybindings
+    // It's possible to inject or remove settings here on `user.init`.
+    conflictSettings = [
+        new Gio.Settings({schema_id: 'org.gnome.mutter.keybindings'}),
+        new Gio.Settings({schema_id: 'org.gnome.mutter.wayland.keybindings'}),
+        new Gio.Settings({schema_id: "org.gnome.desktop.wm.keybindings"}),
+        new Gio.Settings({schema_id: "org.gnome.shell.keybindings"})
+    ];
     schemaSource = Gio.SettingsSchemaSource.new_from_directory(
         GLib.build_filenamev([Extension.path, "schemas"]),
         Gio.SettingsSchemaSource.get_default(),
@@ -64,6 +81,8 @@ function enable() {
 function disable() {
 }
 
+/// Workspaces
+
 function getWorkspaceSettings(index) {
     let list = workspaceList.get_strv('list');
     for (let uuid of list) {
@@ -89,4 +108,64 @@ function getWorkspaceSettingsByUUID(uuid) {
     return new Gio.Settings({
         settings_schema: schemaSource.lookup(WORKSPACE_KEY, true),
         path: `/org/gnome/shell/extensions/paperwm/workspaces/${uuid}/`});
+}
+
+/// Keybindings
+
+/**
+ * Two keystrings can represent the same key combination
+ */
+function keystrToKeycombo(keystr) {
+    // Above_Tab is a fake keysymbol provided by mutter
+    let aboveTab = false;
+    if (keystr.match(/Above_Tab/)) {
+        // Gtk bails out if provided with an unknown keysymbol
+        keystr = keystr.replace('Above_Tab', 'A');
+        aboveTab = true;
+    }
+    let [key, mask] = Gtk.accelerator_parse(keystr);
+    if (aboveTab)
+        key = META_KEY_ABOVE_TAB;
+    return `${key}|${mask}`; // Since js doesn't have a mapable tuple type
+}
+
+function generateKeycomboMap(settings) {
+    let map = {};
+    for (let name of settings.list_keys()) {
+        let value = settings.get_value(name);
+        if (value.get_type_string() !== 'as')
+            continue;
+
+        for (let combo of value.deep_unpack().map(keystrToKeycombo)) {
+            if (combo === '0|0')
+                continue;
+            if (map[combo]) {
+                map[combo].push(name);
+            } else {
+                map[combo] = [name];
+            }
+        }
+    }
+    return map;
+}
+
+function findConflicts(schemas) {
+    schemas = schemas || conflictSettings;
+    let conflicts = [];
+    const paperMap =
+          generateKeycomboMap(Convenience.getSettings(KEYBINDINGS_KEY));
+
+    for (let settings of schemas) {
+        const against = generateKeycomboMap(settings);
+        for (let combo in paperMap) {
+            if (against[combo]) {
+                conflicts.push({
+                    name: paperMap[combo][0],
+                    conflicts: against[combo],
+                    settings, combo
+                });
+            }
+        }
+    }
+    return conflicts;
 }

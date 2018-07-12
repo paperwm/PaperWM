@@ -9,6 +9,8 @@ var Main = imports.ui.main;
 var Shell = imports.gi.Shell;
 
 var convenience = Extension.imports.convenience;
+var Settings = Extension.imports.settings;
+var keystrToKeycombo = Settings.keystrToKeycombo;
 
 var Navigator = Extension.imports.navigator;
 
@@ -184,15 +186,6 @@ function rawMaskOfKeystr(keystr) {
     let [dontcare, keycodes, mask] =
         Gtk.accelerator_parse_with_keycode(keystr);
     return devirtualizeMask(mask);
-}
-
-/**
- * Two keystrings can represent the same key combination
- */
-function keystrToKeycombo(keystr) {
-    // ASSUMPTION: Gtk parses accelerators mostly the same as mutter
-    let [key, mask] = Gtk.accelerator_parse(keystr);
-    return `${key}|${mask}`; // Since js doesn't have a mapable tuple type
 }
 
 function openNavigatorHandler(actionName, keystr) {
