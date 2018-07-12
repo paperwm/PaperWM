@@ -2,6 +2,9 @@ const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix
 const Gdk = imports.gi.Gdk;
 var Meta = imports.gi.Meta;
 
+var screen = global.screen;
+var display = global.display;
+
 var debug_all = false; // Turn off by default
 var debug_filter = {};
 function debug() {
@@ -94,9 +97,9 @@ const Tiling = Extension.imports.tiling;
 
 function setDevGlobals() {
     // Accept the risk of this interfering with existing code for now
-    metaWindow = global.display.focus_window;
-    meta_window = global.display.focus_window;
-    workspace = global.screen.get_active_workspace();
+    metaWindow = display.focus_window;
+    meta_window = display.focus_window;
+    workspace = screen.get_active_workspace();
     actor = metaWindow.get_compositor_private();
     space = Tiling.spaces.spaceOfWindow(metaWindow);
 }
@@ -105,7 +108,7 @@ function setDevGlobals() {
  * Visualize the frame and buffer bounding boxes of a meta window
  */
 function toggleWindowBoxes(metaWindow) {
-    metaWindow = metaWindow || global.display.focus_window;
+    metaWindow = metaWindow || display.focus_window;
 
     if(metaWindow._paperDebugBoxes) {
         metaWindow._paperDebugBoxes.forEach(box => {
@@ -156,14 +159,14 @@ function toggleCloneMarks() {
             metaWindow.clone.opacity = 255;
     }
 
-    let windows = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
+    let windows = display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
 
     if (markNewClonesSignalId) {
-        global.display.disconnect(markNewClonesSignalId);
+        display.disconnect(markNewClonesSignalId);
         markNewClonesSignalId = null;
         windows.forEach(unmarkCloneOf);
     } else {
-        markNewClonesSignalId = global.display.connect_after(
+        markNewClonesSignalId = display.connect_after(
             "window-created", (_, mw) => markCloneOf(mw))
 
         windows.forEach(markCloneOf);
@@ -178,7 +181,7 @@ function sum(array) {
 function setWorkspaceName(name, workspace) {
     let i;
     if (workspace === undefined) {
-        i = global.screen.get_active_workspace_index();
+        i = screen.get_active_workspace_index();
     } else {
         i = workspace.index();
     }

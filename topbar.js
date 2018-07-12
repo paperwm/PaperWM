@@ -19,6 +19,7 @@ var prefs = Extension.imports.settings.prefs;
 var panelBox = Main.layoutManager.panelBox;
 
 var screen = global.screen;
+var display = global.display;
 
 
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
@@ -209,7 +210,7 @@ function enable () {
 
     panelBoxShowId =  panelBox.connect('show', show);
     panelBoxHideId = panelBox.connect('hide', () => {
-        if (global.display.focus_window.fullscreen) {
+        if (display.focus_window.fullscreen) {
             hide();
         } else {
             panelBox.show();

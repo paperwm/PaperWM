@@ -15,6 +15,7 @@ var debug = utils.debug;
 var Gdk = imports.gi.Gdk;
 
 var screen = global.screen;
+var display = global.display;
 
 var spaces;
 
@@ -331,7 +332,7 @@ class Space extends Array {
             let windows = this.getWindows();
             let i = windows.indexOf(metaWindow);
             let neighbours = [windows[i - 1], windows[i + 1]].filter(w => w);
-            let stack = global.display.sort_windows_by_stacking(neighbours);
+            let stack = display.sort_windows_by_stacking(neighbours);
             selected = stack[stack.length - 1];
         }
 
@@ -563,7 +564,7 @@ class Space extends Array {
             // Could also rely on the MetaWindowActor's index in it's parent
             // children array: That seem to correspond to clutters z-index (note:
             // z_position is something else)
-            let z_sorted = global.display.sort_windows_by_stacking(windows);
+            let z_sorted = display.sort_windows_by_stacking(windows);
             let xkey = (mw) => {
                 let frame = mw.get_frame_rect();
                 if(frame.x <= 0)
@@ -620,7 +621,7 @@ class Space extends Array {
             }
         })
 
-        let tabList = global.display.get_tab_list(Meta.TabList.NORMAL, workspace)
+        let tabList = display.get_tab_list(Meta.TabList.NORMAL, workspace)
             .filter(metaWindow => { return this.indexOf(metaWindow) !== -1; });
         if (tabList[0]) {
             this.selectedWindow = tabList[0]
@@ -673,10 +674,10 @@ class Spaces extends Map {
         signals.connect(screen, 'window-left-monitor', this.windowLeftMonitor.bind(this));
         signals.connect(screen, "window-entered-monitor", this.windowEnteredMonitor.bind(this));
 
-        signals.connect(global.display, 'window-created',
+        signals.connect(display, 'window-created',
                         utils.dynamic_function_ref('window_created', this));
-        signals.connect(global.display, 'grab-op-begin', grabBegin);
-        signals.connect(global.display, 'grab-op-end', grabEnd);
+        signals.connect(display, 'grab-op-begin', grabBegin);
+        signals.connect(display, 'grab-op-end', grabEnd);
 
         signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChanged.bind(this));
 
@@ -686,7 +687,7 @@ class Spaces extends Map {
                         this.monitorsChanged.bind(this));
 
         // Clone and hook up existing windows
-        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+        display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(w => {
                 registerWindow(w);
                 signals.connect(w, 'size-changed', resizeHandler);
@@ -702,8 +703,8 @@ class Spaces extends Map {
             backgroundGroup.last_child);
 
         // Hook up existing workspaces
-        for (let i=0; i < global.screen.n_workspaces; i++) {
-            let workspace = global.screen.get_workspace_by_index(i);
+        for (let i=0; i < screen.n_workspaces; i++) {
+            let workspace = screen.get_workspace_by_index(i);
             this.addSpace(workspace);
             debug("workspace", workspace)
         }
@@ -728,7 +729,7 @@ class Spaces extends Map {
             w.clone.show();
         });
 
-        this.spaceContainer.set_size(global.screen_width, global.screen_height);
+        this.spaceContainer.set_size(...screen.get_size());
 
         for (let overlay of this.clickOverlays) {
             overlay.destroy();
@@ -739,7 +740,7 @@ class Spaces extends Map {
         let monitors = Main.layoutManager.monitors;
 
         let finish = () => {
-            let activeSpace = this.get(global.screen.get_active_workspace());
+            let activeSpace = this.get(screen.get_active_workspace());
             this.monitors.set(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
                 space.clip.raise_top();
@@ -821,7 +822,7 @@ class Spaces extends Map {
             delete monitor.clickOverlay;
         }
 
-        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+        display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(metaWindow => {
                 let actor = metaWindow.get_compositor_private();
                 actor.remove_clip();
@@ -846,7 +847,7 @@ class Spaces extends Map {
     }
 
     workspacesChanged() {
-        let nWorkspaces = global.screen.n_workspaces;
+        let nWorkspaces = screen.n_workspaces;
 
         // Identifying destroyed workspaces is rather bothersome,
         // as it will for example report having windows,
@@ -855,7 +856,7 @@ class Spaces extends Map {
         // Gather all indexed workspaces for easy comparison
         let workspaces = {};
         for (let i=0; i < nWorkspaces; i++) {
-            let workspace = global.screen.get_workspace_by_index(i);
+            let workspace = screen.get_workspace_by_index(i);
             workspaces[workspace] = true;
             if (this.spaceOf(workspace) === undefined) {
                 debug('workspace added', workspace);
@@ -905,11 +906,11 @@ class Spaces extends Map {
      */
     mru() {
         let seen = new Map(), out = [];
-        let active = global.screen.get_active_workspace();
+        let active = screen.get_active_workspace();
         out.push(this.get(active));
         seen.set(active, true);
 
-        global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+        display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach((metaWindow, i) => {
                 let workspace = metaWindow.get_workspace();
                 if (!seen.get(workspace)) {
@@ -918,9 +919,9 @@ class Spaces extends Map {
                 }
             });
 
-        let workspaces = global.screen.get_n_workspaces();
+        let workspaces = screen.get_n_workspaces();
         for (let i=0; i < workspaces; i++) {
-            let workspace = global.screen.get_workspace_by_index(i);
+            let workspace = screen.get_workspace_by_index(i);
             if (!seen.get(workspace)) {
                 out.push(this.get(workspace));
                 seen.set(workspace, true);
@@ -1060,7 +1061,7 @@ function enable() {
 
     function initWorkspaces() {
         spaces = new Spaces();
-        Navigator.switchWorkspace(global.screen.get_active_workspace());
+        Navigator.switchWorkspace(screen.get_active_workspace());
         spaces.mru().reverse().forEach(s => {
             s.selectedWindow && ensureViewport(s.selectedWindow, s, true);
             s.monitor.clickOverlay.show();
@@ -1175,7 +1176,7 @@ function insertWindow(metaWindow, {existing}) {
     };
 
     if (!existing) {
-        let scratchIsFocused = Scratch.isScratchWindow(global.display.focus_window);
+        let scratchIsFocused = Scratch.isScratchWindow(display.focus_window);
         let addToScratch = scratchIsFocused;
 
         let winprop = find_winprop(metaWindow);
@@ -1255,8 +1256,8 @@ function insertWindow(metaWindow, {existing}) {
         clone.show();
     }
 
-    if (metaWindow === global.display.focus_window ||
-        space.workspace === global.screen.get_active_workspace()) {
+    if (metaWindow === display.focus_window ||
+        space.workspace === screen.get_active_workspace()) {
         ensureViewport(metaWindow, space, true);
         Main.activateWindow(metaWindow);
     } else {
@@ -1516,7 +1517,7 @@ var fullscreenWrapper = utils.dynamic_function_ref('fullscreenHandler', Me);
 */
 function showHandler(actor) {
     let metaWindow = actor.meta_window;
-    let onActive = metaWindow.get_workspace() === global.screen.get_active_workspace();
+    let onActive = metaWindow.get_workspace() === screen.get_active_workspace();
 
     if (Scratch.isScratchWindow(metaWindow))
         return;
@@ -1539,7 +1540,7 @@ function fixStack(space, metaWindow) {
         return;
 
     let neighbours = [windows[around - 1], windows[around + 1]].filter(w => w);
-    let stack = global.display.sort_windows_by_stacking(neighbours);
+    let stack = display.sort_windows_by_stacking(neighbours);
 
     stack.forEach(w => w.raise());
     metaWindow.raise();
@@ -1604,7 +1605,7 @@ function isFullyVisible(metaWindow) {
 }
 
 function toggleMaximizeHorizontally(metaWindow) {
-    metaWindow = metaWindow || global.display.focus_window;
+    metaWindow = metaWindow || display.focus_window;
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
 
     // TODO: make some sort of animation
@@ -1623,7 +1624,7 @@ function toggleMaximizeHorizontally(metaWindow) {
 }
 
 function tileVisible(metaWindow) {
-    metaWindow = metaWindow || global.display.focus_window;
+    metaWindow = metaWindow || display.focus_window;
     let space = spaces.spaceOfWindow(metaWindow);
     if (!space)
         return;

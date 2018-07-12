@@ -12,6 +12,9 @@ var convenience = Extension.imports.convenience;
 
 var Navigator = Extension.imports.navigator;
 
+var screen = global.screen;
+var display = global.display;
+
 var signals, actions, nameMap, actionIdMap, keycomboMap;
 function init() {
     signals = new Utils.Signals();
@@ -113,7 +116,7 @@ function bindkey(keystr, actionName=null, handler=null, options=null) {
         unbindkey(boundAction.id)
     }
 
-    let actionId = global.display.grab_accelerator(keystr);
+    let actionId = display.grab_accelerator(keystr);
     if (actionId === Meta.KeyBindingAction.NONE) {
         // Failed to grab. Binding probably already taken.
         log("Failed to grab")
@@ -166,7 +169,7 @@ function unbindkey(actionIdOrKeystr) {
         delete nameMap[action.mutterName];
     }
 
-    return global.display.ungrab_accelerator(actionId);
+    return display.ungrab_accelerator(actionId);
 }
 
 function devirtualizeMask(gdkVirtualMask) {
@@ -213,7 +216,7 @@ function getBoundActionId(keystr) {
         throw new Error("Multiple keycodes " + keycodes + " " + keystr);
     }
     const rawMask = devirtualizeMask(mask);
-    return global.display.get_keybinding_action(keycodes[0], rawMask);
+    return display.get_keybinding_action(keycodes[0], rawMask);
 }
 
 function handleAccelerator(display, actionId, deviceId, timestamp) {
@@ -221,7 +224,7 @@ function handleAccelerator(display, actionId, deviceId, timestamp) {
     if (action) {
         Utils.debug("#keybindings", "Schemaless keybinding activated",
                     actionId, action.name);
-        action.keyHandler(display, null, global.display.focus_window);
+        action.keyHandler(display, null, display.focus_window);
     }
 }
 
@@ -261,7 +264,7 @@ function enableAction(action) {
 
 function enable() {
     signals.connect(
-        global.display,
+        display,
         'accelerator-activated',
         Utils.dynamic_function_ref(handleAccelerator.name, Me)
     );

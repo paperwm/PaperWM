@@ -24,6 +24,9 @@ var debug = utils.debug;
 
 var prefs = Extension.imports.settings.prefs;
 
+var screen = global.screen;
+var display = global.display;
+
 var scale = 0.9;
 var navigating = false;
 var workspaceMru = false;
@@ -93,9 +96,9 @@ var PreviewedWindowNavigator = new Lang.Class({
         navigating = true;
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
-        Meta.disable_unredirect_for_screen(global.screen);
+        Meta.disable_unredirect_for_screen(screen);
 
-        this.space = Tiling.spaces.spaceOf(global.screen.get_active_workspace());
+        this.space = Tiling.spaces.spaceOf(screen.get_active_workspace());
 
         this._startWindow = this.space.selectedWindow;
         this.from = this.space;
@@ -450,7 +453,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             if (this._startWindow.get_compositor_private())
                 this.space.selectedWindow = this._startWindow;
             else
-                this.space.selectedWindow = global.display.focus_window;
+                this.space.selectedWindow = display.focus_window;
         }
 
         if (this.monitor !== this.space.monitor) {
@@ -472,7 +475,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         let selected = this.space.selectedWindow;
         if (selected && !Scratch.isScratchActive()) {
-            if (selected !== global.display.focus_window) {
+            if (selected !== display.focus_window) {
                 Main.activateWindow(selected);
             } else {
                 // Typically on cancel - the `focus` signal won't run
@@ -529,7 +532,7 @@ function switchWorkspace(to, from, callback) {
                        time: 0.25,
                        transition: 'easeInOutQuad',
                        onComplete: () => {
-                           Meta.enable_unredirect_for_screen(global.screen);
+                           Meta.enable_unredirect_for_screen(screen);
 
                            toSpace.clip.raise_top();
                            callback && callback();
