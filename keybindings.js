@@ -2,6 +2,7 @@ var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.o
 var Me = Extension.imports.keybindings;
 var Gdk = imports.gi.Gdk;
 var Gtk = imports.gi.Gtk;
+var Gio = imports.gi.Gio;
 var Meta = imports.gi.Meta;
 
 var Utils = Extension.imports.utils;
@@ -17,13 +18,16 @@ var Navigator = Extension.imports.navigator;
 var screen = global.screen;
 var display = global.display;
 
-var signals, actions, nameMap, actionIdMap, keycomboMap;
+var KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
+
+var signals, actions, nameMap, actionIdMap, keycomboMap, overrides, conflictSettings;
 function init() {
     signals = new Utils.Signals();
     actions = [];
     nameMap = {};     // mutter keybinding action name -> action
     actionIdMap = {}; // actionID   -> action
     keycomboMap = {}; // keycombo   -> action
+    overrides = [];   // action names that have been given a custom handler
 }
 
 function idOf(mutterName) {
@@ -255,16 +259,65 @@ function enableAction(action) {
     }
 }
 
+function setKeybinding(name, func) {
+    Main.wm.setCustomKeybindingHandler(name, Shell.ActionMode.NORMAL, func);
+}
+
+function resolveConflicts() {
+    resetConflicts();
+    for (let conflict of Settings.findConflicts()) {
+        let {name, conflicts} = conflict;
+        let action = byMutterName(name);
+        conflicts.forEach(c => setKeybinding(c, action.handler));
+        overrides.push(conflict);
+    }
+}
+
+function resetConflicts() {
+    let names = overrides.reduce((sum, add) => sum.concat(add.conflicts), []);
+    for (let name of names) {
+        // Some actions need a custom reset, this might break other extensions
+        // overeride
+        switch (name) {
+        case 'switch-applications':
+        case 'switch-applications-backward':
+        case 'switch-group':
+        case 'switch-group-backward':
+            setKeybinding(name,
+                          Main.wm._startSwitcher.bind(Main.wm));
+            break;
+        case 'focus-active-notification':
+            Main.wm.setCustomKeybindingHandler(
+                'focus-active-notification',
+                Shell.ActionMode.NORMAL |
+                    Shell.ActionMode.OVERVIEW,
+                Main.messageTray._expandActiveNotification.bind(Main.messageTray));
+            break;
+        default:
+            Meta.keybindings_set_custom_handler(name, null);
+        }
+    };
+    overrides = [];
+}
+
 function enable() {
+    let schemas = [...Settings.conflictSettings,
+                   convenience.getSettings(KEYBINDINGS_KEY)];
+    schemas.forEach(schema => {
+        signals.connect(schema, 'changed', resolveConflicts);
+    });
+
     signals.connect(
         display,
         'accelerator-activated',
         Utils.dynamic_function_ref(handleAccelerator.name, Me)
     );
     actions.forEach(enableAction);
+    resolveConflicts(schemas);
 }
 
 function disable() {
     signals.destroy();
     actions.forEach(disableAction);
+    resetConflicts();
 }

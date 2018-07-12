@@ -60,10 +60,6 @@ function init() {
 
     modules.forEach(m => m.init && m.init());
 
-    wmSettings =
-        new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
-
-    shellSettings = new Gio.Settings({ schema_id: "org.gnome.shell.keybindings"});
     paperSettings = convenience.getSettings();
 
     let dynamic_function_ref = utils.dynamic_function_ref;
@@ -166,51 +162,7 @@ function init() {
     initUserConfig();
 }
 
-function setKeybinding(name, func) {
-    Main.wm.setCustomKeybindingHandler(name, Shell.ActionMode.NORMAL, func);
-}
-
 function enable() {
-    let settings = new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings"});
-
-    setKeybinding('switch-applications', // <Super>Tab
-                  Keybindings.byMutterName('live-alt-tab').handler);
-    setKeybinding('switch-applications-backward',
-                  Keybindings.byMutterName('live-alt-tab-backward').handler);
-
-    setKeybinding('switch-group', // <Super>Above_tab
-                  Keybindings.byMutterName('previous-workspace').handler);
-    setKeybinding('switch-group-backward',
-                  Keybindings.byMutterName('previous-workspace-backward').handler);
-    setKeybinding('switch-to-workspace-down', // <Super>Page_Down
-                  Keybindings.byMutterName('previous-workspace').handler);
-
-    setKeybinding('switch-to-workspace-up', // <Super>Page_Up
-                  Keybindings.byMutterName('previous-workspace-backward').handler);
-
-    setKeybinding('maximize', // <Super>Up
-                  Keybindings.byMutterName('switch-up').handler);
-    setKeybinding('unmaximize', // <Super>Down
-                  Keybindings.byMutterName('switch-down').handler);
-
-    setKeybinding('focus-active-notification', // `<Super>N`
-                  Keybindings.byMutterName('new-window').handler);
-
-    setKeybinding('restore-shortcuts', // `<Super>Escape`
-                  Keybindings.byMutterName('toggle-scratch-layer').handler);
-
-    setKeybinding('toggle-tiled-right', // <Super>Right
-                  Keybindings.byMutterName('switch-right').handler);
-
-    setKeybinding('toggle-tiled-left', // <Super>Left
-                  Keybindings.byMutterName('switch-left').handler);
-
-
-    setKeybinding('switch-to-workspace-1', // <Super>Home
-                  Keybindings.byMutterName('switch-first').handler);
-    setKeybinding('switch-to-workspace-last', // <Super>End
-                  Keybindings.byMutterName('switch-last').handler);
-
     // Only enable modules after disable have been run
     if (enabled) {
         log('enable called without calling disable');
@@ -224,30 +176,6 @@ function enable() {
 }
 
 function disable() {
-    setKeybinding('switch-applications',
-                  Main.wm._startSwitcher.bind(Main.wm));
-    setKeybinding('switch-applications-backward',
-                  Main.wm._startSwitcher.bind(Main.wm));
-    setKeybinding('switch-group',
-                  Main.wm._startSwitcher.bind(Main.wm));
-    setKeybinding('switch-group-backward',
-                  Main.wm._startSwitcher.bind(Main.wm));
-
-    Main.wm.setCustomKeybindingHandler('focus-active-notification',
-                                       Shell.ActionMode.NORMAL |
-                                       Shell.ActionMode.OVERVIEW,
-                                       Main.messageTray._expandActiveNotification.bind(Main.messageTray));
-
-    Meta.keybindings_set_custom_handler('toggle-tiled-left', null);
-    Meta.keybindings_set_custom_handler('toggle-tiled-right', null);
-    Meta.keybindings_set_custom_handler('maximize', null);
-    Meta.keybindings_set_custom_handler('unmaximize', null);
-    Meta.keybindings_set_custom_handler('restore-shortcuts', null);
-    Meta.keybindings_set_custom_handler('switch-to-workspace-1', null);
-    Meta.keybindings_set_custom_handler('switch-to-workspace-last', null);
-    Meta.keybindings_set_custom_handler('switch-to-workspace-down', null);
-    Meta.keybindings_set_custom_handler('switch-to-workspace-up', null);
-
     if (!enabled)
         return;
     log(`disable ${SESSIONID}`);
