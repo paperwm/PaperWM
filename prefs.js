@@ -25,6 +25,9 @@ const COLUMN_INDEX       = 1;
 const COLUMN_DESCRIPTION = 2;
 const COLUMN_KEY         = 3;
 const COLUMN_MODS        = 4;
+const COLUMN_WARNING     = 5;
+const COLUMN_RESET       = 6;
+const COLUMN_TOOLTIP     = 7;
 
 const Settings = Extension.imports.settings;
 let getWorkspaceSettings = Settings.getWorkspaceSettings;
@@ -93,7 +96,6 @@ class SettingsWidget {
                 return;
 
             let active = workspaceCombo.get_active();
-            log(`active ${active}`);
             let page = workspaceStack.get_child_by_name(active.toString());
             workspaceStack.set_visible_child(page);
         });
@@ -126,6 +128,8 @@ class SettingsWidget {
             addKeybinding(windows.model.child_model, settings, k);
         });
 
+        annotateKeybindings(windows.model.child_model, settings);
+
         let workspaceFrame = new Gtk.Frame({label: _('Workspaces'),
                                             label_xalign: 0.5});
         let workspaces = createKeybindingWidget(settings, searchEntry);
@@ -137,6 +141,8 @@ class SettingsWidget {
             .forEach(k => {
                 addKeybinding(workspaces.model.child_model, settings, k);
             });
+
+        annotateKeybindings(workspaces.model.child_model, settings);
 
 
         let scratchFrame = new Gtk.Frame({label: _('Scratch layer'),
@@ -150,6 +156,7 @@ class SettingsWidget {
                 addKeybinding(scratch.model.child_model, settings, k);
             });
 
+        annotateKeybindings(scratch.model.child_model, settings);
 
         searchEntry.connect('changed', () => {
             [windows, workspaces, scratch].map(tw => tw.model).forEach(m => m.refilter());
@@ -273,12 +280,16 @@ function createKeybindingWidget(settings, searchEntry) {
 
     model.set_column_types(
             [
-             // GObject.TYPE_BOOLEAN, // COLUMN_VISIBLE
-             GObject.TYPE_STRING, // COLUMN_ID
-             GObject.TYPE_INT,    // COLUMN_INDEX
-             GObject.TYPE_STRING, // COLUMN_DESCRIPTION
-             GObject.TYPE_INT,    // COLUMN_KEY
-             GObject.TYPE_INT]);  // COLUMN_MODS
+                // GObject.TYPE_BOOLEAN, // COLUMN_VISIBLE
+                GObject.TYPE_STRING, // COLUMN_ID
+                GObject.TYPE_INT,    // COLUMN_INDEX
+                GObject.TYPE_STRING, // COLUMN_DESCRIPTION
+                GObject.TYPE_INT,    // COLUMN_KEY
+                GObject.TYPE_INT,    // COLUMN_MODS
+                GObject.TYPE_BOOLEAN,// COLUMN_WARNING
+                GObject.TYPE_BOOLEAN,// COLUMN_RESET
+                GObject.TYPE_STRING, // COLUMN_TOOLTIP
+            ]);
 
     let treeView = new Gtk.TreeView();
     treeView.model = filteredModel;
@@ -287,6 +298,7 @@ function createKeybindingWidget(settings, searchEntry) {
     treeView.margin_end = 12;
     treeView.search_column = COLUMN_DESCRIPTION;
     treeView.enable_search = true;
+    treeView.tooltip_column = COLUMN_TOOLTIP;
 
     let descriptionRenderer = new Gtk.CellRendererText();
     let descriptionColumn = new Gtk.TreeViewColumn();
@@ -295,6 +307,15 @@ function createKeybindingWidget(settings, searchEntry) {
     descriptionColumn.add_attribute(descriptionRenderer, "text", COLUMN_DESCRIPTION);
 
     treeView.append_column(descriptionColumn);
+
+    let warningRenderer = new Gtk.CellRendererPixbuf();
+    warningRenderer.mode = Gtk.CellRendererMode.INERT;
+    warningRenderer.stock_id = 'gtk-dialog-warning';
+    let warningColumn = new Gtk.TreeViewColumn();
+    warningColumn.pack_start(warningRenderer, true);
+    warningColumn.add_attribute(warningRenderer, "visible", COLUMN_WARNING);
+
+    treeView.append_column(warningColumn);
 
     let accelRenderer = new Gtk.CellRendererAccel();
     accelRenderer.accel_mode = Gtk.CellRendererAccelMode.GTK;
@@ -346,6 +367,7 @@ function createKeybindingWidget(settings, searchEntry) {
                     ]));
                 }
 
+                annotateKeybindings(model, settings);
             });
 
     accelRenderer.connect("accel-cleared",
@@ -390,6 +412,8 @@ function createKeybindingWidget(settings, searchEntry) {
                 let recreated = addKeybinding(model, settings, id, nextSibling);
                 let selection = treeView.get_selection();
                 selection.select_iter(recreated);
+
+                annotateKeybindings(model, settings);
             });
 
     let accelColumn = new Gtk.TreeViewColumn();
@@ -398,6 +422,41 @@ function createKeybindingWidget(settings, searchEntry) {
     accelColumn.add_attribute(accelRenderer, "accel-mods", COLUMN_MODS);
 
     treeView.append_column(accelColumn);
+
+    let resetRenderer = new Gtk.CellRendererToggle();
+    resetRenderer.mode = Gtk.CellRendererMode.ACTIVATABLE;
+    let resetColumn = new Gtk.TreeViewColumn();
+    resetColumn.clickable = true;
+    resetColumn.pack_start(resetRenderer, true);
+    resetColumn.add_attribute(resetRenderer, "visible", COLUMN_RESET);
+
+    resetRenderer.connect('toggled', (renderer, path) => {
+        let iter = ok(filteredModel.get_iter_from_string(path));
+        if(!iter)
+            return;
+        iter = filteredModel.convert_iter_to_child_iter(iter);
+
+        let id = model.get_value(iter, COLUMN_ID);
+        if (settings.get_user_value(id)) {
+            settings.reset(id);
+            model.set_value(iter, COLUMN_RESET, false);
+        }
+
+        let parent = ok(model.iter_parent(iter)) || iter.copy();
+        let nextSibling = parent.copy();
+        if(!model.iter_next(nextSibling))
+            nextSibling = null;
+
+        model.remove(parent);
+
+        let recreated = addKeybinding(model, settings, id, nextSibling);
+        let selection = treeView.get_selection();
+        selection.select_iter(recreated);
+
+        annotateKeybindings(model, settings);
+    });
+
+    treeView.append_column(resetColumn);
 
     return treeView;
 }
@@ -443,6 +502,8 @@ function addKeybinding(model, settings, id, position=null) {
         [COLUMN_MODS, mods],
     ]));
 
+
+
     // Add one subrow for each additional keybinding
     accels.slice(1).forEach((accelerator, i) => {
         let [key, mods] = parseAccelerator(accelerator);
@@ -469,6 +530,41 @@ function addKeybinding(model, settings, id, position=null) {
     }
 
     return row;
+}
+
+function annotateKeybindings(model, settings) {
+    let conflicts = Settings.findConflicts();
+    let warning = (id, c) => {
+        return conflicts.filter(({name, combo}) => name === id && combo === c);
+    };
+
+    model.foreach((model, path, iter) => {
+        let id = model.get_value(iter, COLUMN_ID);
+        if (model.iter_depth(iter) === 0) {
+            let reset = settings.get_user_value(id) ? true : false;
+            model.set_value(iter, COLUMN_RESET, reset);
+        }
+
+        let accels = settings.get_strv(id);
+        let index = model.get_value(iter, COLUMN_INDEX);
+        if (index === -1)
+            return;
+        let combo = Settings.keystrToKeycombo(accels[index]);
+
+        let conflict = warning(id, combo);
+        let tooltip = null;
+        if (conflict.length > 0) {
+            let keystr = Settings.keycomboToKeystr(combo);
+            tooltip = `${keystr} overrides ${conflict[0].conflicts} in ${conflict[0].settings.path}`;
+
+            model.set_value(iter, COLUMN_TOOLTIP, GLib.markup_escape_text(tooltip));
+            model.set_value(iter, COLUMN_WARNING, true);
+        } else {
+            model.set_value(iter, COLUMN_WARNING, false);
+        }
+
+        return false;
+    });
 }
 
 function init() {

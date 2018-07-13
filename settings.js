@@ -129,6 +129,17 @@ function keystrToKeycombo(keystr) {
     return `${key}|${mask}`; // Since js doesn't have a mapable tuple type
 }
 
+function keycomboToKeystr(combo) {
+    let [mutterKey, mods] = combo.split('|').map(s => Number.parseInt(s));
+    let key = mutterKey;
+    if (mutterKey === META_KEY_ABOVE_TAB)
+        key = 97; // a
+    let keystr = Gtk.accelerator_name(key, mods);
+    if (mutterKey === META_KEY_ABOVE_TAB)
+        keystr = keystr.replace(/a$/, 'Above_Tab');
+    return keystr;
+}
+
 function generateKeycomboMap(settings) {
     let map = {};
     for (let name of settings.list_keys()) {
