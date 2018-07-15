@@ -105,7 +105,7 @@ class Minimap extends Array {
         actor.add_actor(label);
         actor.add_actor(clip);
         clip.add_actor(container);
-        clip.set_position(12 + prefs.window_gap, 15 + 10);
+        clip.set_position(12 + prefs.window_gap, 12 + Math.round(1.5*prefs.window_gap));
         highlight.y = clip.y - 10;
         Main.uiGroup.add_actor(this.actor);
         this.actor.opacity = 0;
@@ -244,7 +244,7 @@ class Minimap extends Array {
         highlight.x = Math.round(
             clip.x + container.x + selected.x - gap/2);
         highlight.y = Math.round(
-            clip.y + selected.y - 10);
+            clip.y + selected.y - prefs.window_gap);
         highlight.set_size(Math.round(selected.width + gap),
                            Math.round(selected.height + prefs.window_gap));
 
