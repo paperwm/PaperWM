@@ -44,7 +44,7 @@ function byMutterName(name) {
 }
 
 function byId(mutterId) {
-    return actions.find(action => action.id == mutterId);
+    return actionIdMap[mutterId];
 }
 
 /**
@@ -94,13 +94,11 @@ function registerAction(actionName, handler, options) {
         options: options,
     };
 
-    enableAction(action); // sets `action.id`
+    enableAction(action);
 
     actions.push(action);
     if (actionName)
         nameMap[actionName] = action;
-    if (action.id)
-        actionIdMap[action.id] = action;
 
     return action;
 }
@@ -235,9 +233,11 @@ function handleAccelerator(display, actionId, deviceId, timestamp) {
 
 
 function disableAction(action) {
+    const oldId = action.id;
     if (action.options.settings) {
         Main.wm.removeKeybinding(action.mutterName);
         action.id = Meta.KeyBindingAction.NONE;
+        delete actionIdMap[oldId];
     } else {
         // Should only be called in disable/enable - schemaless actions are
         // disabled/enabled by other means
@@ -256,9 +256,10 @@ function enableAction(action) {
             Shell.ActionMode.NORMAL,
             action.keyHandler);
 
-        if (actionId !== Meta.KeyBindingAction.NONE)
+        if (actionId !== Meta.KeyBindingAction.NONE) {
             action.id = actionId;
-        else
+            actionIdMap[actionId] = action;
+        } else
             Utils.warn("Could not enable action", action.name);
 
     } else {
