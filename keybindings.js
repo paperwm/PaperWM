@@ -94,8 +94,6 @@ function registerAction(actionName, handler, options) {
         options: options,
     };
 
-    enableAction(action);
-
     actions.push(action);
     if (actionName)
         nameMap[actionName] = action;
