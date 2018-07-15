@@ -272,12 +272,18 @@ function setKeybinding(name, func) {
     Main.wm.setCustomKeybindingHandler(name, Shell.ActionMode.NORMAL, func);
 }
 
+function overrideAction(mutterName, action) {
+    setKeybinding(mutterName, action.keyHandler);
+    let id = Meta.prefs_get_keybinding_action(mutterName);
+    actionIdMap[id] = action;
+}
+
 function resolveConflicts() {
     resetConflicts();
     for (let conflict of Settings.findConflicts()) {
         let {name, conflicts} = conflict;
         let action = byMutterName(name);
-        conflicts.forEach(c => setKeybinding(c, action.handler));
+        conflicts.forEach(c => overrideAction(c, action));
         overrides.push(conflict);
     }
 }
@@ -285,6 +291,8 @@ function resolveConflicts() {
 function resetConflicts() {
     let names = overrides.reduce((sum, add) => sum.concat(add.conflicts), []);
     for (let name of names) {
+        let id = Meta.prefs_get_keybinding_action(name);
+        delete actionIdMap[id];
         // Bultin mutter actions can be reset by setting their custom handler to
         // null. However gnome-shell often sets a custom handler of its own,
         // which means we most often can't rely on that
