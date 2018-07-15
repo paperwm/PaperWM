@@ -4,15 +4,25 @@
   around these problems.
  */
 
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Scratch = Extension.imports.scratch;
 var Meta = imports.gi.Meta;
+var Workspace = imports.ui.workspace;
 
-var orgUpdateState;
+
+var orgUpdateState, _isOverviewWindow;
 function init() {
     orgUpdateState = imports.ui.messageTray.MessageTray.prototype._updateState;
+    _isOverviewWindow = Workspace.Workspace.prototype._isOverviewWindow;
 }
 
 function enable() {
 
+
+    Workspace.Workspace.prototype._isOverviewWindow = (win) => {
+        let metaWindow = win.meta_window;
+        return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+    };
     // Don't hide notifications when there's fullscreen windows in the workspace.
     // Fullscreen windows aren't special in paperWM and might not even be
     // visible, so hiding notifications makes no sense.
@@ -81,4 +91,5 @@ function enable() {
 
 function disable() {
     imports.ui.messageTray.MessageTray.prototype._updateState = orgUpdateState;
+    Workspace.Workspace.prototype._isOverviewWindow = _isOverviewWindow;
 }
