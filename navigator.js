@@ -232,21 +232,6 @@ var PreviewedWindowNavigator = new Lang.Class({
         case Meta.KeyBindingAction.WORKSPACE_DOWN: // PageDown
             mutterActionId = Keybindings.idOf('previous-workspace');
             break;
-        case Meta.KeyBindingAction.TOGGLE_TILED_RIGHT: // Right
-            mutterActionId = Keybindings.idOf('switch-right');
-            break;
-        case Meta.KeyBindingAction.TOGGLE_TILED_LEFT: // Left
-            mutterActionId = Keybindings.idOf('switch-left');
-            break;
-        case Meta.KeyBindingAction.MAXIMIZE: // Up
-            mutterActionId = Keybindings.idOf('switch-up');
-            break;
-        case Meta.KeyBindingAction.UNMAXIMIZE: // Down
-            mutterActionId = Keybindings.idOf('switch-down');
-            break;
-        case Meta.KeyBindingAction.CLOSE:
-            mutterActionId = Keybindings.idOf('close-window');
-            break;
         }
 
         if (mutterActionId

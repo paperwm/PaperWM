@@ -268,8 +268,31 @@ function enableAction(action) {
     }
 }
 
-function setKeybinding(name, func) {
-    Main.wm.setCustomKeybindingHandler(name, Shell.ActionMode.NORMAL, func);
+function getActionId(mutterName) {
+    let id;
+    try {
+        id = Meta.prefs_get_keybinding_action(mutterName);
+    } catch (e) {
+        // This is a pretty ugly hack to extract any action id
+        // When the mutterName isn't a builtin it throws, exposing the id in the
+        // message.
+
+        // The error message starts off with the action id, so we just strip
+        // everything after that.
+        id = Number.parseInt(e.message.replace(/ .*$/, ''));
+        if (!Number.isInteger(id))
+            throw Error(`${id} is not an integer, broken hack`);
+    }
+    return id;
+}
+
+function overrideAction(mutterName, action) {
+    let id = getActionId(mutterName);
+    Main.wm.setCustomKeybindingHandler(mutterName, Shell.ActionMode.NORMAL,
+                                       action.keyHandler);
+    if (id === Meta.KeyBindingAction.NONE)
+        return;
+    actionIdMap[id] = action;
 }
 
 function resolveConflicts() {
@@ -277,7 +300,7 @@ function resolveConflicts() {
     for (let conflict of Settings.findConflicts()) {
         let {name, conflicts} = conflict;
         let action = byMutterName(name);
-        conflicts.forEach(c => setKeybinding(c, action.handler));
+        conflicts.forEach(c => overrideAction(c, action));
         overrides.push(conflict);
     }
 }
@@ -285,6 +308,8 @@ function resolveConflicts() {
 function resetConflicts() {
     let names = overrides.reduce((sum, add) => sum.concat(add.conflicts), []);
     for (let name of names) {
+        let id = getActionId(name);
+        delete actionIdMap[id];
         // Bultin mutter actions can be reset by setting their custom handler to
         // null. However gnome-shell often sets a custom handler of its own,
         // which means we most often can't rely on that
@@ -302,7 +327,9 @@ function resetConflicts() {
         case 'cycle-windows': case 'cycle-windows-backwards':
         case 'switch-applications': case 'switch-applications-backward':
         case 'switch-group': case 'switch-group-backward':
-            setKeybinding(name, Main.wm._startSwitcher.bind(Main.wm));
+            Main.wm.setCustomKeybindingHandler(
+                name, Shell.ActionMode.NORMAL,
+                Main.wm._startSwitcher.bind(Main.wm));
             break;
         case 'switch-panels': case 'switch-panels-backwards':
             Main.wm.setCustomKeybindingHandler(
