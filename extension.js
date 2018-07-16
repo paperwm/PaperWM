@@ -81,8 +81,9 @@ function init() {
                           liveAltTab,
                           Meta.KeyBindingFlags.IS_REVERSED);
 
-    registerPaperAction('previous-workspace', previewNavigate);
-    registerPaperAction('previous-workspace-backward', previewNavigate);
+    registerNavigatorAction('previous-workspace', Tiling.selectPreviousSpace);
+    registerNavigatorAction('previous-workspace-backward',
+                            Tiling.selectPreviousSpaceBackwards);
 
     registerPaperAction('move-previous-workspace', previewNavigate);
     registerPaperAction('move-previous-workspace-backward', previewNavigate);
