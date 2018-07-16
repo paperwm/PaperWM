@@ -731,7 +731,6 @@ class Spaces extends Map {
 
         let signals = new utils.Signals();
         this.signals = signals;
-        this.selectedSpace = undefined;
         this._inPreview = false;
         this._yPositions = [0.95, 0.10, 0.035, 0.01];
 
@@ -784,7 +783,9 @@ class Spaces extends Map {
         this.monitorsChanged();
 
         let visible = Main.layoutManager.monitors.map(m => this.monitors.get(m));
-        this.stack = this.mru().filter(s => !visible.includes(s));
+        let mru = this.mru();
+        this.stack = mru.filter(s => !visible.includes(s));
+        this.selectedSpace = mru[0];
     }
 
     /**

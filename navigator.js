@@ -232,9 +232,10 @@ var PreviewedWindowNavigator = new Lang.Class({
             let action = Keybindings.byId(mutterActionId);
             if (action && action.options.activeInNavigator) {
                 log("Show minimap and do action..")
-                this._showMinimap();
-                let metaWindow = this.space.selectedWindow;
-                action.handler(metaWindow, this.space);
+                // this._showMinimap();
+                let space = Tiling.spaces.selectedSpace;
+                let metaWindow = space.selectedWindow;
+                action.handler(metaWindow, space);
                 return true;
             }
         }
@@ -307,7 +308,9 @@ var PreviewedWindowNavigator = new Lang.Class({
         let force = Tiling.spaces._inPreview;
         navigating = false; workspaceMru = false;
 
-        this.space = Tiling.spaces.selectedSpace;
+        if (force) {
+            this.space = Tiling.spaces.selectedSpace;
+        }
 
         let from = this.from;
         if(!this.was_accepted) {
