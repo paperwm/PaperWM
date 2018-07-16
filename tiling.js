@@ -747,6 +747,9 @@ class Spaces extends Map {
 
         signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChanged.bind(this));
 
+        signals.connect(global.window_manager, 'switch-workspace',
+                        this.switchWorkspace.bind(this));
+
         const OVERRIDE_SCHEMA = 'org.gnome.shell.overrides';
         this.overrideSettings = new Gio.Settings({ schema_id: OVERRIDE_SCHEMA });
         signals.connect(this.overrideSettings, 'changed::workspaces-only-on-primary',
@@ -950,6 +953,44 @@ class Spaces extends Map {
         settings.set_strv('workspace-names', names);
     };
 
+    switchWorkspace(wm, fromIndex, toIndex) {
+        let to = screen.get_workspace_by_index(toIndex);
+        let from = screen.get_workspace_by_index(fromIndex);
+        let toSpace = this.spaceOf(to);
+        this.monitors.set(toSpace.monitor, toSpace);
+
+        Navigator.switchWorkspace(to, from);
+
+        let fromSpace = this.spaceOf(from);
+        if (toSpace.monitor === fromSpace.monitor)
+            return;
+
+        TopBar.setMonitor(toSpace.monitor);
+        toSpace.monitor.clickOverlay.deactivate();
+
+        let display = Gdk.Display.get_default();
+        let deviceManager = display.get_device_manager();
+        let pointer = deviceManager.get_client_pointer();
+        let [gdkscreen, pointerX, pointerY] = pointer.get_position();
+
+        let monitor = toSpace.monitor;
+        pointerX -= monitor.x;
+        pointerY -= monitor.y;
+        if (pointerX < 0 ||
+            pointerX > monitor.width ||
+            pointerY < 0 ||
+            pointerY > monitor.height)
+            pointer.warp(gdkscreen,
+                         monitor.x + Math.floor(monitor.width/2),
+                         monitor.y + Math.floor(monitor.height/2));
+
+        for (let monitor of Main.layoutManager.monitors) {
+            if (monitor === toSpace.monitor)
+                continue;
+            monitor.clickOverlay.activate();
+        }
+    }
+
     addSpace(workspace) {
         this.set(workspace, new Space(workspace, this.spaceContainer));
     };
@@ -1078,47 +1119,6 @@ function resizeHandler(metaWindow) {
 
 function enable() {
     debug('#enable');
-
-    signals.connect(
-        global.window_manager,
-        'switch-workspace',
-        (wm, fromIndex, toIndex) => {
-            let to = screen.get_workspace_by_index(toIndex);
-            let from = screen.get_workspace_by_index(fromIndex);
-            let toSpace = spaces.spaceOf(to);
-            spaces.monitors.set(toSpace.monitor, toSpace);
-
-            Navigator.switchWorkspace(to, from);
-
-            let fromSpace = spaces.spaceOf(from);
-            if (toSpace.monitor === fromSpace.monitor)
-                return;
-
-            TopBar.setMonitor(toSpace.monitor);
-            toSpace.monitor.clickOverlay.deactivate();
-
-            let display = Gdk.Display.get_default();
-            let deviceManager = display.get_device_manager();
-            let pointer = deviceManager.get_client_pointer();
-            let [gdkscreen, pointerX, pointerY] = pointer.get_position();
-
-            let monitor = toSpace.monitor;
-            pointerX -= monitor.x;
-            pointerY -= monitor.y;
-            if (pointerX < 0 ||
-                pointerX > monitor.width ||
-                pointerY < 0 ||
-                pointerY > monitor.height)
-                pointer.warp(gdkscreen,
-                             monitor.x + Math.floor(monitor.width/2),
-                             monitor.y + Math.floor(monitor.height/2));
-
-            for (let monitor of Main.layoutManager.monitors) {
-                if (monitor === toSpace.monitor)
-                    continue;
-                monitor.clickOverlay.activate();
-            }
-        });
 
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
