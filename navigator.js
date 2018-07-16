@@ -231,11 +231,14 @@ var PreviewedWindowNavigator = new Lang.Class({
         } else {
             let action = Keybindings.byId(mutterActionId);
             if (action && action.options.activeInNavigator) {
-                log("Show minimap and do action..")
-                // this._showMinimap();
                 let space = Tiling.spaces.selectedSpace;
                 let metaWindow = space.selectedWindow;
+                if (action.options.opensMinimap) {
+                    this._showMinimap(space);
+                }
                 action.handler(metaWindow, space);
+                if (space !== Tiling.spaces.selectedSpace)
+                    this.minimaps.forEach(m => m.hide());
                 return true;
             }
         }
@@ -251,12 +254,12 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
     },
 
-    _showMinimap() {
-        let minimap = this.minimaps.get(this.space);
+    _showMinimap(space) {
+        let minimap = this.minimaps.get(space);
         if (!minimap) {
-            minimap = new Minimap.Minimap(this.space, this.monitor);
-            this.minimaps.set(this.space, minimap);
-            this.space.startAnimate();
+            minimap = new Minimap.Minimap(space, this.monitor);
+            this.minimaps.set(space, minimap);
+            space.startAnimate();
             minimap.show(true);
         } else {
             minimap.show();

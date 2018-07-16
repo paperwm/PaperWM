@@ -56,6 +56,14 @@ function registerNavigatorAction(name, handler) {
         {settings: settings, opensNavigator: true})
 }
 
+function registerMinimapAction(name, handler) {
+    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    Keybindings.registerAction(
+        name,
+        handler,
+        {settings: settings, opensNavigator: true, opensMinimap: true});
+}
+
 function init() {
     SESSIONID += "#";
     log(`init: ${SESSIONID}`);
@@ -88,24 +96,24 @@ function init() {
     registerPaperAction('move-previous-workspace', previewNavigate);
     registerPaperAction('move-previous-workspace-backward', previewNavigate);
 
-    registerNavigatorAction("switch-next", (mw, space) => space.switchLinear(1));
-    registerNavigatorAction("switch-previous", (mw, space) => space.switchLinear(-1));
+    registerMinimapAction("switch-next", (mw, space) => space.switchLinear(1));
+    registerMinimapAction("switch-previous", (mw, space) => space.switchLinear(-1));
 
-    registerPaperAction("switch-first", Tiling.activateFirstWindow);
-    registerPaperAction("switch-last", Tiling.activateLastWindow);
+    registerMinimapAction("switch-first", Tiling.activateFirstWindow);
+    registerMinimapAction("switch-last", Tiling.activateLastWindow);
 
-    registerNavigatorAction("switch-right", (mw, space) => space.switchRight());
-    registerNavigatorAction("switch-left", (mw, space) => space.switchLeft());
-    registerNavigatorAction("switch-up", (mw, space) => space.switchUp());
-    registerNavigatorAction("switch-down", (mw, space) => space.switchDown());
+    registerMinimapAction("switch-right", (mw, space) => space.switchRight());
+    registerMinimapAction("switch-left", (mw, space) => space.switchLeft());
+    registerMinimapAction("switch-up", (mw, space) => space.switchUp());
+    registerMinimapAction("switch-down", (mw, space) => space.switchDown());
 
-    registerNavigatorAction("move-left", 
+    registerMinimapAction("move-left", 
                         (mw, space) => space.swap(Meta.MotionDirection.LEFT));
-    registerNavigatorAction("move-right", 
+    registerMinimapAction("move-right", 
                         (mw, space) => space.swap(Meta.MotionDirection.RIGHT));
-    registerNavigatorAction("move-up", 
+    registerMinimapAction("move-up", 
                         (mw, space) => space.swap(Meta.MotionDirection.UP));
-    registerNavigatorAction("move-down", 
+    registerMinimapAction("move-down", 
                         (mw, space) => space.swap(Meta.MotionDirection.DOWN));
 
     registerPaperAction("toggle-scratch-layer",
