@@ -557,7 +557,8 @@ function annotateKeybindings(model, settings) {
             let keystr = Settings.keycomboToKeystr(combo);
             tooltip = `${keystr} overrides ${conflict[0].conflicts} in ${conflict[0].settings.path}`;
 
-            model.set_value(iter, COLUMN_TOOLTIP, GLib.markup_escape_text(tooltip));
+            model.set_value(iter, COLUMN_TOOLTIP,
+                            GLib.markup_escape_text(tooltip, -1));
             model.set_value(iter, COLUMN_WARNING, true);
         } else {
             model.set_value(iter, COLUMN_WARNING, false);
