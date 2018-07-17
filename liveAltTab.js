@@ -33,26 +33,35 @@ var LiveAltTab = Lang.Class({
         this.parent(backward, actionName);
     },
 
-    _keyPressHandler: function(keysym, action) {
-        // After the first super-tab the action we get is apparently
+    _keyPressHandler: function(keysym, mutterActionId) {
+        if (keysym === Clutter.KEY_Escape)
+            return Clutter.EVENT_PROPAGATE;
+        // After the first super-tab the mutterActionId we get is apparently
         // SWITCH_APPLICATIONS so we need to case on those too.
-        switch(action) {
+        switch(mutterActionId) {
         case Meta.KeyBindingAction.SWITCH_APPLICATIONS:
-            action = Meta.KeyBindingAction.SWITCH_WINDOWS;
+            mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
             break;
         case Meta.KeyBindingAction.SWITCH_APPLICATIONS_BACKWARD:
-            action = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
+            mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
             break;
         case Keybindings.idOf('live-alt-tab'):
-            action = Meta.KeyBindingAction.SWITCH_WINDOWS;
+            mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
             break;
             ;;
         case Keybindings.idOf('live-alt-tab-backward'):
-            action = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
+            mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
             break;
             ;;
         }
-        return this.parent(keysym, action)
+        let action = Keybindings.byId(mutterActionId);
+        if (action && action.options.activeInNavigator) {
+            let space = Tiling.spaces.selectedSpace;
+            let metaWindow = space.selectedWindow;
+            action.handler(metaWindow, space);
+            return true;
+        }
+        return this.parent(keysym, mutterActionId);
     },
 
     _select: function(num) {
