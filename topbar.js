@@ -13,6 +13,8 @@ var Main = imports.ui.main;
 var Tweener = imports.ui.tweener;
 
 var Tiling = Extension.imports.tiling;
+var Navigator = Extension.imports.navigator;
+var Utils = Extension.imports.utils;
 
 var prefs = Extension.imports.settings.prefs;
 
@@ -141,16 +143,71 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         this.entry.actor.width = this.colors.actor.width;
         this.colors.entry.actor.width = this.colors.actor.width;
+        this.state = "NORMAL";
+    }
+
+    _finishWorkspaceSelect() {
+        this.state = "NORMAL";
+        this._enterbox.destroy();
+        delete this._enterbox;
+        this._navigator.finish();
+        this._navigator.destroy();
+        delete this._navigator;
     }
 
     _onEvent(actor, event) {
-        if (this.menu &&
-            (event.type() == Clutter.EventType.TOUCH_BEGIN ||
+        if (!this.menu) {
+            log("?? no menu ??");
+            Utils.print_stacktrace();
+            return Clutter.EVENT_PROPAGATE;
+        }
+
+        if (this.state === "MENU" && !this.menu.isOpen) {
+            this.state = "NORMAL";
+        }
+
+        if ((event.type() == Clutter.EventType.TOUCH_BEGIN ||
              event.type() == Clutter.EventType.BUTTON_PRESS)) {
-            if (event.get_button() === Clutter.BUTTON_SECONDARY)
-                this.menu.toggle();
-            else
-                Main.overview.toggle();
+            if (this.state === "SCROLL") {
+                this._finishWorkspaceSelect();
+            } else {
+                if (event.get_button() === Clutter.BUTTON_SECONDARY) {
+                    this.menu.toggle();
+                    this.state = this.menu.isOpen ? "MENU" : "NORMAL";
+                } else {
+                    Main.overview.toggle();
+                }
+            }
+            return Clutter.EVENT_PROPAGATE;
+        }
+
+        if (Main.overview.visible) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+
+        if (["NORMAL", "SCROLL"].includes(this.state) &&
+            event.type() === Clutter.EventType.SCROLL) {
+            if (!this._navigator) {
+                this.state = 'SCROLL';
+                this._navigator = new Navigator.Navigator();
+                this._enterbox =  new Clutter.Actor({reactive: true});
+                Main.uiGroup.add_actor(this._enterbox);
+                this._enterbox.set_position(panelBox.x, panelBox.y + panelBox.height + 20);
+                this._enterbox.set_size(...screen.get_size());
+                Main.layoutManager.trackChrome(this._enterbox);
+
+                let id = this._enterbox.connect('enter-event', () => {
+                    this._finishWorkspaceSelect();
+                });
+            }
+
+            let direction = event.get_scroll_direction();
+            if (direction === Clutter.ScrollDirection.UP) {
+                Tiling.spaces.selectSpace(Meta.MotionDirection.DOWN);
+            }
+            if (direction === Clutter.ScrollDirection.DOWN) {
+                Tiling.spaces.selectSpace(Meta.MotionDirection.UP);
+            }
         }
 
         return Clutter.EVENT_PROPAGATE;

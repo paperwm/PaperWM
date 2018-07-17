@@ -62,7 +62,7 @@ Pressing <kbd>Super</kbd><kbd>I</kbd> will move the window to the right below th
 
 Pressing <kbd>Super</kbd><kbd>Above_Tab</kbd> will slide the active workspace down revealing the stack as shown in the above screenshot. You can then flip through the most recently used workspaces with repeated <kbd>Above_Tab</kbd> presses while holding <kbd>Super</kbd> downe. <kbd>Above_Tab</kbd> is the key above <kbd>Tab</kbd> (<kbd>\`</kbd> in a US qwerty layout). Like alt-tab <kbd>Shift</kbd> is added to move in reverse order.
 
-A workspace has a name and background color. Right-clicking the workspace name lets you change them easily:
+The workspace name is shown in the top left corner replacing the the `Activities` button adding a few enhancements. Scrolling on the name will let you browse the workpace stack just like <kbd>Super</kbd><kbd>Above_Tab</kbd>. Right clicking the name lets you access and change the workspace name and the background color:
 
 ![The workspace menu](https://github.com/paperwm/media/blob/master/menu.png)
 
