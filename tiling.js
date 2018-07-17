@@ -1917,17 +1917,16 @@ function cycleWindowWidth(metaWindow) {
 function activateNthWindow(n, space) {
     space = space || spaces.spaceOf(screen.get_active_workspace());
     let nth = space[n][0];
-    if (nth)
-        Main.activateWindow(nth);
+    ensureViewport(nth, space);
 }
 
-function activateFirstWindow() {
-    let space = spaces.spaceOf(screen.get_active_workspace());
+function activateFirstWindow(mw, space) {
+    space = space || spaces.spaceOf(screen.get_active_workspace());
     activateNthWindow(0, space);
 }
 
-function activateLastWindow() {
-    let space = spaces.spaceOf(screen.get_active_workspace());
+function activateLastWindow(mw, space) {
+    space = space || spaces.spaceOf(screen.get_active_workspace());
     activateNthWindow(space.length - 1, space);
 }
 
