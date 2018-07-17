@@ -743,7 +743,7 @@ class Spaces extends Map {
         signals.connect(screen, "window-entered-monitor", this.windowEnteredMonitor.bind(this));
 
         signals.connect(display, 'window-created',
-                        utils.dynamic_function_ref('window_created', this));
+                        this.window_created.bind(this));
         signals.connect(display, 'grab-op-begin', grabBegin);
         signals.connect(display, 'grab-op-end', grabEnd);
 
@@ -1210,6 +1210,11 @@ class Spaces extends Map {
 
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
+        if (metaWindow.get_workspace() !== this.selectedSpace.workspace) {
+            metaWindow.redirected = true;
+            metaWindow.change_workspace(this.selectedSpace.workspace);
+            return;
+        }
         let signal = actor.connect(
             'show',
             () =>  {
@@ -1389,7 +1394,8 @@ function add_handler(ws, metaWindow) {
     let actor = metaWindow.get_compositor_private();
     if (actor) {
         // Set position and hookup signals, with `existing` set to true
-        insertWindow(metaWindow, {existing: true});
+        insertWindow(metaWindow, {existing: true && !metaWindow.redirected});
+        delete metaWindow.redirected;
     }
     // Otherwise we're dealing with a new window, so we let `window-created`
     // handle initial positioning.
@@ -1494,7 +1500,7 @@ function insertWindow(metaWindow, {existing}) {
         ensureViewport(metaWindow, space, true);
         Main.activateWindow(metaWindow);
     } else {
-        ensureViewport(space.selectedWindow, space, true);
+        ensureViewport(metaWindow, space, true);
     }
 }
 
