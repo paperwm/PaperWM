@@ -59,22 +59,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     _initialSelection: function(backward, actionName) {
         debug('#preview', '_initialSelection');
-        TopBar.show();
-
-        navigating = true;
-        this._block = Main.wm._blockAnimations;
-        Main.wm._blockAnimations = true;
-        Meta.disable_unredirect_for_screen(screen);
-
-        this.space = Tiling.spaces.spaceOf(screen.get_active_workspace());
-
-        this._startWindow = this.space.selectedWindow;
-        this.from = this.space;
-        this.monitor = this.space.monitor;
-        this.minimaps = new Map();
-
-        this.space.startAnimate();
-
+        this.navigator = new Navigator();
         let actionId = Keybindings.idOf(actionName);
         if(actionId === Meta.KeyBindingAction.NONE) {
             try {
@@ -96,11 +81,11 @@ var PreviewedWindowNavigator = new Lang.Class({
             let space = Tiling.spaces.selectedSpace;
             let metaWindow = space.selectedWindow;
             if (action.options.opensMinimap) {
-                this._showMinimap(space);
+                this.navigator._showMinimap(space);
             }
             action.handler(metaWindow, space);
             if (space !== Tiling.spaces.selectedSpace) {
-                this.minimaps.forEach(m => m.hide());
+                this.navigator.minimaps.forEach(m => m.hide());
             }
             return true;
         }
@@ -116,32 +101,9 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
     },
 
-    _showMinimap(space) {
-        let minimap = this.minimaps.get(space);
-        if (!minimap) {
-            minimap = new Minimap.Minimap(space, this.monitor);
-            this.minimaps.set(space, minimap);
-            space.startAnimate();
-            minimap.show(true);
-        } else {
-            minimap.show();
-        }
-    },
-
-    _select: function(position) {
-        // debug('#preview', 'Select', this.space[index][0].title, index);
-        if (!position)
-            return;
-        let metaWindow = this.space.getWindow(...position);
-        if (metaWindow) {
-            this._showMinimap();
-            Tiling.ensureViewport(metaWindow, this.space);
-        }
-    },
-
     _finish: function(timestamp) {
         debug('#preview', 'finish');
-        this.was_accepted = true;
+        this.navigator.finish();
         this.parent(timestamp);
     },
 
@@ -155,19 +117,59 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     destroy: function() {
-        debug('#preview', 'destroy', this.space.actor);
+        this.navigator.destroy();
+        this.actor.hide(); // Prevents finalized crap
+        this.parent();
+    }
+});
 
+var Navigator = class Navigator {
+    constructor() {
+        TopBar.show();
+
+        navigating = true;
+        this._block = Main.wm._blockAnimations;
+        Main.wm._blockAnimations = true;
+        Meta.disable_unredirect_for_screen(screen);
+
+        this.space = Tiling.spaces.spaceOf(screen.get_active_workspace());
+
+        this._startWindow = this.space.selectedWindow;
+        this.from = this.space;
+        this.monitor = this.space.monitor;
+        this.monitor.clickOverlay.hide();
+        this.minimaps = new Map();
+
+        this.space.startAnimate();
+    }
+
+    _showMinimap(space) {
+        let minimap = this.minimaps.get(space);
+        if (!minimap) {
+            minimap = new Minimap.Minimap(space, this.monitor);
+            this.minimaps.set(space, minimap);
+            space.startAnimate();
+            minimap.show(true);
+        } else {
+            minimap.show();
+        }
+    }
+
+    finish() {
+        this.was_accepted = true;
+    }
+
+    destroy() {
         this.minimaps.forEach(m => m.destroy());
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
-        if (workspaceMru)
-            this.space.monitor.clickOverlay.hide();
 
         let force = Tiling.inPreview;
         navigating = false;
 
         if (force) {
+            this.space.monitor.clickOverlay.hide();
             this.space = Tiling.spaces.selectedSpace;
         }
 
@@ -224,10 +226,8 @@ var PreviewedWindowNavigator = new Lang.Class({
 
         Main.wm._blockAnimations = this._block;
 
-        this.actor.hide(); // Prevents finalized crap
-        this.parent();
     }
-});
+}
 
 function preview_navigate(meta_window, space, {display, screen, binding}) {
     let tabPopup = new PreviewedWindowNavigator();
