@@ -116,6 +116,8 @@ class ClickOverlay {
     }
 
     show() {
+        if (Main.overview.visible)
+            return;
         this.left.overlay.show();
         this.right.overlay.show();
     }
