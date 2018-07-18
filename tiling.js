@@ -732,6 +732,7 @@ class Spaces extends Map {
         let signals = new utils.Signals();
         this.signals = signals;
         this._inPreview = false;
+        this._moving = [];
         this._yPositions = [0.95, 0.10, 0.035, 0.01];
 
 
@@ -1058,16 +1059,41 @@ class Spaces extends Map {
         }
 
         let from = mru.indexOf(this.selectedSpace);
-        let to;
-        if (direction === Meta.MotionDirection.DOWN)
-            to = from + 1;
-        else
-            to = from - 1;
-        if (to < 0 || to >= mru.length) {
-            return true;
+        let newSpace = this.selectedSpace;
+        let to = from;
+        if (move && this.selectedSpace.selectedWindow) {
+            let space = this.selectedSpace;
+            let moving = this.selectedSpace.selectedWindow;
+            this._moving.push(moving);
+
+            this.selectedSpace.removeWindow(moving);
+            let actor = moving.get_compositor_private();
+            Main.uiGroup.add_actor(moving.clone);
+            let point = space.cloneContainer.apply_relative_transform_to_point(
+                this.spaceContainer, new Clutter.Vertex({x: moving.clone.x,
+                                          y: moving.clone.y}));
+            moving.clone.set_position(point.x, point.y);
+            moving.move_frame(true, point.x, point.y);
+            moving.clone.show();
+            actor.hide();
+            Tweener.addTween(moving.clone,
+                             {y: Math.round(space.monitor.y
+                                            + space.monitor.height/2),
+                              time: 0.25,
+                              transition: 'easeInOutQuad'
+                             });
+        } else {
+            if (direction === Meta.MotionDirection.DOWN)
+                to = from + 1;
+            else
+                to = from - 1;
+            if (to < 0 || to >= mru.length) {
+                return true;
+            }
+            newSpace = mru[to];
+            this.selectedSpace = newSpace;
         }
-        let newSpace = mru[to];
-        this.selectedSpace = newSpace;
+
 
         TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
@@ -1100,6 +1126,14 @@ class Spaces extends Map {
 
     animateToSpace(to, from, callback) {
         TopBar.updateWorkspaceIndicator(to.workspace.index());
+
+        this._moving.forEach(w => {
+            w.change_workspace(to.workspace);
+            if (w.get_workspace() === to.workspace) {
+                insertWindow(w, {existing: true});
+            }
+        });
+        this._moving = [];
 
         let xDest = 0, yDest = global.screen_height;
 
@@ -2005,4 +2039,12 @@ function selectPreviousSpace(mw, space) {
 
 function selectPreviousSpaceBackwards(mw, space) {
     spaces.selectSpace(Meta.MotionDirection.UP);
+}
+
+function movePreviousSpace(mw, space) {
+    spaces.selectSpace(Meta.MotionDirection.DOWN, true);
+}
+
+function movePreviousSpaceBackwards(mw, space) {
+    spaces.selectSpace(Meta.MotionDirection.UP, true);
 }
