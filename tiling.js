@@ -184,7 +184,7 @@ class Space extends Array {
             if (column.includes(this.selectedWindow))
                 targetWidth = this.selectedWindow.get_frame_rect().width;
 
-            targetWidth = Math.min(targetWidth, this.width);
+            targetWidth = Math.min(targetWidth, this.width - 2*minimumMargin);
             let height = Math.round(
                 (this.height - panelBox.height - prefs.vertical_margin
                  - prefs.window_gap*(column.length - 1))/column.length) ;
@@ -195,7 +195,13 @@ class Space extends Array {
                 let f = w.get_frame_rect();
                 let b = w.get_buffer_rect();
 
-                w.move_resize_frame(true, f.x, f.y, targetWidth, height);
+                let resizable = !w.fullscreen &&
+                    w.get_maximized() !== Meta.MaximizeFlags.BOTH;
+                if (resizable) {
+                    w.move_resize_frame(true, f.x, f.y, targetWidth, height);
+                } else {
+                    targetWidth = f.width;
+                }
                 // When resize is synchronous, ie. for X11 windows
                 let newWidth = w.get_frame_rect().width;
                 if (newWidth !== targetWidth && newWidth !== f.width) {
