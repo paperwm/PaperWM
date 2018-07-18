@@ -783,11 +783,6 @@ class Spaces extends Map {
         }
 
         this.monitorsChanged();
-
-        let visible = Main.layoutManager.monitors.map(m => this.monitors.get(m));
-        let mru = this.mru();
-        this.stack = mru.filter(s => !visible.includes(s));
-        this.selectedSpace = mru[0];
     }
 
     /**
@@ -819,6 +814,10 @@ class Spaces extends Map {
 
         let finish = () => {
             let activeSpace = this.get(screen.get_active_workspace());
+            let visible = monitors.map(m => this.monitors.get(m));
+            let mru = this.mru();
+            this.stack = mru.filter(s => !visible.includes(s));
+            this.selectedSpace = mru[0];
             this.monitors.set(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
                 space.clip.raise_top();
