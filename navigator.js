@@ -83,7 +83,7 @@ var PreviewedWindowNavigator = new Lang.Class({
             if (action.options.opensMinimap) {
                 this.navigator._showMinimap(space);
             }
-            action.handler(metaWindow, space);
+            action.handler(metaWindow, space, {navigator: this.navigator});
             if (space !== Tiling.spaces.selectedSpace) {
                 this.navigator.minimaps.forEach(m => m.hide());
             }
