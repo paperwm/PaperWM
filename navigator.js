@@ -29,7 +29,6 @@ var display = global.display;
 
 var scale = 0.9;
 var navigating = false;
-var workspaceMru = false;
 
 // Dummy class to satisfy `SwitcherPopup.SwitcherPopup`
 class SwitcherList {
@@ -165,8 +164,8 @@ var PreviewedWindowNavigator = new Lang.Class({
         if (workspaceMru)
             this.space.monitor.clickOverlay.hide();
 
-        let force = Tiling.spaces._inPreview;
-        navigating = false; workspaceMru = false;
+        let force = Tiling.inPreview;
+        navigating = false;
 
         if (force) {
             this.space = Tiling.spaces.selectedSpace;

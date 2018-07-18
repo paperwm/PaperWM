@@ -36,6 +36,8 @@ var minimumMargin = 15;
 
 var panelBox = Main.layoutManager.panelBox;
 
+var inPreview = false;
+
 var signals, oldSpaces, backgroundGroup, oldMonitors;
 function init() {
     // Symbol to retrieve the focus handler id
@@ -481,7 +483,7 @@ class Space extends Array {
 
     moveDone() {
         if (this.cloneContainer.x !== this.targetX
-            || Navigator.navigating || noAnimate) {
+            || Navigator.navigating || inPreview || noAnimate) {
             return;
         }
         this.getWindows().forEach(w => {
@@ -731,7 +733,6 @@ class Spaces extends Map {
 
         let signals = new utils.Signals();
         this.signals = signals;
-        this._inPreview = false;
         this._moving = [];
         this._yPositions = [0.95, 0.10, 0.035, 0.01];
 
@@ -824,7 +825,10 @@ class Spaces extends Map {
             }
             this.forEach(space => {
                 space.layout(false);
-                let selected = activeSpace.selectedWindow;
+                let selected = space.selectedWindow;
+                if (selected) {
+                    ensureViewport(selected, space, true);
+                }
             });
             this.spaceContainer.show();
         };
@@ -1006,12 +1010,12 @@ class Spaces extends Map {
         let space = this.spaceOf(screen.get_active_workspace());
         let mru = [space, ...this.stack];
 
-        if (!this._inPreview) {
+        if (!inPreview) {
             if (Main.panel.statusArea.appMenu)
                 Main.panel.statusArea.appMenu.container.hide();
             let monitor = space.monitor;
             this.selectedSpace = space;
-            this._inPreview = space;
+            inPreview = true;
 
             let heights = [0].concat(this._yPositions.slice(1));
 
@@ -1125,6 +1129,7 @@ class Spaces extends Map {
     }
 
     animateToSpace(to, from, callback) {
+        inPreview = false;
         TopBar.updateWorkspaceIndicator(to.workspace.index());
 
         this._moving.forEach(w => {
@@ -1137,7 +1142,6 @@ class Spaces extends Map {
 
         let xDest = 0, yDest = global.screen_height;
 
-        this._inPreview = false;
         this.selectedSpace = to;
 
         to.actor.show();
@@ -1615,7 +1619,7 @@ function ensureViewport(meta_window, space, force) {
 
 
     let selected = space.selectedWindow;
-    if (!spaces._inPreview && (selected.fullscreen
+    if (!inPreview && (selected.fullscreen
         || selected.get_maximized() === Meta.MaximizeFlags.BOTH)) {
         Tweener.addTween(selected.clone,
                          { y: frame.y - monitor.y,
@@ -1665,7 +1669,7 @@ function move_to(space, metaWindow, { x, y, delay, transition,
     let clone = metaWindow.clone;
     let delta = Math.round(clone.targetX) + space.targetX - x;
     let target = space.targetX - delta;
-    if (!Navigator._inPreview && delta === 0 && !force) {
+    if (!inPreview && delta === 0 && !force) {
         space.moveDone();
         return;
     }
@@ -1795,7 +1799,8 @@ function showHandler(actor) {
     if (Scratch.isScratchWindow(metaWindow))
         return;
 
-    if (metaWindow.clone.visible || ! onActive || Navigator.navigating) {
+    if (metaWindow.clone.visible || ! onActive || Navigator.navigating
+       || inPreview) {
         actor.hide();
         metaWindow.clone.show();
     }
