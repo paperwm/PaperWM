@@ -89,6 +89,7 @@ class Space extends Array {
         this.signals.connect(workspace, "window-added", utils.dynamic_function_ref("add_handler", Me));
         this.signals.connect(workspace, "window-removed",
                              utils.dynamic_function_ref("remove_handler", Me));
+        this.signals.connect(Main.overview, 'showing', this.startAnimate.bind(this));
 
         // The windows that should be represented by their WindowActor
         this.visible = [];
