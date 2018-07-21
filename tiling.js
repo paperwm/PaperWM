@@ -491,7 +491,8 @@ class Space extends Array {
 
     moveDone() {
         if (this.cloneContainer.x !== this.targetX
-            || Navigator.navigating || inPreview || noAnimate) {
+            || Navigator.navigating || inPreview || noAnimate
+            || Main.overview.visible) {
             return;
         }
         this.getWindows().forEach(w => {
