@@ -105,52 +105,34 @@ function registerAction(actionName, handler, options) {
  * Bind a key to an action (possibly creating a new action)
  */
 function bindkey(keystr, actionName=null, handler=null, options=null) {
-    let action = actionName && actions.find(a => a.name === actionName);
-
-    if (!action) {
-        action = registerAction(actionName, asKeyHandler(handler), options);
-    } else {
-        // Maybe nicer to simply update the action?
-        Utils.assert(!handler && !options, "Action already registered, rebind instead",
-                     actionName);
-    }
-
-    Utils.assert(!action.settings,
+    Utils.assert(!options.settings,
                  "Can only bind schemaless actions - change action's settings instead",
                  actionName);
 
+    let action = actionName && actions.find(a => a.name === actionName);
     let keycombo = keystrToKeycombo(keystr);
-    let boundAction = keycomboMap[keycombo]
-    if (boundAction) {
-        log("Rebinding", keystr, "to", actionName, "from", boundAction.name);
-        unbindkey(boundAction.id)
-    }
 
-    let actionId = display.grab_accelerator(keystr);
-    if (actionId === Meta.KeyBindingAction.NONE) {
-        // Failed to grab. Binding probably already taken.
-        log("Failed to grab")
-        return null;
-    }
-
-    let mutterName = Meta.external_binding_name_for_action(actionId);
-
-    action.id = actionId;
-    action.mutterName = mutterName;
-
-    if (action.options.opensNavigator) {
-        action.keyHandler = openNavigatorHandler(mutterName, keystr);
+    if (!action) {
+        action = registerAction(actionName, handler, options);
     } else {
-        action.keyHandler = asKeyHandler(handler);
+        let boundAction = keycomboMap[keycombo];
+        if (boundAction != action) {
+            log("Rebinding", keystr, "to", actionName, "from", boundAction.name);
+            disableAction(boundAction)
+        }
+
+        disableAction(action);
+
+        action.handler = handler;
+        action.options = options;
     }
 
-    Main.wm.allowKeybinding(action.mutterName, Shell.ActionMode.ALL);
+    action.keystr = keystr;
+    action.keycombo = keycombo;
 
-    nameMap[mutterName] = action;
-    actionIdMap[actionId] = action;
-    keycomboMap[keycombo] = action;
+    enableAction(action);
 
-    return actionId;
+    return action.id;
 }
 
 function unbindkey(actionIdOrKeystr) {
@@ -162,24 +144,7 @@ function unbindkey(actionIdOrKeystr) {
         actionId = actionIdOrKeystr;
     }
 
-    const action = actionIdMap[actionId];
-    Utils.assert(!action.settings,
-                 "Can not unbind schema-actions",
-                 action.name, actionIdOrKeystr);
-
-    if (!action) {
-        log("Attempted to unbind unbound keystr/action", actionIdOrKeystr);
-        return null;
-    }
-
-    if (!action.name) {
-        // anonymous action -> remove the action too
-        delete keycomboMap[action.combo];
-        delete actionIdMap[action.id];
-        delete nameMap[action.mutterName];
-    }
-
-    return display.ungrab_accelerator(actionId);
+    disableAction(actionIdMap[actionId]);
 }
 
 function devirtualizeMask(gdkVirtualMask) {
@@ -229,16 +194,25 @@ function handleAccelerator(display, actionId, deviceId, timestamp) {
     }
 }
 
-
 function disableAction(action) {
+    if (action.id === Meta.KeyBindingAction.NONE) {
+        return;
+    }
+
     const oldId = action.id;
     if (action.options.settings) {
         Main.wm.removeKeybinding(action.mutterName);
         action.id = Meta.KeyBindingAction.NONE;
         delete actionIdMap[oldId];
     } else {
-        // Should only be called in disable/enable - schemaless actions are
-        // disabled/enabled by other means
+        display.ungrab_accelerator(action.id)
+        action.id = Meta.KeyBindingAction.NONE;
+
+        delete nameMap[action.mutterName];
+        delete actionIdMap[oldId];
+        delete keycomboMap[action.keycombo];
+
+        action.mutterName = undefined;
     }
 }
 
@@ -261,8 +235,33 @@ function enableAction(action) {
             Utils.warn("Could not enable action", action.name);
 
     } else {
-        // Should only be called in disable/enable - schemaless actions are
-        // disabled/enabled by other means
+        if (keycomboMap[action.keycombo]) {
+            Utils.assert("Other action bound to", action.keystr, keycomboMap[action.keycombo].name)
+            return;
+        }
+
+        let actionId = display.grab_accelerator(action.keystr);
+        if (actionId === Meta.KeyBindingAction.NONE) {
+            log("Failed to grab. Binding probably already taken");
+            return;
+        }
+
+        let mutterName = Meta.external_binding_name_for_action(actionId);
+
+        action.id = actionId;
+        action.mutterName = mutterName;
+
+        actionIdMap[actionId] = action;
+        keycomboMap[action.keycombo] = action;
+        nameMap[mutterName] = action; 
+
+        if (action.options.opensNavigator) {
+            action.keyHandler = openNavigatorHandler(mutterName, action.keystr);
+        } else {
+            action.keyHandler = asKeyHandler(action.handler);
+        }
+
+        Main.wm.allowKeybinding(action.mutterName, Shell.ActionMode.ALL);
     }
 }
 
