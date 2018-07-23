@@ -1284,7 +1284,7 @@ class Spaces extends Map {
 
         let monitor = Main.layoutManager.monitors[index];
         let space = this.monitors.get(monitor);
-        if (space.monitor.index() !== monitor.index())
+        if (space.monitor !== monitor)
             return;
         let focus = metaWindow.has_focus();
 
