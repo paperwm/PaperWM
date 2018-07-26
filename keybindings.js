@@ -104,7 +104,7 @@ function registerAction(actionName, handler, options) {
 /**
  * Bind a key to an action (possibly creating a new action)
  */
-function bindkey(keystr, actionName=null, handler=null, options=null) {
+function bindkey(keystr, actionName=null, handler=null, options={}) {
     Utils.assert(!options.settings,
                  "Can only bind schemaless actions - change action's settings instead",
                  actionName);
@@ -116,7 +116,7 @@ function bindkey(keystr, actionName=null, handler=null, options=null) {
         action = registerAction(actionName, handler, options);
     } else {
         let boundAction = keycomboMap[keycombo];
-        if (boundAction != action) {
+        if (boundAction && boundAction != action) {
             log("Rebinding", keystr, "to", actionName, "from", boundAction.name);
             disableAction(boundAction)
         }
