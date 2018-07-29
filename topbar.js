@@ -150,8 +150,6 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.state = "NORMAL";
         this._enterbox.destroy();
         delete this._enterbox;
-        this._navigator.finish();
-        this._navigator.destroy();
         delete this._navigator;
     }
 
@@ -169,7 +167,7 @@ class WorkspaceMenu extends PanelMenu.Button {
         if ((event.type() == Clutter.EventType.TOUCH_BEGIN ||
              event.type() == Clutter.EventType.BUTTON_PRESS)) {
             if (this.state === "SCROLL") {
-                this._finishWorkspaceSelect();
+                this._navigator.finish();
             } else {
                 if (event.get_button() === Clutter.BUTTON_SECONDARY) {
                     this.menu.toggle();
@@ -196,8 +194,10 @@ class WorkspaceMenu extends PanelMenu.Button {
                 this._enterbox.set_size(...screen.get_size());
                 Main.layoutManager.trackChrome(this._enterbox);
 
+                this._navigator.connect('destroy', this._finishWorkspaceSelect.bind(this));
+
                 let id = this._enterbox.connect('enter-event', () => {
-                    this._finishWorkspaceSelect();
+                    this._navigator.finish();
                 });
             }
 

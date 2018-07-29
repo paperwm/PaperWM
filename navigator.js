@@ -233,8 +233,11 @@ var Navigator = class Navigator {
         Main.wm._blockAnimations = this._block;
 
         navigator = false;
+
+        this.emit('destroy');
     }
 }
+Signals.addSignalMethods(Navigator.prototype);
 
 function getNavigator() {
     if (navigator)
