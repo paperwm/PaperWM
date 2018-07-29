@@ -149,6 +149,7 @@ class WorkspaceMenu extends PanelMenu.Button {
     _finishWorkspaceSelect() {
         this.state = "NORMAL";
         this._enterbox.destroy();
+        delete this.selected;
         delete this._enterbox;
         delete this._navigator;
     }
@@ -164,9 +165,11 @@ class WorkspaceMenu extends PanelMenu.Button {
             this.state = "NORMAL";
         }
 
-        if ((event.type() == Clutter.EventType.TOUCH_BEGIN ||
-             event.type() == Clutter.EventType.BUTTON_PRESS)) {
-            if (this.state === "SCROLL") {
+        let type = event.type();
+
+        if ((type == Clutter.EventType.TOUCH_BEGIN ||
+             type == Clutter.EventType.BUTTON_PRESS)) {
+            if (['SCROLL', 'SMOOTH'].includes(this.state)) {
                 this._navigator.finish();
             } else {
                 if (event.get_button() === Clutter.BUTTON_SECONDARY) {
@@ -184,10 +187,11 @@ class WorkspaceMenu extends PanelMenu.Button {
         }
 
         if (["NORMAL", "SCROLL"].includes(this.state) &&
-            event.type() === Clutter.EventType.SCROLL) {
+            type === Clutter.EventType.SCROLL) {
             if (!this._navigator) {
                 this.state = 'SCROLL';
                 this._navigator = Navigator.getNavigator();
+                Tiling.spaces._initWorkspaceStack();
                 this._enterbox =  new Clutter.Actor({reactive: true});
                 Main.uiGroup.add_actor(this._enterbox);
                 this._enterbox.set_position(panelBox.x, panelBox.y + panelBox.height + 20);
@@ -201,13 +205,114 @@ class WorkspaceMenu extends PanelMenu.Button {
                 });
             }
 
+            let device = event.get_source_device();
+            // log(`source: ${device.get_device_type()}`);
             let direction = event.get_scroll_direction();
+            if (direction === Clutter.ScrollDirection.SMOOTH
+                && device.get_device_type() !== Clutter.InputDeviceType.POINTER_DEVICE) {
+                this.state = 'SMOOTH';
+            }
+
             if (direction === Clutter.ScrollDirection.UP) {
                 Tiling.spaces.selectSpace(Meta.MotionDirection.DOWN);
             }
             if (direction === Clutter.ScrollDirection.DOWN) {
                 Tiling.spaces.selectSpace(Meta.MotionDirection.UP);
             }
+        }
+
+        if (this.state === 'SMOOTH' && type === Clutter.EventType.SCROLL
+            && event.get_scroll_direction() === Clutter.ScrollDirection.SMOOTH) {
+
+            let spaces = Tiling.spaces;
+            let active = spaces.spaceOf(screen.get_active_workspace());
+
+            let [dx, dy] = event.get_scroll_delta();
+            dy *= active.height*0.05;
+            let t = event.get_time();
+            let v = -dy/(this.time - t);
+            // log(`v ${v}, dy: ${dy}`);
+
+            let firstEvent = false;
+            if (!this.selected) {
+                firstEvent = true;
+                this.selected = spaces.selectedSpace;
+            }
+            let transition = 'easeOutQuad';
+            if (dy > 0
+                && this.selected !== active
+                && ((this.selected.actor.y > 0.385*active.height &&
+                     this.selected.actor.y - dy < 0.385*active.height)
+                    ||
+                    (this.selected.actor.y - dy < 0.035*active.height))
+               ) {
+                dy = 0;
+                v = 0.1;
+                spaces.selectSpace(Meta.MotionDirection.UP, false, transition);
+                this.selected = spaces.selectedSpace;
+                Tweener.removeTweens(this.selected.actor);
+                Tweener.addTween(this.selected.actor,
+                                 {scale_x: 0.9, scale_y: 0.9, time: 0.25, transition});
+            } else if (dy < 0
+                       && ((this.selected.actor.y < 0.60*active.height &&
+                            this.selected.actor.y - dy > 0.60*active.height)
+                           ||
+                           (this.selected.actor.y - dy > 0.95*active.height))
+                      ) {
+                dy = 0;
+                v = 0.1;
+                spaces.selectSpace(Meta.MotionDirection.DOWN, false, transition);
+                this.selected = spaces.selectedSpace;
+                Tweener.removeTweens(this.selected.actor);
+                Tweener.addTween(this.selected.actor,
+                                 {scale_x: 0.9, scale_y: 0.9, time: 0.25, transition});
+            }
+
+            this.selected.actor.y -= dy;
+            if (this.selected === active) {
+                let scale = 0.90;
+                let s = 1 - (1 - scale)*(this.selected.actor.y/(0.1*this.selected.height));
+                s = Math.max(s, scale);
+                Tweener.removeTweens(this.selected.actor);
+                this.selected.actor.set_scale(s, s);
+            }
+
+            if (v === 0 && !firstEvent) {
+                // log(`finish: ${this.velocity}`);
+                let test;
+                if (this.velocity > 0)
+                    test = () => this.velocity > 0;
+                else
+                    test = () => this.velocity < 0;
+
+                let y = this.selected.actor.y;
+                let friction = 0.5;
+                while (test()) {
+                    let dy = this.velocity*16;
+                    y -= dy;
+                    // log(`calc target: ${dy} ${y} ${this.velocity}`);
+                    if (this.velocity > 0)
+                        this.velocity -= friction;
+                    else
+                        this.velocity += friction;
+                }
+                // log(`zero: ${y/this.selected.height}`);
+
+                if (this.selected === active && y <= 0.1*this.selected.height) {
+                    this._navigator.finish();
+                    return;
+                } else if (y > 0.6*this.selected.height) {
+                    spaces.selectSpace(Meta.MotionDirection.DOWN, false, transition);
+                    this.selected = spaces.selectedSpace;
+                } else {
+                    spaces.selectSpace(Meta.MotionDirection.DOWN);
+                    spaces.selectSpace(Meta.MotionDirection.UP);
+                }
+            } else {
+                this.time = t;
+                this.velocity = v;
+            }
+
         }
 
         return Clutter.EVENT_PROPAGATE;
