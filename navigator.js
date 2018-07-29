@@ -59,7 +59,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     _initialSelection: function(backward, actionName) {
         debug('#preview', '_initialSelection');
-        this.navigator = new Navigator();
+        this.navigator = getNavigator();
         let actionId = Keybindings.idOf(actionName);
         if(actionId === Meta.KeyBindingAction.NONE) {
             try {
@@ -103,7 +103,7 @@ var PreviewedWindowNavigator = new Lang.Class({
 
     _finish: function(timestamp) {
         debug('#preview', 'finish');
-        this.navigator.finish();
+        this.navigator.accept();
         this.parent(timestamp);
     },
 
@@ -123,6 +123,7 @@ var PreviewedWindowNavigator = new Lang.Class({
     }
 });
 
+var navigator;
 var Navigator = class Navigator {
     constructor() {
         TopBar.show();
@@ -155,8 +156,13 @@ var Navigator = class Navigator {
         }
     }
 
-    finish() {
+    accept() {
         this.was_accepted = true;
+    }
+
+    finish() {
+        this.accept();
+        this.destroy();
     }
 
     destroy() {
@@ -226,7 +232,16 @@ var Navigator = class Navigator {
 
         Main.wm._blockAnimations = this._block;
 
+        navigator = false;
     }
+}
+
+function getNavigator() {
+    if (navigator)
+        return navigator;
+
+    navigator = new Navigator();
+    return navigator;
 }
 
 function preview_navigate(meta_window, space, {display, screen, binding}) {
