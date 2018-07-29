@@ -1101,7 +1101,7 @@ class Spaces extends Map {
                              {y: Math.round(space.monitor.y
                                             + space.monitor.height/2),
                               time: 0.25,
-                              transition: 'easeInOutQuad'
+                              transition
                              });
         } else {
             if (direction === Meta.MotionDirection.DOWN)
@@ -1109,7 +1109,7 @@ class Spaces extends Map {
             else
                 to = from - 1;
             if (to < 0 || to >= mru.length) {
-                return true;
+                to = from;
             }
             newSpace = mru[to];
             this.selectedSpace = newSpace;
@@ -1139,7 +1139,7 @@ class Spaces extends Map {
                               time: 0.25,
                               scale_x: scale + (to - i)*0.01,
                               scale_y: scale + (to - i)*0.01,
-                              transition: 'easeInOutQuad',
+                              transition
                              });
 
         });
