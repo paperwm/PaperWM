@@ -1111,6 +1111,9 @@ class Spaces extends Map {
             if (to < 0 || to >= mru.length) {
                 to = from;
             }
+            if (to === from && Tweener.getTweenCount(newSpace.actor) > 0)
+                return;
+
             newSpace = mru[to];
             this.selectedSpace = newSpace;
         }
