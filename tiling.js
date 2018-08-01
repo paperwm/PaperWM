@@ -1013,61 +1013,70 @@ class Spaces extends Map {
         }
     }
 
-    selectSpace(direction, move) {
+    _initWorkspaceStack() {
+        const scale = 0.9;
+        let space = this.spaceOf(screen.get_active_workspace());
+        let mru = [space, ...this.stack];
+
+        if (Main.panel.statusArea.appMenu)
+            Main.panel.statusArea.appMenu.container.hide();
+        let monitor = space.monitor;
+        this.selectedSpace = space;
+        inPreview = true;
+
+        let heights = [0].concat(this._yPositions.slice(2));
+
+        let cloneParent = space.clip.get_parent();
+        mru.forEach((space, i) => {
+            TopBar.updateIndicatorPosition(space.workspace);
+            space.clip.set_position(monitor.x, monitor.y);
+
+            let scaleX = monitor.width/space.width;
+            let scaleY = monitor.height/space.height;
+            space.clip.set_scale(scaleX, scaleY);
+
+            let h = heights[i];
+            if (h === undefined)
+                h = heights[heights.length-1];
+            space.actor.set_position(0, space.height*h);
+
+            space.actor.scale_y = scale - i*0.01;
+            space.actor.scale_x = scale - i*0.01;
+            if (mru[i - 1] === undefined)
+                return;
+            cloneParent.set_child_below_sibling(
+                space.clip,
+                mru[i - 1].clip
+            );
+            Tweener.removeTweens(space.actor);
+            space.actor.show();
+
+            let selected = space.selectedWindow;
+            if (selected && selected.fullscreen) {
+                selected.clone.y = Main.panel.actor.height + prefs.vertical_margin;
+            }
+        });
+
+        space.actor.scale_y = 1;
+        space.actor.scale_x = 1;
+
+        let selected = space.selectedWindow;
+        if (selected && selected.fullscreen) {
+            Tweener.addTween(selected.clone, {
+                y: Main.panel.actor.height + prefs.vertical_margin,
+                time: 0.25
+            });
+        }
+    }
+
+    selectSpace(direction, move, transition) {
+        transition = transition || 'easeInOutQuad';
         const scale = 0.9;
         let space = this.spaceOf(screen.get_active_workspace());
         let mru = [space, ...this.stack];
 
         if (!inPreview) {
-            if (Main.panel.statusArea.appMenu)
-                Main.panel.statusArea.appMenu.container.hide();
-            let monitor = space.monitor;
-            this.selectedSpace = space;
-            inPreview = true;
-
-            let heights = [0].concat(this._yPositions.slice(1));
-
-            let cloneParent = space.clip.get_parent();
-            mru.forEach((space, i) => {
-                TopBar.updateIndicatorPosition(space.workspace);
-                space.clip.set_position(monitor.x, monitor.y);
-
-                let scaleX = monitor.width/space.width;
-                let scaleY = monitor.height/space.height;
-                space.clip.set_scale(scaleX, scaleY);
-
-                let h = heights[i];
-                if (h === undefined)
-                    h = heights[heights.length-1];
-                space.actor.set_position(0, space.height*h);
-
-                space.actor.scale_y = scale + (1 - i)*0.01;
-                space.actor.scale_x = scale + (1 - i)*0.01;
-                if (mru[i - 1] === undefined)
-                    return;
-                cloneParent.set_child_below_sibling(
-                    space.clip,
-                    mru[i - 1].clip
-                );
-                Tweener.removeTweens(space.actor);
-                space.actor.show();
-
-                let selected = space.selectedWindow;
-                if (selected && selected.fullscreen) {
-                    selected.clone.y = Main.panel.actor.height + prefs.vertical_margin;
-                }
-            });
-
-            space.actor.scale_y = 1;
-            space.actor.scale_x = 1;
-
-            let selected = space.selectedWindow;
-            if (selected && selected.fullscreen) {
-                Tweener.addTween(selected.clone, {
-                    y: Main.panel.actor.height + prefs.vertical_margin,
-                    time: 0.25
-                });
-            }
+            this._initWorkspaceStack();
         }
 
         let from = mru.indexOf(this.selectedSpace);
