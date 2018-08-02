@@ -114,7 +114,7 @@
     </key>
 
     <key type="as" name="center-horizontally">
-      <default><![CDATA[['<Super>w']]]></default>
+      <default><![CDATA[['<Super>c']]]></default>
       <summary>Center window horizontally</summary>
     </key>
 
@@ -141,7 +141,7 @@
     </key>
 
     <key type="as" name="close-window">
-      <default><![CDATA[['<Super>BackSpace', '<Super>c']]]></default>
+      <default><![CDATA[['<Super>BackSpace']]]></default>
       <summary>Close the active window</summary>
     </key>
   </schema>
