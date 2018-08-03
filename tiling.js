@@ -446,9 +446,8 @@ class Space extends Array {
         let column = space[index];
 
         if (row === -1) {
-            let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
-                                                  space.workspace);
-            let selected = mru.filter(w => column.includes(w))[0];
+            let selected =
+                display.sort_windows_by_stacking(column)[column.length - 1];
             row = column.indexOf(selected);
         }
 
