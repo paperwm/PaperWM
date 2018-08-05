@@ -1406,25 +1406,23 @@ function disable () {
    Types of windows which never should be tiled.
  */
 function add_filter(meta_window) {
-    let add = true;
-
     if (meta_window.get_transient_for()) {
         // Never add transient windows
-        add = false;
+        return false;
     }
     if (meta_window.window_type !== Meta.WindowType.NORMAL) {
         // And only add Normal windows
-        add = false;
+        return false;
     }
 
     if (meta_window.is_on_all_workspaces()) {
-        add = false;
+        return false;
     }
     if (Scratch.isScratchWindow(meta_window)) {
-        add = false;
+        return false;
     }
 
-    return add;
+    return true;
 }
 
 
