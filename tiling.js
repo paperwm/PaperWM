@@ -108,7 +108,9 @@ class Space extends Array {
         let metaBackground = new Meta.Background({meta_screen: screen});
         const GDesktopEnums = imports.gi.GDesktopEnums;
         let background = new Meta.BackgroundActor({
-            meta_screen: screen, monitor: 0, background: metaBackground});
+            meta_screen: screen, monitor: 0, background: metaBackground,
+            reactive: true // Disable the background menu
+        });
         this.background = background;
         this.shadow = new St.Widget();;
         this.shadow.set_style(
