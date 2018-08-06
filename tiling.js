@@ -618,11 +618,13 @@ class Space extends Array {
                       monitor.width,
                       monitor.height);
 
-        this.shadow.set_size(monitor.width + 8*2 + prefs.window_gap, monitor.height + 4);
+        this.shadow.set_size(monitor.width + 8*2 + prefs.window_gap,
+                             monitor.height + 4 + prefs.window_gap);
         background.set_size(this.shadow.width, this.shadow.height);
 
         this.cloneClip.set_size(monitor.width, monitor.height);
-        this.cloneClip.set_clip(-Math.round(prefs.window_gap/2), 0, monitor.width + prefs.window_gap, monitor.height);
+        this.cloneClip.set_clip(-Math.round(prefs.window_gap/2), 0,
+                                monitor.width + prefs.window_gap, this.shadow.height);
 
         this.emit('monitor-changed');
     }
