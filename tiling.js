@@ -38,7 +38,7 @@ var panelBox = Main.layoutManager.panelBox;
 
 var inPreview = false;
 
-var signals, oldSpaces, backgroundGroup, oldMonitors;
+var signals, oldSpaces, backgroundGroup, oldMonitors, WindowCloneLayout;
 function init() {
     // Symbol to retrieve the focus handler id
     signals = new utils.Signals();
@@ -46,6 +46,50 @@ function init() {
     oldMonitors = new Map();
 
     backgroundGroup = global.window_group.first_child;
+
+    // LayoutManagers can't be re-evaluated so we wrap this in `init`
+    /**
+       A simple layout for our window clones that aligns the coordinates and
+       size of our clone with the window's frame
+     */
+    WindowCloneLayout = new imports.lang.Class ({
+        Name: 'TiledCloneLayout',
+        Extends: Clutter.LayoutManager,
+
+        vfunc_get_preferred_height(container, forWidth) {
+            let frame = container.get_first_child().meta_window.get_frame_rect();
+            return [frame.height, frame.height];
+        },
+
+        vfunc_get_preferred_width(container, forHeight) {
+            let frame = container.get_first_child().meta_window.get_frame_rect();
+            return [frame.width, frame.width];
+        },
+
+        vfunc_allocate(container, box, flags) {
+            let child = container.first_child;
+            let actor = child.source;
+            if (!actor)
+                return;
+
+            // We need to adjust the position of the actor because of the
+            // consequences of invisible borders -- in reality, the texture
+            // has an extra set of "padding" around it that we need to trim
+            // down.
+
+            // The outer rect (from which we compute the bounding box)
+            // paradoxically is the smaller rectangle, containing the positions
+            // of the visible frame. The input rect contains everything,
+            // including the invisible border padding.
+            let metaWindow = actor.meta_window;
+            let buffer = metaWindow.get_buffer_rect();
+            let frame = metaWindow.get_frame_rect();
+            box.set_origin((buffer.x - frame.x),
+                           (buffer.y - frame.y));
+            box.set_size(buffer.width, buffer.height);
+            child.allocate(box, flags);
+        }
+    });
 }
 
 /**
@@ -215,10 +259,8 @@ class Space extends Array {
                 let c = w.clone;
                 c.targetX = x;
                 c.targetY = y;
-                let dX = f.x - b.x, dY = f.y - b.y;
                 Tweener.addTween(c, {
-                    x: x - dX,
-                    y: y - dY,
+                    x, y,
                     time,
                     transition: 'easeInOutQuad',
                 });
@@ -508,10 +550,8 @@ class Space extends Array {
             let frame = w.get_frame_rect();
             let buffer = w.get_buffer_rect();
 
-            let dX = frame.x - buffer.x, dY = frame.y - buffer.y;
-            let x = this.monitor.x + Math.round(clone.x) + dX
-                + this.targetX;
-            let y = this.monitor.y + Math.round(clone.y) + dY;
+            let x = this.monitor.x + Math.round(clone.x) + this.targetX;
+            let y = this.monitor.y + Math.round(clone.y);
             w.move_frame(true, x, y);
 
         });
@@ -1315,8 +1355,15 @@ Signals.addSignalMethods(Spaces.prototype);
 function registerWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
     let clone = new Clutter.Clone({source: actor});
-    clone.set_position(actor.x, actor.y);
-    metaWindow.clone = clone;
+    let container = new Clutter.Actor({
+        layout_manager: new WindowCloneLayout()
+    });
+    container.add_actor(clone);
+    clone.meta_window = metaWindow;
+
+    let frame = metaWindow.get_frame_rect();
+    clone.set_position(frame.x, frame.y);
+    metaWindow.clone = container;
 
     signals.connect(metaWindow, "focus", focus_wrapper);
     signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
@@ -1331,11 +1378,6 @@ function destroyHandler(actor) {
 }
 
 function resizeHandler(metaWindow) {
-    // On wayland the clone size doesn't seem to update properly if the window
-    // actor is hidden.
-    let b = metaWindow.get_buffer_rect();
-    metaWindow.clone.set_size(b.width, b.height);
-
     let space = spaces.spaceOfWindow(metaWindow);
     if (metaWindow !== space.selectedWindow)
         return;
@@ -1410,6 +1452,7 @@ function disable () {
    Types of windows which never should be tiled.
  */
 function add_filter(meta_window) {
+    log(`meta_window.title is of type: ${meta_window.window_type}`)
     if (meta_window.get_transient_for()) {
         // Never add transient windows
         return false;
@@ -1552,8 +1595,8 @@ function insertWindow(metaWindow, {existing}) {
         });
     } else {
         clone.set_position(
-            frame.x - monitor.x - x_offset - space.cloneContainer.x,
-            frame.y - monitor.y - y_offset + space.cloneContainer.y);
+            frame.x - monitor.x - space.cloneContainer.x,
+            frame.y - monitor.y + space.cloneContainer.y);
         clone.show();
     }
 
@@ -1571,9 +1614,8 @@ function animateDown(metaWindow) {
     let frame = metaWindow.get_frame_rect();
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
-    let dY = frame.y - buffer.y;
     Tweener.addTween(metaWindow.clone, {
-        y: panelBox.height + prefs.vertical_margin - dY,
+        y: panelBox.height + prefs.vertical_margin,
         time: 0.25,
         transition: 'easeInOutQuad'
     });
@@ -1611,7 +1653,6 @@ function ensureViewport(meta_window, space, force) {
     let frame = meta_window.get_frame_rect();
     let buffer = meta_window.get_buffer_rect();
     let clone = meta_window.clone;
-    let dX = frame.x - buffer.x;
 
     let x = Math.round(clone.targetX) + space.targetX;
     let y = panelBox.height + prefs.vertical_margin;
@@ -1668,7 +1709,6 @@ function updateSelection(space, metaWindow, noAnimate){
     let clone = metaWindow.clone;
     const frame = metaWindow.get_frame_rect();
     const buffer = metaWindow.get_buffer_rect();
-    const dX = frame.x - buffer.x, dY = frame.y - buffer.y;
     let protrusion = Math.round(prefs.window_gap/2);
     Tweener.addTween(space.selection,
                      {x: clone.targetX - protrusion,
@@ -1738,6 +1778,7 @@ function grabEnd(screen, display, metaWindow, type) {
     if (type === Meta.GrabOp.COMPOSITOR)
         return;
     let space = spaces.spaceOfWindow(metaWindow);
+    let frame = metaWindow.get_frame_rect();
     if (space.indexOf(metaWindow) === -1)
         return;
     grabSignals.destroy();
@@ -1745,8 +1786,8 @@ function grabEnd(screen, display, metaWindow, type) {
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
     space.targetX = space.cloneContainer.x;
-    clone.set_position(buffer.x - space.monitor.x - space.targetX,
-                       buffer.y - space.monitor.y);
+    clone.set_position(frame.x - space.monitor.x - space.targetX,
+                       frame.y - space.monitor.y);
     space.layout();
     ensureViewport(metaWindow, space, true);
 }
