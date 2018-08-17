@@ -201,7 +201,7 @@
        '#494066', '#826647', '#4B6983', '#807D74', '#5D7555', '#884631',
        '#625B81', '#B39169', '#7590AE', '#BAB5AB', '#83A67F', '#C1665A',
        '#887FA3', '#E0C39E']]]></default>
-      <summary>Minimum gap between windows</summary>
+      <summary>Workspace colors</summary>
     </key>
 
     <child name="keybindings" schema="org.gnome.Shell.Extensions.PaperWM.Keybindings"/>
