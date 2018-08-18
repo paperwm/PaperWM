@@ -29,7 +29,7 @@ var Me = Extension.imports.tiling;
 
 var prefs = Settings.prefs;
 
-// How much the stack should protrude from the side
+// Mutter prevints windows from being placed further off the screen than 75 pixels.
 var stack_margin = 75;
 // Minimum margin
 var minimumMargin = 15;
@@ -1353,8 +1353,6 @@ function registerWindow(metaWindow) {
     container.add_actor(clone);
     clone.meta_window = metaWindow;
 
-    let frame = metaWindow.get_frame_rect();
-    clone.set_position(frame.x, frame.y);
     metaWindow.clone = container;
 
     signals.connect(metaWindow, "focus", focus_wrapper);
@@ -1444,7 +1442,6 @@ function disable () {
    Types of windows which never should be tiled.
  */
 function add_filter(meta_window) {
-    log(`meta_window.title is of type: ${meta_window.window_type}`)
     if (meta_window.get_transient_for()) {
         // Never add transient windows
         return false;
