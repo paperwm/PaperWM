@@ -22,7 +22,8 @@ var prefs = {
     window_gap: settings.get_int('window-gap'),
     vertical_margin: settings.get_int('vertical-margin'),
     horizontal_margin: settings.get_int('horizontal-margin'),
-    workspace_colors: settings.get_strv('workspace-colors')
+    workspace_colors: settings.get_strv('workspace-colors'),
+    override_hot_corner: settings.get_boolean('override-hot-corner')
 };
 
 function setVerticalMargin() {
@@ -68,6 +69,7 @@ setSchemas(); // Initialize imediately so prefs.js can import properly
 function init() {
     settings.connect('changed::window-gap', setState);
     settings.connect('changed::horizontal-margin', setState);
+    settings.connect('changed::override-hot-corner', setState);
     settings.connect('changed::vertical-margin', setVerticalMargin);
     setVerticalMargin();
     settings.connect('changed::workspace-colors', setState);

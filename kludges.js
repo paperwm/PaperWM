@@ -4,14 +4,42 @@
   around these problems.
  */
 
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+
 var Meta = imports.gi.Meta;
+var Main = imports.ui.main;
+var prefs = Extension.imports.settings.prefs;
+var utils = Extension.imports.utils;
+
+function overrideHotCorners() {
+    for (let corner of Main.layoutManager.hotCorners) {
+        if (!corner)
+            return;
+
+        corner._toggleOverview = function() {
+        };
+
+        corner._pressureBarrier._trigger = function() {
+            this._isTriggered = true;
+            Extension.imports.topbar.show();
+            this._reset();
+        };
+    }
+}
 
 var orgUpdateState;
+var signals;
 function init() {
     orgUpdateState = imports.ui.messageTray.MessageTray.prototype._updateState;
+    signals = new utils.Signals();
 }
 
 function enable() {
+
+    if (prefs.override_hot_corner) {
+        overrideHotCorners();
+        signals.connect(Main.layoutManager, 'hot-corners-changed', overrideHotCorners);
+    }
 
     // Don't hide notifications when there's fullscreen windows in the workspace.
     // Fullscreen windows aren't special in paperWM and might not even be
@@ -81,4 +109,7 @@ function enable() {
 
 function disable() {
     imports.ui.messageTray.MessageTray.prototype._updateState = orgUpdateState;
+
+    Main.layoutManager._updateHotCorners();
+    signals.destroy();
 }
