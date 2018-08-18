@@ -4,14 +4,52 @@
   around these problems.
  */
 
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+
 var Meta = imports.gi.Meta;
+var Main = imports.ui.main;
+var utils = Extension.imports.utils;
+
+var Convenience = Extension.imports.convenience;
+var settings = Convenience.getSettings();
+
+function overrideHotCorners() {
+    for (let corner of Main.layoutManager.hotCorners) {
+        if (!corner)
+            return;
+
+        corner._toggleOverview = function() {};
+
+        corner._pressureBarrier._trigger = function() {};
+    }
+}
+
+function disableHotcorners() {
+    let override = settings.get_boolean("override-hot-corner");
+    if (override) {
+        overrideHotCorners();
+        signals.connect(Main.layoutManager,
+                        'hot-corners-changed',
+                        overrideHotCorners);
+    } else {
+        signals.disconnect(Main.layoutManager);
+        Main.layoutManager._updateHotCorners();
+    }
+}
 
 var orgUpdateState;
+var signals;
 function init() {
     orgUpdateState = imports.ui.messageTray.MessageTray.prototype._updateState;
+    signals = new utils.Signals();
 }
 
 function enable() {
+
+    signals.connect(settings,
+                    'changed::override-hot-corner',
+                    disableHotcorners);
+    disableHotcorners();
 
     // Don't hide notifications when there's fullscreen windows in the workspace.
     // Fullscreen windows aren't special in paperWM and might not even be
@@ -81,4 +119,7 @@ function enable() {
 
 function disable() {
     imports.ui.messageTray.MessageTray.prototype._updateState = orgUpdateState;
+
+    signals.destroy();
+    Main.layoutManager._updateHotCorners();
 }
