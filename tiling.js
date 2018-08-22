@@ -1369,15 +1369,20 @@ function destroyHandler(actor) {
 
 function resizeHandler(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
-    if (metaWindow !== space.selectedWindow)
+    if (space.indexOf(metaWindow) === -1)
         return;
+
+    let selected = metaWindow !== space.selectedWindow;
 
     if (noAnimate) {
         space.layout(false);
-        space.selection.width = metaWindow.get_frame_rect().width + prefs.window_gap;
+        if (selected) {
+            let frame = metaWindow.get_frame_rect();
+            space.selection.width = frame.width + prefs.window_gap;
+        }
     } else {
         // Restore window position when eg. exiting fullscreen
-        !Navigator.navigating
+        !Navigator.navigating && selected
             && move_to(space, metaWindow, {x: metaWindow.get_frame_rect().x});
 
         space.layout(true);
