@@ -1372,7 +1372,7 @@ function resizeHandler(metaWindow) {
     if (space.indexOf(metaWindow) === -1)
         return;
 
-    let selected = metaWindow !== space.selectedWindow;
+    let selected = metaWindow === space.selectedWindow;
 
     if (noAnimate) {
         space.layout(false);
