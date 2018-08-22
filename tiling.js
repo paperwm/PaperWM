@@ -72,21 +72,13 @@ function init() {
             if (!actor)
                 return;
 
-            // We need to adjust the position of the actor because of the
-            // consequences of invisible borders -- in reality, the texture
-            // has an extra set of "padding" around it that we need to trim
-            // down.
-
-            // The outer rect (from which we compute the bounding box)
-            // paradoxically is the smaller rectangle, containing the positions
-            // of the visible frame. The input rect contains everything,
-            // including the invisible border padding.
             let metaWindow = actor.meta_window;
-            let buffer = metaWindow.get_buffer_rect();
             let frame = metaWindow.get_frame_rect();
-            box.set_origin((buffer.x - frame.x),
-                           (buffer.y - frame.y));
-            box.set_size(buffer.width, buffer.height);
+            // Adjust the clone's origin to the north-west, so it will line up
+            // with the frame.
+            box.set_origin(actor.x - frame.x,
+                           actor.y - frame.y);
+            box.set_size(actor.width, actor.height);
             child.allocate(box, flags);
         }
     });
