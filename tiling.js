@@ -164,6 +164,10 @@ class Space extends Array {
                 spaces.selectedSpace = this;
                 nav.finish();
             });
+
+            this.signals.connect(
+                background, 'captured-event',
+                Extension.imports.gestures.horizontalScroll.bind(this));
         }
         this.background = background;
         this.shadow = new St.Widget();;
@@ -280,6 +284,7 @@ class Space extends Array {
             }
         }
         this._inLayout = false;
+        this.cloneContainer.width = x - gap;
 
         let width = x - gap;
         this.cloneContainer.width = width;
@@ -1052,6 +1057,8 @@ class Spaces extends Map {
     }
 
     _initWorkspaceStack() {
+        if (inPreview)
+            return;
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
         let mru = [space, ...this.stack];

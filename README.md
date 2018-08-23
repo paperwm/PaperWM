@@ -14,7 +14,7 @@ It will link the repo to `~/.local/share/gnome-shell-extensions/` where gnome-sh
 
 ## Usage ##
 
-Most functionality is available using a mouse, eg. by clicking on a window at the edge of a monitor. But the primary focus is making an environment which works well with a keyboard.
+Most functionality is available using a mouse, eg. activating a window at the edge of the monitor by clicking on it. In wayland its possible to navigate with 3-finger swipes on the trackpad. But the primary focus is making an environment which works well with a keyboard.
 
 All keybindings start with the <kbd>Super</kbd> modifier. On most keyboards it's the Windows key, on mac keyboards it's the Command key. It's possible and recommended to modify the keyboard layout so that <kbd>Super</kbd> is switched with <kbd>Alt</kbd> making all the keybindings easier to reach. This can be done through Gnome Tweaks under `Keybard & Mouse` ⟶ `Additional Layout Options` ⟶ `Alt/Win key behavior` ⟶ `Left Alt is swapped with Left Win`.
 
@@ -33,6 +33,8 @@ New windows are automatically tiled to the right of the active window, taking up
 Activating a window will ensure it's fully visible, scrolling the tiling if necessary. Pressing <kbd>Super</kbd><kbd>.</kbd> activates the window to the right. <kbd>Super</kbd><kbd>,</kbd> activates the window to the left. On a US keyboard these keys are intuitively marked by <kbd><</kbd> and <kbd>></kbd>, they are also ordered the same way on almost all keyboard layouts. A minimap will be shown when <kbd>Super</kbd> is continually being pressed, as can be seen in the above screenshot.
 
 Pressing <kbd>Super</kbd><kbd>I</kbd> will move the window to the right below the active window, tiling them vertically in a column. <kbd>Super</kbd><kbd>O</kbd> will do the opposite, pushing the bottom window out of the current column.
+
+Swiping the trackpad horizontally with three fingers will scroll the tiling (only available in Wayland).
 
 <kbd>Alt</kbd><kbd>Tab</kbd> is of course also available.
 
@@ -66,6 +68,8 @@ Pressing <kbd>Super</kbd><kbd>Above_Tab</kbd> will slide the active workspace do
 The workspace name is shown in the top left corner replacing the `Activities` button adding a few enhancements. Scrolling on the name will let you browse the workspace stack just like <kbd>Super</kbd><kbd>Above_Tab</kbd>. Right clicking the name lets you access and change the workspace name and the background color:
 
 ![The workspace menu](https://github.com/paperwm/media/blob/master/menu.png)
+
+Swiping the trackpad vertically with three fingers lets you navigate the workspace stack (only available in Wayland).
 
 There's a single scrollable tiling per workspace. Adding another monitor simply makes it possible to have another workspace visible. The workspace stack is shared among all the monitors, windows being resized vertically as necessary when workspace is displayed on another monitor.
 
