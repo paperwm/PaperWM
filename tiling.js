@@ -153,6 +153,7 @@ class Space extends Array {
                 reactive: true // Disable the background menu
             }, meta_display)
         );
+        background.space = this;
 
         // This kills all input on X11, but works on wayland...
         if (Meta.is_wayland_compositor()) {
@@ -164,6 +165,11 @@ class Space extends Array {
                 spaces.selectedSpace = this;
                 nav.finish();
             });
+
+            this.signals.connect(background, 'captured-event',
+                                 (actor, event) => {
+                                     Extension.imports.gestures.horizontalScroll(actor, event);
+                                 });
         }
         this.background = background;
         this.shadow = new St.Widget();;
@@ -280,6 +286,7 @@ class Space extends Array {
             }
         }
         this._inLayout = false;
+        this.cloneContainer.width = x - gap;
 
         let width = x - gap;
         this.cloneContainer.width = width;
@@ -1052,6 +1059,8 @@ class Spaces extends Map {
     }
 
     _initWorkspaceStack() {
+        if (inPreview)
+            return;
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
         let mru = [space, ...this.stack];

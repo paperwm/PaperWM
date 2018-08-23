@@ -12,7 +12,7 @@ var modules = [
     Extension.imports.stackoverlay, Extension.imports.app,
     Extension.imports.kludges, Extension.imports.topbar,
     Extension.imports.navigator, Extension.imports.settings,
-    Extension.imports.keybindings,
+    Extension.imports.keybindings, Extension.imports.gestures
 ];
 var [ Tiling, Scratch, LiveAltTab,
         utils, StackOverlay,
