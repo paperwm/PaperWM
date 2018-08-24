@@ -126,8 +126,6 @@ var PreviewedWindowNavigator = new Lang.Class({
 var navigator;
 var Navigator = class Navigator {
     constructor() {
-        TopBar.show();
-
         navigating = true;
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
@@ -140,6 +138,14 @@ var Navigator = class Navigator {
         this.monitor = this.space.monitor;
         this.monitor.clickOverlay.hide();
         this.minimaps = new Map();
+
+        TopBar.show();
+        let selected = this.space.selectedWindow;
+        if (selected &&
+            (selected.fullscreen ||
+             selected.get_maximized() === Meta.MaximizeFlags.BOTH)) {
+            Tiling.animateDown(selected);
+        }
 
         this.space.startAnimate();
     }

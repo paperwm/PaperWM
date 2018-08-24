@@ -1610,7 +1610,6 @@ function animateDown(metaWindow) {
     });
 }
 
-
 /**
    Make sure that `meta_window` is in view, scrolling the space if needed.
  */
