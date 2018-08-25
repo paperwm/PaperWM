@@ -1075,6 +1075,7 @@ class Spaces extends Map {
         mru.forEach((space, i) => {
             TopBar.updateIndicatorPosition(space.workspace);
             space.clip.set_position(monitor.x, monitor.y);
+            space.startAnimate();
 
             let scaleX = monitor.width/space.width;
             let scaleY = monitor.height/space.height;
