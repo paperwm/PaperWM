@@ -191,6 +191,15 @@
       <summary>Minimum margin from windows top and bottom edge</summary>
     </key>
 
+    <key type="d" name="horizontal-swipe-speed">
+        <default>1.</default>
+        <summary>Horizontal swipe speed multiplier</summary>
+    </key>
+    <key type="d" name="vertical-swipe-speed">
+        <default>1.</default>
+        <summary>Vertical swipe speed multiplier</summary>
+    </key>
+
     <key type="i" name="window-gap">
       <default>10</default>
       <summary>Minimum gap between windows</summary>
