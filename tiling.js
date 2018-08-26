@@ -263,8 +263,10 @@ class Space extends Array {
         }
         this._inLayout = false;
 
-        if (x < this.width) {
-            this.targetX = Math.round((this.width - (x - gap))/2);
+        let width = x - gap;
+        this.cloneContainer.width = width;
+        if (width < this.width) {
+            this.targetX = Math.round((this.width - width)/2);
         }
         if (animate) {
             Tweener.addTween(this.cloneContainer,
