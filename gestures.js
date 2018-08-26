@@ -7,7 +7,6 @@ var PopupMenu = imports.ui.popupMenu;
 var Clutter = imports.gi.Clutter;
 var Main = imports.ui.main;
 var Tweener = imports.ui.tweener;
-var Gdk = imports.gi.Gdk;
 
 var Utils = Extension.imports.utils;
 var Tiling = Extension.imports.tiling;
@@ -173,10 +172,7 @@ function done(actor) {
 
 function focusWindowAtPointer(actor) {
     log(`focus at pointer`)
-    let display = Gdk.Display.get_default();
-    let deviceManager = display.get_device_manager();
-    let pointer = deviceManager.get_client_pointer();
-    let [$, x, y] = pointer.get_position();
+    let [x, y, mask] = global.get_pointer();
     let space = actor.space;
     x -= space.monitor.x;
     y -= space.monitor.y;
