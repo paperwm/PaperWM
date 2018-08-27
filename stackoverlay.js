@@ -246,7 +246,7 @@ var StackOverlay = new Lang.Class({
             frame.x = neighbour.clone.targetX + space.targetX;
             let max = 75;
             let width = frame.x;
-            if (space.visible.includes(metaWindow))
+            if (space.isPlaceable(metaWindow))
                 width = Math.min(width, 75);
             if (width > 75)
                 width -= prefs.window_gap;
@@ -261,7 +261,7 @@ var StackOverlay = new Lang.Class({
             let frame = neighbour.get_frame_rect();
             frame.x = neighbour.clone.targetX + space.targetX;
             let width = this.monitor.width - (frame.x + frame.width);
-            if (space.visible.includes(metaWindow))
+            if (space.isPlaceable(metaWindow))
                 width = Math.min(width, 75);
             if (width > 75)
                 width -= prefs.window_gap;

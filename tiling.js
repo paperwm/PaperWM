@@ -281,59 +281,24 @@ class Space extends Array {
                                transition: 'easeInOutQuad',
                                onComplete: this.moveDone.bind(this)
                              });
-            this.fixVisible();
             updateSelection(this);
         }
     }
 
-    fixVisible() {
-        let index = this.indexOf(this.selectedWindow);
-        if (index === -1)
-            return;
-        let target = this.targetX;
+    isPlaceable(metaWindow) {
+        let clone = metaWindow.clone;
+        let x = clone.targetX + this.targetX;
 
-        this.monitor.clickOverlay.reset();
-        this.visible = [...this[index]];
-
-        for (let overlay = this.monitor.clickOverlay.right,
-                 n=index+1 ; n < this.length; n++) {
-
-            let metaWindow = this[n][0];
-            let clone = metaWindow.clone;
-            let frame = metaWindow.get_frame_rect();
-            let x = clone.targetX + target;
-
-            if (!(x + frame.width < stack_margin
-                  || x > this.width - stack_margin
-                  || metaWindow.fullscreen
-                  || metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH)) {
-                this.visible.push(...this[n]);
+        if (x + clone.width < stack_margin
+            || x > this.width - stack_margin) {
+            return false;
+        } else {
+            // Fullscreen windows are only placeable on the monitor origin
+            if ((metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH ||
+                 metaWindow.fullscreen) && x !== 0) {
+                return false;
             }
-            if (!overlay.target && x + frame.width > this.width) {
-                overlay.setTarget(this, n);
-                break;
-            }
-        }
-
-        for (let overlay = this.monitor.clickOverlay.left,
-                 n=index-1; n >= 0; n--) {
-            // let width = Math.max(...this[n].map(w => w.get_frame_rect().width));
-
-            let metaWindow = this[n][0];
-            let clone = metaWindow.clone;
-            let frame = metaWindow.get_frame_rect();
-            let x = clone.targetX + target;
-
-            if (!(x + frame.width < stack_margin
-                  || x > this.width - stack_margin
-                  || metaWindow.fullscreen
-                  || metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH)) {
-                this.visible.push(...this[n]);
-            }
-            if (!overlay.target && x < 0) {
-                overlay.setTarget(this, n);
-                break;
-            }
+            return true;
         }
     }
 
@@ -532,29 +497,29 @@ class Space extends Array {
             || Main.overview.visible) {
             return;
         }
+        this.visible = [];
         this.getWindows().forEach(w => {
             if (!w.get_compositor_private())
                 return;
+
+            if (this.isPlaceable(w)) {
+                this.visible.push(w);
+            }
+
             let unMovable = w.fullscreen ||
                 w.get_maximized() === Meta.MaximizeFlags.BOTH;
             if (unMovable)
                 return;
 
             let clone = w.clone;
-            let frame = w.get_frame_rect();
-            let buffer = w.get_buffer_rect();
-
             let x = this.monitor.x + Math.round(clone.x) + this.targetX;
             let y = this.monitor.y + Math.round(clone.y);
             w.move_frame(true, x, y);
-
         });
 
         this.visible.forEach(w => {
             w.clone.hide();
             let actor = w.get_compositor_private();
-            if (!actor)
-                return;
             clipWindowActor(actor, this.monitor);
             actor.show();
         });
@@ -1775,8 +1740,29 @@ function move_to(space, metaWindow, { x, y, delay, transition,
                        }
                      });
 
+    // Set up the edge overlays so they're available immediately
+    space.monitor.clickOverlay.reset();
+    for (let overlay = space.monitor.clickOverlay.right,
+             n=index+1 ; n < space.length; n++) {
+        let metaWindow = space[n][0];
+        let clone = metaWindow.clone;
+        let x = clone.targetX + target;
+        if (!overlay.target && x + clone.width > space.width) {
+            overlay.setTarget(space, n);
+            break;
+        }
+    }
 
-    space.fixVisible();
+    for (let overlay = space.monitor.clickOverlay.left,
+             n=index-1; n >= 0; n--) {
+        let metaWindow = space[n][0];
+        let clone = metaWindow.clone;
+        let x = clone.targetX + target;
+        if (!overlay.target && x < 0) {
+            overlay.setTarget(space, n);
+            break;
+        }
+    }
 }
 
 var noAnimate = false;
