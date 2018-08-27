@@ -704,6 +704,7 @@ class Space extends Array {
         }
 
         if (oldSpace) {
+            this.targetX = oldSpace.targetX;
             for (let i=0; i < oldSpace.length; i++) {
                 let column = oldSpace[i];
                 for(let j=0; j < column.length; j++) {
@@ -736,7 +737,6 @@ class Space extends Array {
         }
 
         this._populated = true;
-        this.targetX = oldSpace.targetX;
         this.cloneContainer.x = this.targetX;
         this.getWindows().forEach(w => {
             w.get_compositor_private().hide();
