@@ -6,6 +6,7 @@ var PanelMenu = imports.ui.panelMenu;
 var PopupMenu = imports.ui.popupMenu;
 var Clutter = imports.gi.Clutter;
 var Main = imports.ui.main;
+var Shell = imports.gi.Shell;
 var Tweener = imports.ui.tweener;
 
 var Utils = Extension.imports.utils;
@@ -47,7 +48,8 @@ function enable() {
      */
     signals.connect(stage, 'captured-event', (actor, event) => {
         if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
-            event.get_touchpad_gesture_finger_count() > 3) {
+            event.get_touchpad_gesture_finger_count() > 3 ||
+            (Main.actionMode & Shell.ActionMode.OVERVIEW) > 0) {
             return Clutter.EVENT_PROPAGATE;
         }
         const phase = event.get_gesture_phase();
