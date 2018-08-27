@@ -24,7 +24,7 @@ var debug = utils.debug;
 
 var prefs = Extension.imports.settings.prefs;
 
-var screen = global.screen;
+var workspaceManager = global.workspace_manager;
 var display = global.display;
 
 var scale = 0.9;
@@ -131,9 +131,9 @@ var Navigator = class Navigator {
         navigating = true;
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
-        Meta.disable_unredirect_for_screen(screen);
+        // Meta.disable_unredirect_for_screen(screen);
 
-        this.space = Tiling.spaces.spaceOf(screen.get_active_workspace());
+        this.space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
 
         this._startWindow = this.space.selectedWindow;
         this.from = this.space;

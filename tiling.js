@@ -14,7 +14,7 @@ var debug = utils.debug;
 
 var Gdk = imports.gi.Gdk;
 
-var screen = global.screen;
+var workspaceManager = global.workspace_manager;
 var display = global.display;
 
 var spaces;
@@ -95,7 +95,7 @@ function init() {
 
    A @clip actor which spans the monitor and clips all its contents to the
    monitor. The clip lives along side all other space's clips in an actor
-   spanning the whole global.screen
+   spanning the whole global.workspaceManager
 
    An @actor to hold everything that's visible, it contains a @background,
    a @label and a @cloneContainer.
@@ -109,7 +109,7 @@ function init() {
 
    Clones are necessary due to restrictions mutter places on MetaWindowActors
    MetaWindowActors can only live in the `global.window_group` and can't be
-   moved reliably off screen. We create a Clutter.Clone for every window which
+   moved reliably off workspaceManager. We create a Clutter.Clone for every window which
    live in its @cloneContainer to avoid these problems. Scrolling to a window in
    the tiling can then be done by simply moving the @cloneContainer.
 
@@ -141,12 +141,18 @@ class Space extends Array {
         let cloneContainer = new St.Widget();
         this.cloneContainer = cloneContainer;
 
-        let metaBackground = new Meta.Background({meta_screen: screen});
+        let meta_display = global.screen ?
+            { meta_screen: global.screen } :
+            { meta_display: display };
+
         const GDesktopEnums = imports.gi.GDesktopEnums;
-        let background = new Meta.BackgroundActor({
-            meta_screen: screen, monitor: 0, background: metaBackground,
-            reactive: true // Disable the background menu
-        });
+        let metaBackground = new Meta.Background(meta_display);
+        let background = new Meta.BackgroundActor(
+            Object.assign({
+                monitor: 0, background: metaBackground,
+                reactive: true // Disable the background menu
+            }, meta_display)
+        );
         this.background = background;
         this.shadow = new St.Widget();;
         this.shadow.set_style(
@@ -617,7 +623,7 @@ class Space extends Array {
         this.label.text = name;
         this.name = name;
 
-        if (this.workspace === screen.get_active_workspace()) {
+        if (this.workspace === workspaceManager.get_active_workspace()) {
             TopBar.setWorkspaceName(this.name);
         }
     }
@@ -791,17 +797,27 @@ class Spaces extends Map {
         this._yPositions = [0.95, 0.10, 0.035, 0.01];
 
 
-        signals.connect(screen, 'notify::n-workspaces',
+        signals.connect(workspaceManager, 'notify::n-workspaces',
                         utils.dynamic_function_ref('workspacesChanged', this).bind(this));
-        signals.connect(screen, 'workspace-removed',
+        signals.connect(workspaceManager, 'workspace-removed',
                         utils.dynamic_function_ref('workspaceRemoved', this));
-        signals.connect(screen, 'window-left-monitor', this.windowLeftMonitor.bind(this));
-        signals.connect(screen, "window-entered-monitor", this.windowEnteredMonitor.bind(this));
+        signals.connect(global.screen || display,
+                        'window-left-monitor',
+                        this.windowLeftMonitor.bind(this));
+        signals.connect(global.screen || display,
+                        "window-entered-monitor",
+                        this.windowEnteredMonitor.bind(this));
 
         signals.connect(display, 'window-created',
                         this.window_created.bind(this));
-        signals.connect(display, 'grab-op-begin', grabBegin);
-        signals.connect(display, 'grab-op-end', grabEnd);
+        signals.connect(display, 'grab-op-begin',
+                        global.screen ?
+                        (display, screen, mw, type) => grabBegin(mw, type) :
+                        (display, mw, type) => grabBegin(mw, type));
+        signals.connect(display, 'grab-op-end',
+                        global.screen ?
+                        (display, screen, mw, type) => grabEnd(mw, type) :
+                        (display, mw, type) => grabEnd(mw, type));
 
         signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChanged.bind(this));
 
@@ -830,8 +846,8 @@ class Spaces extends Map {
             backgroundGroup.last_child);
 
         // Hook up existing workspaces
-        for (let i=0; i < screen.n_workspaces; i++) {
-            let workspace = screen.get_workspace_by_index(i);
+        for (let i=0; i < workspaceManager.n_workspaces; i++) {
+            let workspace = workspaceManager.get_workspace_by_index(i);
             this.addSpace(workspace);
             debug("workspace", workspace)
         }
@@ -851,12 +867,12 @@ class Spaces extends Map {
             oldMonitors = this.monitors;
 
         this.monitors = new Map();
-        this.get(screen.get_active_workspace()).getWindows().forEach(w => {
+        this.get(workspaceManager.get_active_workspace()).getWindows().forEach(w => {
             w.get_compositor_private().hide();
             w.clone.show();
         });
 
-        this.spaceContainer.set_size(...screen.get_size());
+        this.spaceContainer.set_size(global.screen_width, global.screen_height);
 
         for (let overlay of this.clickOverlays) {
             overlay.destroy();
@@ -867,7 +883,7 @@ class Spaces extends Map {
         let monitors = Main.layoutManager.monitors;
 
         let finish = () => {
-            let activeSpace = this.get(screen.get_active_workspace());
+            let activeSpace = this.get(workspaceManager.get_active_workspace());
             let visible = monitors.map(m => this.monitors.get(m));
             let mru = this.mru();
             this.stack = mru.filter(s => !visible.includes(s));
@@ -958,7 +974,7 @@ class Spaces extends Map {
                 let actor = metaWindow.get_compositor_private();
                 actor.remove_clip();
 
-                if (metaWindow.get_workspace() === screen.get_active_workspace()
+                if (metaWindow.get_workspace() === workspaceManager.get_active_workspace()
                    && !metaWindow.minimized)
                     actor.show();
                 else
@@ -978,7 +994,7 @@ class Spaces extends Map {
     }
 
     workspacesChanged() {
-        let nWorkspaces = screen.n_workspaces;
+        let nWorkspaces = workspaceManager.n_workspaces;
 
         // Identifying destroyed workspaces is rather bothersome,
         // as it will for example report having windows,
@@ -987,7 +1003,7 @@ class Spaces extends Map {
         // Gather all indexed workspaces for easy comparison
         let workspaces = {};
         for (let i=0; i < nWorkspaces; i++) {
-            let workspace = screen.get_workspace_by_index(i);
+            let workspace = workspaceManager.get_workspace_by_index(i);
             workspaces[workspace] = true;
             if (this.spaceOf(workspace) === undefined) {
                 debug('workspace added', workspace);
@@ -1003,7 +1019,7 @@ class Spaces extends Map {
         }
     };
 
-    workspaceRemoved(screen, index) {
+    workspaceRemoved(workspaceManager, index) {
         let settings = new Gio.Settings({ schema_id:
                                           'org.gnome.desktop.wm.preferences'});
         let names = settings.get_strv('workspace-names');
@@ -1016,8 +1032,8 @@ class Spaces extends Map {
     };
 
     switchWorkspace(wm, fromIndex, toIndex) {
-        let to = screen.get_workspace_by_index(toIndex);
-        let from = screen.get_workspace_by_index(fromIndex);
+        let to = workspaceManager.get_workspace_by_index(toIndex);
+        let from = workspaceManager.get_workspace_by_index(fromIndex);
         let toSpace = this.spaceOf(to);
 
         this.stack = this.stack.filter(s => s !== toSpace);
@@ -1060,7 +1076,7 @@ class Spaces extends Map {
 
     _initWorkspaceStack() {
         const scale = 0.9;
-        let space = this.spaceOf(screen.get_active_workspace());
+        let space = this.spaceOf(workspaceManager.get_active_workspace());
         let mru = [space, ...this.stack];
 
         if (Main.panel.statusArea.appMenu)
@@ -1117,7 +1133,7 @@ class Spaces extends Map {
     selectSpace(direction, move, transition) {
         transition = transition || 'easeInOutQuad';
         const scale = 0.9;
-        let space = this.spaceOf(screen.get_active_workspace());
+        let space = this.spaceOf(workspaceManager.get_active_workspace());
         let mru = [space, ...this.stack];
 
         if (!inPreview) {
@@ -1226,7 +1242,7 @@ class Spaces extends Map {
                            time: 0.25,
                            transition: 'easeInOutQuad',
                            onComplete: () => {
-                               Meta.enable_unredirect_for_screen(screen);
+                               // Meta.enable_unredirect_for_screen(screen);
 
                                to.clip.raise_top();
                                callback && callback();
@@ -1283,7 +1299,7 @@ class Spaces extends Map {
      */
     mru() {
         let seen = new Map(), out = [];
-        let active = screen.get_active_workspace();
+        let active = workspaceManager.get_active_workspace();
         out.push(this.get(active));
         seen.set(active, true);
 
@@ -1296,9 +1312,9 @@ class Spaces extends Map {
                 }
             });
 
-        let workspaces = screen.get_n_workspaces();
+        let workspaces = workspaceManager.get_n_workspaces();
         for (let i=0; i < workspaces; i++) {
-            let workspace = screen.get_workspace_by_index(i);
+            let workspace = workspaceManager.get_workspace_by_index(i);
             if (!seen.get(workspace)) {
                 out.push(this.get(workspace));
                 seen.set(workspace, true);
@@ -1609,7 +1625,7 @@ function insertWindow(metaWindow, {existing}) {
     }
 
     if (metaWindow === display.focus_window ||
-        space.workspace === screen.get_active_workspace()) {
+        space.workspace === workspaceManager.get_active_workspace()) {
         ensureViewport(metaWindow, space, true);
         Main.activateWindow(metaWindow);
     } else {
@@ -1765,7 +1781,8 @@ function move_to(space, metaWindow, { x, y, delay, transition,
 
 var noAnimate = false;
 var grabSignals = new utils.Signals();
-function grabBegin(screen, display, metaWindow, type) {
+
+function grabBegin(metaWindow, type) {
     // Don't handle pushModal grabs
     if (type === Meta.GrabOp.COMPOSITOR)
         return;
@@ -1782,7 +1799,7 @@ function grabBegin(screen, display, metaWindow, type) {
     noAnimate = true;
 }
 
-function grabEnd(screen, display, metaWindow, type) {
+function grabEnd(metaWindow, type) {
     if (type === Meta.GrabOp.COMPOSITOR)
         return;
     let space = spaces.spaceOfWindow(metaWindow);
@@ -1867,7 +1884,7 @@ var fullscreenWrapper = utils.dynamic_function_ref('fullscreenHandler', Me);
 */
 function showHandler(actor) {
     let metaWindow = actor.meta_window;
-    let onActive = metaWindow.get_workspace() === screen.get_active_workspace();
+    let onActive = metaWindow.get_workspace() === workspaceManager.get_active_workspace();
 
     if (Scratch.isScratchWindow(metaWindow))
         return;
@@ -2033,18 +2050,18 @@ function cycleWindowWidth(metaWindow) {
 }
 
 function activateNthWindow(n, space) {
-    space = space || spaces.spaceOf(screen.get_active_workspace());
+    space = space || spaces.spaceOf(workspaceManager.get_active_workspace());
     let nth = space[n][0];
     ensureViewport(nth, space);
 }
 
 function activateFirstWindow(mw, space) {
-    space = space || spaces.spaceOf(screen.get_active_workspace());
+    space = space || spaces.spaceOf(workspaceManager.get_active_workspace());
     activateNthWindow(0, space);
 }
 
 function activateLastWindow(mw, space) {
-    space = space || spaces.spaceOf(screen.get_active_workspace());
+    space = space || spaces.spaceOf(workspaceManager.get_active_workspace());
     activateNthWindow(space.length - 1, space);
 }
 

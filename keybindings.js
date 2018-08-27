@@ -15,7 +15,6 @@ var keystrToKeycombo = Settings.keystrToKeycombo;
 
 var Navigator = Extension.imports.navigator;
 
-var screen = global.screen;
 var display = global.display;
 
 var KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
@@ -49,11 +48,20 @@ function byId(mutterId) {
 
 /**
  * Adapts an paperwm action handler to mutter's keybinding handler signature
+ *
+ * Works for 3.28 and 3.30
  */
-function asKeyHandler(actionHandler) {
-    return (display, screen, mw, binding) => {
-        return actionHandler(mw, null, {display, screen, binding});   
-    }
+var asKeyHandler;
+if (global.screen) {
+    asKeyHandler = (actionHandler) =>
+        (display, screen, mw, binding) => {
+            return actionHandler(mw, null, {display, screen, binding});
+        };
+} else {
+    asKeyHandler = (actionHandler) =>
+        (display, mw, binding) => {
+            return actionHandler(mw, null, {display, binding});
+        };
 }
 
 /**

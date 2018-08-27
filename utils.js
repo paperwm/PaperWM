@@ -2,7 +2,7 @@ const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix
 const Gdk = imports.gi.Gdk;
 var Meta = imports.gi.Meta;
 
-var screen = global.screen;
+var workspaceManager = global.workspace_manager;
 var display = global.display;
 
 var debug_all = false; // Turn off by default
@@ -87,7 +87,7 @@ function setDevGlobals() {
     // Accept the risk of this interfering with existing code for now
     metaWindow = display.focus_window;
     meta_window = display.focus_window;
-    workspace = screen.get_active_workspace();
+    workspace = workspaceManager.get_active_workspace();
     actor = metaWindow.get_compositor_private();
     space = Tiling.spaces.spaceOfWindow(metaWindow);
 }
@@ -169,7 +169,7 @@ function sum(array) {
 function setWorkspaceName(name, workspace) {
     let i;
     if (workspace === undefined) {
-        i = screen.get_active_workspace_index();
+        i = workspaceManager.get_active_workspace_index();
     } else {
         i = workspace.index();
     }

@@ -20,7 +20,7 @@ var prefs = Extension.imports.settings.prefs;
 
 var panelBox = Main.layoutManager.panelBox;
 
-var screen = global.screen;
+var workspaceManager = global.workspace_manager;
 var display = global.display;
 
 
@@ -102,7 +102,7 @@ class ColorEntry {
     }
 
     clicked() {
-        let space = Tiling.spaces.spaceOf(screen.get_active_workspace());
+        let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
         let color = this.entry.actor.text;
         space.settings.set_string('color', color);
     }
@@ -115,22 +115,25 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.actor.name = 'workspace-button';
 
         this._label = new St.Label({
-            text: Meta.prefs_get_workspace_name(global.screen.get_active_workspace_index()),
+            text: Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()),
             y_align: Clutter.ActorAlign.CENTER });
 
         this.actor.add_actor(this._label);
 
-        this._workspaceSwitchedSignal = global.screen.connect(
-            'workspace-switched', this.workspaceSwitched.bind(this));
+        this.signals = new Utils.Signals();
+        this.signals.connect(global.window_manager,
+                             'switch-workspace',
+                             this.workspaceSwitched.bind(this));
 
         this.entry = new PopupMenuEntry(this._label.text, 'Set name');
         let clicked = () => {
             let name = this.entry.entry.text;
-            let space = Tiling.spaces.spaceOf(screen.get_active_workspace());
+            let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
             space.settings.set_string('name', name);
             this._label.text = name;
         };
-        this.entry.button.connect('clicked', clicked.bind(this.entry));
+        this.signals.connect(this.entry.button, 'clicked',
+                             clicked.bind(this.entry));
 
         this.colors = new ColorEntry();
 
@@ -195,7 +198,7 @@ class WorkspaceMenu extends PanelMenu.Button {
                 this._enterbox =  new Clutter.Actor({reactive: true});
                 Main.uiGroup.add_actor(this._enterbox);
                 this._enterbox.set_position(panelBox.x, panelBox.y + panelBox.height + 20);
-                this._enterbox.set_size(...screen.get_size());
+                this._enterbox.set_size(global.screen_width, global.screen_height);
                 Main.layoutManager.trackChrome(this._enterbox);
 
                 this._navigator.connect('destroy', this._finishWorkspaceSelect.bind(this));
@@ -225,7 +228,7 @@ class WorkspaceMenu extends PanelMenu.Button {
             && event.get_scroll_direction() === Clutter.ScrollDirection.SMOOTH) {
 
             let spaces = Tiling.spaces;
-            let active = spaces.spaceOf(screen.get_active_workspace());
+            let active = spaces.spaceOf(workspaceManager.get_active_workspace());
 
             let [dx, dy] = event.get_scroll_delta();
             dy *= active.height*0.05;
@@ -322,19 +325,19 @@ class WorkspaceMenu extends PanelMenu.Button {
         if (!open)
             return;
 
-        let space = Tiling.spaces.spaceOf(screen.get_active_workspace());
+        let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
         this.entry.actor.text = space.name;
         this.colors.entry.actor.text = space.color;
     }
 
-    workspaceSwitched(screen, fromIndex, toIndex) {
-        let space = Tiling.spaces.spaceOf(screen.get_workspace_by_index(toIndex));
+    workspaceSwitched(wm, fromIndex, toIndex) {
+        let space = Tiling.spaces.spaceOf(workspaceManager.get_workspace_by_index(toIndex));
         this._label.set_text(space.name);
     }
 
     destroy() {
         super.destroy();
-        screen.disconnect(this._workspaceSwitchedSignal);
+        this.signals.destroy();
     }
 };
 
@@ -356,7 +359,7 @@ function enable () {
     menu.actor.show();
     let id = panelBox.connect('parent-set', (actor) => {
         actor.disconnect(id);
-        updateWorkspaceIndicator(global.screen.get_active_workspace());
+        updateWorkspaceIndicator(global.workspaceManager.get_active_workspace());
     });
 
     // Force transparency
@@ -365,8 +368,8 @@ function enable () {
         .forEach(c => c.actor.opacity = 0);
 
     screenSignals.push(
-        screen.connect_after('workspace-switched',
-                                    (screen, from, to) => {
+        workspaceManager.connect_after('workspace-switched',
+                                    (workspaceManager, from, to) => {
                                         updateWorkspaceIndicator(to);
                                     }));
 
@@ -387,7 +390,7 @@ function disable() {
     [Main.panel._rightCorner, Main.panel._leftCorner]
         .forEach(c => c.actor.opacity = 255);
 
-    screenSignals.forEach(id => screen.disconnect(id));
+    screenSignals.forEach(id => workspaceManager.disconnect(id));
     screenSignals = [];
 
     panelBox.scale_y = 1;
@@ -424,7 +427,7 @@ function hide() {
    let workspaceIndex = 0
 */
 function updateWorkspaceIndicator (index) {
-    let space = Tiling.spaces.spaceOf(screen.get_workspace_by_index(index));
+    let space = Tiling.spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
     setWorkspaceName(space.name);
 };
 
