@@ -432,7 +432,7 @@ function updateWorkspaceIndicator (index) {
 };
 
 function updateIndicatorPosition(workspace) {
-    if (!menu || !Tiling.spaces)
+    if (!Tiling.spaces)
         return;
     let space = Tiling.spaces.spaceOf(workspace);
     if (!space)
@@ -454,8 +454,6 @@ function updateIndicatorPosition(workspace) {
 }
 
 function setWorkspaceName (name) {
-    if (!menu)
-        return;
     menu._label.text = name;
 }
 

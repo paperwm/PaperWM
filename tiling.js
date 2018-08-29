@@ -204,6 +204,8 @@ class Space extends Array {
         this.targetX = 0;
         if (oldSpace) {
             monitor = Main.layoutManager.monitors[oldSpace.monitor.index];
+            this.targetX = oldSpace.targetX;
+            cloneContainer.x = this.targetX;
         }
         this.setMonitor(monitor, false);
 
@@ -217,6 +219,10 @@ class Space extends Array {
         this.moving = false;
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
+
+        this.addAll(oldSpace);
+        this._populated = true;
+        oldSpaces.delete(workspace);
     }
 
     layout(animate = true) {
@@ -722,20 +728,6 @@ class Space extends Array {
             this.selectedWindow = tabList[0]
             // ensureViewport(space.selectedWindow, space);
         }
-
-        this._populated = true;
-        this.targetX = oldSpace.targetX;
-        this.cloneContainer.x = this.targetX;
-        this.getWindows().forEach(w => {
-            w.get_compositor_private().hide();
-            w.clone.show();
-        });
-        this.layout(false);
-        let selected = this.selectedWindow;
-        if (selected) {
-            ensureViewport(selected, this, true);
-        }
-        oldSpaces.delete(this.workspace);
     }
 
     // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
@@ -1403,7 +1395,6 @@ function resizeHandler(metaWindow) {
 
 function enable() {
     debug('#enable');
-    spaces = new Spaces();
 
     // HACK: couldn't find an other way within a reasonable time budget
     // This state is different from being enabled after startup. Existing
@@ -1411,10 +1402,7 @@ function enable() {
     let isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
 
     function initWorkspaces() {
-        spaces.forEach(space => {
-            space.addAll(oldSpaces.get(space.workspace));
-        });
-
+        spaces = new Spaces();
         spaces.mru().reverse().forEach(s => {
             s.selectedWindow && ensureViewport(s.selectedWindow, s, true);
             s.monitor.clickOverlay.show();
