@@ -120,13 +120,7 @@ class Space extends Array {
     constructor (workspace, container) {
         super(0);
         this.workspace = workspace;
-
         this.signals = new utils.Signals();
-        this.signals.connect(workspace, "window-added", utils.dynamic_function_ref("add_handler", Me));
-        this.signals.connect(workspace, "window-removed",
-                             utils.dynamic_function_ref("remove_handler", Me));
-        this.signals.connect(Main.overview, 'showing', this.startAnimate.bind(this));
-        this.signals.connect(Main.overview, 'hidden', this.moveDone.bind(this));
 
         // The windows that should be represented by their WindowActor
         this.visible = [];
@@ -220,9 +214,37 @@ class Space extends Array {
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
 
+    }
+
+    init() {
+        let workspace = this.workspace;
+        let oldSpace = oldSpaces.get(workspace);
+
         this.addAll(oldSpace);
-        this._populated = true;
         oldSpaces.delete(workspace);
+        this._populated = true;
+        if (oldSpace) {
+            this.targetX = oldSpace.targetX;
+        }
+        this.cloneContainer.x = this.targetX;
+        this.getWindows().forEach(w => {
+            w.get_compositor_private().hide();
+            w.clone.show();
+        });
+        this.layout(false);
+
+        let selected = this.selectedWindow;
+        if (selected) {
+            ensureViewport(selected, this, true);
+        }
+
+        this.signals.connect(workspace, "window-added",
+                             utils.dynamic_function_ref("add_handler", Me));
+        this.signals.connect(workspace, "window-removed",
+                             utils.dynamic_function_ref("remove_handler", Me));
+        this.signals.connect(Main.overview, 'showing',
+                             this.startAnimate.bind(this));
+        this.signals.connect(Main.overview, 'hidden', this.moveDone.bind(this));
     }
 
     layout(animate = true) {
@@ -763,52 +785,9 @@ class Spaces extends Map {
         super();
 
         this.clickOverlays = [];
-
-        let signals = new utils.Signals();
-        this.signals = signals;
+        this.signals = new utils.Signals();
         this._moving = [];
         this._yPositions = [0.95, 0.10, 0.035, 0.01];
-
-
-        signals.connect(workspaceManager, 'notify::n-workspaces',
-                        utils.dynamic_function_ref('workspacesChanged', this).bind(this));
-        signals.connect(workspaceManager, 'workspace-removed',
-                        utils.dynamic_function_ref('workspaceRemoved', this));
-        signals.connect(global.screen || display,
-                        'window-left-monitor',
-                        this.windowLeftMonitor.bind(this));
-        signals.connect(global.screen || display,
-                        "window-entered-monitor",
-                        this.windowEnteredMonitor.bind(this));
-
-        signals.connect(display, 'window-created',
-                        this.window_created.bind(this));
-        signals.connect(display, 'grab-op-begin',
-                        global.screen ?
-                        (display, screen, mw, type) => grabBegin(mw, type) :
-                        (display, mw, type) => grabBegin(mw, type));
-        signals.connect(display, 'grab-op-end',
-                        global.screen ?
-                        (display, screen, mw, type) => grabEnd(mw, type) :
-                        (display, mw, type) => grabEnd(mw, type));
-
-        signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChanged.bind(this));
-
-        signals.connect(global.window_manager, 'switch-workspace',
-                        this.switchWorkspace.bind(this));
-
-        const OVERRIDE_SCHEMA = 'org.gnome.shell.overrides';
-        this.overrideSettings = new Gio.Settings({ schema_id: OVERRIDE_SCHEMA });
-        signals.connect(this.overrideSettings, 'changed::workspaces-only-on-primary',
-                        this.monitorsChanged.bind(this));
-
-        // Clone and hook up existing windows
-        display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
-            .forEach(w => {
-                registerWindow(w);
-                signals.connect(w, 'size-changed', resizeHandler);
-            });
-
         let spaceContainer = new Clutter.Actor({name: 'spaceContainer'});
         spaceContainer.hide();
         this.spaceContainer = spaceContainer;
@@ -825,7 +804,57 @@ class Spaces extends Map {
             debug("workspace", workspace)
         }
 
+        const OVERRIDE_SCHEMA = 'org.gnome.shell.overrides';
+        this.overrideSettings = new Gio.Settings({ schema_id: OVERRIDE_SCHEMA });
         this.monitorsChanged();
+    }
+
+    init() {
+        this.signals.connect(workspaceManager, 'notify::n-workspaces',
+                        utils.dynamic_function_ref('workspacesChanged', this).bind(this));
+        this.signals.connect(workspaceManager, 'workspace-removed',
+                        utils.dynamic_function_ref('workspaceRemoved', this));
+        this.signals.connect(global.screen || display,
+                        'window-left-monitor',
+                        this.windowLeftMonitor.bind(this));
+        this.signals.connect(global.screen || display,
+                        "window-entered-monitor",
+                        this.windowEnteredMonitor.bind(this));
+
+        this.signals.connect(display, 'window-created',
+                        this.window_created.bind(this));
+        this.signals.connect(display, 'grab-op-begin',
+                        global.screen ?
+                        (display, screen, mw, type) => grabBegin(mw, type) :
+                        (display, mw, type) => grabBegin(mw, type));
+        this.signals.connect(display, 'grab-op-end',
+                        global.screen ?
+                        (display, screen, mw, type) => grabEnd(mw, type) :
+                        (display, mw, type) => grabEnd(mw, type));
+
+        this.signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChanged.bind(this));
+
+        this.signals.connect(global.window_manager, 'switch-workspace',
+                        this.switchWorkspace.bind(this));
+
+        this.signals.connect(this.overrideSettings, 'changed::workspaces-only-on-primary',
+                             this.monitorsChanged.bind(this));
+
+        // Clone and hook up existing windows
+        display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
+            .forEach(w => {
+                registerWindow(w);
+                this.signals.connect(w, 'size-changed', resizeHandler);
+            });
+
+        this.forEach(space => space.init());
+
+        // Redo the stack 
+        this.monitorsChanged(); // Necessary for X11
+        let monitors = Main.layoutManager.monitors;
+        let visible = monitors.map(m => this.monitors.get(m));
+        let mru = this.mru();
+        this.stack = mru.filter(s => !visible.includes(s));
     }
 
     /**
@@ -1394,14 +1423,12 @@ function resizeHandler(metaWindow) {
 
 function enable() {
     debug('#enable');
-
-    // HACK: couldn't find an other way within a reasonable time budget
-    // This state is different from being enabled after startup. Existing
-    // windows are not accessible yet for instance.
-    let isDuringGnomeShellStartup = Main.actionMode === Shell.ActionMode.NONE;
+    spaces = new Spaces();
 
     function initWorkspaces() {
-        spaces = new Spaces();
+        spaces.init();
+
+        // Fix the stack overlay
         spaces.mru().reverse().forEach(s => {
             s.selectedWindow && ensureViewport(s.selectedWindow, s, true);
             s.monitor.clickOverlay.show();
@@ -1413,12 +1440,12 @@ function enable() {
         }
     }
 
-    if (isDuringGnomeShellStartup) {
+    if (Main.layoutManager._startingUp) {
         // Defer workspace initialization until existing windows are accessible.
         // Otherwise we're unable to restore the tiling-order. (when restarting
         // gnome-shell)
-        Main.layoutManager.connect('startup-complete', function() {
-            isDuringGnomeShellStartup = false;
+        let id = Main.layoutManager.connect('startup-complete', function() {
+            Main.layoutManager.disconnect(id);
             initWorkspaces();
         });
     } else {
