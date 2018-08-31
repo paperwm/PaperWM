@@ -290,9 +290,8 @@ class Space extends Array {
             }
         }
         this._inLayout = false;
-        this.cloneContainer.width = x - gap;
 
-        let width = x - gap;
+        let width = Math.max(0, x - gap);
         this.cloneContainer.width = width;
         if (width < this.width) {
             this.targetX = Math.round((this.width - width)/2);
