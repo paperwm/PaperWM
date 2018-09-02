@@ -536,9 +536,10 @@ class Space extends Array {
     }
 
     moveDone() {
-        if (this.cloneContainer.x !== this.targetX
-            || Navigator.navigating || inPreview || noAnimate
-            || Main.overview.visible) {
+        if (this.cloneContainer.x !== this.targetX ||
+            this.actor.y !== 0 ||
+            Navigator.navigating || inPreview || noAnimate ||
+            Main.overview.visible) {
             return;
         }
         this.visible = [];
@@ -1249,6 +1250,7 @@ class Spaces extends Map {
                            onComplete: () => {
                                // Meta.enable_unredirect_for_screen(screen);
 
+                               to.moveDone();
                                to.clip.raise_top();
                                callback && callback();
                            }
