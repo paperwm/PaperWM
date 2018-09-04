@@ -787,6 +787,7 @@ class Spaces extends Map {
 
         this.clickOverlays = [];
         this.signals = new utils.Signals();
+        this.stack = [];
         this._moving = [];
         this._yPositions = [0.95, 0.10, 0.035, 0.01];
         let spaceContainer = new Clutter.Actor({name: 'spaceContainer'});
@@ -813,8 +814,8 @@ class Spaces extends Map {
     init() {
         this.signals.connect(workspaceManager, 'notify::n-workspaces',
                         utils.dynamic_function_ref('workspacesChanged', this).bind(this));
-        this.signals.connect(workspaceManager, 'workspace-removed',
-                        utils.dynamic_function_ref('workspaceRemoved', this));
+        // this.signals.connect(workspaceManager, 'workspace-removed',
+        //                 utils.dynamic_function_ref('workspaceRemoved', this));
         this.signals.connect(global.screen || display,
                         'window-left-monitor',
                         this.windowLeftMonitor.bind(this));
@@ -852,10 +853,7 @@ class Spaces extends Map {
 
         // Redo the stack 
         this.monitorsChanged(); // Necessary for X11
-        let monitors = Main.layoutManager.monitors;
-        let visible = monitors.map(m => this.monitors.get(m));
-        let mru = this.mru();
-        this.stack = mru.filter(s => !visible.includes(s));
+        this.stack = this.mru();
     }
 
     /**
@@ -889,7 +887,6 @@ class Spaces extends Map {
             let activeSpace = this.get(workspaceManager.get_active_workspace());
             let visible = monitors.map(m => this.monitors.get(m));
             let mru = this.mru();
-            this.stack = mru.filter(s => !visible.includes(s));
             this.selectedSpace = mru[0];
             this.monitors.set(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
@@ -1040,17 +1037,14 @@ class Spaces extends Map {
         let toSpace = this.spaceOf(to);
 
         this.stack = this.stack.filter(s => s !== toSpace);
+        this.stack = [toSpace, ...this.stack];
+
         let monitor = toSpace.monitor;
         this.monitors.set(monitor, toSpace);
 
         let fromSpace = this.spaceOf(from);
 
         this.animateToSpace(toSpace, fromSpace);
-
-        if (toSpace.monitor === fromSpace.monitor) {
-            this.stack.splice(0, 0, fromSpace);
-            return;
-        }
 
         TopBar.setMonitor(toSpace.monitor);
         toSpace.monitor.clickOverlay.deactivate();
@@ -1082,7 +1076,9 @@ class Spaces extends Map {
             return;
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
-        let mru = [space, ...this.stack];
+        let mru = [...this.stack];
+        this.monitors.forEach(space => mru.splice(mru.indexOf(space), 1));
+        mru = [space, ...mru];
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.hide();
@@ -1140,7 +1136,9 @@ class Spaces extends Map {
         transition = transition || 'easeInOutQuad';
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
-        let mru = [space, ...this.stack];
+        let mru = [...this.stack];
+        this.monitors.forEach(space => mru.splice(mru.indexOf(space), 1));
+        mru = [space, ...mru];
 
         if (!inPreview) {
             this._initWorkspaceStack();
@@ -1285,11 +1283,14 @@ class Spaces extends Map {
     }
 
     addSpace(workspace) {
-        this.set(workspace, new Space(workspace, this.spaceContainer));
+        let space = new Space(workspace, this.spaceContainer);
+        this.set(workspace, space);
+        this.stack.push(space);
     };
 
     removeSpace(space) {
         this.delete(space.workspace);
+        this.stack.splice(this.stack.indexOf(space), 1);
         space.destroy();
     };
 
