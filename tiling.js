@@ -726,7 +726,15 @@ class Space extends Array {
                 let column = oldSpace[i];
                 for(let j=0; j < column.length; j++) {
                     let metaWindow = column[j];
-                    this.addWindow(metaWindow, i, j);
+                    // Prune removed windows
+                    if (metaWindow.get_compositor_private()) {
+                        this.addWindow(metaWindow, i, j);
+                    } else {
+                        column.splice(j, 1); j--;
+                    }
+                }
+                if (column.length === 0) {
+                    oldSpace.splice(i, 1); i--;
                 }
             }
         }
