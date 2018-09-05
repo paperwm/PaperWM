@@ -38,6 +38,8 @@ Swiping the trackpad horizontally with three fingers will scroll the tiling (onl
 
 <kbd>Alt</kbd><kbd>Tab</kbd> is of course also available.
 
+PaperWM doesn't handle attached modal dialogs very well, so it's best to turn it off in Gnome Tweaks (under Windows).
+
 | Keybindings                                                                                       |                                                        |
 | ------                                                                                            | -------                                                |
 | <kbd>Super</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>.</kbd>                                      | Activate the next or previous window                   |
@@ -72,6 +74,8 @@ The workspace name is shown in the top left corner replacing the `Activities` bu
 Swiping the trackpad vertically with three fingers lets you navigate the workspace stack (only available in Wayland).
 
 There's a single scrollable tiling per workspace. Adding another monitor simply makes it possible to have another workspace visible. The workspace stack is shared among all the monitors, windows being resized vertically as necessary when workspace is displayed on another monitor.
+
+PaperWM currently works best using static workspaces, this can be turned on with Gnome Tweaks under Workspaces.
 
 | Keybindings                                                                                                              |                                                                                   |
 | ------                                                                                                                   | -------                                                                           |
