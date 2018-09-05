@@ -211,7 +211,7 @@ function disable() {
 
 
 function getConfigDir() {
-    return Gio.file_new_for_path(GLib.getenv('HOME') + '/.config/paperwm');
+    return Gio.file_new_for_path(GLib.get_user_config_dir() + '/paperwm');
 }
 
 function hasUserConfigFile() {
