@@ -10,7 +10,7 @@ Clone the repo and run the `install.sh` script from the directory:
 ```bash
 ./install.sh
 ```
-It will link the repo to `~/.local/share/gnome-shell-extensions/` where gnome-shell can find it. You can then enable the extension in Gnome Tweaks. Running the extension will automatic install of a user config file as described in [Development & user configuration](#development--user-configuration).
+It will link the repo to `~/.local/share/gnome-shell/extensions/` where gnome-shell can find it. You can then enable the extension in Gnome Tweaks. Running the extension will automatic install of a user config file as described in [Development & user configuration](#development--user-configuration).
 
 ## Usage ##
 
