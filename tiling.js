@@ -223,7 +223,9 @@ class Space extends Array {
         this.addAll(oldSpace);
         oldSpaces.delete(workspace);
         this._populated = true;
-        if (oldSpace) {
+        // FIXME: this prevents bad old values propagating
+        // Though, targetX shouldn't ideally be able to get into this state.
+        if (oldSpace && Number.isFinite(oldSpace.targetX)) {
             this.targetX = oldSpace.targetX;
         }
         this.cloneContainer.x = this.targetX;
