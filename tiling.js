@@ -571,6 +571,8 @@ class Space extends Array {
             actor.show();
         });
 
+        this.fixOverlays();
+
         this.emit('move-done');
     }
 
@@ -588,6 +590,34 @@ class Space extends Array {
             actor.hide();
             w.clone.show();
         });
+    }
+
+    fixOverlays(metaWindow) {
+        metaWindow = metaWindow || this.selectedWindow;
+        let index = this.indexOf(metaWindow);
+        let target = this.targetX;
+        this.monitor.clickOverlay.reset();
+        for (let overlay = this.monitor.clickOverlay.right,
+                 n=index+1 ; n < this.length; n++) {
+            let metaWindow = this[n][0];
+            let clone = metaWindow.clone;
+            let x = clone.targetX + target;
+            if (!overlay.target && x + clone.width > this.width) {
+                overlay.setTarget(this, n);
+                break;
+            }
+        }
+
+        for (let overlay = this.monitor.clickOverlay.left,
+                 n=index-1; n >= 0; n--) {
+            let metaWindow = this[n][0];
+            let clone = metaWindow.clone;
+            let x = clone.targetX + target;
+            if (!overlay.target && x < 0) {
+                overlay.setTarget(this, n);
+                break;
+            }
+        }
     }
 
     setSettings([uuid, settings]) {
@@ -1786,29 +1816,7 @@ function move_to(space, metaWindow, { x, y, delay, transition,
                        }
                      });
 
-    // Set up the edge overlays so they're available immediately
-    space.monitor.clickOverlay.reset();
-    for (let overlay = space.monitor.clickOverlay.right,
-             n=index+1 ; n < space.length; n++) {
-        let metaWindow = space[n][0];
-        let clone = metaWindow.clone;
-        let x = clone.targetX + target;
-        if (!overlay.target && x + clone.width > space.width) {
-            overlay.setTarget(space, n);
-            break;
-        }
-    }
-
-    for (let overlay = space.monitor.clickOverlay.left,
-             n=index-1; n >= 0; n--) {
-        let metaWindow = space[n][0];
-        let clone = metaWindow.clone;
-        let x = clone.targetX + target;
-        if (!overlay.target && x < 0) {
-            overlay.setTarget(space, n);
-            break;
-        }
-    }
+    space.fixOverlays(metaWindow);
 }
 
 var noAnimate = false;
