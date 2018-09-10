@@ -152,10 +152,16 @@ class Space extends Array {
         // This kills all input on X11, but works on wayland...
         if (Meta.is_wayland_compositor()) {
             Main.layoutManager.trackChrome(background);
-            this.signals.connect(background, 'button-press-event', () => {
+            this.signals.connect(background, 'button-press-event', (actor, event) => {
+                let [aX, aY, mask] = global.get_pointer();
+                let [ok, x, y] =
+                    this.actor.transform_stage_point(aX, aY);
+                let windowAtPoint = this.getWindowAtPoint(x, y);
                 if (!inPreview)
                     return;
                 let nav = Navigator.getNavigator();
+                if (windowAtPoint)
+                    ensureViewport(windowAtPoint, this);
                 spaces.selectedSpace = this;
                 nav.finish();
             });
