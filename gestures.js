@@ -170,9 +170,8 @@ function done(space) {
 
 function focusWindowAtPointer(space) {
     log(`focus at pointer`)
-    let [x, y, mask] = global.get_pointer();
-    x -= space.monitor.x;
-    y -= space.monitor.y;
+    let [aX, aY, mask] = global.get_pointer();
+    let [ok, x, y] = space.actor.transform_stage_point(aX, aY);
 
     space.targetX = Math.round(space.targetX);
     space.cloneContainer.x = space.targetX;
