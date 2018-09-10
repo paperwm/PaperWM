@@ -363,6 +363,23 @@ class Space extends Array {
         return column[row];
     }
 
+    isWindowAtPoint(metaWindow, x, y) {
+        let clone = metaWindow.clone;
+        let wX = clone.targetX + this.cloneContainer.x;
+        return x >= wX && x <= wX + clone.width &&
+            y >= clone.y && y <= clone.y + clone.height;
+    }
+
+    getWindowAtPoint(x, y) {
+        for (let column of this) {
+            for (let w of column) {
+                if (this.isWindowAtPoint(w, x, y))
+                    return w;
+            }
+        }
+        return null;
+    }
+
     addWindow(metaWindow, index, row) {
         if (!this.selectedWindow)
             this.selectedWindow = metaWindow;
