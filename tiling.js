@@ -1457,7 +1457,8 @@ function resizeHandler(metaWindow) {
     } else {
         // Restore window position when eg. exiting fullscreen
         !Navigator.navigating && selected
-            && move_to(space, metaWindow, {x: metaWindow.get_frame_rect().x});
+            && move_to(space, metaWindow, {
+                x: metaWindow.get_frame_rect().x - space.monitor.x});
 
         space.layout(true);
         ensureViewport(space.selectedWindow, space, true);
