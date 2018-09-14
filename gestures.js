@@ -28,7 +28,7 @@ const DIRECTIONS = {
 
 var vy;
 var time;
-var hState, vState;
+var vState;
 var navigator;
 var direction = undefined;
 function enable() {
@@ -111,13 +111,13 @@ function horizontalScroll(actor, event) {
         let [dx, dy] = event.get_gesture_motion_delta();
         if (direction === undefined) {
             this.vx = 0;
-            hState = phase;
+            this.hState = phase;
             direction = DIRECTIONS.Horizontal;
         }
         return update(this, -dx, event.get_time());
     case Clutter.TouchpadGesturePhase.CANCEL:
     case Clutter.TouchpadGesturePhase.END:
-        hState = phase;
+        this.hState = phase;
         return done(this);
     }
 }
@@ -138,7 +138,7 @@ function done(space) {
     if (!Number.isFinite(space.vx)) {
         log(`${space.vx} is not finite`)
         navigator.finish();
-        hState = -1;
+        space.hState = -1;
         return Clutter.EVENT_STOP;
     }
     let test = space.vx > 0 ?
@@ -146,7 +146,10 @@ function done(space) {
         () => space.vx > 0;
 
     let glide = () => {
-        if (hState < Clutter.TouchpadGesturePhase.END)
+        if (space.hState === -1) {
+            focusWindowAtPointer(space);
+        }
+        if (space.hState < Clutter.TouchpadGesturePhase.END)
             return false;
 
         if (test() ||
