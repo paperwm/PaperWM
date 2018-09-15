@@ -1145,13 +1145,16 @@ class Spaces extends Map {
 
             space.actor.scale_y = scale - i*0.01;
             space.actor.scale_x = scale - i*0.01;
+
+            // Remove any lingering onComplete handlers from animateToSpace
+            Tweener.removeTweens(space.actor);
+
             if (mru[i - 1] === undefined)
                 return;
             cloneParent.set_child_below_sibling(
                 space.clip,
                 mru[i - 1].clip
             );
-            Tweener.removeTweens(space.actor);
             space.actor.show();
 
             let selected = space.selectedWindow;
@@ -1265,8 +1268,6 @@ class Spaces extends Map {
         });
         this._moving = [];
 
-        let xDest = 0, yDest = global.screen_height;
-
         this.selectedSpace = to;
 
         to.actor.show();
@@ -1276,6 +1277,12 @@ class Spaces extends Map {
 
         if (from) {
             from.startAnimate();
+        }
+
+
+        let visible = new Map();
+        for (let [monitor, space] of this.monitors) {
+            visible.set(space, true);
         }
 
         Tweener.addTween(to.actor,
@@ -1288,36 +1295,33 @@ class Spaces extends Map {
                            onComplete: () => {
                                // Meta.enable_unredirect_for_screen(screen);
 
+                               // Hide any spaces that aren't visible This
+                               // avoids a nasty permance degregration in some
+                               // cases
+                               for (const space of spaces.values()) {
+                                   if (!visible.get(space)) {
+                                       space.actor.hide();
+                                   }
+                               }
+
                                to.moveDone();
                                to.clip.raise_top();
                                callback && callback();
                            }
                          });
 
-        let visible = new Map();
-        for (let [monitor, space] of this.monitors) {
-            visible.set(space, true);
-        }
-
-        let scale = 0.9;
-        for (const space of spaces.values()) {
+        // Animate all the spaces above `to` down below the monitor. We get
+        // these spaces by looking at siblings of upper most actor, ie. the
+        // `clip`. This is done since `this.stack` is already updated.
+        let above = to.clip.get_next_sibling();
+        while (above) {
+            let space = above.space;
             if (!visible.get(space)) {
-                Tweener.addTween(
-                    space.clip,
-                    { x: xDest,
-                      y: yDest,
-                      scale_x: scale,
-                      scale_y: scale,
-                      time: 0.25,
-                      transition: 'easeInOutQuad',
-                      onComplete() {
-                          this.set_position(0, global.screen_height*0.1);
-                          this.hide();
-                      },
-                      onCompleteScope: space.clip.first_child
-                    });
-
+                Tweener.addTween(space.actor,
+                                 {x: 0, y: space.height + 20,
+                                  time: 0.25, transition: 'easeInOutQuad' });
             }
+            above = above.get_next_sibling();
         }
     }
 
