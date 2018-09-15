@@ -2150,9 +2150,9 @@ function barf(metaWindow) {
     if (column.length < 2)
         return;
 
-    let bottom = column[column.length - 1];
-    space.removeWindow(bottom);
+    let bottom = column.splice(-1, 1)[0];
     space.addWindow(bottom, index + 1);
+
     ensureViewport(space.selectedWindow, space, true);
 }
 
