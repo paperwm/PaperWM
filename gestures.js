@@ -232,23 +232,24 @@ function updateVertical(dy, t) {
     let selected = Tiling.spaces.selectedSpace;
     let monitor = navigator.monitor;
     let v = dy/(t - time);
+    const StackPositions = Tiling.StackPositions;
     if (dy > 0
         && selected !== navigator.from
-        && (selected.actor.y - dy < 0.035*monitor.height)
+        && (selected.actor.y - dy < StackPositions.up*monitor.height)
        ) {
         dy = 0;
         vy = 1;
-        selected.actor.y = 0.035*selected.height;
+        selected.actor.y = StackPositions.up*selected.height;
         Tiling.spaces.selectSpace(Meta.MotionDirection.UP, false, transition);
         selected = Tiling.spaces.selectedSpace;
         Tweener.removeTweens(selected.actor);
         Tweener.addTween(selected.actor,
                          {scale_x: 0.9, scale_y: 0.9, time: 0.25, transition});
     } else if (dy < 0
-               && (selected.actor.y - dy > 0.95*monitor.height)) {
+               && (selected.actor.y - dy > StackPositions.down*monitor.height)) {
         dy = 0;
         vy = -1;
-        selected.actor.y = 0.95*selected.height;
+        selected.actor.y = StackPositions.down*selected.height;
         Tiling.spaces.selectSpace(Meta.MotionDirection.DOWN, false, transition);
         selected = Tiling.spaces.selectedSpace;
         Tweener.removeTweens(selected.actor);

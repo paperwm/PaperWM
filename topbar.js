@@ -242,12 +242,15 @@ class WorkspaceMenu extends PanelMenu.Button {
                 this.selected = spaces.selectedSpace;
             }
             let transition = 'easeOutQuad';
+            const StackPositions = Tiling.StackPositions;
+            const upEdge = 0.385*active.height;
+            const downEdge = 0.60*active.height;
             if (dy > 0
                 && this.selected !== active
-                && ((this.selected.actor.y > 0.385*active.height &&
-                     this.selected.actor.y - dy < 0.385*active.height)
+                && ((this.selected.actor.y > upEdge &&
+                     this.selected.actor.y - dy < upEdge)
                     ||
-                    (this.selected.actor.y - dy < 0.035*active.height))
+                    (this.selected.actor.y - dy < StackPositions.up*active.height))
                ) {
                 dy = 0;
                 v = 0.1;
@@ -257,10 +260,10 @@ class WorkspaceMenu extends PanelMenu.Button {
                 Tweener.addTween(this.selected.actor,
                                  {scale_x: 0.9, scale_y: 0.9, time: 0.25, transition});
             } else if (dy < 0
-                       && ((this.selected.actor.y < 0.60*active.height &&
-                            this.selected.actor.y - dy > 0.60*active.height)
+                       && ((this.selected.actor.y < downEdge &&
+                            this.selected.actor.y - dy > downEdge)
                            ||
-                           (this.selected.actor.y - dy > 0.95*active.height))
+                           (this.selected.actor.y - dy > StackPositions.down*active.height))
                       ) {
                 dy = 0;
                 v = 0.1;
@@ -304,7 +307,7 @@ class WorkspaceMenu extends PanelMenu.Button {
                 if (this.selected === active && y <= 0.1*this.selected.height) {
                     this._navigator.finish();
                     return;
-                } else if (y > 0.6*this.selected.height) {
+                } else if (y > downEdge) {
                     spaces.selectSpace(Meta.MotionDirection.DOWN, false, transition);
                     this.selected = spaces.selectedSpace;
                 } else {

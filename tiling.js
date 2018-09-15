@@ -814,6 +814,15 @@ class Space extends Array {
 }
 Signals.addSignalMethods(Space.prototype);
 
+
+var StackPositions = {
+    top: 0.01,
+    up: 0.035,
+    selected: 0.1,
+    down: 0.95,
+    bottom: 1.1
+};
+
 /**
    A `Map` to store all `Spaces`'s, indexed by the corresponding workspace.
 
@@ -830,7 +839,6 @@ class Spaces extends Map {
         this.signals = new utils.Signals();
         this.stack = [];
         this._moving = [];
-        this._yPositions = [0.95, 0.10, 0.035, 0.01];
         let spaceContainer = new Clutter.Actor({name: 'spaceContainer'});
         spaceContainer.hide();
         this.spaceContainer = spaceContainer;
@@ -1128,8 +1136,6 @@ class Spaces extends Map {
         this.selectedSpace = space;
         inPreview = true;
 
-        let heights = [0].concat(this._yPositions.slice(2));
-
         let cloneParent = space.clip.get_parent();
         mru.forEach((space, i) => {
             TopBar.updateIndicatorPosition(space.workspace);
@@ -1140,9 +1146,14 @@ class Spaces extends Map {
             let scaleY = monitor.height/space.height;
             space.clip.set_scale(scaleX, scaleY);
 
-            let h = heights[i];
-            if (h === undefined)
-                h = heights[heights.length-1];
+            let h;
+            if (i === 0)
+                h = 0;
+            else if (i === 1)
+                h = StackPositions.up;
+            else
+                h = StackPositions.top;
+
             space.actor.set_position(0, space.height*h);
 
             space.actor.scale_y = scale - i*0.01;
@@ -1228,24 +1239,21 @@ class Spaces extends Map {
             this.selectedSpace = newSpace;
         }
 
-
         TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
-
-        let heights = this._yPositions;
 
         mru.forEach((space, i) => {
             let actor = space.actor;
             let h;
             if (to === i)
-                h = heights[1];
+                h = StackPositions.selected;
             else if (to + 1 === i)
-                h = heights[2];
+                h = StackPositions.up;
             else if (to - 1 === i)
-                h = heights[0];
+                h = StackPositions.down;
             else if (i > to)
-                h = heights[3];
+                h = StackPositions.top;
             else if (i < to)
-                h = 1;
+                h = StackPositions.bottom;
 
             Tweener.addTween(actor,
                              {y: h*space.height,

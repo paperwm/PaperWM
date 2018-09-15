@@ -42,8 +42,6 @@ var PreviewedWindowNavigator = new Lang.Class({
     Name: 'PreviewedWindowNavigator',
     Extends: SwitcherPopup.SwitcherPopup,
 
-    _yPositions: [0.95, 0.10, 0.035, 0.01],
-
     _init: function() {
         // Do the absolute minimal here, as `parent.show` is buggy and can
         // return early making cleanup hard. We do most initialization in
