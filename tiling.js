@@ -1294,17 +1294,16 @@ class Spaces extends Map {
                            }
                          });
 
-        let next = to.clip.get_next_sibling();
-
         let visible = new Map();
         for (let [monitor, space] of this.monitors) {
             visible.set(space, true);
         }
+
         let scale = 0.9;
-        while (next !== null) {
-            if (!visible.get(next.space))
+        for (const space of spaces.values()) {
+            if (!visible.get(space)) {
                 Tweener.addTween(
-                    next.first_child,
+                    space.clip,
                     { x: xDest,
                       y: yDest,
                       scale_x: scale,
@@ -1315,10 +1314,10 @@ class Spaces extends Map {
                           this.set_position(0, global.screen_height*0.1);
                           this.hide();
                       },
-                      onCompleteScope: next.first_child
+                      onCompleteScope: space.clip.first_child
                     });
 
-            next = next.get_next_sibling();
+            }
         }
     }
 
