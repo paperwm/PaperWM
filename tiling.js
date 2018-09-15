@@ -129,6 +129,7 @@ class Space extends Array {
         let clip = new Clutter.Actor();
         this.clip = clip;
         let actor = new Clutter.Actor();
+        actor.hide(); // We keep the space actor hidden when inactive due to performance
         this.actor = actor;
         let cloneClip = new Clutter.Actor();
         this.cloneClip = cloneClip;
@@ -930,6 +931,7 @@ class Spaces extends Map {
             this.selectedSpace = mru[0];
             this.monitors.set(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
+                space.actor.show();
                 space.clip.raise_top();
             }
             this.forEach(space => {
