@@ -1146,13 +1146,19 @@ class Spaces extends Map {
             let scaleY = monitor.height/space.height;
             space.clip.set_scale(scaleX, scaleY);
 
+            space.actor.show();
+
             let h;
             if (i === 0)
                 h = 0;
             else if (i === 1)
                 h = StackPositions.up;
-            else
+            else if (i === 2)
                 h = StackPositions.top;
+            else {
+                h = StackPositions.top;
+                space.actor.hide();
+            }
 
             space.actor.set_position(0, space.height*h);
 
@@ -1168,8 +1174,6 @@ class Spaces extends Map {
                 space.clip,
                 mru[i - 1].clip
             );
-            space.actor.show();
-
             let selected = space.selectedWindow;
             if (selected && selected.fullscreen) {
                 selected.clone.y = Main.panel.actor.height + prefs.vertical_margin;
@@ -1243,7 +1247,7 @@ class Spaces extends Map {
 
         mru.forEach((space, i) => {
             let actor = space.actor;
-            let h;
+            let h, onComplete = () => {};
             if (to === i)
                 h = StackPositions.selected;
             else if (to + 1 === i)
@@ -1255,12 +1259,18 @@ class Spaces extends Map {
             else if (i < to)
                 h = StackPositions.bottom;
 
+            if (Math.abs(i - to) > 2) {
+                onComplete = () => space.actor.hide();
+            } else {
+                space.actor.show();
+            }
+
             Tweener.addTween(actor,
                              {y: h*space.height,
                               time: 0.25,
                               scale_x: scale + (to - i)*0.01,
                               scale_y: scale + (to - i)*0.01,
-                              transition
+                              transition, onComplete
                              });
 
         });
