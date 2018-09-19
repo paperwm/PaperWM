@@ -1396,11 +1396,6 @@ class Spaces extends Map {
 
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
-        if (metaWindow.get_workspace() !== this.selectedSpace.workspace) {
-            metaWindow.redirected = true;
-            metaWindow.change_workspace(this.selectedSpace.workspace);
-            return;
-        }
         let signal = actor.connect(
             'show',
             () =>  {
@@ -1600,6 +1595,12 @@ function add_handler(ws, metaWindow) {
    created to ensure that the WindowActor exists.
 */
 function insertWindow(metaWindow, {existing}) {
+
+    if (metaWindow.get_workspace() !== spaces.selectedSpace.workspace) {
+        metaWindow.redirected = true;
+        metaWindow.change_workspace(spaces.selectedSpace.workspace);
+        return;
+    }
 
     let connectSizeChanged = () => {
         !existing && signals.connect(metaWindow, 'size-changed', resizeHandler);
