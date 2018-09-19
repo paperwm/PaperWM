@@ -339,8 +339,8 @@ class WorkspaceMenu extends PanelMenu.Button {
     }
 
     destroy() {
-        super.destroy();
         this.signals.destroy();
+        super.destroy();
     }
 };
 

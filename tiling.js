@@ -805,11 +805,11 @@ class Space extends Array {
     }
 
     destroy() {
+        this.signals.destroy();
         this.background.destroy();
         this.cloneContainer.destroy();
         this.clip.destroy();
         let workspace = this.workspace;
-        this.signals.destroy();
     }
 }
 Signals.addSignalMethods(Space.prototype);
