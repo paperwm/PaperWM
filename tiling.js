@@ -1596,7 +1596,8 @@ function add_handler(ws, metaWindow) {
 */
 function insertWindow(metaWindow, {existing}) {
 
-    if (metaWindow.get_workspace() !== spaces.selectedSpace.workspace) {
+    if (!metaWindow.is_on_all_workspaces() &&
+        metaWindow.get_workspace() !== spaces.selectedSpace.workspace) {
         metaWindow.redirected = true;
         metaWindow.change_workspace(spaces.selectedSpace.workspace);
         return;
