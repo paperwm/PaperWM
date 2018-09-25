@@ -1643,6 +1643,9 @@ function insertWindow(metaWindow, {existing}) {
                 debug("#winprops", `Move ${metaWindow.title} to scratch`);
                 addToScratch = true;
             }
+            if (winprop.focus) {
+                Main.activateWindow(metaWindow);
+            }
         }
 
         if (addToScratch) {

@@ -11,3 +11,9 @@ defwinprop({
     oneshot: true, // Allow reattaching
     scratch_layer: true
 });
+
+// Fix rofi in normal window mode (eg. in Wayland)
+defwinprop({
+    wm_class: "Rofi",
+    focus: true
+});
