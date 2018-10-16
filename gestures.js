@@ -112,6 +112,7 @@ function horizontalScroll(actor, event) {
         if (direction === undefined) {
             this.vx = 0;
             this.hState = phase;
+            Tweener.removeTweens(this.cloneContainer);
             direction = DIRECTIONS.Horizontal;
         }
         return update(this, -dx, event.get_time());
