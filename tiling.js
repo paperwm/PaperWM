@@ -1619,7 +1619,9 @@ function add_handler(ws, metaWindow) {
 */
 function insertWindow(metaWindow, {existing}) {
 
-    if (!metaWindow.is_on_all_workspaces() &&
+    // Add newly created windows to the space being previewed
+    if (!existing &&
+        !metaWindow.is_on_all_workspaces() &&
         metaWindow.get_workspace() !== spaces.selectedSpace.workspace) {
         metaWindow.redirected = true;
         metaWindow.change_workspace(spaces.selectedSpace.workspace);
