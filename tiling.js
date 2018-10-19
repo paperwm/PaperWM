@@ -254,6 +254,11 @@ class Space extends Array {
         this.signals.connect(Main.overview, 'showing',
                              this.startAnimate.bind(this));
         this.signals.connect(Main.overview, 'hidden', this.moveDone.bind(this));
+
+        const Convenience = Extension.imports.convenience;
+        const settings = Convenience.getSettings();
+        this.signals.connect(settings, 'changed::default-background',
+                             this.updateBackground.bind(this));
     }
 
     layout(animate = true) {
@@ -672,7 +677,7 @@ class Space extends Array {
     }
 
     updateBackground() {
-        let path = this.settings.get_string('background');
+        let path = this.settings.get_string('background') || prefs.default_background;
         let file = Gio.File.new_for_path(path);
         const BackgroundStyle = imports.gi.GDesktopEnums.BackgroundStyle;
         let style = BackgroundStyle.ZOOM;

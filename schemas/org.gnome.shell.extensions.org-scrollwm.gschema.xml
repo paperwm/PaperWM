@@ -209,6 +209,11 @@
       <summary>Workspace colors</summary>
     </key>
 
+    <key type="s" name="default-background">
+        <default>''</default>
+        <summary>Default background image</summary>
+    </key>
+
     <child name="keybindings" schema="org.gnome.Shell.Extensions.PaperWM.Keybindings"/>
     <child name="workspaces" schema="org.gnome.Shell.Extensions.PaperWM.WorkspaceList"/>
 

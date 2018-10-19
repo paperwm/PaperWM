@@ -22,7 +22,8 @@ var prefs = {
     window_gap: settings.get_int('window-gap'),
     vertical_margin: settings.get_int('vertical-margin'),
     horizontal_margin: settings.get_int('horizontal-margin'),
-    workspace_colors: settings.get_strv('workspace-colors')
+    workspace_colors: settings.get_strv('workspace-colors'),
+    default_background: settings.get_string('default-background')
 };
 
 function setVerticalMargin() {
@@ -37,6 +38,9 @@ function setState(_, key) {
     switch (value.get_type_string()) {
     case 'i':
         prefs[name] = settings.get_int(key);
+        break;
+    case 's':
+        prefs[name] = settings.get_string(key);
         break;
     case 'as':
         prefs[name] = settings.get_strv(key);
@@ -71,6 +75,7 @@ function init() {
     settings.connect('changed::vertical-margin', setVerticalMargin);
     setVerticalMargin();
     settings.connect('changed::workspace-colors', setState);
+    settings.connect('changed::default-background', setState);
 }
 
 var id;
