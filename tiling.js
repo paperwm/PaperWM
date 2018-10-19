@@ -674,11 +674,13 @@ class Space extends Array {
     updateBackground() {
         let path = this.settings.get_string('background');
         let file = Gio.File.new_for_path(path);
+        const BackgroundStyle = imports.gi.GDesktopEnums.BackgroundStyle;
+        let style = BackgroundStyle.ZOOM;
         if (path === '' || !file.query_exists(null)) {
             file = Gio.File.new_for_uri('resource:///org/gnome/shell/theme/noise-texture.png');
+            style = BackgroundStyle.WALLPAPER;
         }
-        const GDesktopEnums = imports.gi.GDesktopEnums;
-        this.background.background.set_file(file, GDesktopEnums.BackgroundStyle.WALLPAPER);
+        this.background.background.set_file(file, style);
     }
 
     updateName() {
