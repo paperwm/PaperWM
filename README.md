@@ -1,8 +1,8 @@
 # PaperWM #
 
-PaperWM is an experimental gnome shell extension providing scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
+PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension providing scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
-While technically an extension it's to a large extent built on top of the Gnome desktop rather than merely extending it.
+While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
 ## Installation
 
@@ -95,7 +95,7 @@ Opening a window when the scratch layer is active will make it float automatical
 
 Pressing <kbd>Super</kbd><kbd>Escape</kbd> toggles between showing and hiding the windows in the scratch layer. Activating windows in the scratch layer is done using <kbd>Super</kbd><kbd>Tab</kbd>, the floating windows having priority in the list while active.
 
-<kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Escape</kbd> will move a tiled window into the scratch layer or alternatively tile an already floating window. This functionality can also be accessed in the windows context menu (<kbd>Alt</kbd><kbd>Space</kbd>).
+<kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Escape</kbd> will move a tiled window into the scratch layer or alternatively tile an already floating window. This functionality can also be accessed through the window context menu (<kbd>Alt</kbd><kbd>Space</kbd>).
 
 | Keybindings                                      |                                                       |
 | ------                                           | -------                                               |
@@ -114,7 +114,7 @@ Pressing <kbd>Super</kbd><kbd>Insert</kbd> will assign the active window to a gl
 
 ### Winprops
 
-It's possible to create simple rules for placing new windows. Currently mostly useful when a window should be placed in the scratch layer automatically. An example, best placed in the `init` part of `user.js`:
+It's possible to create simple rules for placing new windows. Currently most useful when a window should be placed in the scratch layer automatically. An example, best placed in the `init` part of `user.js`:
 
 ```javascript
     let Tiling = Extension.imports.Tiling;
