@@ -76,7 +76,32 @@ class SettingsWidget {
         });
 
         // Workspaces
-        const workspaceCombo = this.builder.get_object('worskpace_combo_text');
+
+        const defaultBackground = this.builder.get_object('workspace_chooser_default_background');
+        const deleteDefaultBackground = this.builder.get_object('workspace_button_delete_default_background');
+
+        let filename = this._settings.get_string('default-background');
+        if (filename === ''){
+            defaultBackground.unselect_all();
+            deleteDefaultBackground.sensitive = false;
+        } else {
+            defaultBackground.set_filename(filename);
+            deleteDefaultBackground.sensitive = true;
+        }
+
+        defaultBackground.connect('file-set', () => {
+            let filename = defaultBackground.get_filename();
+            this._settings.set_string('default-background', filename);
+            deleteDefaultBackground.sensitive = true;
+        });
+
+        deleteDefaultBackground.connect('clicked', () => {
+            this._settings.set_string('default-background', '');
+            defaultBackground.unselect_all();
+            deleteDefaultBackground.sensitive = false;
+        });
+
+        const workspaceCombo = this.builder.get_object('workspace_combo_text');
         const workspaceStack = this.builder.get_object('workspace_stack');
 
         const nWorkspaces = wmSettings.get_int('num-workspaces');
