@@ -205,8 +205,6 @@ class Space extends Array {
         this.targetX = 0;
         if (oldSpace) {
             monitor = Main.layoutManager.monitors[oldSpace.monitor.index];
-            this.targetX = oldSpace.targetX;
-            cloneContainer.x = this.targetX;
         }
         this.setMonitor(monitor, false);
 
@@ -234,6 +232,7 @@ class Space extends Array {
         // Though, targetX shouldn't ideally be able to get into this state.
         if (oldSpace && Number.isFinite(oldSpace.targetX)) {
             this.targetX = oldSpace.targetX;
+            this.cloneContainer.x = this.targetX;
         }
         this.cloneContainer.x = this.targetX;
         this.getWindows().forEach(w => {
@@ -1469,6 +1468,7 @@ function registerWindow(metaWindow) {
         layout_manager: new WindowCloneLayout()
     });
     container.add_actor(clone);
+    container.targetX = 0;
     clone.meta_window = metaWindow;
 
     metaWindow.clone = container;
