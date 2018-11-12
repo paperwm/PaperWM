@@ -938,6 +938,8 @@ class Spaces extends Map {
        left with heuristics.
      */
     monitorsChanged() {
+        this._monitorsChanging = true;
+
         if (this.monitors)
             oldMonitors = this.monitors;
 
@@ -975,6 +977,9 @@ class Spaces extends Map {
                 }
             });
             this.spaceContainer.show();
+
+            imports.mainloop.timeout_add(
+                20, () => { this._monitorsChanging = false; });
         };
 
         if (this.overrideSettings.get_boolean('workspaces-only-on-primary')) {
@@ -1443,7 +1448,8 @@ class Spaces extends Map {
             || Scratch.isScratchWindow(metaWindow)
             || metaWindow.is_on_all_workspaces()
             || !metaWindow.clone
-            || metaWindow.clone.visible)
+            || metaWindow.clone.visible
+            || this._monitorsChanging)
             return;
 
         let monitor = Main.layoutManager.monitors[index];
