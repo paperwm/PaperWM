@@ -1450,10 +1450,13 @@ class Spaces extends Map {
 
     windowEnteredMonitor(screen, index, metaWindow) {
         debug('window-entered-monitor', index, metaWindow.title);
-        if (!metaWindow.get_compositor_private()
-            || Scratch.isScratchWindow(metaWindow)
-            || metaWindow.is_on_all_workspaces()
-            || !metaWindow.clone
+
+        if (!metaWindow.get_compositor_private()) {
+            // Doing stuff to a actorless window is usually a bad idea
+            return;
+        }
+
+        if (!metaWindow.clone
             || metaWindow.clone.visible
             || this._monitorsChanging)
             return;
@@ -1462,6 +1465,17 @@ class Spaces extends Map {
         let space = this.monitors.get(monitor);
         if (space.monitor !== monitor)
             return;
+
+        if (metaWindow.is_on_all_workspaces()) {
+            // This check is for when a floating/scratch window is dragged
+            // across monitors.
+            // The monitor overlay (which usually activate the monitor-workspace)
+            // is not triggered inside a grab so the workspace must be activated
+            // manually.
+            space.workspace.activate(global.get_current_time());
+            return;
+        }
+
         let focus = metaWindow.has_focus();
 
         metaWindow.change_workspace(space.workspace);
