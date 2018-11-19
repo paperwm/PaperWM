@@ -925,7 +925,7 @@ class Spaces extends Map {
 
         this.forEach(space => space.init());
 
-        // Redo the stack 
+        // Redo the stack
         this.monitorsChanged(); // Necessary for X11
         this.stack = this.mru();
     }
@@ -2184,16 +2184,35 @@ function centerWindowHorizontally(metaWindow) {
     }
 }
 
+/*
+* pull in the top window from the column to the right. if there is no
+* column to the right, push active window into column to the left.
+* this allows freshly created windows to be stacked without
+* having to change focus
+*/
 function slurp(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     let index = space.indexOf(metaWindow);
-    let rightNeigbour = index < space.length ? space[index+1][0] : null;
-    if(!rightNeigbour)
+    let metaWindowToEnsure = space.selectedWindow;
+    let metaWindowToSlurp;
+
+    if(index + 1 < space.length) {
+        metaWindowToSlurp = space[index + 1][0]
+    } else if (index + 1 === space.length){
+        if(space[index].length > 1) return;
+        metaWindowToSlurp = metaWindow;
+        index = index - 1;
+        metaWindowToEnsure = metaWindowToSlurp;
+    }
+
+    if(!metaWindowToSlurp || space.length < 2) {
         return;
-    space.removeWindow(rightNeigbour);
+    }
+
     let column = space[index];
-    space.addWindow(rightNeigbour, index, column.length);
-    ensureViewport(space.selectedWindow, space, true);
+    space.removeWindow(metaWindowToSlurp);
+    space.addWindow(metaWindowToSlurp, index, column.length);
+    ensureViewport(metaWindowToEnsure, space, true);
 }
 
 function barf(metaWindow) {
