@@ -732,6 +732,7 @@ class Space extends Array {
         this.cloneClip.set_clip(-Math.round(prefs.window_gap/2), 0,
                                 monitor.width + prefs.window_gap, this.shadow.height);
 
+        this.layout();
         this.emit('monitor-changed');
     }
 
