@@ -885,7 +885,12 @@ class Spaces extends Map {
             debug("workspace", workspace)
         }
 
-        const OVERRIDE_SCHEMA = 'org.gnome.shell.overrides';
+        let OVERRIDE_SCHEMA;
+        if (global.screen) {
+            OVERRIDE_SCHEMA = 'org.gnome.shell.overrides';
+        } else { // 3.30 now uses per desktop settings, instead of ad-hoc overrides
+            OVERRIDE_SCHEMA = 'org.gnome.mutter';
+        }
         this.overrideSettings = new Gio.Settings({ schema_id: OVERRIDE_SCHEMA });
         this.monitorsChanged();
     }
