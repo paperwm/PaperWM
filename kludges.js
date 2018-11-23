@@ -12,6 +12,7 @@ var utils = Extension.imports.utils;
 
 var Convenience = Extension.imports.convenience;
 var settings = Convenience.getSettings();
+var Clutter = imports.gi.Clutter;
 
 function overrideHotCorners() {
     for (let corner of Main.layoutManager.hotCorners) {
@@ -37,10 +38,12 @@ function disableHotcorners() {
     }
 }
 
-var orgUpdateState;
+var orgUpdateState, prepareWorkspaceSwitch;
 var signals;
 function init() {
     orgUpdateState = imports.ui.messageTray.MessageTray.prototype._updateState;
+    prepareWorkspaceSwitch = imports.ui.windowManager.WindowManager.prototype._prepareWorkspaceSwitch;
+
     signals = new utils.Signals();
 }
 
@@ -50,6 +53,29 @@ function enable() {
                     'changed::override-hot-corner',
                     disableHotcorners);
     disableHotcorners();
+
+    /* The «native» workspace animation can be now (3.30) be disabled as it
+       calls out of the function bound to the `switch-workspace` signal.
+     */
+    imports.ui.windowManager.WindowManager.prototype._prepareWorkspaceSwitch =
+        function (from, to, direction) {
+            if (this._switchData)
+                return;
+
+            let wgroup = global.window_group;
+            let windows = global.get_window_actors();
+            let switchData = {};
+
+            this._switchData = switchData;
+            switchData.movingWindowBin = new Clutter.Actor();
+            switchData.windows = [];
+            switchData.surroundings = {};
+            switchData.gestureActivated = false;
+            switchData.inProgress = false;
+
+            switchData.container = new Clutter.Actor();
+
+        };
 
     // Don't hide notifications when there's fullscreen windows in the workspace.
     // Fullscreen windows aren't special in paperWM and might not even be
@@ -119,6 +145,7 @@ function enable() {
 
 function disable() {
     imports.ui.messageTray.MessageTray.prototype._updateState = orgUpdateState;
+    imports.ui.windowManager.WindowManager.prototype._prepareWorkspaceSwitch = prepareWorkspaceSwitch;
 
     signals.destroy();
     Main.layoutManager._updateHotCorners();
