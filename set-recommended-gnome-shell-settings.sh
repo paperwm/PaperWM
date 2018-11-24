@@ -7,8 +7,22 @@ if [[ -e $RESTORE_SETTINGS_SCRIPT ]]; then
     exit 1
 fi
 
+GNOME_SHELL_VERSION=$(gnome-shell --version)
+
+if [[ $GNOME_SHELL_VERSION > "gnome_shell 3.3" ]]; then
+   USE_OVERRIDE_SCHEMA=true
+fi
+
 function set-with-backup {
     DPATH=$1
+
+    if [[ $USE_OVERRIDE_SCHEMA == true ]]; then
+        # Gnome 3.3x doesn't use the override path
+        # https://gitlab.gnome.org/GNOME/gnome-shell/commit/393d7246cc176cbe8200a62bd661830597ca2fb6
+        DPATH=$(echo $DPATH |
+                    sed "s|^/org/gnome/shell/overrides/|/org/gnome/mutter/|g")
+    fi
+
     TARGET_VAL=$2
     CURRENT_VAL=$(dconf read $DPATH)
     if [[ "$CURRENT_VAL" == "$TARGET_VAL" ]]; then
@@ -20,6 +34,7 @@ function set-with-backup {
     dconf write $DPATH $TARGET_VAL
     echo "Changed $DPATH from '$CURRENT_VAL' to '$TARGET_VAL'"
 }
+
 
 ##### Recommended settings
 
