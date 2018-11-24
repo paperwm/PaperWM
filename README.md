@@ -12,7 +12,7 @@ Clone the repo and run the `install.sh` script from the directory:
 ```
 It will link the repo to `~/.local/share/gnome-shell/extensions/` where gnome-shell can find it. You can then enable the extension in Gnome Tweaks. Running the extension will automatic install of a user config file as described in [Development & user configuration](#development--user-configuration).
 
-Optionally run `set-recommended-gnome-shell-settings.sh`. A "restore previous settings" script is generated so the origin settings is not lost.
+Optionally run `set-recommended-gnome-shell-settings.sh`. A "restore previous settings" script is generated so the original settings is not lost.
 
 ## Usage ##
 
@@ -180,7 +180,7 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
                     { activeInNavigator: true });
 ```
 
-See 'examples/keybindings.js' for more examples.
+See `examples/keybindings.js` for more examples.
 
 ## Prior work ##
 
