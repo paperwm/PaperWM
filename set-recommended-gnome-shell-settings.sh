@@ -11,6 +11,10 @@ function set-with-backup {
     DPATH=$1
     TARGET_VAL=$2
     CURRENT_VAL=$(dconf read $DPATH)
+    if [[ "$CURRENT_VAL" == "$TARGET_VAL" ]]; then
+        return
+    fi
+
     echo "dconf write $DPATH $CURRENT_VAL" >> $RESTORE_SETTINGS_SCRIPT
 
     dconf write $DPATH $TARGET_VAL
@@ -29,6 +33,9 @@ set-with-backup /org/gnome/shell/overrides/dynamic-workspaces false
 
 # We make no attempt at handing edge-tiling
 set-with-backup /org/gnome/shell/overrides/edge-tiling false
+
+# Attached modal dialogs isn't handled very well
+set-with-backup /org/gnome/shell/overrides/attach-modal-dialogs false
 
 
 echo
