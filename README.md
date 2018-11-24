@@ -12,6 +12,8 @@ Clone the repo and run the `install.sh` script from the directory:
 ```
 It will link the repo to `~/.local/share/gnome-shell/extensions/` where gnome-shell can find it. You can then enable the extension in Gnome Tweaks. Running the extension will automatic install of a user config file as described in [Development & user configuration](#development--user-configuration).
 
+Optionally run `set-recommended-gnome-shell-settings.sh`. A "restore previous settings" script is generated so the origin settings is not lost.
+
 ## Usage ##
 
 Most functionality is available using a mouse, eg. activating a window at the edge of the monitor by clicking on it. In wayland its possible to navigate with 3-finger swipes on the trackpad. But the primary focus is making an environment which works well with a keyboard.
