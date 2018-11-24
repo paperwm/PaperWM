@@ -17,7 +17,7 @@ var Clutter = imports.gi.Clutter;
 function overrideHotCorners() {
     for (let corner of Main.layoutManager.hotCorners) {
         if (!corner)
-            return;
+            continue;
 
         corner._toggleOverview = function() {};
 
