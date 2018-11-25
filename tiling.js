@@ -1434,6 +1434,8 @@ class Spaces extends Map {
     window_created(display, metaWindow, user_data) {
         registerWindow(metaWindow);
 
+        metaWindow.unmapped = true;
+
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
         let signal = actor.connect(
@@ -1457,6 +1459,7 @@ class Spaces extends Map {
         }
 
         if (!metaWindow.clone
+            || metaWindow.unmapped
             || metaWindow.clone.visible
             || this._monitorsChanging)
             return;
@@ -1662,6 +1665,7 @@ function insertWindow(metaWindow, {existing}) {
     }
 
     let connectSizeChanged = () => {
+        delete metaWindow.unmapped;
         !existing && signals.connect(metaWindow, 'size-changed', resizeHandler);
     };
 
