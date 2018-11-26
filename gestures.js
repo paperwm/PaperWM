@@ -127,7 +127,7 @@ function update(space, dx, t) {
 
     let v = dx/(t - time);
     if (Number.isFinite(v)) {
-        space.vx = (space.vx + v)/2;
+        space.vx = v;
     }
     time = t;
     space.targetX -= dx;
@@ -260,7 +260,7 @@ function updateVertical(dy, t) {
         Tweener.addTween(selected.actor,
                          {scale_x: 0.9, scale_y: 0.9, time: 0.25, transition});
     } else if (Number.isFinite(v)) {
-        vy = (v + vy)/2;
+        vy = v;
     }
 
     selected.actor.y -= dy;
