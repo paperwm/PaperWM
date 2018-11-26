@@ -18,12 +18,16 @@ var LiveAltTab = Lang.Class({
     _getWindowList: function () {
         let tabList = global.display.get_tab_list(
             Meta.TabList.NORMAL_ALL,
-            global.workspace_manager.get_active_workspace());
+            global.workspace_manager.get_active_workspace())
+            .filter(w => !Scratch.isScratchWindow(w));
+
+        let scratch = Scratch.getScratchWindows();
 
         if (Scratch.isScratchActive()) {
-            return Scratch.getScratchWindows();
+            return scratch.concat(tabList);
         } else {
-            return tabList;
+            // Access scratch windows in mru order with shift-super-tab
+            return tabList.concat(scratch.reverse());
         }
     },
 
