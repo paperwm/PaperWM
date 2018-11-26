@@ -69,17 +69,48 @@ function registerMinimapAction(name, handler) {
         {settings: settings, opensNavigator: true, opensMinimap: true});
 }
 
+function run(method) {
+    for (let module of modules) {
+        // Bail if there's an error in our own modules
+        if (!safeCall(module, method))
+            return false;
+    }
+
+    if (hasUserConfigFile())
+        safeCall(Extension.imports.user, method);
+
+    return true;
+}
+
+function safeCall(module, method) {
+    try {
+        utils.debug("#paperwm", `${method} ${module.__moduleName__}`);
+        module[method] && module[method].call(module);
+        return true;
+    } catch(e) {
+        utils.debug("#paperwm", `${method} failed`, e.message);
+        utils.print_stacktrace(e);
+        errorNotification(
+            "PaperWM",
+            `Error occured in ${module.__moduleName__} @${method}:\n\n${e.message}`,
+            e.stack);
+        return false;
+    }
+}
+
 function init() {
     SESSIONID += "#";
-    log(`init: ${SESSIONID}`);
+    log(`#paperwm init: ${SESSIONID}`);
 
     if(initRun) {
         log(`#startup Reinitialized against our will! Skip adding bindings again to not cause trouble.`);
         return;
     }
-    initRun = true;
 
-    modules.forEach(m => m.init && m.init());
+    initUserConfig();
+
+    if (run('init'))
+        initRun = true;
 
     paperSettings = convenience.getSettings();
 
@@ -183,30 +214,29 @@ function init() {
                                     metaWindow.make_fullscreen();
                             }, Meta.KeyBindingFlags.PER_WINDOW);
 
-    initUserConfig();
 }
 
 function enable() {
-    // Only enable modules after disable have been run
+    log(`#paerwm enable ${SESSIONID}`);
+
     if (enabled) {
         log('enable called without calling disable');
         return;
     }
-    log(`enabled ${SESSIONID}`);
 
-    modules.forEach(m => m.enable && m.enable());
-
+    if (run('enable'))
     enabled = true;
 }
 
 function disable() {
-    if (!enabled)
+    log(`#paerwm enable ${SESSIONID}`);
+    if (!enabled) {
+        log('disable called without calling enable');
         return;
-    log(`disable ${SESSIONID}`);
+    }
 
-    modules.forEach(m => m.disable && m.disable());
-
-    enabled = false;
+    if (run('disable'))
+        enabled = false;
 }
 
 
@@ -244,33 +274,6 @@ function installConfig() {
     }
 }
 
-function errorWrappedModule(module) {
-    function safeCall(method) {
-        try {
-            utils.debug("#rc", `calling ${method}`);
-            module[method].call(module);
-        } catch(e) {
-            utils.debug("#rc", `${method} failed`, e.message);
-            utils.print_stacktrace(e);
-            errorNotification("PaperWM",
-                `Error occured in user.js@${method}:\n\n${e.message}`,
-                e.stack
-            );
-        }
-    }
-    return {
-        init: () => {
-            safeCall("init");
-        },
-        enable: () => {
-            safeCall("enable");
-        },
-        disable: () => {
-            safeCall("disable");
-        }
-    };
-}
-
 function initUserConfig() {
     const paperSettings = convenience.getSettings();
 
@@ -286,17 +289,6 @@ function initUserConfig() {
 
     if (hasUserConfigFile()) {
         Extension.imports.searchPath.push(getConfigDir().get_path());
-        try {
-            utils.debug("#rc", "Loading config file");
-            const userModule = errorWrappedModule(Extension.imports.user);
-            modules.push(userModule);
-            userModule.init();
-        } catch(e) {
-            utils.debug("#rc", "Loading config failed", e.message);
-            utils.print_stacktrace(e);
-            errorNotification("PaperWM", `Loading user.js failed:\n\n${e.message}`, e.stack);
-            return;
-        }
     }
 }
 

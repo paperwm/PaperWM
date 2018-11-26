@@ -6,7 +6,7 @@ var workspaceManager = global.workspace_manager;
 var display = global.display;
 
 var debug_all = false; // Turn off by default
-var debug_filter = {};
+var debug_filter = {'#paperwm': true, '#stacktrace': true};
 function debug() {
     let keyword = arguments[0];
     let filter = debug_filter[keyword];
@@ -40,7 +40,7 @@ function print_stacktrace(error) {
         return frame !== "wrapper@resource:///org/gnome/gjs/modules/lang.js:178"   
     });
     let args = [...arguments];
-    args.splice(0, 1, "stacktrace:"+(args[0] ? args[0] : ""))
+    args.splice(0, 1, "#stacktrace:"+(args[0] ? args[0] : ""));
     // Use non-breaking space to encode new lines (otherwise every frame is
     // prefixed by timestamp)
     let nl = " ";
