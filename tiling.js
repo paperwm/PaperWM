@@ -1721,10 +1721,7 @@ function insertWindow(metaWindow, {existing}) {
         toggleMaximizeHorizontally(metaWindow);
     }
 
-    let buffer = metaWindow.get_buffer_rect();
     let frame = metaWindow.get_frame_rect();
-    let x_offset = frame.x - buffer.x;
-    let y_offset = frame.y - buffer.y;
     let clone = metaWindow.clone;
 
     let actor = metaWindow.get_compositor_private();

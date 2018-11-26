@@ -224,10 +224,6 @@ var Navigator = class Navigator {
             this.space.workspace.activate(global.get_current_time());
         }
 
-        if (this._moving) {
-            Scratch.unmakeScratch(this._moving);
-        }
-
         if (selected && selected.fullscreen) {
             TopBar.hide();
         } else {
