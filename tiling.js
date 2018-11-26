@@ -296,7 +296,8 @@ class Space extends Array {
                     w.get_maximized() !== Meta.MaximizeFlags.BOTH;
                 if (resizable) {
                     w.move_resize_frame(true, f.x, f.y, targetWidth, height);
-                } else {
+                } else { // fullscreen windows can only be moved between monitors
+                    w.move_frame(true, this.monitor.x, this.monitor.y);
                     targetWidth = f.width;
                 }
                 // When resize is synchronous, ie. for X11 windows
