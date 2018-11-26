@@ -211,7 +211,9 @@ var Navigator = class Navigator {
         }
 
         let selected = this.space.selectedWindow;
-        if (selected && !Scratch.isScratchActive()) {
+        if (selected &&
+            (!display.focus_window.is_on_all_workspaces()  || !force) ) {
+
             if (selected !== display.focus_window) {
                 Main.activateWindow(selected);
             } else {
