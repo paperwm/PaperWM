@@ -38,10 +38,12 @@ var panelBox = Main.layoutManager.panelBox;
 
 var inPreview = false;
 
-var signals, oldSpaces, backgroundGroup, oldMonitors, WindowCloneLayout;
+var signals, oldSpaces, backgroundGroup, oldMonitors, WindowCloneLayout,
+    grabSignals;
 function init() {
     // Symbol to retrieve the focus handler id
     signals = new utils.Signals();
+    grabSignals = new utils.Signals();
     oldSpaces = new Map();
     oldMonitors = new Map();
 
@@ -1905,8 +1907,6 @@ function move_to(space, metaWindow, { x, y, delay, transition,
 }
 
 var noAnimate = false;
-var grabSignals = new utils.Signals();
-
 function grabBegin(metaWindow, type) {
     // Don't handle pushModal grabs
     if (type === Meta.GrabOp.COMPOSITOR)
