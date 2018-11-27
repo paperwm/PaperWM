@@ -1,5 +1,6 @@
 var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 var convenience = Extension.imports.convenience;
+var utils = Extension.imports.utils;
 
 // polyfill workspace_manager that was introduced in 3.30
 if (!global.workspace_manager) {
@@ -15,22 +16,17 @@ var modules = [
     Extension.imports.keybindings, Extension.imports.gestures
 ];
 
-var utils = Extension.imports.utils;
-var debug = utils.debug;
-
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
 var Main = imports.ui.main;
 
-let SESSIONID = ""+(new Date().getTime());
+var SESSIONID = ""+(new Date().getTime());
 /**
  * The extension sometimes go through multiple init -> enable -> disable
  * cycles. So we need to keep track of whether we're initialized..
  */
-let initRun;
-let enabled = false;
-
-window.PaperWM = Extension;
+var initRun;
+var enabled = false;
 
 function run(method) {
     for (let module of modules) {
@@ -78,7 +74,6 @@ function init() {
 
 function enable() {
     log(`#paerwm enable ${SESSIONID}`);
-
     if (enabled) {
         log('enable called without calling disable');
         return;
