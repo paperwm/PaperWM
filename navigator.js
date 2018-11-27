@@ -212,7 +212,8 @@ var Navigator = class Navigator {
 
         let selected = this.space.selectedWindow;
         if (selected &&
-            (!display.focus_window.is_on_all_workspaces()  || !force) ) {
+            (!force ||
+             !(display.focus_window && display.focus_window.is_on_all_workspaces())) ) {
 
             if (selected !== display.focus_window) {
                 Main.activateWindow(selected);
