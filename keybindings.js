@@ -19,6 +19,33 @@ var display = global.display;
 
 var KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
 
+
+function registerPaperAction(actionName, handler, flags) {
+    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    registerAction(
+        actionName,
+        handler,
+        {settings: settings, mutterFlags: flags, activeInNavigator: true});
+}
+
+function registerNavigatorAction(name, handler) {
+    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    registerAction(
+        name,
+        handler,
+        {settings: settings, opensNavigator: true});
+}
+
+function registerMinimapAction(name, handler) {
+    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    registerAction(
+        name,
+        handler,
+        {settings: settings, opensNavigator: true, opensMinimap: true});
+
+}
+
+
 var signals, actions, nameMap, actionIdMap, keycomboMap, overrides, conflictSettings;
 function init() {
     signals = new Utils.Signals();
@@ -27,6 +54,113 @@ function init() {
     actionIdMap = {}; // actionID   -> action
     keycomboMap = {}; // keycombo   -> action
     overrides = [];   // action names that have been given a custom handler
+
+    /* Initialize keybindings */
+    let Tiling = Extension.imports.tiling;
+    let LiveAltTab = Extension.imports.liveAltTab;
+    let Scratch = Extension.imports.scratch;
+    let App = Extension.imports.app;
+
+    let dynamic_function_ref = Utils.dynamic_function_ref;
+
+    let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
+    let previewNavigate = dynamic_function_ref("preview_navigate", Navigator);
+
+    registerPaperAction('live-alt-tab',
+                          liveAltTab);
+    registerPaperAction('live-alt-tab-backward',
+                          liveAltTab,
+                          Meta.KeyBindingFlags.IS_REVERSED);
+
+    registerNavigatorAction('previous-workspace', Tiling.selectPreviousSpace);
+    registerNavigatorAction('previous-workspace-backward',
+                            Tiling.selectPreviousSpaceBackwards);
+
+    registerNavigatorAction('move-previous-workspace', Tiling.movePreviousSpace);
+    registerNavigatorAction('move-previous-workspace-backward',
+                            Tiling.movePreviousSpaceBackwards);
+
+    registerMinimapAction("switch-next", (mw, space) => space.switchLinear(1));
+    registerMinimapAction("switch-previous", (mw, space) => space.switchLinear(-1));
+
+    registerMinimapAction("switch-first", Tiling.activateFirstWindow);
+    registerMinimapAction("switch-last", Tiling.activateLastWindow);
+
+    registerMinimapAction("switch-right", (mw, space) => space.switchRight());
+    registerMinimapAction("switch-left", (mw, space) => space.switchLeft());
+    registerMinimapAction("switch-up", (mw, space) => space.switchUp());
+    registerMinimapAction("switch-down", (mw, space) => space.switchDown());
+
+    registerMinimapAction("move-left",
+                        (mw, space) => space.swap(Meta.MotionDirection.LEFT));
+    registerMinimapAction("move-right",
+                        (mw, space) => space.swap(Meta.MotionDirection.RIGHT));
+    registerMinimapAction("move-up",
+                        (mw, space) => space.swap(Meta.MotionDirection.UP));
+    registerMinimapAction("move-down",
+                        (mw, space) => space.swap(Meta.MotionDirection.DOWN));
+
+    registerPaperAction("toggle-scratch-layer",
+                        dynamic_function_ref("toggleScratch",
+                                             Scratch));
+
+    registerPaperAction("toggle-scratch",
+                        dynamic_function_ref("toggle",
+                                             Scratch),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction("develop-set-globals",
+                        dynamic_function_ref("setDevGlobals",
+                                             Utils));
+
+    registerPaperAction("cycle-width",
+                        dynamic_function_ref("cycleWindowWidth",
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction("center-horizontally",
+                        dynamic_function_ref("centerWindowHorizontally",
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction("tile-visible",
+                        dynamic_function_ref("tileVisible",
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction('new-window',
+                        dynamic_function_ref('newWindow',
+                                       App),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction('close-window',
+                        (metaWindow) =>
+                        metaWindow.delete(global.get_current_time()),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction('slurp-in',
+                        dynamic_function_ref('slurp',
+                                             Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction('barf-out',
+                        dynamic_function_ref('barf',
+                                             Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction('toggle-maximize-width',
+                        dynamic_function_ref("toggleMaximizeHorizontally",
+                                             Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction('paper-toggle-fullscreen',
+                            (metaWindow) => {
+                                if (metaWindow.fullscreen)
+                                    metaWindow.unmake_fullscreen();
+                                else
+                                    metaWindow.make_fullscreen();
+                            }, Meta.KeyBindingFlags.PER_WINDOW);
+
 }
 
 function idOf(mutterName) {
@@ -261,7 +395,7 @@ function enableAction(action) {
 
         actionIdMap[actionId] = action;
         keycomboMap[action.keycombo] = action;
-        nameMap[mutterName] = action; 
+        nameMap[mutterName] = action;
 
         if (action.options.opensNavigator) {
             action.keyHandler = openNavigatorHandler(mutterName, action.keystr);
