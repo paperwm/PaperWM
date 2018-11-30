@@ -151,10 +151,14 @@ class Space extends Array {
             }, meta_display)
         );
 
-        // This kills all input on X11, but works on wayland...
+        // This kills all mouse input on X11, but works on wayland
         if (Meta.is_wayland_compositor()) {
             Main.layoutManager.trackChrome(background);
-            this.signals.connect(background, 'button-press-event', (actor, event) => {
+        }
+
+        this.signals.connect(
+            background, 'button-press-event',
+            (actor, event) => {
                 let [aX, aY, mask] = global.get_pointer();
                 let [ok, x, y] =
                     this.actor.transform_stage_point(aX, aY);
@@ -171,7 +175,7 @@ class Space extends Array {
             this.signals.connect(
                 background, 'captured-event',
                 Extension.imports.gestures.horizontalScroll.bind(this));
-        }
+
         this.background = background;
         this.shadow = new St.Widget();;
         this.shadow.set_style(
