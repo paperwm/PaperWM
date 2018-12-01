@@ -31,27 +31,29 @@ var enabled = false;
 function run(method) {
     for (let module of modules) {
         // Bail if there's an error in our own modules
-        if (!safeCall(module, method))
+        if (!safeCall(module.__moduleName__, method))
             return false;
     }
 
-    if (hasUserConfigFile())
-        safeCall(Extension.imports.user, method);
+    if (hasUserConfigFile()) {
+        safeCall('user', method);
+    }
 
     return true;
 }
 
-function safeCall(module, method) {
+function safeCall(name, method) {
     try {
-        utils.debug("#paperwm", `${method} ${module.__moduleName__}`);
-        module[method] && module[method].call(module);
+        utils.debug("#paperwm", `${method} ${name}`);
+        let module = Extension.imports[name];
+        module && module[method] && module[method].call(module);
         return true;
     } catch(e) {
         utils.debug("#paperwm", `${method} failed`, e.message);
         utils.print_stacktrace(e);
         errorNotification(
             "PaperWM",
-            `Error occured in ${module.__moduleName__} @${method}:\n\n${e.message}`,
+            `Error occured in ${name} @${method}:\n\n${e.message}`,
             e.stack);
         return false;
     }
