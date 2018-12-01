@@ -8,31 +8,45 @@ var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.o
 var convenience = Extension.imports.convenience;
 var utils = Extension.imports.utils;
 
+/**
+   The currently used modules
+     - tiling is the main module, responsible for tiling and workspaces
+
+     - navigator is used to initiate a discrete navigation.
+       Focus is only switched when the navigation is done.
+
+     - keybindings is a utility wrapper around mutters keybinding facilities.
+
+     - scratch is used to manage floating windows, or scratch windows.
+
+     - liveAltTab is a simple altTab implementiation with live previews.
+
+     - stackoverlay is somewhat kludgy. It makes clicking on the left or right
+       edge of the screen always activate the partially (or sometimes wholly)
+       concealed window at the edges.
+
+     - app creates new windows based on the current application. It's possible
+       to create custom new window handlers.
+
+     - kludges is used for monkey patching gnome shell behavior which simply
+       doesn't fit paperwm.
+
+     - topbar adds the workspace name to the topbar and styles it.
+
+     - gestures is responsible for 3-finger swiping (only works in wayland).
+ */
 var modules = [
-    Extension.imports.tiling, Extension.imports.scratch,
-    Extension.imports.liveAltTab, Extension.imports.utils,
-    Extension.imports.stackoverlay, Extension.imports.app,
-    Extension.imports.kludges, Extension.imports.topbar,
-    Extension.imports.navigator, Extension.imports.settings,
-    Extension.imports.keybindings, Extension.imports.gestures
+    'tiling', 'navigator', 'keybindings', 'scratch', 'liveAltTab', 'utils',
+    'stackoverlay', 'app', 'kludges', 'topbar', 'settings','gestures'
 ];
 
-var Gio = imports.gi.Gio;
-var GLib = imports.gi.GLib;
-var Main = imports.ui.main;
-
-var SESSIONID = ""+(new Date().getTime());
 /**
- * The extension sometimes go through multiple init -> enable -> disable
- * cycles. So we need to keep track of whether we're initialized..
+  Tell the modules to run init, enable or disable
  */
-var initRun;
-var enabled = false;
-
 function run(method) {
-    for (let module of modules) {
+    for (let name of modules) {
         // Bail if there's an error in our own modules
-        if (!safeCall(module.__moduleName__, method))
+        if (!safeCall(name, method))
             return false;
     }
 
@@ -60,6 +74,15 @@ function safeCall(name, method) {
     }
 }
 
+var SESSIONID = ""+(new Date().getTime());
+
+/**
+ * The extension sometimes go through multiple init -> enable -> disable
+ * cycles. So we need to keep track of whether we're initialized..
+ */
+var initRun;
+var enabled = false;
+
 function init() {
     SESSIONID += "#";
     log(`#paperwm init: ${SESSIONID}`);
@@ -83,7 +106,7 @@ function enable() {
     }
 
     if (run('enable'))
-    enabled = true;
+        enabled = true;
 }
 
 function disable() {
@@ -97,6 +120,10 @@ function disable() {
         enabled = false;
 }
 
+
+var Gio = imports.gi.Gio;
+var GLib = imports.gi.GLib;
+var Main = imports.ui.main;
 
 function getConfigDir() {
     return Gio.file_new_for_path(GLib.get_user_config_dir() + '/paperwm');
