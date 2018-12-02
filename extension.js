@@ -1,11 +1,12 @@
-var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
-var convenience = Extension.imports.convenience;
-var utils = Extension.imports.utils;
 
-// polyfill workspace_manager that was introduced in 3.30
+// polyfill workspace_manager that was introduced in 3.30 (must happen before modules are imported)
 if (!global.workspace_manager) {
     global.workspace_manager = global.screen;
 }
+
+var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var convenience = Extension.imports.convenience;
+var utils = Extension.imports.utils;
 
 var modules = [
     Extension.imports.tiling, Extension.imports.scratch,
