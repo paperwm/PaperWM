@@ -466,4 +466,5 @@ function setMonitor(monitor) {
     let panelBox = Main.layoutManager.panelBox;
     panelBox.set_position(monitor.x, monitor.y);
     panelBox.width = monitor.width;
+    show();
 }
