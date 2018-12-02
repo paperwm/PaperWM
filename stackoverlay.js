@@ -76,7 +76,7 @@ class ClickOverlay {
         this.signals = new utils.Signals();
 
         this.signals.connect(
-            enterMonitor, 'enter-event',
+            enterMonitor, 'motion-event',
             () => {
                 this.deactivate();
                 let space = Tiling.spaces.monitors.get(this.monitor);

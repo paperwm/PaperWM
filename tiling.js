@@ -1468,23 +1468,14 @@ class Spaces extends Map {
         if (!metaWindow.clone
             || metaWindow.unmapped
             || metaWindow.clone.visible
-            || this._monitorsChanging)
+            || this._monitorsChanging
+            || metaWindow.is_on_all_workspaces())
             return;
 
         let monitor = Main.layoutManager.monitors[index];
         let space = this.monitors.get(monitor);
         if (space.monitor !== monitor)
             return;
-
-        if (metaWindow.is_on_all_workspaces()) {
-            // This check is for when a floating/scratch window is dragged
-            // across monitors.
-            // The monitor overlay (which usually activate the monitor-workspace)
-            // is not triggered inside a grab so the workspace must be activated
-            // manually.
-            space.workspace.activate(global.get_current_time());
-            return;
-        }
 
         let focus = metaWindow.has_focus();
 
