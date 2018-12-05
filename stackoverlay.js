@@ -111,8 +111,9 @@ class ClickOverlay {
 
     activate() {
         let monitor = this.monitor;
-        this.enterMonitor.set_position(monitor.x, monitor.y);
-        this.enterMonitor.set_size(monitor.width, monitor.height);
+        let d = 10;
+        this.enterMonitor.set_position(monitor.x + d, monitor.y + d);
+        this.enterMonitor.set_size(monitor.width - 2*d, monitor.height - 2*d);
     }
 
     deactivate() {
