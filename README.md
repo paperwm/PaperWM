@@ -1,8 +1,12 @@
 # PaperWM #
 
+[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://paperwm.zulipchat.com)
+
 PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension providing scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
+
+We hang out on [zulip](https://paperwm.zulipchat.com).
 
 ## Installation
 
