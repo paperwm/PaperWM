@@ -572,7 +572,8 @@ class Space extends Array {
     }
 
     moveDone() {
-        if (this.cloneContainer.x !== this.targetX ||
+        if (Tweener.getTweenCount(this.cloneContainer) > 0 ||
+            this.cloneContainer.x !== this.targetX ||
             this.actor.y !== 0 ||
             Navigator.navigating || inPreview || noAnimate ||
             Main.overview.visible) {
