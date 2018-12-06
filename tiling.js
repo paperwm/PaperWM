@@ -572,8 +572,7 @@ class Space extends Array {
     }
 
     moveDone() {
-        if (Tweener.getTweenCount(this.cloneContainer) > 0 ||
-            this.cloneContainer.x !== this.targetX ||
+        if (this.cloneContainer.x !== this.targetX ||
             this.actor.y !== 0 ||
             Navigator.navigating || inPreview || noAnimate ||
             Main.overview.visible) {
@@ -600,6 +599,10 @@ class Space extends Array {
         });
 
         this.visible.forEach(w => {
+            // Guard against races between move_to and layout
+            if (Tweener.isTweening(w.clone))
+                return;
+
             w.clone.hide();
             let actor = w.get_compositor_private();
             clipWindowActor(actor, this.monitor);
