@@ -8,9 +8,11 @@ var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.o
 
 var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
+var Workspace = imports.ui.workspace;
 var utils = Extension.imports.utils;
 
 var Convenience = Extension.imports.convenience;
+var Scratch = Extension.imports.scratch;
 var settings = Convenience.getSettings();
 var Clutter = imports.gi.Clutter;
 
@@ -72,16 +74,33 @@ function init() {
     savedMethods = new Map();
     saveMethod(imports.ui.messageTray.MessageTray.prototype, '_updateState');
     saveMethod(imports.ui.windowManager.WindowManager.prototype, '_prepareWorkspaceSwitch');
+    saveMethod(Workspace.Workspace.prototype, '_isOverviewWindow');
 
     signals = new utils.Signals();
 }
 
 function enable() {
 
-    signals.connect(settings,
-                    'changed::override-hot-corner',
+    signals.connect(settings, 'changed::override-hot-corner',
                     disableHotcorners);
     disableHotcorners();
+
+
+    function onlyScratchInOverview() {
+        let obj = Workspace.Workspace.prototype;
+        let name = '_isOverviewWindow';
+        if (settings.get_boolean('only-scratch-in-overview')) {
+            overrideMethod(obj, name, (win) => {
+                let metaWindow = win.meta_window;
+                return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+            });
+        } else {
+            restoreMethod(obj, name);
+        }
+    }
+    signals.connect(settings, 'changed::only-scratch-in-overview',
+                    onlyScratchInOverview);
+    onlyScratchInOverview();
 
     /* The «native» workspace animation can be now (3.30) be disabled as it
        calls out of the function bound to the `switch-workspace` signal.
