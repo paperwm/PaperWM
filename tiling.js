@@ -221,7 +221,6 @@ class Space extends Array {
         this.shadow.set_position(-8 - Math.round(prefs.window_gap/2), -4);
 
         this.selectedWindow = null;
-        this.moving = false;
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
 
@@ -1774,10 +1773,6 @@ function animateDown(metaWindow) {
  */
 function ensureViewport(meta_window, space, force) {
     space = space || spaces.spaceOfWindow(meta_window);
-    if (space.moving == meta_window && !force) {
-        debug('already moving', meta_window.title);
-        return undefined;
-    }
 
     let index = space.indexOf(meta_window);
     if (index === -1 || space.length === 0)
@@ -1871,31 +1866,24 @@ function updateSelection(space, metaWindow, noAnimate){
  * Move the column containing @meta_window to x, y and propagate the change
  * in @space. Coordinates are relative to monitor and y is optional.
  */
-function move_to(space, metaWindow, { x, y, delay, transition,
-                                       onComplete, onStart, gap, force }) {
-    let index = space.indexOf(metaWindow);
-    if (index === -1)
+function move_to(space, metaWindow, { x, y, transition, force }) {
+    if (space.indexOf(metaWindow) === -1)
         return;
 
     let clone = metaWindow.clone;
-    let delta = Math.round(clone.targetX) + space.targetX - x;
-    let target = space.targetX - delta;
-    if (!inPreview && delta === 0 && !force) {
+    let target = x - clone.targetX;
+    if (target === space.targetX && !force) {
         space.moveDone();
         return;
     }
 
     space.targetX = target;
     space.startAnimate();
-    space.moving = metaWindow;
     Tweener.addTween(space.cloneContainer,
                      { x: target,
                        time: 0.25,
                        transition: 'easeInOutQuad',
-                       onComplete: () => {
-                           space.moving = false;
-                           space.moveDone();
-                       }
+                       onComplete: space.moveDone.bind(space)
                      });
 
     space.fixOverlays(metaWindow);
