@@ -38,11 +38,40 @@ function disableHotcorners() {
     }
 }
 
-var orgUpdateState, prepareWorkspaceSwitch;
+var savedMethods;
+function saveMethod(obj, name) {
+    let method = obj[name];
+    let methods = savedMethods.get(obj);
+    if (!methods) {
+        methods = {};
+        savedMethods.set(obj, methods);
+    }
+    methods[name] = method;
+}
+
+function getMethod(obj, name) {
+    let methods = savedMethods.get(obj);
+    return methods[name];
+}
+
+
+function overrideMethod(obj, name, method) {
+    if (!getMethod(obj, name))
+        saveMethod(obj, name);
+    obj[name] = method;
+}
+
+function restoreMethod(obj, name) {
+    let method = getMethod(obj, name);
+    if (method)
+        obj[name] = method;
+}
+
 var signals;
 function init() {
-    orgUpdateState = imports.ui.messageTray.MessageTray.prototype._updateState;
-    prepareWorkspaceSwitch = imports.ui.windowManager.WindowManager.prototype._prepareWorkspaceSwitch;
+    savedMethods = new Map();
+    saveMethod(imports.ui.messageTray.MessageTray.prototype, '_updateState');
+    saveMethod(imports.ui.windowManager.WindowManager.prototype, '_prepareWorkspaceSwitch');
 
     signals = new utils.Signals();
 }
@@ -144,8 +173,11 @@ function enable() {
 }
 
 function disable() {
-    imports.ui.messageTray.MessageTray.prototype._updateState = orgUpdateState;
-    imports.ui.windowManager.WindowManager.prototype._prepareWorkspaceSwitch = prepareWorkspaceSwitch;
+    for (let [obj, methods] of savedMethods) {
+        for (let name in methods) {
+            restoreMethod(obj, name);
+        }
+    }
 
     signals.destroy();
     Main.layoutManager._updateHotCorners();
