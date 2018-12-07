@@ -57,7 +57,6 @@ class SettingsWidget {
 
         let windowGap = this.builder.get_object('window_gap_spin');
         let gap = this._settings.get_int('window-gap');
-
         windowGap.set_value(gap);
         windowGap.connect('value-changed', () => {
             this._settings.set_int('window-gap', windowGap.get_value());
@@ -74,6 +73,23 @@ class SettingsWidget {
         vMargin.connect('value-changed', () => {
             this._settings.set_int('vertical-margin', vMargin.get_value());
         });
+
+        let onlyScratch = this.builder.get_object('only-scratch-in-overview');
+        onlyScratch.state =
+            this._settings.get_boolean('only-scratch-in-overview');
+        onlyScratch.connect('state-set', (obj, state) => {
+            this._settings.set_boolean('only-scratch-in-overview',
+                                       state);
+        });
+
+        let disableCorner = this.builder.get_object('override-hot-corner');
+        disableCorner.state =
+            this._settings.get_boolean('override-hot-corner');
+        disableCorner.connect('state-set', (obj, state) => {
+            this._settings.set_boolean('override-hot-corner',
+                                       state);
+        });
+
 
         // Workspaces
 
