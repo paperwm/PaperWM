@@ -312,13 +312,18 @@ class Space extends Array {
                 }
 
                 let c = w.clone;
-                c.targetX = x;
-                c.targetY = y;
-                Tweener.addTween(c, {
-                    x, y,
-                    time,
-                    transition: 'easeInOutQuad',
-                });
+                if (widthChanged ||
+                    c.targetX !== x ||
+                    c.targetY !== y) {
+
+                    c.targetX = x;
+                    c.targetY = y;
+                    Tweener.addTween(c, {
+                        x, y,
+                        time,
+                        transition: 'easeInOutQuad',
+                    });
+                }
 
                 y += height + gap;
             }
@@ -1940,10 +1945,12 @@ function grabEnd(metaWindow, type) {
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
     space.targetX = space.cloneContainer.x;
-    clone.set_position(frame.x - space.monitor.x - space.targetX,
-                       frame.y - space.monitor.y);
+    clone.targetX = frame.x - space.monitor.x - space.targetX;
+    clone.targetY = frame.y - space.monitor.y;
+    clone.set_position(clone.targetX,
+                       clone.targetY);
     space.layout();
-    ensureViewport(metaWindow, space, true);
+    ensureViewport(metaWindow, space);
 }
 function getGrab(space, anchor) {
     let gap = Math.round(prefs.window_gap/2);
