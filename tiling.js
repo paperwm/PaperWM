@@ -1276,23 +1276,28 @@ class Spaces extends Map {
         let newSpace = this.selectedSpace;
         let to = from;
         if (move && this.selectedSpace.selectedWindow) {
-            let space = this.selectedSpace;
             let moving = this.selectedSpace.selectedWindow;
             this._moving.push(moving);
 
             this.selectedSpace.removeWindow(moving);
             let actor = moving.get_compositor_private();
-            Main.uiGroup.add_actor(moving.clone);
-            let point = space.cloneContainer.apply_relative_transform_to_point(
-                this.spaceContainer, new Clutter.Vertex({x: moving.clone.x,
-                                          y: moving.clone.y}));
+            backgroundGroup.add_actor(moving.clone);
+            let lowest = this._moving[this._moving.length - 2];
+            lowest && backgroundGroup.set_child_below_sibling(moving.clone, lowest.clone);
+            let point = this.selectedSpace.cloneContainer.apply_relative_transform_to_point(
+                backgroundGroup, new Clutter.Vertex({x: moving.clone.x,
+                                                     y: moving.clone.y}));
             moving.clone.set_position(point.x, point.y);
-            moving.move_frame(true, point.x, point.y);
+            let x = Math.round(space.monitor.x +
+                               space.monitor.width -
+                               (0.1*space.monitor.width*(1 +this._moving.length)));
+            let y = Math.round(space.monitor.y + space.monitor.height*2/3)
+                + 20*this._moving.length;
+            moving.move_frame(true, x, y);
             moving.clone.show();
             actor.hide();
             Tweener.addTween(moving.clone,
-                             {y: Math.round(space.monitor.y
-                                            + space.monitor.height/2),
+                             {x, y,
                               time: 0.25,
                               transition
                              });
@@ -1348,7 +1353,7 @@ class Spaces extends Map {
         inPreview = false;
         TopBar.updateWorkspaceIndicator(to.workspace.index());
 
-        this._moving.forEach(w => {
+        this._moving.reverse().forEach(w => {
             w.change_workspace(to.workspace);
             if (w.get_workspace() === to.workspace) {
                 insertWindow(w, {existing: true});
@@ -1767,9 +1772,9 @@ function insertWindow(metaWindow, {existing}) {
             scale_x: 1, scale_y: 1, time: 0.25, transition: 'easeInOutQuad'
         });
     } else {
-        clone.set_position(
-            frame.x - monitor.x - space.cloneContainer.x,
-            frame.y - monitor.y + space.cloneContainer.y);
+        let [ok, x, y] = space.cloneContainer.transform_stage_point(frame.x, frame.y);
+
+        clone.set_position(x, y);
         clone.show();
     }
 
