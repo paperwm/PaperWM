@@ -611,10 +611,25 @@ class Space extends Array {
 
         this.fixOverlays();
 
+        if (!Meta.is_wayland_compositor()) {
+            // See startAnimate
+            Main.layoutManager.untrackChrome(this.background);
+        }
+
+        this._isAnimating = false;
+
         this.emit('move-done');
     }
 
     startAnimate(grabWindow) {
+
+        if (!this._isAnimating && !Meta.is_wayland_compositor()) {
+            // Tracking the background fixes issue #80
+            // It also let us activate window clones clicked during animation
+            // Untracked in moveDone
+            Main.layoutManager.trackChrome(this.background);
+        }
+
         this.visible.forEach(w => {
             let actor = w.get_compositor_private();
             if (!actor)
@@ -628,6 +643,8 @@ class Space extends Array {
             actor.hide();
             w.clone.show();
         });
+
+        this._isAnimating = true;
     }
 
     fixOverlays(metaWindow) {
