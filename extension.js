@@ -134,42 +134,46 @@ function hasUserConfigFile() {
 }
 
 function installConfig() {
-    try {
-        utils.debug("#rc", "Installing config");
-        const configDir = getConfigDir();
-        configDir.make_directory_with_parents(null);
+    utils.debug("#rc", "Installing config");
+    const configDir = getConfigDir();
+    configDir.make_directory_with_parents(null);
 
-        // We copy metadata.json to the config directory so gnome-shell-mode
-        // know which extension the files belong to (ideally we'd symlink, but
-        // that trips up the importer: Extension.imports.<complete> in
-        // gnome-shell-mode crashes gnome-shell..)
-        const metadata = Extension.dir.get_child("metadata.json");
-        metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.NONE, null, null);
+    // We copy metadata.json to the config directory so gnome-shell-mode
+    // know which extension the files belong to (ideally we'd symlink, but
+    // that trips up the importer: Extension.imports.<complete> in
+    // gnome-shell-mode crashes gnome-shell..)
+    const metadata = Extension.dir.get_child("metadata.json");
+    metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.NONE, null, null);
 
-        // Copy the user.js template to the config directory
-        const user = Extension.dir.get_child("examples/user.js");
-        user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
+    // Copy the user.js template to the config directory
+    const user = Extension.dir.get_child("examples/user.js");
+    user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
 
-        const settings = convenience.getSettings();
-        settings.set_boolean("has-installed-config-template", true);
-
-    } catch(e) {
-        errorNotification("PaperWM", "Failed to install user config", e.stack);
-        utils.debug("#rc", "Install failed", e.message);
-    }
+    const settings = convenience.getSettings();
+    settings.set_boolean("has-installed-config-template", true);
 }
 
 function initUserConfig() {
     const paperSettings = convenience.getSettings();
 
-    if (!paperSettings.get_boolean("has-installed-config-template")) {
-        installConfig();
-        const configDir = getConfigDir().get_path();
-        const notification = notify("PaperWM", `Installed user configuration in ${configDir}`);
-        notification.connect('activated', () => {
-            imports.misc.util.spawn(["nautilus", configDir]);
-            notification.destroy();
-        });
+    if (!paperSettings.get_boolean("has-installed-config-template")
+        && !hasUserConfigFile())
+    {
+        try {
+            installConfig()  
+
+            const configDir = getConfigDir().get_path();
+            const notification = notify("PaperWM", `Installed user configuration in ${configDir}`);
+            notification.connect('activated', () => {
+                imports.misc.util.spawn(["nautilus", configDir]);
+                notification.destroy();
+            });
+        } catch(e) {
+            errorNotification("PaperWM",
+                              `Failed to install user config: ${e.message}`, e.stack);
+            utils.debug("#rc", "Install failed", e.message);
+        }
+
     }
 
     if (hasUserConfigFile()) {
