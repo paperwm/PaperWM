@@ -123,11 +123,6 @@ function init() {
                                        Tiling),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
-    registerPaperAction("tile-visible",
-                        dynamic_function_ref("tileVisible",
-                                       Tiling),
-                        Meta.KeyBindingFlags.PER_WINDOW);
-
     registerPaperAction('new-window',
                         dynamic_function_ref('newWindow',
                                        App),

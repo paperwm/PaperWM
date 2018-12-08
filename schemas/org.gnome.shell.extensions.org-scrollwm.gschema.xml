@@ -128,11 +128,6 @@
       <summary>Toggle fullscreen</summary>
     </key>
 
-    <key type="as" name="tile-visible">
-      <default><![CDATA[['<Super>t']]]></default>
-      <summary>Squeeze all visible windows fully into the view</summary>
-    </key>
-
     <key type="as" name="develop-set-globals">
       <default><![CDATA[['<Super>Insert']]]></default>
       <summary>

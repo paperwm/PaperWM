@@ -2092,21 +2092,6 @@ function defwinprop(spec) {
     winprops.push(spec);
 }
 
-/* simple utils */
-
-function isStacked(metaWindow) {
-    return metaWindow._isStacked;
-}
-
-function isUnStacked(metaWindow) {
-    return !isStacked(metaWindow);
-}
-
-function isFullyVisible(metaWindow) {
-    let frame = metaWindow.get_frame_rect();
-    let space = spaces.spaceOfWindow(metaWindow);
-    return frame.x >= 0 && (frame.x + frame.width) <= space.width;
-}
 
 function toggleMaximizeHorizontally(metaWindow) {
     metaWindow = metaWindow || display.focus_window;
@@ -2125,28 +2110,6 @@ function toggleMaximizeHorizontally(metaWindow) {
         metaWindow.unmaximizedRect = frame;
         metaWindow.move_resize_frame(true, minimumMargin, frame.y, monitor.width - minimumMargin*2, frame.height);
     }
-}
-
-function tileVisible(metaWindow) {
-    metaWindow = metaWindow || display.focus_window;
-    let space = spaces.spaceOfWindow(metaWindow);
-    if (!space)
-        return;
-
-    let active = space.filter(isUnStacked);
-    let requiredWidth =
-        utils.sum(active.map(mw => mw.get_frame_rect().width))
-        + (active.length-1)*prefs.window_gap + minimumMargin*2;
-    let deficit = requiredWidth - primary.width;
-    if (deficit > 0) {
-        let perWindowReduction = Math.ceil(deficit/active.length);
-        active.forEach(mw => {
-            let frame = mw.get_frame_rect();
-            mw.move_resize_frame(true, frame.x, frame.y, frame.width - perWindowReduction, frame.height);
-        });
-
-    }
-    move_to(space, active[0], { x: minimumMargin, y: active[0].get_frame_rect().y });
 }
 
 function cycleWindowWidth(metaWindow) {
