@@ -301,7 +301,8 @@ class Space extends Array {
                 let resizable = !w.fullscreen &&
                     w.get_maximized() !== Meta.MaximizeFlags.BOTH;
                 if (resizable) {
-                    w.move_resize_frame(true, f.x, f.y, targetWidth, height);
+                    (f.width !== targetWidth || f.height !== height) &&
+                        w.move_resize_frame(true, f.x, f.y, targetWidth, height);
                 } else { // fullscreen windows can only be moved between monitors
                     w.move_frame(true, this.monitor.x, this.monitor.y);
                     targetWidth = f.width;
@@ -600,7 +601,8 @@ class Space extends Array {
             let clone = w.clone;
             let x = this.monitor.x + Math.round(clone.x) + this.targetX;
             let y = this.monitor.y + Math.round(clone.y);
-            w.move_frame(true, x, y);
+            let f = w.get_frame_rect();
+            (f.x !== x || f.y !== y) && w.move_frame(true, x, y);
         });
 
         this.visible.forEach(w => {
