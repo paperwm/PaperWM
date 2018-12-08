@@ -1564,7 +1564,7 @@ function resizeHandler(metaWindow) {
                 x: metaWindow.get_frame_rect().x - space.monitor.x});
 
         space.layout(true);
-        ensureViewport(space.selectedWindow, space, true);
+        ensureViewport(space.selectedWindow, space);
     }
 }
 
