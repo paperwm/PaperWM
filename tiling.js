@@ -163,7 +163,8 @@ class Space extends Array {
                 let [ok, x, y] =
                     this.actor.transform_stage_point(aX, aY);
                 let windowAtPoint = this.getWindowAtPoint(x, y);
-                if (!inPreview)
+                // FIXME: Fix interaction with swiping and remove guard
+                if (!inPreview && Meta.is_wayland_compositor())
                     return;
                 let nav = Navigator.getNavigator();
                 if (windowAtPoint)
