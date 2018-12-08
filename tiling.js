@@ -585,6 +585,7 @@ class Space extends Array {
             return;
         }
         this.visible = [];
+        const monitor = this.monitor;
         this.getWindows().forEach(w => {
             if (!w.get_compositor_private())
                 return;
@@ -599,8 +600,8 @@ class Space extends Array {
                 return;
 
             let clone = w.clone;
-            let x = this.monitor.x + Math.round(clone.x) + this.targetX;
-            let y = this.monitor.y + Math.round(clone.y);
+            let x = monitor.x + Math.round(clone.x) + this.targetX;
+            let y = monitor.y + Math.round(clone.y);
             let f = w.get_frame_rect();
             (f.x !== x || f.y !== y) && w.move_frame(true, x, y);
         });
@@ -610,9 +611,19 @@ class Space extends Array {
             if (Tweener.isTweening(w.clone))
                 return;
 
-            w.clone.hide();
             let actor = w.get_compositor_private();
-            clipWindowActor(actor, this.monitor);
+
+            // The actor's width/height is not correct right after resize
+            let b = w.get_buffer_rect();
+            const x = Math.max(0, monitor.x - b.x);
+            const y = Math.max(0, monitor.y - b.y);
+            const cw = b.width - x
+                  - Math.max(0, (b.x + b.width) - (monitor.x + monitor.width));
+            const ch = actor.height - y
+                  - Math.max(0, (b.y + b.height) - (monitor.y + monitor.height));
+            actor.set_clip(x, y, cw, ch);
+
+            w.clone.hide();
             actor.show();
         });
 
@@ -2242,19 +2253,6 @@ function barf(metaWindow) {
 
     ensureViewport(space.selectedWindow, space, true);
 }
-
-function clipWindowActor(actor, monitor) {
-    const x = Math.max(0, monitor.x - actor.x);
-    const y = Math.max(0, monitor.y - actor.y);
-
-    const w = actor.width - x
-          - Math.max(0, (actor.x + actor.width) - (monitor.x + monitor.width));
-    const h = actor.height - y
-          - Math.max(0, (actor.y + actor.height) - (monitor.y + monitor.height));
-
-    actor.set_clip(x, y, w, h);
-}
-
 
 function selectPreviousSpace(mw, space) {
     spaces.selectSpace(Meta.MotionDirection.DOWN);
