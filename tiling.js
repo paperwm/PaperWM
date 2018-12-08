@@ -407,13 +407,20 @@ class Space extends Array {
             this.selectedWindow = metaWindow;
         if (this.indexOf(metaWindow) !== -1)
             return false;
+
         if (row !== undefined && this[index]) {
             let column = this[index];
             column.splice(row, 0, metaWindow);
         } else {
             this.splice(index, 0, [metaWindow]);
         }
-        metaWindow.clone.reparent(this.cloneContainer);
+
+        let clone = metaWindow.clone;
+        let f = metaWindow.get_frame_rect();
+        let [ok, x, y] = this.cloneContainer.transform_stage_point(f.x, f.y);
+        clone.reparent(this.cloneContainer);
+        clone.set_position(x, y);
+
         this._populated && this.layout();
         this.emit('window-added', metaWindow, index, row);
         return true;
@@ -1766,6 +1773,7 @@ function insertWindow(metaWindow, {existing}) {
 
     let actor = metaWindow.get_compositor_private();
     actor.hide();
+    clone.show();
     if (!existing) {
         clone.set_position(clone.targetX,
                            panelBox.height + prefs.vertical_margin);
@@ -1784,11 +1792,6 @@ function insertWindow(metaWindow, {existing}) {
         Tweener.addTween(space.selection, {
             scale_x: 1, scale_y: 1, time: 0.25, transition: 'easeInOutQuad'
         });
-    } else {
-        let [ok, x, y] = space.cloneContainer.transform_stage_point(frame.x, frame.y);
-
-        clone.set_position(x, y);
-        clone.show();
     }
 
     if (metaWindow === display.focus_window ||
