@@ -1859,6 +1859,9 @@ function ensureViewport(meta_window, space, force) {
                            time: 0.25,
                            transition: 'easeInOutQuad',
                          });
+        // Hack to ensure a moveDone is called after the above tween is done
+        Tweener.addTween(space.cloneContainer,
+                         {time: 0.25, onComplete: space.moveDone.bind(space)});
     }
     move_to(space, meta_window, {
         x, y, force
