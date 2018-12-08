@@ -2120,17 +2120,21 @@ function defwinprop(spec) {
 function toggleMaximizeHorizontally(metaWindow) {
     metaWindow = metaWindow || display.focus_window;
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
+    let frame = metaWindow.get_frame_rect();
+    let reqWidth = monitor.width - minimumMargin*2;
 
-    // TODO: make some sort of animation
-    // Note: should investigate best-practice for attaching extension-data to meta_windows
-    if(metaWindow.unmaximizedRect) {
+    // Some windows only resize in increments > 1px so we can't rely on a precise width
+    // Hopefully this heuristic is good enough
+    let isFullWidth = (reqWidth - frame.width) < 10;
+
+    if (isFullWidth && metaWindow.unmaximizedRect) {
         let unmaximizedRect = metaWindow.unmaximizedRect;
         metaWindow.move_resize_frame(
-            true, unmaximizedRect.x, unmaximizedRect.y,
-            unmaximizedRect.width, unmaximizedRect.height);
-        metaWindow.unmaximizedRect = undefined;
+            true, unmaximizedRect.x, frame.y,
+            unmaximizedRect.width, frame.height);
+
+        metaWindow.unmaximizedRect = null;
     } else {
-        let frame = metaWindow.get_frame_rect();
         metaWindow.unmaximizedRect = frame;
         metaWindow.move_resize_frame(true, minimumMargin, frame.y, monitor.width - minimumMargin*2, frame.height);
     }
@@ -2168,8 +2172,6 @@ function cycleWindowWidth(metaWindow) {
 
     // WEAKNESS: When the navigator is open the window is not moved until the navigator is closed
     metaWindow.move_resize_frame(true, nextX, frame.y, nextW, frame.height);
-
-    delete metaWindow.unmaximized_rect;
 }
 
 function activateNthWindow(n, space) {
