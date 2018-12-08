@@ -1747,6 +1747,8 @@ function insertWindow(metaWindow, {existing}) {
 
     if (!add_filter(metaWindow)) {
         connectSizeChanged();
+        // Make sure the window isn't hidden behind the space (eg. dialogs)
+        !existing && metaWindow.make_above()
         return;
     }
 
