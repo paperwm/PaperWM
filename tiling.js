@@ -2160,7 +2160,8 @@ function cycleWindowWidth(metaWindow) {
     }
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
-    let availableWidth = monitor.width - minimumMargin*2;
+    // Make sure two windows of "compatible" width will have room
+    let availableWidth = monitor.width - prefs.horizontal_margin*2 - prefs.window_gap;
     let r = frame.width / availableWidth;
     let nextW = Math.floor(ratios[findNext(r)]*availableWidth);
     let nextX = frame.x;
@@ -2170,7 +2171,6 @@ function cycleWindowWidth(metaWindow) {
         nextX = monitor.x+monitor.width - minimumMargin - nextW;
     }
 
-    // WEAKNESS: When the navigator is open the window is not moved until the navigator is closed
     metaWindow.move_resize_frame(true, nextX, frame.y, nextW, frame.height);
 }
 
