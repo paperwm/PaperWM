@@ -312,9 +312,8 @@ class Space extends Array {
                 }
 
                 let c = w.clone;
-                if (widthChanged ||
-                    c.targetX !== x ||
-                    c.targetY !== y) {
+                if (c.x !== x || c.targetX !== x ||
+                    c.y !== y || c.targetY !== y) {
 
                     c.targetX = x;
                     c.targetY = y;
