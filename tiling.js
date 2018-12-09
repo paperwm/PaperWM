@@ -583,7 +583,7 @@ class Space extends Array {
     moveDone() {
         if (this.cloneContainer.x !== this.targetX ||
             this.actor.y !== 0 ||
-            Navigator.navigating || inPreview || noAnimate ||
+            Navigator.navigating || inPreview || inGrab ||
             Main.overview.visible) {
             return;
         }
@@ -1565,7 +1565,7 @@ function resizeHandler(metaWindow) {
 
     let selected = metaWindow === space.selectedWindow;
 
-    if (noAnimate) {
+    if (inGrab) {
         space.layout(false);
         if (selected) {
             let frame = metaWindow.get_frame_rect();
@@ -1938,7 +1938,7 @@ function move_to(space, metaWindow, { x, y, transition, force }) {
     space.fixOverlays(metaWindow);
 }
 
-var noAnimate = false;
+var inGrab = false;
 function grabBegin(metaWindow, type) {
     // Don't handle pushModal grabs and SCD button (close/minimize/etc.) grabs
     if (type === Meta.GrabOp.COMPOSITOR || type === Meta.GrabOp.FRAME_BUTTON)
@@ -1953,7 +1953,7 @@ function grabBegin(metaWindow, type) {
     grabSignals.connect(metaWindow, 'position-changed', handler);
     Tweener.removeTweens(space.cloneContainer);
     // Turn size/position animation off when grabbing a window with the mouse
-    noAnimate = true;
+    inGrab = true;
 }
 
 function grabEnd(metaWindow, type) {
@@ -1964,7 +1964,7 @@ function grabEnd(metaWindow, type) {
     if (space.indexOf(metaWindow) === -1)
         return;
     grabSignals.destroy();
-    noAnimate = false;
+    inGrab = false;
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
     space.targetX = space.cloneContainer.x;
