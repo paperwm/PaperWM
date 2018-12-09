@@ -71,7 +71,7 @@ function swapNeighbours() {
 
 
 function showNavigator() {
-    Keybindings.bindkey("<Super>j", "show-minimap", () => null, { opensNavigator: true })
+    Keybindings.bindkey("<Super>j", "show-minimap", () => null, { opensMinimap: true })
 }
 
 // listFreeBindings("<super>").join("\n")

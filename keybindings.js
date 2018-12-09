@@ -193,22 +193,33 @@ if (global.screen) {
         };
 }
 
-/**
- * handler: function(metaWindow, space, {binding, display, screen}) -> ignored
- */
-function registerAction(actionName, handler, options) {
+function impliedOptions(options) {
     options = Object.assign({}, options);
+
+    if (options.opensMinimap)
+        options.opensNavigator = true;
 
     if (options.opensNavigator)
         options.activeInNavigator = true;
 
+    return options
+}
+
+/**
+ * handler: function(metaWindow, space, {binding, display, screen}) -> ignored
+ * options: {
+ *   opensMinimap:      true|false Start navigation and open the minimap
+ *   opensNavigator:    true|false Start navigation (eg. Esc will restore selected space and window)
+ *   activeInNavigator: true|false Action is available during navigation
+ *   ...
+ * }
+ */
+function registerAction(actionName, handler, options) {
+    options = impliedOptions(options)
+
     let {
         settings,
-        mutterFlags, // Only relevant for "schema-actions"
-        // The navigator should open when the action is invoked (through a keybinding?)
         opensNavigator,
-        activeInNavigator, // The action makes sense when the navigator is open
-        activeInScratch,
     } = options;
 
     let mutterName, keyHandler;
@@ -261,7 +272,7 @@ function bindkey(keystr, actionName=null, handler=null, options={}) {
         disableAction(action);
 
         action.handler = handler;
-        action.options = options;
+        action.options = impliedOptions(options);
     }
 
     action.keystr = keystr;

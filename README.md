@@ -176,7 +176,7 @@ Due to limitations in the mutter keybinding API we need to steal some built in G
 Option              | Values              | Meaning
 --------------------|---------------------|------------------------------------
 `activeInNavigator` | `true`, **`false`** | The keybinding is active when the minimap/navigator is open
-`opensNavigator`    | `true`, **`false`** | The minimap will open when the keybinding is invoked
+`opensMinimap`    | `true`, **`false`** | The minimap will open when the keybinding is invoked
 
 ```javascript
 let Keybindings = Extension.imports.keybindings;
