@@ -1941,8 +1941,8 @@ function move_to(space, metaWindow, { x, y, transition, force }) {
 
 var noAnimate = false;
 function grabBegin(metaWindow, type) {
-    // Don't handle pushModal grabs
-    if (type === Meta.GrabOp.COMPOSITOR)
+    // Don't handle pushModal grabs and SCD button (close/minimize/etc.) grabs
+    if (type === Meta.GrabOp.COMPOSITOR || type === Meta.GrabOp.FRAME_BUTTON)
         return;
     let space = spaces.spaceOfWindow(metaWindow);
     if (space.indexOf(metaWindow) === -1)

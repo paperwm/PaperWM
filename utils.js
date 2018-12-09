@@ -40,7 +40,7 @@ function print_stacktrace(error) {
         return frame !== "wrapper@resource:///org/gnome/gjs/modules/lang.js:178"   
     });
     let args = [...arguments];
-    args.splice(0, 1, "#stacktrace:"+(args[0] ? args[0] : ""));
+    args.splice(0, 1, "#stacktrace", ":"+(args[0] ? args[0] : ""));
     // Use non-breaking space to encode new lines (otherwise every frame is
     // prefixed by timestamp)
     let nl = " ";
@@ -50,6 +50,18 @@ function print_stacktrace(error) {
 
 function framestr(rect) {
     return "[ x:"+rect.x + ", y:" + rect.y + " w:" + rect.width + " h:"+rect.height + " ]";
+}
+
+/**
+ * Returns a human-readable enum value representation
+ */
+function ppEnumValue(value, genum) {
+    let entry = Object.entries(genum).find(([k, v]) => v === value);
+    if (entry) {
+        return `${entry[0]} (${entry[1]})`
+    } else {
+        return `<not-found> (${value})`
+    }
 }
 
 /**
