@@ -350,7 +350,7 @@ class Space extends Array {
                                transition: 'easeInOutQuad',
                                onComplete: this.moveDone.bind(this)
                              });
-            updateSelection(this);
+            ensureViewport(this.selectedWindow, this);
         }
     }
 
@@ -1577,8 +1577,7 @@ function resizeHandler(metaWindow) {
             && move_to(space, metaWindow, {
                 x: metaWindow.get_frame_rect().x - space.monitor.x});
 
-        space.layout(true);
-        ensureViewport(space.selectedWindow, space);
+        space.layout();
     }
 }
 
