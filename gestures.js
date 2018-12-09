@@ -60,7 +60,6 @@ function enable() {
             }
             let [dx, dy] = event.get_gesture_motion_delta();
             if (direction === undefined) {
-                log(`set direction ${dx} ${dy}`);
                 if (Math.abs(dx) < Math.abs(dy)) {
                     vy = 0;
                     vState = phase;
@@ -137,7 +136,6 @@ function update(space, dx, t) {
 
 function done(space) {
     if (!Number.isFinite(space.vx)) {
-        log(`${space.vx} is not finite`)
         navigator.finish();
         space.hState = -1;
         return Clutter.EVENT_STOP;
@@ -156,7 +154,6 @@ function done(space) {
         if (test() ||
             space.targetX > 0 ||
             space.targetX + space.cloneContainer.width < space.width) {
-            log(`end: ${space.targetX + space.cloneContainer.width} ${space.targetX} ${space.cloneContainer.width}`)
             focusWindowAtPointer(space);
             space.cloneContainer.set_scale(1, 1);
             return false;
@@ -173,7 +170,6 @@ function done(space) {
 }
 
 function focusWindowAtPointer(space) {
-    log(`focus at pointer`)
     let [aX, aY, mask] = global.get_pointer();
     let [ok, x, y] = space.actor.transform_stage_point(aX, aY);
 
@@ -185,7 +181,6 @@ function focusWindowAtPointer(space) {
     let selected = space.selectedWindow.clone;
     if (selected.x + space.targetX >= 0 &&
         selected.x + selected.width + space.targetX <= space.width) {
-        log(`selected fully visible`);
         target = space.selectedWindow;
     }
 
@@ -195,7 +190,6 @@ function focusWindowAtPointer(space) {
             if (clone.x + space.targetX - gap <= x
                 && x <= clone.x + space.targetX + clone.width + gap) {
                 target = w;
-                log(`cursor over ${w.title}`);
                 break;
             }
         }
@@ -212,13 +206,11 @@ function focusWindowAtPointer(space) {
                            onComplete: space.moveDone.bind(space)
                          });
     } else if (0 <= space.cloneContainer.x) {
-        log(`last`)
         let first = space[0][0];
         target = target || first;
         // Tiling.ensureViewport(target, space);
         Tiling.move_to(space, first, {x: 0});
     } else if (space.targetX + space.cloneContainer.width <= space.width) {
-        log(`last`)
         let last = space[space.length-1][0];
         target = target || last;
         Tiling.move_to(space, last, {x: space.width - last.clone.width});
@@ -283,14 +275,12 @@ function endVertical() {
             return false;
 
         if (!Number.isFinite(vy)) {
-            log(`vertical velocity isn't finite`);
             return false;
         }
 
         let selected = Tiling.spaces.selectedSpace;
         let y = selected.actor.y;
         if (selected === navigator.from && y <= 0.1*selected.height) {
-            log(`finish ${y}`);
             navigator.finish();
             return false;
         }
