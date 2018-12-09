@@ -1793,12 +1793,12 @@ function insertWindow(metaWindow, {existing}) {
         });
     }
 
-    if (metaWindow === display.focus_window ||
-        space.workspace === workspaceManager.get_active_workspace()) {
-        ensureViewport(metaWindow, space, true);
+    if (metaWindow === display.focus_window) {
+        focus_handler(metaWindow);
+    } else if (space.workspace === workspaceManager.get_active_workspace()) {
         Main.activateWindow(metaWindow);
     } else {
-        ensureViewport(metaWindow, space, true);
+        ensureViewport(space.selectedWindow, space);
     }
 }
 
