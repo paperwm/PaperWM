@@ -1382,7 +1382,7 @@ class Spaces extends Map {
         to.actor.show();
         let selected = to.selectedWindow;
         if (selected)
-            ensureViewport(selected, to, true);
+            ensureViewport(selected, to);
 
         if (from) {
             from.startAnimate();
