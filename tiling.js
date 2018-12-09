@@ -415,11 +415,7 @@ class Space extends Array {
             this.splice(index, 0, [metaWindow]);
         }
 
-        let clone = metaWindow.clone;
-        let f = metaWindow.get_frame_rect();
-        let [ok, x, y] = this.cloneContainer.transform_stage_point(f.x, f.y);
-        clone.reparent(this.cloneContainer);
-        clone.set_position(x, y);
+        metaWindow.clone.reparent(this.cloneContainer);
 
         this._populated && this.layout();
         this.emit('window-added', metaWindow, index, row);
@@ -1761,6 +1757,11 @@ function insertWindow(metaWindow, {existing}) {
     }
     index++;
 
+    let clone = metaWindow.clone;
+    let frame = metaWindow.get_frame_rect();
+    let [ok, x, y] = space.cloneContainer.transform_stage_point(frame.x, frame.y);
+    clone.set_position(x, y);
+
     if (!space.addWindow(metaWindow, index))
         return;
 
@@ -1769,9 +1770,6 @@ function insertWindow(metaWindow, {existing}) {
         metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
         toggleMaximizeHorizontally(metaWindow);
     }
-
-    let frame = metaWindow.get_frame_rect();
-    let clone = metaWindow.clone;
 
     let actor = metaWindow.get_compositor_private();
     actor.hide();
