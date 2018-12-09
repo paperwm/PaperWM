@@ -449,7 +449,7 @@ class Space extends Array {
         this.layout();
         this.emit('window-removed', metaWindow, index, row);
         if (selected) {
-            ensureViewport(selected, this, true);
+            ensureViewport(selected, this);
         } else {
             this.selectedWindow = null;
             Tweener.removeTweens(this.selection);
