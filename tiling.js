@@ -1484,7 +1484,9 @@ class Spaces extends Map {
     }
 
     window_created(display, metaWindow, user_data) {
-        registerWindow(metaWindow);
+        if (!registerWindow(metaWindow)) {
+            return;
+        }
 
         metaWindow.unmapped = true;
 
@@ -1534,6 +1536,10 @@ class Spaces extends Map {
 Signals.addSignalMethods(Spaces.prototype);
 
 function registerWindow(metaWindow) {
+    if (utils.isOverrideRedirectWindow(metaWindow)) {
+        return false;
+    }
+
     let actor = metaWindow.get_compositor_private();
     let clone = new Clutter.Clone({source: actor});
     let container = new Clutter.Actor({
@@ -1551,6 +1557,8 @@ function registerWindow(metaWindow) {
     signals.connect(actor, 'show', showWrapper);
 
     signals.connect(actor, 'destroy', destroyHandler);
+
+    return true;
 }
 
 function destroyHandler(actor) {
