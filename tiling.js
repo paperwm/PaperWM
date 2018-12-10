@@ -586,10 +586,14 @@ class Space extends Array {
             Main.overview.visible) {
             return;
         }
+
         this.visible = [];
         const monitor = this.monitor;
         this.getWindows().forEach(w => {
-            if (!w.get_compositor_private())
+            if (!w.get_compositor_private() ||
+            // Guard against races between move_to and layout
+                // eg. moving can kill ongoing resize on wayland
+                Tweener.isTweening(w.clone))
                 return;
 
             if (this.isPlaceable(w)) {
@@ -609,10 +613,6 @@ class Space extends Array {
         });
 
         this.visible.forEach(w => {
-            // Guard against races between move_to and layout
-            if (Tweener.isTweening(w.clone))
-                return;
-
             let actor = w.get_compositor_private();
 
             // The actor's width/height is not correct right after resize
