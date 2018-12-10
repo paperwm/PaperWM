@@ -443,12 +443,11 @@ class Space extends Array {
         if (column.length === 0)
             this.splice(index, 1);
 
-
         this.cloneContainer.remove_actor(metaWindow.clone);
-
-        this.selectedWindow = selected;
         this.layout();
-        if (!selected) {
+        if (selected) {
+            ensureViewport(selected, this);
+        } else {
             this.selectedWindow = null;
             Tweener.removeTweens(this.selection);
             this.selection.width = 0;
