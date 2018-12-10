@@ -1107,8 +1107,11 @@ class Spaces extends Map {
                 let actor = metaWindow.get_compositor_private();
                 actor.remove_clip();
 
+                if (metaWindow.clone)
+                    metaWindow.clone.destroy();
+
                 if (metaWindow.get_workspace() === workspaceManager.get_active_workspace()
-                   && !metaWindow.minimized)
+                    && !metaWindow.minimized)
                     actor.show();
                 else
                     actor.hide();
@@ -1672,8 +1675,11 @@ function remove_handler(workspace, meta_window) {
     // window has already received the `focus` signal at this point.
     // Not sure if we can check directly if _this_ window had focus when closed.
 
-    if (!meta_window.get_compositor_private())
+    if (!meta_window.get_compositor_private()) {
         signals.disconnect(meta_window);
+        if (meta_window.clone)
+            meta_window.clone.destroy();
+    }
 
     let space = spaces.spaceOf(workspace);
     space.removeWindow(meta_window);
