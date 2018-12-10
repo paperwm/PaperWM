@@ -1675,14 +1675,14 @@ function remove_handler(workspace, meta_window) {
     // window has already received the `focus` signal at this point.
     // Not sure if we can check directly if _this_ window had focus when closed.
 
+    let space = spaces.spaceOf(workspace);
+    space.removeWindow(meta_window);
+
     if (!meta_window.get_compositor_private()) {
         signals.disconnect(meta_window);
         if (meta_window.clone)
             meta_window.clone.destroy();
     }
-
-    let space = spaces.spaceOf(workspace);
-    space.removeWindow(meta_window);
 }
 
 
