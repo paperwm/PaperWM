@@ -195,7 +195,6 @@ function focusWindowAtPointer(space) {
         }
     }
 
-    target && Tiling.ensureViewport(target, space);
     if (space.cloneContainer.width < space.width) {
         target = target || space.selectedWindow;
         space.targetX = Math.round((space.width - (space.cloneContainer.width - gap))/2);
@@ -216,6 +215,7 @@ function focusWindowAtPointer(space) {
         Tiling.move_to(space, last, {x: space.width - last.clone.width});
     }
 
+    Tiling.ensureViewport(target, space);
     if (!Tiling.inPreview)
         Navigator.getNavigator().finish();
 }
