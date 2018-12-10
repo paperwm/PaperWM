@@ -1985,30 +1985,66 @@ function getGrab(space, anchor) {
 }
 
 // `MetaWindow::focus` handling
-function focus_handler(meta_window, user_data) {
-    debug("focus:", meta_window.title, utils.framestr(meta_window.get_frame_rect()));
+function focus_handler(metaWindow, user_data) {
+    debug("focus:", metaWindow.title, utils.framestr(metaWindow.get_frame_rect()));
 
-    if (meta_window.fullscreen) {
+    if (metaWindow.fullscreen) {
         TopBar.hide();
     } else {
         TopBar.show();
     }
 
-    if (Scratch.isScratchWindow(meta_window)) {
-        Scratch.makeScratch(meta_window);
+    if (Scratch.isScratchWindow(metaWindow)) {
+        Scratch.makeScratch(metaWindow);
         return;
     }
 
-    // If meta_window is a transient window ensure the parent window instead
-    let transientFor = meta_window.get_transient_for();
+    // If metaWindow is a transient window ensure the parent window instead
+    let transientFor = metaWindow.get_transient_for();
     if (transientFor !== null) {
-        meta_window = transientFor;
+        metaWindow = transientFor;
     }
 
-    let space = spaces.spaceOfWindow(meta_window);
+    let space = spaces.spaceOfWindow(metaWindow);
     space.monitor.clickOverlay.show();
-    ensureViewport(meta_window, space);
-    fixStack(space, meta_window);
+
+    /**
+       Find the closest neighbours. Remove any dead windows in the process to
+       work around the fact that `focus` runs before `window-removed` (and there
+       doesn't seem to be a better signal to use)
+     */
+    let windows = space.getWindows();
+    let around = windows.indexOf(metaWindow);
+    if (around === -1)
+        return;
+
+    let neighbours = [];
+    for (let i=around - 1; i > 0; i--) {
+        let w = windows[i];
+        if (w.get_compositor_private()) {
+            neighbours.push(windows[i]);
+            break;
+        }
+        space.removeWindow(w);
+    }
+    for (let i=around + 1; i < windows.length; i++) {
+        let w = windows[i];
+        if (w.get_compositor_private()) {
+            neighbours.push(windows[i]);
+            break;
+        }
+        space.removeWindow(w);
+    }
+
+    /**
+       We need to stack windows in mru order, since mutter picks from the
+       stack, not the mru, when auto choosing focus after closing a window.
+    */
+    let stack = display.sort_windows_by_stacking(neighbours);
+    stack.forEach(w => w.raise());
+    metaWindow.raise();
+
+    ensureViewport(metaWindow, space);
 }
 var focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
 
@@ -2056,22 +2092,6 @@ function showHandler(actor) {
 }
 var showWrapper = utils.dynamic_function_ref('showHandler', Me);
 
-/**
-  We need to stack windows in mru order, since mutter picks from the
-  stack, not the mru, when auto choosing focus after closing a window.
- */
-function fixStack(space, metaWindow) {
-    let windows = space.getWindows();
-    let around = windows.indexOf(metaWindow);
-    if (around === -1)
-        return;
-
-    let neighbours = [windows[around - 1], windows[around + 1]].filter(w => w);
-    let stack = display.sort_windows_by_stacking(neighbours);
-
-    stack.forEach(w => w.raise());
-    metaWindow.raise();
-}
 
 /**
   Modelled after notion/ion3's system
