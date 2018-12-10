@@ -279,9 +279,6 @@ class Space extends Array {
 
         for (let i=0; i<this.length; i++) {
             let column = this[i];
-            let widthChanged = false;
-
-            let y = panelBox.height + prefs.vertical_margin;
 
             let targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
             if (column.includes(this.selectedWindow))
@@ -292,9 +289,12 @@ class Space extends Array {
                 (this.height - panelBox.height - prefs.vertical_margin
                  - prefs.window_gap*(column.length - 1))/column.length) ;
 
+            let y = panelBox.height + prefs.vertical_margin;
+            let widthChanged = false, alive = false;
             for (let w of column) {
                 if (!w.get_compositor_private())
                     continue;
+                alive = true;
                 let f = w.get_frame_rect();
                 let b = w.get_buffer_rect();
 
@@ -332,7 +332,7 @@ class Space extends Array {
             if (widthChanged) {
                 // Redo current column
                 i--;
-            } else {
+            } else if (alive) {
                 x += targetWidth + gap;
             }
         }
