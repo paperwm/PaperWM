@@ -172,49 +172,38 @@ function done(space) {
 function focusWindowAtPointer(space) {
     let [aX, aY, mask] = global.get_pointer();
     let [ok, x, y] = space.actor.transform_stage_point(aX, aY);
-
     space.targetX = Math.round(space.targetX);
     space.cloneContainer.x = space.targetX;
 
-    let gap = prefs.window_gap/2;
-    let target;
     let selected = space.selectedWindow.clone;
-    if (selected.x + space.targetX >= 0 &&
-        selected.x + selected.width + space.targetX <= space.width) {
-        target = space.selectedWindow;
+    if (!(selected.x + space.targetX >= 0 &&
+          selected.x + selected.width + space.targetX <= space.width)) {
+        selected = false;
     }
 
-    if (!target) {
-        for (let w of space.getWindows()) {
-            let clone = w.clone;
-            if (clone.x + space.targetX - gap <= x
-                && x <= clone.x + space.targetX + clone.width + gap) {
-                target = w;
-                break;
-            }
+    let pointerAt;
+    let gap = prefs.window_gap/2;
+    for (let w of space.getWindows()) {
+        let clone = w.clone;
+        if (clone.x + space.targetX - gap <= x
+            && x <= clone.x + space.targetX + clone.width + gap) {
+            pointerAt = w;
+            break;
         }
     }
 
+    let first, last;
     if (space.cloneContainer.width < space.width) {
-        target = target || space.selectedWindow;
-        space.targetX = Math.round((space.width - (space.cloneContainer.width - gap))/2);
-        Tweener.addTween(space.cloneContainer,
-                         { x: space.targetX,
-                           time: 0.25,
-                           transition: 'easeInOutQuad',
-                           onComplete: space.moveDone.bind(space)
-                         });
-    } else if (0 <= space.cloneContainer.x) {
-        let first = space[0][0];
-        target = target || first;
-        // Tiling.ensureViewport(target, space);
+        space.layout();
+    } else if (0 <= space.cloneContainer.x && !selected) {
+        first = space[0][0];
         Tiling.move_to(space, first, {x: 0});
-    } else if (space.targetX + space.cloneContainer.width <= space.width) {
-        let last = space[space.length-1][0];
-        target = target || last;
+    } else if (space.targetX + space.cloneContainer.width <= space.width && !selected) {
+        last = space[space.length-1][0];
         Tiling.move_to(space, last, {x: space.width - last.clone.width});
     }
 
+    let target = selected || pointerAt || last || first;
     Tiling.ensureViewport(target, space);
     if (!Tiling.inPreview)
         Navigator.getNavigator().finish();
