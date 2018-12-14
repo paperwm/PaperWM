@@ -567,19 +567,15 @@ class Space extends Array {
             if (Tweener.isTweening(w.clone))
                 return;
 
-            let unMovable = w.fullscreen ||
-                w.get_maximized() === Meta.MaximizeFlags.BOTH;
-            if (unMovable)
-                return;
-
             let clone = w.clone;
             let x = monitor.x + Math.round(clone.x) + this.targetX;
             let y = monitor.y + Math.round(clone.y);
             let f = w.get_frame_rect();
-            (f.x !== x || f.y !== y) && w.move_frame(true, x, y);
+            let movable = !w.fullscreen &&
+                w.get_maximized() !== Meta.MaximizeFlags.BOTH;
+            movable && (f.x !== x || f.y !== y) && w.move_frame(true, x, y);
 
             let actor = w.get_compositor_private();
-
             // The actor's width/height is not correct right after resize
             let b = w.get_buffer_rect();
             const cx = Math.max(0, monitor.x - b.x);
