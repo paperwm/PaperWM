@@ -48,42 +48,6 @@ function init() {
     oldMonitors = new Map();
 
     backgroundGroup = global.window_group.first_child;
-
-    // LayoutManagers can't be re-evaluated so we wrap this in `init`
-    /**
-       A simple layout for our window clones that aligns the coordinates and
-       size of our clone with the window's frame
-     */
-    WindowCloneLayout = new imports.lang.Class ({
-        Name: 'TiledCloneLayout',
-        Extends: Clutter.LayoutManager,
-
-        vfunc_get_preferred_height(container, forWidth) {
-            let frame = container.get_first_child().meta_window.get_frame_rect();
-            return [frame.height, frame.height];
-        },
-
-        vfunc_get_preferred_width(container, forHeight) {
-            let frame = container.get_first_child().meta_window.get_frame_rect();
-            return [frame.width, frame.width];
-        },
-
-        vfunc_allocate(container, box, flags) {
-            let child = container.first_child;
-            let actor = child.source;
-            if (!actor)
-                return;
-
-            let metaWindow = actor.meta_window;
-            let frame = metaWindow.get_frame_rect();
-            // Adjust the clone's origin to the north-west, so it will line up
-            // with the frame.
-            box.set_origin(actor.x - frame.x,
-                           actor.y - frame.y);
-            box.set_size(actor.width, actor.height);
-            child.allocate(box, flags);
-        }
-    });
 }
 
 /**
@@ -974,6 +938,8 @@ class Spaces extends Map {
         display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(w => {
                 registerWindow(w);
+                // Fixup allocations on reload
+                allocateClone(w.get_compositor_private());
                 this.signals.connect(w, 'size-changed', resizeHandler);
             });
 
@@ -1549,9 +1515,9 @@ function registerWindow(metaWindow) {
 
     let actor = metaWindow.get_compositor_private();
     let clone = new Clutter.Clone({source: actor});
-    let container = new Clutter.Actor({
-        layout_manager: new WindowCloneLayout()
-    });
+    let container = new Clutter.Actor();
+    signals.connect(actor, "notify::allocation", allocateClone);
+
     container.add_actor(clone);
     container.targetX = 0;
     clone.meta_window = metaWindow;
@@ -1566,6 +1532,20 @@ function registerWindow(metaWindow) {
     signals.connect(actor, 'destroy', destroyHandler);
 
     return true;
+}
+
+function allocateClone(actor) {
+    let metaWindow = actor.meta_window;
+    log(`allocate ${metaWindow.title}`);
+    let frame = metaWindow.get_frame_rect();
+    // Adjust the clone's origin to the north-west, so it will line up
+    // with the frame.
+    let container = metaWindow.clone;
+    let clone = container.first_child;
+    clone.set_position(actor.x - frame.x,
+                       actor.y - frame.y);
+    clone.set_size(actor.width, actor.height);
+    container.set_size(frame.width, frame.height);
 }
 
 function destroyHandler(actor) {
