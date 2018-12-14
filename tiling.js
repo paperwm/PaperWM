@@ -590,15 +590,16 @@ class Space extends Array {
         this.visible = [];
         const monitor = this.monitor;
         this.getWindows().forEach(w => {
-            if (!w.get_compositor_private() ||
-            // Guard against races between move_to and layout
-                // eg. moving can kill ongoing resize on wayland
-                Tweener.isTweening(w.clone))
+            if (!w.get_compositor_private())
                 return;
 
-            if (this.isPlaceable(w)) {
+            if (this.isPlaceable(w))
                 this.visible.push(w);
-            }
+
+            // Guard against races between move_to and layout
+            // eg. moving can kill ongoing resize on wayland
+            if (Tweener.isTweening(w.clone))
+                return;
 
             let unMovable = w.fullscreen ||
                 w.get_maximized() === Meta.MaximizeFlags.BOTH;
