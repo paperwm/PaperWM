@@ -557,34 +557,38 @@ class Space extends Array {
             if (!w.get_compositor_private())
                 return;
 
-            if (!this.isPlaceable(w))
-                return;
-
-            this.visible.push(w);
+            if (this.isPlaceable(w))
+                this.visible.push(w);
 
             // Guard against races between move_to and layout
             // eg. moving can kill ongoing resize on wayland
             if (Tweener.isTweening(w.clone))
                 return;
 
+            let unMovable = w.fullscreen ||
+                w.get_maximized() === Meta.MaximizeFlags.BOTH;
+            if (unMovable)
+                return;
+
             let clone = w.clone;
             let x = monitor.x + Math.round(clone.x) + this.targetX;
             let y = monitor.y + Math.round(clone.y);
             let f = w.get_frame_rect();
-            let movable = !w.fullscreen &&
-                w.get_maximized() !== Meta.MaximizeFlags.BOTH;
-            movable && (f.x !== x || f.y !== y) && w.move_frame(true, x, y);
+            (f.x !== x || f.y !== y) && w.move_frame(true, x, y);
+        });
 
+        this.visible.forEach(w => {
             let actor = w.get_compositor_private();
+
             // The actor's width/height is not correct right after resize
             let b = w.get_buffer_rect();
-            const cx = Math.max(0, monitor.x - b.x);
-            const cy = Math.max(0, monitor.y - b.y);
-            const cw = b.width - cx
+            const x = Math.max(0, monitor.x - b.x);
+            const y = Math.max(0, monitor.y - b.y);
+            const cw = b.width - x
                   - Math.max(0, (b.x + b.width) - (monitor.x + monitor.width));
-            const ch = actor.height - cy
+            const ch = actor.height - y
                   - Math.max(0, (b.y + b.height) - (monitor.y + monitor.height));
-            actor.set_clip(cx, cy, cw, ch);
+            actor.set_clip(x, y, cw, ch);
 
             w.clone.hide();
             actor.show();
