@@ -578,6 +578,8 @@ class Space extends Array {
         });
 
         this.visible.forEach(w => {
+            if (Tweener.isTweening(w.clone))
+                return;
             let actor = w.get_compositor_private();
 
             // The actor's width/height is not correct right after resize
