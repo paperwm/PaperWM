@@ -1155,20 +1155,14 @@ class Spaces extends Map {
         TopBar.setMonitor(toSpace.monitor);
         toSpace.monitor.clickOverlay.deactivate();
 
-        let display = Gdk.Display.get_default();
-        let deviceManager = display.get_device_manager();
-        let pointer = deviceManager.get_client_pointer();
-        let [gdkscreen, pointerX, pointerY] = pointer.get_position();
-
-        pointerX -= monitor.x;
-        pointerY -= monitor.y;
-        if (pointerX < 0 ||
-            pointerX > monitor.width ||
-            pointerY < 0 ||
-            pointerY > monitor.height)
-            pointer.warp(gdkscreen,
-                         monitor.x + Math.floor(monitor.width/2),
-                         monitor.y + Math.floor(monitor.height/2));
+        let [ok, x, y] = global.get_pointer();
+        x -= monitor.x;
+        y -= monitor.y;
+        if (x < 0 || x > monitor.width ||
+            y < 0 || y > monitor.height) {
+            utils.warpPointer(monitor.x + Math.floor(monitor.width/2),
+                              monitor.y + Math.floor(monitor.height/2));
+        }
 
         for (let monitor of Main.layoutManager.monitors) {
             if (monitor === toSpace.monitor)
@@ -2216,7 +2210,7 @@ function centerWindowHorizontally(metaWindow) {
     const targetX = Math.round(monitor.width/2 - frame.width/2);
     const dx = targetX - (metaWindow.clone.targetX + space.targetX);
 
-    let [pointerX, pointerY] = utils.getPointerPosition();
+    let [ok, pointerX, pointerY] = global.get_pointer();
     let relPointerX = pointerX - monitor.x - space.cloneContainer.x;
     let relPointerY = pointerY - monitor.y - space.cloneContainer.y;
     if (utils.isPointInsideActor(metaWindow.clone, relPointerX, relPointerY)) {

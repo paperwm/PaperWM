@@ -207,14 +207,6 @@ function isOverrideRedirectWindow(metaWindow) {
     }
 }
 
-function getPointerPosition() {
-    let display = Gdk.Display.get_default();
-    let deviceManager = display.get_device_manager();
-    let pointer = deviceManager.get_client_pointer();
-    let [gdkscreen, x, y] = pointer.get_position();
-    return [x, y, gdkscreen, pointer]
-}
-
 function warpPointer(x, y) {
     let display = Gdk.Display.get_default();
     let deviceManager = display.get_device_manager();
