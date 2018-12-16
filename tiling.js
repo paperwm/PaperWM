@@ -406,6 +406,7 @@ class Space extends Array {
         column.splice(row, 1);
         if (column.length === 0)
             this.splice(index, 1);
+        this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
         this.cloneContainer.remove_actor(metaWindow.clone);
         this.layout();
