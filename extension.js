@@ -4,10 +4,6 @@ if (!global.workspace_manager) {
     global.workspace_manager = global.screen;
 }
 
-var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
-var convenience = Extension.imports.convenience;
-var utils = Extension.imports.utils;
-
 /**
    The currently used modules
      - tiling is the main module, responsible for tiling and workspaces
@@ -59,13 +55,13 @@ function run(method) {
 
 function safeCall(name, method) {
     try {
-        utils.debug("#paperwm", `${method} ${name}`);
+        log("#paperwm", `${method} ${name}`);
         let module = Extension.imports[name];
         module && module[method] && module[method].call(module);
         return true;
     } catch(e) {
-        utils.debug("#paperwm", `${method} failed`, e.message);
-        utils.print_stacktrace(e);
+        log("#paperwm", `${name} failed ${method}`);
+        log(`JS ERROR: ${e}\n${e.stack}`);
         errorNotification(
             "PaperWM",
             `Error occured in ${name} @${method}:\n\n${e.message}`,
@@ -83,9 +79,15 @@ var SESSIONID = ""+(new Date().getTime());
 var initRun;
 var enabled = false;
 
+var Extension, convenience;
 function init() {
     SESSIONID += "#";
     log(`#paperwm init: ${SESSIONID}`);
+
+    // var Gio = imports.gi.Gio;
+    // let extfile = Gio.file_new_for_path( Extension.imports.extension.__file__);
+    Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+    convenience = Extension.imports.convenience;
 
     if(initRun) {
         log(`#startup Reinitialized against our will! Skip adding bindings again to not cause trouble.`);
@@ -134,7 +136,7 @@ function hasUserConfigFile() {
 }
 
 function installConfig() {
-    utils.debug("#rc", "Installing config");
+    log("#rc", "Installing config");
     const configDir = getConfigDir();
     configDir.make_directory_with_parents(null);
 
@@ -171,7 +173,7 @@ function initUserConfig() {
         } catch(e) {
             errorNotification("PaperWM",
                               `Failed to install user config: ${e.message}`, e.stack);
-            utils.debug("#rc", "Install failed", e.message);
+            log("#rc", "Install failed", e.message);
         }
 
     }
