@@ -258,7 +258,7 @@ class WorkspaceMenu extends PanelMenu.Button {
                 this.selected = spaces.selectedSpace;
                 Tweener.removeTweens(this.selected.actor);
                 Tweener.addTween(this.selected.actor,
-                                 {scale_x: 0.9, scale_y: 0.9, time: 0.25, transition});
+                                 {scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, transition});
             } else if (dy < 0
                        && ((this.selected.actor.y < downEdge &&
                             this.selected.actor.y - dy > downEdge)
@@ -271,7 +271,7 @@ class WorkspaceMenu extends PanelMenu.Button {
                 this.selected = spaces.selectedSpace;
                 Tweener.removeTweens(this.selected.actor);
                 Tweener.addTween(this.selected.actor,
-                                 {scale_x: 0.9, scale_y: 0.9, time: 0.25, transition});
+                                 {scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, transition});
             }
 
             this.selected.actor.y -= dy;
@@ -405,7 +405,7 @@ function show() {
     panelBox.show();
     Tweener.addTween(panelBox, {
         scale_y: 1,
-        time: 0.25,
+        time: prefs.animation_time,
         onOverwrite: () => {
             panelBox.scale_y = 1;
         }
@@ -415,7 +415,7 @@ function show() {
 function hide() {
     Tweener.addTween(panelBox, {
         scale_y: 0,
-        time: 0.25,
+        time: prefs.animation_time,
         onOverwrite: () => {
             panelBox.scale_y = 0;
         },

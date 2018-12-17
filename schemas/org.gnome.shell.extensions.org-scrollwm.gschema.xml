@@ -214,6 +214,11 @@
         <summary>Default background image</summary>
     </key>
 
+    <key type="d" name="animation-time">
+        <default>0.25</default>
+        <summary>Duration of animations in seconds</summary>
+    </key>
+
     <child name="keybindings" schema="org.gnome.Shell.Extensions.PaperWM.Keybindings"/>
     <child name="workspaces" schema="org.gnome.Shell.Extensions.PaperWM.WorkspaceList"/>
 

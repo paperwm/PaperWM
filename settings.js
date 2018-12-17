@@ -18,13 +18,10 @@ var KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
 // This is the value mutter uses for the keyvalue of above_tab
 var META_KEY_ABOVE_TAB = 0x2f7259c9;
 
-var prefs = {
-    window_gap: settings.get_int('window-gap'),
-    vertical_margin: settings.get_int('vertical-margin'),
-    horizontal_margin: settings.get_int('horizontal-margin'),
-    workspace_colors: settings.get_strv('workspace-colors'),
-    default_background: settings.get_string('default-background')
-};
+var prefs = {};
+['window-gap', 'vertical-margin', 'horizontal-margin',
+ 'workspace-colors', 'default-background', 'animation-time' ]
+    .forEach((k) => setState(null, k));
 
 function setVerticalMargin() {
     let vMargin = settings.get_int('vertical-margin');
@@ -32,20 +29,10 @@ function setVerticalMargin() {
     prefs.vertical_margin = Math.max(Math.round(gap/2), vMargin);
 }
 
-function setState(_, key) {
+function setState($, key) {
     let value = settings.get_value(key);
     let name = key.replace(/-/g, '_');
-    switch (value.get_type_string()) {
-    case 'i':
-        prefs[name] = settings.get_int(key);
-        break;
-    case 's':
-        prefs[name] = settings.get_string(key);
-        break;
-    case 'as':
-        prefs[name] = settings.get_strv(key);
-        break;
-    }
+    prefs[name] = value.deep_unpack();
 }
 
 var schemaSource, workspaceList, conflictSettings;
@@ -76,6 +63,7 @@ function init() {
     setVerticalMargin();
     settings.connect('changed::workspace-colors', setState);
     settings.connect('changed::default-background', setState);
+    settings.connect('changed::animation-time', setState);
 }
 
 var id;

@@ -310,7 +310,7 @@ class Space extends Array {
         if (animate) {
             Tweener.addTween(this.cloneContainer,
                              { x: this.targetX,
-                               time: 0.25,
+                               time: prefs.animation_time,
                                transition: 'easeInOutQuad',
                                onComplete: this.moveDone.bind(this)
                              });
@@ -1243,7 +1243,7 @@ class Spaces extends Map {
         if (selected && selected.fullscreen) {
             Tweener.addTween(selected.clone, {
                 y: Main.panel.actor.height + prefs.vertical_margin,
-                time: 0.25
+                time: prefs.animation_time,
             });
         }
     }
@@ -1286,7 +1286,7 @@ class Spaces extends Map {
             actor.hide();
             Tweener.addTween(moving.clone,
                              {x, y,
-                              time: 0.25,
+                              time: prefs.animation_time,
                               transition
                              });
         } else {
@@ -1328,7 +1328,7 @@ class Spaces extends Map {
 
             Tweener.addTween(actor,
                              {y: h*space.height,
-                              time: 0.25,
+                              time: prefs.animation_time,
                               scale_x: scale + (to - i)*0.01,
                               scale_y: scale + (to - i)*0.01,
                               transition, onComplete
@@ -1371,7 +1371,7 @@ class Spaces extends Map {
                            y: 0,
                            scale_x: 1,
                            scale_y: 1,
-                           time: 0.25,
+                           time: prefs.animation_time,
                            transition: 'easeInOutQuad',
                            onComplete: () => {
                                // Meta.enable_unredirect_for_screen(screen);
@@ -1400,7 +1400,7 @@ class Spaces extends Map {
             if (!visible.get(space)) {
                 Tweener.addTween(space.actor,
                                  {x: 0, y: space.height + 20,
-                                  time: 0.25, transition: 'easeInOutQuad' });
+                                  time: prefs.animation_time, transition: 'easeInOutQuad' });
             }
             above = above.get_next_sibling();
         }
@@ -1780,7 +1780,7 @@ function insertWindow(metaWindow, {existing}) {
         Tweener.addTween(clone, {
             scale_x: 1,
             scale_y: 1,
-            time: 0.25,
+            time: prefs.animation_time,
             transition: 'easeInOutQuad',
             onComplete: () => {
                 space.layout();
@@ -1789,7 +1789,7 @@ function insertWindow(metaWindow, {existing}) {
         });
         space.selection.set_scale(0, 0);
         Tweener.addTween(space.selection, {
-            scale_x: 1, scale_y: 1, time: 0.25, transition: 'easeInOutQuad'
+            scale_x: 1, scale_y: 1, time: prefs.animation_time, transition: 'easeInOutQuad'
         });
     }
 
@@ -1809,7 +1809,7 @@ function animateDown(metaWindow) {
     let clone = metaWindow.clone;
     Tweener.addTween(metaWindow.clone, {
         y: panelBox.height + prefs.vertical_margin,
-        time: 0.25,
+        time: prefs.animation_time,
         transition: 'easeInOutQuad'
     });
 }
@@ -1876,12 +1876,12 @@ function ensureViewport(meta_window, space, force) {
         || selected.get_maximized() === Meta.MaximizeFlags.BOTH)) {
         Tweener.addTween(selected.clone,
                          { y: frame.y - monitor.y,
-                           time: 0.25,
+                           time: prefs.animation_time,
                            transition: 'easeInOutQuad',
                          });
         // Hack to ensure a moveDone is called after the above tween is done
         Tweener.addTween(space.cloneContainer,
-                         {time: 0.25, onComplete: space.moveDone.bind(space)});
+                         {time: prefs.animation_time, onComplete: space.moveDone.bind(space)});
     }
     move_to(space, meta_window, {
         x, y, force
@@ -1906,7 +1906,7 @@ function updateSelection(space, metaWindow, noAnimate){
                       y: clone.targetY - protrusion,
                       width: frame.width + prefs.window_gap,
                       height: frame.height + prefs.window_gap,
-                      time: noAnimate ? 0 : 0.25,
+                      time: noAnimate ? 0 : prefs.animation_time,
                       transition: 'easeInOutQuad'});
 }
 
@@ -1930,7 +1930,7 @@ function move_to(space, metaWindow, { x, y, transition, force }) {
     space.startAnimate();
     Tweener.addTween(space.cloneContainer,
                      { x: target,
-                       time: 0.25,
+                       time: prefs.animation_time,
                        transition: 'easeInOutQuad',
                        onComplete: space.moveDone.bind(space)
                      });

@@ -228,8 +228,8 @@ function updateVertical(dy, t) {
         Tiling.spaces.selectSpace(Meta.MotionDirection.UP, false, transition);
         selected = Tiling.spaces.selectedSpace;
         Tweener.removeTweens(selected.actor);
-        Tweener.addTween(selected.actor,
-                         {scale_x: 0.9, scale_y: 0.9, time: 0.25, transition});
+        Tweener.addTween(selected.actor, {scale_x: 0.9, scale_y: 0.9, time:
+                                          prefs.animation_time, transition});
     } else if (dy < 0
                && (selected.actor.y - dy > StackPositions.down*monitor.height)) {
         dy = 0;
@@ -238,8 +238,8 @@ function updateVertical(dy, t) {
         Tiling.spaces.selectSpace(Meta.MotionDirection.DOWN, false, transition);
         selected = Tiling.spaces.selectedSpace;
         Tweener.removeTweens(selected.actor);
-        Tweener.addTween(selected.actor,
-                         {scale_x: 0.9, scale_y: 0.9, time: 0.25, transition});
+        Tweener.addTween(selected.actor, {scale_x: 0.9, scale_y: 0.9, time:
+                                          prefs.animation_time, transition});
     } else if (Number.isFinite(v)) {
         vy = v;
     }
