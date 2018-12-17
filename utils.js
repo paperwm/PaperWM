@@ -39,8 +39,7 @@ function print_stacktrace(error) {
     let filtered = trace.filter((frame) => {
         return frame !== "wrapper@resource:///org/gnome/gjs/modules/lang.js:178";
     });
-    log(`JS ERROR: ${error}\n ${trace.join('\n')};
-`);
+    log(`JS ERROR: ${error}\n ${trace.join('\n')}`);
 }
 
 function framestr(rect) {
