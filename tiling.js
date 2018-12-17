@@ -1539,7 +1539,6 @@ function registerWindow(metaWindow) {
 
 function allocateClone(actor) {
     let metaWindow = actor.meta_window;
-    log(`allocate ${metaWindow.title}`);
     let frame = metaWindow.get_frame_rect();
     // Adjust the clone's origin to the north-west, so it will line up
     // with the frame.
