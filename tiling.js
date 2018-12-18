@@ -2077,6 +2077,9 @@ function showHandler(actor) {
     if (Scratch.isScratchWindow(metaWindow))
         return;
 
+    if (metaWindow.unmapped)
+        return;
+
     if (metaWindow.clone.visible || ! onActive || Navigator.navigating
        || inPreview) {
         actor.hide();
