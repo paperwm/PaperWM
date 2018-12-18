@@ -1658,7 +1658,10 @@ function remove_handler(workspace, meta_window) {
     let space = spaces.spaceOf(workspace);
     space.removeWindow(meta_window);
 
-    if (!meta_window.get_compositor_private()) {
+    let actor = meta_window.get_compositor_private();
+    if (!actor) {
+        actor.remove_clip();
+    } else {
         signals.disconnect(meta_window);
         if (meta_window.clone)
             meta_window.clone.destroy();
