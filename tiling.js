@@ -2016,7 +2016,7 @@ function focus_handler(metaWindow, user_data) {
         return;
 
     let neighbours = [];
-    for (let i=around - 1; i > 0; i--) {
+    for (let i=around - 1; i >= 0; i--) {
         let w = windows[i];
         if (w.get_compositor_private()) {
             neighbours.push(windows[i]);
