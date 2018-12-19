@@ -53,6 +53,12 @@ function assert(condition, message, ...dump) {
     }
 }
 
+function visible(metaWindow) {
+    let actor = metaWindow.get_compositor_private();
+    let clone = metaWindow.clone;
+    return actor.visible && !clone.visible;
+}
+
 var currentTest = 0;
 function next() {
     if (currentTest < tests.length) {
@@ -64,6 +70,40 @@ function next() {
 }
 
 var tests = [
+    function insertWindow() {
+        let signals = new Utils.Signals();
+        let windows = 0;
+        let space = Tiling.spaces.selectedSpace;
+        signals.connect(space, 'window-added', (space, metaWindow) => {
+            log(`length: ${space.length}`);
+            let first = space[0][0];
+            if (space.length === 3) {
+                let third = space[2][0];
+                connectOnce(third, 'focus', () => {
+                    connectOnce(first, 'focus', () => {
+                        connectOnce(space, 'move-done', () => {
+                            Misc.util.spawnApp(['xterm']);
+                        });
+                    });
+                    Main.activateWindow(first);
+                });
+            }
+            if (space.length < 4)
+                return;
+            assert(visible(first),
+                   `first window not immediately visible`);
+            assert(!visible(metaWindow), `insert animation broken`);
+
+            space.getWindows().forEach(w => {
+                w.delete(global.get_current_time());
+            });
+            signals.destroy();
+            next();
+        });
+        Misc.util.spawnApp(['xterm']);
+        Misc.util.spawnApp(['xterm']);
+        Misc.util.spawnApp(['xterm']);
+    },
     function fullscreenReactive() {
         openTiledWindow(['tilix'], (space, metaWindow) => {
             assert(metaWindow === space.selectedWindow, `first window isn't selected`);
