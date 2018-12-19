@@ -128,4 +128,23 @@ var tests = [
             app.action_group.activate_action('app.about', null);
         });
     },
+    function selectSpace() {
+        let spaces = Tiling.spaces;
+        let oldSpace = spaces.selectedSpace;
+        spaces.selectSpace(Meta.MotionDirection.DOWN);
+        let space = spaces.selectedSpace;
+        assert(space !== oldSpace, `select space din't change space`);
+        connectOnce(space, 'move-done', () => {
+            let visible = new Map();
+            for (let [monitor, space] of this.monitors) {
+                visible.set(space, true);
+            }
+            spaces.forEach(s => {
+                if (!visible.get(s))
+                    assert(s.actor.visible, `hidden space is visible`);
+            });
+            next();
+        });
+        Navigator.getNavigator().finish();
+    }
 ];
