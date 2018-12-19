@@ -1155,7 +1155,7 @@ class Spaces extends Map {
         TopBar.setMonitor(toSpace.monitor);
         toSpace.monitor.clickOverlay.deactivate();
 
-        let [ok, x, y] = global.get_pointer();
+        let [x, y, _mods] = global.get_pointer();
         x -= monitor.x;
         y -= monitor.y;
         if (x < 0 || x > monitor.width ||
