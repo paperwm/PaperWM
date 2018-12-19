@@ -109,4 +109,23 @@ var tests = [
             next();
         });
     },
+    function visibleDialog() {
+        let nav = Navigator.getNavigator();
+        var Shell = imports.gi.Shell;
+        var Tracker = Shell.WindowTracker.get_default();
+        openTiledWindow(['tilix'], (space, metaWindow) => {
+            connectOnce(display, 'window-created', (display, about) => {
+                let actor = about.get_compositor_private();
+                connectOnce(actor, 'show', (actor) => {
+                    assert(actor.visible && !about.clone.visible, `dialog isn't visible`);
+                    about.delete(global.get_current_time());
+                    metaWindow.delete(global.get_current_time());
+                    nav.finish();
+                    next();
+                });
+            });
+            let app = Tracker.get_window_app(metaWindow);
+            app.action_group.activate_action('app.about', null);
+        });
+    },
 ];
