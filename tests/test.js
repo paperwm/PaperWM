@@ -94,4 +94,18 @@ var tests = [
             space.removeWindow(metaWindow);
         });
     },
+    function reload() {
+        openTiledWindow(['tilix'], (space, metaWindow) => {
+            ExtensionSystem.reloadExtension(Extension);
+            Extension = imports.misc.extensionUtils.extensions[uuid];
+            assert(Extension.state === ExtensionSystem.ExtensionState.ENABLED,
+                   `extension didn't reload`);
+            // We've build a new space
+            assert(Tiling.spaces.selectedSpace !== space, `didn't get a new space`);
+            space = Tiling.spaces.selectedSpace;
+            assert(space.selectedWindow === metaWindow, `tiled window didn't reattach`);
+            metaWindow.delete(global.get_current_time());
+            next();
+        });
+    },
 ];
