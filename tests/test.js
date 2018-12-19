@@ -136,15 +136,15 @@ var tests = [
         assert(space !== oldSpace, `select space din't change space`);
         connectOnce(space, 'move-done', () => {
             let visible = new Map();
-            for (let [monitor, space] of this.monitors) {
+            for (let [monitor, space] of spaces.monitors) {
                 visible.set(space, true);
             }
             spaces.forEach(s => {
                 if (!visible.get(s))
-                    assert(s.actor.visible, `hidden space is visible`);
+                    assert(!s.actor.visible, `hidden space is visible`);
             });
             next();
         });
         Navigator.getNavigator().finish();
-    }
+    },
 ];
