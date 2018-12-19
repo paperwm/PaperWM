@@ -2079,6 +2079,8 @@ function showHandler(actor) {
 
     if (!onActive
         || metaWindow.clone.get_parent() && metaWindow.clone.visible
+           // The built-in workspace-change animation is running: suppress it
+        || actor.get_parent() !== global.window_group
        ) {
         actor.hide();
         metaWindow.clone.show();
