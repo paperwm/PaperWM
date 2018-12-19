@@ -554,6 +554,7 @@ class Space extends Array {
 
         this.visible = [];
         const monitor = this.monitor;
+        let isDone = true;
         this.getWindows().forEach(w => {
             if (!w.get_compositor_private())
                 return;
@@ -563,8 +564,10 @@ class Space extends Array {
 
             // Guard against races between move_to and layout
             // eg. moving can kill ongoing resize on wayland
-            if (Tweener.isTweening(w.clone))
+            if (Tweener.isTweening(w.clone)) {
+                isDone = false;
                 return;
+            }
 
             let unMovable = w.fullscreen ||
                 w.get_maximized() === Meta.MaximizeFlags.BOTH;
@@ -579,8 +582,9 @@ class Space extends Array {
         });
 
         this.visible.forEach(w => {
-            if (Tweener.isTweening(w.clone))
+            if (Tweener.isTweening(w.clone)) {
                 return;
+            }
             let actor = w.get_compositor_private();
 
             // The actor's width/height is not correct right after resize
@@ -606,7 +610,7 @@ class Space extends Array {
 
         this._isAnimating = false;
 
-        this.emit('move-done');
+        isDone && this.emit('move-done');
     }
 
     startAnimate(grabWindow) {
