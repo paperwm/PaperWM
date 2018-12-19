@@ -1486,9 +1486,6 @@ class Spaces extends Map {
             || metaWindow.is_on_all_workspaces())
             return;
 
-        // Prevent the window from flip flopping between monitors
-        metaWindow.unmapped = true;
-
         let monitor = Main.layoutManager.monitors[index];
         let space = this.monitors.get(monitor);
         if (space.monitor !== monitor)
@@ -1680,7 +1677,6 @@ function add_handler(ws, metaWindow) {
         // Set position and hookup signals, with `existing` set to true
         insertWindow(metaWindow, {existing: true && !metaWindow.redirected});
         delete metaWindow.redirected;
-        delete metaWindow.unmapped;
     }
     // Otherwise we're dealing with a new window, so we let `window-created`
     // handle initial positioning.
