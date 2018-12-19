@@ -59,6 +59,25 @@ function visible(metaWindow) {
     return actor.visible && !clone.visible;
 }
 
+function connect(chain, callback) {
+    log(chain.length);
+    function connectIter(chain, callback) {
+        if (chain.length === 0)
+            return callback;
+        return () => {
+            let [obj, signal] = chain.slice(0, 2);
+            connectOnce(obj, signal, connectIter(chain.slice(2), callback));
+        };
+    }
+    assert(chain.length % 2 === 0,
+           `connect require an even numbered chain`);
+    if (chain.length === 0)
+        return callback;
+
+    let [obj, signal] = chain.slice(0, 2);
+    connectOnce(obj, signal, connectIter(chain.slice(2), callback));
+}
+
 var currentTest = 0;
 function next() {
     if (currentTest < tests.length) {
@@ -80,10 +99,8 @@ var tests = [
             if (space.length === 3) {
                 let third = space[2][0];
                 connectOnce(third, 'focus', () => {
-                    connectOnce(first, 'focus', () => {
-                        connectOnce(space, 'move-done', () => {
-                            Misc.util.spawnApp(['xterm']);
-                        });
+                    connect([first, 'focus', space, 'move-done'], () => {
+                        Misc.util.spawnApp(['xterm']);
                     });
                     Main.activateWindow(first);
                 });
