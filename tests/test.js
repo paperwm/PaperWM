@@ -66,6 +66,7 @@ function next() {
 var tests = [
     function fullscreenReactive() {
         openTiledWindow(['tilix'], (space, metaWindow) => {
+            assert(metaWindow === space.selectedWindow, `first window isn't selected`);
             let id = metaWindow.connect('notify::fullscreen', (metaWindow) => {
                 if (!metaWindow.fullscreen)
                     return;
