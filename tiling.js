@@ -2212,7 +2212,7 @@ function centerWindowHorizontally(metaWindow) {
     const targetX = Math.round(monitor.width/2 - frame.width/2);
     const dx = targetX - (metaWindow.clone.targetX + space.targetX);
 
-    let [ok, pointerX, pointerY] = global.get_pointer();
+    let [x, y, mask] = global.get_pointer();
     let relPointerX = pointerX - monitor.x - space.cloneContainer.x;
     let relPointerY = pointerY - monitor.y - space.cloneContainer.y;
     if (utils.isPointInsideActor(metaWindow.clone, relPointerX, relPointerY)) {
