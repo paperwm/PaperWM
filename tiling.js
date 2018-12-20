@@ -1149,6 +1149,26 @@ class Spaces extends Map {
         this.monitors.set(monitor, toSpace);
 
         let fromSpace = this.spaceOf(from);
+        // Replace floating windows on visible, but not active, workspaces with
+        // clones
+        if (this.monitors.get(fromSpace.monitor) === fromSpace) {
+            let workspace = fromSpace.workspace;
+            for (let w of workspace.list_windows()) {
+                if (w.is_on_all_workspaces() ||
+                    w.clone.get_parent() === fromSpace.cloneContainer)
+                    continue;
+                let f = w.get_frame_rect();
+                w.clone.x = f.x; w.clone.y = f.y;
+                w.clone.reparent(backgroundGroup);
+                w.clone.show();
+            }
+        }
+
+        let workspace = toSpace.workspace;
+        for (let w of workspace.list_windows()) {
+            if (w.clone.get_parent() === backgroundGroup)
+                w.clone.hide();
+        }
 
         this.animateToSpace(toSpace, fromSpace);
 
@@ -2077,8 +2097,9 @@ function showHandler(actor) {
     if (Scratch.isScratchWindow(metaWindow))
         return;
 
+    let space = spaces.spaceOfWindow(metaWindow);
     if (!onActive
-        || metaWindow.clone.get_parent() && metaWindow.clone.visible
+        || metaWindow.clone.get_parent() === space.cloneContainer && metaWindow.clone.visible
            // The built-in workspace-change animation is running: suppress it
         || actor.get_parent() !== global.window_group
        ) {
