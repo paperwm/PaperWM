@@ -35,6 +35,44 @@ function connectOnce(obj, signal, callback) {
     });
 }
 
+function connectOncePromise(obj, signal, timeout=2000) {
+    return new Promise(
+        (resolve, reject) => {
+            let hasTimedOut = false;
+
+            let timeoutId = imports.mainloop.timeout_add(timeout, () => {
+                hasTimedOut = true;
+                reject(new Error(`TimeoutError ${signal}`));
+            });
+
+            function signalHandler(...args) {
+                if (hasTimedOut) {
+                    log(`Signal arrived after timeout: ${signal}`);
+                    return;
+                }
+                imports.mainloop.source_remove(timeoutId);
+                resolve(args);
+            }
+
+            connectOnce(obj, signal, signalHandler);
+        }
+    );
+}
+
+/**
+ * Converts a function(...args, callback) to its 'async' equivalent 
+ */
+function asAsync(fnWithCallback) {
+    return function(...args) {
+        return new Promise((resolve, reject) => {
+            fnWithCallback(...args, (...result) => resolve(result))
+        });
+    }
+}
+
+function callAsync(fnWithCallback, ...args) {
+    return asAsync(fnWithCallback)(...args);
+}
 
 /**
    Run @prog and run callback on space::window-added
@@ -45,6 +83,12 @@ function openTiledWindow(prog, callback) {
         connectOnce(space, 'window-added', callback);
     });
     Misc.util.spawnApp(prog);
+}
+
+function waitPromise(delay) {
+    return new Promise(
+        (resolve, reject) => imports.mainloop.timeout_add(delay, resolve)
+    );
 }
 
 function assert(condition, message, ...dump) {
@@ -79,21 +123,31 @@ function connect(chain, callback) {
 }
 
 var currentTest = 0;
-function next() {
-    if (currentTest < tests.length) {
-        display.get_tab_list(Meta.WindowType.DIALOG, null)
-            .forEach(w => {
-                w.delete(global.get_current_time());
-            });
-        display.get_tab_list(Meta.WindowType.NORMAL, null)
-            .forEach(w => {
-                w.delete(global.get_current_time());
-            });
-        let test = tests[currentTest];
-        log(`-- Testing ${test.name}`);
-        test();
+
+async function next() {
+    try {
+        if (currentTest < tests.length) {
+            display.get_tab_list(Meta.WindowType.DIALOG, null)
+                .forEach(w => {
+                    w.delete(global.get_current_time());
+                });
+            display.get_tab_list(Meta.WindowType.NORMAL, null)
+                .forEach(w => {
+                    w.delete(global.get_current_time());
+                });
+            let test = tests[currentTest];
+            log(`-- Testing ${test.name}`);
+            let result = test();
+            if (result && result.constructor === Promise) {
+                result
+                    .then(next)
+                    .catch(Utils.print_stacktrace);
+            } 
+        }
+        currentTest += 1;
+    } catch(e) {
+        Utils.print_stacktrace(e)
     }
-    currentTest += 1;
 }
 
 var tests = [
@@ -143,17 +197,16 @@ var tests = [
             metaWindow.make_fullscreen();
         });
     },
-    function removeWindow() {
-        openTiledWindow(['tilix'], (space, metaWindow) => {
-            connectOnce(space, 'window-removed', (space, metaWindow) => {
-                connectOnce(space, 'move-done', () => {
-                    assert(space.indexOf(metaWindow) === -1, `window wasn't removed`);
-                    assert(metaWindow.get_compositor_private().visible, `actor isn't visible`);
-                    next();
-                });
-            });
-            space.removeWindow(metaWindow);
-        });
+    async function removeWindow() {
+        let [space, metaWindow] = await callAsync(openTiledWindow, ['tilix']);
+
+        let windowRemovedPromise = connectOncePromise(space, 'window-removed');
+        space.removeWindow(metaWindow);
+        await windowRemovedPromise;
+        await connectOncePromise(space, 'move-done');
+
+        assert(space.indexOf(metaWindow) === -1, `window wasn't removed`);
+        assert(metaWindow.get_compositor_private().visible, `actor isn't visible`);
     },
     function reload() {
         openTiledWindow(['tilix'], (space, metaWindow) => {
