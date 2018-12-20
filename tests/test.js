@@ -81,6 +81,14 @@ function connect(chain, callback) {
 var currentTest = 0;
 function next() {
     if (currentTest < tests.length) {
+        display.get_tab_list(Meta.WindowType.DIALOG, null)
+            .forEach(w => {
+                w.delete(global.get_current_time());
+            });
+        display.get_tab_list(Meta.WindowType.NORMAL, null)
+            .forEach(w => {
+                w.delete(global.get_current_time());
+            });
         let test = tests[currentTest];
         log(`-- Testing ${test.name}`);
         test();
@@ -111,9 +119,6 @@ var tests = [
                    `first window not immediately visible`);
             assert(!visible(metaWindow), `insert animation broken`);
 
-            space.getWindows().forEach(w => {
-                w.delete(global.get_current_time());
-            });
             signals.destroy();
             next();
         });
@@ -132,7 +137,6 @@ var tests = [
                     let actor = metaWindow.get_compositor_private();
                     assert(actor.visible, `Fullscreen window isn't reactive`);
                     assert(!metaWindow.clone.visible, `clone is visible`);
-                    metaWindow.delete(global.get_current_time());
                     next();
                 });
             });
@@ -145,7 +149,6 @@ var tests = [
                 connectOnce(space, 'move-done', () => {
                     assert(space.indexOf(metaWindow) === -1, `window wasn't removed`);
                     assert(metaWindow.get_compositor_private().visible, `actor isn't visible`);
-                    metaWindow.delete(global.get_current_time());
                     next();
                 });
             });
@@ -162,7 +165,6 @@ var tests = [
             assert(Tiling.spaces.selectedSpace !== space, `didn't get a new space`);
             space = Tiling.spaces.selectedSpace;
             assert(space.selectedWindow === metaWindow, `tiled window didn't reattach`);
-            metaWindow.delete(global.get_current_time());
             next();
         });
     },
@@ -175,8 +177,6 @@ var tests = [
                 let actor = about.get_compositor_private();
                 connectOnce(actor, 'show', (actor) => {
                     assert(actor.visible && !about.clone.visible, `dialog isn't visible`);
-                    about.delete(global.get_current_time());
-                    metaWindow.delete(global.get_current_time());
                     nav.finish();
                     next();
                 });
