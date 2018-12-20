@@ -74,6 +74,14 @@ function callAsync(fnWithCallback, ...args) {
     return asAsync(fnWithCallback)(...args);
 }
 
+
+function openWindow(prog, callback) {
+    return new Promise((resolve, reject) => {
+        Misc.util.spawnApp(prog);
+        connectOnce(display, 'window-created', (display, w) => resolve(w));
+    });
+}
+
 /**
    Run @prog and run callback on space::window-added
  */
@@ -151,51 +159,35 @@ async function next() {
 }
 
 var tests = [
-    function insertWindow() {
-        let signals = new Utils.Signals();
-        let windows = 0;
-        let space = Tiling.spaces.selectedSpace;
-        signals.connect(space, 'window-added', (space, metaWindow) => {
-            log(`length: ${space.length}`);
-            let first = space[0][0];
-            if (space.length === 3) {
-                let third = space[2][0];
-                connectOnce(third, 'focus', () => {
-                    connect([first, 'focus', space, 'move-done'], () => {
-                        Misc.util.spawnApp(['xterm']);
-                    });
-                    Main.activateWindow(first);
-                });
-            }
-            if (space.length < 4)
-                return;
-            assert(visible(first),
-                   `first window not immediately visible`);
-            assert(!visible(metaWindow), `insert animation broken`);
+    async function insertWindow() {
+        var [space, first] = await callAsync(openTiledWindow, ['xterm']);
+        var [space, second] = await callAsync(openTiledWindow, ['xterm']);
+        var [space, third] = await callAsync(openTiledWindow, ['xterm']);
+        Main.activateWindow(first);
+        await connectOncePromise(space, 'move-done');
+        var [space, active] = await callAsync(openTiledWindow, ['xterm']);
 
-            signals.destroy();
-            next();
-        });
-        Misc.util.spawnApp(['xterm']);
-        Misc.util.spawnApp(['xterm']);
-        Misc.util.spawnApp(['xterm']);
+        assert(visible(first),
+               `first window not immediately visible`);
+        assert(!visible(active), `insert animation broken`);
     },
-    function fullscreenReactive() {
-        openTiledWindow(['tilix'], (space, metaWindow) => {
-            assert(metaWindow === space.selectedWindow, `first window isn't selected`);
+    async function fullscreenReactive() {
+        let metaWindow = await openWindow(['tilix']);
+        let space = Tiling.spaces.selectedSpace;
+        let moveDone = connectOncePromise(space, 'move-done');
+        let fullscreen = new Promise((resolve, reject) => {
             let id = metaWindow.connect('notify::fullscreen', (metaWindow) => {
                 if (!metaWindow.fullscreen)
                     return;
                 metaWindow.disconnect(id);
-                connectOnce(space, 'move-done', () => {
-                    let actor = metaWindow.get_compositor_private();
-                    assert(actor.visible, `Fullscreen window isn't reactive`);
-                    assert(!metaWindow.clone.visible, `clone is visible`);
-                    next();
-                });
+                resolve();
             });
-            metaWindow.make_fullscreen();
         });
+        metaWindow.make_fullscreen();
+        await fullscreen;
+        await moveDone;
+        let actor = metaWindow.get_compositor_private();
+        assert(visible(metaWindow), `Fullscreen window isn't reactive`);
     },
     async function removeWindow() {
         let [space, metaWindow] = await callAsync(openTiledWindow, ['tilix']);
@@ -208,53 +200,46 @@ var tests = [
         assert(space.indexOf(metaWindow) === -1, `window wasn't removed`);
         assert(metaWindow.get_compositor_private().visible, `actor isn't visible`);
     },
-    function reload() {
-        openTiledWindow(['tilix'], (space, metaWindow) => {
-            ExtensionSystem.reloadExtension(Extension);
-            Extension = imports.misc.extensionUtils.extensions[uuid];
-            assert(Extension.state === ExtensionSystem.ExtensionState.ENABLED,
-                   `extension didn't reload`);
-            // We've build a new space
-            assert(Tiling.spaces.selectedSpace !== space, `didn't get a new space`);
-            space = Tiling.spaces.selectedSpace;
-            assert(space.selectedWindow === metaWindow, `tiled window didn't reattach`);
-            next();
-        });
+
+    async function reload() {
+        let [space, metaWindow] = await callAsync(openTiledWindow, ['tilix']);
+        ExtensionSystem.reloadExtension(Extension);
+        Extension = imports.misc.extensionUtils.extensions[uuid];
+        assert(Extension.state === ExtensionSystem.ExtensionState.ENABLED,
+               `extension didn't reload`);
+        assert(Tiling.spaces.selectedSpace !== space, `didn't get a new space`);
+        space = Tiling.spaces.selectedSpace;
+        assert(space.selectedWindow === metaWindow, `tiled window didn't reattach`);
     },
-    function visibleDialog() {
+    async function visibleDialog() {
         let nav = Navigator.getNavigator();
         var Shell = imports.gi.Shell;
         var Tracker = Shell.WindowTracker.get_default();
-        openTiledWindow(['tilix'], (space, metaWindow) => {
-            connectOnce(display, 'window-created', (display, about) => {
-                let actor = about.get_compositor_private();
-                connectOnce(actor, 'show', (actor) => {
-                    assert(actor.visible && !about.clone.visible, `dialog isn't visible`);
-                    nav.finish();
-                    next();
-                });
-            });
-            let app = Tracker.get_window_app(metaWindow);
-            app.action_group.activate_action('app.about', null);
-        });
+        let [space, metaWindow] = await callAsync(openTiledWindow, ['tilix']);
+        let app = Tracker.get_window_app(metaWindow);
+        app.action_group.activate_action('app.about', null);
+        let [d, about] = await connectOncePromise(display, 'window-created');
+        let actor = about.get_compositor_private();
+        await connectOncePromise(actor, 'show');
+        assert(actor.visible && !about.clone.visible, `dialog isn't visible`);
+        nav.finish();
     },
-    function selectSpace() {
+    async function selectSpace() {
         let spaces = Tiling.spaces;
         let oldSpace = spaces.selectedSpace;
         spaces.selectSpace(Meta.MotionDirection.DOWN);
         let space = spaces.selectedSpace;
         assert(space !== oldSpace, `select space din't change space`);
-        connectOnce(space, 'move-done', () => {
-            let visible = new Map();
-            for (let [monitor, space] of spaces.monitors) {
-                visible.set(space, true);
-            }
-            spaces.forEach(s => {
-                if (!visible.get(s))
-                    assert(!s.actor.visible, `hidden space is visible`);
-            });
-            next();
-        });
         Navigator.getNavigator().finish();
+        await connectOncePromise(space, 'move-done');
+
+        let visible = new Map();
+        for (let [monitor, space] of spaces.monitors) {
+            visible.set(space, true);
+        }
+        spaces.forEach(s => {
+            if (!visible.get(s))
+                assert(!s.actor.visible, `hidden space is visible`);
+        });
     },
 ];
