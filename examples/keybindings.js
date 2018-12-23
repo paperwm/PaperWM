@@ -2,6 +2,7 @@ var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.o
 var Keybindings = Extension.imports.keybindings;
 var Main = imports.ui.main;
 var Tiling = Extension.imports.tiling;
+var Scratch = Extension.imports.scratch;
 
 function gotoByIndex() {
     function goto(k) {
@@ -26,6 +27,7 @@ function gotoByIndex() {
 }
 
 function windowMarks() {
+    const Meta = imports.gi.Meta;
     var marks = {}
 
     function setMark(k) {
@@ -33,16 +35,28 @@ function windowMarks() {
     }
 
     function gotoMark(k) {
-        return () => {
-            let metaWindow = marks[k];
-            if (!metaWindow)
+        return (metaWindow, space, options) => {
+            let mark = marks[k];
+            if (!mark)
                 return;
 
-            if (metaWindow.has_focus()) {
+            if (mark.has_focus()) {
                 // Can happen when navigator is open
-                Tiling.ensureViewport(metaWindow);
+                Tiling.ensureViewport(mark);
+                if (!options.navigator) {
+                    let mru = global.display.get_tab_list(
+                        Meta.TabList.NORMAL_ALL, null);
+                    let nextWindow = mru[1];
+                    if (!nextWindow)
+                        return;
+                    Main.activateWindow(nextWindow);
+                    if (Scratch.isScratchWindow(mark) &&
+                        !Scratch.isScratchWindow(nextWindow)) {
+                        Scratch.hide();
+                    }
+                }
             } else {
-                Main.activateWindow(metaWindow);
+                Main.activateWindow(mark);
             }
         }
     }
