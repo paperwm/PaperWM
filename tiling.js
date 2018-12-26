@@ -1557,7 +1557,6 @@ function allocateClone(actor) {
     let clone = container.first_child;
     clone.set_position(actor.x - frame.x,
                        actor.y - frame.y);
-    clone.set_size(actor.width, actor.height);
     container.set_size(frame.width, frame.height);
 }
 
