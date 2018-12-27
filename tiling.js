@@ -409,6 +409,9 @@ class Space extends Array {
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
         this.cloneContainer.remove_actor(metaWindow.clone);
+        let actor = metaWindow.get_compositor_private();
+        if (actor)
+            actor.remove_clip();
         this.layout();
         if (selected) {
             ensureViewport(selected, this);
@@ -1675,9 +1678,7 @@ function remove_handler(workspace, meta_window) {
     space.removeWindow(meta_window);
 
     let actor = meta_window.get_compositor_private();
-    if (actor) {
-        actor.remove_clip();
-    } else {
+    if (!actor) {
         signals.disconnect(meta_window);
         if (meta_window.clone)
             meta_window.clone.destroy();
