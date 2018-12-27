@@ -236,7 +236,7 @@ class Space extends Array {
             return;
         this._inLayout = true;
 
-        let time = animate ? 0.25 : 0;
+        let time = animate ? prefs.animation_time : 0;
         let gap = prefs.window_gap;
         let x = 0;
         this.startAnimate();
