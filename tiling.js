@@ -50,6 +50,7 @@ function init() {
     backgroundGroup = global.window_group.first_child;
 }
 
+
 /**
    Scrolled and tiled per monitor workspace.
 
@@ -230,75 +231,156 @@ class Space extends Array {
                              this.updateBackground.bind(this));
     }
 
-    layout(animate = true) {
+    layoutGrabColumn(column, x, y0, targetWidth, availableHeight, time, grabWindow) {
+        let space = this;
+        let needRelayout = false;
+
+        function mosh(windows, height, y0) {
+            let targetHeights = fitProportionally(
+                windows.map(mw => mw.get_frame_rect().height),
+                height
+            );
+            let [w, relayout, y] = space.layoutColumnSimple(windows, x, y0, targetWidth, targetHeights, time);
+            needRelayout = needRelayout || relayout;
+            return y;
+        }
+
+        const k = column.indexOf(grabWindow);
+        if (k < 0) {
+            throw new Error("Anchor doesn't exist in column " + grabWindow.title);
+        }
+
+        const gap = prefs.window_gap;
+        const f = grabWindow.get_frame_rect();
+        targetWidth = f.width;
+
+        const H1 = (f.y - y0) - gap - (k-1)*gap;
+        const H2 = availableHeight - (f.y + f.height - y0) - gap - (column.length-k-2)*gap;
+        k > 0 && mosh(column.slice(0, k), H1, y0);
+        let y = mosh(column.slice(k, k+1), f.height, f.y);
+        k+1 < column.length && mosh(column.slice(k+1), H2, y);
+
+        return [targetWidth, needRelayout];
+    }
+
+    layoutColumnSimple(windows, x, y0, targetWidth, targetHeights, time) {
+        let space = this;
+        let y = y0;
+
+        let widthChanged = false;
+        let heightChanged = false;
+
+        // log("Layout column simple")
+        for (let i = 0; i < windows.length; i++) {
+            let mw = windows[i];
+            let targetHeight = targetHeights[i];
+
+            let f = mw.get_frame_rect();
+
+            let resizable = !mw.fullscreen &&
+                mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
+
+            if (resizable) {
+                if (f.width !== targetWidth || f.height !== targetHeight) {
+                    // log(`  Sizing window ${mw.title} w: ${targetWidth}, h: ${targetHeight} took `);
+                    mw.move_resize_frame(true, f.x, f.y, targetWidth, targetHeight)
+                }
+            } else {
+                mw.move_frame(true, space.monitor.x, space.monitor.y);
+                targetWidth = f.width;
+            }
+
+            // When resize is synchronous, ie. for X11 windows
+            let nf = mw.get_frame_rect();
+            if (nf.width !== targetWidth && nf.width !== f.width) {
+                // log("  Width did not obey", "new", nf.width, "old", f.width, "target", targetWidth, mw.title)
+                widthChanged = true;
+            }
+            if (nf.height !== targetHeight && nf.height !== f.height) {
+                // log("  Height did not obey", "new", nf.height, "old", f.height, "target", targetHeight, mw.title);
+                heightChanged = true;
+                targetHeight = nf.height; // Use actually height for layout
+            }
+
+            let c = mw.clone;
+            if (c.x !== x || c.targetX !== x ||
+                c.y !== y || c.targetY !== y) {
+
+                // log("  Position window", mw.title, `y: ${y}`);
+                c.targetX = x;
+                c.targetY = y;
+                Tweener.addTween(c, {
+                    x, y,
+                    time,
+                    transition: 'easeInOutQuad',
+                });
+            }
+
+            y += targetHeight + prefs.window_gap;
+        }
+        return [targetWidth, widthChanged || heightChanged, y];
+    }
+
+
+    layout(animate = true, options={}) {
         // Guard against recursively calling layout
         if (this._inLayout)
             return;
+        let start = GLib.get_monotonic_time();
         this._inLayout = true;
+        this.startAnimate();
 
         let time = animate ? prefs.animation_time : 0;
         let gap = prefs.window_gap;
         let x = 0;
-        this.startAnimate();
+        let selectedIndex = this.selectedIndex();
+        let availableHeight = (this.height - panelBox.height - prefs.vertical_margin)
+        let y0 = panelBox.height + prefs.vertical_margin;
+        let fixPointAttempCount = 0;
 
         for (let i=0; i<this.length; i++) {
             let column = this[i];
+            // Actorless windows are trouble. Layout could conceivable run while a window is dying or being born.
+            column = column.filter(mw => mw.get_compositor_private());
+            if (column.length === 0)
+                continue;
 
-            let targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
-            if (column.includes(this.selectedWindow))
-                targetWidth = this.selectedWindow.get_frame_rect().width;
+            let selectedInColumn = i === selectedIndex ? this.selectedWindow : null;
 
+            let targetWidth;
+            if (i === selectedIndex) {
+                targetWidth = selectedInColumn.get_frame_rect().width;
+            } else {
+                targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
+            }
             targetWidth = Math.min(targetWidth, this.width - 2*minimumMargin);
-            let height = Math.round(
-                (this.height - panelBox.height - prefs.vertical_margin
-                 - prefs.window_gap*(column.length - 1))/column.length) ;
 
-            let y = panelBox.height + prefs.vertical_margin;
-            let widthChanged = false, alive = false;
-            for (let w of column) {
-                if (!w.get_compositor_private())
+            let resultingWidth, relayout;
+            if (inGrab && i === selectedIndex) {
+                [resultingWidth, relayout] =
+                    this.layoutGrabColumn(column, x, y0, targetWidth, availableHeight, time,
+                                          selectedInColumn);
+            } else {
+                let allocator = options.customAllocators && options.customAllocators[i];
+                allocator = allocator || allocateDefault;
+
+                let targetHeights = allocator(column, availableHeight, selectedInColumn);
+                [resultingWidth, relayout] =
+                    this.layoutColumnSimple(column, x, y0, targetWidth, targetHeights, time);
+            }
+
+            if (relayout) {
+                if (fixPointAttempCount < 5) {
+                    log("Trying to find layout fixpoint", fixPointAttempCount+1)
+                    i--;
+                    fixPointAttempCount++;
                     continue;
-                alive = true;
-                let f = w.get_frame_rect();
-                let b = w.get_buffer_rect();
-
-                let resizable = !w.fullscreen &&
-                    w.get_maximized() !== Meta.MaximizeFlags.BOTH;
-                if (resizable) {
-                    (f.width !== targetWidth || f.height !== height) &&
-                        w.move_resize_frame(true, f.x, f.y, targetWidth, height);
-                } else { // fullscreen windows can only be moved between monitors
-                    w.move_frame(true, this.monitor.x, this.monitor.y);
-                    targetWidth = f.width;
+                } else {
+                    log("Bail at fixpoint, max tries reached")
                 }
-                // When resize is synchronous, ie. for X11 windows
-                let newWidth = w.get_frame_rect().width;
-                if (newWidth !== targetWidth && newWidth !== f.width) {
-                    widthChanged = true;
-                }
-
-                let c = w.clone;
-                if (c.x !== x || c.targetX !== x ||
-                    c.y !== y || c.targetY !== y) {
-
-                    c.targetX = x;
-                    c.targetY = y;
-                    Tweener.addTween(c, {
-                        x, y,
-                        time,
-                        transition: 'easeInOutQuad',
-                    });
-                }
-
-                y += height + gap;
             }
 
-            if (widthChanged) {
-                // Redo current column
-                i--;
-            } else if (alive) {
-                x += targetWidth + gap;
-            }
+            x += resultingWidth + gap;
         }
         this._inLayout = false;
 
@@ -316,6 +398,9 @@ class Space extends Array {
                              });
             ensureViewport(this.selectedWindow, this);
         }
+
+        let stop = GLib.get_monotonic_time();
+        log(`Layout took ${((stop-start)/1000).toFixed(1)}ms`);
     }
 
     isPlaceable(metaWindow) {
@@ -366,7 +451,7 @@ class Space extends Array {
         return null;
     }
 
-    addWindow(metaWindow, index, row) {
+    addWindow(metaWindow, index, row, deferLayout) {
         if (!this.selectedWindow)
             this.selectedWindow = metaWindow;
         if (this.indexOf(metaWindow) !== -1)
@@ -381,12 +466,15 @@ class Space extends Array {
 
         metaWindow.clone.reparent(this.cloneContainer);
 
+        if (deferLayout) {
+            return true;
+        }
         this._populated && this.layout();
         this.emit('window-added', metaWindow, index, row);
         return true;
     }
 
-    removeWindow(metaWindow) {
+    removeWindow(metaWindow, deferLayout) {
         let index = this.indexOf(metaWindow);
         if (index === -1)
             return false;
@@ -406,12 +494,17 @@ class Space extends Array {
         column.splice(row, 1);
         if (column.length === 0)
             this.splice(index, 1);
+
+        if (deferLayout)
+            return true
+
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
         this.cloneContainer.remove_actor(metaWindow.clone);
         let actor = metaWindow.get_compositor_private();
         if (actor)
             actor.remove_clip();
+
         this.layout();
         if (selected) {
             ensureViewport(selected, this);
@@ -578,7 +671,9 @@ class Space extends Array {
             let x = monitor.x + Math.round(clone.x) + this.targetX;
             let y = monitor.y + Math.round(clone.y);
             let f = w.get_frame_rect();
-            (f.x !== x || f.y !== y) && w.move_frame(true, x, y);
+            if ((f.x !== x || f.y !== y)) {
+                w.move_frame(true, x, y);
+            }
         });
 
         this.visible.forEach(w => {
@@ -2261,6 +2356,58 @@ function centerWindowHorizontally(metaWindow) {
     }
 }
 
+/**
+ * "Fit" values such that they sum to `targetSum`
+ */
+function fitProportionally(values, targetSum) {
+    let sum = utils.sum(values);
+    let weights = values.map(v => v / sum);
+
+    let fitted = utils.zip(values, weights).map(
+        ([h, w]) => Math.round(targetSum * w)
+    )
+    let r = targetSum - utils.sum(fitted);
+    fitted[0] += r;
+    return fitted;
+}
+
+function allocateDefault(column, availableHeight, selectedWindow) {
+    if (column.length === 1) {
+        return [availableHeight];
+    } else {
+        // Distribute available height amongst non-selected windows in proportion to their existing height
+        const gap = prefs.window_gap;
+        const minHeight = 50;
+
+        const f = selectedWindow && selectedWindow.get_frame_rect();
+        const k = selectedWindow && column.indexOf(selectedWindow);
+
+        let nonSelected = column.slice();
+        if (selectedWindow) nonSelected.splice(k, 1)
+
+        const nonSelectedHeights = nonSelected.map(mw => mw.get_frame_rect().height);
+        let availableForNonSelected = Math.max(
+            0, availableHeight - (column.length-1) * gap - (selectedWindow ? f.height : 0));
+
+        const deficit = Math.max(0, nonSelected.length * minHeight - availableForNonSelected);
+
+        let heights = fitProportionally(
+            nonSelectedHeights,
+            availableForNonSelected + deficit
+        );
+
+        if (selectedWindow)
+            heights.splice(k, 0, f.height - deficit);
+
+        return heights
+    }
+}
+
+function allocateEqualHeight(column, available) {
+    available = available - (column.length-1)*prefs.window_gap;
+    return column.map(_ => Math.floor(available / column.length));
+}
+
 /*
 * pull in the top window from the column to the right. if there is no
 * column to the right, push active window into column to the left.
@@ -2287,8 +2434,12 @@ function slurp(metaWindow) {
     }
 
     let column = space[index];
-    space.removeWindow(metaWindowToSlurp);
-    space.addWindow(metaWindowToSlurp, index, column.length);
+    space.removeWindow(metaWindowToSlurp, true);
+    space.addWindow(metaWindowToSlurp, index, column.length, true);
+    space.layout(true, {
+        customAllocators: { [index]: allocateEqualHeight }
+    });
+    space.emit("full-layout");
     ensureViewport(metaWindowToEnsure, space, true);
 }
 
@@ -2303,7 +2454,11 @@ function barf(metaWindow) {
         return;
 
     let bottom = column.splice(-1, 1)[0];
-    space.addWindow(bottom, index + 1);
+    space.addWindow(bottom, index + 1, undefined, true);
+    space.layout(true, {
+        customAllocators: { [index]: allocateEqualHeight }
+    })
+    space.emit("full-layout")
 
     ensureViewport(space.selectedWindow, space, true);
 }

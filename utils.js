@@ -1,5 +1,6 @@
 const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
 const Gdk = imports.gi.Gdk;
+var GLib = imports.gi.GLib;
 var Meta = imports.gi.Meta;
 
 var workspaceManager = global.workspace_manager;
@@ -24,6 +25,13 @@ function assert(condition, message, ...dump) {
     if (!condition) {
         throw new Error(message + "\n", dump);
     }
+}
+
+function withTimer(message, fn) {
+    let start = GLib.get_monotonic_time();
+    let ret = fn();
+    let stop = GLib.get_monotonic_time();
+    log(`${message} ${((stop - start)/1000).toFixed(1)}ms`);
 }
 
 function print_stacktrace(error) {
@@ -170,6 +178,15 @@ function toggleCloneMarks() {
 
 function sum(array) {
     return array.reduce((a, b) => a + b, 0);
+}
+
+function zip(...as) {
+    let r = [];
+    let minLength = Math.min(...as.map(x => x.length));
+    for (let i = 0; i < minLength; i++) {
+        r.push(as.map(a => a[i]));
+    }
+    return r;
 }
 
 function setWorkspaceName(name, workspace) {
