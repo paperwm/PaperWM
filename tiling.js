@@ -1580,6 +1580,7 @@ function resizeHandler(metaWindow) {
         if (selected) {
             let frame = metaWindow.get_frame_rect();
             space.selection.width = frame.width + prefs.window_gap;
+            space.selection.height = frame.height + prefs.window_gap;
         }
     } else if (!space._inLayout) {
         // Restore window position when eg. exiting fullscreen
