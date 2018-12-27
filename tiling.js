@@ -626,11 +626,8 @@ class Space extends Array {
             if (!actor)
                 return;
             actor.remove_clip();
-            if (w === grabWindow) {
-                w.clone.hide();
-                actor.show();
+            if (inGrab && inGrab.window === w)
                 return;
-            }
             actor.hide();
             w.clone.show();
         });
@@ -1514,12 +1511,16 @@ class Spaces extends Map {
         if (space.monitor !== monitor)
             return;
 
-        let focus = metaWindow.has_focus();
+        if (inGrab) {
+            spaces.spaceOfWindow(metaWindow).removeWindow(metaWindow);
+            inGrab.workspace = space.workspace;
+            return;
+        }
 
         metaWindow.change_workspace(space.workspace);
 
         // This doesn't play nice with the clickoverlay, disable for now
-        if (focus)
+        if (metaWindow.has_focus())
             Main.activateWindow(metaWindow);
     }
 }
@@ -1959,25 +1960,34 @@ function grabBegin(metaWindow, type) {
     let space = spaces.spaceOfWindow(metaWindow);
     if (space.indexOf(metaWindow) === -1)
         return;
-    space.startAnimate(metaWindow);
+    inGrab = {window: metaWindow};
+    space.startAnimate();
     let frame = metaWindow.get_frame_rect();
     let anchor = metaWindow.clone.targetX + space.monitor.x;
     let handler = getGrab(space, anchor);
     grabSignals.connect(metaWindow, 'position-changed', handler);
     Tweener.removeTweens(space.cloneContainer);
     // Turn size/position animation off when grabbing a window with the mouse
-    inGrab = true;
 }
 
 function grabEnd(metaWindow, type) {
     if (type === Meta.GrabOp.COMPOSITOR)
         return;
+    grabSignals.destroy();
+    let dragInfo = inGrab;
+    inGrab = false;
+    if (dragInfo.workspace) {
+        let workspace = dragInfo.workspace;
+        if (metaWindow.get_workspace() === workspace)
+            insertWindow(metaWindow, {existing: true});
+        else
+            metaWindow.change_workspace(workspace);
+        return;
+    }
     let space = spaces.spaceOfWindow(metaWindow);
     let frame = metaWindow.get_frame_rect();
     if (space.indexOf(metaWindow) === -1)
         return;
-    grabSignals.destroy();
-    inGrab = false;
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
     space.targetX = space.cloneContainer.x;
@@ -1991,6 +2001,8 @@ function grabEnd(metaWindow, type) {
 function getGrab(space, anchor) {
     let gap = Math.round(prefs.window_gap/2);
     return (metaWindow) => {
+        if (inGrab.workspace)
+            return;
         let frame = metaWindow.get_frame_rect();
         space.cloneContainer.x = frame.x - anchor;
         space.selection.y = frame.y - space.monitor.y - gap;
