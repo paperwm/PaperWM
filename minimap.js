@@ -116,10 +116,18 @@ class Minimap extends Array {
         this.signals.connect(space, 'window-added', this.addWindow.bind(this));
         this.signals.connect(space, 'window-removed', this.removeWindow.bind(this));
         this.signals.connect(space, 'swapped', this.swapped.bind(this));
+        this.signals.connect(space, 'full-layout', this.reset.bind(this));
+
         this.layout();
     }
 
     static get [Symbol.species]() { return Array; }
+
+    reset() {
+        this.splice(0,this.length).forEach(c => c.forEach(x => x.destroy()))
+        this.createClones()
+        this.layout();
+    }
 
     addWindow(space, metaWindow, index, row) {
         let clone = this.createClone(metaWindow);
