@@ -1581,7 +1581,7 @@ function resizeHandler(metaWindow) {
             let frame = metaWindow.get_frame_rect();
             space.selection.width = frame.width + prefs.window_gap;
         }
-    } else {
+    } else if (!space._inLayout) {
         // Restore window position when eg. exiting fullscreen
         !Navigator.navigating && selected
             && move_to(space, metaWindow, {
