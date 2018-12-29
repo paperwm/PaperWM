@@ -283,11 +283,14 @@ class Space extends Array {
             if (resizable) {
                 if (f.width !== targetWidth || f.height !== targetHeight) {
                     // log(`  Sizing window ${mw.title} w: ${targetWidth}, h: ${targetHeight} took `);
-                    mw.move_resize_frame(true, f.x, f.y, targetWidth, targetHeight)
+                    mw._targetWidth = targetWidth;
+                    mw._targetHeight = targetHeight;
+                    mw.move_resize_frame(true, f.x, f.y, targetWidth, targetHeight);
                 }
             } else {
                 mw.move_frame(true, space.monitor.x, space.monitor.y);
                 targetWidth = f.width;
+                targetHeight = f.height;
             }
 
             // When resize is synchronous, ie. for X11 windows
@@ -1664,6 +1667,14 @@ function destroyHandler(actor) {
 }
 
 function resizeHandler(metaWindow) {
+    let f = metaWindow.get_frame_rect();
+    let needLayout = false;
+    if (metaWindow._targetWidth !== f.width || metaWindow._targetHeight !== f.height) {
+        metaWindow._targetWidth = null;
+        metaWindow._targetHeight = null;
+        needLayout = true;
+    }
+
     let space = spaces.spaceOfWindow(metaWindow);
     if (space.indexOf(metaWindow) === -1)
         return;
@@ -1677,7 +1688,7 @@ function resizeHandler(metaWindow) {
             space.selection.width = frame.width + prefs.window_gap;
             space.selection.height = frame.height + prefs.window_gap;
         }
-    } else if (!space._inLayout) {
+    } else if (!space._inLayout && needLayout) {
         // Restore window position when eg. exiting fullscreen
         !Navigator.navigating && selected
             && move_to(space, metaWindow, {
