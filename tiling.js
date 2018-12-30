@@ -153,9 +153,9 @@ class Space extends Array {
         label.set_style('font-weight: bold; height: 1.86em;');
         label.hide();
 
-        let selection = new St.Widget({style_class: 'tile-preview'});
+        let selection = new St.Widget({name: 'selection',
+                                       style_class: 'tile-preview'});
         this.selection = selection;
-        selection.width = 0;
 
         clip.space = this;
         cloneContainer.space = this;
@@ -167,7 +167,6 @@ class Space extends Array {
         actor.add_actor(label);
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
-        cloneContainer.add_actor(selection);
 
         container.set_child_below_sibling(clip,
                                           container.first_child);
@@ -207,8 +206,7 @@ class Space extends Array {
         }
         this.cloneContainer.x = this.targetX;
         this.getWindows().forEach(w => {
-            w.get_compositor_private().hide();
-            w.clone.show();
+            animateWindow(w);
         });
         this.layout(false);
 
@@ -502,7 +500,11 @@ class Space extends Array {
 
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
-        this.cloneContainer.remove_actor(metaWindow.clone);
+        let clone = metaWindow.clone;
+        this.cloneContainer.remove_actor(clone);
+        // Don't destroy the selection highlight widget
+        if (clone.first_child.name === 'selection')
+            clone.remove_actor(clone.first_child);
         let actor = metaWindow.get_compositor_private();
         if (actor)
             actor.remove_clip();
@@ -512,8 +514,6 @@ class Space extends Array {
             ensureViewport(selected, this);
         } else {
             this.selectedWindow = null;
-            Tweener.removeTweens(this.selection);
-            this.selection.width = 0;
         }
 
         this.emit('window-removed', metaWindow, index, row);
@@ -693,8 +693,7 @@ class Space extends Array {
                   - Math.max(0, (b.y + b.height) - (monitor.y + monitor.height));
             actor.set_clip(x, y, cw, ch);
 
-            w.clone.hide();
-            actor.show();
+            showWindow(w);
         });
 
         this.fixOverlays();
@@ -725,8 +724,7 @@ class Space extends Array {
             actor.remove_clip();
             if (inGrab && inGrab.window === w)
                 return;
-            actor.hide();
-            w.clone.show();
+            animateWindow(w);
         });
 
         this._isAnimating = true;
@@ -1065,8 +1063,7 @@ class Spaces extends Map {
 
         this.monitors = new Map();
         this.get(workspaceManager.get_active_workspace()).getWindows().forEach(w => {
-            w.get_compositor_private().hide();
-            w.clone.show();
+            animateWindow(w);
         });
 
         this.spaceContainer.set_size(global.screen_width, global.screen_height);
@@ -1257,14 +1254,14 @@ class Spaces extends Map {
                 let f = w.get_frame_rect();
                 w.clone.x = f.x; w.clone.y = f.y;
                 w.clone.reparent(backgroundGroup);
-                w.clone.show();
+                animateWindow(w);
             }
         }
 
         let workspace = toSpace.workspace;
         for (let w of workspace.list_windows()) {
             if (w.clone.get_parent() === backgroundGroup)
-                w.clone.hide();
+                showWindow(w);
         }
 
         this.animateToSpace(toSpace, fromSpace);
@@ -1393,8 +1390,7 @@ class Spaces extends Map {
             let y = Math.round(space.monitor.y + space.monitor.height*2/3)
                 + 20*this._moving.length;
             moving.move_frame(true, x, y);
-            moving.clone.show();
-            actor.hide();
+            animateWindow(moving);
             Tweener.addTween(moving.clone,
                              {x, y,
                               time: prefs.animation_time,
@@ -1598,7 +1594,7 @@ class Spaces extends Map {
 
         if (!metaWindow.clone
             || metaWindow.unmapped
-            || metaWindow.clone.visible
+            || isWindowAnimating(metaWindow)
             || this._monitorsChanging
             || metaWindow.is_on_all_workspaces())
             return;
@@ -1638,6 +1634,7 @@ function registerWindow(metaWindow) {
     clone.meta_window = metaWindow;
 
     metaWindow.clone = container;
+    metaWindow.clone.actor = clone;
 
     signals.connect(metaWindow, "focus", focus_wrapper);
     signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
@@ -1654,11 +1651,19 @@ function allocateClone(actor) {
     let frame = metaWindow.get_frame_rect();
     // Adjust the clone's origin to the north-west, so it will line up
     // with the frame.
-    let container = metaWindow.clone;
-    let clone = container.first_child;
-    clone.set_position(actor.x - frame.x,
+    let clone = metaWindow.clone;
+    let cloneActor = clone.actor;
+    cloneActor.set_position(actor.x - frame.x,
                        actor.y - frame.y);
-    container.set_size(frame.width, frame.height);
+    clone.set_size(frame.width, frame.height);
+
+    if (metaWindow.clone.first_child.name === 'selection') {
+        let selection = metaWindow.clone.first_child;
+        let protrusion = Math.round(prefs.window_gap/2);
+        selection.x = - protrusion;
+        selection.y = - protrusion;
+        selection.set_size(frame.width + prefs.window_gap, frame.height + prefs.window_gap);
+    }
 }
 
 function destroyHandler(actor) {
@@ -1682,11 +1687,6 @@ function resizeHandler(metaWindow) {
 
     if (inGrab) {
         space.layout(false);
-        if (selected) {
-            let frame = metaWindow.get_frame_rect();
-            space.selection.width = frame.width + prefs.window_gap;
-            space.selection.height = frame.height + prefs.window_gap;
-        }
     } else if (!space._inLayout && needLayout) {
         // Restore window position when eg. exiting fullscreen
         !Navigator.navigating && selected
@@ -1891,8 +1891,7 @@ function insertWindow(metaWindow, {existing}) {
     }
 
     let actor = metaWindow.get_compositor_private();
-    actor.hide();
-    clone.show();
+    animateWindow(metaWindow);
     if (!existing) {
         clone.set_position(clone.targetX,
                            panelBox.height + prefs.vertical_margin);
@@ -1906,10 +1905,6 @@ function insertWindow(metaWindow, {existing}) {
                 space.layout();
                 connectSizeChanged();
             }
-        });
-        space.selection.set_scale(0, 0);
-        Tweener.addTween(space.selection, {
-            scale_x: 1, scale_y: 1, time: prefs.animation_time, transition: 'easeInOutQuad'
         });
     }
 
@@ -1949,10 +1944,6 @@ function ensureViewport(meta_window, space, force) {
     if (space.selectedWindow.fullscreen ||
         space.selectedWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
         animateDown(space.selectedWindow);
-    }
-
-    if (space.selectedWindow !== meta_window) {
-        updateSelection(space, meta_window, true);
     }
 
     space.selectedWindow = meta_window;
@@ -2007,27 +1998,19 @@ function ensureViewport(meta_window, space, force) {
         x, y, force
     });
 
-    updateSelection(space);
     selected.raise();
+    updateSelection(space, meta_window);
     space.emit('select');
 }
 
-function updateSelection(space, metaWindow, noAnimate){
-    metaWindow = metaWindow || space.selectedWindow;
-    if (!metaWindow)
-        return;
-
+function updateSelection(space, metaWindow) {
     let clone = metaWindow.clone;
-    const frame = metaWindow.get_frame_rect();
-    const buffer = metaWindow.get_buffer_rect();
-    let protrusion = Math.round(prefs.window_gap/2);
-    Tweener.addTween(space.selection,
-                     {x: clone.targetX - protrusion,
-                      y: clone.targetY - protrusion,
-                      width: frame.width + prefs.window_gap,
-                      height: frame.height + prefs.window_gap,
-                      time: noAnimate ? 0 : prefs.animation_time,
-                      transition: 'easeInOutQuad'});
+    let cloneActor = clone.actor;
+    if (space.selection.get_parent() === clone)
+        return;
+    space.selection.reparent(clone);
+    clone.set_child_below_sibling(space.selection, cloneActor);
+    allocateClone(metaWindow.get_compositor_private());
 }
 
 
@@ -2105,13 +2088,12 @@ function grabEnd(metaWindow, type) {
     ensureViewport(metaWindow, space);
 }
 function getGrab(space, anchor) {
-    let gap = Math.round(prefs.window_gap/2);
     return (metaWindow) => {
         if (inGrab.workspace)
             return;
         let frame = metaWindow.get_frame_rect();
         space.cloneContainer.x = frame.x - anchor;
-        space.selection.y = frame.y - space.monitor.y - gap;
+        metaWindow.clone.y = frame.y - space.monitor.y;
     };
 }
 
@@ -2217,15 +2199,30 @@ function showHandler(actor) {
 
     let space = spaces.spaceOfWindow(metaWindow);
     if (!onActive
-        || metaWindow.clone.get_parent() === space.cloneContainer && metaWindow.clone.visible
+        || metaWindow.clone.get_parent() === space.cloneContainer && isWindowAnimating(metaWindow)
            // The built-in workspace-change animation is running: suppress it
         || actor.get_parent() !== global.window_group
        ) {
-        actor.hide();
-        metaWindow.clone.show();
+        animateWindow(metaWindow);
     }
 }
 var showWrapper = utils.dynamic_function_ref('showHandler', Me);
+
+function showWindow(metaWindow) {
+    let actor = metaWindow.get_compositor_private();
+    metaWindow.clone.actor.hide();
+    actor.show();
+}
+
+function animateWindow(metaWindow) {
+    let actor = metaWindow.get_compositor_private();
+    metaWindow.clone.actor.show();
+    actor.hide();
+}
+
+function isWindowAnimating(metaWindow) {
+    return metaWindow.clone.actor.visible;
+}
 
 
 /**
@@ -2362,7 +2359,6 @@ function centerWindowHorizontally(metaWindow) {
     } else {
         move_to(space, metaWindow, { x: targetX,
                                      onComplete: () => space.moveDone()});
-        updateSelection(space);
     }
 }
 

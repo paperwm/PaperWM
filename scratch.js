@@ -3,6 +3,7 @@ var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
 
 var TopBar = Extension.imports.topbar;
+var Tiling = Extension.imports.tiling;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
 var float;
@@ -16,8 +17,7 @@ function makeScratch(metaWindow) {
     metaWindow[float] = true;
     metaWindow.make_above();
     metaWindow.stick();
-    metaWindow.clone.hide();
-    metaWindow.get_compositor_private().show();
+    Tiling.showWindow(metaWindow);
 
     let monitor = focusMonitor();
     if (monitor.clickOverlay)
