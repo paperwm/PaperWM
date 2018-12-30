@@ -547,7 +547,6 @@ class Space extends Array {
 
         utils.swap(this[index], row, targetRow);
         utils.swap(this, index, targetIndex);
-        metaWindow.clone.raise_top();
 
         this.layout();
         this.emit('swapped', index, targetIndex, row, targetRow);
@@ -1999,6 +1998,7 @@ function ensureViewport(meta_window, space, force) {
     });
 
     selected.raise();
+    selected.clone.raise_top();
     updateSelection(space, meta_window);
     space.emit('select');
 }
