@@ -281,10 +281,15 @@ class Space extends Array {
                 mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
             if (resizable) {
-                if (f.width !== targetWidth || f.height !== targetHeight) {
-                    // log(`  Sizing window ${mw.title} w: ${targetWidth}, h: ${targetHeight} took `);
-                    mw._targetWidth = targetWidth;
-                    mw._targetHeight = targetHeight;
+                const hasNewTarget = mw._targetWidth !== targetWidth || mw._targetHeight !== targetHeight;
+                const targetReached = f.width === targetWidth && f.height === targetHeight;
+
+                // Update targets (NB: must happen before resize request)
+                mw._targetWidth = targetWidth;
+                mw._targetHeight = targetHeight;
+
+                if (!targetReached && hasNewTarget) {
+                    // Explanation for `hasNewTarget` check in commit message
                     mw.move_resize_frame(true, f.x, f.y, targetWidth, targetHeight);
                 }
             } else {
@@ -309,7 +314,7 @@ class Space extends Array {
             if (c.x !== x || c.targetX !== x ||
                 c.y !== y || c.targetY !== y) {
 
-                // log("  Position window", mw.title, `y: ${y}`);
+                // log("  Position window", mw.title, `y: ${c.targetY} -> ${y} x: ${c.targetX} -> ${x}`);
                 c.targetX = x;
                 c.targetY = y;
                 Tweener.addTween(c, {
@@ -1670,10 +1675,10 @@ function resizeHandler(metaWindow) {
     let f = metaWindow.get_frame_rect();
     let needLayout = false;
     if (metaWindow._targetWidth !== f.width || metaWindow._targetHeight !== f.height) {
-        metaWindow._targetWidth = null;
-        metaWindow._targetHeight = null;
         needLayout = true;
     }
+    metaWindow._targetWidth = null;
+    metaWindow._targetHeight = null;
 
     let space = spaces.spaceOfWindow(metaWindow);
     if (space.indexOf(metaWindow) === -1)
