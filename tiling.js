@@ -71,14 +71,18 @@ function init() {
    and right corners rounded. It's positioned slightly above the monitor so the
    corners aren't visible when the space is active.
 
-   The @cloneContainer holds all the WindowActor clones, it's clipped
+   The @cloneContainer holds clones of all the tiled windows, it's clipped
    by @cloneClip to avoid protruding into neighbouringing monitors.
 
-   Clones are necessary due to restrictions mutter places on MetaWindowActors
-   MetaWindowActors can only live in the `global.window_group` and can't be
-   moved reliably off workspaceManager. We create a Clutter.Clone for every window which
-   live in its @cloneContainer to avoid these problems. Scrolling to a window in
-   the tiling can then be done by simply moving the @cloneContainer.
+   Clones are necessary due to restrictions mutter places on MetaWindowActors.
+   WindowActors can only live in the `global.window_group` and can't be
+   moved reliably outside the monitor. We create a Clutter.Clone for every window which
+   live in @cloneContainer to avoid these problems. Scrolling to a window in
+   the tiling is then done by simply moving the @cloneContainer.
+
+   While eg. animating the cloneContainer WindowActors are all hidden, while the
+   clones are shown. When animation is done, the MetaWindows are moved to their
+   correct position and the WindowActors are shown.
 
    The clones are also useful when constructing the workspace stack as it's
    easier to scale and move the whole @actor in one go.
