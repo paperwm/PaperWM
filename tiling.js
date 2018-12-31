@@ -91,6 +91,7 @@ class Space extends Array {
 
         // The windows that should be represented by their WindowActor
         this.visible = [];
+        this._floating = [];
         this._populated = false;
 
         let clip = new Clutter.Actor();
@@ -480,7 +481,7 @@ class Space extends Array {
     removeWindow(metaWindow) {
         let index = this.indexOf(metaWindow);
         if (index === -1)
-            return false;
+            return this.removeFloating(metaWindow);
 
         let selected = this.selectedWindow;
         if (selected === metaWindow) {
@@ -517,6 +518,26 @@ class Space extends Array {
         }
 
         this.emit('window-removed', metaWindow, index, row);
+        return true;
+    }
+
+    addFloating(metaWindow) {
+        if (this._floating.indexOf(metaWindow) !== -1 ||
+            metaWindow.is_on_all_workspaces())
+            return false;
+        this._floating.push(metaWindow);
+        let clone = metaWindow.clone;
+        clone.reparent(this.actor);
+        showWindow(metaWindow);
+        return true;
+    }
+
+    removeFloating(metaWindow) {
+        let i = this._floating.indexOf(metaWindow);
+        if (i === -1)
+            return false;
+        this._floating.splice(i, 0);
+        this.actor.remove_actor(metaWindow.clone);
         return true;
     }
 
@@ -695,6 +716,8 @@ class Space extends Array {
             showWindow(w);
         });
 
+        this._floating.forEach(showWindow);
+
         this.fixOverlays();
 
         if (!Meta.is_wayland_compositor()) {
@@ -724,6 +747,14 @@ class Space extends Array {
             if (inGrab && inGrab.window === w)
                 return;
             animateWindow(w);
+        });
+
+        this._floating.forEach(w => {
+            let f = w.get_frame_rect();
+            if (!animateWindow(w))
+                return;
+            w.clone.x = f.x - this.monitor.x;
+            w.clone.y = f.y - this.monitor.y;
         });
 
         this._isAnimating = true;
@@ -1242,26 +1273,6 @@ class Spaces extends Map {
         this.monitors.set(monitor, toSpace);
 
         let fromSpace = this.spaceOf(from);
-        // Replace floating windows on visible, but not active, workspaces with
-        // clones
-        if (this.monitors.get(fromSpace.monitor) === fromSpace) {
-            let workspace = fromSpace.workspace;
-            for (let w of workspace.list_windows()) {
-                if (w.is_on_all_workspaces() ||
-                    w.clone.get_parent() === fromSpace.cloneContainer)
-                    continue;
-                let f = w.get_frame_rect();
-                w.clone.x = f.x; w.clone.y = f.y;
-                w.clone.reparent(backgroundGroup);
-                animateWindow(w);
-            }
-        }
-
-        let workspace = toSpace.workspace;
-        for (let w of workspace.list_windows()) {
-            if (w.clone.get_parent() === backgroundGroup)
-                showWindow(w);
-        }
 
         this.animateToSpace(toSpace, fromSpace);
 
@@ -1859,15 +1870,14 @@ function insertWindow(metaWindow, {existing}) {
         }
     }
 
+    let space = spaces.spaceOfWindow(metaWindow);
     if (!add_filter(metaWindow)) {
         connectSizeChanged();
+        space.addFloating(metaWindow);
         // Make sure the window isn't hidden behind the space (eg. dialogs)
         !existing && metaWindow.make_above()
         return;
     }
-
-    let space = spaces.spaceOfWindow(metaWindow);
-    let monitor = space.monitor;
 
     let index = -1; // (-1 -> at beginning)
     if (space.selectedWindow) {
@@ -2199,7 +2209,7 @@ function showHandler(actor) {
 
     let space = spaces.spaceOfWindow(metaWindow);
     if (!onActive
-        || metaWindow.clone.get_parent() === space.cloneContainer && isWindowAnimating(metaWindow)
+        || isWindowAnimating(metaWindow)
            // The built-in workspace-change animation is running: suppress it
         || actor.get_parent() !== global.window_group
        ) {
@@ -2210,14 +2220,20 @@ var showWrapper = utils.dynamic_function_ref('showHandler', Me);
 
 function showWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
+    if (!actor)
+        return false;
     metaWindow.clone.actor.hide();
     actor.show();
+    return true;
 }
 
 function animateWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
+    if (!actor)
+        return false;
     metaWindow.clone.actor.show();
     actor.hide();
+    return true;
 }
 
 function isWindowAnimating(metaWindow) {
