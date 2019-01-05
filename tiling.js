@@ -2346,7 +2346,6 @@ function cycleWindowWidth(metaWindow) {
 }
 
 function cycleWindowHeight(metaWindow) {
-    log("OMG")
     const ratios = [1/3, 1/2, 2/3];
 
     function findNext(tr) {
@@ -2453,20 +2452,26 @@ function allocateDefault(column, availableHeight, selectedWindow) {
         const gap = prefs.window_gap;
         const minHeight = 50;
 
-        function h(mw) {
+        function heightOf(mw) {
             return mw._targetHeight || mw.get_frame_rect().height;
         }
 
         const k = selectedWindow && column.indexOf(selectedWindow);
+        const selectedHeight = selectedWindow && heightOf(selectedWindow);
 
         let nonSelected = column.slice();
         if (selectedWindow) nonSelected.splice(k, 1)
 
-        const nonSelectedHeights = nonSelected.map(h);
+        const nonSelectedHeights = nonSelected.map(heightOf);
         let availableForNonSelected = Math.max(
-            0, availableHeight - (column.length-1) * gap - (selectedWindow ? h(selectedWindow) : 0));
+            0,
+            availableHeight
+                - (column.length-1) * gap
+                - (selectedWindow ? selectedHeight : 0)
+        );
 
-        const deficit = Math.max(0, nonSelected.length * minHeight - availableForNonSelected);
+        const deficit = Math.max(
+            0, nonSelected.length * minHeight - availableForNonSelected);
 
         let heights = fitProportionally(
             nonSelectedHeights,
@@ -2474,7 +2479,7 @@ function allocateDefault(column, availableHeight, selectedWindow) {
         );
 
         if (selectedWindow)
-            heights.splice(k, 0, h(selectedWindow) - deficit);
+            heights.splice(k, 0, selectedHeight - deficit);
 
         return heights
     }

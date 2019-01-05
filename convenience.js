@@ -89,4 +89,3 @@ function getSettings(schema) {
 
     return new Gio.Settings({ settings_schema: schemaObj });
 }
-								  

@@ -1,4 +1,3 @@
-
 // polyfill workspace_manager that was introduced in 3.30 (must happen before modules are imported)
 if (!global.workspace_manager) {
     global.workspace_manager = global.screen;
@@ -162,7 +161,7 @@ function initUserConfig() {
         && !hasUserConfigFile())
     {
         try {
-            installConfig()  
+            installConfig();
 
             const configDir = getConfigDir().get_path();
             const notification = notify("PaperWM", `Installed user configuration in ${configDir}`);
@@ -185,7 +184,7 @@ function initUserConfig() {
 
 /**
  * Our own version of imports.ui.main.notify allowing more control over the
- * notification 
+ * notification
  */
 function notify(msg, details, params) {
     const MessageTray = imports.ui.messageTray;

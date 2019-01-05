@@ -83,6 +83,7 @@ function swap(array, i, j) {
     array[i] = array[j];
     array[j] = temp;
 }
+
 function in_bounds(array, i) {
     return i >= 0 && i < array.length;
 }
@@ -187,24 +188,6 @@ function zip(...as) {
         r.push(as.map(a => a[i]));
     }
     return r;
-}
-
-function setWorkspaceName(name, workspace) {
-    let i;
-    if (workspace === undefined) {
-        i = workspaceManager.get_active_workspace_index();
-    } else {
-        i = workspace.index();
-    }
-    let settings = new Gio.Settings({ schema_id:
-                                      'org.gnome.desktop.wm.preferences'});
-    let names = settings.get_strv('workspace-names');
-
-    let oldName = names[i];
-    names[i] = name;
-    settings.set_strv('workspace-names', names);
-
-    return oldName;
 }
 
 function isOverrideRedirectWindow(metaWindow) {
