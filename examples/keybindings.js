@@ -90,56 +90,6 @@ function showNavigator() {
 }
 
 
-function cycleWindowHeight() {
-    Keybindings.bindkey("<Super>q", "cycle-height", cycleHeight, { activeInNavigator: true });
-
-    var Tiling = Extension.imports.tiling;
-
-    function cycleHeight(metaWindow) {
-        const ratios = [1/3, 1/2, 2/3];
-
-        function findNext(tr) {
-            // Find the first ratio that is significantly bigger than 'tr'
-            for (let i = 0; i < ratios.length; i++) {
-                let r = ratios[i]
-                if (tr <= r) {
-                    if (tr/r > 0.9) {
-                        return (i+1) % ratios.length;
-                    } else {
-                        return i;
-                    }
-                }
-            }
-            return 0; // cycle
-        }
-
-        let space = Tiling.spaces.spaceOfWindow(metaWindow);
-        if (!space)
-            return;
-
-        let i = space.indexOf(metaWindow);
-
-        function allocate(column, available) {
-            available -= (column.length - 1) * Tiling.prefs.window_gap;
-            let frame = metaWindow.get_frame_rect();
-            let r = frame.height / available;
-            let nextR = ratios[findNext(r)];
-            return column.map(mw => {
-                if (mw === metaWindow) {
-                    return Math.floor(available * nextR);
-                } else {
-                    return Math.floor(available * (1-nextR)/(column.length-1));
-                }
-            });
-        }
-
-        if (space[i].length > 1) {
-            space.layout(false, {customAllocators: {[i]: allocate}});
-        } 
-    }
-}
-
-
 // listFreeBindings("<super>").join("\n")
 function listFreeBindings(modifierString) {
     let free = [];

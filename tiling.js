@@ -2345,6 +2345,54 @@ function cycleWindowWidth(metaWindow) {
     metaWindow.move_resize_frame(true, nextX, frame.y, nextW, frame.height);
 }
 
+function cycleWindowHeight(metaWindow) {
+    log("OMG")
+    const ratios = [1/3, 1/2, 2/3];
+
+    function findNext(tr) {
+        // Find the first ratio that is significantly bigger than 'tr'
+        for (let i = 0; i < ratios.length; i++) {
+            let r = ratios[i]
+            if (tr <= r) {
+                if (tr/r > 0.9) {
+                    return (i+1) % ratios.length;
+                } else {
+                    return i;
+                }
+            }
+        }
+        return 0; // cycle
+    }
+
+    let space = spaces.spaceOfWindow(metaWindow);
+    if (!space)
+        return;
+
+    let i = space.indexOf(metaWindow);
+
+    // Fix `frame` outside `allocate` so the allocation wont change during
+    // fixpoint calculation. (could move more out, but then we'd have to
+    // calculate available manually)
+    let frame = metaWindow.get_frame_rect();
+
+    function allocate(column, available) {
+        available -= (column.length - 1) * prefs.window_gap;
+        let r = frame.height / available;
+        let nextR = ratios[findNext(r)];
+        return column.map(mw => {
+            if (mw === metaWindow) {
+                return Math.floor(available * nextR);
+            } else {
+                return Math.floor(available * (1-nextR)/(column.length-1));
+            }
+        });
+    }
+
+    if (space[i].length > 1) {
+        space.layout(false, {customAllocators: {[i]: allocate}});
+    }
+}
+
 function activateNthWindow(n, space) {
     space = space || spaces.spaceOf(workspaceManager.get_active_workspace());
     let nth = space[n][0];

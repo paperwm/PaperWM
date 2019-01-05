@@ -113,6 +113,11 @@
       <summary>Cycle through useful window widths</summary>
     </key>
 
+    <key type="as" name="cycle-height">
+        <default><![CDATA[['<Super><Shift>r']]]></default>
+        <summary>Cycle through useful window heights</summary>
+    </key>
+
     <key type="as" name="center-horizontally">
       <default><![CDATA[['<Super>c']]]></default>
       <summary>Center window horizontally</summary>

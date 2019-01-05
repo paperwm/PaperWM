@@ -164,7 +164,8 @@ class SettingsWidget {
          'switch-first', 'switch-last', 'live-alt-tab', 'live-alt-tab-backward',
          'move-left', 'move-right', 'move-up', 'move-down',
          'slurp-in', 'barf-out', 'center-horizontally',
-         'paper-toggle-fullscreen', 'toggle-maximize-width', 'cycle-width']
+         'paper-toggle-fullscreen', 'toggle-maximize-width', 'cycle-width',
+         'cycle-height']
             .forEach(k => {
             addKeybinding(windows.model.child_model, settings, k);
         });

@@ -118,6 +118,11 @@ function init() {
                                        Tiling),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
+    registerPaperAction("cycle-height",
+                        dynamic_function_ref("cycleWindowHeight",
+                                             Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
     registerPaperAction("center-horizontally",
                         dynamic_function_ref("centerWindowHorizontally",
                                        Tiling),
