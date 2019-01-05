@@ -459,7 +459,7 @@ class Space extends Array {
         return null;
     }
 
-    addWindow(metaWindow, index, row, deferLayout) {
+    addWindow(metaWindow, index, row) {
         if (!this.selectedWindow)
             this.selectedWindow = metaWindow;
         if (this.indexOf(metaWindow) !== -1)
@@ -474,15 +474,12 @@ class Space extends Array {
 
         metaWindow.clone.reparent(this.cloneContainer);
 
-        if (deferLayout) {
-            return true;
-        }
         this._populated && this.layout();
         this.emit('window-added', metaWindow, index, row);
         return true;
     }
 
-    removeWindow(metaWindow, deferLayout) {
+    removeWindow(metaWindow) {
         let index = this.indexOf(metaWindow);
         if (index === -1)
             return false;
@@ -502,9 +499,6 @@ class Space extends Array {
         column.splice(row, 1);
         if (column.length === 0)
             this.splice(index, 1);
-
-        if (deferLayout)
-            return true
 
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
@@ -2433,27 +2427,39 @@ function allocateEqualHeight(column, available) {
 function slurp(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     let index = space.indexOf(metaWindow);
+
+    let to, from;
     let metaWindowToEnsure = space.selectedWindow;
     let metaWindowToSlurp;
 
-    if(index + 1 < space.length) {
-        metaWindowToSlurp = space[index + 1][0]
+    if (index + 1 < space.length) {
+        to = index;
+        from = to + 1;
+        metaWindowToSlurp = space[from][0];
     } else if (index + 1 === space.length){
         if(space[index].length > 1) return;
         metaWindowToSlurp = metaWindow;
-        index = index - 1;
         metaWindowToEnsure = metaWindowToSlurp;
+        to = index - 1;
+        from = index;
     }
 
     if(!metaWindowToSlurp || space.length < 2) {
         return;
     }
 
-    let column = space[index];
-    space.removeWindow(metaWindowToSlurp, true);
-    space.addWindow(metaWindowToSlurp, index, column.length, true);
+    space[to].push(metaWindowToSlurp)
+    
+    { // Remove the slurped window
+        let column = space[from];
+        let row = column.indexOf(metaWindowToSlurp);
+        column.splice(row, 1);
+        if (column.length === 0)
+            space.splice(from, 1);
+    }
+
     space.layout(true, {
-        customAllocators: { [index]: allocateEqualHeight }
+        customAllocators: { [to]: allocateEqualHeight }
     });
     space.emit("full-layout");
     ensureViewport(metaWindowToEnsure, space, true);
@@ -2470,12 +2476,12 @@ function barf(metaWindow) {
         return;
 
     let bottom = column.splice(-1, 1)[0];
-    space.addWindow(bottom, index + 1, undefined, true);
+    space.splice(index + 1, 0, [bottom]);
+
     space.layout(true, {
         customAllocators: { [index]: allocateEqualHeight }
     })
     space.emit("full-layout")
-
     ensureViewport(space.selectedWindow, space, true);
 }
 
