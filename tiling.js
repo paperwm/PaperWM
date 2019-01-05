@@ -2389,15 +2389,18 @@ function allocateDefault(column, availableHeight, selectedWindow) {
         const gap = prefs.window_gap;
         const minHeight = 50;
 
-        const f = selectedWindow && selectedWindow.get_frame_rect();
+        function h(mw) {
+            return mw._targetHeight || mw.get_frame_rect().height;
+        }
+
         const k = selectedWindow && column.indexOf(selectedWindow);
 
         let nonSelected = column.slice();
         if (selectedWindow) nonSelected.splice(k, 1)
 
-        const nonSelectedHeights = nonSelected.map(mw => mw.get_frame_rect().height);
+        const nonSelectedHeights = nonSelected.map(h);
         let availableForNonSelected = Math.max(
-            0, availableHeight - (column.length-1) * gap - (selectedWindow ? f.height : 0));
+            0, availableHeight - (column.length-1) * gap - (selectedWindow ? h(selectedWindow) : 0));
 
         const deficit = Math.max(0, nonSelected.length * minHeight - availableForNonSelected);
 
@@ -2407,7 +2410,7 @@ function allocateDefault(column, availableHeight, selectedWindow) {
         );
 
         if (selectedWindow)
-            heights.splice(k, 0, f.height - deficit);
+            heights.splice(k, 0, h(selectedWindow) - deficit);
 
         return heights
     }
