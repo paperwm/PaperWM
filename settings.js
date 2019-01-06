@@ -60,6 +60,7 @@ function init() {
     settings.connect('changed::window-gap', setState);
     settings.connect('changed::horizontal-margin', setState);
     settings.connect('changed::vertical-margin', setVerticalMargin);
+    settings.connect('changed::window-gap', setVerticalMargin);
     setVerticalMargin();
     settings.connect('changed::workspace-colors', setState);
     settings.connect('changed::default-background', setState);
