@@ -36,6 +36,11 @@ function toggle(metaWindow) {
         hide();
     } else {
         makeScratch(metaWindow);
+
+        if (metaWindow.has_focus) {
+            let space = Tiling.spaces.get(global.workspace_manager.get_active_workspace());
+            space.setSelectionInactive();
+        }
     }
 }
 

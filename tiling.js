@@ -794,6 +794,14 @@ class Space extends Array {
         }
     }
 
+    setSelectionActive() {
+        this.selection.opacity = 255;
+    }
+
+    setSelectionInactive() {
+        this.selection.opacity = 140;
+    }
+
     setSettings([uuid, settings]) {
         this.signals.disconnect(this.settings);
 
@@ -1992,6 +2000,7 @@ function ensureViewport(meta_window, space, force) {
 function updateSelection(space, metaWindow) {
     let clone = metaWindow.clone;
     let cloneActor = clone.actor;
+    space.setSelectionActive();
     if (space.selection.get_parent() === clone)
         return;
     space.selection.reparent(clone);
@@ -2094,6 +2103,7 @@ function focus_handler(metaWindow, user_data) {
     }
 
     if (Scratch.isScratchWindow(metaWindow)) {
+        spaces.get(workspaceManager.get_active_workspace()).setSelectionInactive();
         Scratch.makeScratch(metaWindow);
         return;
     }
