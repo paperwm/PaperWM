@@ -2208,10 +2208,9 @@ function showHandler(actor) {
     let metaWindow = actor.meta_window;
     let onActive = metaWindow.get_workspace() === workspaceManager.get_active_workspace();
 
-    if (Scratch.isScratchWindow(metaWindow))
+    if (!metaWindow.clone.get_parent())
         return;
 
-    let space = spaces.spaceOfWindow(metaWindow);
     if (!onActive
         || isWindowAnimating(metaWindow)
            // The built-in workspace-change animation is running: suppress it
