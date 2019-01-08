@@ -47,6 +47,11 @@
         <summary>Attach/detach the active window into the scratch layer</summary>
     </key>
 
+    <key type="as" name="take-window">
+        <default><![CDATA[['<Super>t']]]></default>
+        <summary>Take the window, dropping it when finished navigating</summary>
+    </key>
+
     <key type="as" name="switch-next">
       <default><![CDATA[['<Super>period']]]></default>
       <summary>Switch to the next window</summary>

@@ -165,7 +165,7 @@ class SettingsWidget {
          'move-left', 'move-right', 'move-up', 'move-down',
          'slurp-in', 'barf-out', 'center-horizontally',
          'paper-toggle-fullscreen', 'toggle-maximize-width', 'cycle-width',
-         'cycle-height']
+         'cycle-height', 'take-window']
             .forEach(k => {
             addKeybinding(windows.model.child_model, settings, k);
         });

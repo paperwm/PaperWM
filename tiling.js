@@ -1012,7 +1012,6 @@ class Spaces extends Map {
         this.clickOverlays = [];
         this.signals = new utils.Signals();
         this.stack = [];
-        this._moving = [];
         let spaceContainer = new Clutter.Actor({name: 'spaceContainer'});
         spaceContainer.hide();
         this.spaceContainer = spaceContainer;
@@ -1386,44 +1385,23 @@ class Spaces extends Map {
         let newSpace = this.selectedSpace;
         let to = from;
         if (move && this.selectedSpace.selectedWindow) {
-            let moving = this.selectedSpace.selectedWindow;
-            this._moving.push(moving);
-
-            this.selectedSpace.removeWindow(moving);
-            let actor = moving.get_compositor_private();
-            backgroundGroup.add_actor(moving.clone);
-            let lowest = this._moving[this._moving.length - 2];
-            lowest && backgroundGroup.set_child_below_sibling(moving.clone, lowest.clone);
-            let point = this.selectedSpace.cloneContainer.apply_relative_transform_to_point(
-                backgroundGroup, new Clutter.Vertex({x: moving.clone.x,
-                                                     y: moving.clone.y}));
-            moving.clone.set_position(point.x, point.y);
-            let x = Math.round(space.monitor.x +
-                               space.monitor.width -
-                               (0.1*space.monitor.width*(1 +this._moving.length)));
-            let y = Math.round(space.monitor.y + space.monitor.height*2/3)
-                + 20*this._moving.length;
-            moving.move_frame(true, x, y);
-            animateWindow(moving);
-            Tweener.addTween(moving.clone,
-                             {x, y,
-                              time: prefs.animation_time,
-                              transition
-                             });
-        } else {
-            if (direction === Meta.MotionDirection.DOWN)
-                to = from + 1;
-            else
-                to = from - 1;
-            if (to < 0 || to >= mru.length) {
-                to = from;
-            }
-            if (to === from && Tweener.getTweenCount(newSpace.actor) > 0)
-                return;
-
-            newSpace = mru[to];
-            this.selectedSpace = newSpace;
+            takeWindow(this.selectedSpace.selectedWindow,
+                       this.selectedSpace,
+                       {navigator: Navigator.getNavigator()});
         }
+
+        if (direction === Meta.MotionDirection.DOWN)
+            to = from + 1;
+        else
+            to = from - 1;
+        if (to < 0 || to >= mru.length) {
+            to = from;
+        }
+        if (to === from && Tweener.getTweenCount(newSpace.actor) > 0)
+            return;
+
+        newSpace = mru[to];
+        this.selectedSpace = newSpace;
 
         TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
@@ -1461,14 +1439,6 @@ class Spaces extends Map {
     animateToSpace(to, from, callback) {
         inPreview = false;
         TopBar.updateWorkspaceIndicator(to.workspace.index());
-
-        this._moving.reverse().forEach(w => {
-            w.change_workspace(to.workspace);
-            if (w.get_workspace() === to.workspace) {
-                insertWindow(w, {existing: true});
-            }
-        });
-        this._moving = [];
 
         this.selectedSpace = to;
 
@@ -2570,4 +2540,53 @@ function movePreviousSpace(mw, space) {
 
 function movePreviousSpaceBackwards(mw, space) {
     spaces.selectSpace(Meta.MotionDirection.UP, true);
+}
+
+/**
+   Detach the @metaWindow, storing it at the bottom right corner while
+   navigating. When done, insert all the detached windows again.
+ */
+function takeWindow(metaWindow, space, {navigator}) {
+    space = space || spaces.selectedSpace;
+    metaWindow = metaWindow || space.selectedWindow;
+    navigator = navigator || Navigator.getNavigator();
+    if (!space.removeWindow(metaWindow))
+        return;
+
+    if (!navigator._movingId) {
+        navigator._moving = [];
+        let id = navigator.connect('destroy', () => {
+            navigator.disconnect(id);
+            let space = spaces.selectedSpace;
+            navigator._moving.reverse().forEach(w => {
+                w.change_workspace(space.workspace);
+                if (w.get_workspace() === space.workspace) {
+                    insertWindow(w, {existing: true});
+                }
+            });
+        });
+    }
+
+    navigator._moving.push(metaWindow);
+    let parent = backgroundGroup;
+    let actor = metaWindow.get_compositor_private();
+    parent.add_actor(metaWindow.clone);
+    let lowest = navigator._moving[navigator._moving.length - 2];
+    lowest && parent.set_child_below_sibling(metaWindow.clone, lowest.clone);
+    let point = space.cloneContainer.apply_relative_transform_to_point(
+        parent, new Clutter.Vertex({x: metaWindow.clone.x,
+                                             y: metaWindow.clone.y}));
+    metaWindow.clone.set_position(point.x, point.y);
+    let x = Math.round(space.monitor.x +
+                       space.monitor.width -
+                       (0.1*space.monitor.width*(1 +navigator._moving.length)));
+    let y = Math.round(space.monitor.y + space.monitor.height*2/3)
+        + 20*navigator._moving.length;
+    metaWindow.move_frame(true, x, y);
+    animateWindow(metaWindow);
+    Tweener.addTween(metaWindow.clone,
+                     {x, y,
+                      time: prefs.animation_time,
+                      transition: 'easeInOutQuad',
+                     });
 }
