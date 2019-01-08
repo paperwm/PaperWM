@@ -217,6 +217,21 @@ function warpPointer(x, y) {
     pointer.warp(Gdk.Screen.get_default(), x, y)
 }
 
+function monitorOfPoint(x, y) {
+    // get_monitor_index_for_rect "helpfully" returns the primary monitor index for out of bounds rects..
+    const Main = imports.ui.main;
+    for (let monitor of Main.layoutManager.monitors) {
+        if ((monitor.x <= x && x <= monitor.x+monitor.width) &&
+            (monitor.y <= y && y <= monitor.y+monitor.height))
+        {
+            return monitor;
+        }
+    }
+
+    return null;
+}
+
+
 class Signals extends Map {
     static get [Symbol.species]() { return Map; }
 
