@@ -192,6 +192,13 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
 
 See `examples/keybindings.js` for more examples.
 
+## Recommended extensions ##
+
+These extensions are good complements to PaperWM:
+
+- [Switcher](https://github.com/daniellandau/switcher) - combined window switcher and launcher
+- [Dash to Dock](https://micheleg.github.io/dash-to-dock/) - a great dock
+
 ## Prior work ##
 
 A similar idea was apparently tried out a while back: http://10gui.com/
