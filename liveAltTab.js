@@ -74,14 +74,19 @@ var LiveAltTab = Lang.Class({
         let from = this._switcherList.windows[this._selectedIndex];
         let to = this._switcherList.windows[num];
 
-        this.clone && this.clone.destroy();
+        if (this.last) {
+            this.last && Main.uiGroup.remove_actor(this.last.clone);
+            !to.minimized && Tiling.showWindow(this.last);
+            delete this.last;
+        }
         // Show pseudo focused scratch windows
         if (Scratch.isScratchWindow(to)) {
-            let actor = to.get_compositor_private();
-            let clone = new Clutter.Clone({source: actor});
-            clone.position = actor.position;
-            this.clone = clone;
+            this.last = to;
+            let f = to.get_frame_rect();
+            let clone = to.clone;
+            clone.set_position(f.x, f.y);
             Main.uiGroup.add_child(clone);
+            Tiling.animateWindow(to);
             // Raise the switcherpopup to the top
             Main.uiGroup.set_child_above_sibling(this.actor, clone);
         }
@@ -93,6 +98,8 @@ var LiveAltTab = Lang.Class({
     },
 
     _finish: function() {
+        this.last && Main.uiGroup.remove_actor(this.last.clone);
+        delete this.last;
         this.parent();
         this.was_accepted = true;
     },
@@ -113,7 +120,7 @@ var LiveAltTab = Lang.Class({
             // Select the starting window
             this._select(0);
         }
-        this.clone && this.clone.destroy();
+        this.last && Main.uiGroup.remove_actor(this.last.clone);
         this.parent();
     }
 })
