@@ -257,16 +257,11 @@ var StackOverlay = new Lang.Class({
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
 
-            let frame = neighbour.get_frame_rect();
-            frame.x = neighbour.clone.targetX + space.targetX;
-            let max = 75;
-            let width = frame.x;
+            let width = neighbour.clone.targetX + space.targetX - prefs.window_gap;
             if (space.isPlaceable(metaWindow))
-                width = Math.min(width, 75);
-            if (width > 75)
-                width -= prefs.window_gap;
+                width = Math.min(width, 1);
             overlay.x = this.monitor.x;
-            overlay.width = width;
+            overlay.width = Math.max(width, 1);
         } else {
             let column = space[space.indexOf(metaWindow) - 1];
             let neighbour = column && column[0];
@@ -275,11 +270,12 @@ var StackOverlay = new Lang.Class({
 
             let frame = neighbour.get_frame_rect();
             frame.x = neighbour.clone.targetX + space.targetX;
-            let width = this.monitor.width - (frame.x + frame.width);
+            let width = this.monitor.width - (frame.x + frame.width) - prefs.window_gap;
             if (space.isPlaceable(metaWindow))
-                width = Math.min(width, 75);
+                width = 1;
             if (width > 75)
                 width -= prefs.window_gap;
+            width = Math.max(width, 1);
             overlay.x = this.monitor.x + this.monitor.width - width;
             overlay.width = width;
         }
