@@ -2275,8 +2275,9 @@ function toggleMaximizeHorizontally(metaWindow) {
 
         metaWindow.unmaximizedRect = null;
     } else {
+        let x = monitor.x + minimumMargin;
         metaWindow.unmaximizedRect = frame;
-        metaWindow.move_resize_frame(true, minimumMargin, frame.y, monitor.width - minimumMargin*2, frame.height);
+        metaWindow.move_resize_frame(true, x, frame.y, monitor.width - minimumMargin*2, frame.height);
     }
 }
 
