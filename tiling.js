@@ -2210,7 +2210,8 @@ function animateWindow(metaWindow) {
 }
 
 function isWindowAnimating(metaWindow) {
-    return metaWindow.clone.actor.visible;
+    let clone = metaWindow.clone;
+    return clone.get_parent() && metaWindow.clone.actor.visible;
 }
 
 
