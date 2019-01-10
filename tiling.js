@@ -180,7 +180,9 @@ class Space extends Array {
         let oldSpace = oldSpaces.get(workspace);
         this.targetX = 0;
         if (oldSpace) {
-            monitor = Main.layoutManager.monitors[oldSpace.monitor.index];
+            let oldMonitor = Main.layoutManager.monitors[oldSpace.monitor.index];
+            if (oldMonitor)
+                monitor = oldMonitor;
         }
         this.setMonitor(monitor, false);
 
