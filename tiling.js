@@ -339,7 +339,6 @@ class Space extends Array {
         // Guard against recursively calling layout
         if (this._inLayout)
             return;
-        let start = GLib.get_monotonic_time();
         this._inLayout = true;
         this.startAnimate();
 
@@ -412,9 +411,6 @@ class Space extends Array {
                              });
             ensureViewport(this.selectedWindow, this);
         }
-
-        let stop = GLib.get_monotonic_time();
-        log(`Layout took ${((stop-start)/1000).toFixed(1)}ms`);
     }
 
     isPlaceable(metaWindow) {
