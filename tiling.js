@@ -397,7 +397,8 @@ class Space extends Array {
         }
         this._inLayout = false;
 
-        let width = Math.max(0, x - gap);
+        // transforms break on width 1
+        let width = Math.max(1, x - gap);
         this.cloneContainer.width = width;
         if (width < this.width) {
             this.targetX = Math.round((this.width - width)/2);
@@ -885,6 +886,8 @@ class Space extends Array {
         this.cloneClip.set_size(monitor.width, monitor.height);
         this.cloneClip.set_clip(-Math.round(prefs.window_gap/2), 0,
                                 monitor.width + prefs.window_gap, this.shadow.height);
+        // transforms break if there's no height
+        this.cloneContainer.height = this.monitor.height;
 
         this.layout();
         this.emit('monitor-changed');
