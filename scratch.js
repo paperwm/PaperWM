@@ -10,7 +10,11 @@ var float;
 
 
 function focusMonitor() {
-    return Main.layoutManager.monitors[global.display.focus_window.get_monitor()]
+    if (global.display.focus_window) {
+        return Main.layoutManager.monitors[global.display.focus_window.get_monitor()]
+    } else {
+        return Main.layoutManager.primaryMonitor;
+    }
 }
 
 function makeScratch(metaWindow) {
