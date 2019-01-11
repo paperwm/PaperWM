@@ -1863,19 +1863,25 @@ function insertWindow(metaWindow, {existing}) {
         return;
     }
 
+    let clone = metaWindow.clone;
+    let ok, x, y;
+    // Figure out the matching coordinates before the clone is reparented.
+    if (isWindowAnimating(metaWindow)) {
+        let point = clone.apply_transform_to_point(new Clutter.Vertex({x: 0, y: 0}));
+        [ok, x, y] = space.cloneContainer.transform_stage_point(point.x, point.y);
+    } else {
+        let frame = metaWindow.get_frame_rect();
+        [ok, x, y] = space.cloneContainer.transform_stage_point(frame.x, frame.y);
+    }
+
     let index = -1; // (-1 -> at beginning)
     if (space.selectedWindow) {
         index = space.indexOf(space.selectedWindow);
     }
     index++;
-
-    let clone = metaWindow.clone;
-    let frame = metaWindow.get_frame_rect();
-    let [ok, x, y] = space.cloneContainer.transform_stage_point(frame.x, frame.y);
-    clone.set_position(x, y);
-
     if (!space.addWindow(metaWindow, index))
         return;
+    ok && clone.set_position(x, y);
 
     metaWindow.unmake_above();
     if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
@@ -2222,7 +2228,8 @@ function animateWindow(metaWindow) {
 }
 
 function isWindowAnimating(metaWindow) {
-    return metaWindow.clone.actor.visible;
+    let clone = metaWindow.clone;
+    return clone.get_parent() && clone.actor.visible;
 }
 
 
