@@ -2566,7 +2566,7 @@ function takeWindow(metaWindow, space, {navigator}) {
     if (!space.removeWindow(metaWindow))
         return;
 
-    if (!navigator._movingId) {
+    if (!navigator._moving) {
         navigator._moving = [];
         let id = navigator.connect('destroy', () => {
             navigator.disconnect(id);
