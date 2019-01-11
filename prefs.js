@@ -242,7 +242,7 @@ class SettingsWidget {
 
         nameEntry.set_text(this.getWorkspaceName(settings, index));
 
-        let workspace_combo = this.builder.get_object('worskpace_combo_text');
+        let workspace_combo = this.builder.get_object('workspace_combo_text');
 
         nameEntry.connect('changed', () => {
             let active = workspace_combo.get_active();
