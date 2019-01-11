@@ -190,9 +190,9 @@ var StackOverlay = new Lang.Class({
             let [x, y, mask] = global.get_pointer();
             let actor = this.target.get_compositor_private();
             let clone = new Clutter.Clone({source: actor});
-            let space = Tiling.spaces.spaceOfWindow(this.target);
             // Remove any window clips, and show the metaWindow.clone's
-            space.startAnimate();
+            actor.remove_clip();
+            Tiling.animateWindow(this.target);
 
             this.clone = clone;
             clone.set_scale(0.15, 0.15);
