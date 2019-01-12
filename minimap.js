@@ -218,12 +218,15 @@ class Minimap extends Array {
 
     select() {
         let position = this.space.positionOf();
-        if (!position)
+        let highlight = this.highlight;
+        if (!position) {
+            this.highlight.hide();
             return;
+        }
+        highlight.show();
         let [index, row] = position;
         let clip = this.clip;
         let container = this.container;
-        let highlight = this.highlight;
         let label = this.label;
         let selected = this[index][row];
         if (!selected)
