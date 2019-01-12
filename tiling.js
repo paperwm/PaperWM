@@ -1875,6 +1875,9 @@ function insertWindow(metaWindow, {existing}) {
         return;
     }
 
+    if (space.indexOf(metaWindow) !== -1)
+        return;
+
     let clone = metaWindow.clone;
     let ok, x, y;
     // Figure out the matching coordinates before the clone is reparented.
@@ -1885,6 +1888,7 @@ function insertWindow(metaWindow, {existing}) {
         let frame = metaWindow.get_frame_rect();
         [ok, x, y] = space.cloneContainer.transform_stage_point(frame.x, frame.y);
     }
+    ok && clone.set_position(x, y);
 
     let index = -1; // (-1 -> at beginning)
     if (space.selectedWindow) {
@@ -1893,7 +1897,6 @@ function insertWindow(metaWindow, {existing}) {
     index++;
     if (!space.addWindow(metaWindow, index))
         return;
-    ok && clone.set_position(x, y);
 
     metaWindow.unmake_above();
     if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
