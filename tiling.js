@@ -492,7 +492,7 @@ class Space extends Array {
             let windows = this.getWindows();
             let i = windows.indexOf(metaWindow);
             let neighbours = [windows[i - 1], windows[i + 1]].filter(w => w);
-            let stack = display.sort_windows_by_stacking(neighbours);
+            let stack = sortWindows(this, neighbours);
             selected = stack[stack.length - 1];
         }
 
@@ -624,7 +624,7 @@ class Space extends Array {
 
         if (row === -1) {
             let selected =
-                display.sort_windows_by_stacking(column)[column.length - 1];
+                sortWindows(this, column)[column.length - 1];
             row = column.indexOf(selected);
         }
 
@@ -2170,7 +2170,7 @@ function focus_handler(metaWindow, user_data) {
        We need to stack windows in mru order, since mutter picks from the
        stack, not the mru, when auto choosing focus after closing a window.
     */
-    let stack = display.sort_windows_by_stacking(neighbours);
+    let stack = sortWindows(space, neighbours);
     stack.forEach(w => w.raise());
     metaWindow.raise();
 
@@ -2624,4 +2624,17 @@ function takeWindow(metaWindow, space, {navigator}) {
                       time: prefs.animation_time,
                       transition: 'easeInOutQuad',
                      });
+}
+
+/**
+   Sort the @windows based on their clone's stacking order
+   in @space.cloneContainer.
+ */
+function sortWindows(space, windows) {
+    if (windows.length === 1)
+        return windows;
+    let clones = windows.map(w => w.clone);
+    return space.cloneContainer.get_children()
+        .filter(c => clones.includes(c))
+        .map(c => c.meta_window);
 }
