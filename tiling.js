@@ -1618,16 +1618,16 @@ function registerWindow(metaWindow) {
     }
 
     let actor = metaWindow.get_compositor_private();
-    let clone = new Clutter.Clone({source: actor});
-    let container = new Clutter.Actor();
+    let cloneActor = new Clutter.Clone({source: actor});
+    let clone = new Clutter.Actor();
     signals.connect(actor, "notify::allocation", allocateClone);
 
-    container.add_actor(clone);
-    container.targetX = 0;
+    clone.add_actor(cloneActor);
+    clone.targetX = 0;
     clone.meta_window = metaWindow;
 
-    metaWindow.clone = container;
-    metaWindow.clone.actor = clone;
+    metaWindow.clone = clone;
+    metaWindow.clone.actor = cloneActor;
 
     signals.connect(metaWindow, "focus", focus_wrapper);
     signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
