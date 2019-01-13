@@ -539,7 +539,7 @@ class Space extends Array {
         let i = this._floating.indexOf(metaWindow);
         if (i === -1)
             return false;
-        this._floating.splice(i, 0);
+        this._floating.splice(i, 1);
         this.actor.remove_actor(metaWindow.clone);
         return true;
     }
