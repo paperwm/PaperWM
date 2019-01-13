@@ -173,13 +173,10 @@ var StackOverlay = new Lang.Class({
         overlay.height = this.monitor.height - panelBox.height - prefs.vertical_margin;
         overlay.width = Tiling.stack_margin;
 
-        this.pressId = overlay.connect('button-press-event', () => {
+        this.pressId = overlay.connect('button-release-event', () => {
             Main.activateWindow(this.target);
             if (this.clone)
                 this.clone.destroy();
-            return true;
-        });
-        this.releaseId = overlay.connect('button-release-event', () => {
             return true;
         });
 
