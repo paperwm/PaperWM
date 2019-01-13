@@ -34,6 +34,20 @@ let getWorkspaceSettings = Settings.getWorkspaceSettings;
 let getNewWorkspaceSettings = Settings.getNewWorkspaceSettings;
 let getWorkspaceSettingsByUUID = Settings.getWorkspaceSettingsByUUID;
 
+function range(n) {
+    let r = [];
+    for (let i = 0; i < n; i++)
+        r.push(i);
+    return r;
+}
+
+function swapArrayElements(array, i, j) {
+    let iVal = array[i];
+    array[i] = array[j];
+    array[j] = iVal;
+    return array;
+}
+
 function ok(okValue) {
     if(okValue[0]) {
         return okValue[1]
@@ -43,7 +57,11 @@ function ok(okValue) {
 }
 
 class SettingsWidget {
-    constructor() {
+    /**
+       selectedWorkspace: index of initially selected workspace in workspace settings tab
+       selectedTab: index of initially shown tab
+     */
+    constructor(selectedTab=0, selectedWorkspace=0 ) {
         this._settings = Convenience.getSettings();
 
         this.builder = new Gtk.Builder();
@@ -51,6 +69,7 @@ class SettingsWidget {
 
         this.widget = new Gtk.ScrolledWindow({ hscrollbar_policy: Gtk.PolicyType.NEVER });
         this._notebook = this.builder.get_object('paperwm_settings');
+        this._notebook.page = selectedTab;
         this.widget.add(this._notebook);
 
         // General
@@ -123,12 +142,23 @@ class SettingsWidget {
         const nWorkspaces = wmSettings.get_int('num-workspaces');
         this.workspaceNames = wmSettings.get_strv('workspace-names');
 
-        for (let i=0; i < nWorkspaces; i++) {
-            let [uuid, settings] = getWorkspaceSettings(i);
-            let view = this.createWorkspacePage(settings, i);
+        // Note: For some reason we can't set the visible child of the workspace
+        //       stack at construction time.. (!)
+        //       Ensure the initially selected workspace is added to the stack
+        //       first as a workaround.
+        let wsIndices = range(nWorkspaces);
+        let wsSettingsByIndex = wsIndices.map(i => getWorkspaceSettings(i)[1]);
+        let wsIndicesSelectedFirst =
+            swapArrayElements(wsIndices.slice(), 0, selectedWorkspace);
 
+        for (let i of wsIndicesSelectedFirst) {
+            let view = this.createWorkspacePage(wsSettingsByIndex[i], i);
             workspaceStack.add_named(view, i.toString());
-            let name = this.getWorkspaceName(settings, i);
+        }
+
+        for (let i of wsIndices) {
+            // Combo box entries in normal workspace index order
+            let name = this.getWorkspaceName(wsSettingsByIndex[i], i);
             workspaceCombo.append_text(name);
         }
 
@@ -137,12 +167,10 @@ class SettingsWidget {
                 return;
 
             let active = workspaceCombo.get_active();
-            let page = workspaceStack.get_child_by_name(active.toString());
-            workspaceStack.set_visible_child(page);
+            workspaceStack.set_visible_child_name(active.toString());
         });
 
-        workspaceCombo.set_active(0);
-
+        workspaceCombo.set_active(selectedWorkspace);
 
         // Keybindings
 
@@ -614,7 +642,12 @@ function init() {
 }
 
 function buildPrefsWidget() {
-    let settings = new SettingsWidget();
+    let selectedWorkspace = GLib.getenv("PAPERWM_PREFS_SELECTED_WORKSPACE");
+    let selectedTab = 0;
+    if (selectedWorkspace) {
+        selectedTab = 1;
+    }
+    let settings = new SettingsWidget(selectedTab, selectedWorkspace || 0);
     let widget = settings.widget;
     widget.show_all();
     return widget;
