@@ -589,7 +589,7 @@ function annotateKeybindings(model, settings) {
 
         let accels = settings.get_strv(id);
         let index = model.get_value(iter, COLUMN_INDEX);
-        if (index === -1)
+        if (index === -1 || accels.length === 0)
             return;
         let combo = Settings.keystrToKeycombo(accels[index]);
 
