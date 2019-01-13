@@ -306,7 +306,7 @@ class SettingsWidget {
         if (name === '')
             name = this.workspaceNames[index];
         if (name === undefined)
-            name = `Workspace ${index}`;
+            name = `Workspace ${index + 1}`;
         return name;
     }
 
