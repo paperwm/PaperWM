@@ -200,17 +200,19 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         let type = event.type();
 
-        if ((type == Clutter.EventType.TOUCH_BEGIN ||
-             type == Clutter.EventType.BUTTON_PRESS)) {
+        if ((type == Clutter.EventType.TOUCH_END ||
+             type == Clutter.EventType.BUTTON_RELEASE)) {
             if (['SCROLL', 'SMOOTH'].includes(this.state)) {
                 this._navigator.finish();
             } else {
-                if (event.get_button() === Clutter.BUTTON_SECONDARY) {
+                if (this.menu.isOpen) {
                     this.menu.toggle();
-                    this.state = this.menu.isOpen ? "MENU" : "NORMAL";
+                } else if (event.get_button() === Clutter.BUTTON_SECONDARY) {
+                    this.menu.toggle();
                 } else {
                     Main.overview.toggle();
                 }
+                this.state = this.menu.isOpen ? "MENU" : "NORMAL";
             }
             return Clutter.EVENT_PROPAGATE;
         }
