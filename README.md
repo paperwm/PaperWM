@@ -109,12 +109,13 @@ When the tiling is active <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> selects
 
 <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Escape</kbd> will move a tiled window into the scratch layer or alternatively tile an already floating window. This functionality can also be accessed through the window context menu (<kbd>Alt</kbd><kbd>Space</kbd>).
 
-| Keybindings                                      |                                                       |
-| ------                                           | -------                                               |
-| <kbd>Super</kbd><kbd>Escape</kbd>                | Toggle between showing and hiding the scratch windows |
-| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Escape</kbd> | Toggle between floating and tiling the current window |
-| <kbd>Super</kbd><kbd>Tab</kbd>                   | Cycle through the most recently used scratch windows  |
-| <kbd>Super</kbd><kbd>H</kbd>                     | Minimize the current window                           |
+| Keybindings                                       |                                                                  |
+| ------                                            | -------                                                          |
+| <kbd>Super</kbd><kbd>Escape</kbd>                 | Toggle between showing and hiding the most recent scratch window |
+| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Escape</kbd> | Toggle between showing and hiding the scratch windows            |
+| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Escape</kbd>  | Toggle between floating and tiling the current window            |
+| <kbd>Super</kbd><kbd>Tab</kbd>                    | Cycle through the most recently used scratch windows             |
+| <kbd>Super</kbd><kbd>H</kbd>                      | Minimize the current window                                      |
 
 ## Development & user configuration ##
 

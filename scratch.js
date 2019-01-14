@@ -69,11 +69,20 @@ function toggleScratch() {
         show();
 }
 
-function show() {
+function toggleScratchWindow() {
+    if (isScratchActive())
+        hide();
+    else
+        show(true);
+}
+
+function show(top) {
     let windows = getScratchWindows();
     if (windows.length === 0) {
         return;
     }
+    if (top)
+        windows = windows.slice(0,1);
 
     TopBar.show();
 

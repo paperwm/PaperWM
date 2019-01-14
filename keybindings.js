@@ -102,6 +102,10 @@ function init() {
     registerMinimapAction("move-down",
                         (mw, space) => space.swap(Meta.MotionDirection.DOWN));
 
+    registerPaperAction("toggle-scratch-window",
+                        dynamic_function_ref("toggleScratchWindow",
+                                             Scratch));
+
     registerPaperAction("toggle-scratch-layer",
                         dynamic_function_ref("toggleScratch",
                                              Scratch));

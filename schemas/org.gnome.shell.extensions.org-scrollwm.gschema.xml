@@ -37,9 +37,14 @@
       <summary>Move the active window to the previously active workspace, backward order</summary>
     </key>
 
-    <key type="as" name="toggle-scratch-layer">
+    <key type="as" name="toggle-scratch-window">
       <default><![CDATA[['<Super>Escape']]]></default>
-      <summary>Toggles the floating scratch layer</summary>
+      <summary>Toggle the most recent scratch window</summary>
+    </key>
+
+    <key type="as" name="toggle-scratch-layer">
+        <default><![CDATA[['<Super><Shift>Escape']]]></default>
+        <summary>Toggles the floating scratch layer</summary>
     </key>
 
     <key type="as" name="toggle-scratch">
