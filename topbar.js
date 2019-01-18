@@ -145,20 +145,12 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.contentBox.add_actor(this.colors.actor);
         this.menu.box.add_actor(this.contentBox);
 
-
-        const Shell = imports.gi.Shell;
-        let app = this._settingsApp = Shell.AppSystem.get_default().lookup_app(
-            'gnome-control-center.desktop'
-        );
-
-        let [iconName, name] = [app.app_info.get_icon().names[0],
-                            app.get_name()];
         this.prefsIcon = new St.Button({ reactive: true,
-                                   can_focus: true,
-                                   track_hover: true,
-                                   accessible_name: name,
-                                   style_class: 'system-menu-action' });
-        this.prefsIcon.child = new St.Icon({ icon_name: iconName });
+                                         can_focus: true,
+                                         track_hover: true,
+                                         accessible_name: 'workspace preference',
+                                         style_class: 'system-menu-action' });
+        this.prefsIcon.child = new St.Icon({ icon_name: 'gtk-preferences' });
 
         this.prefsIcon.connect('clicked', () => {
             this.menu.close(true);
