@@ -1,4 +1,4 @@
 gschemas.compiled: phony
-	glib-compile-schemas .
+	glib-compile-schemas src/schemas
 
 .PHONY: phony
