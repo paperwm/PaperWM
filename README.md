@@ -4,19 +4,33 @@
 
 PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension providing scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
+Supports Gnome Shell 3.28 and 3.30 on X11 and wayland.
+
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
 We hang out on [zulip](https://paperwm.zulipchat.com).
 
 ## Installation
 
-Clone the repo and run the `install.sh` script from the directory:
+Clone the repo and run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script from the directory. The installer will link the repo to `$XDG_DATA_HOME/gnome-shell/extensionspaperwm@hedning:matrix.org/` where gnome-shell can find it.
 ```bash
 ./install.sh
 ```
-It will link the repo to `~/.local/share/gnome-shell/extensions/` where gnome-shell can find it. You can then enable the extension in Gnome Tweaks. Running the extension will automatic install of a user config file as described in [Development & user configuration](#development--user-configuration).
 
-Optionally run `set-recommended-gnome-shell-settings.sh`. A "restore previous settings" script is generated so the original settings is not lost.
+Cloning the repo directly into `$XDG_DATA_HOME` also works:
+```bash
+git clone 'https://github.com/paperwm/PaperWM.git' \
+    "${XDG_DATA_HOME:-~/.local/share}/gnome-shell/extensions/paperwm@hedning:matrix.org"
+```
+
+You can then enable the extension in Gnome Tweaks, or enable if from the command line:
+```bash
+gnome-shell-extension-tool -e paperwm@hedning:matrix.org
+```
+
+There's a few Gnome Shell settings which works poorly with PaperWM. To use the recommended settings run [`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
+
+Running the extension will automatic install a user config file as described in [Development & user configuration](#development--user-configuration).
 
 ## Usage ##
 
