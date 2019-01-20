@@ -174,3 +174,48 @@ function findConflicts(schemas) {
     }
     return conflicts;
 }
+
+
+/// Winprops
+
+/**
+   Modelled after notion/ion3's system
+
+   Examples:
+
+   defwinprop({
+     wm_class: "Riot",
+     scratch_layer: true
+   })
+*/
+var winprops = [];
+
+function winprop_match_p(meta_window, prop) {
+    let wm_class = meta_window.wm_class || "";
+    let title = meta_window.title;
+    if (prop.wm_class !== wm_class) {
+        return false;
+    }
+    if (prop.title) {
+        if (prop.title.constructor === RegExp) {
+            if (!title.match(prop.title))
+                return false;
+        } else {
+            if (prop.title !== title)
+                return false;
+        }
+    }
+
+    return true;
+}
+
+function find_winprop(meta_window)  {
+    let props = winprops.filter(
+        winprop_match_p.bind(null, meta_window));
+
+    return props[0];
+}
+
+function defwinprop(spec) {
+    winprops.push(spec);
+}

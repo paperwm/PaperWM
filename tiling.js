@@ -1837,10 +1837,10 @@ function insertWindow(metaWindow, {existing}) {
         let scratchIsFocused = Scratch.isScratchWindow(focusWindow);
         let addToScratch = scratchIsFocused;
 
-        let winprop = find_winprop(metaWindow);
+        let winprop = Settings.find_winprop(metaWindow);
         if (winprop) {
             if (winprop.oneshot) {
-                winprops.splice(winprops.indexOf(winprop), 1);
+                Settings.winprops.splice(Settings.winprops.indexOf(winprop), 1);
             }
             if (winprop.scratch_layer) {
                 debug("#winprops", `Move ${metaWindow.title} to scratch`);
@@ -2242,50 +2242,6 @@ function isWindowAnimating(metaWindow) {
     return clone.get_parent() && clone.actor.visible;
 }
 
-
-/**
-  Modelled after notion/ion3's system
-
-  Examples:
-
-    defwinprop({
-        wm_class: "Riot",
-        scratch_layer: true
-    })
-*/
-var winprops = [];
-
-function winprop_match_p(meta_window, prop) {
-    let wm_class = meta_window.wm_class || "";
-    let title = meta_window.title;
-    if (prop.wm_class !== wm_class) {
-        return false;
-    }
-    if (prop.title) {
-        if (prop.title.constructor === RegExp) {
-            if (!title.match(prop.title))
-                return false;
-        } else {
-            if (prop.title !== title)
-                return false;
-        }
-    }
-
-    return true;
-}
-
-function find_winprop(meta_window)  {
-    let props = winprops.filter(
-        winprop_match_p.bind(null, meta_window));
-
-    return props[0];
-}
-
-function defwinprop(spec) {
-    winprops.push(spec);
-}
-
-
 function toggleMaximizeHorizontally(metaWindow) {
     metaWindow = metaWindow || display.focus_window;
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
@@ -2632,4 +2588,10 @@ function sortWindows(space, windows) {
     return space.cloneContainer.get_children()
         .filter(c => clones.includes(c))
         .map(c => c.meta_window);
+}
+
+
+// Backward compatibility
+function defwinprop(...args) {
+    return Settings.defwinprop(...args);
 }
