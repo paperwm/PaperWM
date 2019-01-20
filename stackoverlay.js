@@ -248,13 +248,16 @@ var StackOverlay = new Lang.Class({
 
         overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + prefs.vertical_margin;
 
+        // Assume the resize edge is at least this big (empirically found..)
+        const minResizeEdge = 8;
+
         if (this._direction === Meta.MotionDirection.LEFT) {
             let column = space[space.indexOf(metaWindow) + 1];
             let neighbour = column && column[0];
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
 
-            let width = neighbour.clone.targetX + space.targetX - prefs.window_gap;
+            let width = neighbour.clone.targetX + space.targetX - minResizeEdge;
             if (space.isPlaceable(metaWindow))
                 width = Math.min(width, 1);
             overlay.x = this.monitor.x;
@@ -267,7 +270,7 @@ var StackOverlay = new Lang.Class({
 
             let frame = neighbour.get_frame_rect();
             frame.x = neighbour.clone.targetX + space.targetX;
-            let width = this.monitor.width - (frame.x + frame.width) - prefs.window_gap;
+            let width = this.monitor.width - (frame.x + frame.width) - minResizeEdge;
             if (space.isPlaceable(metaWindow))
                 width = 1;
             width = Math.max(width, 1);
