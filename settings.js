@@ -65,6 +65,14 @@ function init() {
     settings.connect('changed::workspace-colors', setState);
     settings.connect('changed::default-background', setState);
     settings.connect('changed::animation-time', setState);
+
+    // A intermediate window is created before the prefs dialog is created.
+    // Prevent it from being inserted into the tiling causing flickering and general disorder
+    defwinprop({
+        wm_class: "Gnome-shell-extension-prefs",
+        scratch_layer: true,
+        focus: true,
+    });
 }
 
 var id;
