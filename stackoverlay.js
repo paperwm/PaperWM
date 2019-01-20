@@ -270,8 +270,6 @@ var StackOverlay = new Lang.Class({
             let width = this.monitor.width - (frame.x + frame.width) - prefs.window_gap;
             if (space.isPlaceable(metaWindow))
                 width = 1;
-            if (width > 75)
-                width -= prefs.window_gap;
             width = Math.max(width, 1);
             overlay.x = this.monitor.x + this.monitor.width - width;
             overlay.width = width;
