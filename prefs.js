@@ -338,13 +338,14 @@ function createKeybindingWidget(settings, searchEntry) {
         (model, iter) => {
             let desc = model.get_value(iter, COLUMN_DESCRIPTION);
 
-            if(ok(model.iter_parent(iter))) {
+            if(ok(model.iter_parent(iter)) || desc === null) {
                 return true;
             }
 
-            let query = searchEntry.get_chars(0, -1).toLowerCase();
-
-            return desc === null || desc.toLowerCase().indexOf(query) > -1;
+            let query = searchEntry.get_chars(0, -1).toLowerCase().split(" ");
+            let descLc = desc.toLowerCase();
+            
+            return query.every(word => descLc.indexOf(word) > -1);
         }
     );
 
