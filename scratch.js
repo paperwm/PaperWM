@@ -21,7 +21,9 @@ function makeScratch(metaWindow) {
     metaWindow[float] = true;
     metaWindow.make_above();
     metaWindow.stick();
-    Tiling.showWindow(metaWindow);
+
+    if (!metaWindow.minimized)
+        Tiling.showWindow(metaWindow);
 
     let monitor = focusMonitor();
     if (monitor.clickOverlay)

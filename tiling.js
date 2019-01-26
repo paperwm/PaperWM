@@ -1702,11 +1702,6 @@ function enable() {
             s.selectedWindow && ensureViewport(s.selectedWindow, s, true);
             s.monitor.clickOverlay.show();
         });
-
-        if (!Scratch.isScratchActive()) {
-            Scratch.getScratchWindows().forEach(
-                w => w.get_compositor_private().hide());
-        }
     }
 
     if (Main.layoutManager._startingUp) {
@@ -2525,7 +2520,7 @@ function slurp(metaWindow) {
     }
 
     space[to].push(metaWindowToSlurp)
-    
+
     { // Remove the slurped window
         let column = space[from];
         let row = column.indexOf(metaWindowToSlurp);
