@@ -145,6 +145,9 @@ class ClickOverlay {
             if (overlay.clone)
                 overlay.clone.destroy();
             actor.destroy();
+            overlay.pressureBarrier.removeBarrier(overlay.barrier);
+            overlay.barrier.destroy();
+            overlay.pressureBarrier.destroy();
         }
         this.signals.destroy();
         this.enterMonitor.destroy();
@@ -213,6 +216,30 @@ var StackOverlay = new Lang.Class({
             space.moveDone();
         });
 
+        const Layout = imports.ui.layout;
+        this.pressureBarrier = new Layout.PressureBarrier(100, 0.25*1000, Shell.ActionMode.NORMAL);
+        // Show the overlay on fullscreen windows when applying pressure to the edge
+        // The above leave-event handler will take care of hiding the overlay
+        this.pressureBarrier.connect('trigger', () => overlay.show() );
+
+        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        let x1, directions;
+        if (this._direction === Meta.MotionDirection.LEFT) {
+            x1 = monitor.x,
+            directions = Meta.BarrierDirection.POSITIVE_X;
+        } else {
+            x1 = monitor.x + monitor.width - 1,
+            directions = Meta.BarrierDirection.NEGATIVE_X;
+        }
+        this.barrier = new Meta.Barrier({
+            display: global.display,
+            x1, x2: x1,
+            y1: workArea.y + 1,
+            y2: workArea.y + workArea.height - 1,
+            directions
+        });
+        this.pressureBarrier.addBarrier(this.barrier);
+
         Main.uiGroup.add_child(overlay);
         Main.layoutManager.trackChrome(overlay);
 
@@ -277,6 +304,11 @@ var StackOverlay = new Lang.Class({
             overlay.x = this.monitor.x + this.monitor.width - width;
             overlay.width = width;
         }
+
+        if (space.selectedWindow.fullscreen)
+            overlay.hide();
+        else
+            overlay.show();
 
         return true;
     },
