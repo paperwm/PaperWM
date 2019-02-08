@@ -370,11 +370,12 @@ class WorkspaceMenu extends PanelMenu.Button {
 
 var menu;
 var orginalActivitiesText;
-var screenSignals;
+var screenSignals, signals;
 function init () {
     let label = Main.panel.statusArea.activities.actor.first_child;
     orginalActivitiesText = label.text;
     screenSignals = [];
+    signals = new Utils.Signals();
 }
 
 var panelBoxShowId, panelBoxHideId;
@@ -382,12 +383,18 @@ function enable () {
     Main.panel.statusArea.activities.actor.hide();
 
     menu = new WorkspaceMenu();
+    signals.connect(menu._label, 'notify::allocation', (label) => {
+        let point = new Clutter.Vertex({x: label.x, y: label.y});
+        let r = label.get_parent()
+            .apply_relative_transform_to_point(Main.panel.actor, point);
+
+        for (let [workspace, space] of Tiling.spaces) {
+            space.label.set_position(Math.round(r.x), Math.round(r.y));
+            space.label.show();
+        }
+    });
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.actor.show();
-    let id = panelBox.connect('parent-set', (actor) => {
-        actor.disconnect(id);
-        updateWorkspaceIndicator(global.workspaceManager.get_active_workspace());
-    });
 
     // Force transparency
     Main.panel.actor.set_style('background-color: rgba(0, 0, 0, 0.35);');
@@ -400,8 +407,8 @@ function enable () {
                                         updateWorkspaceIndicator(to);
                                     }));
 
-    panelBoxShowId =  panelBox.connect('show', show);
-    panelBoxHideId = panelBox.connect('hide', () => {
+    signals.connect(panelBox, 'show', show);
+    signals.connect(panelBox, 'hide', () => {
         if (display.focus_window.fullscreen) {
             hide();
         } else {
@@ -411,6 +418,7 @@ function enable () {
 }
 
 function disable() {
+    signals.destroy();
     menu.destroy();
     Main.panel.statusArea.activities.actor.show();
     Main.panel.actor.set_style('');
@@ -421,8 +429,6 @@ function disable() {
     screenSignals = [];
 
     panelBox.scale_y = 1;
-    panelBox.disconnect(panelBoxShowId);
-    panelBox.disconnect(panelBoxHideId);
 }
 
 function show() {
@@ -457,28 +463,6 @@ function updateWorkspaceIndicator (index) {
     let space = Tiling.spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
     setWorkspaceName(space.name);
 };
-
-function updateIndicatorPosition(workspace) {
-    if (!menu || !Tiling.spaces)
-        return;
-    let space = Tiling.spaces.spaceOf(workspace);
-    if (!space)
-        return;
-    if (!menu._label)
-        return;
-    space.label.show();
-    let p = menu._label.get_position();
-    let point = new Clutter.Vertex({
-        x: p[0],
-        y: p[1]
-    });
-    if (!menu._label || !menu._label.get_parent())
-        return;
-    let r = menu._label.get_parent().apply_relative_transform_to_point(Main.panel.actor,
-                                                          point);
-
-    space.label.set_position(r.x, r.y);
-}
 
 function setWorkspaceName (name) {
     if (!menu)

@@ -1324,7 +1324,6 @@ class Spaces extends Map {
 
         let cloneParent = space.clip.get_parent();
         mru.forEach((space, i) => {
-            TopBar.updateIndicatorPosition(space.workspace);
             space.clip.set_position(monitor.x, monitor.y);
             space.startAnimate();
 
