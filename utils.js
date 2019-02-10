@@ -190,22 +190,6 @@ function zip(...as) {
     return r;
 }
 
-function isOverrideRedirectWindow(metaWindow) {
-    // https://gitlab.gnome.org/GNOME/mutter/blob/master/src/core/window.c#L2246 (override redirect types:)
-    switch(metaWindow.window_type) {
-    case Meta.WindowType.DROPDOWN_MENU:
-    case Meta.WindowType.POPUP_MENU:
-    case Meta.WindowType.TOOLTIP:
-    case Meta.WindowType.NOTIFICATION:
-    case Meta.WindowType.COMBO:
-    case Meta.WindowType.DND:
-    case Meta.WindowType.OVERRIDE_OTHER:
-        return true;
-    default:
-        return false;
-    }
-}
-
 function warpPointer(x, y) {
     let display = Gdk.Display.get_default();
     let deviceManager = display.get_device_manager();

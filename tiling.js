@@ -1612,7 +1612,7 @@ class Spaces extends Map {
 Signals.addSignalMethods(Spaces.prototype);
 
 function registerWindow(metaWindow) {
-    if (utils.isOverrideRedirectWindow(metaWindow)) {
+    if (metaWindow.is_override_redirect()) {
         return false;
     }
 
