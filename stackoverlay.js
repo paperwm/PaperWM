@@ -252,12 +252,13 @@ var StackOverlay = new Lang.Class({
 
         const overlay = this.overlay;
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        let monitor = this.monitor;
         let x1, directions;
         if (this._direction === Meta.MotionDirection.LEFT) {
-            x1 = workArea.x,
+            x1 = monitor.x,
             directions = Meta.BarrierDirection.POSITIVE_X;
         } else {
-            x1 = workArea.x + workArea.width - 1,
+            x1 = monitor.x + monitor.width - 1,
             directions = Meta.BarrierDirection.NEGATIVE_X;
         }
         this.barrier = new Meta.Barrier({
