@@ -425,7 +425,7 @@ class Space extends Array {
             return false;
         } else {
             // Fullscreen windows are only placeable on the monitor origin
-            if ((metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH && x !== workArea.x - this.monitor.x) ||
+            if ((metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH && x !== workArea.x) ||
                 (metaWindow.fullscreen && x !== 0)) {
                 return false;
             }
