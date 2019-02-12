@@ -416,14 +416,15 @@ class Space extends Array {
     isPlaceable(metaWindow) {
         let clone = metaWindow.clone;
         let x = clone.targetX + this.targetX;
+        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
 
-        if (x + clone.width < stack_margin
-            || x > this.width - stack_margin) {
+        if (x + clone.width < workArea.x + stack_margin
+            || x > workArea.x + workArea.width - stack_margin) {
             return false;
         } else {
             // Fullscreen windows are only placeable on the monitor origin
-            if ((metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH ||
-                 metaWindow.fullscreen) && x !== 0) {
+            if ((metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH && x !== workArea.x - this.monitor.x) ||
+                (metaWindow.fullscreen && x !== 0)) {
                 return false;
             }
             return true;
