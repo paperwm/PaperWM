@@ -346,7 +346,9 @@ class Space extends Array {
         let gap = prefs.window_gap;
         let x = 0;
         let selectedIndex = this.selectedIndex();
-        let availableHeight = (this.height - panelBox.height - prefs.vertical_margin)
+        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        let availableHeight = (workArea.y - this.monitor.y + workArea.height -
+                               panelBox.height - prefs.vertical_margin);
         let y0 = panelBox.height + prefs.vertical_margin;
         let fixPointAttempCount = 0;
 
@@ -399,7 +401,6 @@ class Space extends Array {
         // transforms break on width 1
         let width = Math.max(1, x - gap);
         this.cloneContainer.width = width;
-        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
         if (width < workArea.width) {
             this.targetX = workArea.x - this.monitor.x + Math.round((workArea.width - width)/2);
         }
