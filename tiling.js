@@ -418,6 +418,7 @@ class Space extends Array {
         let clone = metaWindow.clone;
         let x = clone.targetX + this.targetX;
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        workArea.x -= this.monitor.x;
 
         if (x + clone.width < workArea.x + stack_margin
             || x > workArea.x + workArea.width - stack_margin) {
