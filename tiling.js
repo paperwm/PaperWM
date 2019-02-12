@@ -346,7 +346,9 @@ class Space extends Array {
         let gap = prefs.window_gap;
         let x = 0;
         let selectedIndex = this.selectedIndex();
-        let availableHeight = (this.height - panelBox.height - prefs.vertical_margin)
+        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        let availableHeight = (workArea.y - this.monitor.y + workArea.height -
+                               panelBox.height - prefs.vertical_margin);
         let y0 = panelBox.height + prefs.vertical_margin;
         let fixPointAttempCount = 0;
 
@@ -365,7 +367,7 @@ class Space extends Array {
             } else {
                 targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
             }
-            targetWidth = Math.min(targetWidth, this.width - 2*minimumMargin);
+            targetWidth = Math.min(targetWidth, workArea.width - 2*minimumMargin);
 
             let resultingWidth, relayout;
             if (inGrab && i === selectedIndex) {
@@ -399,8 +401,8 @@ class Space extends Array {
         // transforms break on width 1
         let width = Math.max(1, x - gap);
         this.cloneContainer.width = width;
-        if (width < this.width) {
-            this.targetX = Math.round((this.width - width)/2);
+        if (width < workArea.width) {
+            this.targetX = workArea.x - this.monitor.x + Math.round((workArea.width - width)/2);
         }
         if (animate) {
             Tweener.addTween(this.cloneContainer,
@@ -416,14 +418,16 @@ class Space extends Array {
     isPlaceable(metaWindow) {
         let clone = metaWindow.clone;
         let x = clone.targetX + this.targetX;
+        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        let min = workArea.x - this.monitor.x;
 
-        if (x + clone.width < stack_margin
-            || x > this.width - stack_margin) {
+        if (x + clone.width < min + stack_margin
+            || x > min + workArea.width - stack_margin) {
             return false;
         } else {
             // Fullscreen windows are only placeable on the monitor origin
-            if ((metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH ||
-                 metaWindow.fullscreen) && x !== 0) {
+            if ((metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH && x !== min) ||
+                (metaWindow.fullscreen && x !== 0)) {
                 return false;
             }
             return true;
@@ -1964,29 +1968,34 @@ function ensureViewport(meta_window, space, force) {
     let x = Math.round(clone.targetX) + space.targetX;
     let y = panelBox.height + prefs.vertical_margin;
     let gap = prefs.window_gap;
-    if (index == 0 && x <= 0) {
-        // Always align the first window to the display's left edge
+    let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
+    let min = workArea.x - monitor.x;
+    let max = min + workArea.width;
+    if (meta_window.fullscreen) {
         x = 0;
-    } else if (index == space.length-1 && x + frame.width >= space.width) {
+    } else if (index == 0 && x <= min) {
+        // Always align the first window to the display's left edge
+        x = min;
+    } else if (index == space.length-1 && x + frame.width >= max) {
         // Always align the first window to the display's right edge
-        x = space.width - frame.width;
-    } else if (frame.width > space.width*0.9 - 2*(prefs.horizontal_margin + prefs.window_gap)) {
+        x = max - frame.width;
+    } else if (frame.width > workArea.width*0.9 - 2*(prefs.horizontal_margin + prefs.window_gap)) {
         // Consider the window to be wide and center it
-        x = Math.round((space.width - frame.width)/2);
+        x = min + Math.round((workArea.width - frame.width)/2);
 
-    } else if (x + frame.width > space.width) {
+    } else if (x + frame.width > max) {
         // Align to the right prefs.horizontal_margin
-        x = space.width - prefs.horizontal_margin - frame.width;
-    } else if (x < 0) {
+        x = max - prefs.horizontal_margin - frame.width;
+    } else if (x < min) {
         // Align to the left prefs.horizontal_margin
-        x = prefs.horizontal_margin;
-    } else if (x + frame.width === space.width) {
+        x = min + prefs.horizontal_margin;
+    } else if (x + frame.width === max) {
         // When opening new windows at the end, in the background, we want to
         // show some minimup margin
-        x = space.width - minimumMargin - frame.width;
-    } else if (x === 0) {
+        x = max - minimumMargin - frame.width;
+    } else if (x === min) {
         // Same for the start (though the case isn't as common)
-        x = minimumMargin;
+        x = min + minimumMargin;
     }
 
 
@@ -2243,9 +2252,9 @@ function isWindowAnimating(metaWindow) {
 
 function toggleMaximizeHorizontally(metaWindow) {
     metaWindow = metaWindow || display.focus_window;
-    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
+    let workArea = Main.layoutManager.getWorkAreaForMonitor(metaWindow.get_monitor());
     let frame = metaWindow.get_frame_rect();
-    let reqWidth = monitor.width - minimumMargin*2;
+    let reqWidth = workArea.width - minimumMargin*2;
 
     // Some windows only resize in increments > 1px so we can't rely on a precise width
     // Hopefully this heuristic is good enough
@@ -2259,9 +2268,9 @@ function toggleMaximizeHorizontally(metaWindow) {
 
         metaWindow.unmaximizedRect = null;
     } else {
-        let x = monitor.x + minimumMargin;
+        let x = workArea.x + minimumMargin;
         metaWindow.unmaximizedRect = frame;
-        metaWindow.move_resize_frame(true, x, frame.y, monitor.width - minimumMargin*2, frame.height);
+        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - minimumMargin*2, frame.height);
     }
 }
 
@@ -2285,15 +2294,16 @@ function cycleWindowWidth(metaWindow) {
     }
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
+    let workArea = Main.layoutManager.getWorkAreaForMonitor(metaWindow.get_monitor());
     // Make sure two windows of "compatible" width will have room
-    let availableWidth = monitor.width - prefs.horizontal_margin*2 - prefs.window_gap;
+    let availableWidth = workArea.width - prefs.horizontal_margin*2 - prefs.window_gap;
     let r = frame.width / availableWidth;
     let nextW = Math.floor(ratios[findNext(r)]*availableWidth);
     let nextX = frame.x;
 
-    if (nextX+nextW > monitor.x+monitor.width - minimumMargin) {
+    if (nextX+nextW > workArea.x + workArea.width - minimumMargin) {
         // Move the window so it remains fully visible
-        nextX = monitor.x+monitor.width - minimumMargin - nextW;
+        nextX = workArea.x + workArea.width - minimumMargin - nextW;
     }
 
     metaWindow.move_resize_frame(true, nextX, frame.y, nextW, frame.height);
@@ -2366,7 +2376,8 @@ function centerWindowHorizontally(metaWindow) {
     const frame = metaWindow.get_frame_rect();
     const space = spaces.spaceOfWindow(metaWindow);
     const monitor = space.monitor;
-    const targetX = Math.round(monitor.width/2 - frame.width/2);
+    const workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
+    const targetX = workArea.x - monitor.x + Math.round(workArea.width/2 - frame.width/2);
     const dx = targetX - (metaWindow.clone.targetX + space.targetX);
 
     let [pointerX, pointerY, mask] = global.get_pointer();
