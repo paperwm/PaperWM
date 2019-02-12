@@ -4,6 +4,7 @@ var Clutter = imports.gi.Clutter;
 var Tweener = imports.ui.tweener;
 var Lang = imports.lang;
 var Main = imports.ui.main;
+var Mainloop = imports.mainloop;
 var Shell = imports.gi.Shell;
 var Meta = imports.gi.Meta;
 var utils = Extension.imports.utils;
@@ -138,6 +139,7 @@ class ClickOverlay {
     }
 
     destroy() {
+        this.signals.destroy();
         for (let overlay of [this.left, this.right]) {
             let actor = overlay.overlay;
             [overlay.pressId, overlay.releaseId, overlay.enterId,
@@ -145,11 +147,9 @@ class ClickOverlay {
             if (overlay.clone)
                 overlay.clone.destroy();
             actor.destroy();
-            overlay.pressureBarrier.removeBarrier(overlay.barrier);
-            overlay.barrier.destroy();
+            overlay.removeBarrier();
             overlay.pressureBarrier.destroy();
         }
-        this.signals.destroy();
         this.enterMonitor.destroy();
     }
 }
@@ -216,34 +216,58 @@ var StackOverlay = new Lang.Class({
             space.moveDone();
         });
 
-        // const Layout = imports.ui.layout;
-        // this.pressureBarrier = new Layout.PressureBarrier(100, 0.25*1000, Shell.ActionMode.NORMAL);
-        // // Show the overlay on fullscreen windows when applying pressure to the edge
-        // // The above leave-event handler will take care of hiding the overlay
-        // this.pressureBarrier.connect('trigger', () => overlay.show() );
-
-        // let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
-        // let x1, directions;
-        // if (this._direction === Meta.MotionDirection.LEFT) {
-        //     x1 = monitor.x,
-        //     directions = Meta.BarrierDirection.POSITIVE_X;
-        // } else {
-        //     x1 = monitor.x + monitor.width - 1,
-        //     directions = Meta.BarrierDirection.NEGATIVE_X;
-        // }
-        // this.barrier = new Meta.Barrier({
-        //     display: global.display,
-        //     x1, x2: x1,
-        //     y1: workArea.y + 1,
-        //     y2: workArea.y + workArea.height - 1,
-        //     directions
-        // });
-        // this.pressureBarrier.addBarrier(this.barrier);
+        const Layout = imports.ui.layout;
+        this.pressureBarrier = new Layout.PressureBarrier(100, 0.25*1000, Shell.ActionMode.NORMAL);
+        // Show the overlay on fullscreen windows when applying pressure to the edge
+        // The above leave-event handler will take care of hiding the overlay
+        this.pressureBarrier.connect('trigger', () => {
+            this.pressureBarrier._reset();
+            this.pressureBarrier._isTriggered = false;
+            if (this._removeBarrierTimeoutId > 0)
+                Mainloop.source_remove(this._removeBarrierTimeoutId);
+            this._removeBarrierTimeoutId = Mainloop.timeout_add(100, this.removeBarrier.bind(this));
+            overlay.show();
+        });
+        this.updateBarrier();
 
         Main.uiGroup.add_child(overlay);
         Main.layoutManager.trackChrome(overlay);
 
         this.overlay = overlay;
+    },
+
+    removeBarrier: function() {
+        if (this.barrier) {
+            if (this.pressureBarrier)
+                this.pressureBarrier.removeBarrier(this.barrier);
+            this.barrier.destroy();
+            this.barrier = null;
+        }
+        this._removeBarrierTimeoutId = 0;
+    },
+
+    updateBarrier: function() {
+        if (this.barrier)
+            return;
+
+        const overlay = this.overlay;
+        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        let x1, directions;
+        if (this._direction === Meta.MotionDirection.LEFT) {
+            x1 = workArea.x,
+            directions = Meta.BarrierDirection.POSITIVE_X;
+        } else {
+            x1 = workArea.x + workArea.width - 1,
+            directions = Meta.BarrierDirection.NEGATIVE_X;
+        }
+        this.barrier = new Meta.Barrier({
+            display: global.display,
+            x1, x2: x1,
+            y1: workArea.y + 1,
+            y2: workArea.y + workArea.height - 1,
+            directions
+        });
+        this.pressureBarrier.addBarrier(this.barrier);
     },
 
     setTarget: function(space, index) {
@@ -310,6 +334,7 @@ var StackOverlay = new Lang.Class({
             overlay.hide();
         else
             overlay.show();
+        this.updateBarrier();
 
         return true;
     },
