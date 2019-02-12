@@ -280,6 +280,7 @@ var StackOverlay = new Lang.Class({
         let bail = () => {
             this.target = null;
             this.overlay.width = 0;
+            this.removeBarrier();
             return false;
         };
 
