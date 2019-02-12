@@ -401,7 +401,7 @@ class Space extends Array {
         this.cloneContainer.width = width;
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
         if (width < workArea.width) {
-            this.targetX = workArea.x + Math.round((workArea.width - width)/2);
+            this.targetX = workArea.x - this.monitor.x + Math.round((workArea.width - width)/2);
         }
         if (animate) {
             Tweener.addTween(this.cloneContainer,
