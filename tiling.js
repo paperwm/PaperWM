@@ -2299,7 +2299,7 @@ function cycleWindowWidth(metaWindow) {
     let nextW = Math.floor(ratios[findNext(r)]*availableWidth);
     let nextX = frame.x;
 
-    if (nextX+nextW > monitor.x+monitor.width - minimumMargin) {
+    if (nextX+nextW > workArea.x + workArea.width - minimumMargin) {
         // Move the window so it remains fully visible
         nextX = workArea.x + workArea.width - minimumMargin - nextW;
     }
