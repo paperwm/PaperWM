@@ -1968,7 +1968,9 @@ function ensureViewport(meta_window, space, force) {
     let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
     let min = workArea.x - monitor.x;
     let max = min + workArea.width;
-    if (index == 0 && x <= min) {
+    if (meta_window.fullscreen) {
+        x = 0;
+    } else if (index == 0 && x <= min) {
         // Always align the first window to the display's left edge
         x = min;
     } else if (index == space.length-1 && x + frame.width >= max) {
