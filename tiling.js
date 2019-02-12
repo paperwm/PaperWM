@@ -399,8 +399,9 @@ class Space extends Array {
         // transforms break on width 1
         let width = Math.max(1, x - gap);
         this.cloneContainer.width = width;
-        if (width < this.width) {
-            this.targetX = Math.round((this.width - width)/2);
+        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        if (width < workArea.width) {
+            this.targetX = workArea.x + Math.round((workArea.width - width)/2);
         }
         if (animate) {
             Tweener.addTween(this.cloneContainer,
