@@ -2374,7 +2374,8 @@ function centerWindowHorizontally(metaWindow) {
     const frame = metaWindow.get_frame_rect();
     const space = spaces.spaceOfWindow(metaWindow);
     const monitor = space.monitor;
-    const targetX = Math.round(monitor.width/2 - frame.width/2);
+    const workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
+    const targetX = workArea.x - monitor.x + Math.round(workArea.width/2 - frame.width/2);
     const dx = targetX - (metaWindow.clone.targetX + space.targetX);
 
     let [pointerX, pointerY, mask] = global.get_pointer();
