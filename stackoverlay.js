@@ -230,7 +230,7 @@ var StackOverlay = new Lang.Class({
         });
         this.updateBarrier();
 
-        Main.uiGroup.add_child(overlay);
+        global.window_group.add_child(overlay);
         Main.layoutManager.trackChrome(overlay);
 
         this.overlay = overlay;
@@ -315,6 +315,7 @@ var StackOverlay = new Lang.Class({
                 width = Math.min(width, 1);
             overlay.x = this.monitor.x;
             overlay.width = Math.max(width, 1);
+            overlay.raise(neighbour.get_compositor_private());
         } else {
             let column = space[space.indexOf(metaWindow) - 1];
             let neighbour = column && column[0];
@@ -329,6 +330,7 @@ var StackOverlay = new Lang.Class({
             width = Math.max(width, 1);
             overlay.x = this.monitor.x + this.monitor.width - width;
             overlay.width = width;
+            overlay.raise(neighbour.get_compositor_private());
         }
 
         if (space.selectedWindow.fullscreen)
