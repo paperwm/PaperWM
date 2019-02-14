@@ -116,8 +116,9 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.actor.name = 'workspace-button';
 
         this._label = new St.Label({
-            text: Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()),
             y_align: Clutter.ActorAlign.CENTER });
+
+        this.setName(Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()));
 
         this.actor.add_actor(this._label);
 
@@ -131,7 +132,7 @@ class WorkspaceMenu extends PanelMenu.Button {
             let name = this.entry.entry.text;
             let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
             space.settings.set_string('name', name);
-            this._label.text = name;
+            this.setName(name);
         };
         this.signals.connect(this.entry.button, 'clicked',
                              clicked.bind(this.entry));
@@ -366,6 +367,13 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.signals.destroy();
         super.destroy();
     }
+
+    setName(name) {
+        if (prefs.use_workspace_name)
+            this._label.text = name;
+        else
+            this._label.text = orginalActivitiesText;
+    }
 };
 
 var menu;
@@ -390,7 +398,6 @@ function enable () {
 
         for (let [workspace, space] of Tiling.spaces) {
             space.label.set_position(Math.round(r.x), Math.round(r.y));
-            space.label.show();
         }
     });
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
@@ -465,9 +472,7 @@ function updateWorkspaceIndicator (index) {
 };
 
 function setWorkspaceName (name) {
-    if (!menu)
-        return;
-    menu._label.text = name;
+    menu && menu.setName(name);
 }
 
 function setMonitor(monitor) {

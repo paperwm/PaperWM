@@ -813,6 +813,8 @@ class Space extends Array {
         this.updateName();
         this.signals.connect(this.settings, 'changed::name',
                              this.updateName.bind(this));
+        this.signals.connect(Settings.settings, 'changed::use-workspace-name',
+                             this.updateName.bind(this));
         this.signals.connect(this.settings, 'changed::color',
                              this.updateColor.bind(this));
         this.signals.connect(this.settings, 'changed::background',
@@ -843,6 +845,11 @@ class Space extends Array {
     }
 
     updateName() {
+        if (prefs.use_workspace_name) {
+            this.label.show();
+        } else {
+            this.label.hide();
+        }
         let name = this.settings.get_string('name');
         if (name === '')
             name = Meta.prefs_get_workspace_name(this.workspace.index());
