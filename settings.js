@@ -57,14 +57,10 @@ function setSchemas() {
 }
 setSchemas(); // Initialize imediately so prefs.js can import properly
 function init() {
-    settings.connect('changed::window-gap', setState);
-    settings.connect('changed::horizontal-margin', setState);
+    settings.connect('changed', setState);
     settings.connect('changed::vertical-margin', setVerticalMargin);
     settings.connect('changed::window-gap', setVerticalMargin);
     setVerticalMargin();
-    settings.connect('changed::workspace-colors', setState);
-    settings.connect('changed::default-background', setState);
-    settings.connect('changed::animation-time', setState);
 
     // A intermediate window is created before the prefs dialog is created.
     // Prevent it from being inserted into the tiling causing flickering and general disorder
