@@ -415,6 +415,26 @@ class Space extends Array {
         }
     }
 
+    // Space.prototype.isVisible = function
+    isVisible(metaWindow) {
+        let clone = metaWindow.clone;
+        let x = clone.targetX + this.targetX;
+        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        let min = workArea.x - this.monitor.x;
+
+        if (x + clone.width < min
+            || x > min + workArea.width) {
+            return false;
+        } else {
+            // Fullscreen windows are only placeable on the monitor origin
+            if ((metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH && x !== min) ||
+                (metaWindow.fullscreen && x !== 0)) {
+                return false;
+            }
+            return true;
+        }
+    }
+
     isPlaceable(metaWindow) {
         let clone = metaWindow.clone;
         let x = clone.targetX + this.targetX;
@@ -733,6 +753,11 @@ class Space extends Array {
         }
 
         this._isAnimating = false;
+
+        if (this.selectedWindow && this.selectedWindow === display.focus_window) {
+            let index = this.indexOf(this.selectedWindow);
+            this[index].forEach(w => w.lastFrame = w.get_frame_rect());
+        }
 
         this.emit('move-done');
     }
@@ -1959,7 +1984,11 @@ function ensuredX(meta_window, space) {
     let buffer = meta_window.get_buffer_rect();
     let clone = meta_window.clone;
 
-    let x = Math.round(clone.targetX) + space.targetX;
+    let x;
+    if (neighbour || space.isVisible(meta_window) || meta_window.lastFrame === undefined)
+        x = Math.round(clone.targetX) + space.targetX;
+    else
+        x = meta_window.lastFrame.x - monitor.x;
     let gap = prefs.window_gap;
     let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
     let min = workArea.x - monitor.x;
