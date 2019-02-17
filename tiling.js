@@ -1948,24 +1948,11 @@ function animateDown(metaWindow) {
     });
 }
 
-/**
-   Make sure that `meta_window` is in view, scrolling the space if needed.
- */
-function ensureViewport(meta_window, space, force) {
-    space = space || spaces.spaceOfWindow(meta_window);
-
+function ensuredX(meta_window, space) {
     let index = space.indexOf(meta_window);
-    if (index === -1 || space.length === 0)
-        return undefined;
-
-    debug('Moving', meta_window.title);
-
-    if (space.selectedWindow.fullscreen ||
-        space.selectedWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
-        animateDown(space.selectedWindow);
-    }
-
-    space.selectedWindow = meta_window;
+    let last = space.selectedWindow;
+    let lastIndex = space.indexOf(last);
+    let neighbour = Math.abs(lastIndex - index) <= 1;
 
     let monitor = space.monitor;
     let frame = meta_window.get_frame_rect();
@@ -1973,7 +1960,6 @@ function ensureViewport(meta_window, space, force) {
     let clone = meta_window.clone;
 
     let x = Math.round(clone.targetX) + space.targetX;
-    let y = panelBox.height + prefs.vertical_margin;
     let gap = prefs.window_gap;
     let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
     let min = workArea.x - monitor.x;
@@ -2005,12 +1991,35 @@ function ensureViewport(meta_window, space, force) {
         x = min + minimumMargin;
     }
 
+    return x;
+}
 
+
+/**
+   Make sure that `meta_window` is in view, scrolling the space if needed.
+ */
+function ensureViewport(meta_window, space, force) {
+    space = space || spaces.spaceOfWindow(meta_window);
+
+    let index = space.indexOf(meta_window);
+    if (index === -1 || space.length === 0)
+        return undefined;
+
+    debug('Moving', meta_window.title);
+
+    if (space.selectedWindow.fullscreen ||
+        space.selectedWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
+        animateDown(space.selectedWindow);
+    }
+    let x = ensuredX(meta_window, space);
+
+    space.selectedWindow = meta_window;
     let selected = space.selectedWindow;
+    let frame = meta_window.get_frame_rect();
     if (!inPreview && (selected.fullscreen
         || selected.get_maximized() === Meta.MaximizeFlags.BOTH)) {
         Tweener.addTween(selected.clone,
-                         { y: frame.y - monitor.y,
+                         { y: frame.y - space.monitor.y,
                            time: prefs.animation_time,
                            transition: 'easeInOutQuad',
                          });
@@ -2019,7 +2028,7 @@ function ensureViewport(meta_window, space, force) {
                          {time: prefs.animation_time, onComplete: space.moveDone.bind(space)});
     }
     move_to(space, meta_window, {
-        x, y, force
+        x, force
     });
 
     selected.raise();
