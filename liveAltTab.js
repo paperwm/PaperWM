@@ -4,12 +4,15 @@ var Lang = imports.lang;
 var Meta = imports.gi.Meta;
 var AltTab = imports.ui.altTab;
 var Main = imports.ui.main;
+var Tweener = imports.ui.tweener;
 
 var Scratch = Extension.imports.scratch;
 var Tiling = Extension.imports.tiling;
 var Keybindings = Extension.imports.keybindings;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
+
+var prefs = Extension.imports.settings.prefs;
 
 var LiveAltTab = Lang.Class({
     Name: 'LiveAltTab',
@@ -34,6 +37,28 @@ var LiveAltTab = Lang.Class({
     _initialSelection: function(backward, actionName) {
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
+        this.space = Tiling.spaces.selectedSpace;
+        this.space.startAnimate();
+
+        let monitor = Tiling.spaces.selectedSpace;
+        let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
+        let fog = new Clutter.Actor({x: workArea.x, y: workArea.y,
+                                     width: workArea.width, height: workArea.height,
+                                     opacity: 0
+                                    });
+
+        this.blur = new Clutter.BlurEffect();
+        this.space.cloneContainer.add_effect(this.blur);
+        this.space.setSelectionInactive();
+        fog.background_color = Clutter.color_from_string("black")[1];
+        Tweener.addTween(fog, {
+            time: prefs.animation_time,
+            transition: 'easeInOutQuad',
+            opacity: 100,
+        });
+
+        Main.uiGroup.insert_child_above(fog, global.window_group);
+        this.fog = fog;
 
         this.parent(backward, actionName);
     },
@@ -75,19 +100,23 @@ var LiveAltTab = Lang.Class({
         let to = this._switcherList.windows[num];
 
         this.clone && this.clone.destroy();
-        // Show pseudo focused scratch windows
-        if (Scratch.isScratchWindow(to)) {
-            let actor = to.get_compositor_private();
-            let clone = new Clutter.Clone({source: actor});
-            clone.position = actor.position;
-            this.clone = clone;
-            Main.uiGroup.add_child(clone);
-            // Raise the switcherpopup to the top
-            Main.uiGroup.set_child_above_sibling(this.actor, clone);
+
+        let actor = to.get_compositor_private();
+        let frame = to.get_frame_rect();
+        let clone = new Clutter.Clone({source: actor});
+        clone.position = actor.position;
+
+            let space = Tiling.spaces.spaceOfWindow(to);
+        if (space.indexOf(to) !== -1) {
+            let x = Tiling.ensuredX(to, space) + space.monitor.x;
+        clone.x = x + space.monitor.x ;
+        clone.x -= frame.x - actor.x;
         }
 
-        let space = Tiling.spaces.spaceOfWindow(to);
-        Tiling.ensureViewport(to, space);
+        this.clone = clone;
+        Main.uiGroup.insert_child_above(clone, this.fog);
+
+        // Tiling.ensureViewport(to, space);
         this._selectedIndex = num;
         this._switcherList.highlight(num);
     },
@@ -113,8 +142,19 @@ var LiveAltTab = Lang.Class({
             // Select the starting window
             this._select(0);
         }
-        this.clone && this.clone.destroy();
+        Tweener.addTween(this.fog, {
+            time: prefs.animation_time,
+            opacity: 0,
+            transition: 'easeInOutQuad',
+            onComplete: () => {
+                this.fog.destroy();
+                this.space.cloneContainer.remove_effect(this.blur);
+                this.clone && this.clone.destroy();
+            }
+        });
+        let to = this._switcherList.windows[this._selectedIndex];
         this.parent();
+        Tiling.focus_handler(to);
     }
 })
 

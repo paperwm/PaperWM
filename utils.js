@@ -93,6 +93,26 @@ function isPointInsideActor(actor, x, y) {
         && (actor.y <= y && y <= actor.y+actor.height);
 }
 
+function setBackgroundImage(actor, resource_path) {
+    // resource://{resource_path}
+    const Clutter = imports.gi.Clutter;
+    const GdkPixbuf = imports.gi.GdkPixbuf;
+    const Cogl = imports.gi.Cogl;
+
+    let image = new Clutter.Image();
+
+    let pixbuf = GdkPixbuf.Pixbuf.new_from_resource(resource_path)
+
+    image.set_data(pixbuf.get_pixels() ,
+                   pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
+                   : Cogl.PixelFormat.RGB_888,
+                   pixbuf.get_width() ,
+                   pixbuf.get_height() ,
+                   pixbuf.get_rowstride());
+    actor.set_content(image);
+    actor.content_repeat = Clutter.ContentRepeat.BOTH
+}
+
 
 //// Debug and development utils
 
