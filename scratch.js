@@ -69,7 +69,7 @@ function makeScratch(metaWindow) {
 
         if (metaWindow[scratchFrame]) {
             let sf = metaWindow[scratchFrame];
-            if (utils.monitorOfPoint(sf.x, sf.y)) {
+            if (utils.monitorOfPoint(sf.x, sf.y) === focusMonitor()) {
                 targetFrame = sf;
             }
         }
