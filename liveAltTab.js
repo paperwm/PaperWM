@@ -18,7 +18,12 @@ var LiveAltTab = Lang.Class({
     Name: 'LiveAltTab',
     Extends: AltTab.WindowSwitcherPopup,
 
-    _getWindowList: function () {
+    _init(reverse) {
+        this.reverse = reverse;
+        this.parent();
+    },
+
+    _getWindowList: function (reverse) {
         let tabList = global.display.get_tab_list(
             Meta.TabList.NORMAL_ALL,
             global.workspace_manager.get_active_workspace())
@@ -26,11 +31,11 @@ var LiveAltTab = Lang.Class({
 
         let scratch = Scratch.getScratchWindows();
 
-        if (Scratch.isScratchActive()) {
-            return scratch.concat(tabList);
-        } else {
+        if (Scratch.isScratchWindow(global.display.focus_window)) {
             // Access scratch windows in mru order with shift-super-tab
-            return tabList.concat(scratch.reverse());
+            return scratch.concat(this.reverse ? tabList.reverse() : tabList);
+        } else {
+            return tabList.concat(this.reverse ? scratch.reverse() : scratch);
         }
     },
 
@@ -159,6 +164,6 @@ var LiveAltTab = Lang.Class({
 })
 
 function liveAltTab(meta_window, space, {display, screen, binding}) {
-    let tabPopup = new LiveAltTab();
+    let tabPopup = new LiveAltTab(binding.is_reversed());
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
