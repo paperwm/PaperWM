@@ -1325,6 +1325,9 @@ class Spaces extends Map {
         let from = workspaceManager.get_workspace_by_index(fromIndex);
         let toSpace = this.spaceOf(to);
 
+        if (!inPreview)
+            this._initWorkspaceStack();
+
         this.stack = this.stack.filter(s => s !== toSpace);
         this.stack = [toSpace, ...this.stack];
 
