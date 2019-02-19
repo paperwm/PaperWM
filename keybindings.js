@@ -66,11 +66,12 @@ function init() {
     let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
     let previewNavigate = dynamic_function_ref("preview_navigate", Navigator);
 
-    registerPaperAction('live-alt-tab',
-                          liveAltTab);
-    registerPaperAction('live-alt-tab-backward',
-                          liveAltTab,
-                          Meta.KeyBindingFlags.IS_REVERSED);
+    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    registerAction('live-alt-tab',
+                   liveAltTab, {settings});
+    registerAction('live-alt-tab-backward',
+                   liveAltTab,
+                   {settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED});
 
     registerNavigatorAction('previous-workspace', Tiling.selectPreviousSpace);
     registerNavigatorAction('previous-workspace-backward',

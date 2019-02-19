@@ -89,13 +89,13 @@ var LiveAltTab = Lang.Class({
             break;
             ;;
         }
-        let action = Keybindings.byId(mutterActionId);
-        if (action && action.options.activeInNavigator) {
-            let space = Tiling.spaces.selectedSpace;
-            let metaWindow = space.selectedWindow;
-            action.handler(metaWindow, space);
-            return true;
-        }
+        // let action = Keybindings.byId(mutterActionId);
+        // if (action && action.options.activeInNavigator) {
+        //     let space = Tiling.spaces.selectedSpace;
+        //     let metaWindow = space.selectedWindow;
+        //     action.handler(metaWindow, space);
+        //     return true;
+        // }
         return this.parent(keysym, mutterActionId);
     },
 
