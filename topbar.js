@@ -398,6 +398,8 @@ function enable () {
 
         for (let [workspace, space] of Tiling.spaces) {
             space.label.set_position(Math.round(r.x), Math.round(r.y));
+            let fontDescription = label.clutter_text.font_description;
+            space.label.clutter_text.set_font_description(fontDescription);
         }
     });
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');

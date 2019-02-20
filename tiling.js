@@ -155,8 +155,8 @@ class Space extends Array {
 
         let label = new St.Label();
         this.label = label;
-        label.set_style('font-weight: bold; font-feature-settings: "tnum"; height: 1.86em;');
         label.hide();
+        label.set_style('font-feature-settings: "tnum";');
 
         let selection = new St.Widget({name: 'selection',
                                        style_class: 'tile-preview'});
