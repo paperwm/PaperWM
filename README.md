@@ -20,7 +20,7 @@ Clone the repo and run the [`install.sh`](https://github.com/paperwm/PaperWM/blo
 Cloning the repo directly into `$XDG_DATA_HOME` also works:
 ```bash
 git clone 'https://github.com/paperwm/PaperWM.git' \
-    "${XDG_DATA_HOME:-~/.local/share}/gnome-shell/extensions/paperwm@hedning:matrix.org"
+    "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/paperwm@hedning:matrix.org"
 ```
 
 You can then enable the extension in Gnome Tweaks, or enable if from the command line:
