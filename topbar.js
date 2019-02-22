@@ -392,9 +392,8 @@ function enable () {
 
     menu = new WorkspaceMenu();
     signals.connect(menu._label, 'notify::allocation', (label) => {
-        let point = new Clutter.Vertex({x: label.x, y: label.y});
-        let r = label.get_parent()
-            .apply_relative_transform_to_point(Main.panel.actor, point);
+        let point = new Clutter.Vertex({x: 0, y: 0});
+        let r = label.apply_relative_transform_to_point(Main.panel.actor, point);
 
         for (let [workspace, space] of Tiling.spaces) {
             space.label.set_position(Math.round(r.x), Math.round(r.y));
