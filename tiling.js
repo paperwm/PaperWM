@@ -153,10 +153,21 @@ class Space extends Array {
             `background: black;
              box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);`);
 
+        // Pick up the same css as the top bar label
         let label = new St.Label();
+        let labelParent = new St.Widget({name: 'panel'});
+        let labelParent2 = new St.Widget({style_class: 'panel-button'});
+        for (let p of [labelParent, labelParent2]) {
+            p.style = `
+                background-color: transparent;
+                border-image: none;
+                background-image: none
+            `;
+        }
+        labelParent.add_actor(labelParent2);
+        labelParent2.add_actor(label);
         this.label = label;
         label.hide();
-        label.set_style('font-feature-settings: "tnum";');
 
         let selection = new St.Widget({name: 'selection',
                                        style_class: 'tile-preview'});
@@ -169,7 +180,7 @@ class Space extends Array {
         clip.add_actor(actor);
         actor.add_actor(this.shadow);
         this.shadow.add_actor(background);
-        actor.add_actor(label);
+        actor.add_actor(labelParent);
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
 
