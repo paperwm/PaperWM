@@ -115,9 +115,9 @@ var PreviewedWindowNavigator = new Lang.Class({
     },
 
     destroy: function() {
-        this.navigator.destroy();
         this.actor.hide(); // Prevents finalized crap
         this.parent();
+        this.navigator.destroy();
     }
 });
 

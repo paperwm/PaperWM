@@ -141,6 +141,7 @@ var LiveAltTab = Lang.Class({
     },
 
     _onDestroy: function() {
+        this.parent();
         debug('#preview', 'onDestroy', this.was_accepted);
         Main.wm._blockAnimations = this._block;
         if(!this.was_accepted) {
@@ -159,7 +160,6 @@ var LiveAltTab = Lang.Class({
             }
         });
         let to = this._switcherList.windows[this._selectedIndex];
-        this.parent();
         Tiling.focus_handler(to);
     }
 })
