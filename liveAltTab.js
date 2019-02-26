@@ -155,6 +155,7 @@ var LiveAltTab = Lang.Class({
                 this.fog.destroy();
                 this.space.cloneContainer.remove_effect(this.blur);
                 this.clone && this.clone.destroy();
+                this.space.moveDone();
             }
         });
         let to = this._switcherList.windows[this._selectedIndex];
