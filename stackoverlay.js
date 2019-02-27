@@ -183,38 +183,8 @@ var StackOverlay = new Lang.Class({
             return true;
         });
 
-        this.enterId = overlay.connect('enter-event', () => {
-            if (this.clone)
-                this.clone.destroy();
-
-            let [x, y, mask] = global.get_pointer();
-            let actor = this.target.get_compositor_private();
-            let clone = new Clutter.Clone({source: actor});
-            // Remove any window clips, and show the metaWindow.clone's
-            actor.remove_clip();
-            Tiling.animateWindow(this.target);
-
-            this.clone = clone;
-            clone.set_scale(0.15, 0.15);
-            Main.uiGroup.add_actor(clone);
-
-            if (this._direction === Meta.MotionDirection.RIGHT)
-                x = monitor.x + monitor.width - clone.get_transformed_size()[0];
-            else
-                x = monitor.x;
-            clone.set_position(x, y);
-        });
-
-        this.leaveId = overlay.connect('leave-event', () => {
-            if (!this.clone)
-                return;
-
-            this.clone.destroy();
-            delete this.clone;
-            let space = Tiling.spaces.spaceOfWindow(this.target);
-            // Show the WindowActors again and re-apply clipping
-            space.moveDone();
-        });
+        this.enterId = overlay.connect('enter-event', this.triggerPreview.bind(this));
+        this.leaveId = overlay.connect('leave-event', this.removePreview.bind(this));
 
         const Layout = imports.ui.layout;
         this.pressureBarrier = new Layout.PressureBarrier(100, 0.25*1000, Shell.ActionMode.NORMAL);
@@ -234,6 +204,49 @@ var StackOverlay = new Lang.Class({
         Main.layoutManager.trackChrome(overlay);
 
         this.overlay = overlay;
+    },
+
+    triggerPreview() {
+        if ("_previewId" in this)
+            return;
+        this._previewId = Mainloop.timeout_add(100, () => {
+            if (this.clone)
+                this.clone.destroy();
+
+            let [x, y, mask] = global.get_pointer();
+            let actor = this.target.get_compositor_private();
+            let clone = new Clutter.Clone({source: actor});
+            // Remove any window clips, and show the metaWindow.clone's
+            actor.remove_clip();
+            Tiling.animateWindow(this.target);
+
+            this.clone = clone;
+            clone.set_scale(0.15, 0.15);
+            Main.uiGroup.add_actor(clone);
+
+            let monitor = this.monitor;
+            if (this._direction === Meta.MotionDirection.RIGHT)
+                x = monitor.x + monitor.width - clone.get_transformed_size()[0];
+            else
+                x = monitor.x;
+            clone.set_position(x, y);
+        });
+    },
+
+    removePreview() {
+        if ("_previewId" in this) {
+            Mainloop.source_remove(this._previewId);
+            delete this._previewId;
+        }
+
+        if (!this.clone)
+            return;
+
+        this.clone.destroy();
+        delete this.clone;
+        let space = Tiling.spaces.spaceOfWindow(this.target);
+        // Show the WindowActors again and re-apply clipping
+        space.moveDone();
     },
 
     removeBarrier: function() {
