@@ -11,7 +11,8 @@ var utils = Extension.imports.utils;
 var debug = utils.debug;
 var Minimap = Extension.imports.minimap;
 
-var prefs = Extension.imports.settings.prefs;
+var Settings = Extension.imports.settings;
+var prefs = Settings.prefs;
 
 /*
   The stack overlay decorates the top stacked window with its icon and
@@ -142,13 +143,11 @@ class ClickOverlay {
         this.signals.destroy();
         for (let overlay of [this.left, this.right]) {
             let actor = overlay.overlay;
-            [overlay.pressId, overlay.releaseId, overlay.enterId,
-             overlay.leaveId].forEach(id => actor.disconnect(id));
+            overlay.signals.destroy();
             if (overlay.clone)
                 overlay.clone.destroy();
             actor.destroy();
             overlay.removeBarrier();
-            overlay.pressureBarrier.destroy();
         }
         this.enterMonitor.destroy();
     }
@@ -176,28 +175,19 @@ var StackOverlay = new Lang.Class({
         overlay.height = this.monitor.height - panelBox.height - prefs.vertical_margin;
         overlay.width = Tiling.stack_margin;
 
-        this.pressId = overlay.connect('button-release-event', () => {
+        this.signals = new utils.Signals();
+        this.signals.connect(overlay, 'button-release-event', () => {
             Main.activateWindow(this.target);
             if (this.clone)
                 this.clone.destroy();
             return true;
         });
 
-        this.enterId = overlay.connect('enter-event', this.triggerPreview.bind(this));
-        this.leaveId = overlay.connect('leave-event', this.removePreview.bind(this));
+        this.signals.connect(overlay, 'enter-event', this.triggerPreview.bind(this));
+        this.signals.connect(overlay,'leave-event', this.removePreview.bind(this));
+        this.signals.connect(Settings.settings, 'changed::pressure-barrier',
+                             this.updateBarrier.bind(this, true));
 
-        const Layout = imports.ui.layout;
-        this.pressureBarrier = new Layout.PressureBarrier(100, 0.25*1000, Shell.ActionMode.NORMAL);
-        // Show the overlay on fullscreen windows when applying pressure to the edge
-        // The above leave-event handler will take care of hiding the overlay
-        this.pressureBarrier.connect('trigger', () => {
-            this.pressureBarrier._reset();
-            this.pressureBarrier._isTriggered = false;
-            if (this._removeBarrierTimeoutId > 0)
-                Mainloop.source_remove(this._removeBarrierTimeoutId);
-            this._removeBarrierTimeoutId = Mainloop.timeout_add(100, this.removeBarrier.bind(this));
-            overlay.show();
-        });
         this.updateBarrier();
 
         global.window_group.add_child(overlay);
@@ -254,14 +244,31 @@ var StackOverlay = new Lang.Class({
             if (this.pressureBarrier)
                 this.pressureBarrier.removeBarrier(this.barrier);
             this.barrier.destroy();
+            this.pressureBarrier.destroy();
             this.barrier = null;
         }
         this._removeBarrierTimeoutId = 0;
     },
 
-    updateBarrier: function() {
-        if (this.barrier)
+    updateBarrier: function(force) {
+        if (force)
+            this.removeBarrier();
+
+        if (this.barrier || !prefs.pressure_barrier)
             return;
+
+        const Layout = imports.ui.layout;
+        this.pressureBarrier = new Layout.PressureBarrier(100, 0.25*1000, Shell.ActionMode.NORMAL);
+        // Show the overlay on fullscreen windows when applying pressure to the edge
+        // The above leave-event handler will take care of hiding the overlay
+        this.pressureBarrier.connect('trigger', () => {
+            this.pressureBarrier._reset();
+            this.pressureBarrier._isTriggered = false;
+            if (this._removeBarrierTimeoutId > 0)
+                Mainloop.source_remove(this._removeBarrierTimeoutId);
+            this._removeBarrierTimeoutId = Mainloop.timeout_add(100, this.removeBarrier.bind(this));
+            overlay.show();
+        });
 
         const overlay = this.overlay;
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);

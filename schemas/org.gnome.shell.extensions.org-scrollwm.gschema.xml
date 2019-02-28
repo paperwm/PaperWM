@@ -221,6 +221,11 @@
         <summary>Replace the Activities text with the current workspace name</summary>
     </key>
 
+    <key type="b" name="pressure-barrier">
+        <default>false</default>
+        <summary>Enable pressure barriers at the monitor edges</summary>
+    </key>
+
     <key type="as" name="workspace-colors">
       <default><![CDATA[['#314E6C', '#565248', '#445632', '#663822',
        '#494066', '#826647', '#4B6983', '#807D74', '#5D7555', '#884631',
