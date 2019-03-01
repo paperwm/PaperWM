@@ -10,6 +10,7 @@ var SwitcherPopup = imports.ui.switcherPopup;
 var Lang = imports.lang;
 var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
+var Mainloop = imports.mainloop;
 var Clutter = imports.gi.Clutter;
 var Tweener = imports.ui.tweener;
 var Signals = imports.signals;
@@ -151,12 +152,15 @@ var Navigator = class Navigator {
     _showMinimap(space) {
         let minimap = this.minimaps.get(space);
         if (!minimap) {
-            minimap = new Minimap.Minimap(space, this.monitor);
-            this.minimaps.set(space, minimap);
-            space.startAnimate();
-            minimap.show(true);
+            let minimapId = Mainloop.timeout_add(200, () => {
+                minimap = new Minimap.Minimap(space, this.monitor);
+                space.startAnimate();
+                minimap.show(false);
+                this.minimaps.set(space, minimap);
+            });
+            this.minimaps.set(space, minimapId);
         } else {
-            minimap.show();
+            typeof(minimap) !== 'number' && minimap.show();
         }
     }
 
@@ -170,7 +174,12 @@ var Navigator = class Navigator {
     }
 
     destroy() {
-        this.minimaps.forEach(m => m.destroy());
+        this.minimaps.forEach(m => {
+            if (typeof(m) === 'number')
+                Mainloop.source_remove(m);
+            else
+                m.destroy();
+        });
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
