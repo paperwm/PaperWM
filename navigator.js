@@ -7,7 +7,6 @@
 
 var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 var SwitcherPopup = imports.ui.switcherPopup;
-var Lang = imports.lang;
 var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
@@ -39,24 +38,21 @@ class SwitcherList {
 }
 Signals.addSignalMethods(SwitcherList.prototype);
 
-var PreviewedWindowNavigator = new Lang.Class({
-    Name: 'PreviewedWindowNavigator',
-    Extends: SwitcherPopup.SwitcherPopup,
-
-    _init: function() {
+var PreviewedWindowNavigator = class PreviewedWindowNavigator extends SwitcherPopup.SwitcherPopup {
+    constructor() {
         // Do the absolute minimal here, as `parent.show` is buggy and can
         // return early making cleanup hard. We do most initialization in
         // `_initialSelection` instead.
 
         // HACK: workaround to enable moving from empty workspace. See check in
         // SwitcherPopup.show
-        this.parent([1]);
+        super([1]);
         this._switcherList = new SwitcherList();
         debug('#preview', 'init', this._switcherList);
 
-    },
+    }
 
-    _initialSelection: function(backward, actionName) {
+    _initialSelection(backward, actionName) {
         debug('#preview', '_initialSelection');
         this.navigator = getNavigator();
         let actionId = Keybindings.idOf(actionName);
@@ -71,9 +67,9 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
 
         this._doAction(actionId);
-    },
+    }
 
-    _doAction: function(mutterActionId) {
+    _doAction(mutterActionId) {
 
         let action = Keybindings.byId(mutterActionId);
         if (action && action.options.activeInNavigator) {
@@ -90,37 +86,37 @@ var PreviewedWindowNavigator = new Lang.Class({
         }
 
         return false;
-    },
+    }
 
-    _keyPressHandler: function(keysym, action) {
+    _keyPressHandler(keysym, action) {
         if (keysym !== Clutter.KEY_Escape && this._doAction(action)) {
             return Clutter.EVENT_STOP;
         } else {
             return Clutter.EVENT_PROPAGATE;
         }
-    },
+    }
 
-    _finish: function(timestamp) {
+    _finish(timestamp) {
         debug('#preview', 'finish');
         this.navigator.accept();
-        this.parent(timestamp);
-    },
+        super._finish(timestamp);
+    }
 
-    _itemEnteredHandler: function() {
+    _itemEnteredHandler() {
         // The item-enter (mouse hover) event is triggered even after a item is
         // accepted. This can cause _select to run on the item below the pointer
         // ensuring the wrong window.
         if(!this.was_accepted) {
-            this.parent.apply(this, arguments);
+            super._itemEnteredHandler.apply(this, arguments);
         }
-    },
+    }
 
-    destroy: function() {
+    destroy() {
         this.actor.hide(); // Prevents finalized crap
-        this.parent();
+        super.destroy();
         this.navigator.destroy();
     }
-});
+};
 
 var navigator;
 var Navigator = class Navigator {

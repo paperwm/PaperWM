@@ -1,7 +1,6 @@
 var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 var GLib = imports.gi.GLib;
 var Tweener = imports.ui.tweener;
-var Lang = imports.lang;
 var Meta = imports.gi.Meta;
 var Clutter = imports.gi.Clutter;
 var St = imports.gi.St;
