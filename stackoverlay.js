@@ -2,7 +2,6 @@ var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.o
 var Tiling = Extension.imports.tiling;
 var Clutter = imports.gi.Clutter;
 var Tweener = imports.ui.tweener;
-var Lang = imports.lang;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var Shell = imports.gi.Shell;
@@ -153,10 +152,8 @@ class ClickOverlay {
     }
 }
 
-var StackOverlay = new Lang.Class({
-    Name: 'Stackoverlay',
-
-    _init: function(direction, monitor) {
+var StackOverlay = class StackOverlay {
+    constructor(direction, monitor) {
 
         this._direction = direction;
 
@@ -194,7 +191,7 @@ var StackOverlay = new Lang.Class({
         Main.layoutManager.trackChrome(overlay);
 
         this.overlay = overlay;
-    },
+    }
 
     triggerPreview() {
         if ("_previewId" in this)
@@ -221,7 +218,7 @@ var StackOverlay = new Lang.Class({
                 x = monitor.x;
             clone.set_position(x, y);
         });
-    },
+    }
 
     removePreview() {
         if ("_previewId" in this) {
@@ -237,9 +234,9 @@ var StackOverlay = new Lang.Class({
         let space = Tiling.spaces.spaceOfWindow(this.target);
         // Show the WindowActors again and re-apply clipping
         space.moveDone();
-    },
+    }
 
-    removeBarrier: function() {
+    removeBarrier() {
         if (this.barrier) {
             if (this.pressureBarrier)
                 this.pressureBarrier.removeBarrier(this.barrier);
@@ -248,9 +245,9 @@ var StackOverlay = new Lang.Class({
             this.barrier = null;
         }
         this._removeBarrierTimeoutId = 0;
-    },
+    }
 
-    updateBarrier: function(force) {
+    updateBarrier(force) {
         if (force)
             this.removeBarrier();
 
@@ -289,9 +286,9 @@ var StackOverlay = new Lang.Class({
             directions
         });
         this.pressureBarrier.addBarrier(this.barrier);
-    },
+    }
 
-    setTarget: function(space, index) {
+    setTarget(space, index) {
 
         if (this.clone) {
             this.clone.destroy();
@@ -360,5 +357,5 @@ var StackOverlay = new Lang.Class({
         this.updateBarrier();
 
         return true;
-    },
-});
+    }
+};

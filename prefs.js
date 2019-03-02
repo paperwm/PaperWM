@@ -4,7 +4,6 @@ const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
-const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 
 const ExtensionUtils = imports.misc.extensionUtils;

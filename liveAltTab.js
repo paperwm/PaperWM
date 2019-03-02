@@ -1,6 +1,5 @@
 var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
 var Clutter = imports.gi.Clutter;
-var Lang = imports.lang;
 var Meta = imports.gi.Meta;
 var AltTab = imports.ui.altTab;
 var Main = imports.ui.main;
@@ -14,16 +13,14 @@ var debug = utils.debug;
 
 var prefs = Extension.imports.settings.prefs;
 
-var LiveAltTab = Lang.Class({
-    Name: 'LiveAltTab',
-    Extends: AltTab.WindowSwitcherPopup,
+var LiveAltTab = class LiveAltTab extends AltTab.WindowSwitcherPopup {
 
-    _init(reverse) {
+    constructor(reverse) {
         this.reverse = reverse;
-        this.parent();
-    },
+        super();
+    }
 
-    _getWindowList: function (reverse) {
+    _getWindowList(reverse) {
         let tabList = global.display.get_tab_list(
             Meta.TabList.NORMAL_ALL,
             global.workspace_manager.get_active_workspace())
@@ -37,9 +34,9 @@ var LiveAltTab = Lang.Class({
         } else {
             return tabList.concat(this.reverse ? scratch.reverse() : scratch);
         }
-    },
+    }
 
-    _initialSelection: function(backward, actionName) {
+    _initialSelection(backward, actionName) {
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
         this.space = Tiling.spaces.selectedSpace;
@@ -65,10 +62,10 @@ var LiveAltTab = Lang.Class({
         Main.uiGroup.insert_child_above(fog, global.window_group);
         this.fog = fog;
 
-        this.parent(backward, actionName);
-    },
+        super._initialSelection(backward, actionName);
+    }
 
-    _keyPressHandler: function(keysym, mutterActionId) {
+    _keyPressHandler(keysym, mutterActionId) {
         if (keysym === Clutter.KEY_Escape)
             return Clutter.EVENT_PROPAGATE;
         // After the first super-tab the mutterActionId we get is apparently
@@ -96,10 +93,10 @@ var LiveAltTab = Lang.Class({
         //     action.handler(metaWindow, space);
         //     return true;
         // }
-        return this.parent(keysym, mutterActionId);
-    },
+        return super._keyPressHandler(keysym, mutterActionId);
+    }
 
-    _select: function(num) {
+    _select(num) {
 
         let from = this._switcherList.windows[this._selectedIndex];
         let to = this._switcherList.windows[num];
@@ -111,11 +108,11 @@ var LiveAltTab = Lang.Class({
         let clone = new Clutter.Clone({source: actor});
         clone.position = actor.position;
 
-            let space = Tiling.spaces.spaceOfWindow(to);
+        let space = Tiling.spaces.spaceOfWindow(to);
         if (space.indexOf(to) !== -1) {
             let x = Tiling.ensuredX(to, space) + space.monitor.x;
-        clone.x = x + space.monitor.x ;
-        clone.x -= frame.x - actor.x;
+            clone.x = x + space.monitor.x ;
+            clone.x -= frame.x - actor.x;
         }
 
         this.clone = clone;
@@ -124,24 +121,24 @@ var LiveAltTab = Lang.Class({
         // Tiling.ensureViewport(to, space);
         this._selectedIndex = num;
         this._switcherList.highlight(num);
-    },
+    }
 
-    _finish: function() {
-        this.parent();
+    _finish() {
+        super._finish();
         this.was_accepted = true;
-    },
+    }
 
-    _itemEnteredHandler: function() {
+    _itemEnteredHandler() {
         // The item-enter (mouse hover) event is triggered even after a item is
         // accepted. This can cause _select to run on the item below the pointer
         // ensuring the wrong window.
         if(!this.was_accepted) {
-            this.parent.apply(this, arguments);
+            super._itemEnteredHandler.apply(this, arguments);
         }
-    },
+    }
 
-    _onDestroy: function() {
-        this.parent();
+    _onDestroy() {
+        super._onDestroy();
         debug('#preview', 'onDestroy', this.was_accepted);
         Main.wm._blockAnimations = this._block;
         if(!this.was_accepted) {
@@ -162,7 +159,7 @@ var LiveAltTab = Lang.Class({
         let to = this._switcherList.windows[this._selectedIndex];
         Tiling.focus_handler(to);
     }
-})
+}
 
 function liveAltTab(meta_window, space, {display, screen, binding}) {
     let tabPopup = new LiveAltTab(binding.is_reversed());

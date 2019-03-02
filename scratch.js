@@ -194,7 +194,6 @@ function hide() {
 }
 
 // Monkey patch the alt-space menu
-var Lang = imports.lang;
 var PopupMenu = imports.ui.popupMenu;
 var WindowMenu = imports.ui.windowMenu;
 var originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
