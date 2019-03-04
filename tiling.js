@@ -194,9 +194,6 @@ class Space extends Array {
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
 
-        container.set_child_below_sibling(clip,
-                                          container.first_child);
-
         let monitor = Main.layoutManager.primaryMonitor;
         let oldSpace = oldSpaces.get(workspace);
         this.targetX = 0;
@@ -1080,10 +1077,7 @@ class Spaces extends Map {
         spaceContainer.hide();
         this.spaceContainer = spaceContainer;
 
-        backgroundGroup.add_actor(spaceContainer);
-        backgroundGroup.set_child_above_sibling(
-            spaceContainer,
-            backgroundGroup.last_child);
+        backgroundGroup.add_child(this.spaceContainer);
 
         // Hook up existing workspaces
         for (let i=0; i < workspaceManager.n_workspaces; i++) {
