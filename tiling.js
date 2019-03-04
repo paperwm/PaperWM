@@ -1622,8 +1622,9 @@ class Spaces extends Map {
 
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
+        animateWindow(metaWindow);
         let signal = actor.connect(
-            'show',
+            'first-frame',
             () =>  {
                 actor.disconnect(signal);
                 insertWindow(metaWindow, {});
@@ -2282,12 +2283,13 @@ function showHandler(actor) {
     let metaWindow = actor.meta_window;
     let onActive = metaWindow.get_workspace() === workspaceManager.get_active_workspace();
 
-    if (!metaWindow.clone.get_parent())
+    if (!metaWindow.clone.get_parent() && !metaWindow.unmapped)
         return;
 
     if (!onActive
         || isWindowAnimating(metaWindow)
-           // The built-in workspace-change animation is running: suppress it
+        || metaWindow.unmapped
+        // The built-in workspace-change animation is running: suppress it
         || actor.get_parent() !== global.window_group
        ) {
         animateWindow(metaWindow);
