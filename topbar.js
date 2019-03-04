@@ -109,9 +109,10 @@ class ColorEntry {
     }
 }
 
+var WorkspaceMenu = Utils.registerClass(
 class WorkspaceMenu extends PanelMenu.Button {
-    constructor(panel) {
-        super(0.5, 'WorkspaceMenu', false);
+    _init() {
+        super._init(0.5, 'WorkspaceMenu', false);
 
         this.actor.name = 'workspace-button';
 
@@ -139,12 +140,12 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         this.colors = new ColorEntry();
 
-        this.contentBox = new St.BoxLayout({vertical: true});
-        this.contentBox.layout_manager.spacing = 10;
-        this.contentBox.set_style('margin: 10px 20px;');
-        this.contentBox.add_actor(this.entry.actor);
-        this.contentBox.add_actor(this.colors.actor);
-        this.menu.box.add_actor(this.contentBox);
+        this._contentBox = new St.BoxLayout({vertical: true});
+        this._contentBox.layout_manager.spacing = 10;
+        this._contentBox.set_style('margin: 10px 20px;');
+        this._contentBox.add_actor(this.entry.actor);
+        this._contentBox.add_actor(this.colors.actor);
+        this.menu.box.add_actor(this._contentBox);
 
         this.prefsIcon = new St.Button({ reactive: true,
                                          can_focus: true,
@@ -374,7 +375,7 @@ class WorkspaceMenu extends PanelMenu.Button {
         else
             this._label.text = orginalActivitiesText;
     }
-};
+});
 
 var menu;
 var orginalActivitiesText;

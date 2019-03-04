@@ -13,11 +13,12 @@ var debug = utils.debug;
 
 var prefs = Extension.imports.settings.prefs;
 
-var LiveAltTab = class LiveAltTab extends AltTab.WindowSwitcherPopup {
+var LiveAltTab = utils.registerClass(
+class LiveAltTab extends AltTab.WindowSwitcherPopup {
 
-    constructor(reverse) {
+    _init(reverse) {
         this.reverse = reverse;
-        super();
+        super._init();
     }
 
     _getWindowList(reverse) {
@@ -159,7 +160,7 @@ var LiveAltTab = class LiveAltTab extends AltTab.WindowSwitcherPopup {
         let to = this._switcherList.windows[this._selectedIndex];
         Tiling.focus_handler(to);
     }
-}
+});
 
 function liveAltTab(meta_window, space, {display, screen, binding}) {
     let tabPopup = new LiveAltTab(binding.is_reversed());

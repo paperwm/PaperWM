@@ -6,6 +6,19 @@ var Meta = imports.gi.Meta;
 var workspaceManager = global.workspace_manager;
 var display = global.display;
 
+var GObject = imports.gi.GObject;
+var registerClass;
+
+{
+    let version = imports.misc.config.PACKAGE_VERSION.split('.');
+    if (version[0] >= 3 && version[1] > 30) {
+        registerClass = GObject.registerClass;
+    } else {
+        registerClass = (x => x);
+    }
+
+}
+
 var debug_all = false; // Turn off by default
 var debug_filter = {'#paperwm': true, '#stacktrace': true};
 function debug() {
