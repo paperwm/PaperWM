@@ -31,30 +31,26 @@ var scale = 0.9;
 var navigating = false;
 
 // Dummy class to satisfy `SwitcherPopup.SwitcherPopup`
-class SwitcherList {
-    constructor() {
-        this.actor = new Clutter.Actor();
-    }
-}
-Signals.addSignalMethods(SwitcherList.prototype);
 
-var PreviewedWindowNavigator = class PreviewedWindowNavigator extends SwitcherPopup.SwitcherPopup {
-    constructor() {
+
+var PreviewedWindowNavigator = utils.registerClass(
+class PreviewedWindowNavigator extends SwitcherPopup.SwitcherPopup {
+    _init() {
         // Do the absolute minimal here, as `parent.show` is buggy and can
         // return early making cleanup hard. We do most initialization in
         // `_initialSelection` instead.
 
         // HACK: workaround to enable moving from empty workspace. See check in
         // SwitcherPopup.show
-        super([1]);
-        this._switcherList = new SwitcherList();
+        super._init([1]);
+        this._switcherList = new SwitcherPopup.SwitcherList();
         debug('#preview', 'init', this._switcherList);
-
     }
 
     _initialSelection(backward, actionName) {
         debug('#preview', '_initialSelection');
         this.navigator = getNavigator();
+        this._switcherList.hide();
         let actionId = Keybindings.idOf(actionName);
         if(actionId === Meta.KeyBindingAction.NONE) {
             try {
@@ -116,11 +112,11 @@ var PreviewedWindowNavigator = class PreviewedWindowNavigator extends SwitcherPo
     }
 
     destroy() {
-        this.actor.hide(); // Prevents finalized crap
+        this.hide(); // Prevents finalized crap
         super.destroy();
         this.navigator.destroy();
     }
-};
+});
 
 var navigator;
 var Navigator = class Navigator {
