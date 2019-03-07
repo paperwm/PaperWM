@@ -227,8 +227,10 @@ class Minimap extends Array {
             this.highlight.hide();
             return;
         }
-        highlight.show();
         let [index, row] = position;
+        if (!(index in this && row in this[index]))
+            return;
+        highlight.show();
         let clip = this.clip;
         let container = this.container;
         let label = this.label;
