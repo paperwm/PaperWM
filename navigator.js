@@ -85,7 +85,8 @@ var PreviewedWindowNavigator = new Lang.Class({
             }
             action.handler(metaWindow, space, {navigator: this.navigator});
             if (space !== Tiling.spaces.selectedSpace) {
-                this.navigator.minimaps.forEach(m => m.hide());
+                this.navigator.minimaps.forEach(m => typeof(m) === 'number' ?
+                                                Mainloop.source_remove(m) : m.hide());
             }
             return true;
         } else if (mutterActionId == Meta.KeyBindingAction.MINIMIZE) {
