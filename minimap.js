@@ -159,6 +159,8 @@ class Minimap extends Array {
     }
 
     show(animate) {
+        if (this.destroyed)
+            return;
         let time = animate ? 0.25 : 0;
         this.actor.show();
         Tweener.addTween(this.actor,
@@ -193,6 +195,8 @@ class Minimap extends Array {
     }
 
     layout() {
+        if (this.destroyed)
+            return;
         let gap = prefs.window_gap;
         let x = 0;
         for (let column of this) {
@@ -274,7 +278,11 @@ class Minimap extends Array {
     }
 
     destroy() {
-        this.actor.destroy();
+        if (this.destroyed)
+            return;
+        this.destroyed = true;
         this.signals.destroy();
+        this.splice(0,this.length);
+        this.actor.destroy();
     }
 }
