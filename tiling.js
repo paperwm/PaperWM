@@ -756,10 +756,8 @@ class Space extends Array {
             let b = w.get_buffer_rect();
             const x = Math.max(0, monitor.x - b.x);
             const y = Math.max(0, monitor.y - b.y);
-            const cw = b.width - x
-                  - Math.max(0, (b.x + b.width) - (monitor.x + monitor.width));
-            const ch = actor.height - y
-                  - Math.max(0, (b.y + b.height) - (monitor.y + monitor.height));
+            const cw = Math.max(0, monitor.x + monitor.width - b.x - x);
+            const ch = Math.max(0, monitor.y + monitor.height - b.y - y);
             actor.set_clip(x, y, cw, ch);
 
             showWindow(w);
