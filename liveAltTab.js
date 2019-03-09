@@ -50,8 +50,8 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
                                      opacity: 0
                                     });
 
-        this.blur = new Clutter.BlurEffect();
-        this.space.cloneContainer.add_effect(this.blur);
+        // this.blur = new Clutter.BlurEffect();
+        // this.space.cloneContainer.add_effect(this.blur);
         this.space.setSelectionInactive();
         fog.background_color = Clutter.color_from_string("black")[1];
         Tweener.addTween(fog, {
@@ -152,7 +152,7 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
             transition: 'easeInOutQuad',
             onComplete: () => {
                 this.fog.destroy();
-                this.space.cloneContainer.remove_effect(this.blur);
+                // this.space.cloneContainer.remove_effect(this.blur);
                 this.clone && this.clone.destroy();
                 this.space.moveDone();
             }
