@@ -396,11 +396,12 @@ function enable () {
         let point = new Clutter.Vertex({x: 0, y: 0});
         let r = label.apply_relative_transform_to_point(Main.panel.actor, point);
 
-        for (let [workspace, space] of Tiling.spaces) {
-            space.label.set_position(Math.round(r.x), Math.round(r.y));
-            let fontDescription = label.clutter_text.font_description;
-            space.label.clutter_text.set_font_description(fontDescription);
-        }
+        imports.mainloop.timeout_add(0, () => {
+            for (let [workspace, space] of Tiling.spaces) {
+                space.label.set_position(Math.round(r.x), Math.round(r.y));
+                let fontDescription = label.clutter_text.font_description;
+                space.label.clutter_text.set_font_description(fontDescription);
+            }})
     });
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.actor.show();
