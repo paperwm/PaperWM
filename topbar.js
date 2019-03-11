@@ -39,9 +39,15 @@ var colors = [
 
 class PopupMenuEntry {
     constructor (text, label) {
-        this.actor = new St.Entry({text});
+        this.actor = new St.Entry({hint_text: text});
         this.entry = this.actor;
         this.actor.set_style('margin: 4px 0 4px 0');
+
+        // 3.32 crashes when an entry with text is first shown...
+        let id = this.entry.clutter_text.connect('key-focus-in', () => {
+            this.entry.clutter_text.disconnect(id);
+            this.entry.text = this.entry.hint_text;
+        });
 
         this.button = new St.Button({label,
                                     style_class: 'modal-dialog-button button'});
@@ -76,7 +82,7 @@ class Color {
 }
 
 class ColorEntry {
-    constructor() {
+    constructor(startColor) {
         this.actor = new St.BoxLayout({vertical: true});
 
         let flowbox = new St.Widget();
@@ -89,7 +95,7 @@ class ColorEntry {
             flow.add_actor(new Color(c, this).actor);
         }
 
-        this.entry = new PopupMenuEntry('', 'Set color');
+        this.entry = new PopupMenuEntry(startColor, 'Set color');
         this.entry.actor.clutter_text.connect(
             'text-changed', () => {
                 let color = this.entry.actor.text;
@@ -138,7 +144,11 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.signals.connect(this.entry.button, 'clicked',
                              clicked.bind(this.entry));
 
-        this.colors = new ColorEntry();
+        let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
+        // this.entry.actor.text = space.name;
+        // this.colors.entry.actor.text = space.color;
+
+        this.colors = new ColorEntry(space.color);
 
         this._contentBox = new St.BoxLayout({vertical: true});
         this._contentBox.layout_manager.spacing = 10;
@@ -354,9 +364,22 @@ class WorkspaceMenu extends PanelMenu.Button {
         if (!open)
             return;
 
+        // FIXME: 3.32: An StEntry cannot have `text` when shown the first time,
+        // as it will crash the shell. We handle this by setting the text when
+        // the entry first gains focus, only then can we start updating the text
+        // property safely.
         let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
-        this.entry.actor.text = space.name;
-        this.colors.entry.actor.text = space.color;
+        if (this.entry.actor.text != '') {
+            this.entry.actor.text = space.name;
+        } else {
+            this.entry.actor.hint_text = space.name;
+        }
+        if (this.entry.actor.text != '') {
+            this.colors.entry.actor.text = space.color;
+        } else {
+            this.colors.actor.hint_text = space.name;
+        }
+
     }
 
     workspaceSwitched(wm, fromIndex, toIndex) {
