@@ -30,9 +30,6 @@ var display = global.display;
 var scale = 0.9;
 var navigating = false;
 
-// Dummy class to satisfy `SwitcherPopup.SwitcherPopup`
-
-
 var PreviewedWindowNavigator = utils.registerClass(
 class PreviewedWindowNavigator extends SwitcherPopup.SwitcherPopup {
     _init() {
@@ -43,14 +40,20 @@ class PreviewedWindowNavigator extends SwitcherPopup.SwitcherPopup {
         // HACK: workaround to enable moving from empty workspace. See check in
         // SwitcherPopup.show
         super._init([1]);
+        if (!('actor' in this)) { // 3.30 compat
+            this.actor = this;
+        }
         this._switcherList = new SwitcherPopup.SwitcherList();
+        if (!('actor' in this._switcherList)) {
+            this._switcherList.actor = this._switcherList;
+        }
         debug('#preview', 'init', this._switcherList);
     }
 
     _initialSelection(backward, actionName) {
         debug('#preview', '_initialSelection');
         this.navigator = getNavigator();
-        this._switcherList.hide();
+        this._switcherList.actor.hide();
         let actionId = Keybindings.idOf(actionName);
         if(actionId === Meta.KeyBindingAction.NONE) {
             try {
@@ -112,7 +115,7 @@ class PreviewedWindowNavigator extends SwitcherPopup.SwitcherPopup {
     }
 
     destroy() {
-        this.hide(); // Prevents finalized crap
+        this.actor.hide(); // Prevents finalized crap
         super.destroy();
         this.navigator.destroy();
     }
