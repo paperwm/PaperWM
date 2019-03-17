@@ -1679,6 +1679,7 @@ function registerWindow(metaWindow) {
     metaWindow.clone.actor = cloneActor;
 
     signals.connect(metaWindow, "focus", focus_wrapper);
+    // Note: runs before gnome-shell's minimize handling code
     signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
     signals.connect(metaWindow, 'notify::fullscreen', fullscreenWrapper);
     signals.connect(actor, 'show', showWrapper);

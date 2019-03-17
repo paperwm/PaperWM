@@ -51,14 +51,19 @@ function tweenScratch(metaWindow, targetX, targetY, tweenParams={}) {
 function makeScratch(metaWindow) {
     let fromNonScratch = !metaWindow[float];
     let fromTiling = false;
+    // Relevant when called while navigating. Use the position the user actually sees.
+    let windowPositionSeen;
+
     if (fromNonScratch) {
+        // Figure out some stuff before the window is removed from the tiling
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
         fromTiling = space.indexOf(metaWindow) > -1;
+        windowPositionSeen = metaWindow.clone.get_transformed_position().map(Math.round);
     }
 
     metaWindow[float] = true;
     metaWindow.make_above();
-    metaWindow.stick();
+    metaWindow.stick();  // NB! Removes the window from the tiling (synchronously)
 
     if (!metaWindow.minimized)
         Tiling.showWindow(metaWindow);
@@ -77,16 +82,30 @@ function makeScratch(metaWindow) {
         if (!targetFrame) {
             // Default to moving the window slightly down and reducing the height
             let vDisplacement = 30;
+            let [x, y] = windowPositionSeen;  // The window could be non-placable so can't use frame
+
             targetFrame = new Meta.Rectangle({
-                x: f.x, y: f.y + vDisplacement,
+                x: x, y: y + vDisplacement,
                 width: f.width,
                 height: Math.min(f.height - vDisplacement, Math.floor(f.height * 0.9))
             })
         }
 
-        metaWindow.move_resize_frame(true, f.x, f.y, targetFrame.width, targetFrame.height);
-        tweenScratch(metaWindow, targetFrame.x, targetFrame.y,
-                     {onComplete: () => delete metaWindow[scratchFrame]});
+        if (!metaWindow.minimized) {
+            metaWindow.move_resize_frame(true, f.x, f.y,
+                                         targetFrame.width, targetFrame.height);
+            tweenScratch(metaWindow, targetFrame.x, targetFrame.y,
+                         {onComplete: () => delete metaWindow[scratchFrame]});
+        } else {
+            // Can't restore the scratch geometry immediately since it distort the minimize animation
+            // ASSUMPTION: minimize animation is not disabled and not already done
+            let actor = metaWindow.get_compositor_private();
+            let signal = actor.connect('effects-completed', () => {
+                metaWindow.move_resize_frame(true, targetFrame.x, targetFrame.y,
+                                             targetFrame.width, targetFrame.height);
+                actor.disconnect(signal)
+            })
+        }
     }
 
     let monitor = focusMonitor();
