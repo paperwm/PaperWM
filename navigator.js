@@ -76,9 +76,10 @@ var PreviewedWindowNavigator = new Lang.Class({
     _doAction: function(mutterActionId) {
 
         let action = Keybindings.byId(mutterActionId);
+        let space = Tiling.spaces.selectedSpace;
+        let metaWindow = space.selectedWindow;
+
         if (action && action.options.activeInNavigator) {
-            let space = Tiling.spaces.selectedSpace;
-            let metaWindow = space.selectedWindow;
             if (action.options.opensMinimap) {
                 this.navigator._showMinimap(space);
             }
@@ -87,6 +88,8 @@ var PreviewedWindowNavigator = new Lang.Class({
                 this.navigator.minimaps.forEach(m => m.hide());
             }
             return true;
+        } else if (mutterActionId == Meta.KeyBindingAction.MINIMIZE) {
+            metaWindow.minimize();
         }
 
         return false;
