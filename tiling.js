@@ -86,6 +86,17 @@ function init() {
 
    The clones are also useful when constructing the workspace stack as it's
    easier to scale and move the whole @actor in one go.
+
+   # Coordinate system
+
+   MetaWindows live in the stage (global) coordinate system. NB: This system
+   covers all monitors - a window positioned top-left in a monitor might have
+   non-zero coordinates.
+
+   The space (technically the @clip) has it's own coordinate system relative to
+   its monitor. Ie. 0,0 is the top-left corner of the monitor.
+
+   To transform a stage point to space coordinates: `space.actor.transform_stage_point(aX, aY)`
  */
 class Space extends Array {
     constructor (workspace, container) {
