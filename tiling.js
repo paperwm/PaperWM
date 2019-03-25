@@ -1458,9 +1458,15 @@ class Spaces extends Map {
             to = from + 1;
         else
             to = from - 1;
-        if (to < 0 || to >= mru.length) {
-            to = from;
+
+        // wrap around workspaces
+        if (to < 0) {
+            to = mru.length - 1;
         }
+        else if (to >= mru.length) {
+            to = 0;
+        }
+
         if (to === from && Tweener.getTweenCount(newSpace.actor) > 0)
             return;
 
