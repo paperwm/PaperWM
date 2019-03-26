@@ -1407,10 +1407,9 @@ class Spaces extends Map {
 
             if (mru[i - 1] === undefined)
                 return;
-            cloneParent.set_child_below_sibling(
-                space.clip,
-                mru[i - 1].clip
-            );
+            let child = space.clip;
+            let sibling = mru[i - 1].clip;
+            child !== sibling && cloneParent.set_child_below_sibling(child, sibling);
             let selected = space.selectedWindow;
             if (selected && selected.fullscreen) {
                 selected.clone.y = Main.panel.actor.height + prefs.vertical_margin;
