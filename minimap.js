@@ -168,6 +168,8 @@ class Minimap extends Array {
     }
 
     hide(animate) {
+        if (this.destroyed)
+            return;
         let time = animate ? 0.25 : 0;
         Tweener.addTween(this.actor,
                          {opacity: 0, time, transition: 'easeInQuad',
