@@ -365,6 +365,11 @@ class Space extends Array {
         let x = 0;
         let selectedIndex = this.selectedIndex();
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        // Happens on monitors-changed
+        if (workArea.width === 0) {
+            this._inLayout = false;
+            return;
+        }
         let availableHeight = (workArea.y - this.monitor.y + workArea.height -
                                panelBox.height - prefs.vertical_margin);
         let y0 = panelBox.height + prefs.vertical_margin;
