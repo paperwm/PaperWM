@@ -10,6 +10,7 @@ var SwitcherPopup = imports.ui.switcherPopup;
 var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
+var GLib = imports.gi.GLib;
 var Clutter = imports.gi.Clutter;
 var Tweener = imports.ui.tweener;
 var Signals = imports.signals;
@@ -49,6 +50,7 @@ var ActionDispatcher = class {
         this.actor.connect('key-press-event', this._keyPressEvent.bind(this));
         this.actor.connect('key-release-event', this._keyReleaseEvent.bind(this));
 
+        this._noModsTimeoutId = 0;
     }
 
     show(backward, binding, mask) {
@@ -66,6 +68,34 @@ var ActionDispatcher = class {
         }
 
         this._doAction(actionId);
+
+        // There's a race condition; if the user released Alt before
+        // we got the grab, then we won't be notified. (See
+        // https://bugzilla.gnome.org/show_bug.cgi?id=596695 for
+        // details.) So we check now. (straight from SwitcherPopup)
+        if (this._modifierMask) {
+            let [x, y, mods] = global.get_pointer();
+            if (!(mods & this._modifierMask)) {
+                this._finish(global.get_current_time());
+                return false;
+            }
+        } else {
+            this._resetNoModsTimeout();
+        }
+
+        return true;
+    }
+
+    _resetNoModsTimeout() {
+        if (this._noModsTimeoutId != 0)
+            Mainloop.source_remove(this._noModsTimeoutId);
+
+        this._noModsTimeoutId = Mainloop.timeout_add(SwitcherPopup.NO_MODS_TIMEOUT,
+                                                     () => {
+                                                         this._finish(global.get_current_time());
+                                                         this._noModsTimeoutId = 0;
+                                                         return GLib.SOURCE_REMOVE;
+                                                     });
     }
 
     _keyPressEvent(actor, event) {
@@ -100,6 +130,8 @@ var ActionDispatcher = class {
 
             if (state == 0)
                 this._finish(event.get_time());
+        } else {
+            this._resetNoModsTimeout();
         }
 
         return Clutter.EVENT_STOP;
@@ -135,6 +167,8 @@ var ActionDispatcher = class {
     }
 
     destroy() {
+        if (this._noModsTimeoutId != 0)
+            Mainloop.source_remove(this._noModsTimeoutId);
         Main.popModal(this.actor);
         this.actor.destroy();
         // We have already destroyed the navigator
