@@ -101,9 +101,6 @@ var ActionDispatcher = class {
         let keysym = event.get_key_symbol();
         let action = global.display.get_keybinding_action(event.get_key_code(), event.get_state());
 
-        if (this._keyPressHandler(keysym, action) != Clutter.EVENT_PROPAGATE)
-            return Clutter.EVENT_STOP;
-
         // Popping the modal on keypress doesn't work properly, as the release
         // event will leak to the active window. To work around this we initate
         // visual destruction on key-press and signal to the release handler
@@ -112,7 +109,10 @@ var ActionDispatcher = class {
         if (keysym == Clutter.Escape || keysym == Clutter.Tab) {
             this.navigator.destroy();
             this._destroy = true;
+            return Clutter.EVENT_STOP;
         }
+
+        this._doAction(action);
 
         return Clutter.EVENT_STOP;
     }
@@ -132,15 +132,6 @@ var ActionDispatcher = class {
         }
 
         return Clutter.EVENT_STOP;
-    }
-
-
-    _keyPressHandler(keysym, action) {
-        if (keysym !== Clutter.KEY_Escape && this._doAction(action)) {
-            return Clutter.EVENT_STOP;
-        } else {
-            return Clutter.EVENT_PROPAGATE;
-        }
     }
 
     _doAction(mutterActionId) {
