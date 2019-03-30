@@ -30,42 +30,79 @@ var display = global.display;
 var scale = 0.9;
 var navigating = false;
 
-var PreviewedWindowNavigator = utils.registerClass(
-class PreviewedWindowNavigator extends SwitcherPopup.SwitcherPopup {
-    _init() {
-        // Do the absolute minimal here, as `parent.show` is buggy and can
-        // return early making cleanup hard. We do most initialization in
-        // `_initialSelection` instead.
+/**
+   Handle catching keyevents and dispatching actions
 
-        // HACK: workaround to enable moving from empty workspace. See check in
-        // SwitcherPopup.show
-        super._init([1]);
-        if (!('actor' in this)) { // 3.30 compat
-            this.actor = this;
+   Adapted from SwitcherPopup, without any visual handling.
+ */
+var ActionDispatcher = class {
+    constructor() {
+        this.actor = new Clutter.Actor();
+        Main.uiGroup.add_actor(this.actor);
+        if (!Main.pushModal(this.actor)) {
+            // Probably someone else has a pointer grab, try again with keyboard only
+            if (!Main.pushModal(this.actor, {
+                options: Meta.ModalOptions.POINTER_ALREADY_GRABBED
+            })) throw new Error('Could not grap a modal');;
         }
-        this._switcherList = new SwitcherPopup.SwitcherList();
-        if (!('actor' in this._switcherList)) {
-            this._switcherList.actor = this._switcherList;
-        }
-        debug('#preview', 'init', this._switcherList);
+
+        this.actor.connect('key-press-event', this._keyPressEvent.bind(this));
+        this.actor.connect('key-release-event', this._keyReleaseEvent.bind(this));
+
     }
 
-    _initialSelection(backward, actionName) {
-        debug('#preview', '_initialSelection');
+    show(backward, binding, mask) {
+        this._modifierMask = SwitcherPopup.primaryModifier(mask);
         this.navigator = getNavigator();
-        this._switcherList.actor.hide();
-        let actionId = Keybindings.idOf(actionName);
+        let actionId = Keybindings.idOf(binding);
         if(actionId === Meta.KeyBindingAction.NONE) {
             try {
                 // Check for built-in actions
-                actionId = Meta.prefs_get_keybinding_action(actionName);
+                actionId = Meta.prefs_get_keybinding_action(binding);
             } catch(e) {
                 debug("Couldn't resolve action name");
-                return;
+                return false;
             }
         }
 
         this._doAction(actionId);
+    }
+
+    _keyPressEvent(actor, event) {
+        let keysym = event.get_key_symbol();
+        let action = global.display.get_keybinding_action(event.get_key_code(), event.get_state());
+
+        // Popping the modal on keypress doesn't work properly, as the release
+        // event will leak to the active window. To work around this we initate
+        // visual destruction on key-press and signal to the release handler
+        // that we should destroy the dispactcher too
+        // https://github.com/paperwm/PaperWM/issues/70
+        if (keysym == Clutter.Escape || keysym == Clutter.Tab) {
+            this.navigator.destroy();
+            this._destroy = true;
+            return Clutter.EVENT_STOP;
+        }
+
+        this._doAction(action);
+
+        return Clutter.EVENT_STOP;
+    }
+
+    _keyReleaseEvent(actor, event) {
+        let keysym = event.get_key_symbol();
+        if (this._destroy) {
+            this.destroy();
+        }
+
+        if (this._modifierMask) {
+            let [x, y, mods] = global.get_pointer();
+            let state = mods & this._modifierMask;
+
+            if (state == 0)
+                this._finish(event.get_time());
+        }
+
+        return Clutter.EVENT_STOP;
     }
 
     _doAction(mutterActionId) {
@@ -91,35 +128,19 @@ class PreviewedWindowNavigator extends SwitcherPopup.SwitcherPopup {
         return false;
     }
 
-    _keyPressHandler(keysym, action) {
-        if (keysym !== Clutter.KEY_Escape && this._doAction(action)) {
-            return Clutter.EVENT_STOP;
-        } else {
-            return Clutter.EVENT_PROPAGATE;
-        }
-    }
-
     _finish(timestamp) {
         debug('#preview', 'finish');
         this.navigator.accept();
-        super._finish(timestamp);
-    }
-
-    _itemEnteredHandler() {
-        // The item-enter (mouse hover) event is triggered even after a item is
-        // accepted. This can cause _select to run on the item below the pointer
-        // ensuring the wrong window.
-        if(!this.was_accepted) {
-            super._itemEnteredHandler.apply(this, arguments);
-        }
+        this.destroy();
     }
 
     destroy() {
-        this.actor.hide(); // Prevents finalized crap
-        super.destroy();
-        this.navigator.destroy();
+        Main.popModal(this.actor);
+        this.actor.destroy();
+        // We have already destroyed the navigator
+        !this._destroy && this.navigator.destroy();
     }
-});
+}
 
 var navigator;
 var Navigator = class Navigator {
@@ -258,6 +279,6 @@ function getNavigator() {
 }
 
 function preview_navigate(meta_window, space, {display, screen, binding}) {
-    let tabPopup = new PreviewedWindowNavigator();
+    let tabPopup = new ActionDispatcher();
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
