@@ -247,13 +247,14 @@ var Navigator = class Navigator {
         }
 
         let from = this.from;
+        let selected = this.space.selectedWindow;
         if(!this.was_accepted) {
             // Abort the navigation
             this.space = from;
             if (this.startWindow && this._startWindow.get_compositor_private())
-                this.space.selectedWindow = this._startWindow;
+                selected = this._startWindow;
             else
-                this.space.selectedWindow = display.focus_window;
+                selected = display.focus_window;
         }
 
         if (this.monitor !== this.space.monitor) {
@@ -273,7 +274,8 @@ var Navigator = class Navigator {
             Tiling.spaces.animateToSpace(this.space);
         }
 
-        let selected = this.space.selectedWindow;
+        selected = this.space.indexOf(selected) !== -1 ? selected :
+                   this.space.selectedWindow;
         if (selected &&
             (!force ||
              !(display.focus_window && display.focus_window.is_on_all_workspaces())) ) {
