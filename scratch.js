@@ -157,7 +157,8 @@ function toggleScratch() {
 }
 
 function toggleScratchWindow() {
-    if (isScratchActive())
+    let focus = global.display.focus_window;
+    if (isScratchWindow(focus))
         hide();
     else
         show(true);
