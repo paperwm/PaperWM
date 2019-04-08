@@ -453,6 +453,7 @@ function enable () {
 function disable() {
     signals.destroy();
     menu.destroy();
+    menu = null;
     Main.panel.statusArea.activities.actor.show();
     Main.panel.actor.set_style('');
     [Main.panel._rightCorner, Main.panel._leftCorner]
