@@ -290,7 +290,7 @@ var StackOverlay = class StackOverlay {
 
     setTarget(space, index) {
 
-        if (this.clone) {
+        if (this.clone && this.clone.mapped) {
             this.clone.destroy();
             delete this.clone;
         }
