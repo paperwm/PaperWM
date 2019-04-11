@@ -103,6 +103,7 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
         let to = this._switcherList.windows[num];
 
         this.clone && this.clone.destroy();
+        this.clone = null;
 
         let actor = to.get_compositor_private();
         let frame = to.get_frame_rect();
@@ -152,8 +153,10 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
             transition: 'easeInOutQuad',
             onComplete: () => {
                 this.fog.destroy();
+                this.fog = null;
                 // this.space.cloneContainer.remove_effect(this.blur);
                 this.clone && this.clone.destroy();
+                this.clone = null;
                 this.space.moveDone();
             }
         });

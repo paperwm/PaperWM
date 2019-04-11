@@ -288,5 +288,6 @@ class Minimap extends Array {
         this.signals.destroy();
         this.splice(0,this.length);
         this.actor.destroy();
+        this.actor = null;
     }
 }

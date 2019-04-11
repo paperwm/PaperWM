@@ -171,6 +171,7 @@ var ActionDispatcher = class {
             Mainloop.source_remove(this._noModsTimeoutId);
         Main.popModal(this.actor);
         this.actor.destroy();
+        this.actor = null;
         // We have already destroyed the navigator
         !this._destroy && this.navigator.destroy();
     }

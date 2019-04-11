@@ -1047,8 +1047,11 @@ class Space extends Array {
     destroy() {
         this.signals.destroy();
         this.background.destroy();
+        this.background = null;
         this.cloneContainer.destroy();
+        this.cloneContainer = null;
         this.clip.destroy();
+        this.cloneContainer = null;
         let workspace = this.workspace;
     }
 }
@@ -1267,8 +1270,10 @@ class Spaces extends Map {
                 let actor = metaWindow.get_compositor_private();
                 actor.remove_clip();
 
-                if (metaWindow.clone)
+                if (metaWindow.clone) {
                     metaWindow.clone.destroy();
+                    metaWindow.clone = null;
+                }
 
                 if (metaWindow.get_workspace() === workspaceManager.get_active_workspace()
                     && !metaWindow.minimized)
@@ -1287,6 +1292,7 @@ class Spaces extends Map {
         }
 
         this.spaceContainer.destroy();
+        this.spaceContainer = null;
     }
 
     workspacesChanged() {
@@ -1838,8 +1844,10 @@ function remove_handler(workspace, meta_window) {
     let actor = meta_window.get_compositor_private();
     if (!actor) {
         signals.disconnect(meta_window);
-        if (meta_window.clone && meta_window.clone.mapped)
+        if (meta_window.clone && meta_window.clone.mapped) {
             meta_window.clone.destroy();
+            meta_window.clone = null;
+        }
     }
 }
 

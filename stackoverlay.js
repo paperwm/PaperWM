@@ -143,8 +143,10 @@ class ClickOverlay {
         for (let overlay of [this.left, this.right]) {
             let actor = overlay.overlay;
             overlay.signals.destroy();
-            if (overlay.clone)
+            if (overlay.clone) {
                 overlay.clone.destroy();
+                overlay.clone = null;
+            }
             actor.destroy();
             overlay.removeBarrier();
         }
@@ -175,8 +177,10 @@ var StackOverlay = class StackOverlay {
         this.signals = new utils.Signals();
         this.signals.connect(overlay, 'button-release-event', () => {
             Main.activateWindow(this.target);
-            if (this.clone)
+            if (this.clone) {
                 this.clone.destroy();
+                this.clone = null;
+            }
             return true;
         });
 
@@ -197,8 +201,10 @@ var StackOverlay = class StackOverlay {
         if ("_previewId" in this)
             return;
         this._previewId = Mainloop.timeout_add(100, () => {
-            if (this.clone)
+            if (this.clone) {
                 this.clone.destroy();
+                this.clone = null;
+            }
 
             let [x, y, mask] = global.get_pointer();
             let actor = this.target.get_compositor_private();
@@ -230,7 +236,7 @@ var StackOverlay = class StackOverlay {
             return;
 
         this.clone.destroy();
-        delete this.clone;
+        this.clone = null;
         let space = Tiling.spaces.spaceOfWindow(this.target);
         // Show the WindowActors again and re-apply clipping
         space.moveDone();
@@ -290,9 +296,9 @@ var StackOverlay = class StackOverlay {
 
     setTarget(space, index) {
 
-        if (this.clone && this.clone.mapped) {
+        if (this.clone) {
             this.clone.destroy();
-            delete this.clone;
+            this.clone = null;
         }
 
         let bail = () => {
