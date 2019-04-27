@@ -370,9 +370,9 @@ class Space extends Array {
             this._inLayout = false;
             return;
         }
-        let availableHeight = (workArea.y - this.monitor.y + workArea.height -
-                               panelBox.height - prefs.vertical_margin);
-        let y0 = panelBox.height + prefs.vertical_margin;
+
+        let availableHeight = (workArea.height - prefs.vertical_margin);
+        let y0 = workArea.y - this.monitor.y + prefs.vertical_margin;
         let fixPointAttempCount = 0;
 
         for (let i=0; i<this.length; i++) {
