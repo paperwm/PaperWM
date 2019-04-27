@@ -145,12 +145,14 @@ var ActionDispatcher = class {
 
         if (action && action.options.activeInNavigator) {
             if (action.options.opensMinimap) {
-                this.navigator._showMinimap(space);
+                //this.navigator._showMinimap(space);
             }
             action.handler(metaWindow, space, {navigator: this.navigator});
             if (space !== Tiling.spaces.selectedSpace) {
                 this.navigator.minimaps.forEach(m => typeof(m) === 'number' ?
                                                 Mainloop.source_remove(m) : m.hide());
+            } else {
+                Main.activateWindow(space.selectedWindow);
             }
             return true;
         } else if (mutterActionId == Meta.KeyBindingAction.MINIMIZE) {

@@ -430,7 +430,7 @@ function enable () {
     menu.actor.show();
 
     // Force transparency
-    Main.panel.actor.set_style('background-color: rgba(0, 0, 0, 0.35);');
+    Main.panel.actor.set_style('background-color: rgba(0, 0, 0, 0.9);');
     [Main.panel._rightCorner, Main.panel._leftCorner]
         .forEach(c => c.actor.opacity = 0);
 
@@ -445,7 +445,7 @@ function enable () {
         if (display.focus_window.fullscreen) {
             hide();
         } else {
-            panelBox.show();
+            //panelBox.show();
         }
     });
 }
@@ -466,6 +466,7 @@ function disable() {
 }
 
 function show() {
+    return;
     panelBox.show();
     Tweener.addTween(panelBox, {
         scale_y: 1,
@@ -477,6 +478,7 @@ function show() {
 }
 
 function hide() {
+    return;
     Tweener.addTween(panelBox, {
         scale_y: 0,
         time: prefs.animation_time,
