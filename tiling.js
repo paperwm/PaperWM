@@ -31,7 +31,7 @@ var prefs = Settings.prefs;
 // Mutter prevints windows from being placed further off the screen than 75 pixels.
 var stack_margin = 75;
 // Minimum margin
-var minimumMargin = 15;
+var minimumMargin = () => Math.min(15, prefs.horizontal_margin);
 
 var panelBox = Main.layoutManager.panelBox;
 
@@ -390,7 +390,7 @@ class Space extends Array {
             } else {
                 targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
             }
-            targetWidth = Math.min(targetWidth, workArea.width - 2*minimumMargin);
+            targetWidth = Math.min(targetWidth, workArea.width - 2*minimumMargin());
 
             let resultingWidth, relayout;
             if (inGrab && i === selectedIndex) {
@@ -2050,10 +2050,10 @@ function ensuredX(meta_window, space) {
     } else if (x + frame.width === max) {
         // When opening new windows at the end, in the background, we want to
         // show some minimup margin
-        x = max - minimumMargin - frame.width;
+        x = max - minimumMargin() - frame.width;
     } else if (x === min) {
         // Same for the start (though the case isn't as common)
-        x = min + minimumMargin;
+        x = min + minimumMargin();
     }
 
     return x;
@@ -2336,7 +2336,7 @@ function toggleMaximizeHorizontally(metaWindow) {
     metaWindow = metaWindow || display.focus_window;
     let workArea = Main.layoutManager.getWorkAreaForMonitor(metaWindow.get_monitor());
     let frame = metaWindow.get_frame_rect();
-    let reqWidth = workArea.width - minimumMargin*2;
+    let reqWidth = workArea.width - minimumMargin()*2;
 
     // Some windows only resize in increments > 1px so we can't rely on a precise width
     // Hopefully this heuristic is good enough
@@ -2350,9 +2350,9 @@ function toggleMaximizeHorizontally(metaWindow) {
 
         metaWindow.unmaximizedRect = null;
     } else {
-        let x = workArea.x + minimumMargin;
+        let x = workArea.x + minimumMargin();
         metaWindow.unmaximizedRect = frame;
-        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - minimumMargin*2, frame.height);
+        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - minimumMargin()*2, frame.height);
     }
 }
 
@@ -2383,9 +2383,9 @@ function cycleWindowWidth(metaWindow) {
     let nextW = Math.floor(ratios[findNext(r)]*availableWidth);
     let nextX = frame.x;
 
-    if (nextX+nextW > workArea.x + workArea.width - minimumMargin) {
+    if (nextX+nextW > workArea.x + workArea.width - minimumMargin()) {
         // Move the window so it remains fully visible
-        nextX = workArea.x + workArea.width - minimumMargin - nextW;
+        nextX = workArea.x + workArea.width - minimumMargin() - nextW;
     }
 
     metaWindow.move_resize_frame(true, nextX, frame.y, nextW, frame.height);
