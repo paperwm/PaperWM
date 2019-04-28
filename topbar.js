@@ -484,6 +484,7 @@ function disable() {
 
 function show() {
     if (!Main.overview.visible &&
+        !Tiling.inPreview &&
         !Tiling.spaces.selectedSpace.settings.get_boolean('show-top-bar')) {
         hide();
         return;
