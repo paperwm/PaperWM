@@ -2023,8 +2023,9 @@ function animateDown(metaWindow) {
     let frame = metaWindow.get_frame_rect();
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
+    let space = spaces.spaceOfWindow(metaWindow);
     Tweener.addTween(metaWindow.clone, {
-        y: (panelBox.height + prefs.vertical_margin)*0 ,
+        y: (panelBox.height + prefs.vertical_margin)*space.showTopBar ,
         time: prefs.animation_time,
         transition: 'easeInOutQuad'
     });
