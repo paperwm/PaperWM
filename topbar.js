@@ -440,8 +440,22 @@ function enable () {
                                         updateWorkspaceIndicator(to);
                                     }));
 
-    signals.connect(panelBox, 'show', show);
+    signals.connect(Main.overview, 'showing', show);
+    signals.connect(Main.overview, 'hidden', hide);
+
+    signals.connect(panelBox, 'show', () => {
+        if (Tiling.spaces.selectedSpace.settings.get_boolean('show-top-bar'))
+            show();
+        else {
+            if (Main.overview.visible)
+                return;
+            hide();
+        }
+    });
     signals.connect(panelBox, 'hide', () => {
+        if (!Tiling.spaces.selectedSpace.settings.get_boolean('show-top-bar'))
+            return;
+
         if (display.focus_window.fullscreen) {
             hide();
         } else {
@@ -466,6 +480,9 @@ function disable() {
 }
 
 function show() {
+    if (!Main.overview.visible &&
+        !Tiling.spaces.selectedSpace.settings.get_boolean('show-top-bar'))
+        return;
     panelBox.show();
     Tweener.addTween(panelBox, {
         scale_y: 1,
@@ -477,6 +494,7 @@ function show() {
 }
 
 function hide() {
+    panelBox.hide();
     Tweener.addTween(panelBox, {
         scale_y: 0,
         time: prefs.animation_time,

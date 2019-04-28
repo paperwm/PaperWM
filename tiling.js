@@ -2003,7 +2003,7 @@ function animateDown(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
     Tweener.addTween(metaWindow.clone, {
-        y: panelBox.height + prefs.vertical_margin,
+        y: (panelBox.height + prefs.vertical_margin)*0 ,
         time: prefs.animation_time,
         transition: 'easeInOutQuad'
     });
