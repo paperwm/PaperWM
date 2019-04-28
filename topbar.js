@@ -157,6 +157,12 @@ class WorkspaceMenu extends PanelMenu.Button {
         this._contentBox.add_actor(this.colors.actor);
         this.menu.box.add_actor(this._contentBox);
 
+        this._zenItem = new PopupMenu.PopupSwitchMenuItem('show top bar', true);
+        this.menu.addMenuItem(this._zenItem);
+        this._zenItem.connect('toggled', item => {
+            Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', item.state);
+        });
+
         this.prefsIcon = new St.Button({ reactive: true,
                                          can_focus: true,
                                          track_hover: true,
@@ -380,6 +386,7 @@ class WorkspaceMenu extends PanelMenu.Button {
             this.colors.actor.hint_text = space.name;
         }
 
+        this._zenItem._switch.state = space.settings.get_boolean('show-top-bar');
     }
 
     workspaceSwitched(wm, fromIndex, toIndex) {
