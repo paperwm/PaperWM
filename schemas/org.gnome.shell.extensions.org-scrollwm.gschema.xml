@@ -169,6 +169,10 @@
           <default>''</default>
           <summary>The background image</summary>
       </key>
+      <key type="b" name="show-top-bar">
+          <default>false</default>
+          <summary>Wether to hide the top bar or not</summary>
+      </key>
       <key type="s" name="color">
           <default>''</default>
           <summary>The background color</summary>
