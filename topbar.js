@@ -454,15 +454,7 @@ function enable () {
         hide();
     });
 
-    signals.connect(panelBox, 'show', () => {
-        if (Tiling.spaces.selectedSpace.settings.get_boolean('show-top-bar'))
-            show();
-        else {
-            if (Main.overview.visible)
-                return;
-            hide();
-        }
-    });
+    signals.connect(panelBox, 'show', show);
     signals.connect(panelBox, 'hide', () => {
         if (!Tiling.spaces.selectedSpace.settings.get_boolean('show-top-bar'))
             return;
@@ -492,8 +484,10 @@ function disable() {
 
 function show() {
     if (!Main.overview.visible &&
-        !Tiling.spaces.selectedSpace.settings.get_boolean('show-top-bar'))
+        !Tiling.spaces.selectedSpace.settings.get_boolean('show-top-bar')) {
+        hide();
         return;
+    }
     panelBox.show();
     Tweener.addTween(panelBox, {
         scale_y: 1,
