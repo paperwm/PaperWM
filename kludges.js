@@ -8,11 +8,13 @@ var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.o
 
 var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
+var Mainloop = imports.mainloop;
 var Workspace = imports.ui.workspace;
 var utils = Extension.imports.utils;
 
 var Convenience = Extension.imports.convenience;
 var Scratch = Extension.imports.scratch;
+var Tiling = Extension.imports.tiling;
 var settings = Convenience.getSettings();
 var Clutter = imports.gi.Clutter;
 
@@ -25,6 +27,55 @@ function overrideHotCorners() {
 
         corner._pressureBarrier._trigger = function() {};
     }
+}
+
+// Workspace.Workspace._realRecalculateWindowPositions
+// Sort tiled windows in the correct order
+function _realRecalculateWindowPositions(flags) {
+    if (this._repositionWindowsId > 0) {
+        Mainloop.source_remove(this._repositionWindowsId);
+        this._repositionWindowsId = 0;
+    }
+
+    let clones = this._windows.slice();
+    if (clones.length == 0)
+        return;
+
+    let space = Tiling.spaces.spaceOf(this.metaWorkspace);
+    clones.sort((a, b) => {
+        let aw = a.metaWindow;
+        let bw = b.metaWindow;
+        let ia = space.indexOf(aw);
+        let ib = space.indexOf(bw);
+        if (ia === -1 && ib === -1) {
+            return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
+        }
+        if (ia === -1) {
+            return -1;
+        }
+        if (ib === -1) {
+            return 1;
+        }
+        return ia - ib;
+    });
+
+    if (this._reservedSlot)
+        clones.push(this._reservedSlot);
+
+    this._currentLayout = this._computeLayout(clones);
+    this._updateWindowPositions(flags);
+}
+
+// Workspace.WindowClone.getOriginalPosition
+// Get the correct positions of tiled windows when animating to/from the overview
+function getOriginalPosition() {
+    let c = this.metaWindow.clone;
+    let space = Tiling.spaces.spaceOfWindow(this.metaWindow);
+    if (space.indexOf(this.metaWindow) === -1) {
+        return [this._boundingBox.x, this._boundingBox.y];
+    }
+    let [x, y] = [ space.monitor.x + space.targetX + c.targetX, space.monitor.y + c.y];
+    return [x, y];
 }
 
 function disableHotcorners() {
@@ -75,6 +126,9 @@ function init() {
     saveMethod(imports.ui.messageTray.MessageTray.prototype, '_updateState');
     saveMethod(imports.ui.windowManager.WindowManager.prototype, '_prepareWorkspaceSwitch');
     saveMethod(Workspace.Workspace.prototype, '_isOverviewWindow');
+    saveMethod(Workspace.WindowClone.prototype, 'getOriginalPosition');
+    saveMethod(Workspace.Workspace.prototype, '_realRecalculateWindowPositions');
+    saveMethod(Workspace.UnalignedLayoutStrategy.prototype, '_sortRow');
 
     signals = new utils.Signals();
 }
@@ -124,6 +178,12 @@ function enable() {
             switchData.container = new Clutter.Actor();
 
         };
+
+    Workspace.WindowClone.prototype.getOriginalPosition = getOriginalPosition;
+    Workspace.Workspace.prototype._realRecalculateWindowPositions = _realRecalculateWindowPositions;
+    // Prevent any extra sorting of the overview
+    Workspace.UnalignedLayoutStrategy.prototype._sortRow = (row) => row;
+
 
     // Don't hide notifications when there's fullscreen windows in the workspace.
     // Fullscreen windows aren't special in paperWM and might not even be

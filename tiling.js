@@ -2156,6 +2156,14 @@ function move_to(space, metaWindow, { x, y, transition, force }) {
     }
 
     space.targetX = target;
+
+    if (Main.overview.visible) {
+        // Do the move immediately, and let the overview take care of animation
+        space.cloneContainer.x = target;
+        space.moveDone();
+        return;
+    }
+
     space.startAnimate();
     Tweener.addTween(space.cloneContainer,
                      { x: target,
