@@ -386,7 +386,7 @@ class WorkspaceMenu extends PanelMenu.Button {
             this.colors.actor.hint_text = space.name;
         }
 
-        this._zenItem._switch.setToggleState(space.settings.get_boolean('show-top-bar'));
+        this._zenItem._switch.setToggleState(space.showTopBar);
     }
 
     workspaceSwitched(wm, fromIndex, toIndex) {
@@ -449,14 +449,14 @@ function enable () {
 
     signals.connect(Main.overview, 'showing', show);
     signals.connect(Main.overview, 'hidden', () => {
-        if (Tiling.spaces.selectedSpace.settings.get_boolean('show-top-bar'))
+        if (Tiling.spaces.selectedSpace.showTopBar)
             return;
         hide();
     });
 
     signals.connect(panelBox, 'show', show);
     signals.connect(panelBox, 'hide', () => {
-        if (!Tiling.spaces.selectedSpace.settings.get_boolean('show-top-bar'))
+        if (!Tiling.spaces.selectedSpace.showTopBar)
             return;
 
         if (display.focus_window.fullscreen) {
@@ -485,7 +485,7 @@ function disable() {
 function show() {
     if (!Main.overview.visible &&
         !Tiling.inPreview &&
-        !Tiling.spaces.selectedSpace.settings.get_boolean('show-top-bar')) {
+        !(Tiling.spaces && Tiling.spaces.selectedSpace.showTopBar)) {
         hide();
         return;
     }

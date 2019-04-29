@@ -857,13 +857,7 @@ class Space extends Array {
         this.updateColor();
         this.updateBackground();
         this.updateName();
-        this.layout();
-        if (this.settings.get_boolean('show-top-bar')) {
-            this.showTopBar = 1;
-        } else {
-            this.showTopBar = 0;
-        }
-
+        this.updateShowTopBar();
         this.signals.connect(this.settings, 'changed::name',
                              this.updateName.bind(this));
         this.signals.connect(Settings.settings, 'changed::use-workspace-name',
@@ -872,18 +866,28 @@ class Space extends Array {
                              this.updateColor.bind(this));
         this.signals.connect(this.settings, 'changed::background',
                              this.updateBackground.bind(this));
+        this.signals.connect(Settings.settings, 'changed::default-show-top-bar',
+                             this.updateShowTopBar.bind(this));
         this.signals.connect(this.settings, 'changed::show-top-bar',
-                             () => {
-                                 if (this.settings.get_boolean('show-top-bar')) {
-                                     this.showTopBar = 1;
-                                     TopBar.show();
-                                 } else {
-                                     this.showTopBar = 0;
-                                     TopBar.hide();
-                                 }
+                             this.updateShowTopBar.bind(this));
+    }
 
-                                 this.layout();
-                             });
+    updateShowTopBar() {
+        let showTopBar = prefs.default_show_top_bar;
+        let userValue = this.settings.get_user_value('show-top-bar');
+        if (userValue) {
+            showTopBar = userValue.unpack();
+        }
+
+        if (showTopBar) {
+            this.showTopBar = 1;
+            TopBar.show();
+        } else {
+            this.showTopBar = 0;
+            TopBar.hide();
+        }
+
+        this.layout();
     }
 
     updateColor() {
