@@ -421,6 +421,13 @@ var panelBoxShowId, panelBoxHideId;
 function enable () {
     Main.panel.statusArea.activities.actor.hide();
 
+    // See #108
+    Main.layoutManager.removeChrome(Main.layoutManager.panelBox);
+    Main.layoutManager.addChrome(Main.layoutManager.panelBox, {
+        affectsStruts: false,
+        trackFullscreen: true
+    });
+
     menu = new WorkspaceMenu();
     signals.connect(menu._label, 'notify::allocation', (label) => {
         let point = new Clutter.Vertex({x: 0, y: 0});
@@ -480,6 +487,12 @@ function disable() {
     screenSignals = [];
 
     panelBox.scale_y = 1;
+
+    Main.layoutManager.removeChrome(Main.layoutManager.panelBox);
+    Main.layoutManager.addChrome(Main.layoutManager.panelBox, {
+        affectsStruts: true,
+        trackFullscreen: true
+    });
 }
 
 function show() {
