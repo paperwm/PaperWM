@@ -245,7 +245,7 @@
 
     <key type="b" name="default-show-top-bar">
         <default>true</default>
-        <summary>Default background image</summary>
+        <summary>Show the top bar on workspaces by default</summary>
     </key>
 
     <key type="d" name="animation-time">
