@@ -443,11 +443,33 @@ class Space extends Array {
         }
         this._inLayout = false;
 
+
+        let oldWidth = this.cloneContainer.width;
+        let min = workArea.x - this.monitor.x;
+        let auto = (this.targetX + oldWidth >= min + workArea.width && this.targetX <= 0)
+            || this.targetX === min + Math.round((workArea.width - oldWidth)/2);
+
         // transforms break on width 1
         let width = Math.max(1, x - gap);
         this.cloneContainer.width = width;
-        if (width < workArea.width) {
-            this.targetX = workArea.x - this.monitor.x + Math.round((workArea.width - width)/2);
+
+        if (auto) {
+            let removeLastFrames = [];
+            let first = this[0] || [];
+            let last = this[this.length -1] || [];
+            if (width < workArea.width) {
+                this.targetX = min + Math.round((workArea.width - width)/2);
+                removeLastFrames = first.concat(last);
+            } else if (this.targetX + width < min + workArea.width) {
+                this.targetX = min + workArea.width - width;
+                removeLastFrames = last;
+            } else if (this.targetX > workArea.min ) {
+                this.targetX = workArea.x;
+                removeLastFrames = first;
+            }
+            // Invalidate the last position stored on the relevant edge windows
+            for (let w of removeLastFrames)
+                w.lastFrame = undefined;
         }
         Tweener.addTween(this.cloneContainer,
                          { x: this.targetX,
@@ -556,6 +578,8 @@ class Space extends Array {
         metaWindow.clone.reparent(this.cloneContainer);
 
         this.layout();
+        if (this.length === 1)
+            centerWindowHorizontally(this.selectedWindow);
         this.emit('window-added', metaWindow, index, row);
         return true;
     }
