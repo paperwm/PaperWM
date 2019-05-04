@@ -578,8 +578,13 @@ class Space extends Array {
         metaWindow.clone.reparent(this.cloneContainer);
 
         this.layout();
-        if (this.length === 1)
+        // Center the first window
+        if (this.length === 1) {
+            let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+            this.targetX = workArea.x - this.monitor.x + Math.round((workArea.width)/2);
+            this.cloneContainer.x = this.targetX;
             centerWindowHorizontally(this.selectedWindow);
+        }
         this.emit('window-added', metaWindow, index, row);
         return true;
     }
