@@ -1178,6 +1178,13 @@ class Spaces extends Map {
        left with heuristics.
      */
     monitorsChanged() {
+        let primary = Main.layoutManager.primaryMonitor;
+        let monitors = Main.layoutManager.monitors;
+        log(`monitors changed ${monitors}`);
+        // Avoid doing anything if there's no monitors.
+        if (monitors.length === 0)
+            return;
+
         this._monitorsChanging = true;
 
         if (this.monitors)
@@ -1195,8 +1202,6 @@ class Spaces extends Map {
         }
         this.clickOverlays = [];
         let mru = this.mru();
-        let primary = Main.layoutManager.primaryMonitor;
-        let monitors = Main.layoutManager.monitors;
 
         let finish = () => {
             let activeSpace = this.get(workspaceManager.get_active_workspace());
