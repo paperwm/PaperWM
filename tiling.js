@@ -438,6 +438,17 @@ class Space extends Array {
         }
     }
 
+    queueLayout() {
+        if (this._layoutQueued)
+            return;
+
+        this._layoutQueued = true;
+        Meta.later_add(Meta.LaterType.RESIZE, () => {
+            this._layoutQueued = false;
+            this.layout();
+        });
+    }
+
     // Space.prototype.isVisible = function
     isVisible(metaWindow) {
         let clone = metaWindow.clone;
@@ -1773,6 +1784,7 @@ function resizeHandler(metaWindow) {
     let selected = metaWindow === space.selectedWindow;
 
     if (inGrab) {
+        // OK to layout directly from size-changed signal since layout wont resize the grab window
         space.layout(false);
     } else if (!space._inLayout && needLayout) {
         // Restore window position when eg. exiting fullscreen
@@ -1780,7 +1792,8 @@ function resizeHandler(metaWindow) {
             && move_to(space, metaWindow, {
                 x: metaWindow.get_frame_rect().x - space.monitor.x});
 
-        space.layout();
+        // Resizing from within a size-changed signal is troube (#73). Queue instead.
+        space.queueLayout();
     }
 }
 
