@@ -418,24 +418,8 @@ function init () {
 }
 
 var panelBoxShowId, panelBoxHideId;
-var originalMessageTrayTween;
 function enable () {
     Main.panel.statusArea.activities.actor.hide();
-
-    // See #108
-    Main.layoutManager.removeChrome(Main.layoutManager.panelBox);
-    Main.layoutManager.addChrome(Main.layoutManager.panelBox, {
-        affectsStruts: false,
-        trackFullscreen: true
-    });
-
-    // See #109
-    originalMessageTrayTween = Main.messageTray._tween;
-    Main.messageTray._tween = function(actor, statevar, value, params) {
-        if (panelBox.visible)
-            params.y += panelBox.height;
-        originalMessageTrayTween.apply(Main.messageTray, arguments);
-    }
 
     menu = new WorkspaceMenu();
     signals.connect(menu._label, 'notify::allocation', (label) => {
@@ -496,14 +480,6 @@ function disable() {
     screenSignals = [];
 
     panelBox.scale_y = 1;
-
-    Main.layoutManager.removeChrome(Main.layoutManager.panelBox);
-    Main.layoutManager.addChrome(Main.layoutManager.panelBox, {
-        affectsStruts: true,
-        trackFullscreen: true
-    });
-
-    Main.messageTray._tween = originalMessageTrayTween;
 }
 
 function show() {
