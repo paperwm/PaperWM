@@ -112,8 +112,7 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
 
         let space = Tiling.spaces.spaceOfWindow(to);
         if (space.indexOf(to) !== -1) {
-            let x = Tiling.ensuredX(to, space) + space.monitor.x;
-            clone.x = x + space.monitor.x ;
+            clone.x = Tiling.ensuredX(to, space) + space.monitor.x; 
             clone.x -= frame.x - actor.x;
         }
 
