@@ -2485,7 +2485,7 @@ function cycleWindowHeight(metaWindow) {
         // Not in tiling
         let frame = metaWindow.get_frame_rect();
         let workspace = metaWindow.get_workspace();
-        let available = workspace.get_work_area_for_monitor().height;
+        let available = workspace.get_work_area_for_monitor(metaWindow.get_monitor()).height;
         let r = frame.height / available;
         let nextR = ratios[findNext(r)];
         metaWindow.move_resize_frame(true, frame.x, frame.y,
