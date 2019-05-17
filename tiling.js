@@ -2457,31 +2457,39 @@ function cycleWindowHeight(metaWindow) {
     }
 
     let space = spaces.spaceOfWindow(metaWindow);
-    if (!space)
-        return;
-
     let i = space.indexOf(metaWindow);
 
-    // Fix `frame` outside `allocate` so the allocation wont change during
-    // fixpoint calculation. (could move more out, but then we'd have to
-    // calculate available manually)
-    let frame = metaWindow.get_frame_rect();
+    if (i > -1) {
+        // Fix `frame` outside `allocate` so the allocation wont change during
+        // fixpoint calculation. (could move more out, but then we'd have to
+        // calculate available manually)
+        let frame = metaWindow.get_frame_rect();
 
-    function allocate(column, available) {
-        available -= (column.length - 1) * prefs.window_gap;
+        function allocate(column, available) {
+            available -= (column.length - 1) * prefs.window_gap;
+            let r = frame.height / available;
+            let nextR = ratios[findNext(r)];
+            return column.map(mw => {
+                if (mw === metaWindow) {
+                    return Math.floor(available * nextR);
+                } else {
+                    return Math.floor(available * (1-nextR)/(column.length-1));
+                }
+            });
+        }
+
+        if (space[i].length > 1) {
+            space.layout(false, {customAllocators: {[i]: allocate}});
+        }
+    } else {
+        // Not in tiling
+        let frame = metaWindow.get_frame_rect();
+        let workspace = metaWindow.get_workspace();
+        let available = workspace.get_work_area_for_monitor().height;
         let r = frame.height / available;
         let nextR = ratios[findNext(r)];
-        return column.map(mw => {
-            if (mw === metaWindow) {
-                return Math.floor(available * nextR);
-            } else {
-                return Math.floor(available * (1-nextR)/(column.length-1));
-            }
-        });
-    }
-
-    if (space[i].length > 1) {
-        space.layout(false, {customAllocators: {[i]: allocate}});
+        metaWindow.move_resize_frame(true, frame.x, frame.y,
+                                     frame.width, Math.floor(available * nextR));
     }
 }
 
