@@ -275,12 +275,13 @@ class Space extends Array {
 
         const gap = prefs.window_gap;
         const f = grabWindow.get_frame_rect();
+        let yGrabRel = f.y - this.monitor.y;
         targetWidth = f.width;
 
-        const H1 = (f.y - y0) - gap - (k-1)*gap;
-        const H2 = availableHeight - (f.y + f.height - y0) - gap - (column.length-k-2)*gap;
+        const H1 = (yGrabRel - y0) - gap - (k-1)*gap;
+        const H2 = availableHeight - (yGrabRel + f.height - y0) - gap - (column.length-k-2)*gap;
         k > 0 && mosh(column.slice(0, k), H1, y0);
-        let y = mosh(column.slice(k, k+1), f.height, f.y);
+        let y = mosh(column.slice(k, k+1), f.height, yGrabRel);
         k+1 < column.length && mosh(column.slice(k+1), H2, y);
 
         return [targetWidth, needRelayout];
