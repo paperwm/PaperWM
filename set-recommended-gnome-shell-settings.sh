@@ -14,43 +14,44 @@ if [[ $GNOME_SHELL_VERSION > "GNOME Shell 3.3" ]]; then
 fi
 
 function set-with-backup {
-    DPATH=$1
+    SCHEMA=$1
+    KEY=$2
+    TARGET_VAL=$3
 
     if [[ $USE_OVERRIDE_SCHEMA == true ]]; then
         # Gnome 3.3x doesn't use the override path
         # https://gitlab.gnome.org/GNOME/gnome-shell/commit/393d7246cc176cbe8200a62bd661830597ca2fb6
-        DPATH=$(echo $DPATH |
-                    sed "s|^/org/gnome/shell/overrides/|/org/gnome/mutter/|g")
+        SCHEMA=$(echo $SCHEMA |
+                    sed "s|^org\.gnome\.shell\.overrides|org.gnome.mutter|g")
     fi
 
-    TARGET_VAL=$2
-    CURRENT_VAL=$(dconf read $DPATH)
+    CURRENT_VAL=$(gsettings get $SCHEMA $KEY)
     if [[ "$CURRENT_VAL" == "$TARGET_VAL" ]]; then
         return
     fi
 
-    echo "dconf write $DPATH $CURRENT_VAL" >> $RESTORE_SETTINGS_SCRIPT
+    echo "gsettings set $SCHEMA $KEY $CURRENT_VAL" >> $RESTORE_SETTINGS_SCRIPT
 
-    dconf write $DPATH $TARGET_VAL
-    echo "Changed $DPATH from '$CURRENT_VAL' to '$TARGET_VAL'"
+    gsettings set $SCHEMA $KEY $TARGET_VAL
+    echo "Changed $SCHEMA $KEY from '$CURRENT_VAL' to '$TARGET_VAL'"
 }
 
 
 ##### Recommended settings
 
-set-with-backup /org/gnome/mutter/auto-maximize false
+set-with-backup org.gnome.mutter auto-maximize false
 
 # Multi-monitor support is much more complete with workspaces spanning monitors
-set-with-backup /org/gnome/shell/overrides/workspaces-only-on-primary false
+set-with-backup org.gnome.shell.overrides workspaces-only-on-primary false
 
 # PaperWM currently works best using static workspaces
-set-with-backup /org/gnome/shell/overrides/dynamic-workspaces false
+set-with-backup org.gnome.shell.overrides dynamic-workspaces false
 
 # We make no attempt at handing edge-tiling
-set-with-backup /org/gnome/shell/overrides/edge-tiling false
+set-with-backup org.gnome.shell.overrides edge-tiling false
 
 # Attached modal dialogs isn't handled very well
-set-with-backup /org/gnome/shell/overrides/attach-modal-dialogs false
+set-with-backup org.gnome.shell.overrides attach-modal-dialogs false
 
 
 echo
