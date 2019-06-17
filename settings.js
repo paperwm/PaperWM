@@ -21,7 +21,7 @@ var META_KEY_ABOVE_TAB = 0x2f7259c9;
 var prefs = {};
 ['window-gap', 'vertical-margin', 'horizontal-margin', 'workspace-colors',
  'default-background', 'animation-time', 'use-workspace-name',
- 'pressure-barrier', 'default-show-top-bar']
+ 'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity']
     .forEach((k) => setState(null, k));
 
 function setVerticalMargin() {

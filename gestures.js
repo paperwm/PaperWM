@@ -67,7 +67,7 @@ function enable() {
                 }
             }
             if (direction === DIRECTIONS.Vertical) {
-                updateVertical(-dy*2, event.get_time());
+                updateVertical(-dy*prefs.swipe_sensitivity[1], event.get_time());
                 return Clutter.EVENT_STOP;
             }
             return Clutter.EVENT_PROPAGATE;
@@ -114,7 +114,7 @@ function horizontalScroll(actor, event) {
             Tweener.removeTweens(this.cloneContainer);
             direction = DIRECTIONS.Horizontal;
         }
-        return update(this, -dx, event.get_time());
+        return update(this, -dx*prefs.swipe_sensitivity[0], event.get_time());
     case Clutter.TouchpadGesturePhase.CANCEL:
     case Clutter.TouchpadGesturePhase.END:
         this.hState = phase;
