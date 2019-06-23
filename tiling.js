@@ -214,9 +214,12 @@ class Space extends Array {
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
 
+        this.init();
     }
 
     init() {
+        if (this._populated || Main.layoutManager._startingUp)
+            return;
         let workspace = this.workspace;
         let oldSpace = oldSpaces.get(workspace);
 
