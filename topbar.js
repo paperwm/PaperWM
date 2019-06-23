@@ -459,7 +459,7 @@ function enable () {
         if (!Tiling.spaces.selectedSpace.showTopBar)
             return;
 
-        if (display.focus_window.fullscreen) {
+        if (display.focus_window && display.focus_window.fullscreen) {
             hide();
         } else {
             panelBox.show();
