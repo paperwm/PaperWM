@@ -98,7 +98,7 @@ function init() {
    To transform a stage point to space coordinates: `space.actor.transform_stage_point(aX, aY)`
  */
 class Space extends Array {
-    constructor (workspace, container) {
+    constructor (workspace, container, doInit) {
         super(0);
         this.workspace = workspace;
         this.signals = new utils.Signals();
@@ -214,7 +214,8 @@ class Space extends Array {
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
 
-        this.init();
+        if (doInit)
+            this.init();
     }
 
     init() {
@@ -1116,6 +1117,7 @@ class Spaces extends Map {
     constructor() {
         super();
 
+        this._initDone = false;
         this.clickOverlays = [];
         this.signals = new utils.Signals();
         this.stack = [];
@@ -1140,11 +1142,7 @@ class Spaces extends Map {
         }
         this.overrideSettings = new Gio.Settings({ schema_id: OVERRIDE_SCHEMA });
 
-        // Make sure spaces are visible immediately when starting the first time. This will not add any extra workspaces
-        // Else leave it up to this.init() to handle the monitors.
-        if (Main.layoutManager._startingUp) {
-            this.monitorsChanged();
-        }
+        this.monitorsChanged();
     }
 
     init() {
@@ -1182,6 +1180,7 @@ class Spaces extends Map {
                 allocateClone(w.get_compositor_private());
                 this.signals.connect(w, 'size-changed', resizeHandler);
             });
+        this._initDone = true;
 
         this.forEach(space => space.init());
 
@@ -1627,7 +1626,7 @@ class Spaces extends Map {
     }
 
     addSpace(workspace) {
-        let space = new Space(workspace, this.spaceContainer);
+        let space = new Space(workspace, this.spaceContainer, this._initDone);
         this.set(workspace, space);
         this.stack.push(space);
     };
