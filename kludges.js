@@ -314,7 +314,12 @@ function enable() {
             if (workspaceManager.n_workspaces <= Main.layoutManager.monitors.length + 1)
                 break;
             if (emptyWorkspaces[i] && i != lastEmptyIndex) {
-                workspaceManager.remove_workspace(this._workspaces[i], global.get_current_time());
+                let space = Tiling.spaces.spaceOf(this._workspaces[i]);
+                let visibleSpace = Tiling.spaces.monitors.get(space.monitor);
+                // Never remove visible spaces
+                if (space !== visibleSpace) {
+                    workspaceManager.remove_workspace(this._workspaces[i], global.get_current_time());
+                }
             }
         }
 
