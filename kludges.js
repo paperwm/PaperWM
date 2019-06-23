@@ -10,6 +10,7 @@ var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var Workspace = imports.ui.workspace;
+var Shell = imports.gi.Shell;
 var utils = Extension.imports.utils;
 
 var Convenience = Extension.imports.convenience;
@@ -129,6 +130,7 @@ function init() {
     saveMethod(Workspace.WindowClone.prototype, 'getOriginalPosition');
     saveMethod(Workspace.Workspace.prototype, '_realRecalculateWindowPositions');
     saveMethod(Workspace.UnalignedLayoutStrategy.prototype, '_sortRow');
+    saveMethod(imports.ui.windowManager.WorkspaceTracker.prototype, '_checkWorkspaces');
 
     signals = new utils.Signals();
 }
@@ -249,6 +251,76 @@ function enable() {
                 this._notificationExpired = false;
             };
     }
+
+    imports.ui.windowManager.WorkspaceTracker.prototype._checkWorkspaces = function () {
+        let workspaceManager = global.workspace_manager;
+        let i;
+        let emptyWorkspaces = [];
+
+        if (!Meta.prefs_get_dynamic_workspaces()) {
+            this._checkWorkspacesId = 0;
+            return false;
+        }
+
+        // Update workspaces only if Dynamic Workspace Management has not been paused by some other function
+        if (this._pauseWorkspaceCheck)
+            return true;
+
+        for (i = 0; i < this._workspaces.length; i++) {
+            let lastRemoved = this._workspaces[i]._lastRemovedWindow;
+            if ((lastRemoved &&
+                 (lastRemoved.get_window_type() == Meta.WindowType.SPLASHSCREEN ||
+                  lastRemoved.get_window_type() == Meta.WindowType.DIALOG ||
+                  lastRemoved.get_window_type() == Meta.WindowType.MODAL_DIALOG)) ||
+                this._workspaces[i]._keepAliveId)
+                emptyWorkspaces[i] = false;
+            else
+                emptyWorkspaces[i] = true;
+        }
+
+        let sequences = Shell.WindowTracker.get_default().get_startup_sequences();
+        for (i = 0; i < sequences.length; i++) {
+            let index = sequences[i].get_workspace();
+            if (index >= 0 && index <= workspaceManager.n_workspaces)
+                emptyWorkspaces[index] = false;
+        }
+
+        let windows = global.get_window_actors();
+        for (i = 0; i < windows.length; i++) {
+            let actor = windows[i];
+            let win = actor.get_meta_window();
+
+            if (win.is_on_all_workspaces())
+                continue;
+
+            let workspaceIndex = win.get_workspace().index();
+            emptyWorkspaces[workspaceIndex] = false;
+        }
+
+        // If we don't have an empty workspace at the end, add one
+        if (!emptyWorkspaces[emptyWorkspaces.length -1]) {
+            workspaceManager.append_new_workspace(false, global.get_current_time());
+            emptyWorkspaces.push(true);
+        }
+
+        let lastIndex = emptyWorkspaces.length - 1;
+        let lastEmptyIndex = emptyWorkspaces.lastIndexOf(false) + 1;
+        let activeWorkspaceIndex = workspaceManager.get_active_workspace_index();
+        emptyWorkspaces[activeWorkspaceIndex] = false;
+
+        // Delete empty workspaces except for the last one; do it from the end
+        // to avoid index changes
+        for (i = lastIndex; i >= 0; i--) {
+            if (workspaceManager.n_workspaces <= Main.layoutManager.monitors.length + 1)
+                break;
+            if (emptyWorkspaces[i] && i != lastEmptyIndex) {
+                workspaceManager.remove_workspace(this._workspaces[i], global.get_current_time());
+            }
+        }
+
+        this._checkWorkspacesId = 0;
+        return false;
+    };
 }
 
 function disable() {
