@@ -1148,8 +1148,6 @@ class Spaces extends Map {
     init() {
         this.signals.connect(workspaceManager, 'notify::n-workspaces',
                         utils.dynamic_function_ref('workspacesChanged', this).bind(this));
-        // this.signals.connect(workspaceManager, 'workspace-removed',
-        //                 utils.dynamic_function_ref('workspaceRemoved', this));
         this.signals.connect(global.screen || display,
                         'window-left-monitor',
                         this.windowLeftMonitor.bind(this));
@@ -1369,18 +1367,6 @@ class Spaces extends Map {
                 this.removeSpace(space);
             }
         }
-    };
-
-    workspaceRemoved(workspaceManager, index) {
-        let settings = new Gio.Settings({ schema_id:
-                                          'org.gnome.desktop.wm.preferences'});
-        let names = settings.get_strv('workspace-names');
-
-        // Move removed workspace name to the end. Could've simply removed it
-        // too, but this way it's not lost. In the future we want a UI to select
-        // old names when selecting a new workspace.
-        names = names.slice(0, index).concat(names.slice(index+1), [names[index]]);
-        settings.set_strv('workspace-names', names);
     };
 
     switchWorkspace(wm, fromIndex, toIndex) {
