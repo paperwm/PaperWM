@@ -1139,7 +1139,12 @@ class Spaces extends Map {
             OVERRIDE_SCHEMA = 'org.gnome.mutter';
         }
         this.overrideSettings = new Gio.Settings({ schema_id: OVERRIDE_SCHEMA });
-        this.monitorsChanged();
+
+        // Make sure spaces are visible immediately when starting the first time. This will not add any extra workspaces
+        // Else leave it up to this.init() to handle the monitors.
+        if (Main.layoutManager._startingUp) {
+            this.monitorsChanged();
+        }
     }
 
     init() {
@@ -1276,6 +1281,14 @@ class Spaces extends Map {
         for (let monitor of monitors) {
             if (this.monitors.get(monitor) === undefined) {
                 let space = mru[0];
+                if (space === undefined && !Main.layoutManager._startingUp) {
+                    let workspace = workspaceManager.append_new_workspace(
+                        false, global.get_current_time());
+                    space = this.spaceOf(workspace);
+                }
+                if (space === undefined) {
+                    break;
+                }
                 this.monitors.set(monitor, space);
                 space.setMonitor(monitor, false);
                 mru = mru.slice(1);
