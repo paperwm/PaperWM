@@ -235,6 +235,16 @@
         <summary>Swipe sensitivity in [x, y] coordinates</summary>
     </key>
 
+    <key type="ad" name="cycle-width-steps">
+        <default><![CDATA[[0.38195, 0.5, 0.61804]]]></default>
+        <summary>cycle-width cycles through these widths. value &lt; 1 is interpreted as a ratio of the monitor width. Mixed ratios and pixel values not allowed.</summary>
+    </key>
+
+    <key type="ad" name="cycle-height-steps">
+        <default><![CDATA[[0.38195, 0.5, 0.61804]]]></default>
+        <summary>cycle-height cycles through these heights. value &lt; 1 is interpreted as a ratio of the monitor height. Mixed ratios and pixel values not allowed.</summary>
+    </key>
+
     <key type="as" name="workspace-colors">
       <default><![CDATA[['#314E6C', '#565248', '#445632', '#663822',
        '#494066', '#826647', '#4B6983', '#807D74', '#5D7555', '#884631',
