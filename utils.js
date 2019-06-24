@@ -91,6 +91,26 @@ function dynamic_function_ref(handler_name, owner_obj) {
     }
 }
 
+/**
+   Find the first x in `values` that's larger than `cur`.
+   Cycle to first value if no larger value is found.
+   `values` should be sorted in ascending order.
+ */
+function findNext(cur, values, slack=0) {
+    for (let i = 0; i < values.length; i++) {
+        let x = values[i];
+        if (cur < x) {
+            if (x - cur < slack) {
+                // Consider `cur` practically equal to `x`
+                continue;
+            } else {
+                return x;
+            }
+        }
+    }
+    return values[0]; // cycle
+}
+
 function swap(array, i, j) {
     let temp = array[i];
     array[i] = array[j];

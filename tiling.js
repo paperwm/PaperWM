@@ -2422,76 +2422,59 @@ function toggleMaximizeHorizontally(metaWindow) {
 }
 
 function cycleWindowWidth(metaWindow) {
-    const gr = 1/1.618;
-    const ratios = [(1-gr), 1/2, gr];
+    let steps = prefs.cycle_width_steps;
 
-    function findNext(tr) {
-        // Find the first ratio that is significantly bigger than 'tr'
-        for (let i = 0; i < ratios.length; i++) {
-            let r = ratios[i]
-            if (tr <= r) {
-                if (tr/r > 0.9) {
-                    return (i+1) % ratios.length;
-                } else {
-                    return i;
-                }
-            }
-        }
-        return 0; // cycle
-    }
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let workArea = Main.layoutManager.getWorkAreaForMonitor(metaWindow.get_monitor());
-    // Make sure two windows of "compatible" width will have room
-    let availableWidth = workArea.width - prefs.horizontal_margin*2 - prefs.window_gap;
-    let r = frame.width / availableWidth;
-    let nextW = Math.floor(ratios[findNext(r)]*availableWidth);
-    let nextX = frame.x;
 
-    if (nextX+nextW > workArea.x + workArea.width - minimumMargin()) {
-        // Move the window so it remains fully visible
-        nextX = workArea.x + workArea.width - minimumMargin() - nextW;
+    if (steps[0] <= 1) {
+        // Steps are specifed as ratios -> convert to pixels
+        // Make sure two windows of "compatible" width will have room:
+        let availableWidth = workArea.width - prefs.horizontal_margin*2 - prefs.window_gap;
+        steps = steps.map(x => Math.floor(x*availableWidth));
     }
 
-    metaWindow.move_resize_frame(true, nextX, frame.y, nextW, frame.height);
+    // 10px slack to avoid locking up windows that only resize in increments > 1px
+    let targetWidth = utils.findNext(frame.width, steps, 10);
+    let targetX = frame.x;
+
+    if (targetX+targetWidth > workArea.x + workArea.width - minimumMargin()) {
+        // Move the window so it remains fully visible
+        targetX = workArea.x + workArea.width - minimumMargin() - targetWidth;
+    }
+
+    metaWindow.move_resize_frame(true, targetX, frame.y, targetWidth, frame.height);
 }
 
 function cycleWindowHeight(metaWindow) {
-    const ratios = [1/3, 1/2, 2/3];
-
-    function findNext(tr) {
-        // Find the first ratio that is significantly bigger than 'tr'
-        for (let i = 0; i < ratios.length; i++) {
-            let r = ratios[i]
-            if (tr <= r) {
-                if (tr/r > 0.9) {
-                    return (i+1) % ratios.length;
-                } else {
-                    return i;
-                }
-            }
-        }
-        return 0; // cycle
-    }
+    let steps = prefs.cycle_height_steps;
+    let frame = metaWindow.get_frame_rect();
 
     let space = spaces.spaceOfWindow(metaWindow);
     let i = space.indexOf(metaWindow);
 
-    if (i > -1) {
-        // Fix `frame` outside `allocate` so the allocation wont change during
-        // fixpoint calculation. (could move more out, but then we'd have to
-        // calculate available manually)
-        let frame = metaWindow.get_frame_rect();
+    function calcTargetHeight(available) {
+        if (steps[0] <= 1) { // ratio steps
+            return Math.floor(
+                utils.findNext(frame.height/available, steps, 10/available) * available
+            );
+        } else { // pixel steps
+            return Math.min(utils.findNext(frame.height, steps, 10), available);
+        }
+    }
 
+    if (i > -1) {
         function allocate(column, available) {
+            // NB: important to not retrieve the frame size inside allocate. Allocation of
+            // metaWindow should stay the same during a potential fixpoint evaluation.
             available -= (column.length - 1) * prefs.window_gap;
-            let r = frame.height / available;
-            let nextR = ratios[findNext(r)];
+            let targetHeight = calcTargetHeight(available);
             return column.map(mw => {
                 if (mw === metaWindow) {
-                    return Math.floor(available * nextR);
+                    return targetHeight;
                 } else {
-                    return Math.floor(available * (1-nextR)/(column.length-1));
+                    return Math.floor((available - targetHeight) / (column.length-1));
                 }
             });
         }
@@ -2501,13 +2484,10 @@ function cycleWindowHeight(metaWindow) {
         }
     } else {
         // Not in tiling
-        let frame = metaWindow.get_frame_rect();
         let workspace = metaWindow.get_workspace();
         let available = workspace.get_work_area_for_monitor(metaWindow.get_monitor()).height;
-        let r = frame.height / available;
-        let nextR = ratios[findNext(r)];
-        metaWindow.move_resize_frame(true, frame.x, frame.y,
-                                     frame.width, Math.floor(available * nextR));
+        let targetHeight = calcTargetHeight(available);
+        metaWindow.move_resize_frame(true, frame.x, frame.y, frame.width, targetHeight);
     }
 }
 
