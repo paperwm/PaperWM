@@ -1366,11 +1366,24 @@ class Spaces extends Map {
             }
         }
 
+        let nextUnusedWorkspaceIndex = nWorkspaces;
         for (let [workspace, space] of this) {
             if (workspaces[space.workspace] !== true) {
                 debug('workspace removed', space.workspace);
                 this.removeSpace(space);
+
+                // Maps in javascript (and thus Spaces) remember insertion order
+                // so the workspaces are sorted by index. The relative ordering
+                // of the removed workspaces will thus be preserved when resurrected.
+                space.settings.set_int('index', nextUnusedWorkspaceIndex);
+                nextUnusedWorkspaceIndex++;
             }
+        }
+
+        // Ensure the live spaces have correct indices
+        for (let [workspace, space] of this) {
+            space.settings.set_int('index', workspace.index());
+            Meta.prefs_change_workspace_name(workspace.index(), space.name);
         }
     };
 
