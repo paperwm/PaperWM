@@ -28,6 +28,7 @@ var Me = Extension.imports.tiling;
 
 var prefs = Settings.prefs;
 
+var borderWidth = 8;
 // Mutter prevints windows from being placed further off the screen than 75 pixels.
 var stack_margin = 75;
 // Minimum margin
@@ -66,12 +67,11 @@ function init() {
    An @actor to hold everything that's visible, it contains a @background,
    a @label and a @cloneContainer.
 
-   The @background is sized somewhat larger than the monitor, with the top left
-   and right corners rounded. It's positioned slightly above the monitor so the
-   corners aren't visible when the space is active.
-
    The @cloneContainer holds clones of all the tiled windows, it's clipped
    by @cloneClip to avoid protruding into neighbouringing monitors.
+
+   The @border surrounds the outside of the monitor so is only visible when
+   using the workspace carousel.
 
    Clones are necessary due to restrictions mutter places on MetaWindowActors.
    WindowActors can only live in the `global.window_group` and can't be
@@ -158,10 +158,6 @@ class Space extends Array {
                 Extension.imports.gestures.horizontalScroll.bind(this));
 
         this.background = background;
-        this.shadow = new St.Widget();;
-        this.shadow.set_style(
-            `background: black;
-             box-shadow: 0px -4px 8px 0 rgba(0, 0, 0, .5);`);
 
         // Pick up the same css as the top bar label
         let label = new St.Label();
@@ -188,11 +184,14 @@ class Space extends Array {
 
         container.add_actor(clip);
         clip.add_actor(actor);
-        actor.add_actor(this.shadow);
-        this.shadow.add_actor(background);
+        actor.add_actor(this.background);
         actor.add_actor(labelParent);
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
+
+        this.border = new St.Widget();
+        this.actor.add_actor(this.border);
+        this.border.hide();
 
         let monitor = Main.layoutManager.primaryMonitor;
         let oldSpace = oldSpaces.get(workspace);
@@ -207,8 +206,6 @@ class Space extends Array {
         this.setSettings(Settings.getWorkspaceSettings(this.workspace.index()));
 
         actor.set_pivot_point(0.5, 0);
-
-        this.shadow.set_position(-8 - Math.round(prefs.window_gap/2), -4);
 
         this.selectedWindow = null;
         this.leftStack = 0; // not implemented
@@ -914,6 +911,11 @@ class Space extends Array {
             color = colors[index];
         }
         this.color = color;
+        this.border.set_style(`
+border: ${borderWidth}px ${this.color};
+border-radius: ${borderWidth}px;
+box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
+`);
         this.background.background.set_color(Clutter.color_from_string(color)[1]);
     }
 
@@ -971,13 +973,16 @@ class Space extends Array {
                       monitor.width,
                       monitor.height);
 
-        this.shadow.set_size(monitor.width + 8*2 + prefs.window_gap,
-                             monitor.height + 4 + prefs.window_gap);
-        background.set_size(this.shadow.width, this.shadow.height);
+        let scale = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        this.border.set_position(-borderWidth*scale, -borderWidth*scale);
+        this.border.set_size(monitor.width + scale*borderWidth*2,
+                             monitor.height + scale*borderWidth*2);
+
+        background.set_size(this.width, this.height);
 
         this.cloneClip.set_size(monitor.width, monitor.height);
-        this.cloneClip.set_clip(-Math.round(prefs.window_gap/2), 0,
-                                monitor.width + prefs.window_gap, this.shadow.height);
+        this.cloneClip.set_clip(0, 0,
+                                this.width, this.height);
         // transforms break if there's no height
         this.cloneContainer.height = this.monitor.height;
 
@@ -1432,6 +1437,10 @@ class Spaces extends Map {
             let scaleY = monitor.height/space.height;
             space.clip.set_scale(scaleX, scaleY);
 
+            Tweener.removeTweens(space.border);
+            space.border.opacity = 255;
+            space.border.show();
+
             space.actor.show();
 
             let h;
@@ -1591,6 +1600,14 @@ class Spaces extends Map {
                                }
 
                                to.moveDone();
+                               Tweener.addTween(to.border, {
+                                   opacity: 0,
+                                   time: prefs.animation_time,
+                                   onComplete: () => {
+                                       to.border.hide();
+                                       to.border.opacity = 255;
+                                   }
+                               });
                                to.clip.raise_top();
                                callback && callback();
                            }
