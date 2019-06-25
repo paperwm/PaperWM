@@ -1278,7 +1278,7 @@ class Spaces extends Map {
         for (let monitor of monitors) {
             if (this.monitors.get(monitor) === undefined) {
                 let space = mru[0];
-                if (space === undefined && !Main.layoutManager._startingUp) {
+                if (space === undefined && this._initDone) {
                     let workspace = workspaceManager.append_new_workspace(
                         false, global.get_current_time());
                     space = this.spaceOf(workspace);
