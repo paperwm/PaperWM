@@ -897,10 +897,10 @@ class Space extends Array {
 
         if (showTopBar) {
             this.showTopBar = 1;
-            TopBar.show();
+            this._populated && TopBar.show();
         } else {
             this.showTopBar = 0;
-            TopBar.hide();
+            this._populated && TopBar.hide();
         }
 
         this.layout();
