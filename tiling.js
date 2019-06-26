@@ -1738,7 +1738,6 @@ function registerWindow(metaWindow) {
     signals.connect(metaWindow, "focus", focus_wrapper);
     // Note: runs before gnome-shell's minimize handling code
     signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
-    signals.connect(metaWindow, 'notify::fullscreen', fullscreenWrapper);
     signals.connect(actor, 'show', showWrapper);
 
     signals.connect(actor, 'destroy', destroyHandler);
@@ -2321,19 +2320,6 @@ function minimizeHandler(metaWindow) {
     }
 }
 var minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
-
-function fullscreenHandler(metaWindow) {
-    let space = spaces.spaceOfWindow(metaWindow);
-    if (space.selectedWindow !== metaWindow)
-        return;
-
-    if (metaWindow.fullscreen) {
-        TopBar.hide();
-    } else {
-        TopBar.show();
-    }
-}
-var fullscreenWrapper = utils.dynamic_function_ref('fullscreenHandler', Me);
 
 /**
   `WindowActor::show` handling
