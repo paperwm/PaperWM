@@ -2436,7 +2436,7 @@ function cycleWindowWidth(metaWindow) {
     }
 
     // 10px slack to avoid locking up windows that only resize in increments > 1px
-    let targetWidth = utils.findNext(frame.width, steps, 10);
+    let targetWidth = Math.min(utils.findNext(frame.width, steps, 10), workArea.width);
     let targetX = frame.x;
 
     if (targetX+targetWidth > workArea.x + workArea.width - minimumMargin()) {
@@ -2455,13 +2455,14 @@ function cycleWindowHeight(metaWindow) {
     let i = space.indexOf(metaWindow);
 
     function calcTargetHeight(available) {
+        let targetHeight;
         if (steps[0] <= 1) { // ratio steps
-            return Math.floor(
-                utils.findNext(frame.height/available, steps, 10/available) * available
-            );
+            let targetR = utils.findNext(frame.height/available, steps, 10/available);
+            targetHeight = Math.floor(targetR * available);
         } else { // pixel steps
-            return Math.min(utils.findNext(frame.height, steps, 10), available);
+            targetHeight = utils.findNext(frame.height, steps, 10);
         }
+        return Math.min(targetHeight, available);
     }
 
     if (i > -1) {
