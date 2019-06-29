@@ -4,6 +4,13 @@ var Main = imports.ui.main;
 var Tiling = Extension.imports.tiling;
 var Scratch = Extension.imports.scratch;
 
+/**
+   To use an example as-is ("gotoByIndex" for instance) add the following to the
+   `init` function in "user.js":
+
+   Extension.imports.examples.keybindings.gotoByIndex();
+ */
+
 function gotoByIndex() {
     function goto(k) {
         return () => {
