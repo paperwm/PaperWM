@@ -14,7 +14,7 @@ var Scratch = Extension.imports.scratch;
 function gotoByIndex() {
     function goto(k) {
         return () => {
-            let space = Tiling.spaces.get(global.screen.get_active_workspace());
+            let space = Tiling.spaces.get(global.workspace_manager.get_active_workspace());
             let metaWindow = space.getWindow(k, 0)
             if (!metaWindow)
                 return;
