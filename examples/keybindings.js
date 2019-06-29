@@ -84,6 +84,22 @@ function swapNeighbours() {
     }, {activeInNavigator: true})
 }
 
+function cycleMonitor() {
+    var Tiling = Extension.imports.tiling;
+    var Main = imports.ui.main;
+
+    Keybindings.bindkey("<Super>d", "cycle-monitor", () => {
+        let curMonitor = Tiling.spaces.selectedSpace.monitor
+        let monitors = Main.layoutManager.monitors;
+        let nextMonitorI = (curMonitor.index + 1) % monitors.length;
+        let nextMonitor = monitors[nextMonitorI];
+        let nextSpace = Tiling.spaces.monitors.get(nextMonitor);
+        if (nextSpace) {
+            nextSpace.workspace.activate(global.get_current_time());
+        }
+    });
+}
+
 
 function showNavigator() {
     Keybindings.bindkey("<Super>j", "show-minimap", () => null, { opensMinimap: true })
