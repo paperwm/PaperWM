@@ -109,7 +109,7 @@ function cycleMonitor(binding = "<Super>d") {
 
 
 function showNavigator(binding = "<Super>j") {
-    Keybindings.bindkey("<Super>j", "show-minimap", () => null, { opensMinimap: true })
+    Keybindings.bindkey(binding, "show-minimap", () => null, { opensMinimap: true })
 }
 
 
