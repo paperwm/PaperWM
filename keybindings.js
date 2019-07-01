@@ -404,7 +404,14 @@ function enableAction(action) {
             return;
         }
 
-        let actionId = display.grab_accelerator(action.keystr);
+        let actionId;
+        if (display.grab_accelerator.length > 1) {
+            actionId = display.grab_accelerator(action.keystr, Meta.KeyBindingFlags.PER_WINDOW);
+        } else  {
+            // gnome-shell 3.2x
+            actionId = display.grab_accelerator(action.keystr);
+        }
+
         if (actionId === Meta.KeyBindingAction.NONE) {
             log("Failed to grab. Binding probably already taken");
             return;
