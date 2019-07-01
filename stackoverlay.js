@@ -76,9 +76,19 @@ class ClickOverlay {
 
         this.signals = new utils.Signals();
 
+        this._lastPointer = [];
         this.signals.connect(
             enterMonitor, 'motion-event',
-            () => {
+            (actor, event) => {
+                let [x, y, z] = global.get_pointer();
+                let [lX, lY] = this._lastPointer;
+                this._lastPointer = [x, y];
+                Mainloop.timeout_add(500, () => {
+                    this._lastPointer = [];
+                });
+                if (lX === undefined ||
+                    Math.sqrt((lX - x)**2 + (lY - y)**2) < 10)
+                    return;
                 this.deactivate();
                 let space = Tiling.spaces.monitors.get(this.monitor);
                 let display = global.display;
