@@ -78,11 +78,11 @@ function windowMarks() {
 }
 
 
-function swapNeighbours() {
+function swapNeighbours(binding = "<Super>y") {
     var Tiling = Extension.imports.tiling;
     var Meta = imports.gi.Meta;
 
-    Keybindings.bindkey("<Super>y", "swap-neighbours", (mw) => {
+    Keybindings.bindkey(binding, "swap-neighbours", (mw) => {
         let space = Tiling.spaces.spaceOfWindow(mw)
         let i = space.indexOf(mw);
         if (space[i+1]) {
@@ -91,11 +91,11 @@ function swapNeighbours() {
     }, {activeInNavigator: true})
 }
 
-function cycleMonitor() {
+function cycleMonitor(binding = "<Super>d") {
     var Tiling = Extension.imports.tiling;
     var Main = imports.ui.main;
 
-    Keybindings.bindkey("<Super>d", "cycle-monitor", () => {
+    Keybindings.bindkey(binding, "cycle-monitor", () => {
         let curMonitor = Tiling.spaces.selectedSpace.monitor
         let monitors = Main.layoutManager.monitors;
         let nextMonitorI = (curMonitor.index + 1) % monitors.length;
@@ -108,7 +108,7 @@ function cycleMonitor() {
 }
 
 
-function showNavigator() {
+function showNavigator(binding = "<Super>j") {
     Keybindings.bindkey("<Super>j", "show-minimap", () => null, { opensMinimap: true })
 }
 
