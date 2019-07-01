@@ -290,7 +290,33 @@ function bindkey(keystr, actionName=null, handler=null, options={}) {
     action.keystr = keystr;
     action.keycombo = keycombo;
 
-    enableAction(action);
+    if (enableAction(action) === Meta.KeyBindingAction.NONE) {
+        // Keybinding failed: try to supply a useful error message
+        let message;
+        let boundAction = keycomboMap[keycombo];
+        if (boundAction) {
+            message = `${keystr} already bound to paperwm action: ${boundAction.name}`;
+        } else {
+            let boundId = getBoundActionId(keystr);
+            if (boundId !== Meta.KeyBindingAction.NONE) {
+                let builtInAction =
+                    Object.entries(Meta.KeyBindingAction).find(([name, id]) => id === boundId);
+                if (builtInAction) {
+                    message = `${keystr} already bound to built-in action: ${builtInAction[0]}`;
+                } else {
+                    message = `${keystr} already bound to unknown action with id: ${boundId}`;
+                }
+            }
+        }
+
+        if (!message) {
+            message = "Usually caused by the binding already being taken, but could not identify which action";
+        }
+
+        Extension.imports.extension.errorNotification(
+            "PaperWM (user.js): Could not enable keybinding",
+            `Tried to bind ${keystr} to ${actionName}\n${message}`);
+    }
 
     return action.id;
 }
@@ -382,7 +408,7 @@ function disableAction(action) {
 
 function enableAction(action) {
     if (action.id !== Meta.KeyBindingAction.NONE)
-        return; // Already enabled (happens on enable right after init)
+        return action.id; // Already enabled (happens on enable right after init)
 
     if (action.options.settings) {
         let actionId = Main.wm.addKeybinding(
@@ -395,13 +421,14 @@ function enableAction(action) {
         if (actionId !== Meta.KeyBindingAction.NONE) {
             action.id = actionId;
             actionIdMap[actionId] = action;
-        } else
+        } else {
             Utils.warn("Could not enable action", action.name);
+        }
 
     } else {
         if (keycomboMap[action.keycombo]) {
-            Utils.assert("Other action bound to", action.keystr, keycomboMap[action.keycombo].name)
-            return;
+            Utils.warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name)
+            return Meta.KeyBindingAction.NONE;
         }
 
         let actionId;
@@ -413,8 +440,8 @@ function enableAction(action) {
         }
 
         if (actionId === Meta.KeyBindingAction.NONE) {
-            log("Failed to grab. Binding probably already taken");
-            return;
+            Utils.warn("Failed to grab. Binding probably already taken");
+            return Meta.KeyBindingAction.NONE;
         }
 
         let mutterName = Meta.external_binding_name_for_action(actionId);
@@ -433,6 +460,8 @@ function enableAction(action) {
         }
 
         Main.wm.allowKeybinding(action.mutterName, Shell.ActionMode.ALL);
+
+        return action.id;
     }
 }
 
