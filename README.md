@@ -32,6 +32,16 @@ There's a few Gnome Shell settings which works poorly with PaperWM. To use the r
 
 Running the extension will automatic install a user config file as described in [Development & user configuration](#development--user-configuration).
 
+
+### Note for Ubuntu users ###
+
+The desktop-icon extension (which is on by default) and PaperWM is not compatible (eg. #145).
+
+Ubuntu makes it difficult to disable desktop-icon so it is suggested to use vanilla gnome session instead `sudo apt install gnome-session` and select `gnome` or `gnome-wayland` using the gear icon on login.
+
+`desktop-icon` can (sometimes) be disabled via the web interface if the GNOME Shell integration is installed on the browser: https://extensions.gnome.org/local/ or via gnome tweaks `sudo apt install gnome-tweaks` and be disabled under the extensions tab.  
+
+
 ## Usage ##
 
 Most functionality is available using a mouse, eg. activating a window at the edge of the monitor by clicking on it. In wayland its possible to navigate with 3-finger swipes on the trackpad. But the primary focus is making an environment which works well with a keyboard.
@@ -203,7 +213,7 @@ Option              | Values              | Meaning
 
 ```javascript
 let Keybindings = Extension.imports.keybindings;
-Keybindings.bindkey("<Super>j", "my-favorite-width", 
+Keybindings.bindkey("<Super>j", "my-favorite-width",
                     (metaWindow) => {
                         let f = metaWindow.get_frame_rect();
                         metaWindow.move_resize_frame(true, f.x, f.y, 500, f.h);
