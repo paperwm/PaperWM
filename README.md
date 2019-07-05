@@ -197,7 +197,7 @@ Option              | Values              | Meaning
 
 ```javascript
 let Keybindings = Extension.imports.keybindings;
-Keybindings.bindkey("<Super>j", "my-favorite-width", 
+Keybindings.bindkey("<Super>j", "my-favorite-width",
                     (metaWindow) => {
                         let f = metaWindow.get_frame_rect();
                         metaWindow.move_resize_frame(true, f.x, f.y, 500, f.h);
@@ -213,6 +213,16 @@ These extensions are good complements to PaperWM:
 
 - [Switcher](https://github.com/daniellandau/switcher) - combined window switcher and launcher
 - [Dash to Dock](https://micheleg.github.io/dash-to-dock/) - a great dock
+
+## Note for gnome users ##
+
+If desktop-icon is enabled (which it is by default), clicking anywhere while on the stack view will cause windows to not take any user inputs. If this happens log out the user session to fix it.
+
+Ubuntu makes it difficult to disable desktop-icon so it is suggested to use vanilla gnome session instead `sudo apt install gnome-session` and select `gnome` or `gnome-wayland` using the gear icon on login in.
+
+`desktop-icon` can be disabled via the web interface if the GNOME Shell integration is installed on the browser: https://extensions.gnome.org/local/ or via gnome tweaks `sudo apt install gnome-tweaks` and disable it under the extensions tab.  
+
+For details see issue #145
 
 ## Prior work ##
 
