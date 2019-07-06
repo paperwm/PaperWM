@@ -139,6 +139,12 @@ We also made an emacs package, [gnome-shell-mode](https://github.com/paperwm/gno
 
 Pressing <kbd>Super</kbd><kbd>Insert</kbd> will assign the active window to a global variable `metaWindow`, its [window actor](https://developer.gnome.org/meta/stable/MetaWindowActor.html) to `actor`, its [workspace](https://developer.gnome.org/meta/stable/MetaWorkspace.html) to `workspace` and its PaperWM style workspace to `space`. This makes it easy to inspect state and test things out.
 
+#### Using dconf-editor to modify settings
+
+```shell
+GSETTINGS_SCHEMA_DIR=$HOME/.local/share/gnome-shell/extensions/paperwm@hedning:matrix.org/schemas dconf-editor /org/gnome/shell/extensions/paperwm/
+```
+
 ### Winprops
 
 It's possible to create simple rules for placing new windows. Currently most useful when a window should be placed in the scratch layer automatically. An example, best placed in the `init` part of `user.js`:
