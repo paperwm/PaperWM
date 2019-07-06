@@ -9,6 +9,7 @@ var Scratch = Extension.imports.scratch;
    `init` function in "user.js":
 
    Extension.imports.examples.keybindings.gotoByIndex();
+
  */
 
 function gotoByIndex() {
@@ -74,6 +75,40 @@ function windowMarks() {
         Keybindings.bindkey(`<Super><Shift>${k}`, `set-mark-${k}`,
                             setMark(k), {activeInNavigator: true})
     }
+}
+
+function cycleEdgeSnap(binding = "<Super>d") {
+    var Tiling = Extension.imports.tiling;
+    var Meta = imports.gi.Meta;
+
+    Keybindings.bindkey(binding, "cycle-edge-snap", (mw) => {
+        // Snaps window to the left/right monitor edge
+        // Note: mostly the same as quickly switching left+right / right+left
+
+        // Note: We work in monitor relative coordinates here
+        let margin = Tiling.prefs.horizontal_margin;
+        let space = Tiling.spaces.spaceOfWindow(mw);
+        let workarea = Main.layoutManager.getWorkAreaForMonitor(space.monitor.index);
+        let clone = mw.clone;
+
+        let x = clone.targetX + space.targetX;
+        let width = clone.width;
+        let wax = workarea.x - space.monitor.x;
+
+        let leftSnapPos = wax + margin;
+        let rightSnapPos = wax + workarea.width - width - margin;
+
+        let targetX;
+        if (x == leftSnapPos) {
+            targetX = rightSnapPos;
+        } else if (x == rightSnapPos) {
+            targetX = leftSnapPos;
+        } else {
+            targetX = leftSnapPos;
+        }
+
+        Tiling.move_to(space, mw, {x: targetX});
+    }, {activeInNavigator: true});
 }
 
 function swapNeighbours(binding = "<Super>y") {
