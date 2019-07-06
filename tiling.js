@@ -1749,6 +1749,10 @@ class Spaces extends Map {
 Signals.addSignalMethods(Spaces.prototype);
 
 function registerWindow(metaWindow) {
+    if (metaWindow.clone) {
+        // Temp workaround - sometimes called twice on enable
+        return false;
+    }
     if (metaWindow.is_override_redirect()) {
         return false;
     }
