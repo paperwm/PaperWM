@@ -246,11 +246,16 @@ class SettingsWidget {
 
         let nameEntry = new Gtk.Entry();
         let colorButton = new Gtk.ColorButton();
+
+        let backgroundBox = new Gtk.Box({spacing: 32});  // same spacing as used in glade for default background
         let background = new Gtk.FileChooserButton();
+        let clearBackground = new Gtk.Button({label: 'Clear', sensitive: settings.get_string('background') != ''});
+        backgroundBox.add(background)
+        backgroundBox.add(clearBackground)
 
         list.add(createRow('Name', nameEntry));
         list.add(createRow('Color', colorButton));
-        list.add(createRow('Background', background));
+        list.add(createRow('Background', backgroundBox));
 
         let rgba = new Gdk.RGBA();
         let color = settings.get_string('color');
@@ -295,6 +300,13 @@ class SettingsWidget {
         background.connect('file-set', () => {
             let filename = background.get_filename();
             settings.set_string('background', filename);
+            clearBackground.sensitive = filename != '';
+        });
+
+        clearBackground.connect('clicked', () => {
+            background.unselect_all();  // Note: does not trigger 'file-set'
+            settings.reset('background');
+            clearBackground.sensitive = settings.get_string('background') != '';
         });
 
         return view;
