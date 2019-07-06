@@ -100,7 +100,7 @@ function init() {
 }
 
 function enable() {
-    log(`#paerwm enable ${SESSIONID}`);
+    log(`#paperwm enable ${SESSIONID}`);
     if (enabled) {
         log('enable called without calling disable');
         return;
@@ -111,7 +111,7 @@ function enable() {
 }
 
 function disable() {
-    log(`#paerwm enable ${SESSIONID}`);
+    log(`#paperwm enable ${SESSIONID}`);
     if (!enabled) {
         log('disable called without calling enable');
         return;
