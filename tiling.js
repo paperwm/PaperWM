@@ -1750,9 +1750,11 @@ Signals.addSignalMethods(Spaces.prototype);
 
 function registerWindow(metaWindow) {
     if (metaWindow.clone) {
-        // Temp workaround - sometimes called twice on enable
-        return false;
+        // Should no longer be possible, but leave a trace just to be sure
+        utils.warn("window already registered", metaWindow.title);
+        utils.print_stacktrace();
     }
+
     if (metaWindow.is_override_redirect()) {
         return false;
     }
@@ -1850,10 +1852,7 @@ function enable() {
         // Defer workspace initialization until existing windows are accessible.
         // Otherwise we're unable to restore the tiling-order. (when restarting
         // gnome-shell)
-        let id = Main.layoutManager.connect('startup-complete', function() {
-            Main.layoutManager.disconnect(id);
-            initWorkspaces();
-        });
+        signals.connectOneShot(Main.layoutManager, 'startup-complete', initWorkspaces);
     } else {
         initWorkspaces();
     }
