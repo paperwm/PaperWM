@@ -12,6 +12,11 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="vertical_margin_bottom">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkAdjustment" id="window_gap">
     <property name="upper">99</property>
     <property name="step_increment">1</property>
@@ -142,11 +147,11 @@
                         <property name="margin_right">12</property>
                         <property name="column_spacing">32</property>
                         <child>
-                          <object class="GtkLabel" id="horizontal_margin1">
+                          <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="hexpand">True</property>
-                            <property name="label" translatable="yes">Vertical margin</property>
+                            <property name="label" translatable="yes">Top margin</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -155,7 +160,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="vmargin_spinner">
+                          <object class="GtkSpinButton" id="top_margin_spinner">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="width_chars">2</property>
@@ -164,6 +169,53 @@
                             <property name="progress_pulse_step">1</property>
                             <property name="input_purpose">number</property>
                             <property name="adjustment">vertical_margin</property>
+                            <property name="snap_to_ticks">True</property>
+                            <property name="numeric">True</property>
+                            <property name="update_policy">if-valid</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="top_attach">0</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkListBoxRow" id="general_row_3">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <child>
+                      <object class="GtkGrid" id="workspace_grid6">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="margin_left">12</property>
+                        <property name="margin_right">12</property>
+                        <property name="column_spacing">32</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="hexpand">True</property>
+                            <property name="label" translatable="yes">Bottom margin</property>
+                            <property name="xalign">0</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">0</property>
+                            <property name="top_attach">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkSpinButton" id="bottom_margin_spinner">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="width_chars">2</property>
+                            <property name="max_width_chars">2</property>
+                            <property name="text" translatable="yes">0</property>
+                            <property name="progress_pulse_step">1</property>
+                            <property name="input_purpose">number</property>
+                            <property name="adjustment">vertical_margin_bottom</property>
                             <property name="snap_to_ticks">True</property>
                             <property name="numeric">True</property>
                             <property name="update_policy">if-valid</property>
