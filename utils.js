@@ -268,21 +268,42 @@ function monitorOfPoint(x, y) {
 class Signals extends Map {
     static get [Symbol.species]() { return Map; }
 
-    connect(object, signal, handler) {
+    _getOrCreateSignals(object) {
         let signals = this.get(object);
         if (!signals) {
             signals = [];
             this.set(object, signals);
         }
+        return signals;
+    }
+
+    connectOneShot(object, signal, handler) {
+        let signals = this._getOrCreateSignals(object);
+        let id = object.connect(signal, (...args) => {
+            this.disconnect(object, id);
+            return handler(...args);
+        });
+    }
+
+    connect(object, signal, handler) {
         let id = object.connect(signal, handler);
+        let signals = this._getOrCreateSignals(object);
         signals.push(id);
         return id;
     }
 
-    disconnect(object) {
+    disconnect(object, id=null) {
         let ids = this.get(object);
         if (ids) {
-            ids.forEach(id => object.disconnect(id));
+            if (id === null) {
+                ids.forEach(id => object.disconnect(id));
+            } else {
+                object.disconnect(id);
+                let i = ids.indexOf(id);
+                if (i > -1) {
+                    ids.splice(i, 1);
+                }
+            }
             this.delete(object);
         }
     }
