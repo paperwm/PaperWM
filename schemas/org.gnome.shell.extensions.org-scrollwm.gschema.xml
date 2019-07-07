@@ -202,7 +202,12 @@
 
     <key type="i" name="vertical-margin">
       <default>5</default>
-      <summary>Minimum margin from windows top and bottom edge</summary>
+      <summary>Minimum margin from windows top edge</summary>
+    </key>
+
+    <key type="i" name="vertical-margin-bottom">
+        <default>0</default>
+        <summary>Minimum margin from windows bottom edge</summary>
     </key>
 
     <key type="i" name="window-gap">

@@ -86,10 +86,16 @@ class SettingsWidget {
             this._settings.set_int('horizontal-margin', hMargin.get_value());
         });
 
-        let vMargin = this.builder.get_object('vmargin_spinner');
-        vMargin.set_value(this._settings.get_int('vertical-margin'));
-        vMargin.connect('value-changed', () => {
-            this._settings.set_int('vertical-margin', vMargin.get_value());
+        let topMargin = this.builder.get_object('top_margin_spinner');
+        topMargin.set_value(this._settings.get_int('vertical-margin'));
+        topMargin.connect('value-changed', () => {
+            this._settings.set_int('vertical-margin', topMargin.get_value());
+        });
+
+        let bottomMargin = this.builder.get_object('bottom_margin_spinner');
+        bottomMargin.set_value(this._settings.get_int('vertical-margin-bottom'));
+        bottomMargin.connect('value-changed', () => {
+            this._settings.set_int('vertical-margin-bottom', bottomMargin.get_value());
         });
 
         let onlyScratch = this.builder.get_object('only-scratch-in-overview');

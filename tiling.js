@@ -373,7 +373,7 @@ class Space extends Array {
             return;
         }
         let availableHeight = (workArea.y - this.monitor.y + workArea.height -
-                               (panelBox.height)*this.showTopBar - prefs.vertical_margin);
+                               (panelBox.height)*this.showTopBar - prefs.vertical_margin - prefs.vertical_margin_bottom);
         let y0 = (panelBox.height)*this.showTopBar + prefs.vertical_margin;
         let fixPointAttempCount = 0;
 

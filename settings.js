@@ -19,8 +19,8 @@ var KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
 var META_KEY_ABOVE_TAB = 0x2f7259c9;
 
 var prefs = {};
-['window-gap', 'vertical-margin', 'horizontal-margin', 'workspace-colors',
- 'default-background', 'animation-time', 'use-workspace-name',
+['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
+ 'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
  'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity',
  'cycle-width-steps', 'cycle-height-steps']
     .forEach((k) => setState(null, k));
