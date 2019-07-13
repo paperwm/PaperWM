@@ -259,7 +259,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="hexpand">True</property>
-                            <property name="label" translatable="yes">Only scratch in overvew</property>
+                            <property name="label" translatable="yes">Only scratch in overview</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
