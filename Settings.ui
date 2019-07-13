@@ -381,7 +381,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="hexpand">True</property>
-                            <property name="label" translatable="yes">Default Background</property>
+                            <property name="label" translatable="yes">Default background</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -395,7 +395,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="tooltip_text" translatable="yes">Clear default Background</property>
+                            <property name="tooltip_text" translatable="yes">Clear default background</property>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
@@ -407,7 +407,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="create_folders">False</property>
-                            <property name="title" translatable="yes">Choose Default Background</property>
+                            <property name="title" translatable="yes">Choose default background</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
