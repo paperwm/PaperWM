@@ -428,7 +428,7 @@ function enable () {
 
         imports.mainloop.timeout_add(0, () => {
             for (let [workspace, space] of Tiling.spaces) {
-                space.label.set_position(Math.round(r.x), Math.round(r.y));
+                space.label.set_position(Main.panel.actor.x + Math.round(r.x), Main.panel.actor.y + Math.round(r.y));
                 let fontDescription = label.clutter_text.font_description;
                 space.label.clutter_text.set_font_description(fontDescription);
             }})
