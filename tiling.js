@@ -2447,6 +2447,10 @@ function cycleWindowWidth(metaWindow) {
         targetX = workArea.x + workArea.width - minimumMargin() - targetWidth;
     }
 
+    if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
+        metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
+    }
+
     metaWindow.move_resize_frame(true, targetX, frame.y, targetWidth, frame.height);
 }
 
