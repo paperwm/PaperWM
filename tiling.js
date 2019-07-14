@@ -2402,6 +2402,14 @@ function isWindowAnimating(metaWindow) {
 
 function toggleMaximizeHorizontally(metaWindow) {
     metaWindow = metaWindow || display.focus_window;
+
+    if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
+        // ASSUMPTION: MaximizeFlags.HORIZONTALLY is not used
+        metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
+        metaWindow.unmaximizedRect = null;
+        return;
+    }
+
     let workArea = Main.layoutManager.getWorkAreaForMonitor(metaWindow.get_monitor());
     let frame = metaWindow.get_frame_rect();
     let reqWidth = workArea.width - minimumMargin()*2;
