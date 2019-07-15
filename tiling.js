@@ -1612,7 +1612,6 @@ class Spaces extends Map {
                                    }
                                }
 
-                               to.moveDone();
                                Tweener.addTween(to.border, {
                                    opacity: 0,
                                    time: prefs.animation_time,
@@ -1622,6 +1621,13 @@ class Spaces extends Map {
                                    }
                                });
                                to.clip.raise_top();
+
+                               // Fixes a weird bug where mouse input stops
+                               // working after mousing to another monitor on
+                               // X11.
+                               !Meta.is_wayland_compositor() && to.startAnimate();
+
+                               to.moveDone();
                                callback && callback();
                            }
                          });
