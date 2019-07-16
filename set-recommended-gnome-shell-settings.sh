@@ -44,9 +44,6 @@ set-with-backup org.gnome.mutter auto-maximize false
 # Multi-monitor support is much more complete with workspaces spanning monitors
 set-with-backup org.gnome.shell.overrides workspaces-only-on-primary false
 
-# PaperWM currently works best using static workspaces
-set-with-backup org.gnome.shell.overrides dynamic-workspaces false
-
 # We make no attempt at handing edge-tiling
 set-with-backup org.gnome.shell.overrides edge-tiling false
 
