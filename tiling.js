@@ -1761,7 +1761,7 @@ function registerWindow(metaWindow) {
         utils.print_stacktrace();
     }
 
-    if (metaWindow.is_override_redirect()) {
+    if (metaWindow.is_override_redirect() || metaWindow.window_type === Meta.WindowType.DOCK) {
         return false;
     }
 
