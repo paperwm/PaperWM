@@ -591,7 +591,6 @@ class Space extends Array {
         this._floating.push(metaWindow);
         let clone = metaWindow.clone;
         clone.reparent(this.actor);
-        showWindow(metaWindow);
         return true;
     }
 
@@ -2014,6 +2013,7 @@ function insertWindow(metaWindow, {existing}) {
     if (!add_filter(metaWindow)) {
         connectSizeChanged();
         space.addFloating(metaWindow);
+        showWindow(metaWindow);
         // Make sure the window isn't hidden behind the space (eg. dialogs)
         !existing && metaWindow.make_above()
         return;
