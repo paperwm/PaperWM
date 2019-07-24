@@ -1969,18 +1969,14 @@ function insertWindow(metaWindow, {existing}) {
     };
 
     if (!existing) {
-        let focusWindow = display.focus_window;
+        // Note: Can't trust global.display.focus_window to determine currently focused window.
+        //       The mru is more flexible. (global.display.focus_window does not always agree with mru[0])
+        let mru = display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
+        let focusWindow = mru[0];
 
-        if (!focusWindow) {
-            // This happens when a new window is created from the overview
-            let mru = display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
-            if (mru[0] === metaWindow) {
-                // The new window is added to the mru before receiving focus..
-                focusWindow = mru[1];
-            } else {
-                focusWindow = mru[0]; // Branch not observed yet
-            }
-        }
+        if (focusWindow === metaWindow) {
+            focusWindow = mru[1];
+        } 
 
         let scratchIsFocused = Scratch.isScratchWindow(focusWindow);
         let addToScratch = scratchIsFocused;
