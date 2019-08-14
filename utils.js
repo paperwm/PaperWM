@@ -278,8 +278,7 @@ class Signals extends Map {
     }
 
     connectOneShot(object, signal, handler) {
-        let signals = this._getOrCreateSignals(object);
-        let id = object.connect(signal, (...args) => {
+        let id = this.connect(object, signal, (...args) => {
             this.disconnect(object, id);
             return handler(...args);
         });
