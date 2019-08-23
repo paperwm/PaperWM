@@ -323,7 +323,7 @@ var StackOverlay = class StackOverlay {
             return bail();
         }
 
-        let mru = global.display.get_tab_list(Meta.TabList.NORMAL,
+        let mru = global.display.get_tab_list(Meta.TabList.NORMAL_ALL,
                                               space.workspace);
         let column = space[index];
         this.target = mru.filter(w => column.includes(w))[0];
