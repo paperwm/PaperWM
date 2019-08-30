@@ -1,4 +1,4 @@
-var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var GLib = imports.gi.GLib;
 var Tweener = imports.ui.tweener;
 var Meta = imports.gi.Meta;

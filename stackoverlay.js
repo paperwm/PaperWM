@@ -1,4 +1,4 @@
-var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Tiling = Extension.imports.tiling;
 var Clutter = imports.gi.Clutter;
 var Tweener = imports.ui.tweener;

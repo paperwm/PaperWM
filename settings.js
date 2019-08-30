@@ -3,7 +3,7 @@
    Settings utility shared between the running extension and the preference UI.
 
  */
-var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
 var Gtk = imports.gi.Gtk;

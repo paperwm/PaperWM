@@ -1,4 +1,4 @@
-var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Me = Extension.imports.keybindings;
 var Gdk = imports.gi.Gdk;
 var Gtk = imports.gi.Gtk;

@@ -1,4 +1,4 @@
-const Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org']
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const Gdk = imports.gi.Gdk;
 var GLib = imports.gi.GLib;
 var Meta = imports.gi.Meta;
