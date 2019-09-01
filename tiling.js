@@ -1774,7 +1774,7 @@ function registerWindow(metaWindow) {
     clone.meta_window = metaWindow;
 
     metaWindow.clone = clone;
-    metaWindow.clone.actor = cloneActor;
+    metaWindow.clone.cloneActor = cloneActor;
 
     signals.connect(metaWindow, "focus", focus_wrapper);
     // Note: runs before gnome-shell's minimize handling code
@@ -1792,7 +1792,7 @@ function allocateClone(actor) {
     // Adjust the clone's origin to the north-west, so it will line up
     // with the frame.
     let clone = metaWindow.clone;
-    let cloneActor = clone.actor;
+    let cloneActor = clone.cloneActor;
     cloneActor.set_position(actor.x - frame.x,
                        actor.y - frame.y);
     clone.set_size(frame.width, frame.height);
@@ -2179,7 +2179,7 @@ function ensureViewport(meta_window, space, force) {
 
 function updateSelection(space, metaWindow) {
     let clone = metaWindow.clone;
-    let cloneActor = clone.actor;
+    let cloneActor = clone.cloneActor;
     space.setSelectionActive();
     if (space.selection.get_parent() === clone)
         return;
@@ -2383,7 +2383,7 @@ function showWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
     if (!actor)
         return false;
-    metaWindow.clone.actor.hide();
+    metaWindow.clone.cloneActor.hide();
     actor.show();
     return true;
 }
@@ -2392,14 +2392,14 @@ function animateWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
     if (!actor)
         return false;
-    metaWindow.clone.actor.show();
+    metaWindow.clone.cloneActor.show();
     actor.hide();
     return true;
 }
 
 function isWindowAnimating(metaWindow) {
     let clone = metaWindow.clone;
-    return clone.get_parent() && clone.actor.visible;
+    return clone.get_parent() && clone.cloneActor.visible;
 }
 
 function toggleMaximizeHorizontally(metaWindow) {
