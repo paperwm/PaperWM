@@ -1,4 +1,10 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
+var Extension;
+if (imports.misc.extensionUtils.extensions) {
+    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
+} else {
+    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
+}
+
 var Clutter = imports.gi.Clutter;
 var Meta = imports.gi.Meta;
 var AltTab = imports.ui.altTab;
