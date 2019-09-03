@@ -5,7 +5,13 @@
   `SwitcherPopup.SwitcherPopup` when we really should just take full control.
  */
 
-var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Extension;
+if (imports.misc.extensionUtils.extensions) {
+    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
+} else {
+    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
+}
+
 var SwitcherPopup = imports.ui.switcherPopup;
 var Meta = imports.gi.Meta;
 var Main = imports.ui.main;

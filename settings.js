@@ -3,7 +3,13 @@
    Settings utility shared between the running extension and the preference UI.
 
  */
-var Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+var Extension;
+if (imports.misc.extensionUtils.extensions) {
+    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
+} else {
+    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
+}
+
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
 var Gtk = imports.gi.Gtk;

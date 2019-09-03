@@ -85,7 +85,7 @@ function init() {
 
     // var Gio = imports.gi.Gio;
     // let extfile = Gio.file_new_for_path( Extension.imports.extension.__file__);
-    Extension = imports.misc.extensionUtils.extensions['paperwm@hedning:matrix.org'];
+    Extension = imports.misc.extensionUtils.getCurrentExtension();
     convenience = Extension.imports.convenience;
 
     if(initRun) {
