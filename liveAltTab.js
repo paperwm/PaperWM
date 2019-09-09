@@ -125,8 +125,8 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
     }
 
     _finish() {
-        super._finish();
         this.was_accepted = true;
+        super._finish();
     }
 
     _itemEnteredHandler() {
