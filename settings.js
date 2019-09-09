@@ -7,7 +7,12 @@ var Extension;
 if (imports.misc.extensionUtils.extensions) {
     Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
 } else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
+    // Cannot relaiably test for imports.ui in the preference ui
+    try {
+        Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
+    } catch(e) {
+        Extension = imports.misc.extensionUtils.getCurrentExtension();
+    }
 }
 
 var Gio = imports.gi.Gio;
