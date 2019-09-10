@@ -164,7 +164,6 @@ It's possible to create simple rules for placing new windows. Currently most use
     Tiling.defwinprop({
         wm_class: "Spotify",
         scratch_layer: true,
-        oneshot: true
     });
 ```
 
