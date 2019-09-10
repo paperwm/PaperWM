@@ -433,7 +433,7 @@ function enableAction(action) {
 
         let actionId;
         if (display.grab_accelerator.length > 1) {
-            actionId = display.grab_accelerator(action.keystr, Meta.KeyBindingFlags.PER_WINDOW);
+            actionId = display.grab_accelerator(action.keystr, Meta.KeyBindingFlags.NONE);
         } else  {
             // gnome-shell 3.2x
             actionId = display.grab_accelerator(action.keystr);
