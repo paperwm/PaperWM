@@ -1711,10 +1711,12 @@ class Spaces extends Map {
 
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
-        animateWindow(metaWindow);
+        // 3.34: The clone will not update its source is hidden this early
+        actor.opacity = 0;
         let signal = actor.connect(
             'first-frame',
             () =>  {
+                actor.opacity = 255;
                 actor.disconnect(signal);
                 insertWindow(metaWindow, {});
             });
