@@ -51,7 +51,11 @@ function decode-multiline-message {
 }
 
 function gnome-shell-exe-path {
-    if uname -a | grep --silent "NixOS"; then
+    if systemctl --user status gnome-shell-x11.service > /dev/null; then
+        echo --user-unit=gnome-shell-x11.service
+    elif systemctl --user status gnome-shell-wayland.service > /dev/null; then
+        echo --user-unit=gnome-shell-wayland.service
+    elif uname -a | grep --silent "NixOS"; then
         echo $(dirname =gnome-shell(:A))/.gnome-shell-wrapped
     else
         echo =gnome-shell
