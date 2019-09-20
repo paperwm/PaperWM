@@ -1185,7 +1185,7 @@ class Spaces extends Map {
             .forEach(w => {
                 registerWindow(w);
                 // Fixup allocations on reload
-                allocateClone(w.get_compositor_private());
+                allocateClone(w);
                 this.signals.connect(w, 'size-changed', resizeHandler);
             });
         this._initDone = true;
@@ -1775,7 +1775,6 @@ function registerWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
     let cloneActor = new Clutter.Clone({source: actor});
     let clone = new Clutter.Actor();
-    signals.connect(actor, "notify::allocation", allocateClone);
 
     clone.add_actor(cloneActor);
     clone.targetX = 0;
@@ -1785,6 +1784,7 @@ function registerWindow(metaWindow) {
     metaWindow.clone.cloneActor = cloneActor;
 
     signals.connect(metaWindow, "focus", focus_wrapper);
+    signals.connect(metaWindow, 'size-changed', allocateClone);
     // Note: runs before gnome-shell's minimize handling code
     signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
     signals.connect(actor, 'show', showWrapper);
@@ -1794,15 +1794,16 @@ function registerWindow(metaWindow) {
     return true;
 }
 
-function allocateClone(actor) {
-    let metaWindow = actor.meta_window;
+function allocateClone(metaWindow) {
     let frame = metaWindow.get_frame_rect();
+    let buffer = metaWindow.get_buffer_rect();
     // Adjust the clone's origin to the north-west, so it will line up
     // with the frame.
     let clone = metaWindow.clone;
     let cloneActor = clone.cloneActor;
-    cloneActor.set_position(actor.x - frame.x,
-                       actor.y - frame.y);
+    cloneActor.set_position(buffer.x - frame.x,
+                       buffer.y - frame.y);
+    cloneActor.set_size(buffer.width, buffer.height);
     clone.set_size(frame.width, frame.height);
 
     if (metaWindow.clone.first_child.name === 'selection') {
@@ -2193,7 +2194,7 @@ function updateSelection(space, metaWindow) {
         return;
     space.selection.reparent(clone);
     clone.set_child_below_sibling(space.selection, cloneActor);
-    allocateClone(metaWindow.get_compositor_private());
+    allocateClone(metaWindow);
 }
 
 
