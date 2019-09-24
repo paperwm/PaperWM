@@ -111,7 +111,7 @@ function enable() {
 }
 
 function disable() {
-    log(`#paperwm enable ${SESSIONID}`);
+    log(`#paperwm disable ${SESSIONID}`);
     if (!enabled) {
         log('disable called without calling enable');
         return;
