@@ -1718,6 +1718,7 @@ class Spaces extends Map {
             () =>  {
                 actor.opacity = 255;
                 actor.disconnect(signal);
+                allocateClone(metaWindow);
                 insertWindow(metaWindow, {});
             });
     };
