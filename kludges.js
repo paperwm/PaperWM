@@ -269,7 +269,7 @@ function enable() {
         }
 
         // Update workspaces only if Dynamic Workspace Management has not been paused by some other function
-        if (this._pauseWorkspaceCheck)
+        if (this._pauseWorkspaceCheck || Tiling.inPreview)
             return true;
 
         for (i = 0; i < this._workspaces.length; i++) {
