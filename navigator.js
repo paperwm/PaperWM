@@ -281,7 +281,9 @@ var Navigator = class Navigator {
             (!force ||
              !(display.focus_window && display.focus_window.is_on_all_workspaces())) ) {
 
-            if (selected !== display.focus_window) {
+            let hasFocus = selected.has_focus();
+            selected.foreach_transient(mw => hasFocus = mw.has_focus() || hasFocus);
+            if (!hasFocus) {
                 Main.activateWindow(selected);
             } else {
                 // Typically on cancel - the `focus` signal won't run
