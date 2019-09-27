@@ -318,7 +318,7 @@ class Signals extends Map {
 var tweener = {
     addTween(actor, params) {
         if (params.time) {
-            params.duration = Number.parseInt(params.time*1000);
+            params.duration = params.time*1000;
             delete params.time;
         }
         if (!params.mode)

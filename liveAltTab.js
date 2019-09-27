@@ -3,7 +3,7 @@ var Clutter = imports.gi.Clutter;
 var Meta = imports.gi.Meta;
 var AltTab = imports.ui.altTab;
 var Main = imports.ui.main;
-var Tweener = imports.ui.tweener;
+var Tweener = Extension.imports.utils.tweener;
 
 var Scratch = Extension.imports.scratch;
 var Tiling = Extension.imports.tiling;
