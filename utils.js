@@ -319,3 +319,24 @@ class Signals extends Map {
         }
     }
 }
+
+var tweener = {
+    addTween(actor, params) {
+        if (params.time) {
+            params.duration = Number.parseInt(params.time*1000);
+            delete params.time;
+        }
+        if (!params.mode)
+            params.mode = imports.gi.Clutter.AnimationMode.EASE_IN_OUT_QUAD;
+        delete params.transition;
+        actor.ease(params);
+    },
+
+    removeTweens(actor) {
+        actor.remove_all_transitions();
+    },
+
+    isTweening(actor) {
+        return actor.get_transition('x') || actor.get_transition('y') || actor.get_transition('scale-x') || actor.get_transition('scale-x');
+    }
+};
