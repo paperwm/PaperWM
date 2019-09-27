@@ -323,7 +323,6 @@ var tweener = {
         }
         if (!params.mode)
             params.mode = imports.gi.Clutter.AnimationMode.EASE_IN_OUT_QUAD;
-        delete params.transition;
         actor.ease(params);
     },
 

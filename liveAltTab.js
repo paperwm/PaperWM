@@ -56,7 +56,6 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
         fog.background_color = Clutter.color_from_string("black")[1];
         Tweener.addTween(fog, {
             time: prefs.animation_time,
-            transition: 'easeInOutQuad',
             opacity: 100,
         });
 
@@ -149,7 +148,6 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
         Tweener.addTween(this.fog, {
             time: prefs.animation_time,
             opacity: 0,
-            transition: 'easeInOutQuad',
             onComplete: () => {
                 this.fog.destroy();
                 this.fog = null;

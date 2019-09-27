@@ -35,7 +35,6 @@ function tweenScratch(metaWindow, targetX, targetY, tweenParams={}) {
     Tweener.addTween(metaWindow.get_compositor_private(), Object.assign(
         {
             time: Settings.prefs.animation_time,
-            transition: 'easeInOutQuad',
             x: targetX - dx,
             y: targetY - dy,
         },

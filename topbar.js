@@ -283,7 +283,7 @@ class WorkspaceMenu extends PanelMenu.Button {
                 firstEvent = true;
                 this.selected = spaces.selectedSpace;
             }
-            let transition = 'easeOutQuad';
+            let mode = Clutter.AnimationMod.EASE_IN_OUT_QUAD;
             const StackPositions = Tiling.StackPositions;
             const upEdge = 0.385*active.height;
             const downEdge = 0.60*active.height;
@@ -296,11 +296,11 @@ class WorkspaceMenu extends PanelMenu.Button {
                ) {
                 dy = 0;
                 v = 0.1;
-                spaces.selectSpace(Meta.MotionDirection.UP, false, transition);
+                spaces.selectSpace(Meta.MotionDirection.UP, false, mode);
                 this.selected = spaces.selectedSpace;
                 Tweener.removeTweens(this.selected.actor);
                 Tweener.addTween(this.selected.actor,
-                                 {scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, transition});
+                                 {scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode});
             } else if (dy < 0
                        && ((this.selected.actor.y < downEdge &&
                             this.selected.actor.y - dy > downEdge)
@@ -309,11 +309,11 @@ class WorkspaceMenu extends PanelMenu.Button {
                       ) {
                 dy = 0;
                 v = 0.1;
-                spaces.selectSpace(Meta.MotionDirection.DOWN, false, transition);
+                spaces.selectSpace(Meta.MotionDirection.DOWN, false, mode);
                 this.selected = spaces.selectedSpace;
                 Tweener.removeTweens(this.selected.actor);
                 Tweener.addTween(this.selected.actor,
-                                 {scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, transition});
+                                 {scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode});
             }
 
             this.selected.actor.y -= dy;
@@ -350,7 +350,7 @@ class WorkspaceMenu extends PanelMenu.Button {
                     this._navigator.finish();
                     return;
                 } else if (y > downEdge) {
-                    spaces.selectSpace(Meta.MotionDirection.DOWN, false, transition);
+                    spaces.selectSpace(Meta.MotionDirection.DOWN, false, mode);
                     this.selected = spaces.selectedSpace;
                 } else {
                     spaces.selectSpace(Meta.MotionDirection.DOWN);
