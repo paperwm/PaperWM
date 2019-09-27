@@ -241,6 +241,12 @@ class Space extends Array {
             animateWindow(w);
         });
         this.layout(false);
+        // Force immediate painting of clones on reload
+        this.getWindows().forEach(w => {
+            let c = w.clone;
+            c.x = c.targetX;
+            c.y = c.targetY;
+        });
 
         let selected = this.selectedWindow;
         if (selected) {
@@ -351,7 +357,6 @@ class Space extends Array {
                 Tweener.addTween(c, {
                     x, y,
                     time,
-                    transition: 'easeInOutQuad',
                     onComplete: this.moveDone.bind(this)
                 });
             }
