@@ -144,8 +144,8 @@ class SettingsWidget {
         const workspaceCombo = this.builder.get_object('workspace_combo_text');
         const workspaceStack = this.builder.get_object('workspace_stack');
 
-        const nWorkspaces = wmSettings.get_int('num-workspaces');
         this.workspaceNames = wmSettings.get_strv('workspace-names');
+        const nWorkspaces = Settings.workspaceList.get_strv('list').length;
 
         // Note: For some reason we can't set the visible child of the workspace
         //       stack at construction time.. (!)
