@@ -36,6 +36,90 @@ function overrideHotCorners() {
     }
 }
 
+// Polyfill gnome-3.34 transition API, taken from gnome-shell/js/ui/environment.js
+if (!Clutter.Actor.prototype.ease) {
+    function _makeEaseCallback(params, cleanup) {
+        let onComplete = params.onComplete;
+        delete params.onComplete;
+
+        let onStopped = params.onStopped;
+        delete params.onStopped;
+
+        return isFinished => {
+            cleanup();
+
+            if (onStopped)
+                onStopped(isFinished);
+            if (onComplete && isFinished)
+                onComplete();
+        };
+    }
+
+    function _easeActor(actor, params) {
+        actor.save_easing_state();
+
+        if (params.duration != undefined)
+            actor.set_easing_duration(params.duration);
+        delete params.duration;
+
+        if (params.delay != undefined)
+            actor.set_easing_delay(params.delay);
+        delete params.delay;
+
+        if (params.mode != undefined)
+            actor.set_easing_mode(params.mode);
+        delete params.mode;
+
+        Meta.disable_unredirect_for_display(global.display);
+
+        let cleanup = () => Meta.enable_unredirect_for_display(global.display);
+        let callback = _makeEaseCallback(params, cleanup);
+
+        // cancel overwritten transitions
+        let animatedProps = Object.keys(params).map(p => p.replace('_', '-', 'g'));
+        animatedProps.forEach(p => actor.remove_transition(p));
+
+        actor.set(params);
+        actor.restore_easing_state();
+
+        let transition = animatedProps.map(p => actor.get_transition(p))
+            .find(t => t !== null);
+
+        if (transition)
+            transition.connect('stopped', (t, finished) => callback(finished));
+        else
+            callback(true);
+    }
+
+    // adjustAnimationTime:
+    // @msecs: time in milliseconds
+    //
+    // Adjust @msecs to account for St's enable-animations
+    // and slow-down-factor settings
+    function adjustAnimationTime(msecs) {
+        let St = imports.gi.St;
+        let settings = St.Settings.get();
+
+        if (!settings.enable_animations)
+            return 1;
+        // settings.slow_down_factor is new in 3.34
+        return St.get_slow_down_factor() * msecs;
+    }
+
+    let origSetEasingDuration = Clutter.Actor.prototype.set_easing_duration;
+    Clutter.Actor.prototype.set_easing_duration = function(msecs) {
+        origSetEasingDuration.call(this, adjustAnimationTime(msecs));
+    };
+    let origSetEasingDelay = Clutter.Actor.prototype.set_easing_delay;
+    Clutter.Actor.prototype.set_easing_delay = function(msecs) {
+        origSetEasingDelay.call(this, adjustAnimationTime(msecs));
+    };
+
+    Clutter.Actor.prototype.ease = function(props, easingParams) {
+        _easeActor(this, props, easingParams);
+    };
+}
+
 // Workspace.Workspace._realRecalculateWindowPositions
 // Sort tiled windows in the correct order
 function _realRecalculateWindowPositions(flags) {
