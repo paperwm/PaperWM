@@ -32,19 +32,7 @@
         <property name="margin_top">24</property>
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="halign">start</property>
-            <property name="margin_left">12</property>
-            <property name="margin_bottom">24</property>
-            <property name="label" translatable="yes">Note: Resize a window to see the changes</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
+          <placeholder/>
         </child>
         <child>
           <object class="GtkFrame" id="dock_display2">
