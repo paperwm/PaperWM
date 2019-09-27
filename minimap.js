@@ -170,7 +170,7 @@ class Minimap extends Array {
         let time = animate ? 0.25 : 0;
         this.actor.show();
         Tweener.addTween(this.actor,
-                         {opacity: 255, time, transition: 'easeInQuad'});
+                         {opacity: 255, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO});
     }
 
     hide(animate) {
@@ -178,7 +178,7 @@ class Minimap extends Array {
             return;
         let time = animate ? 0.25 : 0;
         Tweener.addTween(this.actor,
-                         {opacity: 0, time, transition: 'easeInQuad',
+                         {opacity: 0, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO,
                           onComplete: () => this.actor.hide() });
     }
 
