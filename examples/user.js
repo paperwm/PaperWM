@@ -8,7 +8,7 @@ var Main = imports.ui.main;
 var Shell = imports.gi.Shell;
 
 // Extension local imports
-var Extension, Me, Tiling, Utils, App;
+var Extension, Me, Tiling, Utils, App, Keybindings, Examples;
 
 function init() {
     // Runs _only_ once on startup
@@ -18,6 +18,8 @@ function init() {
     Me = Extension.imports.user;
     Tiling = Extension.imports.tiling;
     Utils = Extension.imports.utils;
+    Keybindings = Extension.imports.keybindings;
+    Examples = Extension.imports.examples;
     App = Extension.imports.app;
 }
 
