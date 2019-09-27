@@ -447,7 +447,6 @@ class Space extends Array {
             Tweener.addTween(this.cloneContainer,
                              { x: this.targetX,
                                time: prefs.animation_time,
-                               transition: 'easeInOutQuad',
                                onComplete: this.moveDone.bind(this)
                              });
             ensureViewport(this.selectedWindow, this);
@@ -973,10 +972,9 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
 
         let time = animate ? 0.25 : 0;
 
-        let transition = 'easeInOutQuad';
         Tweener.addTween(this.actor,
                         {x: 0, y: 0, scale_x: 1, scale_y: 1,
-                         time, transition});
+                         time});
         Tweener.addTween(clip,
                          {scale_x: 1, scale_y: 1, time});
 
@@ -1512,8 +1510,7 @@ class Spaces extends Map {
         }
     }
 
-    selectSpace(direction, move, transition) {
-        transition = transition || 'easeInOutQuad';
+    selectSpace(direction, move) {
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
         let mru = [...this.stack];
@@ -1579,7 +1576,7 @@ class Spaces extends Map {
                               time: prefs.animation_time,
                               scale_x: scale + (to - i)*0.01,
                               scale_y: scale + (to - i)*0.01,
-                              transition, onComplete
+                              onComplete
                              });
 
         });
@@ -1612,8 +1609,7 @@ class Spaces extends Map {
                            scale_x: 1,
                            scale_y: 1,
                            time: prefs.animation_time,
-                           transition: 'easeInOutQuad',
-                           onComplete: () => {
+                              onComplete: () => {
                                // Meta.enable_unredirect_for_screen(screen);
 
                                // Hide any spaces that aren't visible This
@@ -1654,7 +1650,7 @@ class Spaces extends Map {
             if (!visible.get(space)) {
                 Tweener.addTween(space.actor,
                                  {x: 0, y: space.height + 20,
-                                  time: prefs.animation_time, transition: 'easeInOutQuad' });
+                                  time: prefs.animation_time });
             }
             above = above.get_next_sibling();
         }
@@ -2072,7 +2068,6 @@ function insertWindow(metaWindow, {existing}) {
             scale_x: 1,
             scale_y: 1,
             time: prefs.animation_time,
-            transition: 'easeInOutQuad',
             onComplete: () => {
                 space.layout();
                 connectSizeChanged();
@@ -2098,7 +2093,6 @@ function animateDown(metaWindow) {
     Tweener.addTween(metaWindow.clone, {
         y: (panelBox.height + prefs.vertical_margin)*space.showTopBar ,
         time: prefs.animation_time,
-        transition: 'easeInOutQuad'
     });
 }
 
@@ -2179,8 +2173,7 @@ function ensureViewport(meta_window, space, force) {
         Tweener.addTween(selected.clone,
                          { y: frame.y - space.monitor.y,
                            time: prefs.animation_time,
-                           transition: 'easeInOutQuad',
-                           onComplete: space.moveDone.bind(space)
+                              onComplete: space.moveDone.bind(space)
                          });
     }
     move_to(space, meta_window, {
@@ -2209,7 +2202,7 @@ function updateSelection(space, metaWindow) {
  * Move the column containing @meta_window to x, y and propagate the change
  * in @space. Coordinates are relative to monitor and y is optional.
  */
-function move_to(space, metaWindow, { x, y, transition, force }) {
+function move_to(space, metaWindow, { x, y, force }) {
     if (space.indexOf(metaWindow) === -1)
         return;
 
@@ -2233,7 +2226,6 @@ function move_to(space, metaWindow, { x, y, transition, force }) {
     Tweener.addTween(space.cloneContainer,
                      { x: target,
                        time: prefs.animation_time,
-                       transition: 'easeInOutQuad',
                        onComplete: space.moveDone.bind(space)
                      });
 
@@ -2752,7 +2744,6 @@ function takeWindow(metaWindow, space, {navigator}) {
     Tweener.addTween(metaWindow.clone,
                      {x, y,
                       time: prefs.animation_time,
-                      transition: 'easeInOutQuad',
                      });
 }
 
