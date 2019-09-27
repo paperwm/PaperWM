@@ -17,7 +17,7 @@ var PanelMenu = imports.ui.panelMenu;
 var PopupMenu = imports.ui.popupMenu;
 var Clutter = imports.gi.Clutter;
 var Main = imports.ui.main;
-var Tweener = imports.ui.tweener;
+var Tweener = Extension.imports.utils.tweener;
 
 var Tiling = Extension.imports.tiling;
 var Navigator = Extension.imports.navigator;

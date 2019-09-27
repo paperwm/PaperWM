@@ -13,7 +13,7 @@ var PopupMenu = imports.ui.popupMenu;
 var Clutter = imports.gi.Clutter;
 var Main = imports.ui.main;
 var Shell = imports.gi.Shell;
-var Tweener = imports.ui.tweener;
+var Tweener = Extension.imports.utils.tweener;
 
 var Utils = Extension.imports.utils;
 var Tiling = Extension.imports.tiling;

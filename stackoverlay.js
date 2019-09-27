@@ -7,7 +7,7 @@ if (imports.misc.extensionUtils.extensions) {
 
 var Tiling = Extension.imports.tiling;
 var Clutter = imports.gi.Clutter;
-var Tweener = imports.ui.tweener;
+var Tweener = Extension.imports.utils.tweener;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var Shell = imports.gi.Shell;

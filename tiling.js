@@ -6,7 +6,7 @@ if (imports.misc.extensionUtils.extensions) {
 }
 
 var GLib = imports.gi.GLib;
-var Tweener = imports.ui.tweener;
+var Tweener = Extension.imports.utils.tweener;
 var Meta = imports.gi.Meta;
 var Clutter = imports.gi.Clutter;
 var St = imports.gi.St;
@@ -352,6 +352,7 @@ class Space extends Array {
                     x, y,
                     time,
                     transition: 'easeInOutQuad',
+                    onComplete: this.moveDone.bind(this)
                 });
             }
 
@@ -363,6 +364,8 @@ class Space extends Array {
 
     layout(animate = true, options={}) {
         // Guard against recursively calling layout
+        if (!this._populated)
+            return;
         if (this._inLayout)
             return;
         this._inLayout = true;
@@ -542,7 +545,7 @@ class Space extends Array {
 
         metaWindow.clone.reparent(this.cloneContainer);
 
-        this._populated && this.layout();
+        this.layout();
         this.emit('window-added', metaWindow, index, row);
         return true;
     }
@@ -1538,7 +1541,7 @@ class Spaces extends Map {
             to = 0;
         }
 
-        if (to === from && Tweener.getTweenCount(newSpace.actor) > 0)
+        if (to === from && Tweener.isTweening(newSpace.actor))
             return;
 
         newSpace = mru[to];
@@ -2057,8 +2060,8 @@ function insertWindow(metaWindow, {existing}) {
     let actor = metaWindow.get_compositor_private();
     animateWindow(metaWindow);
     if (!existing) {
-        clone.set_position(clone.targetX,
-                           panelBox.height + prefs.vertical_margin);
+        clone.x = clone.targetX;
+        clone.y = clone.targetY;
         clone.set_scale(0, 0);
         Tweener.addTween(clone, {
             scale_x: 1,
@@ -2172,10 +2175,8 @@ function ensureViewport(meta_window, space, force) {
                          { y: frame.y - space.monitor.y,
                            time: prefs.animation_time,
                            transition: 'easeInOutQuad',
+                           onComplete: space.moveDone.bind(space)
                          });
-        // Hack to ensure a moveDone is called after the above tween is done
-        Tweener.addTween(space.cloneContainer,
-                         {time: prefs.animation_time, onComplete: space.moveDone.bind(space)});
     }
     move_to(space, meta_window, {
         x, force

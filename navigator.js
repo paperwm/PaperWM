@@ -18,7 +18,7 @@ var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var GLib = imports.gi.GLib;
 var Clutter = imports.gi.Clutter;
-var Tweener = imports.ui.tweener;
+var Tweener = Extension.imports.utils.tweener;
 var Signals = imports.signals;
 
 var TopBar = Extension.imports.topbar;

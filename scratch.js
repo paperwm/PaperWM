@@ -31,7 +31,7 @@ function focusMonitor() {
    other windows/clones (clones if the space animates)
  */
 function tweenScratch(metaWindow, targetX, targetY, tweenParams={}) {
-    let Tweener = imports.ui.tweener;
+    let Tweener = Extension.imports.utils.tweener;
     let Settings = Extension.imports.settings;
     let f = metaWindow.get_frame_rect();
     let b = metaWindow.get_buffer_rect();

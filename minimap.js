@@ -6,7 +6,7 @@ if (imports.misc.extensionUtils.extensions) {
 }
 
 var Clutter = imports.gi.Clutter;
-var Tweener = imports.ui.tweener;
+var Tweener = Extension.imports.utils.tweener;
 var Main = imports.ui.main;
 var Lang = imports.lang;
 var St = imports.gi.St;
