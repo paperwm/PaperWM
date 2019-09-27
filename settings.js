@@ -41,6 +41,18 @@ function setVerticalMargin() {
     let gap = settings.get_int('window-gap');
     prefs.vertical_margin = Math.max(Math.round(gap/2), vMargin);
 }
+let timerId;
+function onWindowGapChanged() {
+    setVerticalMargin();
+    if (timerId)
+        imports.mainloop.source_remove(timerId);
+    timerId = imports.mainloop.timeout_add(500, () => {
+        Extension.imports.tiling.spaces.mru().forEach(space => {
+            space.layout();
+        });
+        timerId = null;
+    });
+}
 
 function setState($, key) {
     let value = settings.get_value(key);
@@ -71,8 +83,9 @@ function setSchemas() {
 setSchemas(); // Initialize imediately so prefs.js can import properly
 function init() {
     settings.connect('changed', setState);
-    settings.connect('changed::vertical-margin', setVerticalMargin);
-    settings.connect('changed::window-gap', setVerticalMargin);
+    settings.connect('changed::vertical-margin', onWindowGapChanged);
+    settings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
+    settings.connect('changed::window-gap', onWindowGapChanged);
     setVerticalMargin();
 
     // A intermediate window is created before the prefs dialog is created.
