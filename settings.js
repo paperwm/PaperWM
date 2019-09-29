@@ -131,6 +131,33 @@ function getWorkspaceSettingsByUUID(uuid) {
     return workspaceSettingsCache[uuid];
 }
 
+// Only used for debugging/development atm.
+function deleteWorkspaceSettings(uuid) {
+    // NB! Does not check if the settings is currently in use. Does not reindex subsequent settings.
+    let list = workspaceList.get_strv('list');
+    let i = list.indexOf(uuid);
+    let settings = getWorkspaceSettingsByUUID(list[i]);
+    for (let key of settings.list_keys()) {
+        // Hopefully resetting all keys will delete the relocatable settings from dconf?
+        settings.reset();
+    }
+
+    list.splice(i, 1);
+    workspaceList.set_strv('list', list);
+}
+
+// Useful for debugging
+function printWorkspaceSettings() {
+    let list = workspaceList.get_strv('list');
+    let settings = list.map(getWorkspaceSettingsByUUID);
+    let zipped = Extension.imports.utils.zip(list, settings);
+    const key = s => s[1].get_int('index');
+    zipped.sort((a,b) => key(a) - key(b));
+    for (let [uuid, s] of zipped) {
+        print('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
+    }
+}
+
 /// Keybindings
 
 /**
