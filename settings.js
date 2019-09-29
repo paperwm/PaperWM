@@ -10,6 +10,7 @@ var Gtk = imports.gi.Gtk;
 
 var Convenience = Extension.imports.convenience;
 var settings = Convenience.getSettings();
+var workspaceSettingsCache = {};
 
 var WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
 var WORKSPACE_LIST_KEY = 'org.gnome.Shell.Extensions.PaperWM.WorkspaceList';
@@ -92,9 +93,11 @@ function enable() {
 }
 
 function disable() {
+    workspaceSettingsCache = {};
 }
 
 /// Workspaces
+
 
 function getWorkspaceSettings(index) {
     let list = workspaceList.get_strv('list');
@@ -118,9 +121,14 @@ function getNewWorkspaceSettings(index) {
 }
 
 function getWorkspaceSettingsByUUID(uuid) {
-    return new Gio.Settings({
-        settings_schema: schemaSource.lookup(WORKSPACE_KEY, true),
-        path: `/org/gnome/shell/extensions/paperwm/workspaces/${uuid}/`});
+    if (!workspaceSettingsCache[uuid]) {
+        let settings = new Gio.Settings({
+            settings_schema: schemaSource.lookup(WORKSPACE_KEY, true),
+            path: `/org/gnome/shell/extensions/paperwm/workspaces/${uuid}/`
+        });
+        workspaceSettingsCache[uuid] = settings;
+    }
+    return workspaceSettingsCache[uuid];
 }
 
 /// Keybindings
