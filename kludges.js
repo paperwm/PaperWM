@@ -31,7 +31,8 @@ function overrideHotCorners() {
 }
 
 // Polyfill gnome-3.34 transition API, taken from gnome-shell/js/ui/environment.js
-if (!Clutter.Actor.prototype.ease) {
+const version = imports.misc.config.PACKAGE_VERSION.split('.');
+if (version[0] >= 3 && version[1] < 34) {
     function _makeEaseCallback(params, cleanup) {
         let onComplete = params.onComplete;
         delete params.onComplete;
@@ -49,6 +50,14 @@ if (!Clutter.Actor.prototype.ease) {
         };
     }
 
+    let enable_unredirect = () => Meta.enable_unredirect_for_display(global.display);
+    let disable_unredirect = () => Meta.disable_unredirect_for_display(global.display);;
+    // This is different in 3.28
+    if (version[0] >= 3 && version[1] < 30) {
+        enable_unredirect = () => Meta.enable_unredirect_for_screen(global.screen);
+        disable_unredirect = () => Meta.disable_unredirect_for_screen(global.screen);;
+    }
+
     function _easeActor(actor, params) {
         actor.save_easing_state();
 
@@ -64,10 +73,9 @@ if (!Clutter.Actor.prototype.ease) {
             actor.set_easing_mode(params.mode);
         delete params.mode;
 
-        Meta.disable_unredirect_for_display(global.display);
+        disable_unredirect();
 
-        let cleanup = () => Meta.enable_unredirect_for_display(global.display);
-        let callback = _makeEaseCallback(params, cleanup);
+        let callback = _makeEaseCallback(params, enable_unredirect);
 
         // cancel overwritten transitions
         let animatedProps = Object.keys(params).map(p => p.replace('_', '-', 'g'));
