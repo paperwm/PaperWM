@@ -18,6 +18,7 @@ var Scratch = Extension.imports.scratch;
 var Tiling = Extension.imports.tiling;
 var settings = Convenience.getSettings();
 var Clutter = imports.gi.Clutter;
+let St = imports.gi.St;
 
 function overrideHotCorners() {
     for (let corner of Main.layoutManager.hotCorners) {
@@ -27,6 +28,32 @@ function overrideHotCorners() {
         corner._toggleOverview = function() {};
 
         corner._pressureBarrier._trigger = function() {};
+    }
+}
+
+
+if (!St.Settings) {
+    // `St.Settings` doesn't exist in 3.28 - polyfill:
+    let Gtk = imports.gi.Gtk;
+    let gtkSettings = Gtk.Settings.get_default();
+    let polyfillSettings = new (class PolyfillStSettings {
+        get enable_animations() {
+            return gtkSettings.gtk_enable_animations;
+        }
+        set enable_animations(value) {
+            gtkSettings.gtk_enable_animations = value;
+        }
+    })();
+
+    St.Settings = {
+        get: function() { return polyfillSettings; } // ASSUMTION: no need to call get_default each time
+    };
+}
+
+if (!Clutter.Actor.prototype.set) {
+    // `set` doesn't exist in 3.28 - polyfill:
+    Clutter.Actor.prototype.set = function(params) {
+        Object.assign(this, params);
     }
 }
 
@@ -99,7 +126,6 @@ if (version[0] >= 3 && version[1] < 34) {
     // Adjust @msecs to account for St's enable-animations
     // and slow-down-factor settings
     function adjustAnimationTime(msecs) {
-        let St = imports.gi.St;
         let settings = St.Settings.get();
 
         if (!settings.enable_animations)
