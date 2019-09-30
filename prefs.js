@@ -63,13 +63,11 @@ class SettingsWidget {
     constructor(selectedTab=0, selectedWorkspace=0 ) {
         this._settings = Convenience.getSettings();
 
-        this.builder = new Gtk.Builder();
-        this.builder.add_from_file(Extension.path + '/Settings.ui');
+        this.builder = Gtk.Builder.new_from_file(Extension.path + '/Settings.ui');
 
-        this.widget = new Gtk.ScrolledWindow({ hscrollbar_policy: Gtk.PolicyType.NEVER });
         this._notebook = this.builder.get_object('paperwm_settings');
+        this.widget = this._notebook;
         this._notebook.page = selectedTab;
-        this.widget.add(this._notebook);
 
         // General
 
@@ -380,12 +378,12 @@ function createKeybindingWidget(settings, searchEntry) {
             ]);
 
     let treeView = new Gtk.TreeView();
+    treeView.set_enable_search(false);
     treeView.model = filteredModel;
     treeView.headers_visible = false;
     treeView.margin_start = 12;
     treeView.margin_end = 12;
     treeView.search_column = COLUMN_DESCRIPTION;
-    treeView.enable_search = true;
     treeView.tooltip_column = COLUMN_TOOLTIP;
 
     let descriptionRenderer = new Gtk.CellRendererText();
