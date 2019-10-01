@@ -1255,13 +1255,13 @@ class Spaces extends Map {
         };
 
         if (this.overrideSettings.get_boolean('workspaces-only-on-primary')) {
+            let overlay = new ClickOverlay(primary);
+            primary.clickOverlay = overlay;
+            this.clickOverlays.push(overlay);
             this.forEach(space => {
                 space.setMonitor(primary, false);
             });
             this.monitors.set(primary, mru[0]);
-            let overlay = new ClickOverlay(primary);
-            primary.clickOverlay = overlay;
-            this.clickOverlays.push(overlay);
             finish();
             return;
         }
