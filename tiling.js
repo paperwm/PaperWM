@@ -1853,12 +1853,21 @@ function resizeHandler(metaWindow) {
     }
 }
 
-function enable() {
+function enable(errorNotification) {
     debug('#enable');
     spaces = new Spaces();
 
     function initWorkspaces() {
-        spaces.init();
+        try {
+            spaces.init();
+        } catch(e) {
+            log('#paperwm startup failed');
+            log(`JS ERROR: ${e}\n${e.stack}`);
+            errorNotification(
+                "PaperWM",
+                `Error occured in paperwm startup:\n\n${e.message}`,
+                e.stack);
+        }
 
         // Fix the stack overlay
         spaces.mru().reverse().forEach(s => {
