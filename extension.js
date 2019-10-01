@@ -56,7 +56,7 @@ function safeCall(name, method) {
     try {
         log("#paperwm", `${method} ${name}`);
         let module = Extension.imports[name];
-        module && module[method] && module[method].call(module);
+        module && module[method] && module[method].call(module, errorNotification);
         return true;
     } catch(e) {
         log("#paperwm", `${name} failed ${method}`);
