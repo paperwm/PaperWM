@@ -44,8 +44,6 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
     }
 
     _initialSelection(backward, actionName) {
-        this._block = Main.wm._blockAnimations;
-        Main.wm._blockAnimations = true;
         this.space = Tiling.spaces.selectedSpace;
         this.space.startAnimate();
 
@@ -146,7 +144,6 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
     _onDestroy() {
         super._onDestroy();
         debug('#preview', 'onDestroy', this.was_accepted);
-        Main.wm._blockAnimations = this._block;
         if(!this.was_accepted) {
             // Select the starting window
             this._select(0);
@@ -165,6 +162,10 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
         });
         let to = this._switcherList.windows[this._selectedIndex];
         Tiling.focus_handler(to);
+        let actor = to.get_compositor_private();
+        actor.x = this.clone.x;
+        actor.y = this.clone.y;
+        actor.set_scale(1, 1);
     }
 });
 
