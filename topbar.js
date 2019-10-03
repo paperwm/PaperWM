@@ -180,6 +180,8 @@ class WorkspaceMenu extends PanelMenu.Button {
                              'switch-workspace',
                              this.workspaceSwitched.bind(this));
 
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem(_('Workspace Settings')));
+
         this.entry = new PopupMenuEntry(this._label.text);
         this.menu.addMenuItem(this.entry);
         let changed = () => {
