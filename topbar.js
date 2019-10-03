@@ -289,7 +289,7 @@ class WorkspaceMenu extends PanelMenu.Button {
                 firstEvent = true;
                 this.selected = spaces.selectedSpace;
             }
-            let mode = Clutter.AnimationMod.EASE_IN_OUT_QUAD;
+            let mode = Clutter.AnimationMode.EASE_IN_OUT_QUAD;
             const StackPositions = Tiling.StackPositions;
             const upEdge = 0.385*active.height;
             const downEdge = 0.60*active.height;
