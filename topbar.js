@@ -218,12 +218,19 @@ class WorkspaceMenu extends PanelMenu.Button {
             Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', item.state);
         });
 
-        this.prefsIcon = new St.Button({ reactive: true,
-                                         can_focus: true,
-                                         track_hover: true,
-                                         accessible_name: 'workspace preference',
-                                         style_class: 'system-menu-action' });
-        this.prefsIcon.child = new St.Icon({ icon_name: 'gtk-preferences' });
+        function createButton(icon_name, accessible_name) {
+            return new St.Button({reactive: true,
+                                  can_focus: true,
+                                  track_hover: true,
+                                  accessible_name,
+                                  style_class: 'system-menu-action',
+                                  child: new St.Icon({icon_name})
+            });
+        }
+
+        this.prefsIcon = createButton('gtk-preferences', 'workspace preference');
+        this.prevIcon = createButton('go-previous-symbolic', 'previous workspace setting');
+        this.nextIcon = createButton('go-next-symbolic', 'next workspace setting');
 
         this.prefsIcon.connect('clicked', () => {
             this.menu.close(true);
@@ -237,7 +244,23 @@ class WorkspaceMenu extends PanelMenu.Button {
             }
         });
 
-        this.menu.box.add(this.prefsIcon, { expand: true, x_fill: false });
+        this.nextIcon.connect('clicked', () => {
+            let space = Tiling.cycleWorkspaceSettings(-1);
+            this.entry.label.text = space.name;
+        });
+        this.prevIcon.connect('clicked', () => {
+            let space = Tiling.cycleWorkspaceSettings(1);
+            this.entry.label.text = space.name;
+        });
+
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+        this.iconBox = new St.BoxLayout();
+        this.menu.box.add(this.iconBox);
+
+        this.iconBox.add(this.prevIcon, { expand: true, x_fill: false });
+        this.iconBox.add(this.prefsIcon, { expand: true, x_fill: false });
+        this.iconBox.add(this.nextIcon, { expand: true, x_fill: false });
 
         // this.entry.actor.width = this.colors.actor.width;
         // this.colors.entry.actor.width = this.colors.actor.width;
