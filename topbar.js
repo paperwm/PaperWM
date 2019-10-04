@@ -214,10 +214,10 @@ class WorkspaceMenu extends PanelMenu.Button {
         // this._contentBox.add_actor(this.colors.actor);
         // this.menu.box.add_actor(this._contentBox);
 
-        this._zenItem = new PopupMenu.PopupSwitchMenuItem('show top bar', true);
+        this._zenItem = new PopupMenu.PopupSwitchMenuItem('Hide top bar', false);
         this.menu.addMenuItem(this._zenItem);
         this._zenItem.connect('toggled', item => {
-            Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', item.state);
+            Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', !item.state);
         });
 
         function createButton(icon_name, accessible_name) {
@@ -454,7 +454,7 @@ class WorkspaceMenu extends PanelMenu.Button {
         let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
         this.entry.label.text = space.name;
 
-        this._zenItem._switch.setToggleState(space.showTopBar);
+        this._zenItem._switch.setToggleState(!space.showTopBar);
     }
 
     workspaceSwitched(wm, fromIndex, toIndex) {
