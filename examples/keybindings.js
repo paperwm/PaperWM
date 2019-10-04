@@ -77,6 +77,26 @@ function windowMarks() {
     }
 }
 
+/**
+   Swap current window and right neighbor and leave focus "in place" (ie. also focus the right neigbor)
+ */
+function pullFromRight(binding = "<Super><Shift>d") {
+    var Tiling = Extension.imports.tiling;
+    var Utils = Extension.imports.utils;
+
+    Keybindings.bindkey(binding, "pull-from-right", mw => {
+        let space = Tiling.spaces.spaceOfWindow(mw);
+        let i = space.indexOf(mw);
+        if (i === space.length - 1)
+            return;
+
+        Utils.swap(space, i, i+1);
+        space.layout(false);
+        space.emit("full-layout");
+        Main.activateWindow(space[i][0]);
+    }, { opensMinimap: true });
+}
+
 function cycleEdgeSnap(binding = "<Super>d") {
     var Tiling = Extension.imports.tiling;
     var Meta = imports.gi.Meta;
