@@ -228,7 +228,6 @@ class Space extends Array {
         // Though, targetX shouldn't ideally be able to get into this state.
         if (oldSpace && Number.isFinite(oldSpace.targetX)) {
             this.targetX = oldSpace.targetX;
-            this.cloneContainer.x = this.targetX;
         }
         this.cloneContainer.x = this.targetX;
         this.getWindows().forEach(w => {
@@ -437,12 +436,12 @@ class Space extends Array {
         if (width < workArea.width) {
             this.targetX = workArea.x - this.monitor.x + Math.round((workArea.width - width)/2);
         }
+        Tweener.addTween(this.cloneContainer,
+                         { x: this.targetX,
+                           time,
+                           onComplete: this.moveDone.bind(this)
+                         });
         if (animate) {
-            Tweener.addTween(this.cloneContainer,
-                             { x: this.targetX,
-                               time: prefs.animation_time,
-                               onComplete: this.moveDone.bind(this)
-                             });
             ensureViewport(this.selectedWindow, this);
         }
     }
