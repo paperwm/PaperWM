@@ -249,10 +249,12 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.nextIcon.connect('clicked', () => {
             let space = Tiling.cycleWorkspaceSettings(-1);
             this.entry.label.text = space.name;
+            menu.nextIcon.grab_key_focus();
         });
         this.prevIcon.connect('clicked', () => {
             let space = Tiling.cycleWorkspaceSettings(1);
             this.entry.label.text = space.name;
+            menu.prevIcon.grab_key_focus();
         });
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
