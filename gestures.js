@@ -150,6 +150,10 @@ function done(space) {
         () => space.vx < 0 :
         () => space.vx > 0;
 
+    // Only snap to the edges if we started gliding when the viewport is fully covered
+    let snap = !(0 <= space.cloneContainer.x ||
+                 space.targetX + space.cloneContainer.width <= space.width);
+
     let glide = () => {
         if (space.hState === -1) {
             focusWindowAtPointer(space);
@@ -158,9 +162,12 @@ function done(space) {
             return false;
 
         if (test() ||
-            space.targetX > 0 ||
-            space.targetX + space.cloneContainer.width < space.width) {
-            focusWindowAtPointer(space);
+            (snap && (space.targetX > 0 ||
+                      space.targetX + space.cloneContainer.width < space.width)) ||
+            space.targetX > space.width ||
+            space.targetX + space.cloneContainer.width < 0
+           ) {
+            focusWindowAtPointer(space, snap);
             space.cloneContainer.set_scale(1, 1);
             return false;
         }
@@ -175,7 +182,7 @@ function done(space) {
     return Clutter.EVENT_STOP;
 }
 
-function focusWindowAtPointer(space) {
+function focusWindowAtPointer(space, snap) {
     let [aX, aY, mask] = global.get_pointer();
     let [ok, x, y] = space.actor.transform_stage_point(aX, aY);
     space.targetX = Math.round(space.targetX);
@@ -201,10 +208,10 @@ function focusWindowAtPointer(space) {
     let first, last;
     if (space.cloneContainer.width < space.width) {
         space.layout();
-    } else if (0 <= space.cloneContainer.x && !selected) {
+    } else if (0 <= space.cloneContainer.x && snap) {
         first = space[0][0];
         Tiling.move_to(space, first, {x: 0});
-    } else if (space.targetX + space.cloneContainer.width <= space.width && !selected) {
+    } else if (space.targetX + space.cloneContainer.width <= space.width && snap) {
         last = space[space.length-1][0];
         Tiling.move_to(space, last, {x: space.width - last.clone.width});
     }
