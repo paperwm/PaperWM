@@ -129,8 +129,8 @@ function update(space, dx, t) {
         space.vx = v;
     }
     time = t;
-    space.targetX -= dx;
-    space.cloneContainer.x = space.targetX;
+    space.cloneContainer.x -= dx;
+    space.targetX = space.cloneContainer.x;
     return Clutter.EVENT_STOP;
 }
 
@@ -140,53 +140,92 @@ function done(space) {
         space.hState = -1;
         return Clutter.EVENT_STOP;
     }
-    let test = space.vx > 0 ?
-        () => space.vx < 0 :
-        () => space.vx > 0;
 
     // Only snap to the edges if we started gliding when the viewport is fully covered
     let snap = !(0 <= space.cloneContainer.x ||
                  space.targetX + space.cloneContainer.width <= space.width);
 
-    let glide = () => {
-        if (space.hState === -1) {
-            focusWindowAtPointer(space);
-        }
-        if (space.hState < Clutter.TouchpadGesturePhase.END)
-            return false;
+    let start = space.targetX;
+    let accel = .3/16; // ms/s^2
+    accel = space.vx > 0 ? -accel : accel;
+    let t = -space.vx/accel;
+    let d = space.vx*t + .5*accel*t**2;
+    let target = Math.round(space.targetX - d);
 
-        if (test() ||
-            (snap && (space.targetX > 0 ||
-                      space.targetX + space.cloneContainer.width < space.width)) ||
-            space.targetX > space.width ||
-            space.targetX + space.cloneContainer.width < 0
-           ) {
-            focusWindowAtPointer(space, snap);
-            space.cloneContainer.set_scale(1, 1);
-            return false;
-        }
-        let dx = space.vx*16;
-        space.targetX -= dx;
-        space.cloneContainer.x = space.targetX;
-        space.vx = space.vx + (space.vx > 0 ? -0.2 : 0.2);
-        return true;
-    };
+    // timetravel
+    let mode = Clutter.AnimationMode.EASE_OUT;
+    let first = space[0][0];
+    let last = space[space.length-1][0];
 
-    imports.mainloop.timeout_add(16, glide, 0);
+    if (snap && target > 0) {
+        target = 0; // snap to left edge
+        mode = Clutter.AnimationMode.EASE_OUT_BACK;
+    } else if (snap && target + space.cloneContainer.width < space.width) {
+        target = space.width - space.cloneContainer.width;
+        mode = Clutter.AnimationMode.EASE_OUT_BACK;
+    } else if (target + first.clone.width > space.width) {
+        target = space.width - first.clone.width;
+        mode = Clutter.AnimationMode.EASE_OUT_BACK;
+    } else if (target + space.cloneContainer.width - first.clone.width < 0) {
+        target = last.clone.width - space.cloneContainer.width;
+        mode = Clutter.AnimationMode.EASE_OUT_BACK;
+    }
+
+
+    log(`2. tweeen from ${space.targetX} to ${space.targetX + d} in ${t}`);
+    let selected;
+    // adjust for window
+    space.targetX = Math.round(target);
+    selected = focusWindowAtPointer(space, snap, start - target > 0 );
+    delete selected.lastFrame;
+    let x = Tiling.ensuredX(selected, space);
+    target = x - selected.clone.targetX;
+
+    let newD = Math.abs(start - target);
+    if (newD < Math.abs(d))
+        t = t*Math.abs(newD/d);
+
+    if (target !== space.targetX) {
+        space.targetX = target;
+        t = Math.max(t, 200);
+        log(`min duration`)
+    }
+    if (mode !== Clutter.AnimationMode.EASE_OUT) {
+        log(`min duration`)
+        t = Math.max(t, 200);
+    }
+
+    // Main.activateWindow(selected);
+    Tiling.updateSelection(space, selected);
+    // Tweener.removeTweens(space.cloneContainer);
+    Tweener.addTween(space.cloneContainer, {
+        x: space.targetX,
+        duration: t,
+        mode,
+        onComplete: () => {
+            Tiling.ensureViewport(selected, space);
+            if (!Tiling.inPreview)
+                Navigator.getNavigator().finish();
+
+        }
+    });
+
     return Clutter.EVENT_STOP;
 }
+
 
 function focusWindowAtPointer(space, snap) {
     let [aX, aY, mask] = global.get_pointer();
     let [ok, x, y] = space.actor.transform_stage_point(aX, aY);
     space.targetX = Math.round(space.targetX);
-    space.cloneContainer.x = space.targetX;
+    // space.cloneContainer.x = space.targetX;
 
     let selected = space.selectedWindow.clone;
     if (!(selected.x + space.targetX >= 0 &&
           selected.x + selected.width + space.targetX <= space.width)) {
         selected = false;
     }
+    selected = selected && space.selectedWindow;
 
     let pointerAt;
     let gap = prefs.window_gap/2;
@@ -201,19 +240,20 @@ function focusWindowAtPointer(space, snap) {
 
     let first, last;
     if (space.cloneContainer.width < space.width) {
-        space.layout();
+        // space.layout();
     } else if (0 <= space.cloneContainer.x && snap) {
         first = space[0][0];
-        Tiling.move_to(space, first, {x: 0});
+        // Tiling.move_to(space, first, {x: 0});
     } else if (space.targetX + space.cloneContainer.width <= space.width && snap) {
         last = space[space.length-1][0];
-        Tiling.move_to(space, last, {x: space.width - last.clone.width});
+        // Tiling.move_to(space, last, {x: space.width - last.clone.width});
     }
 
     let target = selected || pointerAt || last || first;
-    Tiling.ensureViewport(target, space);
-    if (!Tiling.inPreview)
-        Navigator.getNavigator().finish();
+    return target;
+    // Tiling.ensureViewport(target, space);
+    // if (!Tiling.inPreview)
+    //     Navigator.getNavigator().finish();
 }
 
 var transition = 'easeOutQuad';
