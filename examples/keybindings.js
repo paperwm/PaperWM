@@ -222,6 +222,26 @@ function cycleWorkspaceSettings(binding = "<Super>q") {
     );
 }
 
+function adjustWidth(incBinding="<Super>plus", decBinding="<Super>minus", increment=50) {
+    function inc(mw) {
+        const f = mw.get_frame_rect();
+        mw.move_resize_frame(true, f.x, f.y, f.width + increment, f.height);
+    }
+
+    function dec(mw) {
+        const f = mw.get_frame_rect();
+        mw.move_resize_frame(true, f.x, f.y, f.width - increment, f.height);
+    }
+
+    Keybindings.bindkey(incBinding, "inc-width", inc);
+    Keybindings.bindkey(decBinding, "dec-width", dec);
+
+    // OMFG... should support multiple bindings..!
+    Keybindings.bindkey("<Super>KP_Add", "inc-width-2", inc);
+    Keybindings.bindkey("<Super>KP_Subtract", "dec-width-2", dec);
+}
+
+
 function showNavigator(binding = "<Super>j") {
     Keybindings.bindkey(binding, "show-minimap", () => null, { opensMinimap: true })
 }
