@@ -332,6 +332,7 @@ function createRow(text, widget, signal, handler) {
     let row = new Gtk.ListBoxRow({selectable: false});
     let box = new Gtk.Box({
         margin_start: margin, margin_end: margin,
+        margin_top: margin/2, margin_bottom: margin/2,
         orientation: Gtk.Orientation.HORIZONTAL
     });
     let label = new Gtk.Label({
