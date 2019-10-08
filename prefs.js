@@ -96,6 +96,29 @@ class SettingsWidget {
             this._settings.set_int('vertical-margin-bottom', bottomMargin.get_value());
         });
 
+        let vSens = this.builder.get_object('vertical-sensitivity');
+        let hSens = this.builder.get_object('horizontal-sensitivity');
+        let [sx, sy] = this._settings.get_value('swipe-sensitivity').deep_unpack();
+        hSens.set_value(sx);
+        vSens.set_value(sy);
+        let sensChanged = () => {
+            this._settings.set_value('swipe-sensitivity', new GLib.Variant('ad', [hSens.get_value(), vSens.get_value()]));
+        };
+        vSens.connect('value-changed', sensChanged);
+        hSens.connect('value-changed', sensChanged);
+
+
+        let vFric = this.builder.get_object('vertical-friction');
+        let hFric = this.builder.get_object('horizontal-friction');
+        let [fx, fy] = this._settings.get_value('swipe-friction').deep_unpack();
+        hFric.set_value(fx);
+        vFric.set_value(fy);
+        let fricChanged = () => {
+            this._settings.set_value('swipe-friction', new GLib.Variant('ad', [hFric.get_value(), vFric.get_value()]));
+        };
+        vFric.connect('value-changed', fricChanged);
+        hFric.connect('value-changed', fricChanged);
+
         let onlyScratch = this.builder.get_object('only-scratch-in-overview');
         onlyScratch.state =
             this._settings.get_boolean('only-scratch-in-overview');

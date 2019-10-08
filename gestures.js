@@ -152,7 +152,7 @@ function done(space) {
     let startGlide = space.targetX;
 
     // timetravel
-    let accel = .3/16; // px/ms^2
+    let accel = prefs.swipe_friction[0]/16; // px/ms^2
     accel = space.vx > 0 ? -accel : accel;
     let t = -space.vx/accel;
     let d = space.vx*t + .5*accel*t**2;
@@ -335,11 +335,12 @@ function endVertical() {
             return false;
         }
 
-        let friction = 0.05;
         let dy = vy*16;
         let v = vy;
+        let accel = prefs.swipe_friction[1];
+        accel = v > 0 ? -accel : accel;
         updateVertical(dy, time + 16);
-        vy = vy + (v > 0 ? -0.1 : 0.1);
+        vy = vy + accel;
         return true; // repeat
     };
 
