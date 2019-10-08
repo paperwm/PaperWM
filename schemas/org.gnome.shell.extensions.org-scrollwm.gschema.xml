@@ -236,8 +236,13 @@
     </key>
 
     <key type="ad" name="swipe-sensitivity">
-        <default><![CDATA[[1.0, 2.0]]]></default>
+        <default><![CDATA[[2.0, 2.0]]]></default>
         <summary>Swipe sensitivity in [x, y] coordinates</summary>
+    </key>
+
+    <key type="ad" name="swipe-friction">
+        <default><![CDATA[[0.3, 0.1]]]></default>
+        <summary>Swipe friction in [x, y] coordinates</summary>
     </key>
 
     <key type="ad" name="cycle-width-steps">
