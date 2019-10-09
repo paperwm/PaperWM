@@ -240,12 +240,6 @@ class Space extends Array {
             animateWindow(w);
         });
         this.layout(false);
-        // Force immediate painting of clones on reload
-        this.getWindows().forEach(w => {
-            let c = w.clone;
-            c.x = c.targetX;
-            c.y = c.targetY;
-        });
 
         let selected = this.selectedWindow;
         if (selected) {
@@ -353,11 +347,16 @@ class Space extends Array {
                 // log("  Position window", mw.title, `y: ${c.targetY} -> ${y} x: ${c.targetX} -> ${x}`);
                 c.targetX = x;
                 c.targetY = y;
-                Tweener.addTween(c, {
-                    x, y,
-                    time,
-                    onComplete: this.moveDone.bind(this)
-                });
+                if (time === 0) {
+                    c.x = x;
+                    c.y = y;
+                } else {
+                    Tweener.addTween(c, {
+                        x, y,
+                        time,
+                        onComplete: this.moveDone.bind(this)
+                    });
+                }
             }
 
             y += targetHeight + prefs.window_gap;
