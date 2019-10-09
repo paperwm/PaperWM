@@ -217,14 +217,22 @@ function findTargetWindow(space, direction) {
         return selected.meta_window;
     }
     selected = selected && space.selectedWindow;
+    let workArea = Main.layoutManager.getWorkAreaForMonitor(space.monitor.index);
+    let min = workArea.x - space.monitor.x;
 
-    let windows = space.getWindows().filter(space.isPlaceable.bind(space));
+    let windows = space.getWindows().filter(w => {
+        let  clone = w.clone;
+        let x = clone.targetX + space.targetX;
+        return !(x + clone.width < min
+                 || x > min + workArea.width);
+    });
     if (!direction) // scroll left
         windows.reverse();
     let visible = windows.filter(w => {
         let clone = w.clone;
-        return clone.x + space.targetX >= 0 &&
-            clone.x + clone.width + space.targetX <= space.width;
+        let x = clone.targetX + space.targetX;
+        return x >= 0 &&
+            x + clone.width <= min + workArea.width;
     });
     if (visible.length > 0) {
         return visible[0];
