@@ -212,7 +212,7 @@ class Minimap extends Array {
         }
 
         this.clip.width = Math.min(this.container.width,
-                                    this.monitor.width - this.clip.x*2);
+                                   this.monitor.width - this.clip.x*2 - 24);
         this.actor.width = this.clip.width + this.clip.x*2;
         this.clip.set_clip(0, 0, this.clip.width, this.clip.height);
         this.label.set_style(`max-width: ${this.clip.width}px;`);
