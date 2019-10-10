@@ -302,6 +302,11 @@
         <summary>Default background image</summary>
     </key>
 
+    <key type="b" name="use-default-background">
+        <default>false</default>
+        <summary>Use the default gnome shell background</summary>
+    </key>
+
     <key type="b" name="default-show-top-bar">
         <default>true</default>
         <summary>Show the top bar on workspaces by default</summary>

@@ -138,29 +138,15 @@ class SettingsWidget {
 
         // Workspaces
 
-        const defaultBackground = this.builder.get_object('workspace_chooser_default_background');
-        const deleteDefaultBackground = this.builder.get_object('workspace_button_delete_default_background');
-
-        let filename = this._settings.get_string('default-background');
-        if (filename === ''){
-            defaultBackground.unselect_all();
-            deleteDefaultBackground.sensitive = false;
-        } else {
-            defaultBackground.set_filename(filename);
-            deleteDefaultBackground.sensitive = true;
-        }
-
-        defaultBackground.connect('file-set', () => {
-            let filename = defaultBackground.get_filename();
-            this._settings.set_string('default-background', filename);
-            deleteDefaultBackground.sensitive = true;
+        const defaultBackgroundSwitch = this.builder.get_object('use-default-background');
+        defaultBackgroundSwitch.state =
+            this._settings.get_boolean('use-default-background');
+        defaultBackgroundSwitch.connect('state-set', (obj, state) => {
+            this._settings.set_boolean('use-default-background',
+                                       state);
         });
 
-        deleteDefaultBackground.connect('clicked', () => {
-            this._settings.set_string('default-background', '');
-            defaultBackground.unselect_all();
-            deleteDefaultBackground.sensitive = false;
-        });
+        let useDefault = this._settings.get_boolean('use-default-background');
 
         const workspaceCombo = this.builder.get_object('workspace_combo_text');
         const workspaceStack = this.builder.get_object('workspace_stack');

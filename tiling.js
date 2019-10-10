@@ -34,6 +34,10 @@ var Me = Extension.imports.tiling;
 
 var prefs = Settings.prefs;
 
+var backgroundSettings = new Gio.Settings({
+    schema_id: 'org.gnome.desktop.background'
+})
+
 var borderWidth = 8;
 // Mutter prevints windows from being placed further off the screen than 75 pixels.
 var stack_margin = 75;
@@ -257,6 +261,10 @@ class Space extends Array {
         const Convenience = Extension.imports.convenience;
         const settings = Convenience.getSettings();
         this.signals.connect(settings, 'changed::default-background',
+                             this.updateBackground.bind(this));
+        this.signals.connect(settings, 'changed::use-default-background',
+                             this.updateBackground.bind(this));
+        this.signals.connect(backgroundSettings, 'changed::picture-uri',
                              this.updateBackground.bind(this));
     }
 
@@ -931,9 +939,14 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
 
     updateBackground() {
         let path = this.settings.get_string('background') || prefs.default_background;
-        let file = Gio.File.new_for_path(path);
+        let useDefault = Settings.settings.get_boolean('use-default-background');
         const BackgroundStyle = imports.gi.GDesktopEnums.BackgroundStyle;
         let style = BackgroundStyle.ZOOM;
+        if (!path && useDefault) {
+            path = backgroundSettings.get_string('picture-uri');
+        }
+
+        let file = Gio.File.new_for_commandline_arg(path);
         if (path === '' || !file.query_exists(null)) {
             file = Gio.File.new_for_uri('resource:///org/gnome/shell/theme/noise-texture.png');
             style = BackgroundStyle.WALLPAPER;
