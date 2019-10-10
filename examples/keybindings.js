@@ -221,7 +221,7 @@ function moveSpaceToMonitor(basebinding = '<super><alt>') {
         spaces.monitors.set(monitor, next);
 
         // This is pretty hacky
-        spaces.switchWorkspace(null, currentSpace.workspace.index(), null);
+        spaces.switchWorkspace(null, currentSpace.workspace.index(), currentSpace.workspace.index());
     }
 
     for (let arrow of ['Down', 'Left', 'Up', 'Right']) {
