@@ -181,3 +181,53 @@ function listFreeBindings(modifierString) {
         key => Keybindings.getBoundActionId(modifierString+key) === 0
     ).map(key => modifierString+key)
 }
+
+function moveSpaceToMonitor(basebinding = '<super><alt>') {
+    let Meta = imports.gi.Meta;
+    let display = global.display;
+
+    function moveTo(direction) {
+        let Navigator = Extension.imports.navigator;
+        let spaces = Tiling.spaces;
+
+        let currentSpace = spaces.selectedSpace;
+        let monitor = currentSpace.monitor;
+        let i = display.get_monitor_neighbor_index(monitor.index, direction);
+        let opposite;
+        switch (direction) {
+        case Meta.DisplayDirection.RIGHT:
+            opposite = Meta.DisplayDirection.LEFT; break;
+        case Meta.DisplayDirection.LEFT:
+            opposite = Meta.DisplayDirection.RIGHT; break;
+        case Meta.DisplayDirection.UP:
+            opposite = Meta.DisplayDirection.DOWN; break;
+        case Meta.DisplayDirection.DOWN:
+            opposite = Meta.DisplayDirection.UP; break;
+        }
+        let n = i;
+        if (i === -1) {
+            let i = monitor.index;
+            while (i !== -1) {
+                n = i;
+                i = display.get_monitor_neighbor_index(n, opposite);
+            }
+        }
+        let next = spaces.monitors.get(Main.layoutManager.monitors[n]);
+
+        currentSpace.setMonitor(next.monitor);
+        spaces.monitors.set(next.monitor, currentSpace);
+
+        next.setMonitor(monitor);
+        spaces.monitors.set(monitor, next);
+
+        // This is pretty hacky
+        spaces.switchWorkspace(null, currentSpace.workspace.index(), null);
+    }
+
+    for (let arrow of ['Down', 'Left', 'Up', 'Right']) {
+        Keybindings.bindkey(`${basebinding}${arrow}`, `move-space-monitor-${arrow}`,
+                            () => {
+                                moveTo(Meta.DisplayDirection[arrow.toUpperCase()]);
+                            });
+    }
+}
