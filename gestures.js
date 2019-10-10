@@ -307,6 +307,7 @@ function updateVertical(dy, t) {
     let selected = Tiling.spaces.selectedSpace;
     let monitor = navigator.monitor;
     let v = dy/(t - time);
+    time = t;
     const StackPositions = Tiling.StackPositions;
     if (dy > 0
         && selected !== navigator.from
