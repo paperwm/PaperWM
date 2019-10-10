@@ -105,7 +105,7 @@ function disable() {
    Handle scrolling horizontally in a space. The handler is meant to be
    connected from each space.background and bound to the space.
  */
-let start;
+let start, dxs = [], dts = [];
 function horizontalScroll(actor, event) {
     if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
         event.get_touchpad_gesture_finger_count() > 3) {
@@ -117,6 +117,8 @@ function horizontalScroll(actor, event) {
         let [dx, dy] = event.get_gesture_motion_delta();
         if (direction === undefined) {
             this.vx = 0;
+            dxs = [];
+            dts = [];
             this.hState = phase;
             start = this.targetX;
             Tweener.removeTweens(this.cloneContainer);
@@ -126,19 +128,26 @@ function horizontalScroll(actor, event) {
     case Clutter.TouchpadGesturePhase.CANCEL:
     case Clutter.TouchpadGesturePhase.END:
         this.hState = phase;
-        return done(this);
+        done(this, event);
+        dxs = [];
+        dts = [];
+        return Clutter.EVENT_STOP;
     }
 }
 
 function update(space, dx, t) {
 
-    let v = dx/(t - time);
+    dxs.push(dx);
+    dts.push(t);
+
+    space.cloneContainer.x -= dx;
+    space.targetX = space.cloneContainer.x;
+
+    dx = Utils.sum(dxs.slice(-3));
+    let v = dx/(t - dts.slice(-3)[0]);
     if (Number.isFinite(v)) {
         space.vx = v;
     }
-    time = t;
-    space.cloneContainer.x -= dx;
-    space.targetX = space.cloneContainer.x;
     return Clutter.EVENT_STOP;
 }
 
@@ -211,8 +220,6 @@ function done(space) {
 
         }
     });
-
-    return Clutter.EVENT_STOP;
 }
 
 
