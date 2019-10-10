@@ -137,11 +137,27 @@ function update(space, dx, t) {
     space.cloneContainer.x -= dx;
     space.targetX = space.cloneContainer.x;
 
+    // Check which target windew will be selected if we releas the swipe at this
+    // moment
     dx = Utils.sum(dxs.slice(-3));
     let v = dx/(t - dts.slice(-3)[0]);
     if (Number.isFinite(v)) {
         space.vx = v;
     }
+
+    let accel = prefs.swipe_friction[0]/16; // px/ms^2
+    accel = space.vx > 0 ? -accel : accel;
+    let duration = -space.vx/accel;
+    let d = space.vx*duration + .5*accel*duration**2;
+    let target = Math.round(space.targetX - d);
+
+    space.targetX = target;
+    let selected = findTargetWindow(space, direction, start - space.targetX > 0);
+    space.targetX = space.cloneContainer.x;
+    Tiling.updateSelection(space, selected);
+    space.selectedWindow = selected;
+    space.emit('select');
+
     return Clutter.EVENT_STOP;
 }
 
@@ -203,6 +219,8 @@ function done(space) {
     space.targetX = target;
 
     Tiling.updateSelection(space, selected);
+    space.selectedWindow = selected;
+    space.emit('select');
     Tweener.addTween(space.cloneContainer, {
         x: space.targetX,
         duration: t,
