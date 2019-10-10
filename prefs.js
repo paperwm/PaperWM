@@ -232,10 +232,10 @@ class SettingsWidget {
         box.add(monitorFrame);
         monitorFrame.add(monitors);
 
-        ['move-monitor-right',
-         'move-monitor-left',
-         'move-monitor-above',
-         'move-monitor-below',
+        ['switch-monitor-right',
+         'switch-monitor-left',
+         'switch-monitor-above',
+         'switch-monitor-below',
          'move-monitor-right',
          'move-monitor-left',
          'move-monitor-above',
@@ -261,7 +261,7 @@ class SettingsWidget {
         annotateKeybindings(scratch.model.child_model, settings);
 
         searchEntry.connect('changed', () => {
-            [windows, workspaces, scratch].map(tw => tw.model).forEach(m => m.refilter());
+            [windows, workspaces, monitors, scratch].map(tw => tw.model).forEach(m => m.refilter());
         });
 
 
