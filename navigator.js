@@ -36,6 +36,7 @@ var display = global.display;
 
 var scale = 0.9;
 var navigating = false;
+var grab = false;
 
 /**
    Handle catching keyevents and dispatching actions
@@ -52,6 +53,7 @@ var ActionDispatcher = class {
                 options: Meta.ModalOptions.POINTER_ALREADY_GRABBED
             })) throw new Error('Could not grap a modal');;
         }
+        grab = true;
 
         this.actor.connect('key-press-event', this._keyPressEvent.bind(this));
         this.actor.connect('key-release-event', this._keyReleaseEvent.bind(this));
@@ -173,6 +175,7 @@ var ActionDispatcher = class {
     }
 
     destroy() {
+        grab = false;
         if (this._noModsTimeoutId != 0)
             Mainloop.source_remove(this._noModsTimeoutId);
         Main.popModal(this.actor);
@@ -230,6 +233,8 @@ var Navigator = class Navigator {
     }
 
     finish() {
+        if (grab)
+            return;
         this.accept();
         this.destroy();
     }
