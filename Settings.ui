@@ -659,6 +659,7 @@
                       <object class="GtkGrid" id="workspace_default_background_grid">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Only supports static backgrounds</property>
                         <property name="margin_left">12</property>
                         <property name="margin_right">12</property>
                         <property name="margin_top">12</property>
@@ -669,7 +670,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="hexpand">True</property>
-                            <property name="label" translatable="yes">Default background</property>
+                            <property name="label" translatable="yes">Use default background</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -678,24 +679,9 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="workspace_button_delete_default_background">
-                            <property name="label">Clear</property>
+                          <object class="GtkSwitch" id="use-default-background">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="tooltip_text" translatable="yes">Clear default background</property>
-                          </object>
-                          <packing>
-                            <property name="left_attach">2</property>
-                            <property name="top_attach">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkFileChooserButton" id="workspace_chooser_default_background">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="create_folders">False</property>
-                            <property name="title" translatable="yes">Choose default background</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -796,15 +782,6 @@
             <property name="position">2</property>
           </packing>
         </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
       </object>
       <packing>
         <property name="position">1</property>
@@ -846,7 +823,6 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="hscrollbar_policy">never</property>
-            <property name="shadow_type">in</property>
             <child>
               <object class="GtkViewport">
                 <property name="visible">True</property>
