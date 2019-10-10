@@ -10,6 +10,7 @@ var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var Workspace = imports.ui.workspace;
+var WindowManager = imports.ui.windowManager;
 var Shell = imports.gi.Shell;
 var utils = Extension.imports.utils;
 
@@ -243,12 +244,13 @@ var signals;
 function init() {
     savedMethods = new Map();
     saveMethod(imports.ui.messageTray.MessageTray.prototype, '_updateState');
-    saveMethod(imports.ui.windowManager.WindowManager.prototype, '_prepareWorkspaceSwitch');
+    saveMethod(WindowManager.WindowManager.prototype, '_prepareWorkspaceSwitch');
     saveMethod(Workspace.Workspace.prototype, '_isOverviewWindow');
     saveMethod(Workspace.WindowClone.prototype, 'getOriginalPosition');
     saveMethod(Workspace.Workspace.prototype, '_realRecalculateWindowPositions');
     saveMethod(Workspace.UnalignedLayoutStrategy.prototype, '_sortRow');
-    saveMethod(imports.ui.windowManager.WorkspaceTracker.prototype, '_checkWorkspaces');
+    saveMethod(WindowManager.WorkspaceTracker.prototype, '_checkWorkspaces');
+    saveMethod(WindowManager.TouchpadWorkspaceSwitchAction.prototype, '_checkActivated');
 
     signals = new utils.Signals();
 }
@@ -258,7 +260,6 @@ function enable() {
     signals.connect(settings, 'changed::override-hot-corner',
                     disableHotcorners);
     disableHotcorners();
-
 
     function onlyScratchInOverview() {
         let obj = Workspace.Workspace.prototype;
@@ -276,10 +277,13 @@ function enable() {
                     onlyScratchInOverview);
     onlyScratchInOverview();
 
+
+    // Disable switching the workspace after 4 finger swipe.
+    WindowManager.TouchpadWorkspaceSwitchAction.prototype._checkActivated = () => false;
     /* The «native» workspace animation can be now (3.30) be disabled as it
        calls out of the function bound to the `switch-workspace` signal.
      */
-    imports.ui.windowManager.WindowManager.prototype._prepareWorkspaceSwitch =
+    WindowManager.WindowManager.prototype._prepareWorkspaceSwitch =
         function (from, to, direction) {
             if (this._switchData)
                 return;
@@ -370,7 +374,7 @@ function enable() {
             };
     }
 
-    imports.ui.windowManager.WorkspaceTracker.prototype._checkWorkspaces = function () {
+    WindowManager.WorkspaceTracker.prototype._checkWorkspaces = function () {
         let workspaceManager = global.workspace_manager;
         let i;
         let emptyWorkspaces = [];
