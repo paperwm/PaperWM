@@ -118,7 +118,7 @@ class ColorEntry {
 var WorkspaceMenu = Utils.registerClass(
 class WorkspaceMenu extends PanelMenu.Button {
     _init() {
-        super._init(0.5, 'WorkspaceMenu', false);
+        super._init(0.5, 'Workspace', false);
 
         this.actor.name = 'workspace-button';
 
