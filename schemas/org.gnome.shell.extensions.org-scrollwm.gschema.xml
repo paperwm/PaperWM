@@ -37,6 +37,40 @@
       <summary>Move the active window to the previously active workspace, backward order</summary>
     </key>
 
+    <key type="as" name="move-monitor-right">
+        <default><![CDATA[['<Super><Shift><Ctrl>Right']]]></default>
+        <summary>Move the active window to the right monitor</summary>
+    </key>
+    <key type="as" name="move-monitor-left">
+        <default><![CDATA[['<Super><Shift><Ctrl>Left']]]></default>
+        <summary>Move the active window to the left monitor</summary>
+    </key>
+    <key type="as" name="move-monitor-above">
+        <default><![CDATA[['<Super><Shift><Ctrl>Up']]]></default>
+        <summary>Move the active window to the above monitor</summary>
+    </key>
+    <key type="as" name="move-monitor-below">
+        <default><![CDATA[['<Super><Shift><Ctrl>Down']]]></default>
+        <summary>Move the active window to the below monitor</summary>
+    </key>
+
+    <key type="as" name="switch-monitor-right">
+        <default><![CDATA[['<Super><Shift>Right']]]></default>
+        <summary>Switch to the right monitor</summary>
+    </key>
+    <key type="as" name="switch-monitor-left">
+        <default><![CDATA[['<Super><Shift>Left']]]></default>
+        <summary>Switch to the left monitor</summary>
+    </key>
+    <key type="as" name="switch-monitor-above">
+        <default><![CDATA[['<Super><Shift>Up']]]></default>
+        <summary>Switch to the above monitor</summary>
+    </key>
+    <key type="as" name="switch-monitor-below">
+        <default><![CDATA[['<Super><Shift>Down']]]></default>
+        <summary>Switch to the below monitor</summary>
+    </key>
+
     <key type="as" name="toggle-scratch-window">
       <default><![CDATA[['<Super>Escape']]]></default>
       <summary>Toggle the most recent scratch window</summary>

@@ -1390,6 +1390,37 @@ class Spaces extends Map {
         }
     };
 
+    switchMonitor(direction, move) {
+        let focus = display.focus_window;
+        let currentSpace = this.selectedSpace;
+        let monitor = currentSpace.monitor;
+        let i = display.get_monitor_neighbor_index(monitor.index, direction);
+        if (i === -1)
+            return;
+        let newMonitor = Main.layoutManager.monitors[i];
+        let space = this.monitors.get(newMonitor);
+
+        if (move && focus) {
+            let metaWindow = focus.get_transient_for() || focus;
+
+            if (currentSpace.indexOf(metaWindow) !== -1) {
+                currentSpace.removeWindow(metaWindow);
+                metaWindow.foreach_transient((t) => {
+                    currentSpace.removeWindow(t);
+                });
+            } else {
+                metaWindow.move_to_monitor(newMonitor.index);
+            }
+            metaWindow.change_workspace(space.workspace);
+            metaWindow.foreach_transient((t) => {
+                t.move_to_monitor(newMonitor.index);
+            });
+            space.workspace.activate_with_focus(focus, global.get_current_time());
+        } else {
+            space.workspace.activate(global.get_current_time());
+        }
+    }
+
     switchWorkspace(wm, fromIndex, toIndex) {
         let to = workspaceManager.get_workspace_by_index(toIndex);
         let from = workspaceManager.get_workspace_by_index(fromIndex);
