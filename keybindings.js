@@ -79,6 +79,32 @@ function init() {
                    liveAltTab,
                    {settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED});
 
+    registerAction('switch-monitor-right', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.RIGHT, false);
+    }, {settings});
+    registerAction('switch-monitor-left', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.LEFT, false);
+    }, {settings});
+    registerAction('switch-monitor-above', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.UP, false);
+    }, {settings});
+    registerAction('switch-monitor-below', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.DOWN, false);
+    }, {settings});
+
+    registerAction('move-monitor-right', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.RIGHT, true);
+    }, {settings});
+    registerAction('move-monitor-left', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.LEFT, true);
+    }, {settings});
+    registerAction('move-monitor-above', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.UP, true);
+    }, {settings});
+    registerAction('move-monitor-below', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.DOWN, true);
+    }, {settings});
+
     registerNavigatorAction('previous-workspace', Tiling.selectPreviousSpace);
     registerNavigatorAction('previous-workspace-backward',
                             Tiling.selectPreviousSpaceBackwards);
