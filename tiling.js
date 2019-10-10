@@ -325,6 +325,7 @@ class Space extends Array {
                 // Update targets (NB: must happen before resize request)
                 mw._targetWidth = targetWidth;
                 mw._targetHeight = targetHeight;
+                mw._initialResizeDone = true;
 
                 if (!targetReached && hasNewTarget) {
                     // Explanation for `hasNewTarget` check in commit message
@@ -2047,6 +2048,7 @@ function insertWindow(metaWindow, {existing}) {
         let addToScratch = scratchIsFocused;
 
         let winprop = Settings.find_winprop(metaWindow);
+        metaWindow._winprop = winprop;  // getOrFindWinprop instead?
         if (winprop) {
             if (winprop.oneshot) {
                 Settings.winprops.splice(Settings.winprops.indexOf(winprop), 1);
@@ -2556,7 +2558,7 @@ function cycleWindowHeight(metaWindow) {
             });
         }
 
-        if (space[i].length > 1) {
+        if (space[i].length >= 1) {
             space.layout(false, {customAllocators: {[i]: allocate}});
         }
     } else {
@@ -2621,9 +2623,31 @@ function fitProportionally(values, targetSum) {
     return fitted;
 }
 
+function firstDefined(...values) {
+    for (const value of values) {
+        if (value !== undefined)
+            return value;
+    }
+    return values[values.length-1];
+}
+
+function shouldMaximizeSingleWindow(metaWindow) {
+    let winprop = metaWindow._winprop || {};
+
+    if (!metaWindow._initialResizeDone) {
+        return firstDefined(winprop.automaximize, Settings.prefs.automaximize);
+    }
+
+    return !firstDefined(metaWindow._free_resize, winprop.free_resize, Settings.prefs.free_resize);
+}
+
 function allocateDefault(column, availableHeight, selectedWindow) {
     if (column.length === 1) {
-        return [availableHeight];
+        if (shouldMaximizeSingleWindow(column[0])) {
+            return [availableHeight];
+        } else {
+            return [column[0].get_frame_rect().height]
+        }
     } else {
         // Distribute available height amongst non-selected windows in proportion to their existing height
         const gap = prefs.window_gap;
