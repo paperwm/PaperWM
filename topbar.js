@@ -212,8 +212,8 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         if ((type == Clutter.EventType.TOUCH_END ||
              type == Clutter.EventType.BUTTON_RELEASE)) {
-            if (['SCROLL', 'SMOOTH'].includes(this.state)) {
-                this._navigator.finish();
+            if (Navigator.navigating) {
+                Navigator.getNavigator().finish();
             } else {
                 if (this.menu.isOpen) {
                     this.menu.toggle();
