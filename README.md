@@ -109,12 +109,17 @@ There's a single scrollable tiling per workspace. Adding another monitor simply 
 
 PaperWM currently works best using static workspaces, this can be turned on with Gnome Tweaks under Workspaces.
 
-| Keybindings                                                                                                              |                                                                                   |
+| Workspace Keybindings                                                                                                    |                                                                                   |
 | ------                                                                                                                   | -------                                                                           |
 | <kbd>Super</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Page_Down</kbd>                                             | Cycle through the most recently used workspaces                                   |
 | <kbd>Super</kbd><kbd>Shift</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Page_Up</kbd>                               | Cycle backwards through the most recently used workspaces                         |
 | <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Page_Down</kbd>               | Cycle through the most recently used, taking the active window with you           |
 | <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Page_Up</kbd> | Cycle backwards through the most recently used, taking the active window with you |
+
+| Monitor Keybindings                                                 |                                            |
+| ------                                                              | -------                                    |
+| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Arrow_key</kbd>                | Select neighbouring monitor                |
+| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Ctrl</kbd><kbd>Arrow_key</kbd> | Move active window to neighbouring monitor |
 
 ### Scratch layer ###
 
