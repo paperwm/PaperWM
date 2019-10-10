@@ -537,7 +537,9 @@ function resetConflicts() {
         // null. However gnome-shell often sets a custom handler of its own,
         // which means we most often can't rely on that
         if (name.startsWith('switch-to-workspace-') ||
-            name.startsWith('move-to-workspace-')) {
+            name.startsWith('move-to-workspace-') ||
+            name.startsWith('move-to-monitor-')
+           ) {
             Main.wm.setCustomKeybindingHandler(
                 name,
                 Shell.ActionMode.NORMAL |
