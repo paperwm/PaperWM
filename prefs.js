@@ -273,9 +273,11 @@ class SettingsWidget {
 
     createWorkspacePage(settings, index) {
 
-        let view = new Gtk.Frame();
-        let list = new Gtk.ListBox();
-        view.add(list);
+        let list = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            can_focus: false,
+        });
+        list.add(new Gtk.LevelBar());
 
         let nameEntry = new Gtk.Entry();
         let colorButton = new Gtk.ColorButton();
@@ -342,7 +344,7 @@ class SettingsWidget {
             clearBackground.sensitive = settings.get_string('background') != '';
         });
 
-        return view;
+        return list;
     }
 
     getWorkspaceName(settings, index) {
@@ -358,7 +360,6 @@ class SettingsWidget {
 
 function createRow(text, widget, signal, handler) {
     let margin = 12;
-    let row = new Gtk.ListBoxRow({selectable: false});
     let box = new Gtk.Box({
         margin_start: margin, margin_end: margin,
         margin_top: margin/2, margin_bottom: margin/2,
@@ -371,9 +372,7 @@ function createRow(text, widget, signal, handler) {
     box.add(label);
     box.add(widget);
 
-    row.add(box);
-
-    return row;
+    return box;
 }
 
 function createKeybindingWidget(settings, searchEntry) {
