@@ -240,6 +240,26 @@ class SettingsWidget {
 
         annotateKeybindings(workspaces.model.child_model, settings);
 
+        let monitorFrame = new Gtk.Frame({label: _('Monitors'),
+                                          label_xalign: 0.5});
+        let monitors = createKeybindingWidget(settings, searchEntry);
+        box.add(monitorFrame);
+        monitorFrame.add(monitors);
+
+        ['move-monitor-right',
+         'move-monitor-left',
+         'move-monitor-above',
+         'move-monitor-below',
+         'move-monitor-right',
+         'move-monitor-left',
+         'move-monitor-above',
+         'move-monitor-below',
+        ].forEach(k => {
+                addKeybinding(monitors.model.child_model, settings, k);
+            });
+
+        annotateKeybindings(monitors.model.child_model, settings);
+
 
         let scratchFrame = new Gtk.Frame({label: _('Scratch layer'),
                                           label_xalign: 0.5});
