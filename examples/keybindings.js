@@ -231,3 +231,19 @@ function moveSpaceToMonitor(basebinding = '<super><alt>') {
                             });
     }
 }
+
+/**
+   "<Super>KP_Add" and "<Super>KP_Subtract" to use the numpad keys
+ */
+function adjustWidth(incBinding="<Super>plus", decBinding="<Super>minus", increment=50) {
+    function adjuster(delta) {
+        return mw => {
+            if (!mw) return;
+            const f = mw.get_frame_rect();
+            mw.move_resize_frame(true, f.x, f.y, f.width + delta, f.height);
+        }
+    }
+
+    Keybindings.bindkey(incBinding, "inc-width", adjuster(increment));
+    Keybindings.bindkey(decBinding, "dec-width", adjuster(-increment));
+}
