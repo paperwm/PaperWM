@@ -1757,20 +1757,30 @@ class Spaces extends Map {
 
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
-        // HACK 3.34: Hidden actors aren't allocated, use opacity instead to fix
-        // new window animations. We turn opacity on again after `insertWindow`
-        actor.opacity = 0;
+
+        /* HACK 3.34: Hidden actors aren't allocated if hidden, use opacity instead to fix
+           new window animations.
+
+           The first draw will reset the opacity it seems (but not visible). So
+           even if we set it again in `first-frame` that is too late since that
+           happens _after_ mutter have drawn the frame.
+
+           So we kill visibily on the first the `queue-redraw`.
+        */
+        signals.connectOneShot(actor, 'queue-redraw', () =>  {
+            actor.opacity = 0;
+        });
 
         /*
           We need reliable `window_type`, `wm_class` et. all to handle window insertion correctly.
 
           On wayland this is completely broken before `first-frame`. It's
-          somewhat better on X11, but there's at minimum some racing with
-          `wm_class`.
+          somewhat more stable on X11, but there's at minimum some racing with
+          `wm_class` which can break the users winprop rules.
         */
         signals.connectOneShot(actor, 'first-frame', () =>  {
             allocateClone(metaWindow);
-            insertWindow(metaWindow, {});
+            insertWindow(metaWindow, {existing: false});
         });
     };
 
