@@ -2119,8 +2119,8 @@ function insertWindow(metaWindow, {existing}) {
         toggleMaximizeHorizontally(metaWindow);
     }
 
-    actor.opacity = 0;
     if (!existing) {
+        actor.opacity = 0;
         clone.x = clone.targetX;
         clone.y = clone.targetY;
         clone.set_scale(0, 0);
