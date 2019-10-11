@@ -1757,16 +1757,21 @@ class Spaces extends Map {
 
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
-        // 3.34: The clone will not update its source is hidden this early
+        // HACK 3.34: Hidden actors aren't allocated, use opacity instead to fix
+        // new window animations. We turn opacity on again after `insertWindow`
         actor.opacity = 0;
-        let signal = actor.connect(
-            'first-frame',
-            () =>  {
-                actor.opacity = 255;
-                actor.disconnect(signal);
-                allocateClone(metaWindow);
-                insertWindow(metaWindow, {});
-            });
+
+        /*
+          We need reliable `window_type`, `wm_class` et. all to handle window insertion correctly.
+
+          On wayland this is completely broken before `first-frame`. It's
+          somewhat better on X11, but there's at minimum some racing with
+          `wm_class`.
+        */
+        signals.connectOneShot(actor, 'first-frame', () =>  {
+            allocateClone(metaWindow);
+            insertWindow(metaWindow, {});
+        });
     };
 
     windowLeftMonitor(screen, index, metaWindow) {
@@ -2028,9 +2033,14 @@ function insertWindow(metaWindow, {existing}) {
         return;
     }
 
-    let connectSizeChanged = () => {
+    let actor = metaWindow.get_compositor_private();
+
+    let connectSizeChanged = (tiled) => {
+        if (tiled)
+            animateWindow(metaWindow);
+        actor.opacity = 255;
+        metaWindow.unmapped && signals.connect(metaWindow, 'size-changed', resizeHandler);
         delete metaWindow.unmapped;
-        !existing && signals.connect(metaWindow, 'size-changed', resizeHandler);
     };
 
     if (!existing) {
@@ -2109,8 +2119,7 @@ function insertWindow(metaWindow, {existing}) {
         toggleMaximizeHorizontally(metaWindow);
     }
 
-    let actor = metaWindow.get_compositor_private();
-    animateWindow(metaWindow);
+    actor.opacity = 0;
     if (!existing) {
         clone.x = clone.targetX;
         clone.y = clone.targetY;
@@ -2120,8 +2129,8 @@ function insertWindow(metaWindow, {existing}) {
             scale_y: 1,
             time: prefs.animation_time,
             onComplete: () => {
+                connectSizeChanged(true);
                 space.layout();
-                connectSizeChanged();
             }
         });
     }
@@ -2427,9 +2436,14 @@ function showHandler(actor) {
     if (!metaWindow.clone.get_parent() && !metaWindow.unmapped)
         return;
 
+    // HACK: use opacity instead of hidden on new windows
+    if (metaWindow.unmapped) {
+        actor.opacity = 0;
+        return;
+    }
+
     if (!onActive
         || isWindowAnimating(metaWindow)
-        || metaWindow.unmapped
         // The built-in workspace-change animation is running: suppress it
         || actor.get_parent() !== global.window_group
        ) {
