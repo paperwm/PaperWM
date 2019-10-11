@@ -145,6 +145,13 @@ class SettingsWidget {
             this._settings.set_boolean('use-default-background',
                                        state);
         });
+        const backgroundPanelButton = this.builder.get_object('gnome-background-panel');
+        backgroundPanelButton.connect('clicked', () => {
+            GLib.spawn_async(null, ['gnome-control-center', 'background'],
+                             GLib.get_environ(),
+                             GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                             null);
+        });
 
         let useDefault = this._settings.get_boolean('use-default-background');
 

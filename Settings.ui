@@ -17,6 +17,11 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">org.gnome.Settings-symbolic</property>
+  </object>
   <object class="GtkAdjustment" id="vertical-friction-adjustment">
     <property name="upper">10</property>
     <property name="step_increment">0.10000000000000001</property>
@@ -665,6 +670,7 @@
                         <property name="margin_right">12</property>
                         <property name="margin_top">12</property>
                         <property name="margin_bottom">12</property>
+                        <property name="column_spacing">24</property>
                         <child>
                           <object class="GtkLabel" id="workspace_default_background_label">
                             <property name="visible">True</property>
@@ -682,6 +688,20 @@
                           <object class="GtkSwitch" id="use-default-background">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="valign">center</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">2</property>
+                            <property name="top_attach">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="gnome-background-panel">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                            <property name="tooltip_text" translatable="yes">Launch gnome background picker</property>
+                            <property name="image">image1</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
