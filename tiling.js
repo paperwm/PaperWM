@@ -2133,6 +2133,8 @@ function insertWindow(metaWindow, {existing}) {
                 space.layout();
             }
         });
+    } else {
+        animateWindow(metaWindow);
     }
 
     if (metaWindow === display.focus_window) {
