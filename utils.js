@@ -163,6 +163,7 @@ function setDevGlobals() {
     workspace = workspaceManager.get_active_workspace();
     actor = metaWindow.get_compositor_private();
     space = Tiling.spaces.spaceOfWindow(metaWindow);
+    app = imports.gi.Shell.WindowTracker.get_default().get_window_app(metaWindow);
 }
 
 /**
