@@ -24,45 +24,52 @@ var customHandlers, customSpawnHandlers;
 function init() {
     customHandlers = { 'org.gnome.Terminal.desktop': newGnomeTerminal };
     customSpawnHandlers = {};
-    Kludges.registerOverridePrototype(
+
+    function spawnWithFallback(fallback, ...args) {
+        try {
+            return spawnWindow(...args);
+        } catch(e) {
+            return fallback();
+        }
+    }
+
+    let overrideWithFallback = Kludges.overrideWithFallback;
+
+    overrideWithFallback(
         Shell.App, "open_new_window",
-        function(workspaceId) {
-            log(`Shell.App.open_new_window`);
-            return spawnWindow(this, global.workspace_manager.get_workspace_by_index(workspaceId));
+        (fallback, app, workspaceId) => {
+            return spawnWithFallback(fallback, app, global.workspace_manager.get_workspace_by_index(workspaceId));
         }
     );
 
-    Kludges.registerOverridePrototype(
+    overrideWithFallback(
         Shell.App, "launch_action",
-        function(name, ...args) {
+        (fallback, app, name, ...args) => {
             log(`ShellApp.launch_action ${name}`);
             if (name === 'new-window')
-                return spawnWindow(this);
+                return spawnWithFallback(fallback, app);
             else {
-                let original = Kludges.getSavedProp(Gio.DesktopAppInfo.prototype, "launch_action");
-                return original.call(this, name, ...args);
+                return fallback();
             }
 
         }
     );
-
-    Kludges.registerOverridePrototype(
+    overrideWithFallback(
         Gio.DesktopAppInfo, "launch",
-        function() {
+        (fallback, appInfo) => {
             log(`DesktopAppInfo.launch`);
-            return spawnWindow(this.get_id());
+            return spawnWithFallback(fallback, appInfo.get_id());
         }
     );
 
-    Kludges.registerOverridePrototype(
+    overrideWithFallback(
         Gio.DesktopAppInfo, "launch_action",
-        function(name, ...args) {
+        (fallback, appInfo, name, ...args) => {
             log(`DesktopAppInfo.launch_action ${name}`);
             if (name === 'new-window')
-                return spawnWindow(this.get_id());
+                return spawnWithFallback(fallback, appInfo.get_id());
             else {
-                let original = Kludges.getSavedProp(Gio.DesktopAppInfo.prototype, "launch_action");
-                return original.call(this, name, ...args);
+                return fallback();
             }
 
         }
