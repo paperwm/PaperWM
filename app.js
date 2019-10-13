@@ -27,7 +27,7 @@ function init() {
 
     function spawnWithFallback(fallback, ...args) {
         try {
-            return spawnWindow(...args);
+            return trySpawnWindow(...args);
         } catch(e) {
             return fallback();
         }
@@ -133,7 +133,7 @@ function duplicateWindow(metaWindow) {
     return true;
 }
 
-function spawnWindow(app, workspace) {
+function trySpawnWindow(app, workspace) {
     if (typeof(app) === 'string') {
         app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
     }
@@ -146,6 +146,17 @@ function spawnWindow(app, workspace) {
     }
 }
 
+function spawnWindow(app, workspace) {
+    if (typeof(app) === 'string') {
+        app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
+    }
+    try {
+        return trySpawnWindow(app, workspace);
+    } catch(e) {
+        // Let the overide take care any fallback
+        return app.open_new_window(-1);
+    }
+}
 
 function expandCommandline(commandline, space) {
     let dir = space.settings.get_string('directory');
