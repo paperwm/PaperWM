@@ -225,7 +225,7 @@ function disableHotcorners() {
 }
 
 var savedProps;
-savedProps = savedProps || {};
+savedProps = savedProps || new Map();
 
 function registerOverrideProp(obj, name, override) {
     let saved = getSavedProp(obj, name) || obj[name];
@@ -295,7 +295,6 @@ function restoreMethod(obj, name) {
 
 var signals;
 function init() {
-    savedProps = new Map();
     registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
     registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
