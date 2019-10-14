@@ -1,7 +1,8 @@
 /**
   Some of Gnome Shell's default behavior is really sub-optimal when using
-  paperWM. This is a collection of monkey patches and preferences which works
-  around these problems.
+  paperWM. Other features are simply not possible to implement without monkey
+  patching. This is a collection of monkey patches and preferences which works
+  around these problems and facilitates new features.
  */
 
 var Extension;
@@ -217,27 +218,67 @@ function disableHotcorners() {
     }
 }
 
-var savedMethods;
-function saveMethod(obj, name) {
-    let method = obj[name];
-    let methods = savedMethods.get(obj);
-    if (!methods) {
-        methods = {};
-        savedMethods.set(obj, methods);
+var savedProps;
+savedProps = savedProps || {};
+
+function registerOverrideProp(obj, name, override) {
+    let saved = getSavedProp(obj, name) || obj[name];
+    let props = savedProps.get(obj);
+    if (!props) {
+        props = {};
+        savedProps.set(obj, props);
     }
-    methods[name] = method;
+    props[name] = {
+        saved,
+        override
+    };
 }
 
-function getMethod(obj, name) {
-    let methods = savedMethods.get(obj);
-    return methods[name];
+function registerOverridePrototype(obj, name, override) {
+    registerOverrideProp(obj.prototype, name, override);
+}
+
+function getSavedProp(obj, name) {
+    let props = savedProps.get(obj);
+    if (!props)
+        return undefined;
+    let prop = props[name];
+    if (!prop)
+        return undefined;
+    return prop.saved;
+}
+
+function getSavedPrototype(obj, name) {
+    return getSavedProp(obj.prototype, name);
 }
 
 
-function overrideMethod(obj, name, method) {
-    if (!getMethod(obj, name))
-        saveMethod(obj, name);
-    obj[name] = method;
+function disableOverride(obj, name) {
+    obj[name] = getSavedProp(obj, name);
+}
+
+function enableOverride(obj, name) {
+    let props = savedProps.get(obj);
+    let override = props[name].override;
+    if (override !== undefined) {
+        obj[name] = override;
+    }
+}
+
+function enableOverrides() {
+    for (let [obj, props] of savedProps) {
+        for (let name in props) {
+            enableOverride(obj, name);
+        }
+    }
+}
+
+function disableOverrides() {
+    for (let [obj, props] of savedProps) {
+        for (let name in props) {
+            obj[name] = props[name].saved;
+        }
+    }
 }
 
 function restoreMethod(obj, name) {
@@ -248,35 +289,36 @@ function restoreMethod(obj, name) {
 
 var signals;
 function init() {
-    savedMethods = new Map();
-    saveMethod(imports.ui.messageTray.MessageTray.prototype, '_updateState');
-    saveMethod(WindowManager.WindowManager.prototype, '_prepareWorkspaceSwitch');
-    saveMethod(Workspace.Workspace.prototype, '_isOverviewWindow');
-    saveMethod(Workspace.WindowClone.prototype, 'getOriginalPosition');
-    saveMethod(Workspace.Workspace.prototype, '_realRecalculateWindowPositions');
-    saveMethod(Workspace.UnalignedLayoutStrategy.prototype, '_sortRow');
-    saveMethod(WindowManager.WorkspaceTracker.prototype, '_checkWorkspaces');
-    saveMethod(WindowManager.TouchpadWorkspaceSwitchAction.prototype, '_checkActivated');
+    savedProps = new Map();
+    registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
+    registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
+    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
+    registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition');
+    registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions');
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow');
+    registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces');
+    registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated');
+
+    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', (win) => {
+        let metaWindow = win.meta_window;
+        return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+    });
 
     signals = new utils.Signals();
 }
 
 function enable() {
+    enableOverrides();
 
     signals.connect(settings, 'changed::override-hot-corner',
                     disableHotcorners);
     disableHotcorners();
 
     function onlyScratchInOverview() {
-        let obj = Workspace.Workspace.prototype;
-        let name = '_isOverviewWindow';
         if (settings.get_boolean('only-scratch-in-overview')) {
-            overrideMethod(obj, name, (win) => {
-                let metaWindow = win.meta_window;
-                return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
-            });
+            enableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         } else {
-            restoreMethod(obj, name);
+            disableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         }
     }
     signals.connect(settings, 'changed::only-scratch-in-overview',
@@ -457,11 +499,7 @@ function enable() {
 }
 
 function disable() {
-    for (let [obj, methods] of savedMethods) {
-        for (let name in methods) {
-            restoreMethod(obj, name);
-        }
-    }
+    disableOverrides();
 
     signals.destroy();
     Main.layoutManager._updateHotCorners();
