@@ -299,6 +299,9 @@ function init() {
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces');
     registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated');
 
+    // Kill pinch gestures as they work pretty bad (especially when 3-finger swiping)
+    registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0);
+
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', (win) => {
         let metaWindow = win.meta_window;
         return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
