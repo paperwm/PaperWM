@@ -23,7 +23,9 @@ var CouldNotLaunch = Symbol();
 var customHandlers, customSpawnHandlers;
 function init() {
     customHandlers = { 'org.gnome.Terminal.desktop': newGnomeTerminal };
-    customSpawnHandlers = {};
+    customSpawnHandlers = {
+        'com.gexperts.Tilix.desktop': mkCommandLineSpawner('tilix --working-directory %d')
+    };
 
     function spawnWithFallback(fallback, ...args) {
         try {
@@ -80,15 +82,10 @@ function launchFromWorkspaceDir(app, workspace=null) {
     if (typeof(app) === 'string') {
         app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
     }
-    let space = workspace ? Tiling.spaces.get(workspace) : Tiling.spaces.selectedSpace; 
-    let dir = space.settings.get_string("directory");
+    let dir = getWorkspaceDirectory(workspace);
     let cmd = app.app_info.get_commandline();
     if (!cmd || dir == '') {
         throw CouldNotLaunch;
-    }
-
-    if (dir[0] == "~") {
-        dir = GLib.getenv("HOME") + dir.slice(1);
     }
 
     /* Note: One would think working directory could be specified in the AppLaunchContext
@@ -158,8 +155,38 @@ function spawnWindow(app, workspace) {
     }
 }
 
-function expandCommandline(commandline, space) {
-    let dir = space.settings.get_string('directory');
+function getWorkspaceDirectory(workspace=null) {
+    let space  = workspace ? Tiling.spaces.get(workspace) : Tiling.spaces.selectedSpace;
+
+    let dir = space.settings.get_string("directory");
+    if (dir[0] === "~") {
+        dir = GLib.getenv("HOME") + dir.slice(1);
+    }
+    return dir;
+}
+
+function expandCommandline(commandline, workspace) {
+    let dir = getWorkspaceDirectory(workspace)
+
     commandline = commandline.replace(/%d/g, () => GLib.shell_quote(dir));
-    return commandline;
+
+    return commandline
+}
+
+function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir=false) {
+    return (app, space) => {
+        let workspace = space.workspace;
+        let commandline = expandCommandline(commandlineTemplate, workspace);
+        print("Launching", commandline);
+        let workingDir = spawnInWorkspaceDir ? getWorkspaceDirectory(workspace) : null;
+        let [success, cmdArgs] = GLib.shell_parse_argv(commandline);
+        if (success) {
+            success = GLib.spawn_async(workingDir, cmdArgs, GLib.get_environ(), GLib.SpawnFlags.SEARCH_PATH, null);
+        }
+        if (!success) {
+            Extension.imports.extension.notify(
+                `Failed to run custom spawn handler for ${app.id}`,
+                `Attempted to run '${commandline}'`);
+        }
+    }
 }
