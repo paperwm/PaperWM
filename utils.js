@@ -14,8 +14,8 @@ var display = global.display;
 var GObject = imports.gi.GObject;
 var registerClass;
 
+var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
 {
-    let version = imports.misc.config.PACKAGE_VERSION.split('.');
     if (version[0] >= 3 && version[1] > 30) {
         registerClass = GObject.registerClass;
     } else {
