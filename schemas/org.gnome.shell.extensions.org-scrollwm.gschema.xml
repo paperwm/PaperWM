@@ -211,6 +211,10 @@
           <default>''</default>
           <summary>The background color</summary>
       </key>
+      <key type="s" name="directory">
+          <default>''</default>
+          <summary>Affect various integrations. An empty string means use PWD. (usually ~)</summary>
+      </key>
   </schema>
 
   <schema id="org.gnome.Shell.Extensions.PaperWM.WorkspaceList"
