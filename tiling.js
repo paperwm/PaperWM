@@ -2558,9 +2558,11 @@ function cycleWindowHeight(metaWindow) {
             });
         }
 
-        if (space[i].length >= 1) {
-            space.layout(false, {customAllocators: {[i]: allocate}});
+        if (space[i].length === 1) {
+            steps = [].concat(steps, [1.0]);
         }
+
+        space.layout(false, {customAllocators: {[i]: allocate}});
     } else {
         // Not in tiling
         let workspace = metaWindow.get_workspace();
