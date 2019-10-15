@@ -1158,8 +1158,9 @@ class Spaces extends Map {
         for (let i=0; i < workspaceManager.n_workspaces; i++) {
             let workspace = workspaceManager.get_workspace_by_index(i);
             this.addSpace(workspace);
-            debug("workspace", workspace)
         }
+        this.signals.connect(workspaceManager, 'notify::n-workspaces',
+                             utils.dynamic_function_ref('workspacesChanged', this).bind(this));
 
         let OVERRIDE_SCHEMA;
         if (global.screen) {
@@ -1173,8 +1174,6 @@ class Spaces extends Map {
     }
 
     init() {
-        this.signals.connect(workspaceManager, 'notify::n-workspaces',
-                        utils.dynamic_function_ref('workspacesChanged', this).bind(this));
         this.signals.connect(global.screen || display,
                         'window-left-monitor',
                         this.windowLeftMonitor.bind(this));
