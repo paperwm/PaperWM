@@ -2646,7 +2646,7 @@ function allocateDefault(column, availableHeight, selectedWindow) {
         if (shouldMaximizeSingleWindow(column[0])) {
             return [availableHeight];
         } else {
-            return [column[0].get_frame_rect().height]
+            return [Math.min(availableHeight, column[0].get_frame_rect().height)];
         }
     } else {
         // Distribute available height amongst non-selected windows in proportion to their existing height
