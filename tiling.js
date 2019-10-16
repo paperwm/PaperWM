@@ -454,22 +454,13 @@ class Space extends Array {
         this.cloneContainer.width = width;
 
         if (auto) {
-            let removeLastFrames = [];
-            let first = this[0] || [];
-            let last = this[this.length -1] || [];
             if (width < workArea.width) {
                 this.targetX = min + Math.round((workArea.width - width)/2);
-                removeLastFrames = first.concat(last);
             } else if (this.targetX + width < min + workArea.width) {
                 this.targetX = min + workArea.width - width;
-                removeLastFrames = last;
             } else if (this.targetX > workArea.min ) {
                 this.targetX = workArea.x;
-                removeLastFrames = first;
             }
-            // Invalidate the last position stored on the relevant edge windows
-            for (let w of removeLastFrames)
-                w.lastFrame = undefined;
         }
         Tweener.addTween(this.cloneContainer,
                          { x: this.targetX,
