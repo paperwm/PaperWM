@@ -1432,8 +1432,8 @@ class Spaces extends Map {
 
     switchMonitor(direction, move) {
         let focus = display.focus_window;
-        let currentSpace = this.selectedSpace;
-        let monitor = currentSpace.monitor;
+        let monitor = Scratch.focusMonitor();
+        let currentSpace = this.monitors.get(monitor);
         let i = display.get_monitor_neighbor_index(monitor.index, direction);
         if (i === -1)
             return;
@@ -1443,7 +1443,7 @@ class Spaces extends Map {
         if (move && focus) {
             let metaWindow = focus.get_transient_for() || focus;
 
-            if (currentSpace.indexOf(metaWindow) !== -1) {
+            if (currentSpace && currentSpace.indexOf(metaWindow) !== -1) {
                 currentSpace.removeWindow(metaWindow);
                 metaWindow.foreach_transient((t) => {
                     currentSpace.removeWindow(t);
@@ -1451,11 +1451,18 @@ class Spaces extends Map {
             } else {
                 metaWindow.move_to_monitor(newMonitor.index);
             }
-            metaWindow.change_workspace(space.workspace);
             metaWindow.foreach_transient((t) => {
                 t.move_to_monitor(newMonitor.index);
             });
-            space.workspace.activate_with_focus(focus, global.get_current_time());
+            if (space) {
+                metaWindow.change_workspace(space.workspace);
+                metaWindow.foreach_transient((t) => {
+                    space.addFloating(t);
+                });
+                space.workspace.activate_with_focus(focus, global.get_current_time());
+            } else {
+                metaWindow.move_to_monitor(newMonitor.index);
+            }
         } else {
             space.workspace.activate(global.get_current_time());
         }
