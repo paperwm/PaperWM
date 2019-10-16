@@ -1820,13 +1820,18 @@ class Spaces extends Map {
             return;
 
         let monitor = Main.layoutManager.monitors[index];
-        let space = this.monitors.get(monitor);
-        if (space.monitor !== monitor)
+        let toSpace = this.monitors.get(monitor);
+        if (toSpace && toSpace.monitor !== monitor)
             return;
 
-        spaces.spaceOfWindow(metaWindow).removeWindow(metaWindow);
-        inGrab.workspace = space.workspace;
-        return;
+        let from = spaces.spaceOfWindow(metaWindow);
+        // Remove the window immediately so the grab is free
+        from && from.removeWindow(metaWindow);
+        if (toSpace) {
+            inGrab.workspace = toSpace.workspace;
+        } else {
+            inGrab.workspace = 'all';
+        }
     }
 }
 Signals.addSignalMethods(Spaces.prototype);
@@ -2022,6 +2027,10 @@ function remove_handler(workspace, meta_window) {
 */
 function add_handler(ws, metaWindow) {
     debug("window-added", metaWindow, metaWindow.title, metaWindow.window_type, ws.index());
+
+    // Do not handle grabbed windows
+    if (inGrab && inGrab.window === metaWindow)
+        return;
 
     let actor = metaWindow.get_compositor_private();
     if (actor) {
@@ -2318,9 +2327,9 @@ function grabBegin(metaWindow, type) {
     if (type === Meta.GrabOp.COMPOSITOR || type === Meta.GrabOp.FRAME_BUTTON)
         return;
     let space = spaces.spaceOfWindow(metaWindow);
-    if (space.indexOf(metaWindow) === -1)
-        return;
     inGrab = {window: metaWindow};
+    if (!space || space.indexOf(metaWindow) === -1)
+        return;
     space.startAnimate();
     let frame = metaWindow.get_frame_rect();
     let anchor = metaWindow.clone.targetX + space.monitor.x;
@@ -2338,10 +2347,14 @@ function grabEnd(metaWindow, type) {
     inGrab = false;
     if (dragInfo.workspace) {
         let workspace = dragInfo.workspace;
-        if (metaWindow.get_workspace() === workspace)
+        if (workspace === 'all')
+            return; // Moved to the shared monitor space
+        else if (metaWindow.get_workspace() === workspace)
             insertWindow(metaWindow, {existing: true});
         else
             metaWindow.change_workspace(workspace);
+        if (workspace)
+            Main.activateWindow(metaWindow);
         return;
     }
     let space = spaces.spaceOfWindow(metaWindow);
