@@ -1246,6 +1246,7 @@ class Spaces extends Map {
      */
     monitorsChanged() {
         this._monitorsChanging = true;
+        this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
 
         if (this.monitors)
             oldMonitors = this.monitors;
@@ -1288,7 +1289,7 @@ class Spaces extends Map {
                 20, () => { this._monitorsChanging = false; });
         };
 
-        if (this.overrideSettings.get_boolean('workspaces-only-on-primary')) {
+        if (this.onlyOnPrimary) {
             let overlay = new ClickOverlay(primary);
             primary.clickOverlay = overlay;
             this.clickOverlays.push(overlay);
