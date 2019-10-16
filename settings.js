@@ -96,6 +96,11 @@ function init() {
         scratch_layer: true,
         focus: true,
     });
+    defwinprop({
+        wm_class: "gnome-screenshot",
+        scratch_layer: true,
+        focus: true,
+    });
 }
 
 var id;
