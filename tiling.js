@@ -1262,6 +1262,13 @@ class Spaces extends Map {
             overlay.destroy();
         }
         this.clickOverlays = [];
+        for (let monitor of Main.layoutManager.monitors) {
+            let overlay = new ClickOverlay(monitor, this.onlyOnPrimary);
+            monitor.clickOverlay = overlay;
+            overlay.activate();
+            this.clickOverlays.push(overlay);
+        }
+
         let mru = this.mru();
         let primary = Main.layoutManager.primaryMonitor;
         let monitors = Main.layoutManager.monitors;
@@ -1290,22 +1297,12 @@ class Spaces extends Map {
         };
 
         if (this.onlyOnPrimary) {
-            let overlay = new ClickOverlay(primary);
-            primary.clickOverlay = overlay;
-            this.clickOverlays.push(overlay);
             this.forEach(space => {
                 space.setMonitor(primary, false);
             });
             this.monitors.set(primary, mru[0]);
             finish();
             return;
-        }
-
-        for (let monitor of Main.layoutManager.monitors) {
-            let overlay = new ClickOverlay(monitor);
-            monitor.clickOverlay = overlay;
-            overlay.activate();
-            this.clickOverlays.push(overlay);
         }
 
 

@@ -68,8 +68,9 @@ function createAppIcon(metaWindow, size) {
 /**
  */
 class ClickOverlay {
-    constructor(monitor) {
+    constructor(monitor, onlyOnPrimary) {
         this.monitor = monitor;
+        this.onlyOnPrimary = onlyOnPrimary;
         this.left = new StackOverlay(Meta.MotionDirection.LEFT, monitor);
         this.right = new StackOverlay(Meta.MotionDirection.RIGHT, monitor);
 
@@ -127,6 +128,8 @@ class ClickOverlay {
     }
 
     activate() {
+        if (this.onlyOnPrimary)
+            return;
         let monitor = this.monitor;
         let d = 10;
         this.enterMonitor.set_position(monitor.x + d, monitor.y + d);
