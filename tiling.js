@@ -1816,16 +1816,7 @@ class Spaces extends Map {
     windowEnteredMonitor(screen, index, metaWindow) {
         debug('window-entered-monitor', index, metaWindow.title);
 
-        if (!metaWindow.get_compositor_private()) {
-            // Doing stuff to a actorless window is usually a bad idea
-            return;
-        }
-
-        if (!metaWindow.clone
-            || metaWindow.unmapped
-            || isWindowAnimating(metaWindow)
-            || this._monitorsChanging
-            || metaWindow.is_on_all_workspaces())
+        if (!inGrab || !metaWindow.get_compositor_private())
             return;
 
         let monitor = Main.layoutManager.monitors[index];
@@ -1833,17 +1824,9 @@ class Spaces extends Map {
         if (space.monitor !== monitor)
             return;
 
-        if (inGrab) {
-            spaces.spaceOfWindow(metaWindow).removeWindow(metaWindow);
-            inGrab.workspace = space.workspace;
-            return;
-        }
-
-        metaWindow.change_workspace(space.workspace);
-
-        // This doesn't play nice with the clickoverlay, disable for now
-        if (metaWindow.has_focus())
-            Main.activateWindow(metaWindow);
+        spaces.spaceOfWindow(metaWindow).removeWindow(metaWindow);
+        inGrab.workspace = space.workspace;
+        return;
     }
 }
 Signals.addSignalMethods(Spaces.prototype);
