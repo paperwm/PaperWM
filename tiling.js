@@ -980,8 +980,11 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
             this.label.hide();
         }
         let name = this.settings.get_string('name');
-        if (name === '')
-            name = Meta.prefs_get_workspace_name(this.workspace.index());
+        if (name === '') {
+            // This should usually not happen as we assign a name when a workspace is created
+            // IMPROVEMENT: If static workspaces are used it would make sense to simply use "Workspace ${index}"
+            name = "Unnamed";
+        }
         Meta.prefs_change_workspace_name(this.workspace.index(), name);
         this.label.text = name;
         this.name = name;
