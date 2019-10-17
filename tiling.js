@@ -2114,6 +2114,12 @@ function insertWindow(metaWindow, {existing}) {
         }
     }
 
+    if (Scratch.isScratchWindow(metaWindow) && !metaWindow.is_on_all_workspaces()) {
+        // Moving from secondary monitor to primary can strip `is_on_all_workspaces`.
+        Scratch.makeScratch(metaWindow);
+        return;
+    }
+
     let space = spaces.spaceOfWindow(metaWindow);
     if (!add_filter(metaWindow)) {
         connectSizeChanged();
