@@ -2572,15 +2572,18 @@ function cycleWindowWidth(metaWindow) {
     let targetWidth = Math.min(utils.findNext(frame.width, steps, 10), workArea.width);
     let targetX = frame.x;
 
-    if (targetX+targetWidth > workArea.x + workArea.width - minimumMargin()) {
-        // Move the window so it remains fully visible
-        targetX = workArea.x + workArea.width - minimumMargin() - targetWidth;
+    if (Scratch.isScratchWindow(metaWindow)) {
+        if (targetX+targetWidth > workArea.x + workArea.width - minimumMargin()) {
+            // Move the window so it remains fully visible
+            targetX = workArea.x + workArea.width - minimumMargin() - targetWidth;
+        }
     }
 
     if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
         metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
     }
 
+    // Space.layout will ensure the window is moved if necessary
     metaWindow.move_resize_frame(true, targetX, frame.y, targetWidth, frame.height);
 }
 
