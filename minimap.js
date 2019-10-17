@@ -271,7 +271,7 @@ class Minimap extends Array {
         highlight.y = Math.round(
             clip.y + selected.y - prefs.window_gap);
         highlight.set_size(Math.round(selected.width + gap),
-                           Math.round(selected.height + prefs.window_gap));
+                           Math.round(Math.min(selected.height, this.clip.height + gap) + gap));
 
         let x = highlight.x
             + (highlight.width - label.width)/2;
