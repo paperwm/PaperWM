@@ -147,7 +147,34 @@ function getWorkspaceSettingsByUUID(uuid) {
     return workspaceSettingsCache[uuid];
 }
 
-// Only used for debugging/development atm.
+/** Returns [[uuid, settings, name], ...] (Only used for debugging/development atm.) */
+function findWorkspaceSettingsByName(regex) {
+    let list = workspaceList.get_strv('list');
+    let settingss = list.map(getWorkspaceSettingsByUUID);
+    return Extension.imports.utils.zip(list, settingss, settingss.map(s => s.get_string('name')))
+        .filter(([uuid, s, name]) => name.match(regex));
+}
+
+/** Only used for debugging/development atm. */
+function deleteWorkspaceSettingsByName(regex, dryrun=true) {
+    let out = ""
+    function rprint(...args) { print(...args); out += args.join(" ") + "\n"; }
+    let n = global.workspace_manager.get_n_workspaces();
+    for (let [uuid, s, name] of findWorkspaceSettingsByName(regex)) {
+        let index = s.get_int('index');
+        if (index < n) {
+            rprint("Skipping in-use settings", name, index);
+            continue;
+        }
+        rprint(dryrun ? "[dry]" : "", `Delete settings for '${name}' (${uuid})`);
+        if (!dryrun) {
+            deleteWorkspaceSettings(uuid);
+        }
+    }
+    return out;
+}
+
+/** Only used for debugging/development atm. */
 function deleteWorkspaceSettings(uuid) {
     // NB! Does not check if the settings is currently in use. Does not reindex subsequent settings.
     let list = workspaceList.get_strv('list');
@@ -155,7 +182,7 @@ function deleteWorkspaceSettings(uuid) {
     let settings = getWorkspaceSettingsByUUID(list[i]);
     for (let key of settings.list_keys()) {
         // Hopefully resetting all keys will delete the relocatable settings from dconf?
-        settings.reset();
+        settings.reset(key);
     }
 
     list.splice(i, 1);
