@@ -169,22 +169,28 @@ function _realRecalculateWindowPositions(flags) {
         return;
 
     let space = Tiling.spaces.spaceOf(this.metaWorkspace);
-    clones.sort((a, b) => {
-        let aw = a.metaWindow;
-        let bw = b.metaWindow;
-        let ia = space.indexOf(aw);
-        let ib = space.indexOf(bw);
-        if (ia === -1 && ib === -1) {
+    if (space) {
+        clones.sort((a, b) => {
+            let aw = a.metaWindow;
+            let bw = b.metaWindow;
+            let ia = space.indexOf(aw);
+            let ib = space.indexOf(bw);
+            if (ia === -1 && ib === -1) {
+                return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
+            }
+            if (ia === -1) {
+                return -1;
+            }
+            if (ib === -1) {
+                return 1;
+            }
+            return ia - ib;
+        });
+    } else {
+        clones.sort((a, b) => {
             return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
-        }
-        if (ia === -1) {
-            return -1;
-        }
-        if (ib === -1) {
-            return 1;
-        }
-        return ia - ib;
-    });
+        });
+    }
 
     if (this._reservedSlot)
         clones.push(this._reservedSlot);
@@ -198,7 +204,7 @@ function _realRecalculateWindowPositions(flags) {
 function getOriginalPosition() {
     let c = this.metaWindow.clone;
     let space = Tiling.spaces.spaceOfWindow(this.metaWindow);
-    if (space.indexOf(this.metaWindow) === -1) {
+    if (!space || space.indexOf(this.metaWindow) === -1) {
         return [this._boundingBox.x, this._boundingBox.y];
     }
     let [x, y] = [ space.monitor.x + space.targetX + c.targetX, space.monitor.y + c.y];
