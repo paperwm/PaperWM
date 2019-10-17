@@ -453,7 +453,7 @@ class Space extends Array {
         let width = Math.max(1, x - gap);
         this.cloneContainer.width = width;
 
-        if (auto) {
+        if (auto && animate) {
             if (width < workArea.width) {
                 this.targetX = min + Math.round((workArea.width - width)/2);
             } else if (this.targetX + width < min + workArea.width) {
@@ -461,14 +461,15 @@ class Space extends Array {
             } else if (this.targetX > workArea.min ) {
                 this.targetX = workArea.x;
             }
-        }
-        Tweener.addTween(this.cloneContainer,
-                         { x: this.targetX,
-                           time,
-                           onComplete: this.moveDone.bind(this)
-                         });
-        if (animate) {
+            Tweener.addTween(this.cloneContainer,
+                             { x: this.targetX,
+                               time,
+                               onComplete: this.moveDone.bind(this)
+                             });
+        } else if (animate) {
             ensureViewport(this.selectedWindow, this);
+        } else {
+            this.moveDone();
         }
     }
 
