@@ -1226,10 +1226,13 @@ class Spaces extends Map {
             });
         this._initDone = true;
 
+        // Redo the stack
+        // X11: Monitors aren't set up properly on `enable`, so we need it here too
+        this.monitorsChanged();
+
+        // Initialize spaces _after_ monitors are set up
         this.forEach(space => space.init());
 
-        // Redo the stack
-        this.monitorsChanged(); // Necessary for X11
         this.stack = this.mru();
     }
 
