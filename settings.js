@@ -114,6 +114,22 @@ function disable() {
 
 /// Workspaces
 
+function getUnusedColor() {
+    function workspaceColors() {
+        let list = workspaceList.get_strv('list');
+        return new Set(list.map(getWorkspaceSettingsByUUID).map(s => s.get_string('color')))
+    }
+
+    let palette = settings.get_strv('workspace-colors');
+    let usedColors = workspaceColors();
+
+    for (let color of palette) {
+        if (!usedColors.has(color)) {
+            return color;
+        }
+    }
+    return palette[Math.floor(Math.random()*palette.length)];
+}
 
 function getWorkspaceSettings(index) {
     let list = workspaceList.get_strv('list');
@@ -133,6 +149,9 @@ function getNewWorkspaceSettings(index) {
     list.push(uuid);
     workspaceList.set_strv('list', list);
     settings.set_int('index', index);
+    settings.set_string('color', getUnusedColor());
+    let n = findWorkspaceSettingsByName(/^Unnamed .*/).length;
+    settings.set_string(`Unnamed ${n+1}`)
     return [uuid, settings];
 }
 
