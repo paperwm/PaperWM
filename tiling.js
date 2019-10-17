@@ -2069,8 +2069,8 @@ function insertWindow(metaWindow, {existing}) {
 
     let actor = metaWindow.get_compositor_private();
 
-    let connectSizeChanged = (tiled) => {
-        if (tiled)
+    let connectSizeChanged = (show) => {
+        if (show)
             animateWindow(metaWindow);
         actor.opacity = 255;
         metaWindow.unmapped && signals.connect(metaWindow, 'size-changed', resizeHandler);
@@ -2114,8 +2114,13 @@ function insertWindow(metaWindow, {existing}) {
         }
     }
 
-    if (Scratch.isScratchWindow(metaWindow) && !metaWindow.is_on_all_workspaces()) {
-        // Moving from secondary monitor to primary can strip `is_on_all_workspaces`.
+    if (metaWindow.is_on_all_workspaces()) {
+        // Only connect the necessary signals and show windows on shared
+        // secondary monitors.
+        connectSizeChanged(true);
+        return;
+    } else if (Scratch.isScratchWindow(metaWindow)){
+        // And make sure scratch windows are stuck
         Scratch.makeScratch(metaWindow);
         return;
     }
