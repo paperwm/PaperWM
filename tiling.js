@@ -466,7 +466,8 @@ class Space extends Array {
                                time,
                                onComplete: this.moveDone.bind(this)
                              });
-        } else if (animate) {
+        }
+        if (animate) {
             ensureViewport(this.selectedWindow, this);
         } else {
             this.moveDone();
