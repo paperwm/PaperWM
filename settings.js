@@ -34,7 +34,7 @@ var prefs = {};
 ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
  'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
  'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
- 'cycle-width-steps', 'cycle-height-steps']
+ 'cycle-width-steps', 'cycle-height-steps', 'free-resize', 'automaximize']
     .forEach((k) => setState(null, k));
 
 function setVerticalMargin() {

@@ -74,6 +74,7 @@ function makeScratch(metaWindow) {
         Tiling.showWindow(metaWindow);
 
     if (fromTiling) {
+        metaWindow._initialResizeDone = false;  // [free-resize] automaximize on future insertion
         let f = metaWindow.get_frame_rect();
         let targetFrame = null;
 
