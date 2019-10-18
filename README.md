@@ -28,7 +28,7 @@ You can then enable the extension in Gnome Tweaks, or enable if from the command
 gnome-shell-extension-tool -e paperwm@hedning:matrix.org
 ```
 
-There's a few Gnome Shell settings which works poorly with PaperWM. To use the recommended settings run [`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
+There's a few Gnome Shell settings which works poorly with PaperWM. To use the recommended settings run [`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost. (The script will turn `auto-maximize`, `edge-tiling`, `attach-modal-dialogs` and `workspaces-only-on-primary` off).
 
 Running the extension will automatic install a user config file as described in [Development & user configuration](#development--user-configuration).
 
@@ -107,7 +107,7 @@ Swiping the trackpad vertically with three fingers lets you navigate the workspa
 
 There's a single scrollable tiling per workspace. Adding another monitor simply makes it possible to have another workspace visible. The workspace stack is shared among all the monitors, windows being resized vertically as necessary when workspace is displayed on another monitor.
 
-PaperWM currently works best using static workspaces, this can be turned on with Gnome Tweaks under Workspaces.
+PaperWM currently works best using the workspaces span monitors preference, this can be turned on with Gnome Tweaks under Workspaces. If you want to use workspaces only on primary you need to place the secondary monitor either below or above the primary (with the best result having it below).
 
 | Workspace Keybindings                                                                                                    |                                                                                   |
 | ------                                                                                                                   | -------                                                                           |
