@@ -19,9 +19,8 @@ var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
     if (version[0] >= 3 && version[1] > 30) {
         registerClass = GObject.registerClass;
     } else {
-        registerClass = (x => x);
+        registerClass = (x, y) => y ? y : x;
     }
-
 }
 
 var debug_all = false; // Turn off by default
