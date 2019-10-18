@@ -168,7 +168,7 @@ function init() {
                         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('new-window',
-                        dynamic_function_ref('newWindow',
+                        dynamic_function_ref('duplicateWindow',
                                        App),
                         Meta.KeyBindingFlags.PER_WINDOW);
 

@@ -295,9 +295,15 @@ class SettingsWidget {
         backgroundBox.add(background)
         backgroundBox.add(clearBackground)
 
+        let directoryChooser = new Gtk.FileChooserButton({
+            action: Gtk.FileChooserAction.SELECT_FOLDER,
+            title: 'Select workspace directory'
+        });
+
         list.add(createRow('Name', nameEntry));
         list.add(createRow('Color', colorButton));
         list.add(createRow('Background', backgroundBox));
+        list.add(createRow('Directory', directoryChooser));
 
         let rgba = new Gdk.RGBA();
         let color = settings.get_string('color');
@@ -349,6 +355,17 @@ class SettingsWidget {
             background.unselect_all();  // Note: does not trigger 'file-set'
             settings.reset('background');
             clearBackground.sensitive = settings.get_string('background') != '';
+        });
+
+        let dir = settings.get_string('directory')
+        if (dir === '')
+            directoryChooser.unselect_all();
+        else
+            directoryChooser.set_filename(dir)
+
+        directoryChooser.connect('file-set', () => {
+            let dir = directoryChooser.get_filename();
+            settings.set_string('directory', dir);
         });
 
         return list;

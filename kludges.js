@@ -225,7 +225,7 @@ function disableHotcorners() {
 }
 
 var savedProps;
-savedProps = savedProps || {};
+savedProps = savedProps || new Map();
 
 function registerOverrideProp(obj, name, override) {
     let saved = getSavedProp(obj, name) || obj[name];
@@ -242,6 +242,20 @@ function registerOverrideProp(obj, name, override) {
 
 function registerOverridePrototype(obj, name, override) {
     registerOverrideProp(obj.prototype, name, override);
+}
+
+function makeFallback(obj, method, ...args) {
+    let fallback = getSavedPrototype(obj, method);
+    return fallback.bind(...args);
+}
+
+function overrideWithFallback(obj, method, body) {
+    registerOverridePrototype(
+        obj, method, function(...args) {
+            let fallback = makeFallback(obj, method, this, ...args);
+            body(fallback, this, ...args);
+        }
+    );
 }
 
 function getSavedProp(obj, name) {
@@ -295,7 +309,6 @@ function restoreMethod(obj, name) {
 
 var signals;
 function init() {
-    savedProps = new Map();
     registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
     registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
