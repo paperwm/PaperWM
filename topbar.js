@@ -455,6 +455,7 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
         this.entry.label.text = space.name;
+        GLib.idle_add(GLib.PRIORITY_DEFAULT, this.entry.activate.bind(this.entry));
 
         this._zenItem._switch.setToggleState(!space.showTopBar);
     }
