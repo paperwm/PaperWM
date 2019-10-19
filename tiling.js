@@ -866,6 +866,7 @@ class Space extends Array {
     }
 
     fixOverlays(metaWindow) {
+
         metaWindow = metaWindow || this.selectedWindow;
         let index = this.indexOf(metaWindow);
         let target = this.targetX;
@@ -2033,7 +2034,7 @@ function remove_handler(workspace, meta_window) {
    Handle windows entering workspaces.
 */
 function add_handler(ws, metaWindow) {
-    debug("window-added", metaWindow, metaWindow.title, metaWindow.window_type, ws.index());
+    log("window-added", metaWindow, metaWindow.title, metaWindow.window_type, ws.index(), metaWindow.on_all_workspaces);
 
     // Do not handle grabbed windows
     if (inGrab && inGrab.window === metaWindow)

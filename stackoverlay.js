@@ -213,6 +213,7 @@ var StackOverlay = class StackOverlay {
         Main.layoutManager.trackChrome(overlay);
 
         this.overlay = overlay;
+        this.setTarget(null);
     }
 
     triggerPreview() {
