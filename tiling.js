@@ -1436,6 +1436,9 @@ class Spaces extends Map {
         for (let [workspace, space] of this) {
             if (workspaces[space.workspace] !== true) {
                 debug('workspace removed', space.workspace);
+                space.getWindows().forEach(mw => {
+                    space.removeWindow(mw);
+                });
                 this.removeSpace(space);
 
                 // Maps in javascript (and thus Spaces) remember insertion order
