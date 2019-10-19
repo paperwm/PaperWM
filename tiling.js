@@ -1824,7 +1824,8 @@ class Spaces extends Map {
     windowEnteredMonitor(screen, index, metaWindow) {
         debug('window-entered-monitor', index, metaWindow.title);
 
-        if (!inGrab || !metaWindow.get_compositor_private())
+        if (!inGrab || inGrab.window !== metaWindow
+            || !metaWindow.get_compositor_private())
             return;
 
         let monitor = Main.layoutManager.monitors[index];
