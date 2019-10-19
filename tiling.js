@@ -770,8 +770,11 @@ class Space extends Array {
     moveDone() {
         if (this.cloneContainer.x !== this.targetX ||
             this.actor.y !== 0 ||
-            Navigator.navigating || inPreview || inGrab ||
-            Main.overview.visible) {
+            Navigator.navigating || inPreview ||
+            Main.overview.visible ||
+            // Only block on grab if we haven't detached the window yet
+            (inGrab && !inGrab.workspace)
+           ) {
             return;
         }
 
