@@ -2516,7 +2516,7 @@ function showHandler(actor) {
     let metaWindow = actor.meta_window;
     let onActive = metaWindow.get_workspace() === workspaceManager.get_active_workspace();
 
-    if (!metaWindow.clone.get_parent() && !metaWindow.unmapped)
+    if (!metaWindow.clone || (!metaWindow.clone.get_parent() && !metaWindow.unmapped))
         return;
 
     // HACK: use opacity instead of hidden on new windows
