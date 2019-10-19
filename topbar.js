@@ -489,6 +489,8 @@ function disable() {
 }
 
 function show() {
+    if (Tiling.spaces && Tiling.spaces.selectedSpace._zen)
+        return
     if (!Main.overview.visible &&
         !Tiling.inPreview &&
         !(Tiling.spaces && Tiling.spaces.selectedSpace.showTopBar)) {
