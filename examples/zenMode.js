@@ -19,6 +19,7 @@ var GLib = imports.gi.GLib;
 var Gio = imports.gi.Gio;
 
 var Tiling = Extension.imports.tiling;
+var Topbar = Extension.imports.topbar;
 var Utils = Extension.imports.utils;
 
 var signals = new Utils.Signals()
@@ -29,6 +30,10 @@ var signals = new Utils.Signals()
   - Select a random background image (independent of workspace) and fade this in
   - Make the clones semi-transparent to reveal state when navigating
   - No handling of focus change atm. (stay in zen-mode? exit zen mode? disable navigation altogether?)
+  - Hide topbar
+  - Center window vertically instead of expanding it (after topbar is hidden)
+
+  TODO: disable notifications?
 */
 
 
@@ -132,6 +137,16 @@ function toggleZen(metaWindow) {
         space.zenBackground.background.set_file(background, style);
     }
 
+    if (set) {
+        metaWindow._yOffset = -Math.floor(Topbar.panelBox.height / 2)
+        Topbar.hide()
+        // space.settings.set_boolean('show-top-bar', false)
+        // space.settings.set_boolean('show-top-bar', true)
+    } else {
+        metaWindow._yOffset = 0
+        Topbar.show()
+    }
+
     let completed = false;
     function onComplete() {
         if (completed)
@@ -175,6 +190,7 @@ function toggleZen(metaWindow) {
     if (onlyWindow) {
         onComplete()
     }
+    space.layout()
 }
 
 function activate() {

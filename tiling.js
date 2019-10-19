@@ -349,6 +349,7 @@ class Space extends Array {
             }
 
             let c = mw.clone;
+            y += (mw._yOffset || 0)
             if (c.x !== x || c.targetX !== x ||
                 c.y !== y || c.targetY !== y) {
 
