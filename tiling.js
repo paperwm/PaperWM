@@ -564,6 +564,8 @@ class Space extends Array {
         if (this.indexOf(metaWindow) !== -1)
             return false;
 
+        metaWindow._workspace = this.workspace;
+
         if (row !== undefined && this[index]) {
             let column = this[index];
             column.splice(row, 0, metaWindow);
@@ -588,6 +590,7 @@ class Space extends Array {
         let index = this.indexOf(metaWindow);
         if (index === -1)
             return this.removeFloating(metaWindow);
+        metaWindow._workspace = null;
 
         let selected = this.selectedWindow;
         if (selected === metaWindow) {
@@ -760,6 +763,10 @@ class Space extends Array {
                 return i;
         }
         return -1;
+    }
+
+    includes(metaWindow) {
+        return metaWindow._workspace === this.workspace;
     }
 
     rowOf(metaWindow) {
@@ -1746,7 +1753,10 @@ class Spaces extends Map {
     };
 
     spaceOfWindow(meta_window) {
-        return this.get(meta_window.get_workspace());
+        let workspace = meta_window._workspace;
+        if (!workspace)
+            workspace = meta_window.get_workspace();
+        return this.get(workspace);
     };
 
     spaceOf(workspace) {
