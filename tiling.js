@@ -1126,16 +1126,20 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
                 Scratch.makeScratch(meta_window);
                 return;
             }
-            if(this.indexOf(meta_window) < 0 && add_filter(meta_window)) {
+            if(this.includes(meta_window) && add_filter(meta_window)) {
                 this.addWindow(meta_window, this.length);
             }
         })
 
-        let tabList = display.get_tab_list(Meta.TabList.NORMAL, workspace)
-            .filter(metaWindow => { return this.indexOf(metaWindow) !== -1; });
-        if (tabList[0]) {
-            this.selectedWindow = tabList[0]
-            // ensureViewport(space.selectedWindow, space);
+        if (oldSpace) {
+            this.selectedWindow = oldSpace.selectedWindow;
+        } else {
+            let tabList = display.get_tab_list(Meta.TabList.NORMAL, workspace)
+                .filter(metaWindow => { return this.indexOf(metaWindow) !== -1; });
+            if (tabList[0]) {
+                this.selectedWindow = tabList[0]
+                // ensureViewport(space.selectedWindow, space);
+            }
         }
     }
 
