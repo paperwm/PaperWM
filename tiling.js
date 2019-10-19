@@ -2144,6 +2144,10 @@ function insertWindow(metaWindow, {existing}) {
     if (metaWindow.is_on_all_workspaces()) {
         // Only connect the necessary signals and show windows on shared
         // secondary monitors.
+        let space = spaces.spaceOfWindow(metaWindow);
+        if (space.includes(metaWindow)) {
+            return;
+        }
         connectSizeChanged();
         showWindow(metaWindow);
         return;
