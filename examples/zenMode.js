@@ -47,12 +47,18 @@ function selectRandomBackground(dir) {
     return backgroundPaths[Math.floor(Math.random() * backgroundPaths.length)];
 }
 
-function crossFade(a, b, time=1) {
+function crossFade(a, b, time=1, callback=null) {
     // a and b should be siblings
     let p = a.get_parent().get_children();
     // print(a.opacity, b.opacity, p.indexOf(a), p.indexOf(b))
     b.opacity = 255;
-    Tweener.addTween(a, { opacity: 0, time: time, transition: 'linear', onComplete: () => a.lower_bottom()})
+    Tweener.addTween(a, {
+        opacity: 0, time: time, transition: 'linear',
+        onComplete: () => {
+            a.lower_bottom()
+            callback && callback()
+        }
+    })
     // Tweener.addTween(b, { opacity: 255, time: time, onComplete: () => a.lower_bottom() })
 }
 
@@ -99,6 +105,9 @@ function toggleZen(metaWindow) {
 
     metaWindow._zen = !metaWindow._zen
 
+    const BackgroundStyle = imports.gi.GDesktopEnums.BackgroundStyle;
+    let style = BackgroundStyle.CENTERED;
+
     if (!space.zenBackground) {
         /// One-time init
         // Could also simply use the gnome-shell background - ie. make the space background transparent
@@ -118,22 +127,29 @@ function toggleZen(metaWindow) {
         space.background.get_parent().add_actor(zenBackground)
         space.zenBackground = zenBackground
         zenBackground.lower_bottom()
+
+        let background = selectRandomBackground();
+        space.zenBackground.background.set_file(background, style);
     }
 
-    const BackgroundStyle = imports.gi.GDesktopEnums.BackgroundStyle;
-    let style = BackgroundStyle.CENTERED;
     let completed = false;
     function onComplete() {
         if (completed)
             return;
 
         if (set) {
-            let background = selectRandomBackground();
-            // Some images seems to cause laggy animation. (too slow loading? yeah, combined with rescale time)
-            space.zenBackground.background.set_file(background, style);
             crossFade(space.background, space.zenBackground, crossFadeTime)
         } else {
-            crossFade(space.zenBackground, space.background, crossFadeTime)
+            crossFade(space.zenBackground, space.background, crossFadeTime, () => {
+                Meta.later_add(Meta.LaterType.IDLE, () => {
+                    // Some images seems to cause laggy animation (large images - load and scale probably)
+                    // Change background proactively to avoid this problem 
+                    print("Changing zen background")
+                    let background = selectRandomBackground();
+                    // Some images seems to cause laggy animation. (too slow loading? yeah, combined with rescale time)
+                    space.zenBackground.background.set_file(background, style);
+                })
+            })
         }
         completed = true;
     }
