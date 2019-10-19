@@ -564,6 +564,11 @@ class Space extends Array {
         if (this.indexOf(metaWindow) !== -1)
             return false;
 
+        let space = spaces.spaceOfWindow(metaWindow);
+        if (space.indexOf(metaWindow) !== -1 && space._populated) {
+            space.removeWindow(metaWindow);
+        }
+
         metaWindow._workspace = this.workspace;
 
         if (row !== undefined && this[index]) {
@@ -2033,11 +2038,11 @@ function remove_handler(workspace, meta_window) {
     // window has already received the `focus` signal at this point.
     // Not sure if we can check directly if _this_ window had focus when closed.
 
-    let space = spaces.spaceOf(workspace);
-    space.removeWindow(meta_window);
-
     let actor = meta_window.get_compositor_private();
     if (!actor) {
+        let space = spaces.spaceOf(workspace);
+        space.removeWindow(meta_window);
+
         signals.disconnect(meta_window);
         if (meta_window.clone && meta_window.clone.mapped) {
             meta_window.clone.destroy();
