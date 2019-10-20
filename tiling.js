@@ -44,6 +44,9 @@ var stack_margin = 75;
 // Minimum margin
 var minimumMargin = () => Math.min(15, prefs.horizontal_margin);
 
+// Some features use this to determine if to sizes is considered equal. ie. `abs(w1 - w2) < sizeSlack`
+var sizeSlack = 30;
+
 var panelBox = Main.layoutManager.panelBox;
 
 var inPreview = false;
@@ -2548,7 +2551,7 @@ function toggleMaximizeHorizontally(metaWindow) {
 
     // Some windows only resize in increments > 1px so we can't rely on a precise width
     // Hopefully this heuristic is good enough
-    let isFullWidth = (reqWidth - frame.width) < 10;
+    let isFullWidth = (reqWidth - frame.width) < sizeSlack;
 
     if (isFullWidth && metaWindow.unmaximizedRect) {
         let unmaximizedRect = metaWindow.unmaximizedRect;
@@ -2579,7 +2582,7 @@ function cycleWindowWidth(metaWindow) {
     }
 
     // 10px slack to avoid locking up windows that only resize in increments > 1px
-    let targetWidth = Math.min(utils.findNext(frame.width, steps, 10), workArea.width);
+    let targetWidth = Math.min(utils.findNext(frame.width, steps, sizeSlack), workArea.width);
     let targetX = frame.x;
 
     if (Scratch.isScratchWindow(metaWindow)) {
@@ -2607,10 +2610,10 @@ function cycleWindowHeight(metaWindow) {
     function calcTargetHeight(available) {
         let targetHeight;
         if (steps[0] <= 1) { // ratio steps
-            let targetR = utils.findNext(frame.height/available, steps, 10/available);
+            let targetR = utils.findNext(frame.height/available, steps, sizeSlack/available);
             targetHeight = Math.floor(targetR * available);
         } else { // pixel steps
-            targetHeight = utils.findNext(frame.height, steps, 10);
+            targetHeight = utils.findNext(frame.height, steps, sizeSlack);
         }
         return Math.min(targetHeight, available);
     }
