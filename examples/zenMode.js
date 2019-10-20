@@ -67,6 +67,19 @@ function crossFade(a, b, time=1, callback=null) {
     // Tweener.addTween(b, { opacity: 255, time: time, onComplete: () => a.lower_bottom() })
 }
 
+function isCenterdWindow(metaWindow, space=null, slack=5) {
+    function spaceToViewport(space, x) {
+        return x + space.targetX - space.monitor.x
+    }
+
+    space = space || Tiling.spaces.spaceOfWindow(metaWindow)
+    let workArea = Main.layoutManager.getWorkAreaForMonitor(space.monitor.index);
+
+    let x = spaceToViewport(space, metaWindow.clone.targetX)
+    let offCenter = (x + metaWindow.get_frame_rect().width/2) - (workArea.x + workArea.width / 2)
+    return Math.abs(offCenter) < slack
+}
+
 function toggleZen(metaWindow) {
     let set = !metaWindow._zen;
 
@@ -75,7 +88,7 @@ function toggleZen(metaWindow) {
     let f = metaWindow.get_frame_rect()
     let workArea = Main.layoutManager.getWorkAreaForMonitor(space.monitor.index);
     // FIXME: use targetX to determine if the window is centered
-    let isCentered = Math.abs((f.x + f.width/2) - (workArea.x + workArea.width/2)) < 5
+    let isCentered = isCenterdWindow(metaWindow, space)
     if (!isCentered && set) {
         Tiling.centerWindowHorizontally(metaWindow)
         return
