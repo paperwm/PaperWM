@@ -2159,7 +2159,17 @@ function insertWindow(metaWindow, {existing}) {
         return;
     }
 
-    let space = spaces.spaceOfWindow(metaWindow);
+    // We now handle windows that are on only one workspace
+
+    /*
+      The window might have moved workspaces, while still being tiled on an old
+      space.
+
+      Since we delay removing tiled windows until it's added to another space we
+      need to look at what _workspace_ the window is on, not which _space_.
+     */
+    let workspace = metaWindow.get_workspace();
+    let space = spaces.spaceOf(workspace);
     if (!add_filter(metaWindow)) {
         connectSizeChanged();
         space.addFloating(metaWindow);
