@@ -624,12 +624,12 @@ class Space extends Array {
         if (actor)
             actor.remove_clip();
 
-        this.layout();
         if (selected) {
-            ensureViewport(selected, this);
+            this.selectedWindow = selected;
         } else {
             this.selectedWindow = null;
         }
+        this.layout();
 
         this.emit('window-removed', metaWindow, index, row);
         return true;
@@ -783,7 +783,6 @@ class Space extends Array {
         if (this.cloneContainer.x !== this.targetX ||
             this.actor.y !== 0 ||
             Navigator.navigating || inPreview ||
-            Main.overview.visible ||
             // Only block on grab if we haven't detached the window yet
             (inGrab && !inGrab.workspace)
            ) {
@@ -831,7 +830,7 @@ class Space extends Array {
             const ch = Math.max(0, monitor.y + monitor.height - b.y - y);
             actor.set_clip(x, y, cw, ch);
 
-            showWindow(w);
+            !Main.overview.visible && showWindow(w);
         });
 
         this._floating.forEach(showWindow);
