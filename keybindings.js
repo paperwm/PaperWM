@@ -439,6 +439,8 @@ function disableAction(action) {
 }
 
 function enableAction(action) {
+    if (!action)
+        log(`paperwm: Tried to enable a null action`);
     if (action.id !== Meta.KeyBindingAction.NONE)
         return action.id; // Already enabled (happens on enable right after init)
 
@@ -529,6 +531,10 @@ function resolveConflicts() {
     for (let conflict of Settings.findConflicts()) {
         let {name, conflicts} = conflict;
         let action = byMutterName(name);
+        if (!action) {
+            log(`paperwm: action`, name, 'with', conflicts, 'not defined');
+            continue;
+        }
         conflicts.forEach(c => overrideAction(c, action));
         overrides.push(conflict);
     }
