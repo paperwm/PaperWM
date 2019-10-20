@@ -468,7 +468,8 @@ function enable () {
         if (display.focus_window && display.focus_window.fullscreen) {
             hide();
         } else {
-            panelBox.show();
+            if (!(Tiling.spaces && Tiling.spaces.selectedSpace._zenWindow))
+                panelBox.show();
         }
     });
 }
@@ -489,7 +490,7 @@ function disable() {
 }
 
 function show() {
-    if (Tiling.spaces && Tiling.spaces.selectedSpace._zen)
+    if (Tiling.spaces && Tiling.spaces.selectedSpace._zenWindow)
         return
     if (!Main.overview.visible &&
         !Tiling.inPreview &&
