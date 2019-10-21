@@ -2891,6 +2891,49 @@ function sortWindows(space, windows) {
         .map(c => c.meta_window);
 }
 
+function rotated(list, dir=1) {
+    return [].concat(
+        list.slice(dir),
+        list.slice(0, dir)
+    );
+}
+
+function cycleWorkspaceSettings(dir=1) {
+    let n = workspaceManager.get_n_workspaces();
+    let N = Settings.workspaceList.get_strv('list').length;
+    let space = spaces.selectedSpace;
+    let wsI = space.workspace.index();
+
+    // 2 6 7 8   <-- indices
+    // x a b c   <-- settings
+    // a b c x   <-- rotated settings
+
+    let uuids = Settings.workspaceList.get_strv('list');
+    // Work on tuples of [uuid, settings] since we need to uuid association
+    // in the last step
+    let settings = uuids.map(
+        uuid => [uuid, Settings.getWorkspaceSettingsByUUID(uuid)]
+    );
+    settings.sort((a, b) => a[1].get_int('index') - b[1].get_int('index'));
+
+    let unbound = settings.slice(n);
+    let strip = [settings[wsI]].concat(unbound);
+
+    strip = rotated(strip, dir);
+
+    let nextSettings = strip[0];
+    unbound = strip.slice(1);
+
+    nextSettings[1].set_int('index', wsI);
+    space.setSettings(nextSettings); // ASSUMPTION: ok that two settings have same index here
+
+    // Re-assign unbound indices:
+    for (let i = n; i < N; i++) {
+        unbound[i-n][1].set_int('index', i);
+    }
+    return space;
+}
+
 
 // Backward compatibility
 function defwinprop(...args) {
