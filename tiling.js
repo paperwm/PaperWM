@@ -2466,6 +2466,12 @@ function focus_handler(metaWindow, user_data) {
     }
 
     let space = spaces.spaceOfWindow(metaWindow);
+    // Do not act on stuck windows when switching to an empty workspace
+    if (metaWindow.on_all_workspaces && space !== spaces.selectedSpace &&
+        space.indexOf(metaWindow) !== -1)
+    {
+        return;
+    }
     space.monitor.clickOverlay.show();
 
     /**
