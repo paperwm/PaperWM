@@ -168,8 +168,13 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         this.actor.name = 'workspace-button';
 
+        let scale = display.get_monitor_scale(Main.layoutManager.primaryIndex);
         this._label = new St.Label({
-            y_align: Clutter.ActorAlign.CENTER });
+            y_align: Clutter.ActorAlign.CENTER,
+            // Avoid moving the menu on short names
+            // TODO: update on scale changes
+            min_width: 60*scale
+        });
 
         this.setName(Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()));
 
