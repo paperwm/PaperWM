@@ -559,10 +559,13 @@ class Space extends Array {
     }
 
     addWindow(metaWindow, index, row) {
+        log(`add window`, metaWindow.title);
         if (!this.selectedWindow)
             this.selectedWindow = metaWindow;
-        if (this.indexOf(metaWindow) !== -1)
+        if (this.indexOf(metaWindow) !== -1) {
+            log(`already added window`, metaWindow.title);
             return false;
+        }
 
         let space = spaces.spaceOfWindow(metaWindow);
         if (space.indexOf(metaWindow) !== -1 && space._populated) {
@@ -2039,7 +2042,7 @@ function add_filter(meta_window) {
    Handle windows leaving workspaces.
  */
 function remove_handler(workspace, meta_window) {
-    debug("window-removed", meta_window, meta_window.title, workspace.index());
+    log("window-removed", meta_window, meta_window.title, workspace.index());
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
     // Not sure if we can check directly if _this_ window had focus when closed.
@@ -2086,6 +2089,7 @@ function add_handler(ws, metaWindow) {
    created to ensure that the WindowActor exists.
 */
 function insertWindow(metaWindow, {existing}) {
+    log("insert-window", metaWindow.title, metaWindow.on_all_workspaces, existing);
 
     // Add newly created windows to the space being previewed
     if (!existing &&
@@ -2093,6 +2097,7 @@ function insertWindow(metaWindow, {existing}) {
         metaWindow.get_workspace() !== spaces.selectedSpace.workspace) {
         metaWindow.redirected = true;
         metaWindow.change_workspace(spaces.selectedSpace.workspace);
+        log(`redirect`, metaWindow.title);
         return;
     }
 
@@ -2107,6 +2112,7 @@ function insertWindow(metaWindow, {existing}) {
     };
 
     if (!existing) {
+
         // Note: Can't trust global.display.focus_window to determine currently focused window.
         //       The mru is more flexible. (global.display.focus_window does not always agree with mru[0])
         let mru = display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
@@ -2143,9 +2149,11 @@ function insertWindow(metaWindow, {existing}) {
         }
     }
 
-    if (metaWindow.is_on_all_workspaces()) {
+    // Windows on all workspaces are a bit wonky
+    if (metaWindow.on_all_workspaces) {
         // Only connect the necessary signals and show windows on shared
         // secondary monitors.
+        log(metaWindow.title, 'on all', metaWindow.on_all_workspaces);
         let space = spaces.spaceOfWindow(metaWindow);
         if (space.includes(metaWindow)) {
             return;
@@ -2154,6 +2162,7 @@ function insertWindow(metaWindow, {existing}) {
         showWindow(metaWindow);
         return;
     } else if (Scratch.isScratchWindow(metaWindow)){
+        log(`make scratch stuck`);
         // And make sure scratch windows are stuck
         Scratch.makeScratch(metaWindow);
         return;
@@ -2170,7 +2179,9 @@ function insertWindow(metaWindow, {existing}) {
      */
     let workspace = metaWindow.get_workspace();
     let space = spaces.spaceOf(workspace);
+    log(`workspace`, space.actor, workspace.index());
     if (!add_filter(metaWindow)) {
+        log('add floating', metaWindow.title);
         connectSizeChanged();
         space.addFloating(metaWindow);
         showWindow(metaWindow);
@@ -2179,8 +2190,10 @@ function insertWindow(metaWindow, {existing}) {
         return;
     }
 
-    if (space.indexOf(metaWindow) !== -1)
+    if (space.indexOf(metaWindow) !== -1) {
+        log(`window already tiled on`, space.actor);
         return;
+    }
 
     let clone = metaWindow.clone;
     let ok, x, y;
@@ -2390,6 +2403,7 @@ function grabBegin(metaWindow, type) {
         return;
     let space = spaces.spaceOfWindow(metaWindow);
     inGrab = {window: metaWindow};
+    metaWindow.raise();
     if (!space || space.indexOf(metaWindow) === -1)
         return;
     space.startAnimate();
@@ -2445,7 +2459,7 @@ function getGrab(space, anchor) {
 
 // `MetaWindow::focus` handling
 function focus_handler(metaWindow, user_data) {
-    debug("focus:", metaWindow.title, utils.framestr(metaWindow.get_frame_rect()));
+    log("focus:", metaWindow.title, utils.framestr(metaWindow.get_frame_rect()));
 
     if (metaWindow.fullscreen) {
         TopBar.hide();
@@ -2532,7 +2546,7 @@ var minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
 */
 function showHandler(actor) {
     let metaWindow = actor.meta_window;
-    let onActive = metaWindow.get_workspace() === workspaceManager.get_active_workspace();
+    let onActive = spaces.spaceOfWindow(metaWindow).workspace === workspaceManager.get_active_workspace();
 
     if (!metaWindow.clone || (!metaWindow.clone.get_parent() && !metaWindow.unmapped))
         return;
@@ -2979,4 +2993,12 @@ function cycleWorkspaceSettings(dir=1) {
 // Backward compatibility
 function defwinprop(...args) {
     return Settings.defwinprop(...args);
+}
+
+
+function repl() {
+    metaWindow.get_workspace().index()
+    spaces.spaceOfWindow()
+    metaWindow._workspace.index()
+    metaWindow._workspace.index()
 }
