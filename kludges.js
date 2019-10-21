@@ -39,6 +39,10 @@ function overrideHotCorners() {
     }
 }
 
+if (!global.display.get_monitor_scale) {
+    // `get_monitor_scale` first appeared in 3.31.92. Polyfill a fallback for 3.28
+    global.display.constructor.prototype.get_monitor_scale = () => 1.0;
+}
 
 if (!St.Settings) {
     // `St.Settings` doesn't exist in 3.28 - polyfill:
