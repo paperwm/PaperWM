@@ -1,3 +1,47 @@
+* Mutter state change signal summary (WIP)
+stuck -> unstuck:
+  stuck property change
+  remove from all workspaces
+  add on target workspace
+
+unstuck -> stuck:
+  stuck property change [not-verified]
+  remove from current workspace
+  add on all workspaces
+
+window moved from workspace A -> workspace B:
+  remove from A
+  add on B
+
+window A close:
+  next window receive focus
+  remove A from workspace
+  window-left-monitor (actor is null)
+
+window is created:
+  window-added (actor is null)
+  window-entered-monitor (actor is null)
+  window-created
+  window-focus
+
+window monitor changed: (ws-only-primary)
+  [order not-verified]
+  window-left-monitor [not-verified]
+  window-entered-monitor
+  unstuck -> stuck
+
+window monitor changed: (ws-spans-monitor)
+  window-left-monitor [not-verified]
+  window-entered-monitor
+
+Monitor changes (ws-only-primary)
+  primary -> secondary  <=> unstuck -> stuck
+  seconday -> primary   <=> stuck -> unstuck
+
+window_added always follows a window_removed except when a window is closed.
+
+window monitor membership determined by majority area (ish)
+
 * Mutter signal order
 ** When window A is closed
 1. The next window, B, receives 'focus' (but the actor of A seems to be gone?)
