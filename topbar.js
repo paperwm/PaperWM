@@ -43,27 +43,67 @@ var colors = [
     '#46A046', '#267726', '#ffffff', '#000000'
 ];
 
-class PopupMenuEntry {
-    constructor (text, label) {
-        this.actor = new St.Entry({hint_text: text});
-        this.entry = this.actor;
-        this.actor.set_style('margin: 4px 0 4px 0');
-
-        // 3.32 crashes when an entry with text is first shown...
-        let id = this.entry.clutter_text.connect('key-focus-in', () => {
-            this.entry.clutter_text.disconnect(id);
-            this.entry.text = this.entry.hint_text;
+var PopupMenuEntryHelper = function constructor(text) {
+        this.label = new St.Entry({
+            text,
+            // While not a search entry, this looks much better
+            style_class:'search-entry',
+            name: 'workspace-name-entry',
+            track_hover: true,
+            reactive: true,
+            can_focus: true
         });
+        this.actor.add(this.label, {expand: true});
+        this.actor.label_actor = this.label;
+        this.label.clutter_text.connect('activate', this.emit.bind(this, 'activate'));
+}
 
-        this.button = new St.Button({label,
-                                    style_class: 'modal-dialog-button button'});
-        this.actor.set_secondary_icon(this.button);
+var PopupMenuEntry;
+// 3.32 uses `class` to define `PopupBaseMenuItem`, but doesn't use
+// registerClass, breaking our somewhat lame registerClass polyfill.
+if (Utils.version[1] === 32) {
+    PopupMenuEntry = class PopupMenuEntry extends PopupMenu.PopupBaseMenuItem {
+        constructor(text) {
+            super({
+                activate: false,
+                reactive: true,
+                hover: false,
+                can_focus: false
+            });
 
-        this.entry.clutter_text.set_activatable(true);
-        this.entry.clutter_text.connect('activate', () => {
-            this.button.emit('clicked', null);
-        });
-    }
+            PopupMenuEntryHelper.call(this, text);
+        }
+
+        activate(event) {
+            this.label.grab_key_focus();
+        }
+
+        _onKeyFocusIn(actor) {
+            this.activate();
+        }
+    };
+} else {
+    PopupMenuEntry = Utils.registerClass(
+    class PopupMenuEntry extends PopupMenu.PopupBaseMenuItem {
+        _init(text) {
+            super._init({
+                activate: false,
+                reactive: true,
+                hover: false,
+                can_focus: false
+            });
+
+            PopupMenuEntryHelper.call(this, text);
+        }
+
+        activate(event) {
+            this.label.grab_key_focus();
+        }
+
+        _onKeyFocusIn(actor) {
+            this.activate();
+        }
+    });
 }
 
 class Color {
@@ -128,8 +168,13 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         this.actor.name = 'workspace-button';
 
+        let scale = display.get_monitor_scale(Main.layoutManager.primaryIndex);
         this._label = new St.Label({
-            y_align: Clutter.ActorAlign.CENTER });
+            y_align: Clutter.ActorAlign.CENTER,
+            // Avoid moving the menu on short names
+            // TODO: update on scale changes
+            min_width: 60*scale
+        });
 
         this.setName(Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()));
 
@@ -140,41 +185,59 @@ class WorkspaceMenu extends PanelMenu.Button {
                              'switch-workspace',
                              this.workspaceSwitched.bind(this));
 
-        this.entry = new PopupMenuEntry(this._label.text, 'Set name');
-        let clicked = () => {
-            let name = this.entry.entry.text;
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem(_('Workspace Settings')));
+
+        this.entry = new PopupMenuEntry(this._label.text);
+        this.menu.addMenuItem(this.entry);
+        let changed = () => {
+            let name = this.entry.label.text;
             let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
             space.settings.set_string('name', name);
             this.setName(name);
         };
-        this.signals.connect(this.entry.button, 'clicked',
-                             clicked.bind(this.entry));
+        this.signals.connect(this.entry.label.clutter_text, 'text-changed',
+                             changed);
+        // let clicked = () => {
+        //     let name = this.entry.entry.text;
+        //     let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
+        //     space.settings.set_string('name', name);
+        //     this.setName(name);
+        // };
+        // this.signals.connect(this.entry.button, 'clicked',
+        //                      clicked.bind(this.entry));
 
-        let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
+        // let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
         // this.entry.actor.text = space.name;
         // this.colors.entry.actor.text = space.color;
 
-        this.colors = new ColorEntry(space.color);
+        // this.colors = new ColorEntry(space.color);
 
-        this._contentBox = new St.BoxLayout({vertical: true});
-        this._contentBox.layout_manager.spacing = 10;
-        this._contentBox.set_style('margin: 10px 20px;');
-        this._contentBox.add_actor(this.entry.actor);
-        this._contentBox.add_actor(this.colors.actor);
-        this.menu.box.add_actor(this._contentBox);
+        // this._contentBox = new St.BoxLayout({vertical: true});
+        // this._contentBox.layout_manager.spacing = 10;
+        // this._contentBox.set_style('margin: 10px 20px;');
+        // this._contentBox.add_actor(this.entry.actor);
+        // this._contentBox.add_actor(this.colors.actor);
+        // this.menu.box.add_actor(this._contentBox);
 
-        this._zenItem = new PopupMenu.PopupSwitchMenuItem('show top bar', true);
+        this._zenItem = new PopupMenu.PopupSwitchMenuItem('Hide top bar', false);
         this.menu.addMenuItem(this._zenItem);
         this._zenItem.connect('toggled', item => {
-            Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', item.state);
+            Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', !item.state);
         });
 
-        this.prefsIcon = new St.Button({ reactive: true,
-                                         can_focus: true,
-                                         track_hover: true,
-                                         accessible_name: 'workspace preference',
-                                         style_class: 'system-menu-action' });
-        this.prefsIcon.child = new St.Icon({ icon_name: 'gtk-preferences' });
+        function createButton(icon_name, accessible_name) {
+            return new St.Button({reactive: true,
+                                  can_focus: true,
+                                  track_hover: true,
+                                  accessible_name,
+                                  style_class: 'system-menu-action',
+                                  child: new St.Icon({icon_name})
+            });
+        }
+
+        this.prefsIcon = createButton('gtk-preferences', 'workspace preference');
+        this.prevIcon = createButton('go-previous-symbolic', 'previous workspace setting');
+        this.nextIcon = createButton('go-next-symbolic', 'next workspace setting');
 
         this.prefsIcon.connect('clicked', () => {
             this.menu.close(true);
@@ -188,10 +251,28 @@ class WorkspaceMenu extends PanelMenu.Button {
             }
         });
 
-        this.menu.box.add(this.prefsIcon, { expand: true, x_fill: false });
+        this.nextIcon.connect('clicked', () => {
+            let space = Tiling.cycleWorkspaceSettings(-1);
+            this.entry.label.text = space.name;
+            menu.nextIcon.grab_key_focus();
+        });
+        this.prevIcon.connect('clicked', () => {
+            let space = Tiling.cycleWorkspaceSettings(1);
+            this.entry.label.text = space.name;
+            menu.prevIcon.grab_key_focus();
+        });
 
-        this.entry.actor.width = this.colors.actor.width;
-        this.colors.entry.actor.width = this.colors.actor.width;
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+        this.iconBox = new St.BoxLayout();
+        this.menu.box.add(this.iconBox);
+
+        this.iconBox.add(this.prevIcon, { expand: true, x_fill: false });
+        this.iconBox.add(this.prefsIcon, { expand: true, x_fill: false });
+        this.iconBox.add(this.nextIcon, { expand: true, x_fill: false });
+
+        // this.entry.actor.width = this.colors.actor.width;
+        // this.colors.entry.actor.width = this.colors.actor.width;
         this.state = "NORMAL";
     }
 
@@ -372,27 +453,16 @@ class WorkspaceMenu extends PanelMenu.Button {
         return Clutter.EVENT_PROPAGATE;
     }
 
+    // WorkspaceMenu.prototype._onOpenStateChanged = function
     _onOpenStateChanged(menu, open) {
         if (!open)
             return;
 
-        // FIXME: 3.32: An StEntry cannot have `text` when shown the first time,
-        // as it will crash the shell. We handle this by setting the text when
-        // the entry first gains focus, only then can we start updating the text
-        // property safely.
         let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
-        if (this.entry.actor.text != '') {
-            this.entry.actor.text = space.name;
-        } else {
-            this.entry.actor.hint_text = space.name;
-        }
-        if (this.entry.actor.text != '') {
-            this.colors.entry.actor.text = space.color;
-        } else {
-            this.colors.actor.hint_text = space.name;
-        }
+        this.entry.label.text = space.name;
+        GLib.idle_add(GLib.PRIORITY_DEFAULT, this.entry.activate.bind(this.entry));
 
-        this._zenItem._switch.setToggleState(space.showTopBar);
+        this._zenItem._switch.setToggleState(!space.showTopBar);
     }
 
     workspaceSwitched(wm, fromIndex, toIndex) {
