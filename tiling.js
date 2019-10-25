@@ -1898,10 +1898,11 @@ function allocateClone(metaWindow) {
 
     if (metaWindow.clone.first_child.name === 'selection') {
         let selection = metaWindow.clone.first_child;
+        let maximized = metaWindow.maximized_vertically;
         let protrusion = Math.round(prefs.window_gap/2);
         selection.x = - protrusion;
-        selection.y = - protrusion;
-        selection.set_size(frame.width + prefs.window_gap, frame.height + prefs.window_gap);
+        selection.y = maximized ? 0 : - protrusion;
+        selection.set_size(frame.width + prefs.window_gap, frame.height + (maximized ? 0 : prefs.window_gap));
     }
 }
 
