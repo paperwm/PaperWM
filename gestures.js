@@ -248,8 +248,8 @@ function findTargetWindow(space, direction) {
         return selected.meta_window;
     }
     selected = selected && space.selectedWindow;
-    let workArea = Main.layoutManager.getWorkAreaForMonitor(space.monitor.index);
-    let min = workArea.x - space.monitor.x;
+    let workArea = space.workArea();
+    let min = workArea.x;
 
     let windows = space.getWindows().filter(w => {
         let  clone = w.clone;

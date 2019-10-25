@@ -271,6 +271,12 @@ class Space extends Array {
                              this.updateBackground.bind(this));
     }
 
+    workArea() {
+        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        workArea.x -= this.monitor.x;
+        return workArea;
+    }
+
     layoutGrabColumn(column, x, y0, targetWidth, availableHeight, time, grabWindow) {
         let space = this;
         let needRelayout = false;
@@ -389,7 +395,7 @@ class Space extends Array {
         let gap = prefs.window_gap;
         let x = 0;
         let selectedIndex = this.selectedIndex();
-        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        let workArea = this.workArea();
         // Happens on monitors-changed
         if (workArea.width === 0) {
             this._inLayout = false;
@@ -448,7 +454,7 @@ class Space extends Array {
 
 
         let oldWidth = this.cloneContainer.width;
-        let min = workArea.x - this.monitor.x;
+        let min = workArea.x;
         let auto = (this.targetX + oldWidth >= min + workArea.width && this.targetX <= 0)
             || this.targetX === min + Math.round((workArea.width - oldWidth)/2);
 
@@ -492,8 +498,8 @@ class Space extends Array {
     isVisible(metaWindow) {
         let clone = metaWindow.clone;
         let x = clone.targetX + this.targetX;
-        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
-        let min = workArea.x - this.monitor.x;
+        let workArea = this.workArea();
+        let min = workArea.x;
 
         if (x + clone.width < min
             || x > min + workArea.width) {
@@ -575,9 +581,8 @@ class Space extends Array {
 
         // Make sure the cloneContainer is in a clean state (centered) before layout
         if (this.length === 1) {
-            let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
-            this.targetX = workArea.x - this.monitor.x
-                + Math.round((workArea.width - this.cloneContainer.width)/2);
+            let workArea = this.workArea();
+            this.targetX = workArea.x + Math.round((workArea.width - this.cloneContainer.width)/2);
         }
         this.layout();
         this.emit('window-added', metaWindow, index, row);
@@ -2230,8 +2235,8 @@ function ensuredX(meta_window, space) {
     else
         x = meta_window.lastFrame.x - monitor.x;
     let gap = prefs.window_gap;
-    let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
-    let min = workArea.x - monitor.x;
+    let workArea = space.workArea();
+    let min = workArea.x;
     let max = min + workArea.width;
     if (meta_window.fullscreen) {
         x = 0;
@@ -2549,7 +2554,8 @@ function toggleMaximizeHorizontally(metaWindow) {
         return;
     }
 
-    let workArea = Main.layoutManager.getWorkAreaForMonitor(metaWindow.get_monitor());
+    let space = spaces.spaceOfWindow(metaWindow);
+    let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
     let reqWidth = workArea.width - minimumMargin()*2;
 
@@ -2565,7 +2571,7 @@ function toggleMaximizeHorizontally(metaWindow) {
 
         metaWindow.unmaximizedRect = null;
     } else {
-        let x = workArea.x + minimumMargin();
+        let x = workArea.x + space.monitor.x + minimumMargin();
         metaWindow.unmaximizedRect = frame;
         metaWindow.move_resize_frame(true, x, frame.y, workArea.width - minimumMargin()*2, frame.height);
     }
@@ -2576,7 +2582,8 @@ function cycleWindowWidth(metaWindow) {
 
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
-    let workArea = Main.layoutManager.getWorkAreaForMonitor(metaWindow.get_monitor());
+    let workArea = space.workArea();
+    workArea.x += space.monitor.x;
 
     if (steps[0] <= 1) {
         // Steps are specifed as ratios -> convert to pixels
@@ -2669,8 +2676,8 @@ function centerWindowHorizontally(metaWindow) {
     const frame = metaWindow.get_frame_rect();
     const space = spaces.spaceOfWindow(metaWindow);
     const monitor = space.monitor;
-    const workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
-    const targetX = workArea.x - monitor.x + Math.round(workArea.width/2 - frame.width/2);
+    const workArea = space.workArea();
+    const targetX = workArea.x + Math.round(workArea.width/2 - frame.width/2);
     const dx = targetX - (metaWindow.clone.targetX + space.targetX);
 
     let [pointerX, pointerY, mask] = global.get_pointer();
