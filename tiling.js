@@ -778,7 +778,7 @@ class Space extends Array {
             Navigator.navigating || inPreview ||
             Main.overview.visible ||
             // Only block on grab if we haven't detached the window yet
-            (inGrab && !inGrab.workspace)
+            (inGrab && this.indexOf(inGrab.window) !== -1)
            ) {
             return;
         }
