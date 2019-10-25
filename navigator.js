@@ -55,6 +55,8 @@ var ActionDispatcher = class {
         }
         grab = true;
 
+        this.contexts = new Map();
+
         this.actor.connect('key-press-event', this._keyPressEvent.bind(this));
         this.actor.connect('key-release-event', this._keyReleaseEvent.bind(this));
 
@@ -151,11 +153,18 @@ var ActionDispatcher = class {
         let space = Tiling.spaces.selectedSpace;
         let metaWindow = space.selectedWindow;
 
+        if (this.lastAction !== action) {
+            this.contexts.delete(action);
+        }
+        let context = this.contexts.get(action) || {};
+        this.contexts.set(action, context);
+        this.lastAction = action;
+
         if (action && action.options.activeInNavigator) {
             if (action.options.opensMinimap) {
                 this.navigator._showMinimap(space);
             }
-            action.handler(metaWindow, space, {navigator: this.navigator});
+            action.handler(metaWindow, space, {navigator: this.navigator, context});
             if (space !== Tiling.spaces.selectedSpace) {
                 this.navigator.minimaps.forEach(m => typeof(m) === 'number' ?
                                                 Mainloop.source_remove(m) : m.hide());
