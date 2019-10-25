@@ -2580,12 +2580,11 @@ function toggleMaximizeHorizontally(metaWindow) {
     }
 }
 
-function cycleWindowWidth(metaWindow) {
+function cycleWindowWidth(metaWindow, space, {context} = {}) {
     let steps = prefs.cycle_width_steps;
 
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
-    let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     workArea.x += space.monitor.x;
 
@@ -2605,6 +2604,19 @@ function cycleWindowWidth(metaWindow) {
             // Move the window so it remains fully visible
             targetX = workArea.x + workArea.width - minimumMargin() - targetWidth;
         }
+    } else {
+        context.targetX = context.targetX || space.targetX;
+        if (space.targetX + space.cloneContainer.width === space.width) {
+            space.targetX -= targetWidth - frame.width;
+        } else {
+            // Prefer the original position
+            space.targetX = context.targetX;
+        }
+        Tweener.addTween(space.cloneContainer,
+                         { x: space.targetX,
+                           time: prefs.animation_time,
+                           onComplete: space.moveDone.bind(space)
+                         });
     }
 
     if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {

@@ -152,7 +152,7 @@ function init() {
                         dynamic_function_ref("setDevGlobals",
                                              Utils));
 
-    registerPaperAction("cycle-width",
+    registerNavigatorAction("cycle-width",
                         dynamic_function_ref("cycleWindowWidth",
                                        Tiling),
                         Meta.KeyBindingFlags.PER_WINDOW);
