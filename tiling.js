@@ -119,6 +119,7 @@ class Space extends Array {
         // The windows that should be represented by their WindowActor
         this.visible = [];
         this._floating = [];
+        this.dock = new Map();
         this._populated = false;
 
         let clip = new Clutter.Actor();
@@ -273,7 +274,18 @@ class Space extends Array {
 
     workArea() {
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
-        workArea.x -= this.monitor.x;
+        let right = 0, left = 0;
+        for (let [mw] of this.dock) {
+            let frame = mw.get_frame_rect();
+            if (frame.x === this.monitor.x) {
+                left = Math.max(left, frame.width);
+            }
+            if (frame.x + frame.width === this.monitor.x + this.monitor.width) {
+                right = Math.max(right, frame.width);
+            }
+        }
+        workArea.x += left - this.monitor.x;
+        workArea.width -= left + right;
         return workArea;
     }
 
@@ -335,8 +347,10 @@ class Space extends Array {
                 mw._targetWidth = targetWidth;
                 mw._targetHeight = targetHeight;
 
+                log('should resize', mw.title, !targetReached, hasNewTarget, f.width, targetWidth)
                 if (!targetReached && hasNewTarget) {
                     // Explanation for `hasNewTarget` check in commit message
+                    log('resize', mw.title, 'to', targetWidth);
                     mw.move_resize_frame(true, f.x, f.y, targetWidth, targetHeight);
                 }
             } else {
@@ -423,6 +437,7 @@ class Space extends Array {
             }
             targetWidth = Math.min(targetWidth, workArea.width - 2*minimumMargin());
 
+            log('targetWidth', targetWidth);
             let resultingWidth, relayout;
             if (inGrab && i === selectedIndex) {
                 [resultingWidth, relayout] =
@@ -630,6 +645,22 @@ class Space extends Array {
 
         this.emit('window-removed', metaWindow, index, row);
         return true;
+    }
+
+    addTiled(metaWindow) {
+        if (this.dock.get(metaWindow))
+            return;
+        this.dock.set(metaWindow, metaWindow);
+        this.removeWindow(metaWindow);
+        this.addFloating(metaWindow);
+        metaWindow.make_above();
+        showWindow(metaWindow);
+    }
+
+    removeTiled(metaWindow) {
+        this.dock.delete(metaWindow);
+        this.removeFloating(metaWindow);
+        metaWindow.make_above();
     }
 
     addFloating(metaWindow) {
@@ -1878,6 +1909,11 @@ function registerWindow(metaWindow) {
     metaWindow.clone = clone;
     metaWindow.clone.cloneActor = cloneActor;
 
+    signals.connect(metaWindow, "notify::maximized-vertically", (metaWindow) => {
+        log(`foo`)
+        watchTiled(metaWindow);
+    });
+
     signals.connect(metaWindow, "focus", focus_wrapper);
     signals.connect(metaWindow, 'size-changed', allocateClone);
     // Note: runs before gnome-shell's minimize handling code
@@ -1887,6 +1923,21 @@ function registerWindow(metaWindow) {
     signals.connect(actor, 'destroy', destroyHandler);
 
     return true;
+}
+
+function watchTiled(metaWindow) {
+    let frame = metaWindow.get_frame_rect();
+    log('tiled', frame.x, frame.width);
+    if (metaWindow.maximized_horizontally)
+        return;
+    // Assume Meta.MaximizeFlags.VERTICAL means tiled
+    let space = spaces.spaceOfWindow(metaWindow);
+    if (!metaWindow.maximized_vertically) {
+        if (space.dock.get(metaWindow))
+            space.removeTiled(metaWindow);
+        return;
+    }
+    space.addTiled(metaWindow);
 }
 
 function allocateClone(metaWindow) {
@@ -1916,6 +1967,7 @@ function destroyHandler(actor) {
 }
 
 function resizeHandler(metaWindow) {
+    log(`resize`, metaWindow.title);
     let f = metaWindow.get_frame_rect();
     let needLayout = false;
     if (metaWindow._targetWidth !== f.width || metaWindow._targetHeight !== f.height) {
@@ -1925,6 +1977,11 @@ function resizeHandler(metaWindow) {
     metaWindow._targetHeight = null;
 
     let space = spaces.spaceOfWindow(metaWindow);
+    if (space.dock.get(metaWindow)) {
+        spaces.selectedSpace.layout();
+        return;
+    }
+
     if (space.indexOf(metaWindow) === -1)
         return;
 
@@ -2031,6 +2088,7 @@ function remove_handler(workspace, meta_window) {
 
     let space = spaces.spaceOf(workspace);
     space.removeWindow(meta_window);
+    space.removeTiled(meta_window);
 
     let actor = meta_window.get_compositor_private();
     if (!actor) {
@@ -2279,7 +2337,7 @@ function ensureViewport(meta_window, space, force) {
     if (index === -1 || space.length === 0)
         return undefined;
 
-    debug('Moving', meta_window.title);
+    log('Moving', meta_window.title);
 
     if (space.selectedWindow.fullscreen ||
         space.selectedWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
