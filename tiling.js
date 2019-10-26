@@ -704,13 +704,13 @@ class Space extends Array {
 
         let metaWindow = this.getWindow(index, row);
         ensureViewport(metaWindow, this);
-        return true;
+        return metaWindow;
     }
 
-    switchLeft() { this.switch(Meta.MotionDirection.LEFT) }
-    switchRight() { this.switch(Meta.MotionDirection.RIGHT) }
-    switchUp() { this.switch(Meta.MotionDirection.UP) }
-    switchDown() { this.switch(Meta.MotionDirection.DOWN) }
+    switchLeft() { return this.switch(Meta.MotionDirection.LEFT) }
+    switchRight() { return this.switch(Meta.MotionDirection.RIGHT) }
+    switchUp() { return this.switch(Meta.MotionDirection.UP) }
+    switchDown() { return this.switch(Meta.MotionDirection.DOWN) }
     switch(direction) {
         let space = this;
         let index = space.selectedIndex();
@@ -747,6 +747,7 @@ class Space extends Array {
 
         let metaWindow = space.getWindow(index, row);
         ensureViewport(metaWindow, space);
+        return metaWindow;
     }
 
     positionOf(metaWindow) {
@@ -1448,7 +1449,7 @@ class Spaces extends Map {
         let currentSpace = this.monitors.get(monitor);
         let i = display.get_monitor_neighbor_index(monitor.index, direction);
         if (i === -1)
-            return;
+            return null;
         let newMonitor = Main.layoutManager.monitors[i];
         let space = this.monitors.get(newMonitor);
 
@@ -1478,6 +1479,7 @@ class Spaces extends Map {
         } else {
             space.workspace.activate(global.get_current_time());
         }
+        return focus;
     }
 
     switchWorkspace(wm, fromIndex, toIndex) {
@@ -1662,6 +1664,7 @@ class Spaces extends Map {
                              });
 
         });
+        return newSpace.selectedWindow;
     }
 
     animateToSpace(to, from, callback) {
@@ -2824,11 +2827,11 @@ function barf(metaWindow) {
 }
 
 function selectPreviousSpace(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.DOWN);
+    return spaces.selectSpace(Meta.MotionDirection.DOWN);
 }
 
 function selectPreviousSpaceBackwards(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.UP);
+    return spaces.selectSpace(Meta.MotionDirection.UP);
 }
 
 function movePreviousSpace(mw, space) {

@@ -57,6 +57,8 @@ var ActionDispatcher = class {
 
         this.contexts = new Map();
 
+        this.focus = display.focus_window;
+
         this.actor.connect('key-press-event', this._keyPressEvent.bind(this));
         this.actor.connect('key-release-event', this._keyReleaseEvent.bind(this));
 
@@ -151,7 +153,10 @@ var ActionDispatcher = class {
 
         let action = Keybindings.byId(mutterActionId);
         let space = Tiling.spaces.selectedSpace;
-        let metaWindow = space.selectedWindow;
+        // Make sure the window is alive
+        if (this.focus && !this.focus.get_compositor_private())
+            this.focus = space.selectedWindow;
+        let metaWindow = this.focus;
 
         if (this.lastAction !== action) {
             this.contexts.delete(action);
@@ -164,7 +169,10 @@ var ActionDispatcher = class {
             if (action.options.opensMinimap) {
                 this.navigator._showMinimap(space);
             }
-            action.handler(metaWindow, space, {navigator: this.navigator, context});
+            let focus = action.handler(metaWindow, space, {navigator: this.navigator, context});
+            if (focus && focus.constructor.name.match('MetaWindow')) {
+                this.focus = focus;
+            }
             if (space !== Tiling.spaces.selectedSpace) {
                 this.navigator.minimaps.forEach(m => typeof(m) === 'number' ?
                                                 Mainloop.source_remove(m) : m.hide());

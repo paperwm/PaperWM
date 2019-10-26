@@ -250,13 +250,15 @@ function impliedOptions(options) {
 }
 
 /**
- * handler: function(metaWindow, space, {binding, display, screen}) -> ignored
+ * handler: function(metaWindow, space, {binding, display, screen}) -> metaWindow | null
  * options: {
  *   opensMinimap:      true|false Start navigation and open the minimap
  *   opensNavigator:    true|false Start navigation (eg. Esc will restore selected space and window)
  *   activeInNavigator: true|false Action is available during navigation
  *   ...
  * }
+ * The optionally returned window determines pseudo focus while navigating. Ie.
+ * the next action will operate on this window.
  */
 function registerAction(actionName, handler, options) {
     options = impliedOptions(options)
