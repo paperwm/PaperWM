@@ -271,6 +271,11 @@ class Space extends Array {
                              this.updateBackground.bind(this));
     }
 
+    overview() {
+
+
+    }
+
     workArea() {
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
         workArea.x -= this.monitor.x;

@@ -337,6 +337,8 @@ function init() {
     if (version[1] > 32)
         registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', computeLayout);
 
+    registerOverridePrototype(imports.ui.overview.Overview, 'show', () => {});
+
     // Kill pinch gestures as they work pretty bad (especially when 3-finger swiping)
     registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0);
 

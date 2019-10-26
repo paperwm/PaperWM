@@ -53,6 +53,7 @@ function enable() {
        under the mouse cursor.
      */
     signals.connect(stage, 'captured-event', (actor, event) => {
+        // log(Utils.ppEnumValue(event.type(), Clutter.EventType));
         if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
             event.get_touchpad_gesture_finger_count() > 3 ||
             (Main.actionMode & Shell.ActionMode.OVERVIEW) > 0) {
