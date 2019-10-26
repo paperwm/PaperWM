@@ -2586,7 +2586,6 @@ function cycleWindowWidth(metaWindow, space, {context} = {}) {
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let workArea = space.workArea();
-    workArea.x += space.monitor.x;
 
     if (steps[0] <= 1) {
         // Steps are specifed as ratios -> convert to pixels
@@ -2599,7 +2598,8 @@ function cycleWindowWidth(metaWindow, space, {context} = {}) {
     let targetWidth = Math.min(utils.findNext(frame.width, steps, sizeSlack), workArea.width);
     let targetX = frame.x;
 
-    if (Scratch.isScratchWindow(metaWindow)) {
+    if (space.indexOf(metaWindow) === -1) {
+        workArea = Main.layoutManager.getWorkAreaForMonitor(metaWindow.get_monitor().index);
         if (targetX+targetWidth > workArea.x + workArea.width - minimumMargin()) {
             // Move the window so it remains fully visible
             targetX = workArea.x + workArea.width - minimumMargin() - targetWidth;
