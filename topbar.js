@@ -235,7 +235,7 @@ class WorkspaceMenu extends PanelMenu.Button {
             });
         }
 
-        this.prefsIcon = createButton('gtk-preferences', 'workspace preference');
+        this.prefsIcon = createButton('preferences-system-symbolic', 'workspace preference');
         this.prevIcon = createButton('go-previous-symbolic', 'previous workspace setting');
         this.nextIcon = createButton('go-next-symbolic', 'next workspace setting');
 
