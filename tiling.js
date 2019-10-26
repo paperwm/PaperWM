@@ -2236,6 +2236,9 @@ function insertWindow(metaWindow, {existing}) {
         metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
         toggleMaximizeHorizontally(metaWindow);
     }
+    if (metaWindow.maximized_vertically) {
+        metaWindow.unmaximize(Meta.MaximizeFlags.VERTICAL);
+    }
 
     if (!existing) {
         actor.opacity = 0;
