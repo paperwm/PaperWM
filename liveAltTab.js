@@ -47,7 +47,7 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
         this.space = Tiling.spaces.selectedSpace;
         this.space.startAnimate();
 
-        let monitor = Tiling.spaces.selectedSpace;
+        let monitor = Tiling.spaces.selectedSpace.monitor;
         let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
         let fog = new Clutter.Actor({x: workArea.x, y: workArea.y,
                                      width: workArea.width, height: workArea.height,
