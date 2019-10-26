@@ -647,7 +647,7 @@ class Space extends Array {
         return true;
     }
 
-    addTiled(metaWindow) {
+    addDocked(metaWindow) {
         if (this.dock.get(metaWindow))
             return;
         this.dock.set(metaWindow, metaWindow);
@@ -657,7 +657,7 @@ class Space extends Array {
         showWindow(metaWindow);
     }
 
-    removeTiled(metaWindow) {
+    removeDocked(metaWindow) {
         this.dock.delete(metaWindow);
         this.removeFloating(metaWindow);
         metaWindow.make_above();
@@ -1934,10 +1934,15 @@ function watchTiled(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     if (!metaWindow.maximized_vertically) {
         if (space.dock.get(metaWindow))
-            space.removeTiled(metaWindow);
+            space.removeDocked(metaWindow);
         return;
     }
-    space.addTiled(metaWindow);
+    space.addDocked(metaWindow);
+    // maximized_vertically happens before resize, so we need to queue a layout
+    // on the space
+    signals.connectOneShot(metaWindow, 'size-changed', () => {
+        space.layout();
+    });
 }
 
 function allocateClone(metaWindow) {
@@ -1977,11 +1982,6 @@ function resizeHandler(metaWindow) {
     metaWindow._targetHeight = null;
 
     let space = spaces.spaceOfWindow(metaWindow);
-    if (space.dock.get(metaWindow)) {
-        spaces.selectedSpace.layout();
-        return;
-    }
-
     if (space.indexOf(metaWindow) === -1)
         return;
 
@@ -2088,7 +2088,7 @@ function remove_handler(workspace, meta_window) {
 
     let space = spaces.spaceOf(workspace);
     space.removeWindow(meta_window);
-    space.removeTiled(meta_window);
+    space.removeDocked(meta_window);
 
     let actor = meta_window.get_compositor_private();
     if (!actor) {
