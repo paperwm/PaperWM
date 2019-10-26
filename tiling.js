@@ -2582,6 +2582,7 @@ function cycleWindowWidth(metaWindow) {
 
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
+    let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     workArea.x += space.monitor.x;
 
