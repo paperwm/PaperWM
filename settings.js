@@ -97,7 +97,7 @@ function init() {
         focus: true,
     });
     defwinprop({
-        wm_class: "gnome-screenshot",
+        wm_class: /gnome-screenshot/i,
         scratch_layer: true,
         focus: true,
     });
