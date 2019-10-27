@@ -281,7 +281,7 @@ var Navigator = class Navigator {
         if(!this.was_accepted) {
             // Abort the navigation
             this.space = from;
-            if (this.startWindow && this._startWindow.get_compositor_private())
+            if (this._startWindow && this._startWindow.get_compositor_private())
                 selected = this._startWindow;
             else
                 selected = display.focus_window;
