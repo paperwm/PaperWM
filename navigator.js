@@ -287,6 +287,9 @@ var Navigator = class Navigator {
                 selected = display.focus_window;
         }
 
+        if (!this.space.workspace.list_windows().includes(selected))
+            selected = null;
+
         if (this.monitor !== this.space.monitor) {
             this.space.setMonitor(this.monitor, true);
         }
