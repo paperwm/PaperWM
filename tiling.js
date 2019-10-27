@@ -2583,6 +2583,10 @@ function toggleMaximizeHorizontally(metaWindow) {
 function cycleWindowWidth(metaWindow, space, {context} = {}) {
     let steps = prefs.cycle_width_steps;
 
+    // Remember the original position
+    if (context.targetX === undefined)
+        context.targetX = space.targetX;
+
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let workArea = space.workArea();
@@ -2605,7 +2609,6 @@ function cycleWindowWidth(metaWindow, space, {context} = {}) {
             targetX = workArea.x + workArea.width - minimumMargin() - targetWidth;
         }
     } else {
-        context.targetX = context.targetX || space.targetX;
         if (space.targetX + space.cloneContainer.width === space.width) {
             space.targetX -= targetWidth - frame.width;
         } else {
