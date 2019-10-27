@@ -187,7 +187,7 @@ var ActionDispatcher = class {
 
     _finish(timestamp) {
         debug('#preview', 'finish');
-        this.navigator.accept();
+        this.navigator.accept(this.focus);
         this.destroy();
     }
 
@@ -205,7 +205,7 @@ var ActionDispatcher = class {
 
 var navigator;
 var Navigator = class Navigator {
-    constructor() {
+    constructor(focus) {
         navigating = true;
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
@@ -213,7 +213,7 @@ var Navigator = class Navigator {
 
         this.space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
 
-        this._startWindow = this.space.selectedWindow;
+        this._startWindow = focus || this.space.selectedWindow;
         this.from = this.space;
         this.monitor = this.space.monitor;
         this.monitor.clickOverlay.hide();
@@ -245,14 +245,15 @@ var Navigator = class Navigator {
         }
     }
 
-    accept() {
+    accept(focus) {
+        this.focus = focus;
         this.was_accepted = true;
     }
 
-    finish() {
+    finish(focus) {
         if (grab)
             return;
-        this.accept();
+        this.accept(focus);
         this.destroy();
     }
 
@@ -276,7 +277,7 @@ var Navigator = class Navigator {
         }
 
         let from = this.from;
-        let selected = this.space.selectedWindow;
+        let selected = this.focus || this.space.selectedWindow;
         if(!this.was_accepted) {
             // Abort the navigation
             this.space = from;
@@ -303,8 +304,6 @@ var Navigator = class Navigator {
             Tiling.spaces.animateToSpace(this.space);
         }
 
-        selected = this.space.indexOf(selected) !== -1 ? selected :
-                   this.space.selectedWindow;
         if (selected &&
             (!force ||
              !(display.focus_window && display.focus_window.is_on_all_workspaces())) ) {
@@ -337,11 +336,11 @@ var Navigator = class Navigator {
 }
 Signals.addSignalMethods(Navigator.prototype);
 
-function getNavigator() {
+function getNavigator(focus) {
     if (navigator)
         return navigator;
 
-    navigator = new Navigator();
+    navigator = new Navigator(focus);
     return navigator;
 }
 
