@@ -116,18 +116,27 @@ function newGnomeTerminal(metaWindow, app) {
 function duplicateWindow(metaWindow) {
     metaWindow = metaWindow || global.display.focus_window;
     let app = Tracker.get_window_app(metaWindow);
+    let promisedWindow =    new Promise(
+        (resolve, reject) => {
+            let id = global.display.connect('window-created', (d, mw) => {
+                global.display.disconnect(id);
+                resolve(mw);
+            });
+        }
+    );
 
     let handler = customHandlers[app.id];
     if (handler) {
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
-        return handler(metaWindow, app, space);
+        handler(metaWindow, app, space);
+        return promisedWindow;
     }
 
     let workspaceId = metaWindow.get_workspace().workspace_index;
 
     let original = Kludges.getSavedProp(Shell.App.prototype, "open_new_window");
     original.call(app, workspaceId);
-    return true;
+    return promisedWindow;
 }
 
 function trySpawnWindow(app, workspace) {

@@ -172,6 +172,8 @@ var ActionDispatcher = class {
             let focus = action.handler(metaWindow, space, {navigator: this.navigator, context});
             if (focus && focus.constructor.name.match('MetaWindow')) {
                 this.focus = focus;
+            } else if (focus && focus.constructor === Promise) {
+                focus.then(mw => this.focus = mw);
             }
             if (space !== Tiling.spaces.selectedSpace) {
                 this.navigator.minimaps.forEach(m => typeof(m) === 'number' ?
