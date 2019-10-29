@@ -116,7 +116,7 @@ function newGnomeTerminal(metaWindow, app) {
 function duplicateWindow(metaWindow) {
     metaWindow = metaWindow || global.display.focus_window;
     let app = Tracker.get_window_app(metaWindow);
-    let promisedWindow =    new Promise(
+    let promisedWindow = new Promise(
         (resolve, reject) => {
             let id = global.display.connect('window-created', (d, mw) => {
                 global.display.disconnect(id);
@@ -143,24 +143,43 @@ function trySpawnWindow(app, workspace) {
     if (typeof(app) === 'string') {
         app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
     }
+    let promisedWindow = new Promise(
+        (resolve, reject) => {
+            let id = global.display.connect('window-created', (d, mw) => {
+                global.display.disconnect(id);
+                resolve(mw);
+            });
+        }
+    );
     let handler = customSpawnHandlers[app.id];
     if (handler) {
         let space = Tiling.spaces.selectedSpace;
-        return handler(app, space);
+        handler(app, space);
     } else {
         launchFromWorkspaceDir(app, workspace);
     }
+    return promisedWindow;
 }
 
 function spawnWindow(app, workspace) {
     if (typeof(app) === 'string') {
         app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
     }
+    log(`foo`);
     try {
         return trySpawnWindow(app, workspace);
     } catch(e) {
+        let promisedWindow = new Promise(
+            (resolve, reject) => {
+                let id = global.display.connect('window-created', (d, mw) => {
+                    global.display.disconnect(id);
+                    resolve(mw);
+                });
+            }
+        );
         // Let the overide take care any fallback
-        return app.open_new_window(-1);
+        app.open_new_window(-1);
+        return promisedWindow;
     }
 }
 

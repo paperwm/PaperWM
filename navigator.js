@@ -154,7 +154,7 @@ var ActionDispatcher = class {
         let action = Keybindings.byId(mutterActionId);
         let space = Tiling.spaces.selectedSpace;
         // Make sure the window is alive
-        if (this.focus && !this.focus.get_compositor_private())
+        if (!this.focus || !this.focus.get_compositor_private())
             this.focus = space.selectedWindow;
         let metaWindow = this.focus;
 
