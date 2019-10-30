@@ -979,7 +979,7 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         let path = this.settings.get_string('background') || prefs.default_background;
         let useDefault = Settings.settings.get_boolean('use-default-background');
         const BackgroundStyle = imports.gi.GDesktopEnums.BackgroundStyle;
-        let style = BackgroundStyle.ZOOM;
+        let style = BackgroundStyle.WALLPAPER;
         if (!path && useDefault) {
             path = backgroundSettings.get_string('picture-uri');
         }
