@@ -322,6 +322,9 @@ function init() {
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces');
     registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated');
 
+    if (version[1] > 32)
+        registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', computeLayout);
+
     // Kill pinch gestures as they work pretty bad (especially when 3-finger swiping)
     registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0);
 
@@ -529,4 +532,57 @@ function disable() {
 
     signals.destroy();
     Main.layoutManager._updateHotCorners();
+}
+
+// 3.32 overivew layout
+function computeLayout(windows, layout) {
+    let numRows = layout.numRows;
+
+    let rows = [];
+    let totalWidth = 0;
+    for (let i = 0; i < windows.length; i++) {
+        let window = windows[i];
+        let s = this._computeWindowScale(window);
+        totalWidth += window.width * s;
+    }
+
+    let idealRowWidth = totalWidth / numRows;
+    let windowIdx = 0;
+    for (let i = 0; i < numRows; i++) {
+        let col = 0;
+        let row = this._newRow();
+        rows.push(row);
+
+        for (; windowIdx < windows.length; windowIdx++) {
+            let window = windows[windowIdx];
+            let s = this._computeWindowScale(window);
+            let width = window.width * s;
+            let height = window.height * s;
+            row.fullHeight = Math.max(row.fullHeight, height);
+
+            // either new width is < idealWidth or new width is nearer from idealWidth then oldWidth
+            if (this._keepSameRow(row, window, width, idealRowWidth) || (i == numRows - 1)) {
+                row.windows.push(window);
+                row.fullWidth += width;
+            } else {
+                break;
+            }
+        }
+    }
+
+    let gridHeight = 0;
+    let maxRow;
+    for (let i = 0; i < numRows; i++) {
+        let row = rows[i];
+        this._sortRow(row);
+
+        if (!maxRow || row.fullWidth > maxRow.fullWidth)
+            maxRow = row;
+        gridHeight += row.fullHeight;
+    }
+
+    layout.rows = rows;
+    layout.maxColumns = maxRow.windows.length;
+    layout.gridWidth = maxRow.fullWidth;
+    layout.gridHeight = gridHeight;
 }
