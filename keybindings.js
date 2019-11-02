@@ -529,6 +529,9 @@ function resolveConflicts() {
     for (let conflict of Settings.findConflicts()) {
         let {name, conflicts} = conflict;
         let action = byMutterName(name);
+        // Actionless key, can happen with updated schema without restart
+        if (!action)
+            continue;
         conflicts.forEach(c => overrideAction(c, action));
         overrides.push(conflict);
     }
