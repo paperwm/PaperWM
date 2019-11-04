@@ -44,6 +44,16 @@ if (!global.display.get_monitor_scale) {
     global.display.constructor.prototype.get_monitor_scale = () => 1.0;
 }
 
+if (!global.display.get_monitor_neighbor_index) {
+    // `get_monitor_neighbor_index` polyfill a fallback for 3.28
+    global.display.constructor.prototype.get_monitor_neighbor_index = function(...args) {
+        return global.screen.get_monitor_neighbor_index(...args);
+    }
+}
+
+// polyfill for 3.28
+Meta.DisplayDirection = Meta.ScreenDirection;
+
 if (!St.Settings) {
     // `St.Settings` doesn't exist in 3.28 - polyfill:
     let Gtk = imports.gi.Gtk;
