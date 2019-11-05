@@ -52,7 +52,9 @@ if (!global.display.get_monitor_neighbor_index) {
 }
 
 // polyfill for 3.28
-Meta.DisplayDirection = Meta.ScreenDirection;
+if (!Meta.DisplayDirection && Meta.ScreenDirection) {
+    Meta.DisplayDirection = Meta.ScreenDirection;
+}
 
 if (!St.Settings) {
     // `St.Settings` doesn't exist in 3.28 - polyfill:
