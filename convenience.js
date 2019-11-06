@@ -30,6 +30,12 @@ const Gio = imports.gi.Gio;
 const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
 
+// Cache schema objects - if a user updates the extension without restarting
+// gnome-shell we risk re-reading a updated schema file without using the
+// updated code
+var cache = {};
+
+
 /**
  * initTranslations:
  * @domain: (optional): the gettext domain to use
@@ -66,6 +72,11 @@ function getSettings(schema) {
 
     schema = schema || extension.metadata['settings-schema'];
 
+    let settings = cache[schema];
+    if (settings) {
+        return settings;
+    }
+
     const GioSSS = Gio.SettingsSchemaSource;
 
     // check if this extension was built with "make zip-file", and thus
@@ -87,5 +98,7 @@ function getSettings(schema) {
         throw new Error('Schema ' + schema + ' could not be found for extension '
                         + extension.metadata.uuid + '. Please check your installation.');
 
-    return new Gio.Settings({ settings_schema: schemaObj });
+    settings = new Gio.Settings({ settings_schema: schemaObj });
+    cache[schema] = settings;
+    return settings;
 }
