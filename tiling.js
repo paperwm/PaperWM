@@ -1526,11 +1526,12 @@ class Spaces extends Map {
         inPreviewMode = {stack: false, sequence: false};
     }
 
-    _initWorkspaceSequence() {
+    _initWorkspaceSequence(animate = false) {
 
         if (inPreview) {
             return;
         }
+        log(`init sequence`, animate);
 
         // Always show the topbar when using the workspace stack
         inPreview = true;
@@ -1538,12 +1539,12 @@ class Spaces extends Map {
 
         TopBar.show();
 
-        let currentSpace = this.spaceOf(workspaceManager.get_active_workspace());
+        let currentSpace = this.selectedSpace;
         let monitorSpaces = [];
 
         for (let [workspace, space] of this) {
             if (space.monitor === currentSpace.monitor) {
-                monitorSpaces.push(space)
+                monitorSpaces.push(space);
             }
         }
 
@@ -1556,7 +1557,7 @@ class Spaces extends Map {
 
         let cloneParent = currentSpace.clip.get_parent();
 
-        const scale = 0.8;
+        const scale = 1;
         const padding = 25;
         monitorSpaces.forEach((space, i) => {
 
@@ -1573,31 +1574,36 @@ class Spaces extends Map {
 
             space.actor.show();
 
-            let space_height = ((space.height + padding) * i + padding) * scale;
-            space.actor.set_position(0, space_height);
-
-            space.actor.scale_y = scale;
-            space.actor.scale_x = scale;
-
             // Remove any lingering onComplete handlers from animateToSpace
             Tweener.removeTweens(space.actor);
+
+            let space_height = ((space.height + padding) * (i - currentSpace.workspace.index()) + padding) * scale;
+            if (animate) {
+                Tweener.addTween(space.actor, {
+                    x: 0,
+                    y: space_height,
+                    time: prefs.animation_time,
+                    scale_y: scale, scale_x: scale,
+                });
+            } else {
+                space.actor.set_position(0, space_height);
+                space.actor.scale_y = scale;
+                space.actor.scale_x = scale;
+            }
 
             if (monitorSpaces[i - 1] === undefined) {
                 return;
             }
 
-            let child = space.clip;
-            let sibling = monitorSpaces[i - 1].clip;
-            child !== sibling && cloneParent.set_child_below_sibling(child, sibling);
+            // let child = space.clip;
+            // let sibling = monitorSpaces[i - 1].clip;
+            // child !== sibling && cloneParent.set_child_below_sibling(child, sibling);
             let selected = space.selectedWindow;
             if (selected && selected.fullscreen) {
                 selected.clone.y = Main.panel.actor.height + prefs.vertical_margin;
             }
 
         });
-
-        currentSpace.actor.scale_y = scale;
-        currentSpace.actor.scale_x = scale;
 
         let selected = currentSpace.selectedWindow;
         if (selected && selected.fullscreen) {
@@ -1615,7 +1621,7 @@ class Spaces extends Map {
 
         for (let [workspace, space] of this) {
             if (space.monitor === currentSpace.monitor) {
-                monitorSpaces.push(space)
+                monitorSpaces.push(space);
             }
         }
 
@@ -1653,20 +1659,21 @@ class Spaces extends Map {
 
         TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
-        const scale = 0.8;
+        const scale = 0.9;
         const padding = 25;
         monitorSpaces.forEach((space, i) => {
-            let onComplete = () => {};
             let actor = space.actor;
 
-            let space_height = ((space.height + padding) * (i - to) + padding) * scale;
-            space.actor.set_position(0, space_height);
+            let center = (space.height - space.height*scale)/2;
+            let space_height = center + ((space.height + padding) * (i - to) + padding) * scale;
+            // space.actor.set_position(0, space_height);
+            log('animate', actor, space_height);
+            actor.show();
             Tweener.addTween(actor,
                              {y: space_height,
                               time: prefs.animation_time,
                               scale_x: scale,
                               scale_y: scale,
-                              onComplete
                              });
 
         });
@@ -1843,6 +1850,11 @@ class Spaces extends Map {
             visible.set(space, true);
         }
 
+        if (inPreviewMode.sequence) {
+            this._initWorkspaceSequence(true);
+            inPreview = false;
+        }
+
         Tweener.addTween(to.actor,
                          { x: 0,
                            y: 0,
@@ -1880,6 +1892,12 @@ class Spaces extends Map {
                                callback && callback();
                            }
                          });
+
+
+        if (inPreviewMode.sequence) {
+            return;
+        }
+
 
         // Animate all the spaces above `to` down below the monitor. We get
         // these spaces by looking at siblings of upper most actor, ie. the
