@@ -50,6 +50,7 @@ var sizeSlack = 30;
 var panelBox = Main.layoutManager.panelBox;
 
 var inPreview = false;
+var inPreviewMode = {stack: false, sequence: false};
 
 var signals, oldSpaces, backgroundGroup, oldMonitors, WindowCloneLayout,
     grabSignals;
@@ -1485,8 +1486,14 @@ class Spaces extends Map {
         let from = workspaceManager.get_workspace_by_index(fromIndex);
         let toSpace = this.spaceOf(to);
 
-        if (!inPreview)
-            this._initWorkspaceStack();
+        if (!inPreview) {
+            if (inPreviewMode.stack) {
+                this._initWorkspaceStack();
+            }
+            else if (inPreviewMode.sequence) {
+                this._initWorkspaceSequence();
+            }
+        }
 
         this.stack = this.stack.filter(s => s !== toSpace);
         this.stack = [toSpace, ...this.stack];
@@ -1515,13 +1522,164 @@ class Spaces extends Map {
                 continue;
             monitor.clickOverlay.activate();
         }
+
+        inPreviewMode = {stack: false, sequence: false};
+    }
+
+    _initWorkspaceSequence() {
+
+        if (inPreview) {
+            return;
+        }
+
+        // Always show the topbar when using the workspace stack
+        inPreview = true;
+        inPreviewMode = {stack: false, sequence: true};
+
+        TopBar.show();
+
+        let currentSpace = this.spaceOf(workspaceManager.get_active_workspace());
+        let monitorSpaces = [];
+
+        for (let [workspace, space] of this) {
+            if (space.monitor === currentSpace.monitor) {
+                monitorSpaces.push(space)
+            }
+        }
+
+        if (Main.panel.statusArea.appMenu) {
+            Main.panel.statusArea.appMenu.container.hide();
+        }
+
+        let currentMonitor = currentSpace.monitor;
+        this.selectedSpace = currentSpace;
+
+        let cloneParent = currentSpace.clip.get_parent();
+
+        const scale = 0.8;
+        const padding = 25;
+        monitorSpaces.forEach((space, i) => {
+
+            space.clip.set_position(currentMonitor.x, currentMonitor.y);
+            space.startAnimate();
+
+            let scaleX = currentMonitor.width / space.width;
+            let scaleY = currentMonitor.height / space.height;
+            space.clip.set_scale(scaleX, scaleY);
+
+            Tweener.removeTweens(space.border);
+            space.border.opacity = 255;
+            space.border.show();
+
+            space.actor.show();
+
+            let space_height = ((space.height + padding) * i + padding) * scale;
+            space.actor.set_position(0, space_height);
+
+            space.actor.scale_y = scale;
+            space.actor.scale_x = scale;
+
+            // Remove any lingering onComplete handlers from animateToSpace
+            Tweener.removeTweens(space.actor);
+
+            if (monitorSpaces[i - 1] === undefined) {
+                return;
+            }
+
+            let child = space.clip;
+            let sibling = monitorSpaces[i - 1].clip;
+            child !== sibling && cloneParent.set_child_below_sibling(child, sibling);
+            let selected = space.selectedWindow;
+            if (selected && selected.fullscreen) {
+                selected.clone.y = Main.panel.actor.height + prefs.vertical_margin;
+            }
+
+        });
+
+        currentSpace.actor.scale_y = scale;
+        currentSpace.actor.scale_x = scale;
+
+        let selected = currentSpace.selectedWindow;
+        if (selected && selected.fullscreen) {
+            Tweener.addTween(selected.clone, {
+                y: Main.panel.actor.height + prefs.vertical_margin,
+                time: prefs.animation_time,
+            });
+        }
+    }
+
+    switchSpace(direction, move) {
+
+        let currentSpace = this.spaceOf(workspaceManager.get_active_workspace());
+        let monitorSpaces = [];
+
+        for (let [workspace, space] of this) {
+            if (space.monitor === currentSpace.monitor) {
+                monitorSpaces.push(space)
+            }
+        }
+
+        if (!inPreview) {
+            this._initWorkspaceSequence();
+        }
+
+        let from = monitorSpaces.indexOf(this.selectedSpace);
+        let newSpace = this.selectedSpace;
+        let to = from;
+        if (move && this.selectedSpace.selectedWindow) {
+            takeWindow(this.selectedSpace.selectedWindow,
+                       this.selectedSpace,
+                       {navigator: Navigator.getNavigator()});
+        }
+
+        if (direction === Meta.MotionDirection.DOWN)
+            to = from + 1;
+        else
+            to = from - 1;
+
+        // wrap around workspaces
+        if (to < 0) {
+            to = monitorSpaces.length - 1;
+        }
+        else if (to >= monitorSpaces.length) {
+            to = 0;
+        }
+
+        if (to === from && Tweener.isTweening(newSpace.actor))
+            return;
+
+        newSpace = monitorSpaces[to];
+        this.selectedSpace = newSpace;
+
+        TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
+
+        const scale = 0.8;
+        const padding = 25;
+        monitorSpaces.forEach((space, i) => {
+            let onComplete = () => {};
+            let actor = space.actor;
+
+            let space_height = ((space.height + padding) * (i - to) + padding) * scale;
+            space.actor.set_position(0, space_height);
+            Tweener.addTween(actor,
+                             {y: space_height,
+                              time: prefs.animation_time,
+                              scale_x: scale,
+                              scale_y: scale,
+                              onComplete
+                             });
+
+        });
     }
 
     _initWorkspaceStack() {
         if (inPreview)
             return;
-        // Always show the topbar when using the workspace stack
+
         inPreview = true;
+        inPreviewMode = {stack: true, sequence: false};
+
+        // Always show the topbar when using the workspace stack
         TopBar.show();
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
@@ -2099,7 +2257,7 @@ function insertWindow(metaWindow, {existing}) {
 
         if (focusWindow === metaWindow) {
             focusWindow = mru[1];
-        } 
+        }
 
         let scratchIsFocused = Scratch.isScratchWindow(focusWindow);
         let addToScratch = scratchIsFocused;
@@ -2838,6 +2996,23 @@ function movePreviousSpace(mw, space) {
 function movePreviousSpaceBackwards(mw, space) {
     spaces.selectSpace(Meta.MotionDirection.UP, true);
 }
+
+function selectDownSpace(mw, space) {
+    spaces.switchSpace(Meta.MotionDirection.DOWN);
+}
+
+function selectUpSpace(mw, space) {
+    spaces.switchSpace(Meta.MotionDirection.UP);
+}
+
+function moveDownSpace(mw, space) {
+    spaces.switchSpace(Meta.MotionDirection.DOWN, true);
+}
+
+function moveUpSpace(mw, space) {
+    spaces.switchSpace(Meta.MotionDirection.UP, true);
+}
+
 
 /**
    Detach the @metaWindow, storing it at the bottom right corner while
