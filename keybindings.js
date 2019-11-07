@@ -113,6 +113,12 @@ function init() {
     registerNavigatorAction('move-previous-workspace-backward',
                             Tiling.movePreviousSpaceBackwards);
 
+    registerNavigatorAction('switch-down-workspace', Tiling.selectDownSpace);
+    registerNavigatorAction('switch-up-workspace', Tiling.selectUpSpace);
+
+    registerNavigatorAction('move-down-workspace', Tiling.moveDownSpace);
+    registerNavigatorAction('move-up-workspace', Tiling.moveUpSpace);
+
     registerNavigatorAction('take-window', Tiling.takeWindow);
 
     registerMinimapAction("switch-next", (mw, space) => space.switchLinear(1));

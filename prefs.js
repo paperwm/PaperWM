@@ -226,7 +226,10 @@ class SettingsWidget {
         workspaceFrame.add(workspaces);
 
         ['previous-workspace', 'previous-workspace-backward',
-         'move-previous-workspace', 'move-previous-workspace-backward' ]
+         'move-previous-workspace', 'move-previous-workspace-backward',
+         'switch-up-workspace', 'switch-down-workspace',
+         'move-up-workspace', 'move-down-workspace'
+        ]
             .forEach(k => {
                 addKeybinding(workspaces.model.child_model, settings, k);
             });
@@ -412,7 +415,7 @@ function createKeybindingWidget(settings, searchEntry) {
 
             let query = searchEntry.get_chars(0, -1).toLowerCase().split(" ");
             let descLc = desc.toLowerCase();
-            
+
             return query.every(word => descLc.indexOf(word) > -1);
         }
     );
