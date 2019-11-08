@@ -1588,6 +1588,11 @@ class Spaces extends Map {
 
     selectSequenceSpace(direction, move) {
 
+        // if in stack preview do not run sequence preview
+        if (inPreview === PreviewMode.STACK) {
+            return;
+        }
+
         let currentSpace = this.spaceOf(workspaceManager.get_active_workspace());
         let monitorSpaces = [];
 
@@ -1659,6 +1664,7 @@ class Spaces extends Map {
     }
 
     _initWorkspaceStack() {
+
         if (inPreview)
             return;
 
@@ -1736,9 +1742,16 @@ class Spaces extends Map {
     }
 
     selectStackSpace(direction, move) {
+
+        // if in sequence preview do not run stack preview
+        if (inPreview === PreviewMode.SEQUENTIAL) {
+            return;
+        }
+
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
         let mru = [...this.stack];
+
         this.monitors.forEach(space => mru.splice(mru.indexOf(space), 1));
         mru = [space, ...mru];
 
