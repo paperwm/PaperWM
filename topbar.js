@@ -346,10 +346,10 @@ class WorkspaceMenu extends PanelMenu.Button {
             }
 
             if (direction === Clutter.ScrollDirection.UP) {
-                Tiling.spaces.selectSpace(Meta.MotionDirection.DOWN);
+                Tiling.spaces.selectStackSpace(Meta.MotionDirection.DOWN);
             }
             if (direction === Clutter.ScrollDirection.DOWN) {
-                Tiling.spaces.selectSpace(Meta.MotionDirection.UP);
+                Tiling.spaces.selectStackSpace(Meta.MotionDirection.UP);
             }
         }
 
@@ -383,7 +383,7 @@ class WorkspaceMenu extends PanelMenu.Button {
                ) {
                 dy = 0;
                 v = 0.1;
-                spaces.selectSpace(Meta.MotionDirection.UP, false, mode);
+                spaces.selectStackSpace(Meta.MotionDirection.UP, false, mode);
                 this.selected = spaces.selectedSpace;
                 Tweener.removeTweens(this.selected.actor);
                 Tweener.addTween(this.selected.actor,
@@ -396,7 +396,7 @@ class WorkspaceMenu extends PanelMenu.Button {
                       ) {
                 dy = 0;
                 v = 0.1;
-                spaces.selectSpace(Meta.MotionDirection.DOWN, false, mode);
+                spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, mode);
                 this.selected = spaces.selectedSpace;
                 Tweener.removeTweens(this.selected.actor);
                 Tweener.addTween(this.selected.actor,
@@ -437,11 +437,11 @@ class WorkspaceMenu extends PanelMenu.Button {
                     this._navigator.finish();
                     return;
                 } else if (y > downEdge) {
-                    spaces.selectSpace(Meta.MotionDirection.DOWN, false, mode);
+                    spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, mode);
                     this.selected = spaces.selectedSpace;
                 } else {
-                    spaces.selectSpace(Meta.MotionDirection.DOWN);
-                    spaces.selectSpace(Meta.MotionDirection.UP);
+                    spaces.selectStackSpace(Meta.MotionDirection.DOWN);
+                    spaces.selectStackSpace(Meta.MotionDirection.UP);
                 }
             } else {
                 this.time = t;

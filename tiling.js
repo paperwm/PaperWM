@@ -1526,7 +1526,6 @@ class Spaces extends Map {
         if (inPreview) {
             return;
         }
-        log(`init sequence`, animate);
 
         inPreview = PreviewMode.SEQUENTIAL;
 
@@ -1587,7 +1586,7 @@ class Spaces extends Map {
         }
     }
 
-    switchSpace(direction, move) {
+    selectSequenceSpace(direction, move) {
 
         let currentSpace = this.spaceOf(workspaceManager.get_active_workspace());
         let monitorSpaces = [];
@@ -1736,7 +1735,7 @@ class Spaces extends Map {
         }
     }
 
-    selectSpace(direction, move) {
+    selectStackSpace(direction, move) {
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
         let mru = [...this.stack];
@@ -2974,35 +2973,35 @@ function barf(metaWindow) {
 }
 
 function selectPreviousSpace(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.DOWN);
+    spaces.selectStackSpace(Meta.MotionDirection.DOWN);
 }
 
 function selectPreviousSpaceBackwards(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.UP);
+    spaces.selectStackSpace(Meta.MotionDirection.UP);
 }
 
 function movePreviousSpace(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.DOWN, true);
+    spaces.selectStackSpace(Meta.MotionDirection.DOWN, true);
 }
 
 function movePreviousSpaceBackwards(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.UP, true);
+    spaces.selectStackSpace(Meta.MotionDirection.UP, true);
 }
 
 function selectDownSpace(mw, space) {
-    spaces.switchSpace(Meta.MotionDirection.DOWN);
+    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN);
 }
 
 function selectUpSpace(mw, space) {
-    spaces.switchSpace(Meta.MotionDirection.UP);
+    spaces.selectSequenceSpace(Meta.MotionDirection.UP);
 }
 
 function moveDownSpace(mw, space) {
-    spaces.switchSpace(Meta.MotionDirection.DOWN, true);
+    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN, true);
 }
 
 function moveUpSpace(mw, space) {
-    spaces.switchSpace(Meta.MotionDirection.UP, true);
+    spaces.selectSequenceSpace(Meta.MotionDirection.UP, true);
 }
 
 
