@@ -1521,6 +1521,17 @@ class Spaces extends Map {
         inPreview = PreviewMode.NONE;
     }
 
+    _getOrderedSpaces(monitor) {
+        let nWorkspaces = workspaceManager.n_workspaces;
+        let out = [];
+        for (let i=0; i<nWorkspaces; i++) {
+            let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
+            if (space.monitor === monitor)
+                out.push(space);
+        }
+        return out;
+    }
+
     _initWorkspaceSequence() {
 
         if (inPreview) {
@@ -1533,13 +1544,7 @@ class Spaces extends Map {
         TopBar.show();
 
         let currentSpace = this.selectedSpace;
-        let monitorSpaces = [];
-
-        for (let [workspace, space] of this) {
-            if (space.monitor === currentSpace.monitor) {
-                monitorSpaces.push(space);
-            }
-        }
+        let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
 
         if (Main.panel.statusArea.appMenu) {
             Main.panel.statusArea.appMenu.container.hide();
@@ -1594,13 +1599,7 @@ class Spaces extends Map {
         }
 
         let currentSpace = this.spaceOf(workspaceManager.get_active_workspace());
-        let monitorSpaces = [];
-
-        for (let [workspace, space] of this) {
-            if (space.monitor === currentSpace.monitor) {
-                monitorSpaces.push(space);
-            }
-        }
+        let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
 
         if (!inPreview) {
             this._initWorkspaceSequence();
