@@ -1485,8 +1485,11 @@ class Spaces extends Map {
         let to = workspaceManager.get_workspace_by_index(toIndex);
         let from = workspaceManager.get_workspace_by_index(fromIndex);
         let toSpace = this.spaceOf(to);
+        let fromSpace = this.spaceOf(from);
 
-        if (inPreview === PreviewMode.NONE) {
+        if (inPreview === PreviewMode.NONE && toSpace.monitor === fromSpace.monitor) {
+            // Only start an animation if we're moving between workspaces on the
+            // same monitor
             this._initWorkspaceSequence();
         }
 
@@ -1495,8 +1498,6 @@ class Spaces extends Map {
 
         let monitor = toSpace.monitor;
         this.monitors.set(monitor, toSpace);
-
-        let fromSpace = this.spaceOf(from);
 
         this.animateToSpace(toSpace, fromSpace);
 
