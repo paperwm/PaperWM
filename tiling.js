@@ -1852,60 +1852,75 @@ class Spaces extends Map {
             visible.set(space, true);
         }
 
+        let onComplete = () => {
+            // Hide any spaces that aren't visible This
+            // avoids a nasty permance degregration in some
+            // cases
+            for (const space of spaces.values()) {
+                if (!visible.get(space)) {
+                    space.actor.hide();
+                }
+            }
+
+            Tweener.addTween(to.border, {
+                opacity: 0,
+                time: prefs.animation_time,
+                onComplete: () => {
+                    to.border.hide();
+                    to.border.opacity = 255;
+                }
+            });
+            to.clip.raise_top();
+
+            // Fixes a weird bug where mouse input stops
+            // working after mousing to another monitor on
+            // X11.
+            !Meta.is_wayland_compositor() && to.startAnimate();
+
+            to.moveDone();
+            callback && callback();
+        };
+
+        if (currentPreviewMode === PreviewMode.SEQUENTIAL) {
+            this._animateToSpaceOrdered(to, true);
+            let t = to.actor.get_transition('y');
+            let time = GLib.get_monotonic_time();
+            if (t) {
+                t && t.connect('stopped', (t, finished) => {
+                    finished && onComplete();
+                });
+            } else {
+                // When switching between monitors there's no animation we can
+                // connect to
+                onComplete();
+            }
+            return;
+        }
+
         Tweener.addTween(to.actor,
                          { x: 0,
                            y: 0,
                            scale_x: 1,
                            scale_y: 1,
                            time: prefs.animation_time,
-                              onComplete: () => {
-                               // Meta.enable_unredirect_for_screen(screen);
-
-                               // Hide any spaces that aren't visible This
-                               // avoids a nasty permance degregration in some
-                               // cases
-                               for (const space of spaces.values()) {
-                                   if (!visible.get(space)) {
-                                       space.actor.hide();
-                                   }
-                               }
-
-                               Tweener.addTween(to.border, {
-                                   opacity: 0,
-                                   time: prefs.animation_time,
-                                   onComplete: () => {
-                                       to.border.hide();
-                                       to.border.opacity = 255;
-                                   }
-                               });
-                               to.clip.raise_top();
-
-                               // Fixes a weird bug where mouse input stops
-                               // working after mousing to another monitor on
-                               // X11.
-                               !Meta.is_wayland_compositor() && to.startAnimate();
-
-                               to.moveDone();
-                               callback && callback();
-                           }
+                           onComplete
                          });
 
 
-        if (currentPreviewMode === PreviewMode.STACK) {
-            // Animate all the spaces above `to` down below the monitor. We get
-            // these spaces by looking at siblings of upper most actor, ie. the
-            // `clip`. This is done since `this.stack` is already updated.
-            let above = to.clip.get_next_sibling();
-            while (above) {
-                let space = above.space;
-                if (!visible.get(space)) {
-                    Tweener.addTween(space.actor,
-                                     {x: 0, y: space.height + 20,
-                                      time: prefs.animation_time });
-                }
-                above = above.get_next_sibling();
+        // Animate all the spaces above `to` down below the monitor. We get
+        // these spaces by looking at siblings of upper most actor, ie. the
+        // `clip`. This is done since `this.stack` is already updated.
+        let above = to.clip.get_next_sibling();
+        while (above) {
+            let space = above.space;
+            if (!visible.get(space)) {
+                Tweener.addTween(space.actor,
+                                 {x: 0, y: space.height + 20,
+                                  time: prefs.animation_time });
             }
+            above = above.get_next_sibling();
         }
+
     }
 
     addSpace(workspace) {
