@@ -704,13 +704,13 @@ class Space extends Array {
 
         let metaWindow = this.getWindow(index, row);
         ensureViewport(metaWindow, this);
-        return true;
+        return metaWindow;
     }
 
-    switchLeft() { this.switch(Meta.MotionDirection.LEFT) }
-    switchRight() { this.switch(Meta.MotionDirection.RIGHT) }
-    switchUp() { this.switch(Meta.MotionDirection.UP) }
-    switchDown() { this.switch(Meta.MotionDirection.DOWN) }
+    switchLeft() { return this.switch(Meta.MotionDirection.LEFT) }
+    switchRight() { return this.switch(Meta.MotionDirection.RIGHT) }
+    switchUp() { return this.switch(Meta.MotionDirection.UP) }
+    switchDown() { return this.switch(Meta.MotionDirection.DOWN) }
     switch(direction) {
         let space = this;
         let index = space.selectedIndex();
@@ -747,6 +747,7 @@ class Space extends Array {
 
         let metaWindow = space.getWindow(index, row);
         ensureViewport(metaWindow, space);
+        return metaWindow;
     }
 
     positionOf(metaWindow) {
@@ -1448,7 +1449,7 @@ class Spaces extends Map {
         let currentSpace = this.monitors.get(monitor);
         let i = display.get_monitor_neighbor_index(monitor.index, direction);
         if (i === -1)
-            return;
+            return null;
         let newMonitor = Main.layoutManager.monitors[i];
         let space = this.monitors.get(newMonitor);
 
@@ -1478,6 +1479,7 @@ class Spaces extends Map {
         } else {
             space.workspace.activate(global.get_current_time());
         }
+        return focus;
     }
 
     switchWorkspace(wm, fromIndex, toIndex) {
@@ -1662,6 +1664,7 @@ class Spaces extends Map {
                              });
 
         });
+        return newSpace.selectedWindow;
     }
 
     animateToSpace(to, from, callback) {
@@ -2577,14 +2580,16 @@ function toggleMaximizeHorizontally(metaWindow) {
     }
 }
 
-function cycleWindowWidth(metaWindow) {
+function cycleWindowWidth(metaWindow, space, {context} = {}) {
     let steps = prefs.cycle_width_steps;
+
+    // Remember the original position
+    if (context.targetX === undefined)
+        context.targetX = space.targetX;
 
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
-    let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
-    workArea.x += space.monitor.x;
 
     if (steps[0] <= 1) {
         // Steps are specifed as ratios -> convert to pixels
@@ -2597,11 +2602,24 @@ function cycleWindowWidth(metaWindow) {
     let targetWidth = Math.min(utils.findNext(frame.width, steps, sizeSlack), workArea.width);
     let targetX = frame.x;
 
-    if (Scratch.isScratchWindow(metaWindow)) {
+    if (space.indexOf(metaWindow) === -1) {
+        workArea = Main.layoutManager.getWorkAreaForMonitor(metaWindow.get_monitor().index);
         if (targetX+targetWidth > workArea.x + workArea.width - minimumMargin()) {
             // Move the window so it remains fully visible
             targetX = workArea.x + workArea.width - minimumMargin() - targetWidth;
         }
+    } else {
+        if (space.targetX + space.cloneContainer.width === space.width) {
+            space.targetX -= targetWidth - frame.width;
+        } else {
+            // Prefer the original position
+            space.targetX = context.targetX;
+        }
+        Tweener.addTween(space.cloneContainer,
+                         { x: space.targetX,
+                           time: prefs.animation_time,
+                           onComplete: space.moveDone.bind(space)
+                         });
     }
 
     if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
@@ -2824,11 +2842,11 @@ function barf(metaWindow) {
 }
 
 function selectPreviousSpace(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.DOWN);
+    return spaces.selectSpace(Meta.MotionDirection.DOWN);
 }
 
 function selectPreviousSpaceBackwards(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.UP);
+    return spaces.selectSpace(Meta.MotionDirection.UP);
 }
 
 function movePreviousSpace(mw, space) {
