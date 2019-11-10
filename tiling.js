@@ -1533,31 +1533,42 @@ class Spaces extends Map {
     }
 
     _initWorkspaceSequence() {
-
         if (inPreview) {
             return;
         }
-
         inPreview = PreviewMode.SEQUENTIAL;
 
+        this._animateToSpaceOrdered(this.selectedSpace, false);
+
+        let selected = this.selectedSpace.selectedWindow;
+        if (selected && selected.fullscreen) {
+            Tweener.addTween(selected.clone, {
+                y: Main.panel.actor.height + prefs.vertical_margin,
+                time: prefs.animation_time,
+            });
+        }
+    }
+
+    _animateToSpaceOrdered(toSpace, animate = true) {
         // Always show the topbar when using the workspace stack
         TopBar.show();
 
-        let currentSpace = this.selectedSpace;
-        let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
+        toSpace = toSpace || this.selectedSpace;
+        let monitorSpaces = this._getOrderedSpaces(toSpace.monitor);
 
         if (Main.panel.statusArea.appMenu) {
             Main.panel.statusArea.appMenu.container.hide();
         }
 
-        let currentMonitor = currentSpace.monitor;
-        this.selectedSpace = currentSpace;
+        let currentMonitor = toSpace.monitor;
+        this.selectedSpace = toSpace;
 
         const scale = 1;
         const padding_percentage = 4;
-        const to = monitorSpaces.indexOf(currentSpace);
+        const to = monitorSpaces.indexOf(toSpace);
         monitorSpaces.forEach((space, i) => {
 
+            // This should be reduntant, but some reduncancy doesn't hurt
             space.clip.set_position(currentMonitor.x, currentMonitor.y);
             space.startAnimate();
 
@@ -1567,28 +1578,27 @@ class Spaces extends Map {
 
             space.actor.show();
 
-            // Remove any lingering onComplete handlers from animateToSpace
-            Tweener.removeTweens(space.actor);
-
             let padding = (space.height * scale / 100) * padding_percentage;
             let y = ((space.height + padding) * (i - to)) * scale;
-            space.actor.y = y;
-            space.actor.scale_y = scale;
-            space.actor.scale_x = scale;
+            if (animate) {
+                Tweener.addTween(space.actor, {
+                    time: prefs.animation_time,
+                    y, scale_y: scale, scale_x: scale,
+                });
+            } else {
+                // Remove any lingering onComplete handlers from animateToSpace
+                Tweener.removeTweens(space.actor);
+
+                space.actor.y = y;
+                space.actor.scale_y = scale;
+                space.actor.scale_x = scale;
+            }
 
             let selected = space.selectedWindow;
-            if (selected && selected.fullscreen && space !== currentSpace) {
+            if (selected && selected.fullscreen && space !== toSpace) {
                 selected.clone.y = Main.panel.actor.height + prefs.vertical_margin;
             }
         });
-
-        let selected = currentSpace.selectedWindow;
-        if (selected && selected.fullscreen) {
-            Tweener.addTween(selected.clone, {
-                y: Main.panel.actor.height + prefs.vertical_margin,
-                time: prefs.animation_time,
-            });
-        }
     }
 
     selectSequenceSpace(direction, move) {
