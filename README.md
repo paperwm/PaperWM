@@ -39,7 +39,7 @@ The desktop-icon extension (which is on by default) and PaperWM is not compatibl
 
 Ubuntu makes it difficult to disable desktop-icon so it is suggested to use vanilla gnome session instead `sudo apt install gnome-session` and select `gnome` or `gnome-wayland` using the gear icon on login.
 
-`desktop-icon` can (sometimes) be disabled via the web interface if the GNOME Shell integration is installed on the browser: https://extensions.gnome.org/local/ or via gnome tweaks `sudo apt install gnome-tweaks` and be disabled under the extensions tab.  
+`desktop-icon` can (sometimes) be disabled via the web interface if the GNOME Shell integration is installed on the browser: https://extensions.gnome.org/local/ or via gnome tweaks `sudo apt install gnome-tweaks` and be disabled under the extensions tab.
 
 
 ## Usage ##
@@ -95,9 +95,13 @@ PaperWM doesn't handle attached modal dialogs very well, so it's best to turn it
 
 ### The workspace stack & monitors ###
 
+Pressing <kbd>Super</kbd><kbd>Above_Tab</kbd> will slide the active workspace down revealing the stack as shown in the above screenshot. You can then flip through the most recently used workspaces with repeated <kbd>Above_Tab</kbd> presses while holding <kbd>Super</kbd> down. <kbd>Above_Tab</kbd> is the key above <kbd>Tab</kbd> (<kbd>\`</kbd> in a US qwerty layout). Like alt-tab <kbd>Shift</kbd> is added to move in reverse order:
+
 ![The most recently used workspace stack](https://github.com/paperwm/media/blob/master/stack.png)
 
-Pressing <kbd>Super</kbd><kbd>Above_Tab</kbd> will slide the active workspace down revealing the stack as shown in the above screenshot. You can then flip through the most recently used workspaces with repeated <kbd>Above_Tab</kbd> presses while holding <kbd>Super</kbd> down. <kbd>Above_Tab</kbd> is the key above <kbd>Tab</kbd> (<kbd>\`</kbd> in a US qwerty layout). Like alt-tab <kbd>Shift</kbd> is added to move in reverse order.
+Pressing <kbd>Super</kbd><kbd>Page_Down</kbd> and <kbd>Super</kbd><kbd>Page_Up</kbd> will slide between workspaces sequentially:
+
+![Sequential workspace navigation](https://github.com/paperwm/media/blob/master/sequence.png)
 
 The workspace name is shown in the top left corner replacing the `Activities` button adding a few enhancements. Scrolling on the name will let you browse the workspace stack just like <kbd>Super</kbd><kbd>Above_Tab</kbd>. Right clicking the name lets you access and change the workspace name and the background color:
 
@@ -109,12 +113,15 @@ There's a single scrollable tiling per workspace. Adding another monitor simply 
 
 PaperWM currently works best using the workspaces span monitors preference, this can be turned on with Gnome Tweaks under Workspaces. If you want to use workspaces only on primary you need to place the secondary monitor either below or above the primary (with the best result having it below).
 
-| Workspace Keybindings                                                                                                    |                                                                                   |
-| ------                                                                                                                   | -------                                                                           |
-| <kbd>Super</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Page_Down</kbd>                                             | Cycle through the most recently used workspaces                                   |
-| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Page_Up</kbd>                               | Cycle backwards through the most recently used workspaces                         |
-| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Page_Down</kbd>               | Cycle through the most recently used, taking the active window with you           |
-| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Above_Tab</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Page_Up</kbd> | Cycle backwards through the most recently used, taking the active window with you |
+| Workspace Keybindings                                                  |                                                                                   |
+| ------                                                                 | -------                                                                           |
+| <kbd>Super</kbd><kbd>Above_Tab</kbd>                                   | Cycle through the most recently used workspaces                                   |
+| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Above_Tab</kbd>                   | Cycle backwards through the most recently used workspaces                         |
+| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Above_Tab</kbd>                    | Cycle through the most recently used, taking the active window with you           |
+| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Above_Tab</kbd>    | Cycle backwards through the most recently used, taking the active window with you |
+| <kbd>Super</kbd><kbd>Page_Down</kbd>/<kbd>Page_Up</kbd>                | Cycle sequentially through workspaces                                             |
+| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Page_Down</kbd>/<kbd>Page_Up</kbd> | Cycle sequentially through workspaces, taking the active window with you          |
+
 
 | Monitor Keybindings                                                 |                                            |
 | ------                                                              | -------                                    |
