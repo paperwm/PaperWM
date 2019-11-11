@@ -334,6 +334,12 @@ function init() {
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces');
     registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated');
 
+    // Work around https://gitlab.gnome.org/GNOME/gnome-shell/issues/1884
+    if (!WindowManager.WindowManager._removeEffect) {
+        registerOverridePrototype(WindowManager.WindowManager, '_mapWindowOverwrite',
+                                  WindowManager.WindowManager.prototype._mapWindowDone);
+    }
+
     if (version[1] > 32)
         registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', computeLayout);
 
