@@ -337,7 +337,11 @@ function init() {
     // Work around https://gitlab.gnome.org/GNOME/gnome-shell/issues/1884
     if (!WindowManager.WindowManager._removeEffect) {
         registerOverridePrototype(WindowManager.WindowManager, '_mapWindowOverwrite',
-                                  WindowManager.WindowManager.prototype._mapWindowDone);
+                                  function (shellwm, actor) {
+                                      if (this._mapping.delete(actor)) {
+                                          shellwm.completed_map(actor);
+                                      }
+                                  });
     }
 
     if (version[1] > 32)
