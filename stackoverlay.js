@@ -87,6 +87,9 @@ class ClickOverlay {
         this.signals.connect(
             enterMonitor, 'motion-event',
             (actor, event) => {
+                // Changing monitors while in workspace preview doesn't work
+                if (Tiling.inPreview)
+                    return;
                 let [x, y, z] = global.get_pointer();
                 let [lX, lY] = this._lastPointer;
                 this._lastPointer = [x, y];
