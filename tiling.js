@@ -1527,7 +1527,8 @@ class Spaces extends Map {
         let out = [];
         for (let i=0; i<nWorkspaces; i++) {
             let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
-            if (space.monitor === monitor)
+            if (space.monitor === monitor ||
+                (space.length === 0 && this.monitors.get(space.monitor) !== space))
                 out.push(space);
         }
         return out;
@@ -1569,8 +1570,7 @@ class Spaces extends Map {
         const to = monitorSpaces.indexOf(toSpace);
         monitorSpaces.forEach((space, i) => {
 
-            // This should be reduntant, but some reduncancy doesn't hurt
-            space.clip.set_position(currentMonitor.x, currentMonitor.y);
+            space.setMonitor(currentMonitor, false);
             space.startAnimate();
 
             Tweener.removeTweens(space.border);
@@ -1695,12 +1695,16 @@ class Spaces extends Map {
 
         let cloneParent = space.clip.get_parent();
         mru.forEach((space, i) => {
-            space.clip.set_position(monitor.x, monitor.y);
             space.startAnimate();
 
-            let scaleX = monitor.width/space.width;
-            let scaleY = monitor.height/space.height;
-            space.clip.set_scale(scaleX, scaleY);
+            if (space.length !== 0) {
+                let scaleX = monitor.width/space.width;
+                let scaleY = monitor.height/space.height;
+                space.clip.set_scale(scaleX, scaleY);
+                space.clip.set_position(monitor.x, monitor.y);
+            } else {
+                space.setMonitor(monitor);
+            }
 
             Tweener.removeTweens(space.border);
             space.border.opacity = 255;
