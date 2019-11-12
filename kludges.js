@@ -335,7 +335,7 @@ function init() {
     registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated');
 
     // Work around https://gitlab.gnome.org/GNOME/gnome-shell/issues/1884
-    if (!WindowManager.WindowManager._removeEffect) {
+    if (!WindowManager.WindowManager.prototype._removeEffect) {
         registerOverridePrototype(WindowManager.WindowManager, '_mapWindowOverwrite',
                                   function (shellwm, actor) {
                                       if (this._mapping.delete(actor)) {
