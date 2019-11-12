@@ -49,7 +49,8 @@ var sizeSlack = 30;
 
 var panelBox = Main.layoutManager.panelBox;
 
-var inPreview = false;
+var PreviewMode = {NONE: 0, STACK: 1, SEQUENTIAL: 2};
+var inPreview = PreviewMode.NONE;
 
 var signals, oldSpaces, backgroundGroup, oldMonitors, WindowCloneLayout,
     grabSignals;
@@ -1484,17 +1485,19 @@ class Spaces extends Map {
         let to = workspaceManager.get_workspace_by_index(toIndex);
         let from = workspaceManager.get_workspace_by_index(fromIndex);
         let toSpace = this.spaceOf(to);
+        let fromSpace = this.spaceOf(from);
 
-        if (!inPreview)
-            this._initWorkspaceStack();
+        if (inPreview === PreviewMode.NONE && toSpace.monitor === fromSpace.monitor) {
+            // Only start an animation if we're moving between workspaces on the
+            // same monitor
+            this._initWorkspaceSequence();
+        }
 
         this.stack = this.stack.filter(s => s !== toSpace);
         this.stack = [toSpace, ...this.stack];
 
         let monitor = toSpace.monitor;
         this.monitors.set(monitor, toSpace);
-
-        let fromSpace = this.spaceOf(from);
 
         this.animateToSpace(toSpace, fromSpace);
 
@@ -1515,13 +1518,169 @@ class Spaces extends Map {
                 continue;
             monitor.clickOverlay.activate();
         }
+
+        inPreview = PreviewMode.NONE;
+    }
+
+    _getOrderedSpaces(monitor) {
+        let nWorkspaces = workspaceManager.n_workspaces;
+        let out = [];
+        for (let i=0; i<nWorkspaces; i++) {
+            let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
+            if (space.monitor === monitor)
+                out.push(space);
+        }
+        return out;
+    }
+
+    _initWorkspaceSequence() {
+        if (inPreview) {
+            return;
+        }
+        inPreview = PreviewMode.SEQUENTIAL;
+
+        this._animateToSpaceOrdered(this.selectedSpace, false);
+
+        let selected = this.selectedSpace.selectedWindow;
+        if (selected && selected.fullscreen) {
+            Tweener.addTween(selected.clone, {
+                y: Main.panel.actor.height + prefs.vertical_margin,
+                time: prefs.animation_time,
+            });
+        }
+    }
+
+    _animateToSpaceOrdered(toSpace, animate = true) {
+        // Always show the topbar when using the workspace stack
+        TopBar.show();
+
+        toSpace = toSpace || this.selectedSpace;
+        let monitorSpaces = this._getOrderedSpaces(toSpace.monitor);
+
+        if (Main.panel.statusArea.appMenu) {
+            Main.panel.statusArea.appMenu.container.hide();
+        }
+
+        let currentMonitor = toSpace.monitor;
+        this.selectedSpace = toSpace;
+
+        const scale = 1;
+        const padding_percentage = 4;
+        const to = monitorSpaces.indexOf(toSpace);
+        monitorSpaces.forEach((space, i) => {
+
+            // This should be reduntant, but some reduncancy doesn't hurt
+            space.clip.set_position(currentMonitor.x, currentMonitor.y);
+            space.startAnimate();
+
+            Tweener.removeTweens(space.border);
+            space.border.opacity = 255;
+            space.border.show();
+
+            space.actor.show();
+
+            let padding = (space.height * scale / 100) * padding_percentage;
+            let y = ((space.height + padding) * (i - to)) * scale;
+            if (animate) {
+                Tweener.addTween(space.actor, {
+                    time: prefs.animation_time,
+                    y, scale_y: scale, scale_x: scale,
+                });
+            } else {
+                // Remove any lingering onComplete handlers from animateToSpace
+                Tweener.removeTweens(space.actor);
+
+                space.actor.y = y;
+                space.actor.scale_y = scale;
+                space.actor.scale_x = scale;
+            }
+
+            let selected = space.selectedWindow;
+            if (selected && selected.fullscreen && space !== toSpace) {
+                selected.clone.y = Main.panel.actor.height + prefs.vertical_margin;
+            }
+        });
+    }
+
+    selectSequenceSpace(direction, move) {
+
+        // if in stack preview do not run sequence preview
+        if (inPreview === PreviewMode.STACK) {
+            return;
+        }
+
+        let currentSpace = this.spaceOf(workspaceManager.get_active_workspace());
+        let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
+
+        if (!inPreview) {
+            this._initWorkspaceSequence();
+        }
+
+        let from = monitorSpaces.indexOf(this.selectedSpace);
+        let newSpace = this.selectedSpace;
+        let to = from;
+        if (move && this.selectedSpace.selectedWindow) {
+            takeWindow(this.selectedSpace.selectedWindow,
+                       this.selectedSpace,
+                       {navigator: Navigator.getNavigator()});
+        }
+
+        if (direction === Meta.MotionDirection.DOWN)
+            to = from + 1;
+        else
+            to = from - 1;
+
+        // wrap around workspaces
+        if (to < 0) {
+            to = monitorSpaces.length - 1;
+        } else if (to >= monitorSpaces.length) {
+            to = 0;
+        }
+
+        if (to === from && Tweener.isTweening(newSpace.actor))
+            return;
+
+        newSpace = monitorSpaces[to];
+        this.selectedSpace = newSpace;
+
+        TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
+
+        const scale = 0.825;
+        const padding_percentage = 4;
+        let last = monitorSpaces.length - 1;
+        monitorSpaces.forEach((space, i) => {
+            let actor = space.actor;
+
+            let padding = (space.height * scale / 100) * padding_percentage;
+            let center = (space.height - (space.height * scale)) / 2;
+            let space_y;
+            if (to === 0) {
+                space_y = padding + (space.height + padding) * (i - to) * scale;
+            } else if (to == last) {
+                space_y = (center*2 - padding) + (space.height + padding) * (i - to) * scale;
+            } else {
+                space_y = center + (space.height + padding) * (i - to) * scale;
+            }
+
+            actor.show();
+            Tweener.addTween(actor,
+                             {y: space_y,
+                              time: prefs.animation_time,
+                              scale_x: scale,
+                              scale_y: scale,
+                             });
+
+        });
     }
 
     _initWorkspaceStack() {
+
         if (inPreview)
             return;
+
+        inPreview = PreviewMode.STACK;
+
         // Always show the topbar when using the workspace stack
-        inPreview = true;
         TopBar.show();
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
@@ -1592,10 +1751,17 @@ class Spaces extends Map {
         }
     }
 
-    selectSpace(direction, move) {
+    selectStackSpace(direction, move) {
+
+        // if in sequence preview do not run stack preview
+        if (inPreview === PreviewMode.SEQUENTIAL) {
+            return;
+        }
+
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
         let mru = [...this.stack];
+
         this.monitors.forEach(space => mru.splice(mru.indexOf(space), 1));
         mru = [space, ...mru];
 
@@ -1665,7 +1831,10 @@ class Spaces extends Map {
     }
 
     animateToSpace(to, from, callback) {
-        inPreview = false;
+
+        let currentPreviewMode = inPreview;
+        inPreview = PreviewMode.NONE;
+
         TopBar.updateWorkspaceIndicator(to.workspace.index());
 
         this.selectedSpace = to;
@@ -1679,10 +1848,54 @@ class Spaces extends Map {
             from.startAnimate();
         }
 
-
         let visible = new Map();
         for (let [monitor, space] of this.monitors) {
             visible.set(space, true);
+        }
+
+        let onComplete = () => {
+            // Hide any spaces that aren't visible This
+            // avoids a nasty permance degregration in some
+            // cases
+            for (const space of spaces.values()) {
+                if (!visible.get(space)) {
+                    space.actor.hide();
+                }
+            }
+
+            Tweener.addTween(to.border, {
+                opacity: 0,
+                time: prefs.animation_time,
+                onComplete: () => {
+                    to.border.hide();
+                    to.border.opacity = 255;
+                }
+            });
+            to.clip.raise_top();
+
+            // Fixes a weird bug where mouse input stops
+            // working after mousing to another monitor on
+            // X11.
+            !Meta.is_wayland_compositor() && to.startAnimate();
+
+            to.moveDone();
+            callback && callback();
+        };
+
+        if (currentPreviewMode === PreviewMode.SEQUENTIAL) {
+            this._animateToSpaceOrdered(to, true);
+            let t = to.actor.get_transition('y');
+            let time = GLib.get_monotonic_time();
+            if (t) {
+                t && t.connect('stopped', (t, finished) => {
+                    finished && onComplete();
+                });
+            } else {
+                // When switching between monitors there's no animation we can
+                // connect to
+                onComplete();
+            }
+            return;
         }
 
         Tweener.addTween(to.actor,
@@ -1691,37 +1904,9 @@ class Spaces extends Map {
                            scale_x: 1,
                            scale_y: 1,
                            time: prefs.animation_time,
-                              onComplete: () => {
-                               // Meta.enable_unredirect_for_screen(screen);
-
-                               // Hide any spaces that aren't visible This
-                               // avoids a nasty permance degregration in some
-                               // cases
-                               for (const space of spaces.values()) {
-                                   if (!visible.get(space)) {
-                                       space.actor.hide();
-                                   }
-                               }
-
-                               Tweener.addTween(to.border, {
-                                   opacity: 0,
-                                   time: prefs.animation_time,
-                                   onComplete: () => {
-                                       to.border.hide();
-                                       to.border.opacity = 255;
-                                   }
-                               });
-                               to.clip.raise_top();
-
-                               // Fixes a weird bug where mouse input stops
-                               // working after mousing to another monitor on
-                               // X11.
-                               !Meta.is_wayland_compositor() && to.startAnimate();
-
-                               to.moveDone();
-                               callback && callback();
-                           }
+                           onComplete
                          });
+
 
         // Animate all the spaces above `to` down below the monitor. We get
         // these spaces by looking at siblings of upper most actor, ie. the
@@ -1736,6 +1921,7 @@ class Spaces extends Map {
             }
             above = above.get_next_sibling();
         }
+
     }
 
     addSpace(workspace) {
@@ -2100,7 +2286,7 @@ function insertWindow(metaWindow) {
 
         if (focusWindow === metaWindow) {
             focusWindow = mru[1];
-        } 
+        }
 
         let scratchIsFocused = Scratch.isScratchWindow(focusWindow);
         let addToScratch = scratchIsFocused;
@@ -2825,20 +3011,37 @@ function barf(metaWindow) {
 }
 
 function selectPreviousSpace(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.DOWN);
+    spaces.selectStackSpace(Meta.MotionDirection.DOWN);
 }
 
 function selectPreviousSpaceBackwards(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.UP);
+    spaces.selectStackSpace(Meta.MotionDirection.UP);
 }
 
 function movePreviousSpace(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.DOWN, true);
+    spaces.selectStackSpace(Meta.MotionDirection.DOWN, true);
 }
 
 function movePreviousSpaceBackwards(mw, space) {
-    spaces.selectSpace(Meta.MotionDirection.UP, true);
+    spaces.selectStackSpace(Meta.MotionDirection.UP, true);
 }
+
+function selectDownSpace(mw, space) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN);
+}
+
+function selectUpSpace(mw, space) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.UP);
+}
+
+function moveDownSpace(mw, space) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN, true);
+}
+
+function moveUpSpace(mw, space) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.UP, true);
+}
+
 
 /**
    Detach the @metaWindow, storing it at the bottom right corner while

@@ -20,22 +20,42 @@
     </key>
 
     <key type="as" name="previous-workspace">
-      <default><![CDATA[['<Super>Above_Tab', '<Super>Page_Down']]]></default>
+      <default><![CDATA[['<Super>Above_Tab']]]></default>
       <summary>Switch to previously active workspace</summary>
     </key>
     <key type="as" name="previous-workspace-backward">
-      <default><![CDATA[['<Super><Shift>Above_Tab',  '<Super>Page_Up']]]></default>
+      <default><![CDATA[['<Super><Shift>Above_Tab']]]></default>
       <summary>Switch to the previously active workspace, backward order</summary>
     </key>
 
     <key type="as" name="move-previous-workspace">
-      <default><![CDATA[['<Super><Ctrl>Above_Tab', '<Super><Ctrl>Page_Down']]]></default>
+      <default><![CDATA[['<Super><Ctrl>Above_Tab']]]></default>
       <summary>Move the active window to the previously active workspace</summary>
     </key>
     <key type="as" name="move-previous-workspace-backward">
-      <default><![CDATA[['<Super><Shift><Ctrl>Above_Tab', '<Super><Ctrl>Page_Up']]]></default>
+      <default><![CDATA[['<Super><Shift><Ctrl>Above_Tab']]]></default>
       <summary>Move the active window to the previously active workspace, backward order</summary>
     </key>
+
+    <key type="as" name="switch-down-workspace">
+      <default><![CDATA[['<Super>Page_Down']]]></default>
+      <summary>Switch to workspace below</summary>
+    </key>
+
+    <key type="as" name="switch-up-workspace">
+      <default><![CDATA[['<Super>Page_Up']]]></default>
+      <summary>Switch to workspace above</summary>
+    </key>
+
+    <key type="as" name="move-down-workspace">
+      <default><![CDATA[['<Super><Ctrl>Page_Down']]]></default>
+      <summary>Move window one workspace down</summary>
+    </key>
+    <key type="as" name="move-up-workspace">
+      <default><![CDATA[['<Super><Ctrl>Page_Up']]]></default>
+      <summary>Move window one workspace up</summary>
+    </key>
+
 
     <key type="as" name="move-monitor-right">
         <default><![CDATA[['<Super><Shift><Ctrl>Right']]]></default>
