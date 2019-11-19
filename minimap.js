@@ -28,61 +28,6 @@ function calcOffset(metaWindow) {
     return [x_offset, y_offset];
 }
 
-var WindowCloneLayout = new Lang.Class({
-    Name: 'PaperWindowCloneLayout',
-    Extends: Clutter.LayoutManager,
-
-    _init: function(minimap) {
-        this.parent();
-        this.minimap = minimap;
-    },
-
-    _makeBoxForWindow: function(window) {
-        // We need to adjust the position of the actor because of the
-        // consequences of invisible borders -- in reality, the texture
-        // has an extra set of "padding" around it that we need to trim
-        // down.
-
-        // The outer rect (from which we compute the bounding box)
-        // paradoxically is the smaller rectangle, containing the positions
-        // of the visible frame. The input rect contains everything,
-        // including the invisible border padding.
-        let inputRect = window.get_buffer_rect();
-        let frame = window.get_frame_rect();
-
-        let box = new Clutter.ActorBox();
-
-        box.set_origin(((inputRect.x - frame.x)*MINIMAP_SCALE),
-                       (inputRect.y - frame.y)*MINIMAP_SCALE);
-        box.set_size(inputRect.width*MINIMAP_SCALE,
-                     inputRect.height*MINIMAP_SCALE - prefs.window_gap);
-
-        return box;
-    },
-
-    vfunc_get_preferred_height: function(container, forWidth) {
-        let frame = container.get_first_child().meta_window.get_frame_rect();
-        return [MINIMAP_SCALE*frame.height,
-                MINIMAP_SCALE*frame.height - prefs.window_gap];
-    },
-
-    vfunc_get_preferred_width: function(container, forHeight) {
-        let frame = container.get_first_child().meta_window.get_frame_rect();
-        return [MINIMAP_SCALE*frame.width, MINIMAP_SCALE*frame.width];
-    },
-
-    vfunc_allocate: function(container, box, flags) {
-        let child = container.first_child;
-        let realWindow = child.source;
-        if (!realWindow)
-            return;
-
-        child.allocate(this._makeBoxForWindow(realWindow.meta_window),
-                       flags);
-        this.minimap.layout();
-    }
-});
-
 class Minimap extends Array {
     constructor(space, monitor) {
         super();
@@ -121,6 +66,7 @@ class Minimap extends Array {
         this.signals.connect(space, 'select', this.select.bind(this));
         this.signals.connect(space, 'window-added', this.addWindow.bind(this));
         this.signals.connect(space, 'window-removed', this.removeWindow.bind(this));
+        this.signals.connect(space, 'layout', this.layout.bind(this));
         this.signals.connect(space, 'swapped', this.swapped.bind(this));
         this.signals.connect(space, 'full-layout', this.reset.bind(this));
 
@@ -192,14 +138,27 @@ class Minimap extends Array {
         let windowActor = mw.get_compositor_private();
         let clone = new Clutter.Clone({ source: windowActor });
         let container = new Clutter.Actor({
-            layout_manager: new WindowCloneLayout(this),
+            // layout_manager: new WindowCloneLayout(this),
             name: "window-clone-container"
         });
         clone.meta_window = mw;
+        container.clone = clone;
         container.meta_window = mw;
         container.add_actor(clone);
         this.container.add_actor(container);
+        this._allocateClone(container);
         return container;
+    }
+
+    _allocateClone(container) {
+        let clone = container.clone;
+        let meta_window = clone.meta_window;
+        let buffer = meta_window.get_buffer_rect();
+        let frame = meta_window.get_frame_rect();
+        clone.set_size(buffer.width*MINIMAP_SCALE, buffer.height*MINIMAP_SCALE - prefs.window_gap);
+        clone.set_position(((buffer.x - frame.x)*MINIMAP_SCALE),
+                           (buffer.y - frame.y)*MINIMAP_SCALE);
+        container.set_size(frame.width*MINIMAP_SCALE, frame.height*MINIMAP_SCALE);
     }
 
     layout() {
@@ -211,6 +170,7 @@ class Minimap extends Array {
             let y = 0, w = 0;
             for (let c of column) {
                 c.set_position(x, y);
+                this._allocateClone(c);
                 w = Math.max(w, c.width);
                 y += c.height;
             }
