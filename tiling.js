@@ -482,6 +482,8 @@ class Space extends Array {
         } else {
             this.moveDone();
         }
+
+        this.emit('layout', this);
     }
 
     queueLayout() {
@@ -3087,7 +3089,6 @@ function takeWindow(metaWindow, space, {navigator}) {
                        (0.1*space.monitor.width*(1 +navigator._moving.length)));
     let y = Math.round(space.monitor.y + space.monitor.height*2/3)
         + 20*navigator._moving.length;
-    metaWindow.move_frame(true, x, y);
     animateWindow(metaWindow);
     Tweener.addTween(metaWindow.clone,
                      {x, y,
