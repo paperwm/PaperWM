@@ -2016,7 +2016,7 @@ class Spaces extends Map {
         */
         signals.connectOneShot(actor, 'first-frame', () =>  {
             allocateClone(metaWindow);
-            insertWindow(metaWindow);
+            insertWindow(metaWindow, {existing: false});
         });
     };
 
@@ -2248,7 +2248,7 @@ function add_handler(ws, metaWindow) {
     let actor = metaWindow.get_compositor_private();
     if (actor) {
         // Set position and hookup signals, with `existing` set to true
-        insertWindow(metaWindow);
+        insertWindow(metaWindow, {existing: true && !metaWindow.redirected});
         delete metaWindow.redirected;
     }
     // Otherwise we're dealing with a new window, so we let `window-created`
@@ -2262,8 +2262,7 @@ function add_handler(ws, metaWindow) {
    and `Display::window-created` through `WindowActor::show` if window is newly
    created to ensure that the WindowActor exists.
 */
-function insertWindow(metaWindow) {
-    let existing = !metaWindow.unmapped;
+function insertWindow(metaWindow, {existing}) {
 
     // Add newly created windows to the space being previewed
     if (!existing &&
@@ -2576,7 +2575,7 @@ function grabEnd(metaWindow, type) {
         if (workspace === 'all')
             return; // Moved to the shared monitor space
         else if (metaWindow.get_workspace() === workspace)
-            insertWindow(metaWindow);
+            insertWindow(metaWindow, {existing: true});
         else
             metaWindow.change_workspace(workspace);
         if (workspace)
@@ -3068,7 +3067,7 @@ function takeWindow(metaWindow, space, {navigator}) {
             navigator._moving.reverse().forEach(w => {
                 w.change_workspace(space.workspace);
                 if (w.get_workspace() === space.workspace) {
-                    insertWindow(w);
+                    insertWindow(w, {existing: true});
                 }
             });
         });
