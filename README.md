@@ -25,7 +25,7 @@ git clone 'https://github.com/paperwm/PaperWM.git' \
 
 You can then enable the extension in Gnome Tweaks, or enable if from the command line:
 ```bash
-gnome-shell-extension-tool -e paperwm@hedning:matrix.org
+gnome-extensions enable paperwm@hedning:matrix.org
 ```
 
 There's a few Gnome Shell settings which works poorly with PaperWM. To use the recommended settings run [`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost. (The script will turn `auto-maximize`, `edge-tiling`, `attach-modal-dialogs` and `workspaces-only-on-primary` off).
