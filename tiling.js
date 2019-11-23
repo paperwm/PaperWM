@@ -2676,8 +2676,17 @@ var focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
  */
 function minimizeHandler(metaWindow) {
     debug('minimized', metaWindow.title);
+    let space = spaces.spaceOfWindow(metaWindow);
     if (metaWindow.minimized) {
-        Scratch.makeScratch(metaWindow);
+        if (space.indexOf(metaWindow) !== -1) {
+            space.removeWindow(metaWindow);
+        } else {
+            Scratch.makeScratch(metaWindow);
+        }
+    } else {
+        if (!Scratch.isScratchWindow(metaWindow) && !space._floating.includes(metaWindow)) {
+            insertWindow(metaWindow, {existing: false});
+        }
     }
 }
 var minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
