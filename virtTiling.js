@@ -20,16 +20,17 @@ function repl() {
     virtStage.destroy()
     let stageStyle = `background-color: white;`
     let virtStage = new St.Widget({
-        style: stageStyle, height: 200, width: 800
+        style: stageStyle, height: 80, width: 800
     })
 
     let canvasStyle = `background-color: yellow;`
+    canvasStyle = ""
     let canvas = new St.Widget({name: "canvas", style: canvasStyle, x: 5, y: 5})
     let monitorStyle = `background-color: blue;`
     let monitor = new St.Widget({
         name: "monitor0", 
         style: monitorStyle,
-        x: 0, y: 0, width: 300, height: virtStage.height - 10
+        x: virtStage.width/2 - 300/2, y: 0, width: 300, height: virtStage.height - 10
     })
 
     let panel = new St.Widget({
@@ -56,7 +57,7 @@ function repl() {
     monitor.add_actor(panel)
 
     canvas.add_actor(tilingContainer)
-    virtStage.x = 1300
+    virtStage.x = 1000
 
     renderAndView(
         tilingContainer,
@@ -67,10 +68,35 @@ function repl() {
         )
     )
 
-    virtStage.show()
+    let columns = layout(
+        fromSpace(space),
+        workArea,
+        prefs
+    )
+    monitor.x
+    columns[1][0].x
+    movecolumntoviewportposition(tilingContainer, monitor, columns[1][0], 30)
+
     virtStage.hide()
+    virtStage.show()
 }
 
+/** tiling position given:
+    m_s: monitor position
+    w_m: window position (relative to monitor)
+    w_t: window position (relative to tiling)
+ */
+function t_s(m_s, w_m, w_t) {
+    return w_m - w_t + m_s
+}
+
+/**
+   Calculates the tiling position such that column `k` is positioned at `x`
+   relative to the viewport (or workArea?)
+ */
+function movecolumntoviewportposition(tilingActor, viewport, window, x) {
+    tilingActor.x = t_s(viewport.x, x, window.x)
+}
 
 function renderAndView(container, columns) {
     let tiling = render(columns)
@@ -126,7 +152,7 @@ function allocateDefault(column, availableHeight, preAllocatedWindow) {
     } else {
         // Distribute available height amongst non-selected windows in proportion to their existing height
         const gap = prefs.window_gap;
-        const minHeight = 20;
+        const minHeight = 15;
 
         function heightOf(window) {
             return window.height
@@ -231,7 +257,7 @@ function layout(columns, workArea, prefs, options={}) {
     }
 
     let y0 = workArea.y
-    let x = workArea.x
+    let x = 0
 
     for (let i = 0; i < columns.length; i++) {
         let column = columns[i];
