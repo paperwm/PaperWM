@@ -16,10 +16,14 @@ let prefs = {
     minimum_margin: 3,
 }
 
+var virtStage = null
+
 function repl() {
-    virtStage.destroy()
+    if (virtStage)
+        virtStage.destroy()
+
     let stageStyle = `background-color: white;`
-    let virtStage = new St.Widget({
+    virtStage = new St.Widget({
         style: stageStyle, height: 80, width: 800
     })
 
@@ -73,8 +77,7 @@ function repl() {
         workArea,
         prefs
     )
-    monitor.x
-    columns[1][0].x
+
     movecolumntoviewportposition(tilingContainer, monitor, columns[1][0], 30)
 
     virtStage.hide()
@@ -123,8 +126,8 @@ function fromSpace(space) {
 /** Render a dummy view of the windows */
 function render(columns) {
     let windowStyle = `border: black solid 1px; background-color: red`
-    let tilingStyle = `background-color: yellow`
-    tilingStyle = ""
+    let tilingStyle = `background-color: rgba(190, 190, 0, 0.5);`
+    // tilingStyle = ""
     let tiling = new St.Widget({name: "tiling", style: tilingStyle})
 
     function createWindowActor(window) {
