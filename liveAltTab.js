@@ -29,7 +29,7 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
 
     _getWindowList(reverse) {
         let tabList = global.display.get_tab_list(
-            Meta.TabList.NORMAL,
+            Meta.TabList.NORMAL_ALL,
             global.workspace_manager.get_active_workspace())
             .filter(w => !Scratch.isScratchWindow(w));
 
