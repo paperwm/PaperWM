@@ -14,6 +14,7 @@ if (imports.misc.extensionUtils.extensions) {
 
 
 var Meta = imports.gi.Meta;
+var Gio = imports.gi.Gio;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var Workspace = imports.ui.workspace;
@@ -536,6 +537,7 @@ function computeLayout(windows, layout) {
     layout.gridHeight = gridHeight;
 }
 
+const wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
 function _checkWorkspaces() {
     let workspaceManager = global.workspace_manager;
     let i;
@@ -581,6 +583,15 @@ function _checkWorkspaces() {
         emptyWorkspaces[workspaceIndex] = false;
     }
 
+    let minimum = wmSettings.get_int('num-workspaces');
+    // Make sure we have a minimum number of spaces
+    for (i = 0; i < Math.max(Main.layoutManager.monitors.length, minimum); i++) {
+        if (i >= emptyWorkspaces.length) {
+            workspaceManager.append_new_workspace(false, global.get_current_time());
+            emptyWorkspaces.push(true);
+        }
+    }
+
     // If we don't have an empty workspace at the end, add one
     if (!emptyWorkspaces[emptyWorkspaces.length -1]) {
         workspaceManager.append_new_workspace(false, global.get_current_time());
@@ -590,20 +601,25 @@ function _checkWorkspaces() {
     let lastIndex = emptyWorkspaces.length - 1;
     let lastEmptyIndex = emptyWorkspaces.lastIndexOf(false) + 1;
     let activeWorkspaceIndex = workspaceManager.get_active_workspace_index();
+
+    // Keep the active workspace
     emptyWorkspaces[activeWorkspaceIndex] = false;
+
+    // Keep a minimum number of spaces
+    for (i = 0; i < Math.max(Main.layoutManager.monitors.length, minimum); i++) {
+        emptyWorkspaces[i] = false;
+    }
+
+    // Keep visible spaces
+    for (let [monitor, space] of Tiling.spaces.monitors) {
+        emptyWorkspaces[space.workspace.index()] = false;
+    }
 
     // Delete empty workspaces except for the last one; do it from the end
     // to avoid index changes
     for (i = lastIndex; i >= 0; i--) {
-        if (workspaceManager.n_workspaces <= Main.layoutManager.monitors.length + 1)
-            break;
         if (emptyWorkspaces[i] && i != lastEmptyIndex) {
-            let space = Tiling.spaces.spaceOf(this._workspaces[i]);
-            let visibleSpace = Tiling.spaces.monitors.get(space.monitor);
-            // Never remove visible spaces
-            if (space !== visibleSpace) {
-                workspaceManager.remove_workspace(this._workspaces[i], global.get_current_time());
-            }
+            workspaceManager.remove_workspace(this._workspaces[i], global.get_current_time());
         }
     }
 

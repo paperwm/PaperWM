@@ -1210,6 +1210,9 @@ class Spaces extends Map {
     }
 
     init() {
+        // Create extra workspaces if required
+        Main.wm._workspaceTracker._checkWorkspaces()
+
         this.signals.connect(global.screen || display,
                         'window-left-monitor',
                         this.windowLeftMonitor.bind(this));
