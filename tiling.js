@@ -1545,6 +1545,10 @@ class Spaces extends Map {
         }
         inPreview = PreviewMode.SEQUENTIAL;
 
+        if (Main.panel.statusArea.appMenu) {
+            Main.panel.statusArea.appMenu.container.hide();
+        }
+
         this._animateToSpaceOrdered(this.selectedSpace, false);
 
         let selected = this.selectedSpace.selectedWindow;
@@ -1562,10 +1566,6 @@ class Spaces extends Map {
 
         toSpace = toSpace || this.selectedSpace;
         let monitorSpaces = this._getOrderedSpaces(toSpace.monitor);
-
-        if (Main.panel.statusArea.appMenu) {
-            Main.panel.statusArea.appMenu.container.hide();
-        }
 
         let currentMonitor = toSpace.monitor;
         this.selectedSpace = toSpace;
