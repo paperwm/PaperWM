@@ -193,6 +193,11 @@ if (!Clutter.Actor.prototype.raise_top) {
     }
 }
 
+if (! Clutter.Vertex) {
+    const {Graphene} = imports.gi;
+    Clutter.Vertex = Graphene.Point3D;
+}
+
 // Workspace.Workspace._realRecalculateWindowPositions
 // Sort tiled windows in the correct order
 function _realRecalculateWindowPositions(flags) {
