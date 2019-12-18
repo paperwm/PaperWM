@@ -456,6 +456,16 @@ class WorkspaceMenu extends PanelMenu.Button {
         return Clutter.EVENT_PROPAGATE;
     }
 
+    vfunc_event(event) {
+        // Ugly hack to work on 3.34 at the same time as 3.36> vfunc_event is
+        // active on 3.34, but upstream still connects _onEvent resulting in
+        // double events.
+        if (Utils.version[1] < 35) {
+            return;
+        }
+        this._onEvent(null, event)
+    }
+
     // WorkspaceMenu.prototype._onOpenStateChanged = function
     _onOpenStateChanged(menu, open) {
         if (!open)
