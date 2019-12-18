@@ -173,6 +173,26 @@ if (version[0] >= 3 && version[1] < 34) {
     };
 }
 
+// Polyfill
+if (!Clutter.Actor.prototype.raise_top) {
+    Clutter.Actor.prototype.raise = function raise(above) {
+        const parent = this.get_parent();
+        if (!parent)
+            return;
+        parent.set_child_above_sibling(this, above);
+    }
+    Clutter.Actor.prototype.raise_top = function raise_top() {
+        this.raise(null);
+    }
+    Clutter.Actor.prototype.reparent = function reparent(newParent) {
+        const parent = this.get_parent();
+        if (parent) {
+            parent.remove_child(this);
+        }
+        newParent.add_child(this);
+    }
+}
+
 // Workspace.Workspace._realRecalculateWindowPositions
 // Sort tiled windows in the correct order
 function _realRecalculateWindowPositions(flags) {
