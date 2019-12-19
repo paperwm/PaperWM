@@ -18,6 +18,11 @@ Clone the repo and run the [`install.sh`](https://github.com/paperwm/PaperWM/blo
 ./install.sh
 ```
 
+You'll by default follow the
+[develop](https://github.com/paperwm/PaperWM/tree/develop) branch. If you want a
+possibly more stable experience you can follow the releases by checking out the
+[master](https://github.com/paperwm/PaperWM/tree/master) branch.
+
 Cloning the repo directly into `$XDG_DATA_HOME` also works:
 ```bash
 git clone 'https://github.com/paperwm/PaperWM.git' \
