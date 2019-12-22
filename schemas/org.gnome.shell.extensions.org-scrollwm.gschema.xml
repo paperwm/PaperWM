@@ -269,7 +269,7 @@
     </key>
 
     <key type="i" name="window-gap">
-      <default>10</default>
+      <default>20</default>
       <summary>Minimum gap between windows</summary>
     </key>
 
