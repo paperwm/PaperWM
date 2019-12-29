@@ -125,7 +125,7 @@ class Space extends Array {
         let clip = new Clutter.Actor();
         this.clip = clip;
         let actor = new Clutter.Actor();
-        actor.hide(); // We keep the space actor hidden when inactive due to performance
+        clip.hide(); // We keep the space actor hidden when inactive due to performance
         this.actor = actor;
         let cloneClip = new Clutter.Actor();
         this.cloneClip = cloneClip;
@@ -1298,7 +1298,7 @@ class Spaces extends Map {
             this.selectedSpace = mru[0];
             this.monitors.set(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
-                space.actor.show();
+                space.clip.show();
                 space.clip.raise_top();
             }
             this.forEach(space => {
@@ -1582,7 +1582,7 @@ class Spaces extends Map {
             space.border.opacity = 255;
             space.border.show();
 
-            space.actor.show();
+            space.clip.show();
 
             let padding = (space.height * scale / 100) * padding_percentage;
             let y = ((space.height + padding) * (i - to)) * scale;
@@ -1667,7 +1667,7 @@ class Spaces extends Map {
                 space_y = center + (space.height + padding) * (i - to) * scale;
             }
 
-            actor.show();
+            space.clip.show();
             Tweener.addTween(actor,
                              {y: space_y,
                               time: prefs.animation_time,
@@ -1715,7 +1715,7 @@ class Spaces extends Map {
             space.border.opacity = 255;
             space.border.show();
 
-            space.actor.show();
+            space.clip.show();
 
             let h;
             if (i === 0)
@@ -1726,7 +1726,7 @@ class Spaces extends Map {
                 h = StackPositions.top;
             else {
                 h = StackPositions.top;
-                space.actor.hide();
+                space.clip.hide();
             }
 
             space.actor.set_position(0, space.height*h);
@@ -1823,9 +1823,9 @@ class Spaces extends Map {
                 h = StackPositions.bottom;
 
             if (Math.abs(i - to) > 2) {
-                onComplete = () => space.actor.hide();
+                onComplete = () => space.clip.hide();
             } else {
-                space.actor.show();
+                space.clip.show();
             }
 
             Tweener.addTween(actor,
@@ -1848,7 +1848,7 @@ class Spaces extends Map {
 
         this.selectedSpace = to;
 
-        to.actor.show();
+        to.clip.show();
         let selected = to.selectedWindow;
         if (selected)
             ensureViewport(selected, to);
@@ -1868,7 +1868,7 @@ class Spaces extends Map {
             // cases
             for (const space of spaces.values()) {
                 if (!visible.get(space)) {
-                    space.actor.hide();
+                    space.clip.hide();
                 }
             }
 
