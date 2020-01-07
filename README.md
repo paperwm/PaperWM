@@ -40,7 +40,7 @@ recommended settings run
 The script will simply turn off`auto-maximize`, `edge-tiling`, `attach-modal-dialogs` and
 `workspaces-only-on-primary` ([#216](https://github.com/paperwm/PaperWM/issues/216)). A "restore previous settings" script is generated so the original settings is not lost.
 
-Running the extension will automatic install a user config file as described in [Development & user configuration](#development--user-configuration).
+Running the extension will automatically install a user config file as described in [Development & user configuration](#development--user-configuration).
 
 
 ### Note for Ubuntu users ###
