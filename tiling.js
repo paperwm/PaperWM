@@ -1323,16 +1323,15 @@ class Spaces extends Map {
             return;
         }
 
-
         // Persist as many monitors as possible
         for (let [oldMonitor, oldSpace] of oldMonitors) {
             let monitor = monitors[oldMonitor.index];
-            if (monitor &&
+            let space = this.get(oldSpace.workspace);
+            if (monitor && space &&
                 oldMonitor.width === monitor.width &&
                 oldMonitor.height === monitor.height &&
                 oldMonitor.x === monitor.x &&
                 oldMonitor.y === monitor.y) {
-                let space = this.get(oldSpace.workspace);
                 this.monitors.set(monitor, space);
                 space.setMonitor(monitor, false);
                 mru = mru.filter(s => s !== space);
