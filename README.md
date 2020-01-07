@@ -34,14 +34,18 @@ You can then enable the extension in Gnome Tweaks, or enable if from the command
 gnome-shell-extension-tool -e paperwm@hedning:matrix.org
 ```
 
-There's a few Gnome Shell settings which works poorly with PaperWM. To use the recommended settings run [`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost. (The script will turn `auto-maximize`, `edge-tiling`, `attach-modal-dialogs` and `workspaces-only-on-primary` off).
+There's a few Gnome Shell settings which works poorly with PaperWM. To use the
+recommended settings run
+[`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh).
+The script will simply turn off`auto-maximize`, `edge-tiling`, `attach-modal-dialogs` and
+`workspaces-only-on-primary` ([#216](https://github.com/paperwm/PaperWM/issues/216)). A "restore previous settings" script is generated so the original settings is not lost.
 
 Running the extension will automatic install a user config file as described in [Development & user configuration](#development--user-configuration).
 
 
 ### Note for Ubuntu users ###
 
-The desktop-icon extension (which is on by default) and PaperWM is not compatible (eg. #145).
+The desktop-icon extension (which is on by default) and PaperWM is not compatible (eg. [#145](https://github.com/paperwm/PaperWM/issues/145)).
 
 Ubuntu makes it difficult to disable desktop-icon so it is suggested to use vanilla gnome session instead `sudo apt install gnome-session` and select `gnome` or `gnome-wayland` using the gear icon on login.
 
