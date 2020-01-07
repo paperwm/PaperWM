@@ -2169,7 +2169,9 @@ function enable(errorNotification) {
         // gnome-shell)
         signals.connectOneShot(Main.layoutManager, 'startup-complete', initWorkspaces);
     } else {
-        initWorkspaces();
+        // NOTE: this needs to happen after kludges.enable() have run, so we do
+        // it in a timeout
+        imports.mainloop.timeout_add(0, initWorkspaces);
     }
 }
 
