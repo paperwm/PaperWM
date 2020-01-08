@@ -68,6 +68,8 @@ function makeScratch(metaWindow) {
 
     metaWindow[float] = true;
     metaWindow.make_above();
+    let space = Tiling.spaces.spaceOfWindow(metaWindow);
+    space.removeWindow(metaWindow);
     metaWindow.stick();  // NB! Removes the window from the tiling (synchronously)
 
     if (!metaWindow.minimized)
