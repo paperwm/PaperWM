@@ -1220,13 +1220,6 @@ class Spaces extends Map {
         // Create extra workspaces if required
         Main.wm._workspaceTracker._checkWorkspaces()
 
-        this.signals.connect(global.screen || display,
-                        'window-left-monitor',
-                        this.windowLeftMonitor.bind(this));
-        this.signals.connect(global.screen || display,
-                        "window-entered-monitor",
-                        this.windowEnteredMonitor.bind(this));
-
         this.signals.connect(display, 'window-created',
                         this.window_created.bind(this));
         this.signals.connect(display, 'grab-op-begin',
@@ -2030,32 +2023,6 @@ class Spaces extends Map {
             insertWindow(metaWindow, {existing: false});
         });
     };
-
-    windowLeftMonitor(screen, index, metaWindow) {
-        debug('window-left-monitor', index, metaWindow.title);
-    }
-
-    windowEnteredMonitor(screen, index, metaWindow) {
-        debug('window-entered-monitor', index, metaWindow.title);
-
-        if (!inGrab || inGrab.window !== metaWindow
-            || !metaWindow.get_compositor_private())
-            return;
-
-        let monitor = Main.layoutManager.monitors[index];
-        let toSpace = this.monitors.get(monitor);
-        if (toSpace && toSpace.monitor !== monitor)
-            return;
-
-        let from = spaces.spaceOfWindow(metaWindow);
-        // Remove the window immediately so the grab is free
-        from && from.removeWindow(metaWindow);
-        if (toSpace) {
-            inGrab.workspace = toSpace.workspace;
-        } else {
-            inGrab.workspace = 'all';
-        }
-    }
 }
 Signals.addSignalMethods(Spaces.prototype);
 
@@ -2566,62 +2533,41 @@ function move_to(space, metaWindow, { x, y, force }) {
 
 var inGrab = false;
 function grabBegin(metaWindow, type) {
-    // Don't handle pushModal grabs and SCD button (close/minimize/etc.) grabs
-    if (type === Meta.GrabOp.COMPOSITOR || type === Meta.GrabOp.FRAME_BUTTON)
-        return;
-    let space = spaces.spaceOfWindow(metaWindow);
-    inGrab = {window: metaWindow};
-    if (!space || space.indexOf(metaWindow) === -1)
-        return;
-    space.startAnimate();
-    let frame = metaWindow.get_frame_rect();
-    let anchor = metaWindow.clone.targetX + space.monitor.x;
-    let handler = getGrab(space, anchor);
-    grabSignals.connect(metaWindow, 'position-changed', handler);
-    Tweener.removeTweens(space.cloneContainer);
-    // Turn size/position animation off when grabbing a window with the mouse
+    switch(type) {
+        case Meta.GrabOp.COMPOSITOR:
+        case Meta.GrabOp.FRAME_BUTTON:
+            // Don't handle pushModal grabs and SCD button (close/minimize/etc.) grabs
+            break;
+        case Meta.GrabOp.MOVING:
+        case Meta.GrabOp.KEYBOARD_MOVING:
+            inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
+
+            if (!inGrab.initialSpace || inGrab.initialSpace.indexOf(metaWindow) === -1)
+                return;
+
+            inGrab.begin();
+            break;
+        case Meta.GrabOp.RESIZING_NW:
+        case Meta.GrabOp.RESIZING_N:
+        case Meta.GrabOp.RESIZING_NE:
+        case Meta.GrabOp.RESIZING_E:
+        case Meta.GrabOp.RESIZING_SW:
+        case Meta.GrabOp.RESIZING_S:
+        case Meta.GrabOp.RESIZING_SE:
+        case Meta.GrabOp.RESIZING_W:
+
+    }
 }
 
 function grabEnd(metaWindow, type) {
-    if (type === Meta.GrabOp.COMPOSITOR)
+    if (type === Meta.GrabOp.COMPOSITOR || type === Meta.GrabOp.FRAME_BUTTON)
         return;
-    grabSignals.destroy();
-    let dragInfo = inGrab;
-    inGrab = false;
-    if (dragInfo.workspace) {
-        let workspace = dragInfo.workspace;
-        if (workspace === 'all')
-            return; // Moved to the shared monitor space
-        else if (metaWindow.get_workspace() === workspace)
-            insertWindow(metaWindow, {existing: true});
-        else
-            metaWindow.change_workspace(workspace);
-        if (workspace)
-            Main.activateWindow(metaWindow);
-        return;
+
+    let grab = inGrab;
+    if (grab) {
+        inGrab = false;
+        grab.end();
     }
-    let space = spaces.spaceOfWindow(metaWindow);
-    let frame = metaWindow.get_frame_rect();
-    if (space.indexOf(metaWindow) === -1)
-        return;
-    let buffer = metaWindow.get_buffer_rect();
-    let clone = metaWindow.clone;
-    space.targetX = space.cloneContainer.x;
-    clone.targetX = frame.x - space.monitor.x - space.targetX;
-    clone.targetY = frame.y - space.monitor.y;
-    clone.set_position(clone.targetX,
-                       clone.targetY);
-    space.layout();
-    ensureViewport(metaWindow, space);
-}
-function getGrab(space, anchor) {
-    return (metaWindow) => {
-        if (inGrab.workspace)
-            return;
-        let frame = metaWindow.get_frame_rect();
-        space.cloneContainer.x = frame.x - anchor;
-        metaWindow.clone.y = frame.y - space.monitor.y;
-    };
 }
 
 // `MetaWindow::focus` handling
