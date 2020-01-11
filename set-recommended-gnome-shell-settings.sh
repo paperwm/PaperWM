@@ -13,6 +13,9 @@ if [[ $GNOME_SHELL_VERSION > "GNOME Shell 3.3" ]]; then
    USE_OVERRIDE_SCHEMA=true
 fi
 
+echo -e "#!/usr/bin/env bash\n\n" > $RESTORE_SETTINGS_SCRIPT
+chmod +x $RESTORE_SETTINGS_SCRIPT
+
 function set-with-backup {
     SCHEMA=$1
     KEY=$2
@@ -49,6 +52,7 @@ set-with-backup org.gnome.shell.overrides edge-tiling false
 
 # Attached modal dialogs isn't handled very well
 set-with-backup org.gnome.shell.overrides attach-modal-dialogs false
+
 
 
 echo
