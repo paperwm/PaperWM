@@ -50,6 +50,10 @@ set-with-backup org.gnome.shell.overrides edge-tiling false
 # Attached modal dialogs isn't handled very well
 set-with-backup org.gnome.shell.overrides attach-modal-dialogs false
 
+if [[ -e $RESTORE_SETTINGS_SCRIPT ]]; then
+    chmod +x $RESTORE_SETTINGS_SCRIPT
+fi
+
 
 echo
 echo "Run $RESTORE_SETTINGS_SCRIPT to revert changes"
