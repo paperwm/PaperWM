@@ -587,7 +587,6 @@ class Space extends Array {
             let workArea = this.workArea();
             this.targetX = workArea.x + Math.round((workArea.width - this.cloneContainer.width)/2);
         }
-        this.layout();
         this.emit('window-added', metaWindow, index, row);
         return true;
     }
@@ -2380,6 +2379,7 @@ function insertWindow(metaWindow, {existing}) {
         metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
         toggleMaximizeHorizontally(metaWindow);
     }
+    space.layout();
 
     if (!existing) {
         actor.opacity = 0;
