@@ -1312,6 +1312,8 @@ class Spaces extends Map {
 
             imports.mainloop.timeout_add(
                 20, () => { this._monitorsChanging = false; });
+
+            activeSpace.monitor.clickOverlay.deactivate();
         };
 
         if (this.onlyOnPrimary) {
