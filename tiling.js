@@ -774,6 +774,14 @@ class Space extends Array {
         return column.indexOf(metaWindow);
     }
 
+    /** Transform global coordinates to scroll cooridinates (cloneContainer relative) */
+    globalToScroll(gx, gy, useTarget=false) {
+        // NB: must use this.cloneContainer.transform_stage_point(gx, gy) if stuff is not simply translated
+        let x = gx - this.monitor.x - (useTarget ? this.targetX : this.cloneContainer.x);
+        let y = gy - this.monitor.y - this.cloneContainer.y;
+        return [x, y];
+    }
+
     moveDone() {
         if (this.cloneContainer.x !== this.targetX ||
             this.actor.y !== 0 ||
