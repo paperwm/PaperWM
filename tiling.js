@@ -126,7 +126,10 @@ class Space extends Array {
         let clip = new Clutter.Actor();
         this.clip = clip;
         let actor = new Clutter.Actor();
-        actor.hide(); // We keep the space actor hidden when inactive due to performance
+
+        this._visible = true;
+        this.hide(); // We keep the space actor hidden when inactive due to performance
+
         this.actor = actor;
         let cloneClip = new Clutter.Actor();
         this.cloneClip = cloneClip;
@@ -269,6 +272,29 @@ class Space extends Array {
                              this.updateBackground.bind(this));
         this.signals.connect(backgroundSettings, 'changed::picture-uri',
                              this.updateBackground.bind(this));
+    }
+
+    show() {
+        if (this._visible)
+            return;
+        this._visible = true;
+        this.clip.show();
+        for (let col of this) {
+            for (let w of col) {
+                let actor = w.get_compositor_private();
+                w.clone.cloneActor.source = actor;
+            }
+        }
+    }
+
+    hide() {
+        if (!this._visible)
+            return;
+        this._visible = false;
+        this.clip.hide();
+        for (let col of this)
+            for (let w of col)
+                w.clone.cloneActor.source = null;
     }
 
     workArea() {
@@ -1300,7 +1326,7 @@ class Spaces extends Map {
             this.selectedSpace = mru[0];
             this.monitors.set(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
-                space.actor.show();
+                space.show();
                 space.clip.raise_top();
             }
             this.forEach(space => {
@@ -1585,7 +1611,7 @@ class Spaces extends Map {
             space.border.opacity = 255;
             space.border.show();
 
-            space.actor.show();
+            space.show();
 
             let padding = (space.height * scale / 100) * padding_percentage;
             let y = ((space.height + padding) * (i - to)) * scale;
@@ -1653,7 +1679,6 @@ class Spaces extends Map {
         const padding_percentage = 4;
         let last = monitorSpaces.length - 1;
         monitorSpaces.forEach((space, i) => {
-            let actor = space.actor;
 
             let padding = (space.height * scale / 100) * padding_percentage;
             let center = (space.height - (space.height * scale)) / 2;
@@ -1666,8 +1691,8 @@ class Spaces extends Map {
                 space_y = center + (space.height + padding) * (i - to) * scale;
             }
 
-            actor.show();
-            Tweener.addTween(actor,
+            space.show();
+            Tweener.addTween(space.actor,
                              {y: space_y,
                               time: prefs.animation_time,
                               scale_x: scale,
@@ -1714,18 +1739,19 @@ class Spaces extends Map {
             space.border.opacity = 255;
             space.border.show();
 
-            space.actor.show();
-
             let h;
-            if (i === 0)
+            if (i === 0) {
                 h = 0;
-            else if (i === 1)
+                space.show();
+            } else if (i === 1) {
                 h = StackPositions.up;
-            else if (i === 2)
+                space.show();
+            } else if (i === 2) {
                 h = StackPositions.top;
-            else {
+                space.show();
+            } else {
                 h = StackPositions.top;
-                space.actor.hide();
+                space.hide();
             }
 
             space.actor.set_position(0, space.height*h);
@@ -1822,9 +1848,9 @@ class Spaces extends Map {
                 h = StackPositions.bottom;
 
             if (Math.abs(i - to) > 2) {
-                onComplete = () => space.actor.hide();
+                onComplete = () => space.hide();
             } else {
-                space.actor.show();
+                space.show();
             }
 
             Tweener.addTween(actor,
@@ -1847,7 +1873,7 @@ class Spaces extends Map {
 
         this.selectedSpace = to;
 
-        to.actor.show();
+        to.show();
         let selected = to.selectedWindow;
         if (selected)
             ensureViewport(selected, to);
@@ -1867,7 +1893,7 @@ class Spaces extends Map {
             // cases
             for (const space of spaces.values()) {
                 if (!visible.get(space)) {
-                    space.actor.hide();
+                    space.hide();
                 }
             }
 
@@ -2700,6 +2726,7 @@ function showWindow(metaWindow) {
     if (!actor)
         return false;
     metaWindow.clone.cloneActor.hide();
+    metaWindow.clone.cloneActor.source = null;
     actor.show();
     return true;
 }
@@ -2709,6 +2736,7 @@ function animateWindow(metaWindow) {
     if (!actor)
         return false;
     metaWindow.clone.cloneActor.show();
+    metaWindow.clone.cloneActor.source = actor;
     actor.hide();
     return true;
 }
