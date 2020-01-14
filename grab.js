@@ -233,10 +233,11 @@ var MoveGrab = class MoveGrab {
             space.targetX = x;
             space.cloneContainer.x = x;
         }
-        this.selectDndZone()
+
+        this.selectDndZone(single && onSame)
     }
 
-    selectDndZone() {
+    selectDndZone(initial=false) {
         let [gx, gy, $] = global.get_pointer();
 
         let monitor = monitorAtPoint(gx, gy);
@@ -265,7 +266,7 @@ var MoveGrab = class MoveGrab {
         if (newDndTarget !== this.dndTarget) {
             this.dndTarget && this.deactivateDndTarget(this.dndTarget);
             if (newDndTarget)
-                this.activateDndTarget(newDndTarget);
+                this.activateDndTarget(newDndTarget, initial);
         }
     }
     
@@ -397,21 +398,32 @@ var MoveGrab = class MoveGrab {
         metaWindow.change_workspace(space.workspace)
     }
 
-    activateDndTarget(zone) {
+    activateDndTarget(zone, first) {
         zone.space.selection.hide();
         this.dndTarget = zone;
 
-        let actor = zone.actor;
-        let initialSize = 0;
-        actor[zone.sizeProp] = initialSize;
-        actor[zone.originProp] = zone.center;
-
-        zone.actor.show();
-        Tweener.addTween(actor, {
+        let params = {
             time: prefs.animation_time,
             [zone.originProp]: zone.center - zone.marginA,
             [zone.sizeProp]: zone.marginA + zone.marginB,
-        });
+        };
+
+        if (first) {
+            params.height = zone.actor.height
+            params.y = zone.actor.y
+
+            let actor = this.window.get_compositor_private();
+            let space = zone.space;
+            zone.actor.set_position(...space.globalToScroll(...actor.get_transformed_position()))
+            zone.actor.set_size(...actor.get_transformed_size())
+        } else {
+            zone.actor[zone.sizeProp] = 0;
+            zone.actor[zone.originProp] = zone.center;
+        }
+
+        zone.actor.show();
+        zone.actor.raise_top();
+        Tweener.addTween(zone.actor, params);
     }
 
     deactivateDndTarget(zone) {
