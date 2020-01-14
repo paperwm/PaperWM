@@ -146,6 +146,15 @@ function createDnDZones(space) {
     }
 
     zones.push(mkColumnZone(space.cloneContainer.width + prefs.window_gap, [space.length]));
+    if (space.length === 0) {
+        space.targetX = Math.round(space.width/2);
+        space.cloneContainer.x = space.targetX;
+        let width = Math.round(space.width/2);
+        let zone = zones[0];
+        zone.rect.width = width;
+        zone.rect.x = -Math.round(width/2);
+        zone.rect.center = 0;
+    }
 
     return zones;
 }
