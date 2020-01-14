@@ -2091,6 +2091,9 @@ function destroyHandler(actor) {
 }
 
 function resizeHandler(metaWindow) {
+    if (inGrab && inGrab.window === metaWindow)
+        return;
+
     let f = metaWindow.get_frame_rect();
     let needLayout = false;
     if (metaWindow._targetWidth !== f.width || metaWindow._targetHeight !== f.height) {
@@ -2105,10 +2108,7 @@ function resizeHandler(metaWindow) {
 
     let selected = metaWindow === space.selectedWindow;
 
-    if (inGrab) {
-        // OK to layout directly from size-changed signal since layout wont resize the grab window
-        space.layout(false);
-    } else if (!space._inLayout && needLayout) {
+    if (!space._inLayout && needLayout) {
         // Restore window position when eg. exiting fullscreen
         !Navigator.navigating && selected
             && move_to(space, metaWindow, {
@@ -2571,7 +2571,17 @@ function grabBegin(metaWindow, type) {
         case Meta.GrabOp.RESIZING_S:
         case Meta.GrabOp.RESIZING_SE:
         case Meta.GrabOp.RESIZING_W:
-
+        case Meta.GrabOp.KEYBOARD_RESIZING_UNKNOWN:
+        case Meta.GrabOp.KEYBOARD_RESIZING_NW:
+        case Meta.GrabOp.KEYBOARD_RESIZING_N:
+        case Meta.GrabOp.KEYBOARD_RESIZING_NE:
+        case Meta.GrabOp.KEYBOARD_RESIZING_E:
+        case Meta.GrabOp.KEYBOARD_RESIZING_SW:
+        case Meta.GrabOp.KEYBOARD_RESIZING_S:
+        case Meta.GrabOp.KEYBOARD_RESIZING_SE:
+        case Meta.GrabOp.KEYBOARD_RESIZING_W:
+            inGrab = new Extension.imports.grab.ResizeGrab(metaWindow, type);
+            break;
     }
 }
 
