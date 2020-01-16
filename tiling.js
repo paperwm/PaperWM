@@ -425,14 +425,13 @@ class Space extends Array {
             targetWidth = Math.min(targetWidth, workArea.width - 2*minimumMargin());
 
             let resultingWidth, relayout;
-            if (inGrab && i === selectedIndex) {
+            let allocator = options.customAllocators && options.customAllocators[i];
+            if (inGrab && column.includes(inGrab.window) && !allocator) {
                 [resultingWidth, relayout] =
                     this.layoutGrabColumn(column, x, y0, targetWidth, availableHeight, time,
                                           selectedInColumn);
             } else {
-                let allocator = options.customAllocators && options.customAllocators[i];
                 allocator = allocator || allocateDefault;
-
                 let targetHeights = allocator(column, availableHeight, selectedInColumn);
                 [resultingWidth, relayout] =
                     this.layoutColumnSimple(column, x, y0, targetWidth, targetHeights, time);
@@ -787,8 +786,8 @@ class Space extends Array {
             this.actor.y !== 0 ||
             Navigator.navigating || inPreview ||
             Main.overview.visible ||
-            // Only block on grab if we haven't detached the window yet
-            (inGrab && !inGrab.workspace)
+            // Block when we're carrying a window in dnd
+            (inGrab && inGrab.dnd && inGrab.window)
            ) {
             return;
         }
@@ -2560,14 +2559,11 @@ function grabBegin(metaWindow, type) {
 }
 
 function grabEnd(metaWindow, type) {
-    if (type === Meta.GrabOp.COMPOSITOR || type === Meta.GrabOp.FRAME_BUTTON)
+    if (!inGrab)
         return;
 
-    let grab = inGrab;
-    if (grab) {
-        inGrab = false;
-        grab.end();
-    }
+    inGrab.end();
+    inGrab = false;
 }
 
 // `MetaWindow::focus` handling

@@ -384,6 +384,8 @@ var MoveGrab = class MoveGrab {
                     clone.set_pivot_point(0, 0)
                 }
             });
+
+            this.window = null;
             space.layout();
             Tiling.ensureViewport(metaWindow, space);
         }
@@ -395,6 +397,8 @@ var MoveGrab = class MoveGrab {
         space.workspace.activate(global.get_current_time());
         // Make sure the window is on the correct workspace.
         // If the window is transient this will take care of its parent too.
+        // NOTE: we reset window here so `window-added` will handle the window
+        this.window = null;
         metaWindow.change_workspace(space.workspace)
     }
 
