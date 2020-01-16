@@ -213,7 +213,7 @@ var MoveGrab = class MoveGrab {
         let space = this.initialSpace;
 
         let i = space.indexOf(metaWindow);
-        let single = space[i].length === 1;
+        let single = i !== -1 && space[i].length === 1;
         space.removeWindow(metaWindow);
         Tweener.addTween(actor, {time: prefs.animation_time, scale_x: 0.5, scale_y: 0.5});
 
@@ -306,6 +306,7 @@ var MoveGrab = class MoveGrab {
         let actor = metaWindow.get_compositor_private();
         let frame = metaWindow.get_frame_rect();
         let clone = metaWindow.clone;
+        let [gx, gy, $] = global.get_pointer();
 
         if (this.dnd) {
             let dndTarget = this.dndTarget;
@@ -317,10 +318,20 @@ var MoveGrab = class MoveGrab {
             if (dndTarget) {
                 let space = dndTarget.space;
                 space.selection.show()
+
+                if (Scratch.isScratchWindow(metaWindow))
+                    Scratch.unmakeScratch(metaWindow);
+
                 space.addWindow(metaWindow, ...dndTarget.position);
 
-                clone.set_scale(actor.scale_x, actor.scale_y);
                 [clone.x, clone.y] = space.globalToScroll(frame.x, frame.y);
+
+                let [x, y] = space.globalToScroll(gx, gy);
+                let px = (x - clone.x) / clone.width;
+                let py = (y - clone.y) / clone.height;
+                clone.set_pivot_point(px, py);
+                clone.set_scale(actor.scale_x, actor.scale_y);
+
 
                 actor.set_scale(1, 1);
                 actor.set_pivot_point(0, 0);
@@ -390,7 +401,6 @@ var MoveGrab = class MoveGrab {
             Tiling.ensureViewport(metaWindow, space);
         }
 
-        let [gx, gy, $] = global.get_pointer();
         let monitor = monitorAtPoint(gx, gy);
         let space = Tiling.spaces.monitors.get(monitor);
 

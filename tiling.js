@@ -633,6 +633,10 @@ class Space extends Array {
         return true;
     }
 
+    isFloating(metaWindow) {
+        return this._floating.indexOf(metaWindow) !== -1;
+    }
+
     addFloating(metaWindow) {
         if (this._floating.indexOf(metaWindow) !== -1 ||
             metaWindow.is_on_all_workspaces())
@@ -2537,8 +2541,21 @@ function grabBegin(metaWindow, type) {
         case Meta.GrabOp.FRAME_BUTTON:
             // Don't handle pushModal grabs and SCD button (close/minimize/etc.) grabs
             break;
-        case Meta.GrabOp.MOVING:
         case Meta.GrabOp.KEYBOARD_MOVING:
+            inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
+
+            if (inGrab.initialSpace.isFloating(metaWindow))
+                return;
+
+            // NOTE: Keyboard grab moves the cursor, but it happens after grab
+            // signals have run. Simply delay the dnd so it will get the correct
+            // pointer coordinates.
+            Meta.later_add(Meta.LaterType.IDLE, () => {
+                inGrab.begin();
+                inGrab.beginDnD();
+            })
+            break;
+        case Meta.GrabOp.MOVING:
             inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
 
             if (!inGrab.initialSpace || inGrab.initialSpace.indexOf(metaWindow) === -1)
