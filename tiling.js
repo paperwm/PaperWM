@@ -2344,6 +2344,8 @@ function insertWindow(metaWindow, {existing}) {
     if (!add_filter(metaWindow)) {
         connectSizeChanged();
         space.addFloating(metaWindow);
+        // Make sure the window is on the correct monitor
+        metaWindow.move_to_monitor(space.monitor.index);
         showWindow(metaWindow);
         // Make sure the window isn't hidden behind the space (eg. dialogs)
         !existing && metaWindow.make_above()
