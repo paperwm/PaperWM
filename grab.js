@@ -396,20 +396,22 @@ var MoveGrab = class MoveGrab {
                 }
             });
 
-            this.window = null;
-            space.layout();
             Tiling.ensureViewport(metaWindow, space);
         }
+
+        // NOTE: we reset window here so `window-added` will handle the window,
+        // and layout will work correctly etc.
+        this.window = null;
+
+        this.initialSpace.layout();
 
         let monitor = monitorAtPoint(gx, gy);
         let space = Tiling.spaces.monitors.get(monitor);
 
-        space.workspace.activate(global.get_current_time());
         // Make sure the window is on the correct workspace.
         // If the window is transient this will take care of its parent too.
-        // NOTE: we reset window here so `window-added` will handle the window
-        this.window = null;
         metaWindow.change_workspace(space.workspace)
+        space.workspace.activate(global.get_current_time());
     }
 
     activateDndTarget(zone, first) {
