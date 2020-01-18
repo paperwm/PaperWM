@@ -1639,12 +1639,8 @@ class Spaces extends Map {
         else
             to = from - 1;
 
-        // wrap around workspaces
-        if (to < 0) {
-            to = monitorSpaces.length - 1;
-        } else if (to >= monitorSpaces.length) {
-            to = 0;
-        }
+        if (to < 0 || to >= monitorSpaces.length)
+            return;
 
         if (to === from && Tweener.isTweening(newSpace.actor))
             return;
