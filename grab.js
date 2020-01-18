@@ -385,6 +385,8 @@ var MoveGrab = class MoveGrab {
                 if (Scratch.isScratchWindow(metaWindow))
                     Scratch.unmakeScratch(metaWindow);
 
+                // Remember the global coordinates of the clone
+                let [x, y] = clone.get_position();
                 space.addWindow(metaWindow, ...dndTarget.position);
 
                 // Make sure the window is on the correct workspace.
@@ -392,7 +394,7 @@ var MoveGrab = class MoveGrab {
                 // metaWindow.change_workspace(space.workspace);
                 // space.workspace.activate(global.get_current_time());
 
-                [clone.x, clone.y] = space.globalToScroll(clone.x, clone.y);
+                [clone.x, clone.y] = space.globalToScroll(x, y);
 
                 actor.set_scale(1, 1);
                 actor.set_pivot_point(0, 0);
@@ -415,7 +417,7 @@ var MoveGrab = class MoveGrab {
                 } else {
                     space.layout();
                 }
-                Tiling.move_to(space, metaWindow, {x: frame.x - space.monitor.x})
+                Tiling.move_to(space, metaWindow, {x: x - space.monitor.x})
                 Tiling.ensureViewport(metaWindow, space);
 
                 clone.raise_top()
