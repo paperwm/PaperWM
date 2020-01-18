@@ -297,9 +297,9 @@ var Navigator = class Navigator {
             } else {
                 // Typically on cancel - the `focus` signal won't run
                 // automatically, so we run it manually
+                this.space.workspace.activate(global.get_current_time());
                 Tiling.focus_handler(selected);
             }
-            debug('#preview', 'Finish', selected.title);
         } else {
             this.space.workspace.activate(global.get_current_time());
         }

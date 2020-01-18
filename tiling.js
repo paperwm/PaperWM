@@ -1070,6 +1070,8 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         this.signals.connect(
             this.background, 'button-press-event',
             (actor, event) => {
+                if (inGrab)
+                    return;
                 let [aX, aY, mask] = global.get_pointer();
                 let [ok, x, y] =
                     this.actor.transform_stage_point(aX, aY);
@@ -1583,6 +1585,11 @@ class Spaces extends Map {
         let from = workspaceManager.get_workspace_by_index(fromIndex);
         let toSpace = this.spaceOf(to);
         let fromSpace = this.spaceOf(from);
+
+        for (let metaWindow of toSpace.getWindows()) {
+            print("Enforcing workspace memebership", toSpace.name, metaWindow.title)
+            metaWindow.change_workspace(toSpace.workspace);
+        }
 
         if (inPreview === PreviewMode.NONE && toSpace.monitor === fromSpace.monitor) {
             // Only start an animation if we're moving between workspaces on the
@@ -2688,7 +2695,7 @@ function grabBegin(metaWindow, type) {
 }
 
 function grabEnd(metaWindow, type) {
-    if (!inGrab)
+    if (!inGrab || inGrab.dnd)
         return;
 
     inGrab.end();
