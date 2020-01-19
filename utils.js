@@ -346,3 +346,64 @@ var tweener = {
         return actor.get_transition('x') || actor.get_transition('y') || actor.get_transition('scale-x') || actor.get_transition('scale-x');
     }
 };
+
+
+function trace(topic, ...args) {
+    windowTrace(topic, ...args);
+}
+
+let existingWindows = new Set();
+
+function windowTrace(topic, metaWindow, ...rest) {
+    if (existingWindows.has(metaWindow)) {
+        return;
+    }
+
+    if (!topic.match(/.*/)) {
+        return;
+    }
+
+    log(topic, infoMetaWindow(metaWindow).join("\n"), ...rest.join("\n"));
+}
+
+function infoMetaWindow(metaWindow) {
+    let id = metaWindow.toString().split(" ")[4];
+    let trace = shortTrace(3).join(" < ");
+    let info = [
+        `(win: ${id}) ${trace}`,
+        `Title: ${metaWindow.title}`,
+    ];
+    if (!metaWindow.window_type === Meta.WindowType.NORMAL) {
+        info.push(`Type: ${ppEnumValue(metaWindow.window_type, Meta.WindowType)}`);
+    }
+    if (!metaWindow.get_compositor_private()) {
+        info.push(`- no actor`);
+    }
+    if (metaWindow.is_on_all_workspaces()) {
+        info.push(`- is_on_all_workspaces`);
+    }
+    if (metaWindow.above) {
+        info.push(`- above`);
+    }
+    if (Extension.imports.scratch.isScratchWindow(metaWindow)) {
+        info.push(`- scratch`);
+    }
+    return info;
+}
+
+function shortTrace(skip=0) {
+    let trace = new Error().stack.split("\n").map(s => {
+        let words = s.split(/[@/]/)
+        let cols = s.split(":")
+        let ln = parseInt(cols[2])
+        if (ln === null)
+            ln = "?"
+
+        return [words[0], ln]
+    })
+    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : f+":"+ln);
+    return trace.slice(skip+1, skip+5);
+}
+
+
+// Meta.remove_verbose_topic(Meta.DebugTopic.FOCUS)
