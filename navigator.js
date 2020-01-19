@@ -250,8 +250,9 @@ var Navigator = class Navigator {
 
         if (force) {
             this.space.monitor.clickOverlay.hide();
-            this.space = Tiling.spaces.selectedSpace;
         }
+
+        this.space = Tiling.spaces.selectedSpace;
 
         let from = this.from;
         let selected = this.space.selectedWindow;
@@ -283,22 +284,28 @@ var Navigator = class Navigator {
 
         selected = this.space.indexOf(selected) !== -1 ? selected :
                    this.space.selectedWindow;
-        if (selected &&
-            (!force ||
-             !(display.focus_window && display.focus_window.is_on_all_workspaces())) ) {
 
-            let hasFocus = selected.has_focus();
-            selected.foreach_transient(mw => hasFocus = mw.has_focus() || hasFocus);
-            if (!hasFocus) {
-                Main.activateWindow(selected);
-            } else {
-                // Typically on cancel - the `focus` signal won't run
-                // automatically, so we run it manually
-                this.space.workspace.activate(global.get_current_time());
-                Tiling.focus_handler(selected);
-            }
+        if (Tiling.inGrab && Tiling.inGrab.dnd) {
+            Tiling.spaces.monitors.set(this.monitor, this.space);
+            Tiling.spaces.animateToSpace(this.space);
         } else {
-            this.space.workspace.activate(global.get_current_time());
+            if (selected &&
+                (!force ||
+                !(display.focus_window && display.focus_window.is_on_all_workspaces())) ) {
+
+                let hasFocus = selected.has_focus();
+                selected.foreach_transient(mw => hasFocus = mw.has_focus() || hasFocus);
+                if (!hasFocus) {
+                    Main.activateWindow(selected);
+                } else {
+                    // Typically on cancel - the `focus` signal won't run
+                    // automatically, so we run it manually
+                    this.space.workspace.activate(global.get_current_time());
+                    Tiling.focus_handler(selected);
+                }
+            } else {
+                this.space.workspace.activate(global.get_current_time());
+            }
         }
 
         TopBar.fixTopBar();
