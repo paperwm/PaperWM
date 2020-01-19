@@ -1587,7 +1587,11 @@ class Spaces extends Map {
         let fromSpace = this.spaceOf(from);
 
         for (let metaWindow of toSpace.getWindows()) {
-            print("Enforcing workspace memebership", toSpace.name, metaWindow.title)
+            // Make sure all windows belong to the correct workspace.
+            // Note: The 'switch-workspace' signal (this method) runs before mutter decides on focus window.
+            // This simplifies other code moving windows between workspaces.
+            // Eg.: The DnD-window defer changing its workspace until the workspace actually is activated.
+            //      This ensures the DnD window keep focus the whole time.
             metaWindow.change_workspace(toSpace.workspace);
         }
 
