@@ -561,34 +561,27 @@ function disable() {
 }
 
 function show() {
-    if (!Main.overview.visible &&
-        !Tiling.inPreview &&
-        !(Tiling.spaces && Tiling.spaces.selectedSpace.showTopBar)) {
+    let hideTopBar = !(Tiling.spaces && Tiling.spaces.selectedSpace.showTopBar);
+    if (hideTopBar &&
+        !Main.overview.visible &&
+        !Tiling.inPreview) {
         hide();
         return;
     }
+    // Make sure the workarea is correct
+    panelBox.scale_y = 1;
     panelBox.show();
-    Tweener.addTween(panelBox, {
-        scale_y: 1,
-        time: prefs.animation_time,
-        onOverwrite: () => {
-            panelBox.scale_y = 1;
-        }
-    });
 }
 
 function hide() {
     panelBox.hide();
-    Tweener.addTween(panelBox, {
-        scale_y: 0,
-        time: prefs.animation_time,
-        onOverwrite: () => {
-            panelBox.scale_y = 0;
-        },
-        onComplete: () => {
-            panelBox.scale_y = 0;
-        }
-    });
+    let hideTopBar = !(Tiling.spaces && Tiling.spaces.selectedSpace.showTopBar);
+    if (hideTopBar &&
+        !Main.overview.visible &&
+        !Tiling.inPreview) {
+        // Update the workarea to support hide top bar
+        panelBox.scale_y = 0;
+    }
 }
 
 /**
