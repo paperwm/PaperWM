@@ -16,6 +16,7 @@ var Scratch = Extension.imports.scratch;
 var prefs = Extension.imports.settings.prefs;
 var Utils = Extension.imports.utils;
 var Tweener = Utils.tweener;
+var Navigator = Extension.imports.navigator;
 
 
 function isInRect(x, y, r) {
@@ -389,11 +390,6 @@ var MoveGrab = class MoveGrab {
                 let [x, y] = clone.get_position();
                 space.addWindow(metaWindow, ...dndTarget.position);
 
-                // Make sure the window is on the correct workspace.
-                // If the window is transient this will take care of its parent too.
-                // metaWindow.change_workspace(space.workspace);
-                // space.workspace.activate(global.get_current_time());
-
                 [clone.x, clone.y] = space.globalToScroll(x, y);
 
                 actor.set_scale(1, 1);
@@ -411,7 +407,7 @@ var MoveGrab = class MoveGrab {
                 });
 
                 space.targetX = space.cloneContainer.x;
-                space.selectedWindow = metaWindow
+                space.selectedWindow = metaWindow;
                 if (dndTarget.position) {
                     space.layout(true, {customAllocators: {[dndTarget.position[0]]: Tiling.allocateEqualHeight}});
                 } else {
@@ -422,7 +418,7 @@ var MoveGrab = class MoveGrab {
 
                 clone.raise_top()
             } else {
-                // metaWindow.move_frame(true, )
+                metaWindow.move_frame(true, clone.x, clone.y);
                 Scratch.makeScratch(metaWindow);
                 this.initialSpace.moveDone();
 
@@ -477,6 +473,7 @@ var MoveGrab = class MoveGrab {
         // metaWindow.change_workspace(space.workspace)
         // space.workspace.activate(global.get_current_time());
         Tiling.inGrab = false;
+        Navigator.getNavigator().finish();
     }
 
     activateDndTarget(zone, first) {
