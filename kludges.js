@@ -359,8 +359,23 @@ function init() {
     signals = new utils.Signals();
 }
 
+var actions;
 function enable() {
     enableOverrides();
+
+    /*
+     * Some actions work rather poorly.
+     * In particular the 3-finger hold + tap can randomly activate a minimized
+     * window when tapping after a 3-finger swipe
+     */
+    actions = global.stage.get_actions().filter(a => {
+        switch (a.constructor) {
+        case WindowManager.AppSwitchAction:
+            return true;
+        }
+    });
+    actions.forEach(a => global.stage.remove_action(a))
+
 
     signals.connect(settings, 'changed::override-hot-corner',
                     disableHotcorners);
@@ -479,6 +494,7 @@ function enable() {
 
 function disable() {
     disableOverrides();
+    actions.forEach(a => global.stage.add_action(a))
 
     signals.destroy();
     Main.layoutManager._updateHotCorners();
