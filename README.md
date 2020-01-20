@@ -13,25 +13,27 @@ We hang out on [zulip](https://paperwm.zulipchat.com).
 
 ## Installation
 
-Clone the repo and run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script from the directory. The installer will link the repo to `$XDG_DATA_HOME/gnome-shell/extensionspaperwm@hedning:matrix.org/` where gnome-shell can find it.
+Clone the repo and run the
+[`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script
+from the repository. The installer will create a link to the repo in
+`$XDG_DATA_HOME/gnome-shell/extensions/`, it will then ask if you
+want to enable PaperWM, if so it will get gnome-shell to load and enable the extension.
 ```bash
-./install.sh
+./install.sh # install, load and enable paperwm
 ```
+
+To uninstall simply run `./uninstall.sh`.
 
 You'll by default follow the
 [develop](https://github.com/paperwm/PaperWM/tree/develop) branch. If you want a
 possibly more stable experience you can follow the releases by checking out the
 [master](https://github.com/paperwm/PaperWM/tree/master) branch.
 
-Cloning the repo directly into `$XDG_DATA_HOME` also works:
+Cloning the repo directly into `$XDG_DATA_HOME` also works (you can then run
+`install.sh` to enable PaperWM):
 ```bash
 git clone 'https://github.com/paperwm/PaperWM.git' \
     "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/paperwm@hedning:matrix.org"
-```
-
-You can then enable the extension in Gnome Tweaks, or enable if from the command line:
-```bash
-gnome-shell-extension-tool -e paperwm@hedning:matrix.org
 ```
 
 There's a few Gnome Shell settings which works poorly with PaperWM. To use the
@@ -41,7 +43,6 @@ The script will simply turn off`auto-maximize`, `edge-tiling`, `attach-modal-dia
 `workspaces-only-on-primary` ([#216](https://github.com/paperwm/PaperWM/issues/216)). A "restore previous settings" script is generated so the original settings is not lost.
 
 Running the extension will automatically install a user config file as described in [Development & user configuration](#development--user-configuration).
-
 
 ### Note for Ubuntu users ###
 
