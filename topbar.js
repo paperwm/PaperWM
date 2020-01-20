@@ -345,10 +345,10 @@ class WorkspaceMenu extends PanelMenu.Button {
                 this.state = 'SMOOTH';
             }
 
-            if (direction === Clutter.ScrollDirection.UP) {
+            if (direction === Clutter.ScrollDirection.DOWN) {
                 Tiling.spaces.selectStackSpace(Meta.MotionDirection.DOWN);
             }
-            if (direction === Clutter.ScrollDirection.DOWN) {
+            if (direction === Clutter.ScrollDirection.UP) {
                 Tiling.spaces.selectStackSpace(Meta.MotionDirection.UP);
             }
         }
