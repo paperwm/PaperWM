@@ -16,8 +16,9 @@ We hang out on [zulip](https://paperwm.zulipchat.com).
 Clone the repo and run the
 [`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script
 from the repository. The installer will create a link to the repo in
-`$XDG_DATA_HOME/gnome-shell/extensions/`, it will then ask if you
-want to enable PaperWM, if so it will get gnome-shell to load and enable the extension.
+`$XDG_DATA_HOME/gnome-shell/extensions/`. It will then ask if you want to apply
+the recommended settings (see [Recommended
+Settings](#recommended-gnome-shell-settings) and lastly it will ask to enable PaperWM.
 ```bash
 ./install.sh # install, load and enable paperwm
 ```
@@ -35,12 +36,6 @@ Cloning the repo directly into `$XDG_DATA_HOME` also works (you can then run
 git clone 'https://github.com/paperwm/PaperWM.git' \
     "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/paperwm@hedning:matrix.org"
 ```
-
-There's a few Gnome Shell settings which works poorly with PaperWM. To use the
-recommended settings run
-[`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh).
-The script will simply turn off`auto-maximize`, `edge-tiling`, `attach-modal-dialogs` and
-`workspaces-only-on-primary` ([#216](https://github.com/paperwm/PaperWM/issues/216)). A "restore previous settings" script is generated so the original settings is not lost.
 
 Running the extension will automatically install a user config file as described in [Development & user configuration](#development--user-configuration).
 
@@ -244,6 +239,18 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
 ```
 
 See `examples/keybindings.js` for more examples.
+
+
+## Recommended Gnome Shell Settings ##
+
+To use the recommended settings run
+[`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
+
+There's a few Gnome Shell settings which works poorly with PaperWM. Namely
+- `workspaces-only-on-primary`: Multi monitor support require workspaces
+  spanning all monitors
+- `edge-tiling`: We don't support the native half tiled windows
+- `attach-modal-dialogs` off: Attached modal dialogs can cause visual glitching
 
 ## Recommended extensions ##
 
