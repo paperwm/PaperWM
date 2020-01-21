@@ -6,9 +6,25 @@ EXT_DIR=${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions
 mkdir -p "$EXT_DIR"
 ln -sn "$REPO" "$EXT_DIR"/"$UUID"
 
-read -p "Enable the extension [Y/n]: " consent
-case "$p" in
-    Y|"")
+cat <<EOF
+
+PaperWM runs best with some Gnome Shell settings changed:
+ workspaces-only-on-primary off: Required for working multi-monitor support
+ edge-tiling off: Natively tiled windows doesn't work in PaperWM
+ attach-modal-dialogs off: Attached modal dialogs can cause visual glitching
+EOF
+echo
+read -p "Use recommended settings (generates a backup) [Y/n]: " consent
+case "$consent" in
+    (Y|y|"")
+        $REPO/set-recommended-gnome-shell-settings.sh
+    ;;
+esac
+
+echo
+read -p "Enable the extension [Y/n]? " consent
+case "$consent" in
+    (Y|y|"")
     ;;
     *)
         exit
