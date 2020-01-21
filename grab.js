@@ -211,6 +211,7 @@ var MoveGrab = class MoveGrab {
             return;
         this.dnd = true;
         global.display.end_grab_op(global.get_current_time());
+        global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
 
         let metaWindow = this.window;
         let frame = metaWindow.get_frame_rect();
@@ -474,6 +475,7 @@ var MoveGrab = class MoveGrab {
         // space.workspace.activate(global.get_current_time());
         Tiling.inGrab = false;
         Navigator.getNavigator().finish();
+        global.display.set_cursor(Meta.Cursor.DEFAULT);
     }
 
     activateDndTarget(zone, first) {
