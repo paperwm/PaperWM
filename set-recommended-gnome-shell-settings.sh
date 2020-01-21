@@ -42,8 +42,6 @@ function set-with-backup {
 
 ##### Recommended settings
 
-set-with-backup org.gnome.mutter auto-maximize false
-
 # Multi-monitor support is much more complete with workspaces spanning monitors
 set-with-backup org.gnome.shell.overrides workspaces-only-on-primary false
 
