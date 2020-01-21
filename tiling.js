@@ -61,7 +61,7 @@ function init() {
     oldSpaces = new Map();
     oldMonitors = new Map();
 
-    backgroundGroup = global.window_group.first_child;
+    backgroundGroup = Main.layoutManager._backgroundGroup;
 }
 
 
