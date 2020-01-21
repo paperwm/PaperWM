@@ -41,6 +41,7 @@ try {
 
     extensionSystem.loadExtension(extension);
     extensionSystem.enableExtension(uuid);
+    true
 } catch (e) {
     if (e.message === "paperwm-loaded")
        "paperwm already loaded"
