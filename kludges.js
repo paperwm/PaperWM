@@ -52,6 +52,11 @@ if (!global.display.get_monitor_neighbor_index) {
     }
 }
 
+
+if (!global.display.set_cursor) {
+    global.display.constructor.prototype.set_cursor = global.screen.set_cursor.bind(global.screen);
+}
+
 // polyfill for 3.28
 if (!Meta.DisplayDirection && Meta.ScreenDirection) {
     Meta.DisplayDirection = Meta.ScreenDirection;
