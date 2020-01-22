@@ -99,35 +99,48 @@ class ClickOverlay {
                 if (lX === undefined ||
                     Math.sqrt((lX - x)**2 + (lY - y)**2) < 10)
                     return;
-                this.deactivate();
-                let space = Tiling.spaces.monitors.get(this.monitor);
-                let display = global.display;
-                let mi = space.monitor.index;
-                let mru = display.get_tab_list(Meta.TabList.NORMAL,
-                                               space.workspace)
-                    .filter(w => !w.minimized && w.get_monitor() === mi);
+                this.select();
+                return Clutter.EVENT_STOP;
+            }
+        );
 
-                let stack = display.sort_windows_by_stacking(mru);
-                // Select the highest stacked window on the monitor
-                let select = stack[stack.length - 1];
-
-                // But don't change focus if a stuck window is active
-                if (display.focus_window &&
-                    display.focus_window.is_on_all_workspaces())
-                    select = display.focus_window;
-
-                if (select) {
-                    space.workspace.activate_with_focus(
-                        select, global.get_current_time());
-                } else {
-                    space.workspace.activate(global.get_current_time());
-                }
+        this.signals.connect(
+            enterMonitor, 'button-press-event', () => {
+                if (Tiling.inPreview || Main.overview.visible)
+                    return;
+                this.select();
                 return Clutter.EVENT_STOP;
             }
         );
 
         this.signals.connect(Main.overview, 'showing', this.hide.bind(this));
         this.signals.connect(Main.overview, 'hidden', this.show.bind(this));
+    }
+
+    select() {
+        this.deactivate();
+        let space = Tiling.spaces.monitors.get(this.monitor);
+        let display = global.display;
+        let mi = space.monitor.index;
+        let mru = display.get_tab_list(Meta.TabList.NORMAL,
+                                       space.workspace)
+                         .filter(w => !w.minimized && w.get_monitor() === mi);
+
+        let stack = display.sort_windows_by_stacking(mru);
+        // Select the highest stacked window on the monitor
+        let select = stack[stack.length - 1];
+
+        // But don't change focus if a stuck window is active
+        if (display.focus_window &&
+            display.focus_window.is_on_all_workspaces())
+            select = display.focus_window;
+
+        if (select) {
+            space.workspace.activate_with_focus(
+                select, global.get_current_time());
+        } else {
+            space.workspace.activate(global.get_current_time());
+        }
     }
 
     activate() {
