@@ -196,7 +196,7 @@ var StackOverlay = class StackOverlay {
         overlay.width = Tiling.stack_margin;
 
         this.signals = new utils.Signals();
-        this.signals.connect(overlay, 'button-release-event', () => {
+        this.signals.connect(overlay, 'button-press-event', () => {
             Main.activateWindow(this.target);
             if (this.clone) {
                 this.clone.destroy();
