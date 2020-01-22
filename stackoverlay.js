@@ -363,7 +363,7 @@ var StackOverlay = class StackOverlay {
                 return bail(); // Should normally have a neighbour. Bail!
 
             let width = neighbour.clone.targetX + space.targetX - minResizeEdge;
-            if (space.isPlaceable(metaWindow))
+            if (space.isPlaceable(metaWindow) || Meta.is_wayland_compositor())
                 width = Math.min(width, 1);
             overlay.x = this.monitor.x;
             overlay.width = Math.max(width, 1);
@@ -377,7 +377,7 @@ var StackOverlay = class StackOverlay {
             let frame = neighbour.get_frame_rect();
             frame.x = neighbour.clone.targetX + space.targetX;
             let width = this.monitor.width - (frame.x + frame.width) - minResizeEdge;
-            if (space.isPlaceable(metaWindow))
+            if (space.isPlaceable(metaWindow) || Meta.is_wayland_compositor())
                 width = 1;
             width = Math.max(width, 1);
             overlay.x = this.monitor.x + this.monitor.width - width;
