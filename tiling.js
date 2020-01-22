@@ -26,6 +26,7 @@ var spaces;
 
 var Minimap = Extension.imports.minimap;
 var Scratch = Extension.imports.scratch;
+var Gestures = Extension.imports.gestures;
 var TopBar = Extension.imports.topbar;
 var Navigator = Extension.imports.navigator;
 var ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
@@ -156,20 +157,18 @@ class Space extends Array {
                 let [aX, aY, mask] = global.get_pointer();
                 let [ok, x, y] =
                     this.actor.transform_stage_point(aX, aY);
-                let windowAtPoint = this.getWindowAtPoint(x, y);
-                // FIXME: Fix interaction with swiping and remove guard
-                if (!inPreview && Meta.is_wayland_compositor())
-                    return;
+                let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
                 let nav = Navigator.getNavigator();
-                if (windowAtPoint)
+                if (windowAtPoint) {
                     ensureViewport(windowAtPoint, this);
+                }
                 spaces.selectedSpace = this;
                 nav.finish();
             });
 
             this.signals.connect(
                 background, 'captured-event',
-                Extension.imports.gestures.horizontalScroll.bind(this));
+                Gestures.horizontalScroll.bind(this));
 
         this.background = background;
 

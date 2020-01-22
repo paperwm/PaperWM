@@ -5,6 +5,8 @@ if (imports.misc.extensionUtils.extensions) {
     Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
 }
 
+var gliding = false;
+
 var Meta = imports.gi.Meta;
 var St = imports.gi.St;
 var Gio = imports.gi.Gio;
@@ -227,15 +229,17 @@ function done(space) {
     Tiling.updateSelection(space, selected);
     space.selectedWindow = selected;
     space.emit('select');
+    gliding = true;
     Tweener.addTween(space.cloneContainer, {
         x: space.targetX,
         duration: t,
         mode,
+        onStopped: () => {
+            gliding = false;
+        },
         onComplete: () => {
-            Tiling.ensureViewport(selected, space);
             if (!Tiling.inPreview)
                 Navigator.getNavigator().finish();
-
         }
     });
 }
