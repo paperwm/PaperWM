@@ -41,12 +41,26 @@ Running the extension will automatically install a user config file as described
 
 ### Note for Ubuntu users ###
 
-The desktop-icon extension (which is on by default) and PaperWM is not compatible (eg. [#145](https://github.com/paperwm/PaperWM/issues/145)).
+There's three different gnome-desktop variants in Ubuntu:
+- [`ubuntu-desktop`](https://packages.ubuntu.com/focal/ubuntu-desktop): the default
+- [`ubuntu-gnome-desktop`](https://packages.ubuntu.com/focal/ubuntu-gnome-desktop):
+  adds plain gnome sessions to the default
+- [`vanilla-gnome-desktop`](https://packages.ubuntu.com/focal/vanilla-gnome-desktop):
+  a «plain» variant
 
-Ubuntu makes it difficult to disable desktop-icon so it is suggested to use vanilla gnome session instead `sudo apt install gnome-session` and select `gnome` or `gnome-wayland` using the gear icon on login.
+The default `ubuntu-desktop` ships with `desktop-icons` which doesn't work
+correctly with PaperWM ([#145](https://github.com/paperwm/PaperWM/issues/145),
+[#218](https://github.com/paperwm/PaperWM/issues/218)). Turning the extension
+off in gnome-tweaks [should work in
+19.10](https://github.com/paperwm/PaperWM/issues/218#issuecomment-572250654),
+but there's [reports of this not
+working](https://github.com/paperwm/PaperWM/issues/145#issuecomment-508620154)
+in 19.04, so your milage my vary.
 
-`desktop-icon` can (sometimes) be disabled via the web interface if the GNOME Shell integration is installed on the browser: https://extensions.gnome.org/local/ or via gnome tweaks `sudo apt install gnome-tweaks` and be disabled under the extensions tab.
-
+For the easiest out of the box experience we reccommend `ubuntu-gnome-desktop`.
+`vanilla-gnome-desktop` adds some keybindings which plays badly with PaperWM
+([#233](https://github.com/paperwm/PaperWM/issues/233)), making it unsuitable at
+the moment.
 
 ## Usage ##
 
