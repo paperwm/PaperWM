@@ -201,7 +201,6 @@ var MoveGrab = class MoveGrab {
         clone.set_pivot_point(px, py);
 
         this.signals.connect(global.stage, "button-release-event", this.end.bind(this));
-        this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
         this.signals.connect(global.stage, "motion-event", this.motion.bind(this));
         this.signals.connect(
             global.screen || global.display, "window-entered-monitor",
@@ -245,9 +244,10 @@ var MoveGrab = class MoveGrab {
 
         let [gx, gy, $] = global.get_pointer();
 
-        this.spaceToDndZones = new Map();
+        this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
         this.signals.connect(global.stage, "scroll-event", this.scroll.bind(this));
 
+        this.spaceToDndZones = new Map();
         this.monitorToZones = createDndZonesForMonitors();
 
         let monitor = monitorAtPoint(gx, gy);
@@ -425,6 +425,8 @@ var MoveGrab = class MoveGrab {
                 let [x, y] = clone.get_position();
                 space.addWindow(metaWindow, ...dndTarget.position);
 
+                this.window = null;
+
                 [clone.x, clone.y] = space.globalToScroll(x, y);
 
                 actor.set_scale(1, 1);
@@ -524,10 +526,10 @@ var MoveGrab = class MoveGrab {
 
             let clone = this.window.clone;
             let space = zone.space;
-            let [x, y] = clone.get_transformed_position()
-            log(...clone.get_transformed_position(), clone.get_parent(), clone.x, clone.y, space.targetX)
-            log(clone.get_transformed_size())
-            zone.actor.set_position(...space.globalToScroll(x, y))
+            // let [x, y] = clone.get_transformed_position()
+            // log(...clone.get_transformed_position(), clone.get_parent(), clone.x, clone.y, space.targetX)
+            // log(clone.get_transformed_size())
+            zone.actor.set_position(...clone.get_transformed_position())
             zone.actor.set_size(...clone.get_transformed_size())
         } else {
             zone.actor[zone.sizeProp] = 0;
