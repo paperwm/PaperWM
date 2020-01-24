@@ -168,79 +168,84 @@ var MoveGrab = class MoveGrab {
         this.window = metaWindow;
         this.type = type;
         this.signals = new Utils.Signals();
+        this.grabbed = false;
 
         this.initialSpace = Tiling.spaces.spaceOfWindow(metaWindow);
     }
 
     begin() {
+        log(`begin`)
+        if (this.grabbed)
+            return;
+        this.grabbed = true
+        global.display.end_grab_op(global.get_current_time());
+        global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
+
         let metaWindow = this.window;
-        let frame = metaWindow.get_frame_rect();
-        let space = Tiling.spaces.spaceOfWindow(metaWindow);
-
-        this.initialY = frame.y;
-
         let actor = metaWindow.get_compositor_private();
+        let clone = metaWindow.clone;
+        let space = this.initialSpace;
+        let frame = metaWindow.get_frame_rect();
+
+        this.initialY = clone.y;
         let [gx, gy, $] = global.get_pointer();
+        this.pointerOffset = [gx - frame.x, gy - frame.y]
+
         let px = (gx - actor.x) / actor.width;
         let py = (gy - actor.y) / actor.height;
         actor.set_pivot_point(px, py);
 
-        let clone = metaWindow.clone;
         let [x, y] = space.globalToScroll(gx, gy);
         px = (x - clone.x) / clone.width;
         py = (y - clone.y) / clone.height;
         clone.set_pivot_point(px, py);
 
+        this.signals.connect(global.stage, "button-release-event", this.end.bind(this));
+        this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
+        this.signals.connect(global.stage, "motion-event", this.motion.bind(this));
         this.signals.connect(
             global.screen || global.display, "window-entered-monitor",
             this.beginDnD.bind(this)
         );
 
-        this.scrollAnchor = metaWindow.clone.targetX + space.monitor.x;
-        this.signals.connect(
-            metaWindow, 'position-changed', this.positionChanged.bind(this)
-        );
+        this.scrollAnchor = x;
         space.startAnimate();
         // Make sure the window actor is visible
-        Tiling.showWindow(metaWindow);
+        Tiling.animateWindow(metaWindow);
         Tweener.removeTweens(space.cloneContainer);
     }
 
     beginDnD() {
         if (this.dnd)
             return;
+        log(`beginDND`)
         this.dnd = true;
-        global.display.end_grab_op(global.get_current_time());
-        global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
-
         let metaWindow = this.window;
-        let frame = metaWindow.get_frame_rect();
+        // let frame = metaWindow.get_frame_rect();
         let actor = metaWindow.get_compositor_private();
         let clone = metaWindow.clone;
         let space = this.initialSpace;
 
+        // FIXME
+        let frame = {
+            x: clone.x + space.cloneContainer.x + space.monitor.x,
+            y: clone.y + space.cloneContainer.y + space.monitor.y,
+            width: clone.width,
+            height: clone.height
+        }
+
         let i = space.indexOf(metaWindow);
         let single = i !== -1 && space[i].length === 1;
-        space.removeWindow(metaWindow);
-
-        clone.reparent(Main.uiGroup);
         clone.x = frame.x;
         clone.y = frame.y;
-        Tiling.animateWindow(metaWindow);
+        space.removeWindow(metaWindow);
+        clone.reparent(Main.uiGroup);
 
         Tweener.addTween(clone, {time: prefs.animation_time, scale_x: 0.5, scale_y: 0.5});
 
         let [gx, gy, $] = global.get_pointer();
 
-        this.pointerOffset = [gx - frame.x, gy - frame.y]
-        this.signals.connect(global.stage, "motion-event", this.motion.bind(this));
         this.spaceToDndZones = new Map();
-        for (let [workspace, space] of Tiling.spaces) {
-            this.signals.connect(space.background, "motion-event", this.spaceMotion.bind(this, space));
-            this.spaceToDndZones.set(space, createDnDZones(space));
-        }
-        this.signals.connect(global.stage, "button-release-event", this.end.bind(this));
-        this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
         this.signals.connect(global.stage, "scroll-event", this.scroll.bind(this));
 
         this.monitorToZones = createDndZonesForMonitors();
@@ -260,6 +265,11 @@ var MoveGrab = class MoveGrab {
         }
 
         let [sx, sy] = space.globalToScroll(gx, gy, true);
+
+        for (let [workspace, space] of Tiling.spaces) {
+            this.signals.connect(space.background, "motion-event", this.spaceMotion.bind(this, space));
+            this.spaceToDndZones.set(space, createDnDZones(space));
+        }
         this.selectDndZone(space, sx, sy, single && onSame);
     }
 
@@ -292,34 +302,37 @@ var MoveGrab = class MoveGrab {
         }
     }
 
-    positionChanged() {
-        let metaWindow = this.window;
+    // positionChanged() {
+    //     let metaWindow = this.window;
 
-        let [gx, gy, $] = global.get_pointer();
+    //     let [gx, gy, $] = global.get_pointer();
 
-        if (this.dnd) {
-            print("SHOULD NOT HAPPEND")
-            // this.selectDndZone(gx, gy);  // TODO: dead/obsolete?
-        } else {  // Move the window and scroll the space
-            let space = this.initialSpace;
-            let clone = metaWindow.clone;
-            let frame = metaWindow.get_frame_rect();
-            space.targetX = frame.x - this.scrollAnchor;
-            space.cloneContainer.x = space.targetX;
+    //     if (this.dnd) {
+    //         print("SHOULD NOT HAPPEND")
+    //         // this.selectDndZone(gx, gy);  // TODO: dead/obsolete?
+    //     } else {  // Move the window and scroll the space
+    //         let space = this.initialSpace;
+    //         let clone = metaWindow.clone;
+    //         let frame = metaWindow.get_frame_rect();
+    //         // scrollAnchhor = gx - space.monitor.x - space.cloneContainer.x
+    //         // scrollAnchhor - gx + space.monitor.x = - space.cloneContainer.x
 
-            const threshold = 300;
-            const dy = Math.min(threshold, Math.abs(frame.y - this.initialY));
-            let s = 1 - Math.pow(dy / 500, 3);
-            let actor = metaWindow.get_compositor_private();
-            actor.set_scale(s, s);
-            clone.set_scale(s, s);
-            [clone.x, clone.y] = space.globalToScroll(frame.x, frame.y);
+    //         space.targetX = gx - space.monitor.x - this.scrollAnchhor;
+    //         space.cloneContainer.x = space.targetX;
 
-            if (dy >= threshold) {
-                this.beginDnD();
-            }
-        }
-    }
+    //         const threshold = 300;
+    //         const dy = Math.min(threshold, Math.abs(frame.y - this.initialY));
+    //         let s = 1 - Math.pow(dy / 500, 3);
+    //         let actor = metaWindow.get_compositor_private();
+    //         actor.set_scale(s, s);
+    //         clone.set_scale(s, s);
+    //         [clone.x, clone.y] = space.globalToScroll(frame.x, frame.y);
+
+    //         if (dy >= threshold) {
+    //             this.beginDnD();
+    //         }
+    //     }
+    // }
 
     scroll(actor, event) {
         let dir = event.get_scroll_direction();
@@ -355,16 +368,37 @@ var MoveGrab = class MoveGrab {
     }
 
     motion(actor, event) {
-        let [gx, gy, $] = global.get_pointer();
+        let metaWindow = this.window;
+        let [gx, gy] = event.get_coords();
         let [dx, dy] = this.pointerOffset;
-        let clone = this.window.clone;
-        clone.x = gx - dx;
-        clone.y = gy - dy;
-        // this.selectDndZone(...event.get_coords())
-        // this.selectDndZone(gx, gy)
+        let clone = metaWindow.clone;
+
+        if (this.dnd) {
+            clone.x = gx - dx;
+            clone.y = gy - dy;
+        } else {
+            let space = this.initialSpace;
+            let clone = metaWindow.clone;
+            space.targetX = gx - space.monitor.x - this.scrollAnchor;
+            space.cloneContainer.x = space.targetX;
+
+            clone.y = gy - dy + space.monitor.y;
+
+            const threshold = 300;
+            dy = Math.min(threshold, Math.abs(clone.y - this.initialY));
+            let s = 1 - Math.pow(dy / 500, 3);
+            let actor = metaWindow.get_compositor_private();
+            actor.set_scale(s, s);
+            clone.set_scale(s, s);
+
+            if (dy >= threshold) {
+                this.beginDnD();
+            }
+        }
     }
 
     end() {
+        log(`end`)
         this.signals.destroy();
 
         let metaWindow = this.window;
@@ -396,7 +430,7 @@ var MoveGrab = class MoveGrab {
                 actor.set_scale(1, 1);
                 actor.set_pivot_point(0, 0);
 
-                Tiling.animateWindow(metaWindow);
+                // Tiling.animateWindow(metaWindow);
                 Tweener.addTween(clone, {
                     time: prefs.animation_time,
                     scale_x: 1,
@@ -438,10 +472,6 @@ var MoveGrab = class MoveGrab {
         } else if (this.initialSpace.indexOf(metaWindow) !== -1){
             let space = this.initialSpace;
             space.targetX = space.cloneContainer.x;
-            clone.targetX = frame.x - space.monitor.x - space.targetX;
-            clone.targetY = frame.y - space.monitor.y;
-            clone.set_position(clone.targetX,
-                               clone.targetY);
 
             actor.set_scale(1, 1);
             actor.set_pivot_point(0, 0);
@@ -492,10 +522,13 @@ var MoveGrab = class MoveGrab {
             params.height = zone.actor.height
             params.y = zone.actor.y
 
-            let actor = this.window.get_compositor_private();
+            let clone = this.window.clone;
             let space = zone.space;
-            zone.actor.set_position(...space.globalToScroll(...actor.get_transformed_position()))
-            zone.actor.set_size(...actor.get_transformed_size())
+            let [x, y] = clone.get_transformed_position()
+            log(...clone.get_transformed_position(), clone.get_parent(), clone.x, clone.y, space.targetX)
+            log(clone.get_transformed_size())
+            zone.actor.set_position(...space.globalToScroll(x, y))
+            zone.actor.set_size(...clone.get_transformed_size())
         } else {
             zone.actor[zone.sizeProp] = 0;
             zone.actor[zone.originProp] = zone.center;
