@@ -215,12 +215,13 @@ class SettingsWidget {
 
 
         ['new-window', 'close-window', 'switch-next', 'switch-previous',
-         'switch-left', 'switch-right', 'switch-up', 'switch-down',
-         'switch-first', 'switch-last', 'live-alt-tab', 'live-alt-tab-backward',
-         'move-left', 'move-right', 'move-up', 'move-down',
-         'slurp-in', 'barf-out', 'center-horizontally',
-         'paper-toggle-fullscreen', 'toggle-maximize-width', 'cycle-width',
-         'cycle-height', 'take-window']
+          'switch-left', 'switch-right', 'switch-up', 'switch-down',
+          'switch-first', 'switch-last', 'live-alt-tab', 'live-alt-tab-backward',
+          'move-left', 'move-right', 'move-up', 'move-down',
+          'slurp-in', 'barf-out', 'center-horizontally',
+          'paper-toggle-fullscreen', 'toggle-maximize-width', 'resize-h-inc',
+          'resize-h-dec', 'resize-w-inc', 'resize-w-dec', 'cycle-width',
+          'cycle-height', 'take-window']
             .forEach(k => {
             addKeybinding(windows.model.child_model, settings, k);
         });

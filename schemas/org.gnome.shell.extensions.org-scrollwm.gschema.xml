@@ -172,6 +172,26 @@
         <summary>Expel the bottom window into its own column</summary>
     </key>
 
+    <key type="as" name="resize-h-inc">
+      <default><![CDATA[['<Super><Shift>equal']]]></default>
+      <summary>Increment window height</summary>
+    </key>
+
+    <key type="as" name="resize-h-dec">
+      <default><![CDATA[['<Super><Shift>minus']]]></default>
+      <summary>Decrement window height</summary>
+    </key>
+
+    <key type="as" name="resize-w-inc">
+      <default><![CDATA[['<Super>equal']]]></default>
+      <summary>Increment window width</summary>
+    </key>
+
+    <key type="as" name="resize-w-dec">
+      <default><![CDATA[['<Super>minus']]]></default>
+      <summary>Decrement window width</summary>
+    </key>
+
     <key type="as" name="cycle-width">
       <default><![CDATA[['<Super>r']]]></default>
       <summary>Cycle through useful window widths</summary>
