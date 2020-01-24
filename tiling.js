@@ -1070,18 +1070,20 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         this.signals.connect(
             this.background, 'button-press-event',
             (actor, event) => {
-                if (inGrab)
+                if (inGrab) {
                     return;
+                }
                 let [aX, aY, mask] = global.get_pointer();
                 let [ok, x, y] =
                     this.actor.transform_stage_point(aX, aY);
                 let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
-                let nav = Navigator.getNavigator();
                 if (windowAtPoint) {
                     ensureViewport(windowAtPoint, this);
+                    inGrab = new Extension.imports.grab.MoveGrab(windowAtPoint, Meta.GrabOp.MOVING);
+                    inGrab.begin();
                 }
-                spaces.selectedSpace = this;
-                nav.finish();
+                // spaces.selectedSpace = this;
+                // nav.finish();
             });
 
         this.signals.connect(
