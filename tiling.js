@@ -2680,7 +2680,7 @@ function grabBegin(metaWindow, type) {
 }
 
 function grabEnd(metaWindow, type) {
-    if (!inGrab || inGrab.dnd)
+    if (!inGrab || inGrab.dnd || inGrab.grabbed)
         return;
 
     inGrab.end();
