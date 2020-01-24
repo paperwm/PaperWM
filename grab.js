@@ -189,16 +189,20 @@ var MoveGrab = class MoveGrab {
 
         this.initialY = clone.y;
         let [gx, gy, $] = global.get_pointer();
-        this.pointerOffset = [gx - frame.x, gy - frame.y]
 
         let px = (gx - actor.x) / actor.width;
         let py = (gy - actor.y) / actor.height;
         actor.set_pivot_point(px, py);
 
-        let [x, y] = space.globalToScroll(gx, gy);
+        let [ok, x, y] = space.cloneContainer.transform_stage_point(gx, gy);
         px = (x - clone.x) / clone.width;
         py = (y - clone.y) / clone.height;
         clone.set_pivot_point(px, py);
+        if (clone.get_parent()) {
+            this.pointerOffset = [x - clone.x, y - clone.y];
+        } else {
+            this.pointerOffset = [gx - frame.x, gy - frame.y];
+        }
 
         this.signals.connect(global.stage, "button-release-event", this.end.bind(this));
         this.signals.connect(global.stage, "motion-event", this.motion.bind(this));
