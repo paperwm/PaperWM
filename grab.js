@@ -306,39 +306,6 @@ var MoveGrab = class MoveGrab {
         }
     }
 
-    // scroll(space, actor, event) {
-    //     let dir = event.get_scroll_direction();
-    //     if (dir === Clutter.ScrollDirection.SMOOTH)
-    //         return;
-    //     // print(dir, Clutter.ScrollDirection.SMOOTH, Clutter.ScrollDirection.UP, Clutter.ScrollDirection.DOWN)
-    //     let dx
-    //     log(Utils.ppEnumValue(dir, Clutter.ScrollDirection))
-    //     // let dx = dir === Clutter.ScrollDirection.DOWN ? -1 : 1
-    //     // let [dx, dy] = event.get_scroll_delta()
-
-    //     let [gx, gy] = event.get_coords();
-    //     if (!gx) {
-    //         print("Noooo");
-    //         return;
-    //     }
-    //     print(dx, gx, gy);
-
-    //     switch (dir) {
-    //         case Clutter.ScrollDirection.LEFT:
-    //         case Clutter.ScrollDirection.DOWN:
-    //             space.switchLeft();
-    //             break;
-    //         case Clutter.ScrollDirection.RIGHT:
-    //         case Clutter.ScrollDirection.UP:
-    //             space.switchRight();
-    //             break;
-    //     }
-
-    //     // let speed = 30
-    //     // space.targetX += dx * speed
-    //     // space.cloneContainer.x += dx * speed
-    // }
-
     motion(actor, event) {
         let metaWindow = this.window;
         let [gx, gy] = event.get_coords();
