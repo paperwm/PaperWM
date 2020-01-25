@@ -228,24 +228,15 @@ var MoveGrab = class MoveGrab {
         let actor = metaWindow.get_compositor_private();
         let clone = metaWindow.clone;
         let space = this.initialSpace;
-        let frame;
-        if (clone.get_parent()) {
-            // let point = clone.apply_transform_to_point(new Clutter.Vertex({x: 0, y: 0}));
-            let point = space.cloneContainer.apply_transform_to_point(new Clutter.Vertex({x: clone.x, y: clone.y}));
-            frame = {x: point.x, y: point.y,
-                width: clone.width,
-                height: clone.height
-            }
-        } else {
-            frame = metaWindow.get_frame_rect();
-        }
 
         let i = space.indexOf(metaWindow);
         let single = i !== -1 && space[i].length === 1;
         space.removeWindow(metaWindow);
         clone.reparent(Main.uiGroup);
-        clone.x = frame.x;
-        clone.y = frame.y;
+        let [gx, gy, $] = global.get_pointer();
+        let [dx, dy] = this.pointerOffset;
+        clone.x = gx - dx;
+        clone.y = gy - dy;
 
         let newScale = clone.scale_x*space.actor.scale_x;
         clone.set_scale(newScale, newScale);
@@ -256,7 +247,6 @@ var MoveGrab = class MoveGrab {
         this.spaceToDndZones = new Map();
         this.monitorToZones = createDndZonesForMonitors();
 
-        let [gx, gy, $] = global.get_pointer();
         let monitor = monitorAtPoint(gx, gy);
 
         let onSame = monitor === space.monitor;
