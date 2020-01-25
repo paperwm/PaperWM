@@ -164,13 +164,13 @@ function createDnDZones(space) {
 
 
 var MoveGrab = class MoveGrab {
-    constructor(metaWindow, type) {
+    constructor(metaWindow, type, space) {
         this.window = metaWindow;
         this.type = type;
         this.signals = new Utils.Signals();
         this.grabbed = false;
 
-        this.initialSpace = Tiling.spaces.spaceOfWindow(metaWindow);
+        this.initialSpace = space || Tiling.spaces.spaceOfWindow(metaWindow);
     }
 
     begin() {
@@ -222,42 +222,46 @@ var MoveGrab = class MoveGrab {
         if (this.dnd)
             return;
         log(`beginDND`)
+        global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
         this.dnd = true;
         let metaWindow = this.window;
-        // let frame = metaWindow.get_frame_rect();
         let actor = metaWindow.get_compositor_private();
         let clone = metaWindow.clone;
         let space = this.initialSpace;
-
-        // FIXME
-        let frame = {
-            x: clone.x + space.cloneContainer.x + space.monitor.x,
-            y: clone.y + space.cloneContainer.y + space.monitor.y,
-            width: clone.width,
-            height: clone.height
+        let frame;
+        if (clone.get_parent()) {
+            // let point = clone.apply_transform_to_point(new Clutter.Vertex({x: 0, y: 0}));
+            let point = space.cloneContainer.apply_transform_to_point(new Clutter.Vertex({x: clone.x, y: clone.y}));
+            frame = {x: point.x, y: point.y,
+                width: clone.width,
+                height: clone.height
+            }
+        } else {
+            frame = metaWindow.get_frame_rect();
         }
 
         let i = space.indexOf(metaWindow);
         let single = i !== -1 && space[i].length === 1;
-        clone.x = frame.x;
-        clone.y = frame.y;
         space.removeWindow(metaWindow);
         clone.reparent(Main.uiGroup);
+        clone.x = frame.x;
+        clone.y = frame.y;
 
+        let newScale = clone.scale_x*space.actor.scale_x;
+        clone.set_scale(newScale, newScale);
         Tweener.addTween(clone, {time: prefs.animation_time, scale_x: 0.5, scale_y: 0.5});
 
-        let [gx, gy, $] = global.get_pointer();
-
         this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
-        this.signals.connect(global.stage, "scroll-event", this.scroll.bind(this));
 
         this.spaceToDndZones = new Map();
         this.monitorToZones = createDndZonesForMonitors();
 
+        let [gx, gy, $] = global.get_pointer();
         let monitor = monitorAtPoint(gx, gy);
-        let onSame = space === Tiling.spaces.monitors.get(monitor);
 
-        let x = gx - space.monitor.x;
+        let onSame = monitor === space.monitor;
+
+        let [ok, x, y] = space.actor.transform_stage_point(gx, gy);
         if (onSame && single && space[i]) {
             Tiling.move_to(space, space[i][0], { x: x + prefs.window_gap/2 });
         } else if (onSame && single && space[i-1]) {
@@ -338,38 +342,38 @@ var MoveGrab = class MoveGrab {
     //     }
     // }
 
-    scroll(actor, event) {
-        let dir = event.get_scroll_direction();
-        if (dir === Clutter.ScrollDirection.SMOOTH)
-            return;
-        // print(dir, Clutter.ScrollDirection.SMOOTH, Clutter.ScrollDirection.UP, Clutter.ScrollDirection.DOWN)
-        let dx
-        if ([Clutter.ScrollDirection.DOWN, Clutter.ScrollDirection.LEFT].includes(dir)) {
-            dx = -1;
-        } else {
-            dx = 1;
-        }
-        // let dx = dir === Clutter.ScrollDirection.DOWN ? -1 : 1
-        // let [dx, dy] = event.get_scroll_delta()
+    // scroll(space, actor, event) {
+    //     let dir = event.get_scroll_direction();
+    //     if (dir === Clutter.ScrollDirection.SMOOTH)
+    //         return;
+    //     // print(dir, Clutter.ScrollDirection.SMOOTH, Clutter.ScrollDirection.UP, Clutter.ScrollDirection.DOWN)
+    //     let dx
+    //     log(Utils.ppEnumValue(dir, Clutter.ScrollDirection))
+    //     // let dx = dir === Clutter.ScrollDirection.DOWN ? -1 : 1
+    //     // let [dx, dy] = event.get_scroll_delta()
 
-        let [gx, gy] = event.get_coords();
-        if (!gx) {
-            print("Noooo");
-            return;
-        }
-        print(dx, gx, gy);
-        let monitor = monitorAtPoint(gx, gy);
-        let space = Tiling.spaces.monitors.get(monitor);
+    //     let [gx, gy] = event.get_coords();
+    //     if (!gx) {
+    //         print("Noooo");
+    //         return;
+    //     }
+    //     print(dx, gx, gy);
 
-        if (dx === 1)
-            space.switchLeft();
-        else
-            space.switchRight();
+    //     switch (dir) {
+    //         case Clutter.ScrollDirection.LEFT:
+    //         case Clutter.ScrollDirection.DOWN:
+    //             space.switchLeft();
+    //             break;
+    //         case Clutter.ScrollDirection.RIGHT:
+    //         case Clutter.ScrollDirection.UP:
+    //             space.switchRight();
+    //             break;
+    //     }
 
-        // let speed = 30
-        // space.targetX += dx * speed
-        // space.cloneContainer.x += dx * speed
-    }
+    //     // let speed = 30
+    //     // space.targetX += dx * speed
+    //     // space.cloneContainer.x += dx * speed
+    // }
 
     motion(actor, event) {
         let metaWindow = this.window;
@@ -430,9 +434,11 @@ var MoveGrab = class MoveGrab {
                 let [x, y] = clone.get_position();
                 space.addWindow(metaWindow, ...dndTarget.position);
 
-                this.window = null;
 
-                [clone.x, clone.y] = space.globalToScroll(x, y);
+                let [ok, sx, sy] = space.cloneContainer.transform_stage_point(x, y);
+                [clone.x, clone.y] = [sx, sy];
+                let newScale = clone.scale_x/space.actor.scale_x;
+                clone.set_scale(newScale, newScale);
 
                 actor.set_scale(1, 1);
                 actor.set_pivot_point(0, 0);
@@ -532,9 +538,10 @@ var MoveGrab = class MoveGrab {
             let clone = this.window.clone;
             let space = zone.space;
             // let [x, y] = clone.get_transformed_position()
-            // log(...clone.get_transformed_position(), clone.get_parent(), clone.x, clone.y, space.targetX)
+            log(...clone.get_transformed_position(), clone.get_parent(), clone.x, clone.y, space.targetX)
             // log(clone.get_transformed_size())
-            zone.actor.set_position(...clone.get_transformed_position())
+            let [ok, x, y] = space.cloneContainer.transform_stage_point(...clone.get_transformed_position())
+            zone.actor.set_position(x, y)
             zone.actor.set_size(...clone.get_transformed_size())
         } else {
             zone.actor[zone.sizeProp] = 0;
