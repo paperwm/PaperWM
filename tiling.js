@@ -623,6 +623,8 @@ class Space extends Array {
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
         let clone = metaWindow.clone;
+        if (clone.get_parent() !== this.cloneContainer)
+            utils.trace('wrong parent', metaWindow);
         this.cloneContainer.remove_actor(clone);
         // Don't destroy the selection highlight widget
         if (clone.first_child.name === 'selection')
@@ -1073,14 +1075,45 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
                 if (inGrab) {
                     return;
                 }
-                let [aX, aY, mask] = global.get_pointer();
-                let [ok, x, y] =
-                    this.actor.transform_stage_point(aX, aY);
+                let [x, y] = event.get_coords();
                 let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
                 if (windowAtPoint) {
                     ensureViewport(windowAtPoint, this);
-                    inGrab = new Extension.imports.grab.MoveGrab(windowAtPoint, Meta.GrabOp.MOVING);
+                    inGrab = new Extension.imports.grab.MoveGrab(windowAtPoint, Meta.GrabOp.MOVING, this);
                     inGrab.begin();
+                }
+                // spaces.selectedSpace = this;
+                // nav.finish();
+            });
+
+        this.signals.connect(
+            this.background, 'scroll-event',
+            (actor, event) => {
+                let dir = event.get_scroll_direction();
+                if (dir === Clutter.ScrollDirection.SMOOTH)
+                    return;
+                // print(dir, Clutter.ScrollDirection.SMOOTH, Clutter.ScrollDirection.UP, Clutter.ScrollDirection.DOWN)
+                let dx
+                log(utils.ppEnumValue(dir, Clutter.ScrollDirection))
+                // let dx = dir === Clutter.ScrollDirection.DOWN ? -1 : 1
+                // let [dx, dy] = event.get_scroll_delta()
+
+                let [gx, gy] = event.get_coords();
+                if (!gx) {
+                    print("Noooo");
+                    return;
+                }
+                print(dx, gx, gy);
+
+                switch (dir) {
+                    case Clutter.ScrollDirection.LEFT:
+                    case Clutter.ScrollDirection.DOWN:
+                        this.switchLeft();
+                        break;
+                    case Clutter.ScrollDirection.RIGHT:
+                    case Clutter.ScrollDirection.UP:
+                        this.switchRight();
+                        break;
                 }
                 // spaces.selectedSpace = this;
                 // nav.finish();
