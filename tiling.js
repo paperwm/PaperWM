@@ -541,7 +541,7 @@ class Space extends Array {
 
     isWindowAtPoint(metaWindow, x, y) {
         let clone = metaWindow.clone;
-        let wX = clone.targetX + this.cloneContainer.x;
+        let wX = clone.x + this.cloneContainer.x;
         return x >= wX && x <= wX + clone.width &&
             y >= clone.y && y <= clone.y + clone.height;
     }
