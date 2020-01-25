@@ -282,7 +282,13 @@ var MoveGrab = class MoveGrab {
     }
 
     spaceMotion(space, background, event) {
-        let [bx, by] = event.get_coords();
+        e = event;
+        // e.get_coords()
+        // let p = new Clutter.Point()
+        // e.get_position(p)
+        let [x, y] = event.get_coords();
+        let [gx, gy, $] = global.get_pointer();
+        let [ok, bx, by] = space.actor.transform_stage_point(gx, gy);
         this.selectDndZone(space, bx - space.targetX, by);
     }
 
@@ -387,10 +393,10 @@ var MoveGrab = class MoveGrab {
         } else {
             let space = this.initialSpace;
             let clone = metaWindow.clone;
-            space.targetX = gx - space.monitor.x - this.scrollAnchor;
+            let [ok, x, y] = space.actor.transform_stage_point(gx, gy);
+            space.targetX = x - space.monitor.x - this.scrollAnchor;
             space.cloneContainer.x = space.targetX;
 
-            let [ok, x, y] = space.cloneContainer.transform_stage_point(gx, gy);
             clone.y = y - dy;
 
             const threshold = 300;
