@@ -1062,7 +1062,8 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
                 if (inGrab) {
                     return;
                 }
-                let [x, y] = event.get_coords();
+                let [gx, gy, $] = global.get_pointer();
+                let [ok, x, y] = this.actor.transform_stage_point(gx, gy);
                 let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
                 if (windowAtPoint) {
                     ensureViewport(windowAtPoint, this);
