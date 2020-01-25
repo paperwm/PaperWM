@@ -306,38 +306,6 @@ var MoveGrab = class MoveGrab {
         }
     }
 
-    // positionChanged() {
-    //     let metaWindow = this.window;
-
-    //     let [gx, gy, $] = global.get_pointer();
-
-    //     if (this.dnd) {
-    //         print("SHOULD NOT HAPPEND")
-    //         // this.selectDndZone(gx, gy);  // TODO: dead/obsolete?
-    //     } else {  // Move the window and scroll the space
-    //         let space = this.initialSpace;
-    //         let clone = metaWindow.clone;
-    //         let frame = metaWindow.get_frame_rect();
-    //         // scrollAnchhor = gx - space.monitor.x - space.cloneContainer.x
-    //         // scrollAnchhor - gx + space.monitor.x = - space.cloneContainer.x
-
-    //         space.targetX = gx - space.monitor.x - this.scrollAnchhor;
-    //         space.cloneContainer.x = space.targetX;
-
-    //         const threshold = 300;
-    //         const dy = Math.min(threshold, Math.abs(frame.y - this.initialY));
-    //         let s = 1 - Math.pow(dy / 500, 3);
-    //         let actor = metaWindow.get_compositor_private();
-    //         actor.set_scale(s, s);
-    //         clone.set_scale(s, s);
-    //         [clone.x, clone.y] = space.globalToScroll(frame.x, frame.y);
-
-    //         if (dy >= threshold) {
-    //             this.beginDnD();
-    //         }
-    //     }
-    // }
-
     // scroll(space, actor, event) {
     //     let dir = event.get_scroll_direction();
     //     if (dir === Clutter.ScrollDirection.SMOOTH)
