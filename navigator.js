@@ -281,36 +281,29 @@ var Navigator = class Navigator {
             monitor.clickOverlay.activate();
         }
 
-        if (this.space === from && force) {
+        if (this.space === from) {
             // Animate the selected space into full view - normally this
             // happens on workspace switch, but activating the same workspace
             // again doesn't trigger a switch signal
-            Tiling.spaces.animateToSpace(this.space);
+            force && Tiling.spaces.animateToSpace(this.space);
+        } else {
+            this.space.workspace.activate(global.get_current_time());
         }
 
         selected = this.space.indexOf(selected) !== -1 ? selected :
                    this.space.selectedWindow;
 
-        if (Tiling.inGrab && Tiling.inGrab.dnd) {
-            Tiling.spaces.monitors.set(this.monitor, this.space);
-            Tiling.spaces.animateToSpace(this.space);
-        } else {
-            if (selected &&
-                (!force ||
-                !(display.focus_window && display.focus_window.is_on_all_workspaces())) ) {
+        let focus = display.focus_window;
+        if (focus && focus.is_on_all_workspaces())
+            selected = focus;
 
-                let hasFocus = selected.has_focus();
-                selected.foreach_transient(mw => hasFocus = mw.has_focus() || hasFocus);
-                if (!hasFocus) {
-                    Main.activateWindow(selected);
-                } else {
-                    // Typically on cancel - the `focus` signal won't run
-                    // automatically, so we run it manually
-                    this.space.workspace.activate(global.get_current_time());
-                    Tiling.focus_handler(selected);
-                }
+        if (selected) {
+            let hasFocus = selected && selected.has_focus();
+            selected.foreach_transient(mw => hasFocus = mw.has_focus() || hasFocus);
+            if (hasFocus) {
+                Tiling.focus_handler(selected)
             } else {
-                this.space.workspace.activate(global.get_current_time());
+                Main.activateWindow(selected);
             }
         }
 
