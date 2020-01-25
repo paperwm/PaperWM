@@ -153,7 +153,11 @@ var ActionDispatcher = class {
         let metaWindow = space.selectedWindow;
 
         if (action && action.options.activeInNavigator) {
-            if (action.options.opensMinimap) {
+            if (Tiling.inGrab && !Tiling.inGrab.dnd && Tiling.inGrab.window) {
+                Tiling.inGrab.beginDnD();
+            }
+
+            if (!Tiling.inGrab && action.options.opensMinimap) {
                 this.navigator._showMinimap(space);
             }
             action.handler(metaWindow, space, {navigator: this.navigator});
@@ -194,11 +198,6 @@ var Navigator = class Navigator {
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
         // Meta.disable_unredirect_for_screen(screen);
-        //
-        if (Tiling.inGrab && Tiling.inGrab.window) {
-            Tiling.inGrab.beginDnD();
-        }
-
         this.space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
 
         this._startWindow = this.space.selectedWindow;
