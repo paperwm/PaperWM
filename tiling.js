@@ -1078,6 +1078,8 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         this.signals.connect(
             this.background, 'scroll-event',
             (actor, event) => {
+                if (!inGrab && !Navigator.navigating)
+                    return;
                 let dir = event.get_scroll_direction();
                 if (dir === Clutter.ScrollDirection.SMOOTH)
                     return;
