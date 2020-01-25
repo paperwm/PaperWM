@@ -373,6 +373,8 @@ var StackOverlay = class StackOverlay {
         let column = space[index];
         this.target = mru.filter(w => column.includes(w))[0];
         let metaWindow = this.target;
+        if (!metaWindow)
+            return;
 
         let overlay = this.overlay;
         let actor = metaWindow.get_compositor_private();
