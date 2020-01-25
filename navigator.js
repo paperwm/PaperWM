@@ -194,6 +194,10 @@ var Navigator = class Navigator {
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
         // Meta.disable_unredirect_for_screen(screen);
+        //
+        if (Tiling.inGrab && Tiling.inGrab.window) {
+            Tiling.inGrab.beginDnD();
+        }
 
         this.space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
 
