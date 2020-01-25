@@ -386,7 +386,8 @@ var MoveGrab = class MoveGrab {
             space.targetX = gx - space.monitor.x - this.scrollAnchor;
             space.cloneContainer.x = space.targetX;
 
-            clone.y = gy - dy + space.monitor.y;
+            let [ok, x, y] = space.cloneContainer.transform_stage_point(gx, gy);
+            clone.y = y - dy;
 
             const threshold = 300;
             dy = Math.min(threshold, Math.abs(clone.y - this.initialY));
