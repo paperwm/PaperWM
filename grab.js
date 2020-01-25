@@ -365,9 +365,10 @@ var MoveGrab = class MoveGrab {
                 let [x, y] = clone.get_position();
                 space.addWindow(metaWindow, ...dndTarget.position);
 
-
-                let [ok, sx, sy] = space.cloneContainer.transform_stage_point(x, y);
-                [clone.x, clone.y] = [sx, sy];
+                let [ok, sx, sy] = space.cloneContainer.transform_stage_point(gx, gy);
+                let [dx, dy] = this.pointerOffset;
+                clone.x = sx - dx;
+                clone.y = sy - dy;
                 let newScale = clone.scale_x/space.actor.scale_x;
                 clone.set_scale(newScale, newScale);
 
