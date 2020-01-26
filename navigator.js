@@ -230,14 +230,14 @@ var Navigator = class Navigator {
         this.was_accepted = true;
     }
 
-    finish() {
+    finish(space) {
         if (grab)
             return;
         this.accept();
-        this.destroy();
+        this.destroy(space);
     }
 
-    destroy() {
+    destroy(space) {
         this.minimaps.forEach(m => {
             if (typeof(m) === 'number')
                 Mainloop.source_remove(m);
@@ -255,7 +255,7 @@ var Navigator = class Navigator {
             this.space.monitor.clickOverlay.hide();
         }
 
-        this.space = Tiling.spaces.selectedSpace;
+        this.space = space || Tiling.spaces.selectedSpace;
 
         let from = this.from;
         let selected = this.space.selectedWindow;
