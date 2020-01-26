@@ -345,6 +345,7 @@ var MoveGrab = class MoveGrab {
         let actor = metaWindow.get_compositor_private();
         let frame = metaWindow.get_frame_rect();
         let clone = metaWindow.clone;
+        let destSpace;
         let [gx, gy, $] = global.get_pointer();
 
         if (this.dnd) {
@@ -356,6 +357,7 @@ var MoveGrab = class MoveGrab {
 
             if (dndTarget) {
                 let space = dndTarget.space;
+                destSpace = space;
                 space.selection.show()
 
                 if (Scratch.isScratchWindow(metaWindow))
@@ -416,6 +418,7 @@ var MoveGrab = class MoveGrab {
             }
         } else if (this.initialSpace.indexOf(metaWindow) !== -1){
             let space = this.initialSpace;
+            destSpace = space;
             space.targetX = space.cloneContainer.x;
 
             actor.set_scale(1, 1);
@@ -449,7 +452,7 @@ var MoveGrab = class MoveGrab {
         // metaWindow.change_workspace(space.workspace)
         // space.workspace.activate(global.get_current_time());
         Tiling.inGrab = false;
-        Navigator.getNavigator().finish();
+        Navigator.getNavigator().finish(destSpace);
         global.display.set_cursor(Meta.Cursor.DEFAULT);
     }
 
