@@ -181,6 +181,10 @@ var MoveGrab = class MoveGrab {
         global.display.end_grab_op(global.get_current_time());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
 
+        for (let [monitor, $] of Tiling.spaces.monitors) {
+            monitor.clickOverlay.deactivate();
+        }
+
         let metaWindow = this.window;
         let actor = metaWindow.get_compositor_private();
         let clone = metaWindow.clone;
@@ -312,6 +316,11 @@ var MoveGrab = class MoveGrab {
             clone.x = gx - dx;
             clone.y = gy - dy;
         } else {
+            let monitor = monitorAtPoint(gx, gy);
+            if (monitor !== this.initialSpace.monitor) {
+                this.beginDnD();
+                return;
+            }
             let space = this.initialSpace;
             let clone = metaWindow.clone;
             let [ok, x, y] = space.actor.transform_stage_point(gx, gy);
