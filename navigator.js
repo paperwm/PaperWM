@@ -271,14 +271,16 @@ var Navigator = class Navigator {
                 selected = display.focus_window;
         }
 
-        if (this.monitor !== this.space.monitor) {
-            this.space.setMonitor(this.monitor, true);
-        }
-
+        let visible = [];
         for (let monitor of Main.layoutManager.monitors) {
-            if (monitor === this.monitor || !monitor.clickOverlay)
+            visible.push( Tiling.spaces.monitors.get(monitor));
+            if (monitor === this.monitor)
                 continue;
             monitor.clickOverlay.activate();
+        }
+
+        if (!visible.includes(space) && this.monitor !== this.space.monitor) {
+            this.space.setMonitor(this.monitor, true);
         }
 
         if (this.space === from) {
