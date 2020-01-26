@@ -272,10 +272,6 @@ var MoveGrab = class MoveGrab {
     }
 
     spaceMotion(space, background, event) {
-        e = event;
-        // e.get_coords()
-        // let p = new Clutter.Point()
-        // e.get_position(p)
         let [x, y] = event.get_coords();
         let [gx, gy, $] = global.get_pointer();
         let [ok, bx, by] = space.actor.transform_stage_point(gx, gy);
