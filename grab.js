@@ -315,7 +315,7 @@ var MoveGrab = class MoveGrab {
             let space = this.initialSpace;
             let clone = metaWindow.clone;
             let [ok, x, y] = space.actor.transform_stage_point(gx, gy);
-            space.targetX = x - space.monitor.x - this.scrollAnchor;
+            space.targetX = x - this.scrollAnchor;
             space.cloneContainer.x = space.targetX;
 
             clone.y = y - dy;
