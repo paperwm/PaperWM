@@ -289,7 +289,11 @@ var Navigator = class Navigator {
             // again doesn't trigger a switch signal
             force && Tiling.spaces.animateToSpace(this.space);
         } else {
-            this.space.workspace.activate(global.get_current_time());
+            if (Tiling.inGrab && Tiling.inGrab.window) {
+                this.space.workspace.activate_with_focus(Tiling.inGrab.window, global.get_current_time());
+            } else {
+                this.space.workspace.activate(global.get_current_time());
+            }
         }
 
         selected = this.space.indexOf(selected) !== -1 ? selected :
@@ -299,7 +303,7 @@ var Navigator = class Navigator {
         if (focus && focus.is_on_all_workspaces())
             selected = focus;
 
-        if (selected) {
+        if (selected && !Tiling.inGrab) {
             let hasFocus = selected && selected.has_focus();
             selected.foreach_transient(mw => hasFocus = mw.has_focus() || hasFocus);
             if (hasFocus) {
