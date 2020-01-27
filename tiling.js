@@ -1606,6 +1606,10 @@ class Spaces extends Map {
         let toSpace = this.spaceOf(to);
         let fromSpace = this.spaceOf(from);
 
+        if (inGrab && inGrab.window) {
+            inGrab.window.change_workspace(toSpace.workspace);
+        }
+
         for (let metaWindow of toSpace.getWindows()) {
             // Make sure all windows belong to the correct workspace.
             // Note: The 'switch-workspace' signal (this method) runs before mutter decides on focus window.
