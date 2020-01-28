@@ -191,7 +191,8 @@ var MoveGrab = class MoveGrab {
         let space = this.initialSpace;
         let frame = metaWindow.get_frame_rect();
 
-        this.initialY = clone.y;
+        this.initialY = clone.targetY;
+        Tweener.removeTweens(clone);
         let [gx, gy, $] = global.get_pointer();
 
         let px = (gx - actor.x) / actor.width;
