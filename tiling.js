@@ -802,7 +802,7 @@ class Space extends Array {
             Navigator.navigating || inPreview ||
             Main.overview.visible ||
             // Block when we're carrying a window in dnd
-            (inGrab && inGrab.dnd && inGrab.window)
+            (inGrab && inGrab.window)
            ) {
             return;
         }
