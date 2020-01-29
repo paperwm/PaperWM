@@ -1082,7 +1082,7 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
                     ensureViewport(windowAtPoint, this);
                     inGrab = new Extension.imports.grab.MoveGrab(windowAtPoint, Meta.GrabOp.MOVING, this);
                     inGrab.begin();
-                } else {
+                } else if (inPreview) {
                     spaces.selectedSpace = this;
                     Navigator.getNavigator().finish();
                 }
