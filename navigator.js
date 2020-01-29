@@ -287,7 +287,10 @@ var Navigator = class Navigator {
             // Animate the selected space into full view - normally this
             // happens on workspace switch, but activating the same workspace
             // again doesn't trigger a switch signal
-            force && Tiling.spaces.animateToSpace(this.space);
+            if (force) {
+                const workspaceId = this.space.workspace.index();
+                Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId);
+            }
         } else {
             if (Tiling.inGrab && Tiling.inGrab.window) {
                 this.space.workspace.activate_with_focus(Tiling.inGrab.window, global.get_current_time());
