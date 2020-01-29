@@ -347,19 +347,28 @@ var tweener = {
     }
 };
 
+function isMetaWindow(obj) {
+    return obj && obj.window_type && obj.get_compositor_private;
+}
 
 function trace(topic, ...args) {
-    windowTrace(topic, ...args);
+    if (!topic.match(/.*/)) {
+        return;
+    }
+
+    if (isMetaWindow(args[0])) {
+        windowTrace(topic, ...args);
+    } else {
+        let trace = shortTrace(1).join(" < ");
+        let extraInfo = args.length > 0 ? "\n\t" + args.map(x => x.toString()).join("\n\t") : ""
+        log(topic, trace, extraInfo);
+    }
 }
 
 let existingWindows = new Set();
 
 function windowTrace(topic, metaWindow, ...rest) {
     if (existingWindows.has(metaWindow)) {
-        return;
-    }
-
-    if (!topic.match(/.*/)) {
         return;
     }
 
