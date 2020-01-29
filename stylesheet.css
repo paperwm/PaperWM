@@ -2,3 +2,15 @@
     border: 10px cyan; /* if we need to operate in pre-scaled dimension */
     border-radius: 5px;
 }
+
+
+.workspace-icon-button {
+    -st-icon-style: symbolic;
+    border: none;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.workspace-icon-button StIcon {
+    icon-size: 16px;
+}
