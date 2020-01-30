@@ -301,6 +301,7 @@ class Signals extends Map {
         if (ids) {
             if (id === null) {
                 ids.forEach(id => object.disconnect(id));
+                ids = [];
             } else {
                 object.disconnect(id);
                 let i = ids.indexOf(id);
