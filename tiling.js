@@ -566,6 +566,23 @@ class Space extends Array {
             this.splice(index, 0, [metaWindow]);
         }
 
+        /*
+         * 3.35+ has a bug where move_frame sometimes triggers another move back to its original position. Make sure tiled windows are always positioned correctly.
+         */
+        this.signals.connect(metaWindow, 'position-changed', (w) => {
+            if (inGrab)
+                return
+            let f = w.get_frame_rect();
+            let clone = w.clone;
+            let x = clone.targetX + this.targetX;
+            let y = this.monitor.y + clone.targetY;
+            x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
+            x += this.monitor.x;
+            if (f.x !== x || f.y !== y) {
+                w.move_frame(true, x, y);
+            }
+        });
+
         metaWindow.clone.reparent(this.cloneContainer);
 
         // Make sure the cloneContainer is in a clean state (centered) before layout
@@ -581,6 +598,8 @@ class Space extends Array {
         let index = this.indexOf(metaWindow);
         if (index === -1)
             return this.removeFloating(metaWindow);
+
+        this.signals.disconnect(metaWindow);
 
         let selected = this.selectedWindow;
         if (selected === metaWindow) {
@@ -786,10 +805,12 @@ class Space extends Array {
         this.visible = [];
         const monitor = this.monitor;
         this.getWindows().forEach(w => {
-            if (!w.get_compositor_private())
+            let actor = w.get_compositor_private();
+            if (!actor)
                 return;
 
-            if (this.isPlaceable(w))
+            let placeable = this.isPlaceable(w);
+            if (placeable)
                 this.visible.push(w);
 
             // Guard against races between move_to and layout
@@ -803,9 +824,13 @@ class Space extends Array {
                 return;
 
             let clone = w.clone;
-            let x = monitor.x + Math.round(clone.x) + this.targetX;
-            let y = monitor.y + Math.round(clone.y);
             let f = w.get_frame_rect();
+            let x = clone.targetX + this.targetX;
+            let y = monitor.y + clone.targetY;
+            x = Math.max(stack_margin - f.width, x);
+            x = Math.min(this.width - stack_margin, x);
+            x += monitor.x;
+            // let b = w.get_frame_rect();
             if ((f.x !== x || f.y !== y)) {
                 w.move_frame(true, x, y);
             }
