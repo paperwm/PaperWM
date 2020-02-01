@@ -60,7 +60,7 @@ try {
     true
 } catch (e) {
     if (e.message === "paperwm-loaded")
-       "paperwm already loaded"
+	true
     else
         e.message + "  " + e.stack;
 };
@@ -68,17 +68,17 @@ EOF
 `
 echo "Trying to load and enable extension:"
 RET=`gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell -m org.gnome.Shell.Eval "$ENABLE"`
-if [[ "(true, '\"paperwm already loaded\"')" = "$RET" ]]; then
-    echo "paperwm is already loaded, enabling with gnome-extensions"
-    if type gnome-extensions > /dev/null; then
+if [[ "(true, 'true')" == "$RET" ]]; then
+    # Enable with gnome-extensions tool since `extensionSystem.enableExtension`
+    # doesn't write to dconf in version < 3.34
+    if type gnome-extensions &> /dev/null; then
         gnome-extensions enable "$UUID"
     else
         gnome-shell-extension-tool --enable="$UUID"
     fi
-    echo Success
-elif [[ "(true, 'true')" != "$RET" ]]; then
+else
     echo something went wrong:
     echo $RET | sed -e "s/(true, '\"//" | sed -e "s/\\\\n/\n/g"
-else
+    
     echo Success
 fi
