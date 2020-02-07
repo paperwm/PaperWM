@@ -263,7 +263,7 @@ class SettingsWidget {
         box.add(scratchFrame);
         scratchFrame.add(scratch);
 
-        ['toggle-scratch-layer', 'toggle-scratch']
+        ['toggle-scratch-layer', 'toggle-scratch', "toggle-scratch-window"]
             .forEach(k => {
                 addKeybinding(scratch.model.child_model, settings, k);
             });
