@@ -209,12 +209,16 @@ function toggleCloneMarks() {
     // NB: doesn't clean up signal on disable
 
     function markCloneOf(metaWindow) {
-        if (metaWindow.clone)
+        if (metaWindow.clone) {
             metaWindow.clone.opacity = 190;
+            metaWindow.clone.background_color = imports.gi.Clutter.color_from_string("red")[1];
+        }
     }
     function unmarkCloneOf(metaWindow) {
-        if (metaWindow.clone)
+        if (metaWindow.clone) {
             metaWindow.clone.opacity = 255;
+            metaWindow.clone.background_color = null;
+        }
     }
 
     let windows = display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
@@ -274,6 +278,38 @@ function monitorOfPoint(x, y) {
     return null;
 }
 
+
+function indent(level, str) {
+    let blank = ""
+    for (let i = 0; i < level; i++) {
+        blank += "  "
+    }
+    return blank + str
+}
+
+
+function fmt(actor) {
+    let extra = [
+        `${actor.get_position()}`,
+        `${actor.get_size()}`,
+    ];
+    let metaWindow = actor.meta_window || actor.metaWindow;
+    if (metaWindow) {
+        metaWindow = `(mw: ${metaWindow.title})`;
+        extra.push(metaWindow);
+    }
+    return `${actor.toString()} ${extra.join(" | ")}`;
+}
+
+function printActorTree(node, fmt=fmt, limit=Infnity, level=1) {
+    if (level > limit) {
+        return;
+    }
+    print(indent(level, fmt(node)));
+    for (let child of node.get_children()) {
+        printActorTree(child, fmt, limit, level+1);
+    }
+}
 
 class Signals extends Map {
     static get [Symbol.species]() { return Map; }
