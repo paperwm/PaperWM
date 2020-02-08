@@ -295,6 +295,7 @@ class SettingsWidget {
         let backgroundBox = new Gtk.Box({spacing: 32});  // same spacing as used in glade for default background
         let background = new Gtk.FileChooserButton();
         let clearBackground = new Gtk.Button({label: 'Clear', sensitive: settings.get_string('background') != ''});
+        let hideTopBarSwitch = new Gtk.Switch({active: !settings.get_boolean('show-top-bar')});
         backgroundBox.add(background)
         backgroundBox.add(clearBackground)
 
@@ -306,6 +307,7 @@ class SettingsWidget {
         list.add(createRow('Name', nameEntry));
         list.add(createRow('Color', colorButton));
         list.add(createRow('Background', backgroundBox));
+        list.add(createRow('Hide top bar', hideTopBarSwitch));
         list.add(createRow('Directory', directoryChooser));
 
         let rgba = new Gdk.RGBA();
@@ -358,6 +360,10 @@ class SettingsWidget {
             background.unselect_all();  // Note: does not trigger 'file-set'
             settings.reset('background');
             clearBackground.sensitive = settings.get_string('background') != '';
+        });
+
+        hideTopBarSwitch.connect('state-set', (gtkswitch_, state) => {
+            settings.set_boolean('show-top-bar', !state);
         });
 
         let dir = settings.get_string('directory')
