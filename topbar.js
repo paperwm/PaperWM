@@ -219,11 +219,11 @@ class WorkspaceMenu extends PanelMenu.Button {
         // this._contentBox.add_actor(this.colors.actor);
         // this.menu.box.add_actor(this._contentBox);
 
-        this._zenItem = new PopupMenu.PopupSwitchMenuItem('Hide top bar', false);
-        this.menu.addMenuItem(this._zenItem);
-        this._zenItem.connect('toggled', item => {
-            Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', !item.state);
-        });
+        // this._zenItem = new PopupMenu.PopupSwitchMenuItem('Hide top bar', false);
+        // this.menu.addMenuItem(this._zenItem);
+        // this._zenItem.connect('toggled', item => {
+        //     Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', !item.state);
+        // });
 
         function createButton(icon_name, accessible_name) {
             return new St.Button({reactive: true,
