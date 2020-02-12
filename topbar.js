@@ -500,7 +500,7 @@ function enable () {
     menu = new WorkspaceMenu();
     // Work around 'actor' warnings
     let panelActor = Main.panel.actor;
-    signals.connect(menu._label, 'notify::allocation', (label) => {
+    function fixLabel(label) {
         let point = new Clutter.Vertex({x: 0, y: 0});
         let r = label.apply_relative_transform_to_point(panelActor, point);
 
@@ -510,7 +510,9 @@ function enable () {
                 let fontDescription = label.clutter_text.font_description;
                 space.label.clutter_text.set_font_description(fontDescription);
             }})
-    });
+    }
+    fixLabel(menu._label);
+    signals.connect(menu._label, 'notify::allocation', fixLabel);
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.actor.show();
 
