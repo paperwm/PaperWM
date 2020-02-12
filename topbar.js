@@ -532,7 +532,13 @@ function enable () {
         hide();
     });
 
-    signals.connect(panelBox, 'show', show);
+    signals.connect(panelBox, 'show', () => {
+        let focus = display.focus_window;
+        if (focus && focus.fullscreen)
+            hide();
+        else
+            show();
+    });
     signals.connect(panelBox, 'hide', () => {
         if (!Tiling.spaces.selectedSpace.showTopBar)
             return;
