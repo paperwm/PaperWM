@@ -135,6 +135,14 @@ class SettingsWidget {
                                        state);
         });
 
+        let topbarFollowFocus = this.builder.get_object('topbar-follow-focus');
+        topbarFollowFocus.state =
+            this._settings.get_boolean('topbar-follow-focus');
+        topbarFollowFocus.connect('state-set', (obj, state) => {
+            this._settings.set_boolean('topbar-follow-focus',
+                                       state);
+        });
+
 
         // Workspaces
 

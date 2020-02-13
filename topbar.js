@@ -23,9 +23,11 @@ var Tiling = Extension.imports.tiling;
 var Navigator = Extension.imports.navigator;
 var Utils = Extension.imports.utils;
 
-var prefs = Extension.imports.settings.prefs;
+var Settings = Extension.imports.settings;
+var prefs = Settings.prefs;
 
 var panelBox = Main.layoutManager.panelBox;
+var panelMonitor;
 
 var workspaceManager = global.workspace_manager;
 var display = global.display;
@@ -466,8 +468,7 @@ class WorkspaceMenu extends PanelMenu.Button {
     }
 
     workspaceSwitched(wm, fromIndex, toIndex) {
-        let space = Tiling.spaces.spaceOf(workspaceManager.get_workspace_by_index(toIndex));
-        this._label.set_text(space.name);
+        updateWorkspaceIndicator(toIndex);
     }
 
     destroy() {
@@ -504,15 +505,12 @@ function enable () {
         let point = new Clutter.Vertex({x: 0, y: 0});
         let r = label.apply_relative_transform_to_point(panelActor, point);
 
-        imports.mainloop.timeout_add(0, () => {
-            for (let [workspace, space] of Tiling.spaces) {
-                space.label.set_position(panelActor.x + Math.round(r.x), panelActor.y + Math.round(r.y));
-                let fontDescription = label.clutter_text.font_description;
-                space.label.clutter_text.set_font_description(fontDescription);
-            }})
+        for (let [workspace, space] of Tiling.spaces) {
+            space.label.set_position(panelActor.x + Math.round(r.x), panelActor.y + Math.round(r.y));
+            let fontDescription = label.clutter_text.font_description;
+            space.label.clutter_text.set_font_description(fontDescription);
+        }
     }
-    fixLabel(menu._label);
-    signals.connect(menu._label, 'notify::allocation', fixLabel);
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.actor.show();
 
@@ -534,24 +532,29 @@ function enable () {
         hide();
     });
 
+    signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
+        let monitors = Tiling.spaces.monitors;
+        let to = setMonitor(Main.layoutManager.focusMonitor);
+        let space = monitors.get(to);
+        updateWorkspaceIndicator(space.workspace.index());
+        for (let [workspace, space] of Tiling.spaces) {
+            space.layout();
+        }
+
+    });
+
     signals.connect(panelBox, 'show', () => {
-        let focus = display.focus_window;
-        if (focus && focus.fullscreen
-            && !Main.overview.visible && !Tiling.inPreview)
-            hide();
-        else
-            show();
+        show();
     });
     signals.connect(panelBox, 'hide', () => {
-        if (!Tiling.spaces.selectedSpace.showTopBar)
-            return;
-
-        if (display.focus_window && display.focus_window.fullscreen) {
-            hide();
-        } else {
-            panelBox.show();
-        }
+        hide();
     });
+
+    fixLabel(menu._label);
+    signals.connect(menu._label, 'notify::allocation', fixLabel);
+    signals.connectOneShot(menu._label, 'notify::allocation', () => {
+        setMonitor(Main.layoutManager.primaryMonitor);
+    })
 }
 
 function disable() {
@@ -570,10 +573,11 @@ function disable() {
 }
 
 function show() {
-    let hideTopBar = !(Tiling.spaces && Tiling.spaces.selectedSpace.showTopBar);
-    if (hideTopBar &&
-        !Main.overview.visible &&
-        !Tiling.inPreview) {
+    let focus = display.focus_window;
+    let normal = !Main.overview.visible && !Tiling.inPreview
+    let fullscreen = focus && focus.fullscreen && focus.get_monitor() === panelMonitor.index
+    let hideTopBar = !(Tiling.spaces && Tiling.spaces.monitors.get(panelMonitor).showTopBar)
+    if (normal && (hideTopBar || fullscreen)) {
         hide();
         return;
     }
@@ -583,23 +587,34 @@ function show() {
 }
 
 function hide() {
-    panelBox.hide();
-    let hideTopBar = !(Tiling.spaces && Tiling.spaces.selectedSpace.showTopBar);
-    if (hideTopBar &&
-        !Main.overview.visible &&
-        !Tiling.inPreview) {
+    let normal = !Main.overview.visible && !Tiling.inPreview
+    let hideTopBar = !(Tiling.spaces && Tiling.spaces.monitors.get(panelMonitor).showTopBar)
+    if (normal && hideTopBar) {
         // Update the workarea to support hide top bar
         panelBox.scale_y = 0;
+        panelBox.hide();
+        return;
+    }
+    let focus = display.focus_window;
+    let fullscreen = focus && focus.fullscreen && focus.get_monitor() === panelMonitor.index
+    if (normal && !fullscreen) {
+        show();
     }
 }
+
+
 
 /**
    Override the activities label with the workspace name.
    let workspaceIndex = 0
 */
 function updateWorkspaceIndicator (index) {
-    let space = Tiling.spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
-    setWorkspaceName(space.name);
+    let spaces = Tiling.spaces;
+    let space = spaces && spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
+    let onMonitor = space && space.monitor === panelMonitor;
+    let nav = Navigator.navigator
+    if (onMonitor || (Tiling.inPreview && nav && nav.from.monitor === panelMonitor))
+        setWorkspaceName(space.name);
 };
 
 function setWorkspaceName (name) {
@@ -607,8 +622,12 @@ function setWorkspaceName (name) {
 }
 
 function setMonitor(monitor) {
+    if (!prefs.topbar_follow_focus)
+        monitor = Main.layoutManager.primaryMonitor;
     let panelBox = Main.layoutManager.panelBox;
+    panelMonitor = monitor;
     panelBox.set_position(monitor.x, monitor.y);
     panelBox.width = monitor.width;
     show();
+    return monitor;
 }

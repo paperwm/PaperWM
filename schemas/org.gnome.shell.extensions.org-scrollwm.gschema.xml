@@ -336,6 +336,11 @@
         <summary>Show the top bar on workspaces by default</summary>
     </key>
 
+    <key type="b" name="topbar-follow-focus">
+        <default>true</default>
+        <summary>Make the top bar follow the focused monitor</summary>
+    </key>
+
     <key type="d" name="animation-time">
         <default>0.25</default>
         <summary>Duration of animations in seconds</summary>

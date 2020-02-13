@@ -387,9 +387,11 @@ class Space extends Array {
             this._inLayout = false;
             return;
         }
+        let topBarAdjustment = this.showTopBar && (prefs.topbar_follow_focus || this.monitor === Main.layoutManager.primaryMonitor) ?
+            panelBox.height : 0;
         let availableHeight = (workArea.y - this.monitor.y + workArea.height -
-                               (panelBox.height)*this.showTopBar - prefs.vertical_margin - prefs.vertical_margin_bottom);
-        let y0 = (panelBox.height)*this.showTopBar + prefs.vertical_margin;
+                               topBarAdjustment - prefs.vertical_margin - prefs.vertical_margin_bottom);
+        let y0 = topBarAdjustment + prefs.vertical_margin;
         let fixPointAttempCount = 0;
 
         for (let i=0; i<this.length; i++) {
@@ -1001,7 +1003,7 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         this.name = name;
 
         if (this.workspace === workspaceManager.get_active_workspace()) {
-            TopBar.setWorkspaceName(this.name);
+            TopBar.updateWorkspaceIndicator(this.workspace.index());
         }
     }
 
