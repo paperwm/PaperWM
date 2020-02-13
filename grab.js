@@ -173,7 +173,8 @@ var MoveGrab = class MoveGrab {
         this.initialSpace = space || Tiling.spaces.spaceOfWindow(metaWindow);
     }
 
-    begin() {
+    begin({center} = {}) {
+        this.center = center;
         log(`begin`)
         if (this.grabbed)
             return;
@@ -202,7 +203,8 @@ var MoveGrab = class MoveGrab {
         let [ok, x, y] = space.cloneContainer.transform_stage_point(gx, gy);
         px = (x - clone.x) / clone.width;
         py = (y - clone.y) / clone.height;
-        clone.set_pivot_point(px, py);
+        !center && clone.set_pivot_point(px, py);
+        center && clone.set_pivot_point(0, 0);
         if (clone.get_parent()) {
             this.pointerOffset = [x - clone.x, y - clone.y];
         } else {
@@ -223,29 +225,42 @@ var MoveGrab = class MoveGrab {
         Tweener.removeTweens(space.cloneContainer);
     }
 
-    beginDnD() {
+    beginDnD({center} = {}) {
         if (this.dnd)
             return;
+        this.center = center;
+        this.dnd = true;
         log(`beginDND`)
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
-        this.dnd = true;
         let metaWindow = this.window;
         let actor = metaWindow.get_compositor_private();
         let clone = metaWindow.clone;
         let space = this.initialSpace;
+
+        let point = space.cloneContainer.apply_relative_transform_to_point(
+            global.stage, new Clutter.Vertex({x: clone.x, y: clone.y}));
 
         let i = space.indexOf(metaWindow);
         let single = i !== -1 && space[i].length === 1;
         space.removeWindow(metaWindow);
         clone.reparent(Main.uiGroup);
         let [gx, gy, $] = global.get_pointer();
-        let [dx, dy] = this.pointerOffset;
-        clone.x = gx - dx;
-        clone.y = gy - dy;
+
+        clone.x = Math.round(point.x);
+        clone.y = Math.round(point.y);
 
         let newScale = clone.scale_x*space.actor.scale_x;
         clone.set_scale(newScale, newScale);
-        Tweener.addTween(clone, {time: prefs.animation_time, scale_x: 0.5, scale_y: 0.5});
+
+        let params = {time: prefs.animation_time, scale_x: 0.5, scale_y: 0.5}
+        if (center) {
+            this.pointerOffset = [0, 0];
+            clone.set_pivot_point(0, 0)
+            params.x = gx
+            params.y = gy
+        }
+
+        Tweener.addTween(clone, params);
 
         this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
 
@@ -257,12 +272,12 @@ var MoveGrab = class MoveGrab {
         let onSame = monitor === space.monitor;
 
         let [ok, x, y] = space.actor.transform_stage_point(gx, gy);
-        if (onSame && single && space[i]) {
+        if (!this.center && onSame && single && space[i]) {
             Tiling.move_to(space, space[i][0], { x: x + prefs.window_gap/2 });
-        } else if (onSame && single && space[i-1]) {
+        } else if (!this.center && onSame && single && space[i-1]) {
             Tiling.move_to(space, space[i-1][0], {
                 x: x - space[i-1][0].clone.width - prefs.window_gap/2 });
-        } else if (onSame && space.length === 0) {
+        } else if (!this.center && onSame && space.length === 0) {
             space.targetX = x;
             space.cloneContainer.x = x;
         }
@@ -313,9 +328,18 @@ var MoveGrab = class MoveGrab {
         let [dx, dy] = this.pointerOffset;
         let clone = metaWindow.clone;
 
+        let tx = clone.get_transition('x')
+        let ty = clone.get_transition('y')
+
         if (this.dnd) {
-            clone.x = gx - dx;
-            clone.y = gy - dy;
+            if (tx) {
+                log(`motion`, tx, this.pointerOffset)
+                tx.set_to(gx - dx)
+                ty.set_to(gy - dy)
+            } else {
+                clone.x = gx - dx;
+                clone.y = gy - dy;
+            }
         } else {
             let monitor = monitorAtPoint(gx, gy);
             if (monitor !== this.initialSpace.monitor) {
