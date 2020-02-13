@@ -136,45 +136,6 @@ class Space extends Array {
         let cloneContainer = new St.Widget();
         this.cloneContainer = cloneContainer;
 
-        let meta_display = global.screen ?
-            { meta_screen: global.screen } :
-            { meta_display: display };
-
-        const GDesktopEnums = imports.gi.GDesktopEnums;
-        let metaBackground = new Meta.Background(meta_display);
-        let background = new Meta.BackgroundActor(
-            Object.assign({
-                monitor: 0, background: metaBackground,
-                reactive: true // Disable the background menu
-            }, meta_display)
-        );
-
-        // This kills all mouse input on X11, but works on wayland
-        if (Meta.is_wayland_compositor()) {
-            Main.layoutManager.trackChrome(background);
-        }
-
-        this.signals.connect(
-            background, 'button-press-event',
-            (actor, event) => {
-                let [aX, aY, mask] = global.get_pointer();
-                let [ok, x, y] =
-                    this.actor.transform_stage_point(aX, aY);
-                let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
-                let nav = Navigator.getNavigator();
-                if (windowAtPoint) {
-                    ensureViewport(windowAtPoint, this);
-                }
-                spaces.selectedSpace = this;
-                nav.finish();
-            });
-
-            this.signals.connect(
-                background, 'captured-event',
-                Gestures.horizontalScroll.bind(this));
-
-        this.background = background;
-
         // Pick up the same css as the top bar label
         let label = new St.Label();
         let labelParent = new St.Widget({name: 'panel'});
@@ -200,7 +161,6 @@ class Space extends Array {
 
         container.add_actor(clip);
         clip.add_actor(actor);
-        actor.add_actor(this.background);
         actor.add_actor(labelParent);
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
@@ -217,9 +177,9 @@ class Space extends Array {
             if (oldMonitor)
                 monitor = oldMonitor;
         }
-        this.setMonitor(monitor, false);
 
         this.setSettings(Settings.getWorkspaceSettings(this.workspace.index()));
+        this.setMonitor(monitor, false);
 
         actor.set_pivot_point(0.5, 0);
 
@@ -956,8 +916,10 @@ class Space extends Array {
 
         this.settings = settings;
         this.uuid = uuid;
-        this.updateColor();
-        this.updateBackground();
+        if (this.background) {
+            this.updateColor();
+            this.updateBackground();
+        }
         this.updateName();
         this.updateShowTopBar();
         this.signals.connect(this.settings, 'changed::name',
@@ -1043,12 +1005,62 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         }
     }
 
+    createBackground() {
+        if (this.background) {
+            this.signals.disconnect(this.background)
+            this.background.destroy();
+        }
+
+        let monitor = this.monitor;
+        const GDesktopEnums = imports.gi.GDesktopEnums;
+        let meta_display = global.screen ?
+            { meta_screen: global.screen } :
+            { meta_display: display };
+        let metaBackground = new Meta.Background(meta_display);
+        this.background = new Meta.BackgroundActor(
+            Object.assign({
+                monitor: monitor.index, background: metaBackground,
+                reactive: true // Disable the background menu
+            }, meta_display)
+        );
+
+        this.actor.insert_child_below(this.background, null);
+
+        this.signals.connect(
+            this.background, 'button-press-event',
+            (actor, event) => {
+                let [aX, aY, mask] = global.get_pointer();
+                let [ok, x, y] =
+                    this.actor.transform_stage_point(aX, aY);
+                let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
+                let nav = Navigator.getNavigator();
+                if (windowAtPoint) {
+                    ensureViewport(windowAtPoint, this);
+                }
+                spaces.selectedSpace = this;
+                nav.finish();
+            });
+
+        this.signals.connect(
+            this.background, 'captured-event',
+            Gestures.horizontalScroll.bind(this));
+    }
+
     setMonitor(monitor, animate) {
-        let cloneContainer = this.cloneContainer;
+        // Remake the background when we move monitors. The size/scale will be
+        // incorrect when using fractional scaling.
+        if (monitor !== this.monitor) {
+            this.monitor = monitor;
+            this.createBackground();
+            this.updateBackground();
+            this.updateColor()
+        }
         let background = this.background;
+
+
+        let cloneContainer = this.cloneContainer;
         let clip = this.clip;
 
-        this.monitor = monitor;
         this.width = monitor.width;
         this.height = monitor.height;
 
