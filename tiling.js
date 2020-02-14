@@ -1342,7 +1342,6 @@ class Spaces extends Map {
                 space.clip.raise_top();
             }
             this.forEach(space => {
-                space.layout(false);
                 let selected = space.selectedWindow;
                 if (selected) {
                     ensureViewport(selected, space, true);
