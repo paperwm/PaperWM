@@ -2556,12 +2556,20 @@ function move_to(space, metaWindow, { x, y, force }) {
         return;
     }
 
-    space.startAnimate();
-    Tweener.addTween(space.cloneContainer,
-                     { x: target,
-                       time: prefs.animation_time,
-                       onComplete: space.moveDone.bind(space)
-                     });
+    // If we're quickly repeating movement, simply patch the current transition.
+    // This fixes an issue where queuing transitions too quickly will cause a
+    // big delay.
+    let tx = space.cloneContainer.get_transition('x');
+    if (tx && tx.is_playing() && tx.get_elapsed_time() < 50) {
+        tx.set_to(target);
+    } else {
+        space.startAnimate();
+        Tweener.addTween(space.cloneContainer,
+                         { x: target,
+                           time: prefs.animation_time,
+                           onComplete: space.moveDone.bind(space)
+                         });
+    }
 
     space.fixOverlays(metaWindow);
 }
