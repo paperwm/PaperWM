@@ -1,4 +1,3 @@
-
 var Extension;
 if (imports.misc.extensionUtils.extensions) {
     Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
@@ -200,7 +199,7 @@ var MoveGrab = class MoveGrab {
         let py = (gy - actor.y) / actor.height;
         actor.set_pivot_point(px, py);
 
-        let [ok, x, y] = space.cloneContainer.transform_stage_point(gx, gy);
+        let [x, y] = space.globalToScroll(gx, gy);
         px = (x - clone.x) / clone.width;
         py = (y - clone.y) / clone.height;
         !center && clone.set_pivot_point(px, py);
@@ -271,7 +270,7 @@ var MoveGrab = class MoveGrab {
 
         let onSame = monitor === space.monitor;
 
-        let [ok, x, y] = space.actor.transform_stage_point(gx, gy);
+        let [x, y] = space.globalToViewport(gx, gy);
         if (!this.center && onSame && single && space[i]) {
             Tiling.move_to(space, space[i][0], { x: x + prefs.window_gap/2 });
         } else if (!this.center && onSame && single && space[i-1]) {
@@ -282,7 +281,7 @@ var MoveGrab = class MoveGrab {
             space.cloneContainer.x = x;
         }
 
-        let [sx, sy] = space.globalToScroll(gx, gy, true);
+        let [sx, sy] = space.globalToScroll(gx, gy, {useTarget: true});
 
         for (let [workspace, space] of Tiling.spaces) {
             this.signals.connect(space.background, "motion-event", this.spaceMotion.bind(this, space));
@@ -292,10 +291,9 @@ var MoveGrab = class MoveGrab {
     }
 
     spaceMotion(space, background, event) {
-        let [x, y] = event.get_coords();
         let [gx, gy, $] = global.get_pointer();
-        let [ok, bx, by] = space.actor.transform_stage_point(gx, gy);
-        this.selectDndZone(space, bx - space.targetX, by);
+        let [sx, sy] = space.globalToScroll(gx, gy, {useTarget: true});
+        this.selectDndZone(space, sx, sy);
     }
 
     /** x,y in scroll cooridinates */
@@ -348,7 +346,7 @@ var MoveGrab = class MoveGrab {
             }
             let space = this.initialSpace;
             let clone = metaWindow.clone;
-            let [ok, x, y] = space.actor.transform_stage_point(gx, gy);
+            let [x, y] = space.globalToViewport(gx, gy);
             space.targetX = x - this.scrollAnchor;
             space.cloneContainer.x = space.targetX;
 
@@ -397,7 +395,7 @@ var MoveGrab = class MoveGrab {
                 let [x, y] = clone.get_position();
                 space.addWindow(metaWindow, ...dndTarget.position);
 
-                let [ok, sx, sy] = space.cloneContainer.transform_stage_point(gx, gy);
+                let [sx, sy] = space.globalToScroll(gx, gy);
                 let [dx, dy] = this.pointerOffset;
                 clone.x = sx - dx;
                 clone.y = sy - dy;
@@ -502,10 +500,7 @@ var MoveGrab = class MoveGrab {
 
             let clone = this.window.clone;
             let space = zone.space;
-            // let [x, y] = clone.get_transformed_position()
-            log(...clone.get_transformed_position(), clone.get_parent(), clone.x, clone.y, space.targetX)
-            // log(clone.get_transformed_size())
-            let [ok, x, y] = space.cloneContainer.transform_stage_point(...clone.get_transformed_position())
+            let [x, y] = space.globalToScroll(...clone.get_transformed_position())
             zone.actor.set_position(x, y)
             zone.actor.set_size(...clone.get_transformed_size())
         } else {

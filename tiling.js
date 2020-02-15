@@ -787,12 +787,19 @@ class Space extends Array {
         return column.indexOf(metaWindow);
     }
 
+    globalToViewport(gx, gy) {
+        let [ok, vx, vy] = this.actor.transform_stage_point(gx, gy);
+        return [Math.round(vx), Math.round(vy)];
+    }
+
     /** Transform global coordinates to scroll cooridinates (cloneContainer relative) */
-    globalToScroll(gx, gy, useTarget=false) {
-        // NB: must use this.cloneContainer.transform_stage_point(gx, gy) if stuff is not simply translated
-        let x = gx - this.monitor.x - (useTarget ? this.targetX : this.cloneContainer.x);
-        let y = gy - this.monitor.y - this.cloneContainer.y;
-        return [x, y];
+    globalToScroll(gx, gy, {useTarget = false} = {}) {
+        // Use the smart transform on the actor, as that's the one we scale etc.
+        // We can then use straight translation on the scroll which makes it possible to use target instead if wanted.
+        let [vx, vy] = this.globalToViewport(gx, gy);
+        let sx = vx - (useTarget ? this.targetX : this.cloneContainer.x);
+        let sy = vy - this.cloneContainer.y;
+        return [Math.round(sx), Math.round(sy)];
     }
 
     moveDone() {
