@@ -2560,10 +2560,10 @@ function move_to(space, metaWindow, { x, y, force }) {
     // This fixes an issue where queuing transitions too quickly will cause a
     // big delay.
     let tx = space.cloneContainer.get_transition('x');
+    space.startAnimate();
     if (tx && tx.is_playing() && tx.get_elapsed_time() < 50) {
         tx.set_to(target);
     } else {
-        space.startAnimate();
         Tweener.addTween(space.cloneContainer,
                          { x: target,
                            time: prefs.animation_time,
