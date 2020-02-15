@@ -2401,7 +2401,7 @@ function insertWindow(metaWindow, {existing}) {
             scale_x: 1,
             scale_y: 1,
             time: prefs.animation_time,
-            onComplete: () => {
+            onStopped: () => {
                 connectSizeChanged(true);
                 space.layout();
             }
