@@ -803,6 +803,10 @@ class Space extends Array {
         return [Math.round(sx), Math.round(sy)];
     }
 
+    viewportToScroll(vx, vy=0) {
+        return [vx - this.cloneContainer.x, vy - this.cloneContainer.y];
+    }
+
     moveDone() {
         if (this.cloneContainer.x !== this.targetX ||
             this.actor.y !== 0 ||
