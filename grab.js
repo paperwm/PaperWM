@@ -317,6 +317,13 @@ var MoveGrab = class MoveGrab {
                 this.beginDnD();
                 return;
             }
+
+            if (event.get_state() & Clutter.ModifierType.CONTROL_MASK) {
+                // NB: only works in wayland
+                this.beginDnD();
+                return;
+            }
+
             let space = this.initialSpace;
             let clone = metaWindow.clone;
             let [x, y] = space.globalToViewport(gx, gy);
