@@ -184,17 +184,21 @@ var MoveGrab = class MoveGrab {
             return actor;
         }
 
-        const lastClone = space[space.length - 1][0].clone;
-        const fakeClone = {
-            clone: {
-                targetX: lastClone.targetX + lastClone.width + gap,
-                targetY: lastClone.targetY,
-                width: columnZoneMargin,
-                height: tilingHeight
-            }
+        let fakeClone = {
+            targetX: null,
+            targetY: 0,
+            width: columnZoneMargin,
+            height: tilingHeight
         };
+        if (space.length > 0) {
+            const lastClone = space[space.length - 1][0].clone;
+            fakeClone.targetX = lastClone.x + lastClone.width + gap;
+        } else {
+            let [sx, sy] = space.viewportToScroll(Math.round(space.width/2), 0);
+            fakeClone.targetX = sx + halfGap;
+        }
 
-        const columns = [...space, [fakeClone]];
+        const columns = [...space, [{ clone: fakeClone }]];
         for (let j = 0; j < columns.length; j++) {
             const column = columns[j];
             const metaWindow = column[0];
@@ -278,7 +282,7 @@ var MoveGrab = class MoveGrab {
                 return true;
             if (!a || !b)
                 return false;
-            return a.position[0] === b.position[0] && a.position[1] === b.position[1];
+            return a.space === b.space && a.position[0] === b.position[0] && a.position[1] === b.position[1];
         }
 
         // TODO: rename dndTarget to selectedZone ?
