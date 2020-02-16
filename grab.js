@@ -32,136 +32,6 @@ function monitorAtPoint(gx, gy) {
     return null;
 }
 
-function createDndZonesForMonitors() {
-    let monitorToZones = new Map();
-    for (let [monitor, space] of Tiling.spaces.monitors) {
-        monitorToZones.set(monitor, createDnDZones(space));
-    }
-    return monitorToZones;
-}
-
-function createDnDZones(space) {
-
-    // In pixels protuding into the window. Ie. exclusive window_gap
-    let columnZoneMargin = 100;
-    let tileZoneMargin = 250;
-
-    function mkZoneActor(zone, color="red") {
-        let actor = new St.Widget({style_class: "tile-preview"})
-        actor.visible = false;
-        actor.x = zone.rect.x;
-        actor.y = zone.rect.y;
-        actor.width = zone.rect.width;
-        actor.height = zone.rect.height;
-
-        space.cloneContainer.add_actor(actor);
-        actor.raise_top();
-        return actor
-    }
-
-    function mkColumnZone(x, position) {
-        // Represent zones as center, margin instead of "regular" rects?
-        let margin = prefs.window_gap / 2 + columnZoneMargin
-
-        let detection = {
-            x: x - prefs.window_gap - columnZoneMargin,
-            y: 0,
-            width: margin * 2,
-            height: space.height
-        };
-
-        let zone = {
-            // Detection:
-            rect: detection,
-            position: position,
-
-            space: space,
-
-            // Visualization:
-            center: detection.x + detection.width / 2,
-            marginA: margin,  // left
-            marginB: margin,  // right
-
-            // Animation props:
-            originProp: "x",
-            sizeProp: "width",
-        };
-        zone.actor = mkZoneActor(zone, "red");
-        zone.actor.y = Tiling.panelBox.height;
-        zone.actor.height = space.height - Tiling.panelBox.height;
-        return zone;
-    }
-
-    function mkTileZone(x, y, width, position) {
-        let detection = {
-            x: x + columnZoneMargin,
-            y: y - prefs.window_gap - tileZoneMargin,
-            width: width - columnZoneMargin * 2,
-            height: prefs.window_gap + tileZoneMargin * 2,
-        };
-
-        let margin = prefs.window_gap + tileZoneMargin;
-        let cy = detection.y + detection.height / 2;
-        let marginTop = Math.min(cy - Tiling.panelBox.height, margin);
-        let marginBottom = margin;
-
-        let zone = {
-            rect: detection,
-            position: position,
-
-            space: space,
-
-            // Visualization:
-            center: cy,
-            marginA: marginTop,
-            marginB: marginBottom,
-
-            // Animation props:
-            originProp: "y",
-            sizeProp: "height",
-        };
-        zone.actor = mkZoneActor(zone, "blue");
-        zone.actor.x = x - prefs.window_gap / 2;
-        zone.actor.width = width + prefs.window_gap;
-        return zone;
-    }
-
-    let zones = [];
-    for (let i = 0; i < space.length; i++) {
-        let col = space[i];
-        zones.push(mkColumnZone(col[0].clone.targetX, [i]));
-
-        for (let j = 0; j < col.length; j++) {
-            let metaWindow = col[j];
-            let x = metaWindow.clone.targetX;
-            let y = metaWindow.clone.targetY;
-            let width = metaWindow._targetWidth || metaWindow.clone.width;
-            zones.push(mkTileZone(x, y, width, [i, j]));
-        }
-
-        let lastRow = col[col.length-1];
-        let x = lastRow.clone.targetX;
-        let y = lastRow.clone.targetY;
-        let width = lastRow._targetWidth || lastRow.clone.width;
-        let height = lastRow._targetHeight || lastRow.clone.height;
-        zones.push(mkTileZone(x, y + height + prefs.window_gap, width, [i, col.length]));
-    }
-
-    zones.push(mkColumnZone(space.cloneContainer.width + prefs.window_gap, [space.length]));
-    if (space.length === 0) {
-        space.targetX = Math.round(space.width/2);
-        space.cloneContainer.x = space.targetX;
-        let width = Math.round(space.width/2);
-        let zone = zones[0];
-        zone.rect.width = width;
-        zone.rect.x = -Math.round(width/2);
-        zone.rect.center = 0;
-    }
-
-    return zones;
-}
-
-
 var MoveGrab = class MoveGrab {
     constructor(metaWindow, type, space) {
         this.window = metaWindow;
@@ -170,6 +40,7 @@ var MoveGrab = class MoveGrab {
         this.grabbed = false;
 
         this.initialSpace = space || Tiling.spaces.spaceOfWindow(metaWindow);
+        this.zoneActors = new Set();
     }
 
     begin({center} = {}) {
@@ -180,6 +51,7 @@ var MoveGrab = class MoveGrab {
         this.grabbed = true
         global.display.end_grab_op(global.get_current_time());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
+
 
         for (let [monitor, $] of Tiling.spaces.monitors) {
             monitor.clickOverlay.deactivate();
@@ -263,9 +135,6 @@ var MoveGrab = class MoveGrab {
 
         this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
 
-        this.spaceToDndZones = new Map();
-        this.monitorToZones = createDndZonesForMonitors();
-
         let monitor = monitorAtPoint(gx, gy);
 
         let onSame = monitor === space.monitor;
@@ -285,7 +154,6 @@ var MoveGrab = class MoveGrab {
 
         for (let [workspace, space] of Tiling.spaces) {
             this.signals.connect(space.background, "motion-event", this.spaceMotion.bind(this, space));
-            this.spaceToDndZones.set(space, createDnDZones(space));
         }
         this.selectDndZone(space, sx, sy, single && onSame);
     }
@@ -298,25 +166,126 @@ var MoveGrab = class MoveGrab {
 
     /** x,y in scroll cooridinates */
     selectDndZone(space, x, y, initial=false) {
-        let dndZones = this.spaceToDndZones.get(space);
+        const gap = prefs.window_gap;
+        const halfGap = gap / 2;
+        const columnZoneMargin = 100 + halfGap;
+        const rowZoneMargin = 250 + halfGap;
 
-        let newDndTarget = null;
-        for (let zone of dndZones) {
-            if (isInRect(x, y, zone.rect)) {
-                if (newDndTarget) {
-                    // Treat ambiguous zones as non-match (this way we don't have to ensure zones are non-overlapping :P)
-                    newDndTarget = null;
+        let target = null;
+        const tilingHeight = space.height - Tiling.panelBox.height;
+
+        // TODO: move actor creation to activateDndTarget?
+        function mkZoneActor(props) {
+            let actor = new St.Widget({style_class: "tile-preview"});
+            actor.x = props.x;
+            actor.y = props.y;
+            actor.width = props.width;
+            actor.height = props.height;
+            return actor;
+        }
+
+        const lastClone = space[space.length - 1][0].clone;
+        const fakeClone = {
+            clone: {
+                targetX: lastClone.targetX + lastClone.width + gap,
+                targetY: lastClone.targetY,
+                width: columnZoneMargin,
+                height: tilingHeight
+            }
+        };
+
+        const columns = [...space, [fakeClone]];
+        for (let j = 0; j < columns.length; j++) {
+            const column = columns[j];
+            const metaWindow = column[0];
+            const clone = metaWindow.clone;
+
+            // FIXME: Non-uniform column width
+            const colX = clone.targetX;
+            const colW = clone.width;
+
+            // Fast forward if pointer is not inside column
+            if (x < colX - gap - columnZoneMargin) {
+                continue;
+            }
+            if (colX + colW < x) {
+                continue;
+            }
+
+            const cx = colX - halfGap;
+            const l = cx - columnZoneMargin;
+            const r = cx + columnZoneMargin;
+            if (l <= x && x <= r) {
+                target = {
+                    position: [j],
+                    center: cx,
+                    originProp: "x",
+                    sizeProp: "width",
+                    marginA: columnZoneMargin,
+                    marginB: columnZoneMargin,
+                    space: space,
+                    actor: mkZoneActor({
+                        x: l,
+                        y: Tiling.panelBox.height,
+                        width: columnZoneMargin*2,
+                        height: tilingHeight
+                    })
+                };
+                break;
+            }
+
+            for (let i = 0; i < column.length + 1; i++) {
+                let clone;
+                if (i < column.length) {
+                    clone = column[i].clone;
+                } else {
+                    let lastClone = column[i-1].clone;
+                    clone = {
+                        targetX: lastClone.targetX,
+                        targetY: lastClone.targetY + lastClone.height + gap,
+                        width: lastClone.width,
+                        height: 0
+                    };
+                }
+                const isFirst = i === 0;
+                const isLast = i === column.length;
+                const cy = clone.targetY - halfGap;
+                const t = cy - rowZoneMargin;
+                const b = cy + rowZoneMargin;
+                if (t <= y && y <= b) {
+                    target = {
+                        position: [j, i],
+                        center: cy,
+                        originProp: "y",
+                        sizeProp: "height",
+                        marginA: isFirst ? 0 : rowZoneMargin,
+                        marginB: isLast  ? 0 : rowZoneMargin,
+                        space: space,
+                        actor: mkZoneActor({
+                            x: clone.targetX,
+                            y: cy,
+                            width: clone.width,
+                            height: (isFirst ? 0 : rowZoneMargin) + (isLast  ? 0 : rowZoneMargin),
+                        })
+                    };
                     break;
                 }
-                newDndTarget = zone;
             }
         }
 
+        function sameTarget(a, b) {
+            if (a === b)
+                return true;
+            if (!a || !b)
+                return false;
+            return a.position[0] === b.position[0] && a.position[1] === b.position[1];
+        }
+
         // TODO: rename dndTarget to selectedZone ?
-        if (newDndTarget !== this.dndTarget) {
+        if (!sameTarget(target, this.dndTarget)) {
             this.dndTarget && this.deactivateDndTarget(this.dndTarget);
-            if (newDndTarget)
-                this.activateDndTarget(newDndTarget, initial);
+            if (target)
+                this.activateDndTarget(target, initial);
         }
     }
 
@@ -376,12 +345,10 @@ var MoveGrab = class MoveGrab {
         let destSpace;
         let [gx, gy, $] = global.get_pointer();
 
+        this.zoneActors.forEach(actor => actor.destroy());
+
         if (this.dnd) {
             let dndTarget = this.dndTarget;
-
-            for (let [space, zones] of this.spaceToDndZones) {
-                zones.forEach(zone => zone.actor.destroy());
-            }
 
             if (dndTarget) {
                 let space = dndTarget.space;
@@ -485,8 +452,11 @@ var MoveGrab = class MoveGrab {
     }
 
     activateDndTarget(zone, first) {
+        zone.space.cloneContainer.add_child(zone.actor);
+        zone.actor.raise_top();
         zone.space.selection.hide();
         this.dndTarget = zone;
+        this.zoneActors.add(zone.actor);
 
         let params = {
             time: prefs.animation_time,
@@ -520,7 +490,7 @@ var MoveGrab = class MoveGrab {
                 time: prefs.animation_time,
                 [zone.originProp]: zone.center,
                 [zone.sizeProp]: 0,
-                onComplete: () => zone.actor.hide()
+                onComplete: () => { zone.actor.destroy(); this.zoneActors.delete(zone.actor); }
             });
         }
 
