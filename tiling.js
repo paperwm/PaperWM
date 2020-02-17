@@ -1430,6 +1430,9 @@ class Spaces extends Map {
                     metaWindow.clone = null;
                 }
 
+                metaWindow._targetHeight = null;
+                metaWindow._targetWidth = null;
+
                 if (metaWindow.get_workspace() === workspaceManager.get_active_workspace()
                     && !metaWindow.minimized)
                     actor.show();
