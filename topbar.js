@@ -536,7 +536,8 @@ function enable () {
 
     signals.connect(panelBox, 'show', () => {
         let focus = display.focus_window;
-        if (focus && focus.fullscreen)
+        if (focus && focus.fullscreen
+            && !Main.overview.visible && !Tiling.inPreview)
             hide();
         else
             show();
