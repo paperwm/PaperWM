@@ -18,7 +18,9 @@ var Gio = imports.gi.Gio;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var Workspace = imports.ui.workspace;
+var WorkspaceView = imports.ui.workspacesView;
 var WindowManager = imports.ui.windowManager;
+var Overview = imports.ui.overview;
 var Shell = imports.gi.Shell;
 var utils = Extension.imports.utils;
 
@@ -331,7 +333,16 @@ function init() {
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
     registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition');
     registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions');
-    registerOverridePrototype(Workspace.Workspace, '_isMyWindow', _isMyWindow);
+
+    // Some new GObject.registerClass in 3.35
+    if (utils.version[1] < 35) {
+        registerOverridePrototype(Workspace.Workspace, '_isMyWindow', _isMyWindow);
+        registerOverridePrototype(Workspace.Workspace, '_updateWindowPositions', _updateWindowPositions);
+        registerOverridePrototype(Workspace.Workspace, 'fadeToOverview', fadeToOverview);
+        registerOverridePrototype(Workspace.Workspace, 'fadeFromOverview', fadeFromOverview);
+        registerOverridePrototype(Workspace.Workspace, 'zoomFromOverview', zoomFromOverview);
+        registerOverridePrototype(WorkspaceView.WorkspacesView, '_updateWorkspaceActors',   _updateWorkspaceActors);
+    }
     registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow');
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
     registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated');
@@ -657,4 +668,289 @@ function _isMyWindow(actor) {
     let winOnMonitor =  win.get_monitor() === this.monitorIndex;
 
     return (isOnAllWorkspaces && winOnMonitor) || (!isOnAllWorkspaces && isOnWorkspace && isOnMonitor);
+}
+
+function _updateWorkspaceActors(showAnimation) {
+    let workspaceManager = global.workspace_manager;
+    let active = workspaceManager.get_active_workspace_index();
+    let activeWorkspace = workspaceManager.get_active_workspace();
+    let spaces = Tiling.spaces;
+
+    let activeSpace = spaces.spaceOf(activeWorkspace);
+    if (activeSpace.monitor.index !== this._monitorIndex)
+        return;
+
+    for (let w = 0; w < this._workspaces.length; w++) {
+        let workspace = this._workspaces[w];
+
+        workspace.actor.remove_all_transitions();
+
+        let params = {};
+        if (workspaceManager.layout_rows == -1)
+            params.y = (w - active) * this._fullGeometry.height;
+        else if (this.actor.text_direction == Clutter.TextDirection.RTL)
+            params.x = (active - w) * this._fullGeometry.width;
+        else
+            params.x = (w - active) * this._fullGeometry.width;
+
+        if (showAnimation) {
+            let easeParams = Object.assign(params, {
+                duration: Workspace.WORKSPACE_SWITCH_TIME,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD
+            });
+            // we have to call _updateVisibility() once before the
+            // animation and once afterwards - it does not really
+            // matter which tween we use, so we pick the first one ...
+            if (w == 0) {
+                this._updateVisibility();
+                easeParams.onComplete = () => {
+                    this._animating = false;
+                    this._updateVisibility();
+                };
+            }
+            workspace.actor.ease(easeParams);
+        } else {
+            workspace.actor.set(params);
+            if (w == 0)
+                this._updateVisibility();
+        }
+    }
+}
+
+function _updateWindowPositions(flags) {
+    if (this._currentLayout == null) {
+        this._recalculateWindowPositions(flags);
+        return;
+    }
+
+    // We will reposition windows anyway when enter again overview or when ending the windows
+    // animations with fade animation.
+    // In this way we avoid unwanted animations of windows repositioning while
+    // animating overview.
+    if (this.leavingOverview || this._animatingWindowsFade)
+        return;
+
+    let initialPositioning = flags & Workspace.WindowPositionFlags.INITIAL;
+    let animate = flags & Workspace.WindowPositionFlags.ANIMATE;
+
+    let layout = this._currentLayout;
+    let strategy = layout.strategy;
+
+    let [, , padding] = this._getSpacingAndPadding();
+    let area = Workspace.padArea(this._actualGeometry, padding);
+    let slots = strategy.computeWindowSlots(layout, area);
+
+    let workspaceManager = global.workspace_manager;
+    let currentWorkspace = workspaceManager.get_active_workspace();
+    let isOnCurrentWorkspace = this.metaWorkspace == null || this.metaWorkspace == currentWorkspace;
+    // NOTE:
+    let spaces = Tiling.spaces;
+    let space = spaces.monitors.get(this._monitor);
+    let isOnVisibleMonitor = space.workspace === this.metaWorkspace;
+
+    for (let i = 0; i < slots.length; i++) {
+        let slot = slots[i];
+        let [x, y, scale, clone] = slot;
+
+        clone.slotId = i;
+
+        // Positioning a window currently being dragged must be avoided;
+        // we'll just leave a blank spot in the layout for it.
+        if (clone.inDrag)
+            continue;
+
+        let cloneWidth = clone.width * scale;
+        let cloneHeight = clone.height * scale;
+        clone.slot = [x, y, cloneWidth, cloneHeight];
+
+        let cloneCenter = x + cloneWidth / 2;
+        let maxChromeWidth = 2 * Math.min(
+            cloneCenter - area.x,
+            area.x + area.width - cloneCenter);
+        clone.overlay.setMaxChromeWidth(Math.round(maxChromeWidth));
+
+        if (clone.overlay && (initialPositioning || !clone.positioned))
+            clone.overlay.hide();
+
+        if (!clone.positioned) {
+            // This window appeared after the overview was already up
+            // Grow the clone from the center of the slot
+            clone.x = x + cloneWidth / 2;
+            clone.y = y + cloneHeight / 2;
+            clone.scale_x = 0;
+            clone.scale_y = 0;
+            clone.positioned = true;
+        }
+
+        if (animate && isOnVisibleMonitor) {
+            if (!clone.metaWindow.showing_on_its_workspace()) {
+                /* Hidden windows should fade in and grow
+                 * therefore we need to resize them now so they
+                 * can be scaled up later */
+                if (initialPositioning) {
+                    clone.opacity = 0;
+                    clone.scale_x = 0;
+                    clone.scale_y = 0;
+                    clone.x = x;
+                    clone.y = y;
+                }
+
+                clone.ease({
+                    opacity: 255,
+                    mode: Clutter.AnimationMode.EASE_IN_QUAD,
+                    duration: imports.ui.overview.ANIMATION_TIME
+                });
+            }
+
+            this._animateClone(clone, clone.overlay, x, y, scale);
+        } else {
+            // cancel any active tweens (otherwise they might override our changes)
+            clone.remove_all_transitions();
+            clone.set_position(x, y);
+            clone.set_scale(scale, scale);
+            clone.set_opacity(255);
+            clone.overlay.relayout(false);
+            this._showWindowOverlay(clone, clone.overlay);
+        }
+    }
+}
+
+function fadeToOverview() {
+    // We don't want to reposition windows while animating in this way.
+    this._animatingWindowsFade = true;
+    this._overviewShownId = Main.overview.connect('shown', this._doneShowingOverview.bind(this));
+    if (this._windows.length == 0)
+        return;
+
+    let workspaceManager = global.workspace_manager;
+    let activeWorkspace = workspaceManager.get_active_workspace();
+
+    let spaces = Tiling.spaces;
+    let space = spaces.monitors.get(this._monitor);
+    let isOnVisibleMonitor = space.workspace === this.metaWorkspace;
+
+    if (this.metaWorkspace != null && !isOnVisibleMonitor)
+        return;
+
+    // Special case maximized windows, since it doesn't make sense
+    // to animate windows below in the stack
+    let topMaximizedWindow;
+    // It is ok to treat the case where there is no maximized
+    // window as if the bottom-most window was maximized given that
+    // it won't affect the result of the animation
+    for (topMaximizedWindow = this._windows.length - 1; topMaximizedWindow > 0; topMaximizedWindow--) {
+        let metaWindow = this._windows[topMaximizedWindow].metaWindow;
+        if (metaWindow.maximized_horizontally && metaWindow.maximized_vertically)
+            break;
+    }
+
+    let nTimeSlots = Math.min(Workspace.WINDOW_ANIMATION_MAX_NUMBER_BLENDING + 1, this._windows.length - topMaximizedWindow);
+    let windowBaseTime = Overview.ANIMATION_TIME / nTimeSlots;
+
+    let topIndex = this._windows.length - 1;
+    for (let i = 0; i < this._windows.length; i++) {
+        if (i < topMaximizedWindow) {
+            // below top-most maximized window, don't animate
+            let overlay = this._windowOverlays[i];
+            if (overlay)
+                overlay.hide();
+            this._windows[i].opacity = 0;
+        } else {
+            let fromTop = topIndex - i;
+            let time;
+            if (fromTop < nTimeSlots) // animate top-most windows gradually
+                time = windowBaseTime * (nTimeSlots - fromTop);
+            else
+                time = windowBaseTime;
+
+            this._windows[i].opacity = 255;
+            this._fadeWindow(i, time, 0);
+        }
+    }
+}
+
+function fadeFromOverview() {
+    this.leavingOverview = true;
+    this._overviewHiddenId = Main.overview.connect('hidden', this._doneLeavingOverview.bind(this));
+    if (this._windows.length == 0)
+        return;
+
+    for (let i = 0; i < this._windows.length; i++)
+        this._windows[i].remove_all_transitions();
+
+    if (this._repositionWindowsId > 0) {
+        GLib.source_remove(this._repositionWindowsId);
+        this._repositionWindowsId = 0;
+    }
+
+    let workspaceManager = global.workspace_manager;
+    let activeWorkspace = workspaceManager.get_active_workspace();
+
+    let spaces = Tiling.spaces;
+    let space = spaces.monitors.get(this._monitor);
+    let isOnVisibleMonitor = space.workspace === this.metaWorkspace;
+    if (this.metaWorkspace != null && !isOnVisibleMonitor)
+        return;
+
+    // Special case maximized windows, since it doesn't make sense
+    // to animate windows below in the stack
+    let topMaximizedWindow;
+    // It is ok to treat the case where there is no maximized
+    // window as if the bottom-most window was maximized given that
+    // it won't affect the result of the animation
+    for (topMaximizedWindow = this._windows.length - 1; topMaximizedWindow > 0; topMaximizedWindow--) {
+        let metaWindow = this._windows[topMaximizedWindow].metaWindow;
+        if (metaWindow.maximized_horizontally && metaWindow.maximized_vertically)
+            break;
+    }
+
+    let nTimeSlots = Math.min(Workspace.WINDOW_ANIMATION_MAX_NUMBER_BLENDING + 1, this._windows.length - topMaximizedWindow);
+    let windowBaseTime = Overview.ANIMATION_TIME / nTimeSlots;
+
+    let topIndex = this._windows.length - 1;
+    for (let i = 0; i < this._windows.length; i++) {
+        if (i < topMaximizedWindow) {
+            // below top-most maximized window, don't animate
+            let overlay = this._windowOverlays[i];
+            if (overlay)
+                overlay.hide();
+            this._windows[i].opacity = 0;
+        } else {
+            let fromTop = topIndex - i;
+            let time;
+            if (fromTop < nTimeSlots) // animate top-most windows gradually
+                time = windowBaseTime * (fromTop + 1);
+            else
+                time = windowBaseTime * nTimeSlots;
+
+            this._windows[i].opacity = 0;
+            this._fadeWindow(i, time, 255);
+        }
+    }
+}
+
+function zoomFromOverview() {
+    let workspaceManager = global.workspace_manager;
+    let currentWorkspace = workspaceManager.get_active_workspace();
+
+    this.leavingOverview = true;
+
+    for (let i = 0; i < this._windows.length; i++)
+        this._windows[i].remove_all_transitions();
+
+    if (this._repositionWindowsId > 0) {
+        GLib.source_remove(this._repositionWindowsId);
+        this._repositionWindowsId = 0;
+    }
+    this._overviewHiddenId = Main.overview.connect('hidden', this._doneLeavingOverview.bind(this));
+
+    let spaces = Tiling.spaces;
+    let space = spaces.monitors.get(this._monitor);
+    let isOnVisibleMonitor = space.workspace === this.metaWorkspace;
+    if (this.metaWorkspace != null && !isOnVisibleMonitor)
+        return;
+
+    // Position and scale the windows.
+    for (let i = 0; i < this._windows.length; i++)
+        this._zoomWindowFromOverview(i);
 }
