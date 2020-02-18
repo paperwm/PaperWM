@@ -331,6 +331,7 @@ function init() {
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
     registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition');
     registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions');
+    registerOverridePrototype(Workspace.Workspace, '_isMyWindow', _isMyWindow);
     registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow');
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
     registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated');
@@ -642,3 +643,18 @@ function _checkWorkspaces() {
     this._checkWorkspacesId = 0;
     return false;
 };
+
+function _isMyWindow(actor) {
+    let win = actor.meta_window;
+    let spaces = Tiling.spaces;
+    let space = spaces.spaceOf(this.metaWorkspace);
+    let monitor = this._monitor;
+
+    let isOnWorkspace = this.metaWorkspace == null || win.located_on_workspace(this.metaWorkspace);
+    let isOnMonitor = space.monitor === monitor;
+
+    let isOnAllWorkspaces = win.is_on_all_workspaces();
+    let winOnMonitor =  win.get_monitor() === this.monitorIndex;
+
+    return (isOnAllWorkspaces && winOnMonitor) || (!isOnAllWorkspaces && isOnWorkspace && isOnMonitor);
+}
