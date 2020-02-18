@@ -106,15 +106,21 @@ class ClickOverlay {
 
         this.signals.connect(
             enterMonitor, 'button-press-event', () => {
-                if (Tiling.inPreview || Main.overview.visible)
+                if (Tiling.inPreview)
                     return;
                 this.select();
                 return Clutter.EVENT_STOP;
             }
         );
 
-        this.signals.connect(Main.overview, 'showing', this.hide.bind(this));
-        this.signals.connect(Main.overview, 'hidden', this.show.bind(this));
+        this.signals.connect(Main.overview, 'showing', () => {
+            this.deactivate();
+            this.hide();
+        });
+        this.signals.connect(Main.overview, 'hidden', () => {
+            this.activate();
+            this.show();
+        });
     }
 
     select() {
@@ -144,9 +150,16 @@ class ClickOverlay {
     }
 
     activate() {
-        if (this.onlyOnPrimary)
+        if (this.onlyOnPrimary || Main.overview.visible)
             return;
+
+        let spaces = Tiling.spaces;
+        let active = global.workspace_manager.get_active_workspace();
         let monitor = this.monitor;
+        // Never activate the clickoverlay of the active monitor
+        if (spaces && spaces.monitors.get(monitor) === spaces.get(active))
+            return;
+
         this.enterMonitor.set_position(monitor.x, monitor.y);
         this.enterMonitor.set_size(monitor.width, monitor.height);
     }
