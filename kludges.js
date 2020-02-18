@@ -342,6 +342,11 @@ function init() {
         registerOverridePrototype(Workspace.Workspace, 'fadeFromOverview', fadeFromOverview);
         registerOverridePrototype(Workspace.Workspace, 'zoomFromOverview', zoomFromOverview);
         registerOverridePrototype(WorkspaceView.WorkspacesView, '_updateWorkspaceActors',   _updateWorkspaceActors);
+        registerOverridePrototype(WorkspaceView.WorkspacesView, '_onScroll',   _onScroll);
+        registerOverridePrototype(WorkspaceView.WorkspacesView, 'getActiveWorkspace',   getActiveWorkspace);
+        registerOverridePrototype(WorkspaceView.WorkspacesView, '_onSwitchWorkspaceMotion',   _onSwitchWorkspaceMotion);
+        registerOverridePrototype(WorkspaceView.WorkspacesView, '_updateVisibility',   _updateVisibility);
+        registerOverridePrototype(WorkspaceView.WorkspacesView, 'scrolltoactive',   scrolltoactive);
     }
     registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow');
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
@@ -667,21 +672,149 @@ function _isMyWindow(actor) {
     let isOnAllWorkspaces = win.is_on_all_workspaces();
     let winOnMonitor =  win.get_monitor() === this.monitorIndex;
 
-    return (isOnAllWorkspaces && winOnMonitor) || (!isOnAllWorkspaces && isOnWorkspace && isOnMonitor);
+    return (isOnAllWorkspaces && winOnMonitor && isOnMonitor) || (!isOnAllWorkspaces && isOnWorkspace && isOnMonitor);
 }
 
-function _updateWorkspaceActors(showAnimation) {
-    let workspaceManager = global.workspace_manager;
-    let active = workspaceManager.get_active_workspace_index();
-    let activeWorkspace = workspaceManager.get_active_workspace();
-    let spaces = Tiling.spaces;
+// WorkspaceView.WorkspacesView.prototype._onScroll =
 
-    let activeSpace = spaces.spaceOf(activeWorkspace);
-    if (activeSpace.monitor.index !== this._monitorIndex)
+function _onScroll(adj) {
+    if (this._animatingScroll)
         return;
+
+    let workspaceManager = global.workspace_manager;
+    let spaces = Tiling.spaces;
+    let monitor = Main.layoutManager.monitors[this._monitorIndex]
+    let activeSpace = spaces.monitors.get(monitor);
+    let active = activeSpace.workspace.index();
+    let current = Math.round(adj.value);
+
+    if (active != current && !this._gestureActive) {
+        if (!this._workspaces[current]) {
+            // The current workspace was destroyed. This could happen
+            // when you are on the last empty workspace, and consolidate
+            // windows using the thumbnail bar.
+            // In that case, the intended behavior is to stay on the empty
+            // workspace, which is the last one, so pick it.
+            current = this._workspaces.length - 1;
+        }
+
+        let metaWorkspace = this._workspaces[current].metaWorkspace;
+        metaWorkspace.activate(global.get_current_time());
+    }
+
+    if (adj.upper == 1)
+        return;
+
+    let last = this._workspaces.length - 1;
+
+    if (workspaceManager.layout_rows == -1) {
+        let firstWorkspaceY = this._workspaces[0].actor.y;
+        let lastWorkspaceY = this._workspaces[last].actor.y;
+        let workspacesHeight = lastWorkspaceY - firstWorkspaceY;
+
+        let currentY = firstWorkspaceY;
+        let newY = -adj.value / (adj.upper - 1) * workspacesHeight;
+
+        let dy = newY - currentY;
+
+        for (let i = 0; i < this._workspaces.length; i++) {
+            this._workspaces[i].actor.visible = Math.abs(i - adj.value) <= 1;
+            this._workspaces[i].actor.y += dy;
+        }
+    } else {
+        let firstWorkspaceX = this._workspaces[0].actor.x;
+        let lastWorkspaceX = this._workspaces[last].actor.x;
+        let workspacesWidth = lastWorkspaceX - firstWorkspaceX;
+
+        let currentX = firstWorkspaceX;
+        let newX = -adj.value / (adj.upper - 1) * workspacesWidth;
+
+        let dx = newX - currentX;
+
+        for (let i = 0; i < this._workspaces.length; i++) {
+            this._workspaces[i].actor.visible = Math.abs(i - adj.value) <= 1;
+            this._workspaces[i].actor.x += dx;
+        }
+    }
+}
+
+// WorkspaceView.WorkspacesView.prototype.getActiveWorkspace =
+function getActiveWorkspace() {
+    let spaces = Tiling.spaces;
+    let monitor = Main.layoutManager.monitors[this._monitorIndex]
+    let activeSpace = spaces.monitors.get(monitor);
+    let active = activeSpace.workspace.index();
+    return this._workspaces[active];
+}
+
+// WorkspaceView.WorkspacesView.prototype._onSwitchWorkspaceMotion =
+function _onSwitchWorkspaceMotion(action, xRel, yRel) {
+    // We don't have a way to hook into start of touchpad actions,
+    // luckily this is safe to call repeatedly.
+    this._startTouchGesture();
+
+    let workspaceManager = global.workspace_manager;
+    let spaces = Tiling.spaces;
+    let monitor = Main.layoutManager.monitors[this._monitorIndex]
+    let activeSpace = spaces.monitors.get(monitor);
+    let active = activeSpace.workspace.index();
+    let adjustment = this._scrollAdjustment;
+    if (workspaceManager.layout_rows == -1)
+        adjustment.value = (active - yRel / this.actor.height) * adjustment.page_size;
+    else if (this.actor.text_direction == Clutter.TextDirection.RTL)
+        adjustment.value = (active + xRel / this.actor.width) * adjustment.page_size;
+    else
+        adjustment.value = (active - xRel / this.actor.width) * adjustment.page_size;
+}
+
+// WorkspaceView.WorkspacesView.prototype._updateVisibility =
+function _updateVisibility() {
+    let spaces = Tiling.spaces;
+    let monitor = Main.layoutManager.monitors[this._monitorIndex]
+    let activeSpace = spaces.monitors.get(monitor);
+    let active = activeSpace.workspace.index();
 
     for (let w = 0; w < this._workspaces.length; w++) {
         let workspace = this._workspaces[w];
+        if (this._animating || this._scrolling || this._gestureActive) {
+            workspace.actor.show();
+        } else {
+            if (this._inDrag)
+                workspace.actor.visible = (Math.abs(w - active) <= 1);
+            else
+                workspace.actor.visible = (w == active);
+        }
+    }
+}
+
+// WorkspaceView.WorkspacesView.prototype._scrollToActive =
+function _scrollToActive() {
+    let workspaceManager = global.workspace_manager;
+    let spaces = Tiling.spaces;
+    let monitor = Main.layoutManager.monitors[this._monitorIndex]
+    let activeSpace = spaces.monitors.get(monitor);
+    let active = activeSpace.workspace.index();
+    log(`scrolltoactive`, activeSpace.actor)
+
+    this._updateWorkspaceActors(true);
+    this._updateScrollAdjustment(active);
+}
+
+// WorkspaceView.WorkspacesView.prototype._updateWorkspaceActors =
+function _updateWorkspaceActors(showAnimation) {
+    let workspaceManager = global.workspace_manager;
+    let spaces = Tiling.spaces;
+    let monitor = Main.layoutManager.monitors[this._monitorIndex]
+    let activeSpace = spaces.monitors.get(monitor);
+    let active = activeSpace.workspace.index();
+    log(`update workspace`, monitor.index, active, activeSpace.actor)
+
+    for (let w = 0; w < this._workspaces.length; w++) {
+        let workspace = this._workspaces[w];
+        let space = spaces.spaceOf(workspace.metaWorkspace);
+
+        if (space.monitor !== monitor)
+            return;
 
         workspace.actor.remove_all_transitions();
 
@@ -954,3 +1087,4 @@ function zoomFromOverview() {
     for (let i = 0; i < this._windows.length; i++)
         this._zoomWindowFromOverview(i);
 }
+
