@@ -462,7 +462,7 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.entry.label.text = space.name;
         GLib.idle_add(GLib.PRIORITY_DEFAULT, this.entry.activate.bind(this.entry));
 
-        this._zenItem._switch.setToggleState(!space.showTopBar);
+        // this._zenItem._switch.setToggleState(!space.showTopBar);
     }
 
     workspaceSwitched(wm, fromIndex, toIndex) {
