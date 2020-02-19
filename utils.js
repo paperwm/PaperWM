@@ -308,7 +308,8 @@ class Signals extends Map {
                     ids.splice(i, 1);
                 }
             }
-            this.delete(object);
+            if (ids.length === 0)
+                this.delete(object);
         }
     }
 
