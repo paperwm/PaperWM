@@ -103,6 +103,9 @@ var MoveGrab = class MoveGrab {
         this.center = center;
         this.dnd = true;
         log(`beginDND`)
+        Navigator.getNavigator()
+                 .minimaps.forEach(m => typeof(m) === 'number' ?
+                                   Mainloop.source_remove(m) : m.hide());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
         let metaWindow = this.window;
         let actor = metaWindow.get_compositor_private();
