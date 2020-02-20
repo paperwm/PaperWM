@@ -51,19 +51,18 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
         let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
         let fog = new Clutter.Actor({x: workArea.x, y: workArea.y,
                                      width: workArea.width, height: workArea.height,
-                                     opacity: 0
+                                     opacity: 0, background_color: Clutter.color_from_string("black")[1]
                                     });
 
         // this.blur = new Clutter.BlurEffect();
         // this.space.cloneContainer.add_effect(this.blur);
         this.space.setSelectionInactive();
-        fog.background_color = Clutter.color_from_string("black")[1];
+
+        Main.uiGroup.insert_child_above(fog, global.window_group);
         Tweener.addTween(fog, {
             time: prefs.animation_time,
             opacity: 100,
         });
-
-        Main.uiGroup.insert_child_above(fog, global.window_group);
         this.fog = fog;
 
         super._initialSelection(backward, actionName);
