@@ -93,6 +93,7 @@ var MoveGrab = class MoveGrab {
         space.startAnimate();
         // Make sure the window actor is visible
         Tiling.animateWindow(metaWindow);
+        Navigator.getNavigator();
         Tweener.removeTweens(space.cloneContainer);
     }
 
