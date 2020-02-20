@@ -211,6 +211,7 @@ var Navigator = class Navigator {
 
         TopBar.fixTopBar();
 
+        Scratch.animateWindows();
         this.space.startAnimate();
     }
 
@@ -319,6 +320,9 @@ var Navigator = class Navigator {
                 Main.activateWindow(selected);
             }
         }
+
+        if (!Tiling.inGrab)
+            Scratch.showWindows();
 
         TopBar.fixTopBar();
 
