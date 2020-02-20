@@ -320,6 +320,9 @@ var Navigator = class Navigator {
                 Main.activateWindow(selected);
             }
         }
+        if (selected && Tiling.inGrab && !this.was_accepted) {
+            Tiling.focus_handler(selected)
+        }
 
         if (!Tiling.inGrab)
             Scratch.showWindows();
