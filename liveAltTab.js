@@ -109,6 +109,7 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
         this.clone = null;
 
         let actor = to.get_compositor_private();
+        actor.remove_clip();
         let frame = to.get_frame_rect();
         let clone = new Clutter.Clone({source: actor});
         clone.position = actor.position;
