@@ -248,6 +248,10 @@ var Navigator = class Navigator {
                 m.destroy();
         });
 
+        if (Tiling.inGrab && !Tiling.inGrab.dnd) {
+            Tiling.inGrab.beginDnD()
+        }
+
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
 
