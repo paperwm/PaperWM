@@ -72,15 +72,20 @@ var MoveGrab = class MoveGrab {
         actor.set_pivot_point(px, py);
 
         let [x, y] = space.globalToScroll(gx, gy);
-        px = (x - clone.x) / clone.width;
-        py = (y - clone.y) / clone.height;
-        !center && clone.set_pivot_point(px, py);
-        center && clone.set_pivot_point(0, 0);
         if (clone.get_parent() === this.initialSpace.cloneContainer) {
             this.pointerOffset = [x - clone.x, y - clone.y];
+            px = (x - clone.x) / clone.width;
+            py = (y - clone.y) / clone.height;
         } else {
             this.pointerOffset = [gx - frame.x, gy - frame.y];
+            clone.x = frame.x;
+            clone.y = frame.y;
+            px = (gx - clone.x) / clone.width;
+            py = (gy - clone.y) / clone.height;
         }
+        !center && clone.set_pivot_point(px, py);
+        center && clone.set_pivot_point(0, 0);
+        log('pointeroffset', this.pointerOffset, clone.get_pivot_point())
 
         this.signals.connect(global.stage, "button-release-event", this.end.bind(this));
         this.signals.connect(global.stage, "motion-event", this.motion.bind(this));
@@ -92,8 +97,8 @@ var MoveGrab = class MoveGrab {
         this.scrollAnchor = x;
         space.startAnimate();
         // Make sure the window actor is visible
-        Tiling.animateWindow(metaWindow);
         Navigator.getNavigator();
+        Tiling.animateWindow(metaWindow);
         Tweener.removeTweens(space.cloneContainer);
     }
 
@@ -112,22 +117,24 @@ var MoveGrab = class MoveGrab {
         let clone = metaWindow.clone;
         let space = this.initialSpace;
 
-        let point = space.cloneContainer.apply_relative_transform_to_point(
-            global.stage, new Clutter.Vertex({x: clone.x, y: clone.y}));
+        let point = {x: clone.x, y: clone.y};
+        if (clone.get_parent() !== Main.uiGroup) {
+            point = space.cloneContainer.apply_relative_transform_to_point(
+                global.stage, new Clutter.Vertex({x: clone.x, y: clone.y}));
+        }
 
         let i = space.indexOf(metaWindow);
         let single = i !== -1 && space[i].length === 1;
         space.removeWindow(metaWindow);
         clone.reparent(Main.uiGroup);
-        let [gx, gy, $] = global.get_pointer();
-
+        log(`begin dnd`, point.x, point.y)
         clone.x = Math.round(point.x);
         clone.y = Math.round(point.y);
-
         let newScale = clone.scale_x*space.actor.scale_x;
         clone.set_scale(newScale, newScale);
 
-        let params = {time: prefs.animation_time, scale_x: 0.5, scale_y: 0.5}
+        let params = {time: prefs.animation_time, scale_x: 0.5, scale_y: 0.5, opacity: 240}
+        let [gx, gy, $] = global.get_pointer();
         if (center) {
             this.pointerOffset = [0, 0];
             clone.set_pivot_point(0, 0)
@@ -361,6 +368,12 @@ var MoveGrab = class MoveGrab {
         let [gx, gy, $] = global.get_pointer();
 
         this.zoneActors.forEach(actor => actor.destroy());
+        let params = {
+            time: prefs.animation_time,
+            scale_x: 1,
+            scale_y: 1,
+            opacity: 255
+        };
 
         if (this.dnd) {
             let dndTarget = this.dndTarget;
@@ -388,15 +401,11 @@ var MoveGrab = class MoveGrab {
                 actor.set_pivot_point(0, 0);
 
                 // Tiling.animateWindow(metaWindow);
-                Tweener.addTween(clone, {
-                    time: prefs.animation_time,
-                    scale_x: 1,
-                    scale_y: 1,
-                    onComplete: () => {
-                        space.moveDone()
-                        clone.set_pivot_point(0, 0)
-                    }
-                });
+                params.onStopped = () => {
+                    space.moveDone()
+                    clone.set_pivot_point(0, 0)
+                }
+                Tweener.addTween(clone, params);
 
                 space.targetX = space.cloneContainer.x;
                 space.selectedWindow = metaWindow;
@@ -414,17 +423,15 @@ var MoveGrab = class MoveGrab {
                 Scratch.makeScratch(metaWindow);
                 this.initialSpace.moveDone();
 
+                actor.set_scale(clone.scale_x, clone.scale_y);
+                actor.opacity = clone.opacity;
+
+                clone.opacity = 255;
                 clone.set_scale(1, 1);
                 clone.set_pivot_point(0, 0);
 
-                Tweener.addTween(actor, {
-                    time: prefs.animation_time,
-                    scale_x: 1,
-                    scale_y: 1,
-                    onComplete: () => {
-                        actor.set_pivot_point(0, 0)
-                    }
-                });
+                params.onStopped = () => { actor.set_pivot_point(0, 0) };
+                Tweener.addTween(actor, params);
             }
         } else if (this.initialSpace.indexOf(metaWindow) !== -1){
             let space = this.initialSpace;
@@ -435,15 +442,11 @@ var MoveGrab = class MoveGrab {
             actor.set_pivot_point(0, 0);
 
             Tiling.animateWindow(metaWindow);
-            Tweener.addTween(clone, {
-                time: prefs.animation_time,
-                scale_x: 1,
-                scale_y: 1,
-                onComplete: () => {
-                    space.moveDone()
-                    clone.set_pivot_point(0, 0)
-                }
-            });
+            params.onStopped = () => {
+                space.moveDone()
+                clone.set_pivot_point(0, 0)
+            }
+            Tweener.addTween(clone, params);
 
             Tiling.ensureViewport(metaWindow, space);
         }
