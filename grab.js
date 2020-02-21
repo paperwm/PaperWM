@@ -76,7 +76,7 @@ var MoveGrab = class MoveGrab {
         py = (y - clone.y) / clone.height;
         !center && clone.set_pivot_point(px, py);
         center && clone.set_pivot_point(0, 0);
-        if (clone.get_parent()) {
+        if (clone.get_parent() === this.initialSpace.cloneContainer) {
             this.pointerOffset = [x - clone.x, y - clone.y];
         } else {
             this.pointerOffset = [gx - frame.x, gy - frame.y];
