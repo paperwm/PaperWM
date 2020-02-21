@@ -117,10 +117,16 @@ var MoveGrab = class MoveGrab {
         let clone = metaWindow.clone;
         let space = this.initialSpace;
 
-        let point = {x: clone.x, y: clone.y};
-        if (clone.get_parent() !== Main.uiGroup) {
+        let [gx, gy, $] = global.get_pointer();
+        let point = {};
+        if (center) {
             point = space.cloneContainer.apply_relative_transform_to_point(
-                global.stage, new Clutter.Vertex({x: clone.x, y: clone.y}));
+                global.stage, new Clutter.Vertex({x: Math.round(clone.x), y: Math.round(clone.y)}));
+        } else {
+            // For some reason the above isn't smooth when DnD is triggered from dragging
+            let [dx, dy] = this.pointerOffset;
+            point.x = gx - dx;
+            point.y = gy - dy;
         }
 
         let i = space.indexOf(metaWindow);
@@ -134,7 +140,6 @@ var MoveGrab = class MoveGrab {
         clone.set_scale(newScale, newScale);
 
         let params = {time: prefs.animation_time, scale_x: 0.5, scale_y: 0.5, opacity: 240}
-        let [gx, gy, $] = global.get_pointer();
         if (center) {
             this.pointerOffset = [0, 0];
             clone.set_pivot_point(0, 0)
