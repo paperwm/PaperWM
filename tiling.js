@@ -2725,10 +2725,15 @@ function grabBegin(metaWindow, type) {
         case Meta.GrabOp.MOVING:
             inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
 
-            if (!inGrab.initialSpace || inGrab.initialSpace.indexOf(metaWindow) === -1)
-                return;
+            let dm = Clutter.DeviceManager.get_default();
+            let d = dm.get_core_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+            if (d.get_modifier_state() & Clutter.ModifierType.CONTROL_MASK) {
+                inGrab.begin();
+                inGrab.beginDnD();
+            } else if (inGrab.initialSpace && inGrab.initialSpace.indexOf(metaWindow) > -1) {
+                inGrab.begin();
+            }
 
-            inGrab.begin();
             break;
         case Meta.GrabOp.RESIZING_NW:
         case Meta.GrabOp.RESIZING_N:
