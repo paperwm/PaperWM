@@ -2725,8 +2725,15 @@ function grabBegin(metaWindow, type) {
         case Meta.GrabOp.MOVING:
             inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
 
-            let dm = Clutter.DeviceManager.get_default();
-            let d = dm.get_core_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+            let d;
+            if (Clutter.DeviceManager) {
+                let dm = Clutter.DeviceManager.get_default();
+                d = dm.get_core_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+            } else {
+                let backend = Clutter.get_default_backend()
+                let seat = backend.get_default_seat()
+                d = seat.get_keyboard()
+            }
             if (d.get_modifier_state() & Clutter.ModifierType.CONTROL_MASK) {
                 inGrab.begin();
                 inGrab.beginDnD();
