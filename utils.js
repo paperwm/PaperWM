@@ -4,17 +4,14 @@ if (imports.misc.extensionUtils.extensions) {
 } else {
     Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
 }
-const Gdk = imports.gi.Gdk;
-var GLib = imports.gi.GLib;
-var Meta = imports.gi.Meta;
+var { Gdk, GLib, Clutter, Meta, GObject } = imports.gi;
 
 var workspaceManager = global.workspace_manager;
 var display = global.display;
 
-var GObject = imports.gi.GObject;
-var registerClass;
-
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
+
+var registerClass;
 {
     if (version[0] >= 3 && version[1] > 30) {
         registerClass = GObject.registerClass;
@@ -249,10 +246,18 @@ function zip(...as) {
 }
 
 function warpPointer(x, y) {
-    let display = Gdk.Display.get_default();
-    let deviceManager = display.get_device_manager();
-    let pointer = deviceManager.get_client_pointer();
-    pointer.warp(Gdk.Screen.get_default(), x, y)
+    // 3.36 added support for warping in wayland
+    if (Meta.is_wayland_compositor() && Clutter.Backend.prototype.get_default_seat) {
+        let backend = Clutter.get_default_backend();
+        let seat = backend.get_default_seat();
+        seat.warp_pointer(x, y);
+        return;
+    } else {
+        let display = Gdk.Display.get_default();
+        let deviceManager = display.get_device_manager();
+        let pointer = deviceManager.get_client_pointer();
+        pointer.warp(Gdk.Screen.get_default(), x, y)
+    }
 }
 
 function monitorOfPoint(x, y) {
