@@ -153,10 +153,6 @@ var ActionDispatcher = class {
         let metaWindow = space.selectedWindow;
 
         if (action && action.options.activeInNavigator) {
-            if (Tiling.inGrab && !Tiling.inGrab.dnd && Tiling.inGrab.window) {
-                Tiling.inGrab.beginDnD();
-            }
-
             if (!Tiling.inGrab && action.options.opensMinimap) {
                 this.navigator._showMinimap(space);
             }
@@ -165,6 +161,10 @@ var ActionDispatcher = class {
                 this.navigator.minimaps.forEach(m => typeof(m) === 'number' ?
                                                 Mainloop.source_remove(m) : m.hide());
             }
+            if (Tiling.inGrab && !Tiling.inGrab.dnd && Tiling.inGrab.window) {
+                Tiling.inGrab.beginDnD();
+            }
+
             return true;
         } else if (mutterActionId == Meta.KeyBindingAction.MINIMIZE) {
             metaWindow.minimize();
