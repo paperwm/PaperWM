@@ -526,7 +526,7 @@ function enable () {
                                         updateWorkspaceIndicator(to);
                                     }));
 
-    signals.connect(Main.overview, 'showing', show);
+    signals.connect(Main.overview, 'showing', fixTopBar);
     signals.connect(Main.overview, 'hidden', () => {
         if (Tiling.spaces.selectedSpace.showTopBar)
             return;
