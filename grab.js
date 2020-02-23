@@ -215,7 +215,7 @@ var MoveGrab = class MoveGrab {
             const colX = clone.targetX;
             const colW = clone.width;
 
-            // Fast forward if pointer is not inside column
+            // Fast forward if pointer is not inside the column or the column zone
             if (x < colX - gap - columnZoneMargin) {
                 continue;
             }
@@ -242,6 +242,10 @@ var MoveGrab = class MoveGrab {
                 };
                 break;
             }
+
+            // Must be strictly within the column to tile vertically
+            if (x < colX)
+                continue;
 
             for (let i = 0; i < column.length + 1; i++) {
                 let clone;
