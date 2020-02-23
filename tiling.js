@@ -947,11 +947,10 @@ class Space extends Array {
 
         if (showTopBar) {
             this.showTopBar = 1;
-            this._populated && TopBar.show();
         } else {
             this.showTopBar = 0;
-            this._populated && TopBar.hide();
         }
+        this._populated && TopBar.fixTopBar();
 
         this.layout();
     }
@@ -1608,7 +1607,7 @@ class Spaces extends Map {
 
     _animateToSpaceOrdered(toSpace, animate = true) {
         // Always show the topbar when using the workspace stack
-        TopBar.show();
+        TopBar.fixTopBar();
 
         toSpace = toSpace || this.selectedSpace;
         let monitorSpaces = this._getOrderedSpaces(toSpace.monitor);
@@ -1727,7 +1726,7 @@ class Spaces extends Map {
         inPreview = PreviewMode.STACK;
 
         // Always show the topbar when using the workspace stack
-        TopBar.show();
+        TopBar.fixTopBar();
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
         let mru = [...this.stack];
@@ -2635,11 +2634,7 @@ function grabEnd(metaWindow, type) {
 function focus_handler(metaWindow, user_data) {
     debug("focus:", metaWindow.title, utils.framestr(metaWindow.get_frame_rect()));
 
-    if (metaWindow.fullscreen) {
-        TopBar.hide();
-    } else {
-        TopBar.show();
-    }
+    TopBar.fixTopBar();
 
     if (Scratch.isScratchWindow(metaWindow)) {
         spaces.get(workspaceManager.get_active_workspace()).setSelectionInactive();

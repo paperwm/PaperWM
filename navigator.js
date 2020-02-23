@@ -202,7 +202,7 @@ var Navigator = class Navigator {
         this.monitor.clickOverlay.hide();
         this.minimaps = new Map();
 
-        TopBar.show();
+        TopBar.fixTopBar();
         let selected = this.space.selectedWindow;
         if (selected &&
             (selected.fullscreen ||
@@ -306,11 +306,7 @@ var Navigator = class Navigator {
             this.space.workspace.activate(global.get_current_time());
         }
 
-        if (selected && selected.fullscreen) {
-            TopBar.hide();
-        } else {
-            TopBar.show();
-        }
+        TopBar.fixTopBar();
 
         Main.wm._blockAnimations = this._block;
 

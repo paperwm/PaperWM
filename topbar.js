@@ -22,6 +22,7 @@ var Tweener = Extension.imports.utils.tweener;
 var Tiling = Extension.imports.tiling;
 var Navigator = Extension.imports.navigator;
 var Utils = Extension.imports.utils;
+var Scratch = Extension.imports.scratch;
 
 var Settings = Extension.imports.settings;
 var prefs = Settings.prefs;
@@ -544,10 +545,10 @@ function enable () {
     });
 
     signals.connect(panelBox, 'show', () => {
-        show();
+        fixTopBar();
     });
     signals.connect(panelBox, 'hide', () => {
-        hide();
+        fixTopBar();
     });
 
     fixLabel(menu._label);
@@ -572,37 +573,29 @@ function disable() {
     panelBox.scale_y = 1;
 }
 
-function show() {
-    let focus = display.focus_window;
-    let normal = !Main.overview.visible && !Tiling.inPreview
-    let fullscreen = focus && focus.fullscreen && focus.get_monitor() === panelMonitor.index
-    let hideTopBar = !(Tiling.spaces && Tiling.spaces.monitors.get(panelMonitor).showTopBar)
-    if (normal && (hideTopBar || fullscreen)) {
-        hide();
+function fixTopBar() {
+    let spaces = Tiling.spaces
+    if (!spaces)
         return;
-    }
-    // Make sure the workarea is correct
-    panelBox.scale_y = 1;
-    panelBox.show();
-}
-
-function hide() {
     let normal = !Main.overview.visible && !Tiling.inPreview
-    let hideTopBar = !(Tiling.spaces && Tiling.spaces.monitors.get(panelMonitor).showTopBar)
+    let selected = spaces.monitors.get(panelMonitor).selectedWindow
+    let focus = display.focus_window
+    let focusIsScratch = focus && Scratch.isScratchWindow(focus)
+    let fullscreen = selected && selected.fullscreen && !(focusIsScratch);
+    let hideTopBar = !spaces.monitors.get(panelMonitor).showTopBar
     if (normal && hideTopBar) {
         // Update the workarea to support hide top bar
         panelBox.scale_y = 0;
         panelBox.hide();
         return;
     }
-    let focus = display.focus_window;
-    let fullscreen = focus && focus.fullscreen && focus.get_monitor() === panelMonitor.index
-    if (normal && !fullscreen) {
-        show();
+    if (normal && fullscreen) {
+        panelBox.hide();
+        return;
     }
+    panelBox.scale_y = 1;
+    panelBox.show();
 }
-
-
 
 /**
    Override the activities label with the workspace name.
@@ -628,6 +621,6 @@ function setMonitor(monitor) {
     panelMonitor = monitor;
     panelBox.set_position(monitor.x, monitor.y);
     panelBox.width = monitor.width;
-    show();
+    fixTopBar();
     return monitor;
 }

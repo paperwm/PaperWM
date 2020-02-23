@@ -177,7 +177,7 @@ function show(top) {
     if (top)
         windows = windows.slice(0,1);
 
-    TopBar.show();
+    TopBar.fixTopBar();
 
     windows.slice().reverse()
         .map(function(meta_window) {
