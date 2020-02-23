@@ -184,21 +184,12 @@ var MoveGrab = class MoveGrab {
     selectDndZone(space, x, y, initial=false) {
         const gap = prefs.window_gap;
         const halfGap = gap / 2;
-        const columnZoneMargin = 100 + halfGap;
+        const columnZoneMarginViz = 100 + halfGap;
+        const columnZoneMargin = space.length > 0 ? columnZoneMarginViz : Math.round(space.width / 4);
         const rowZoneMargin = 250 + halfGap;
 
         let target = null;
         const tilingHeight = space.height - Tiling.panelBox.height;
-
-        // TODO: move actor creation to activateDndTarget?
-        function mkZoneActor(props) {
-            let actor = new St.Widget({style_class: "tile-preview"});
-            actor.x = props.x;
-            actor.y = props.y;
-            actor.width = props.width;
-            actor.height = props.height;
-            return actor;
-        }
 
         let fakeClone = {
             targetX: null,
@@ -241,15 +232,13 @@ var MoveGrab = class MoveGrab {
                     center: cx,
                     originProp: "x",
                     sizeProp: "width",
-                    marginA: columnZoneMargin,
-                    marginB: columnZoneMargin,
+                    marginA: columnZoneMarginViz,
+                    marginB: columnZoneMarginViz,
                     space: space,
-                    actor: mkZoneActor({
-                        x: l,
+                    actorParams: {
                         y: Tiling.panelBox.height,
-                        width: columnZoneMargin*2,
                         height: tilingHeight
-                    })
+                    }
                 };
                 break;
             }
@@ -281,12 +270,10 @@ var MoveGrab = class MoveGrab {
                         marginA: isFirst ? 0 : rowZoneMargin,
                         marginB: isLast  ? 0 : rowZoneMargin,
                         space: space,
-                        actor: mkZoneActor({
+                        actorParams: {
                             x: clone.targetX,
-                            y: cy,
                             width: clone.width,
-                            height: (isFirst ? 0 : rowZoneMargin) + (isLast  ? 0 : rowZoneMargin),
-                        })
+                        }
                     };
                     break;
                 }
@@ -475,9 +462,17 @@ var MoveGrab = class MoveGrab {
     }
 
     activateDndTarget(zone, first) {
-        zone.space.cloneContainer.add_child(zone.actor);
-        zone.actor.raise_top();
-        zone.space.selection.hide();
+        function mkZoneActor(props) {
+            let actor = new St.Widget({style_class: "tile-preview"});
+            actor.x = props.x;
+            actor.y = props.y;
+            actor.width = props.width;
+            actor.height = props.height;
+            return actor;
+        }
+
+        zone.actor = mkZoneActor({...zone.actorParams});
+
         this.dndTarget = zone;
         this.zoneActors.add(zone.actor);
 
@@ -501,14 +496,16 @@ var MoveGrab = class MoveGrab {
             zone.actor[zone.originProp] = zone.center;
         }
 
+        zone.space.cloneContainer.add_child(zone.actor);
+        zone.space.selection.hide();
         zone.actor.show();
         zone.actor.raise_top();
         Tweener.addTween(zone.actor, params);
     }
 
     deactivateDndTarget(zone) {
-        zone.space.selection.show();
         if (zone) {
+            zone.space.selection.show();
             Tweener.addTween(zone.actor, {
                 time: prefs.animation_time,
                 [zone.originProp]: zone.center,
