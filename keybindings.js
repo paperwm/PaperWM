@@ -361,7 +361,7 @@ function bindkey(keystr, actionName=null, handler=null, options={}) {
 
 function unbindkey(actionIdOrKeystr) {
     let actionId;
-    if (typeof(actionId) === "string") {
+    if (typeof(actionIdOrKeystr) === "string") {
         const action = keycomboMap[keystrToKeycombo(actionIdOrKeystr)];
         actionId = action && action.id
     } else {
