@@ -204,9 +204,7 @@ var Navigator = class Navigator {
 
         TopBar.fixTopBar();
         let selected = this.space.selectedWindow;
-        if (selected &&
-            (selected.fullscreen ||
-             selected.get_maximized() === Meta.MaximizeFlags.BOTH)) {
+        if (selected && selected.fullscreen) {
             Tiling.animateDown(selected);
         }
 

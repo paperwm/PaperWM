@@ -330,6 +330,9 @@ class Space extends Array {
                 targetWidth = f.width;
                 targetHeight = f.height;
             }
+            if (mw.maximized_vertically) {
+                y = f.y - space.monitor.y;
+            }
 
             // When resize is synchronous, ie. for X11 windows
             let nf = mw.get_frame_rect();
@@ -2499,8 +2502,7 @@ function ensureViewport(meta_window, space, force) {
 
     debug('Moving', meta_window.title);
 
-    if (space.selectedWindow.fullscreen ||
-        space.selectedWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
+    if (space.selectedWindow.fullscreen) {
         animateDown(space.selectedWindow);
     }
     let x = ensuredX(meta_window, space);
@@ -2508,8 +2510,7 @@ function ensureViewport(meta_window, space, force) {
     space.selectedWindow = meta_window;
     let selected = space.selectedWindow;
     let frame = meta_window.get_frame_rect();
-    if (!inPreview && (selected.fullscreen
-        || selected.get_maximized() === Meta.MaximizeFlags.BOTH)) {
+    if (!inPreview && selected.fullscreen) {
         Tweener.addTween(selected.clone,
                          { y: frame.y - space.monitor.y,
                            time: prefs.animation_time,
