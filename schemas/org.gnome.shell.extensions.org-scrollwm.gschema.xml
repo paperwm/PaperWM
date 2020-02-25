@@ -173,7 +173,7 @@
     </key>
 
     <key type="as" name="resize-h-inc">
-      <default><![CDATA[['<Super><Shift>equal']]]></default>
+      <default><![CDATA[['<Super><Shift>plus']]]></default>
       <summary>Increment window height</summary>
     </key>
 
@@ -183,7 +183,7 @@
     </key>
 
     <key type="as" name="resize-w-inc">
-      <default><![CDATA[['<Super>equal']]]></default>
+      <default><![CDATA[['<Super>plus']]]></default>
       <summary>Increment window width</summary>
     </key>
 
