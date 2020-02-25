@@ -2792,6 +2792,88 @@ function toggleMaximizeHorizontally(metaWindow) {
     }
 }
 
+function resizeHInc(metaWindow) {
+    let frame = metaWindow.get_frame_rect();
+    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
+    let space = spaces.spaceOfWindow(metaWindow);
+    let workArea = space.workArea();
+
+    let maxHeight = workArea.height - prefs.horizontal_margin*2 - prefs.window_gap;
+    let step = Math.floor(maxHeight * 0.1)
+    let currentHeight = Math.floor(frame.height/step)*step;
+    let targetHeight = Math.min(currentHeight + step, maxHeight);
+    let targetY = frame.y;
+
+    if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
+        metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
+    }
+
+    // Space.layout will ensure the window is moved if necessary
+    metaWindow.move_resize_frame(true, frame.x, targetY, frame.width, targetHeight);
+}
+
+function resizeHDec(metaWindow) {
+    let frame = metaWindow.get_frame_rect();
+    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
+    let space = spaces.spaceOfWindow(metaWindow);
+    let workArea = space.workArea();
+
+    let maxHeight = workArea.height - prefs.horizontal_margin*2 - prefs.window_gap;
+    let step = Math.floor(maxHeight * 0.1);
+    let currentHeight = Math.floor(frame.height/step)*step;
+    let minHeight = step;
+    let targetHeight = Math.max(currentHeight - step, minHeight);
+    let targetY = frame.y;
+
+    if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
+        metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
+    }
+
+    // Space.layout will ensure the window is moved if necessary
+    metaWindow.move_resize_frame(true, frame.x, targetY, frame.width, targetHeight);
+}
+
+function resizeWInc(metaWindow) {
+    let frame = metaWindow.get_frame_rect();
+    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
+    let space = spaces.spaceOfWindow(metaWindow);
+    let workArea = space.workArea();
+
+    let maxWidth = workArea.width - prefs.horizontal_margin*2 - prefs.window_gap;
+    let step = Math.floor(maxWidth * 0.1);
+    let currentWidth = Math.floor(frame.width/step)*step;
+    let targetWidth = Math.min(currentWidth + step, maxWidth);
+    let targetX = frame.x;
+
+    if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
+        metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
+    }
+
+    // Space.layout will ensure the window is moved if necessary
+    metaWindow.move_resize_frame(true, targetX, frame.y, targetWidth, frame.height);
+}
+
+function resizeWDec(metaWindow) {
+    let frame = metaWindow.get_frame_rect();
+    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
+    let space = spaces.spaceOfWindow(metaWindow);
+    let workArea = space.workArea();
+
+    let maxWidth = workArea.width - prefs.horizontal_margin*2 - prefs.window_gap;
+    let step = Math.floor(maxWidth * 0.1);
+    let currentWidth = Math.floor(frame.width/step)*step;
+    let minWidth = step;
+    let targetWidth = Math.max(currentWidth - step, minWidth);
+    let targetX = frame.x;
+
+    if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
+        metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
+    }
+
+    // Space.layout will ensure the window is moved if necessary
+    metaWindow.move_resize_frame(true, targetX, frame.y, targetWidth, frame.height);
+}
+
 function cycleWindowWidth(metaWindow) {
     let steps = prefs.cycle_width_steps;
 

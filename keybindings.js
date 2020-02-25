@@ -158,6 +158,26 @@ function init() {
                         dynamic_function_ref("setDevGlobals",
                                              Utils));
 
+    registerPaperAction("resize-h-inc",
+                        dynamic_function_ref("resizeHInc",
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction("resize-h-dec",
+                        dynamic_function_ref("resizeHDec",
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction("resize-w-inc",
+                        dynamic_function_ref("resizeWInc",
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction("resize-w-dec",
+                        dynamic_function_ref("resizeWDec",
+                                       Tiling),
+                        Meta.KeyBindingFlags.PER_WINDOW);
+
     registerPaperAction("cycle-width",
                         dynamic_function_ref("cycleWindowWidth",
                                        Tiling),
