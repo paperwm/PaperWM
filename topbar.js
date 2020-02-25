@@ -577,6 +577,9 @@ function fixTopBar() {
     let spaces = Tiling.spaces
     if (!spaces)
         return;
+    let space = spaces.monitors.get(panelMonitor);
+    if (!space)
+        return;
     let normal = !Main.overview.visible && !Tiling.inPreview
     let selected = spaces.monitors.get(panelMonitor).selectedWindow
     let focus = display.focus_window
