@@ -1338,6 +1338,7 @@ class Spaces extends Map {
             let mru = this.mru();
             this.selectedSpace = mru[0];
             this.monitors.set(activeSpace.monitor, activeSpace);
+            TopBar.setMonitor(activeSpace.monitor);
             for (let [monitor, space] of this.monitors) {
                 space.show();
                 space.clip.raise_top();
