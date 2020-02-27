@@ -260,6 +260,12 @@ class Space extends Array {
     workArea() {
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
         workArea.x -= this.monitor.x;
+        workArea.y -= this.monitor.y;
+        let topBarAdjustment = this.showTopBar && (prefs.topbar_follow_focus || this.monitor === Main.layoutManager.primaryMonitor) ?
+            panelBox.height : 0;
+        workArea.height = (workArea.y + workArea.height -
+                               topBarAdjustment - prefs.vertical_margin - prefs.vertical_margin_bottom);
+        workArea.y = topBarAdjustment + prefs.vertical_margin;
         return workArea;
     }
 
@@ -390,11 +396,8 @@ class Space extends Array {
             this._inLayout = false;
             return;
         }
-        let topBarAdjustment = this.showTopBar && (prefs.topbar_follow_focus || this.monitor === Main.layoutManager.primaryMonitor) ?
-            panelBox.height : 0;
-        let availableHeight = (workArea.y - this.monitor.y + workArea.height -
-                               topBarAdjustment - prefs.vertical_margin - prefs.vertical_margin_bottom);
-        let y0 = topBarAdjustment + prefs.vertical_margin;
+        let availableHeight = workArea.height;
+        let y0 = workArea.y;
         let fixPointAttempCount = 0;
 
         for (let i=0; i<this.length; i++) {
