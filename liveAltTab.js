@@ -142,12 +142,12 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
     }
 
     _onDestroy() {
-        super._onDestroy();
-        debug('#preview', 'onDestroy', this.was_accepted);
         if(!this.was_accepted) {
             // Select the starting window
             this._select(0);
         }
+        super._onDestroy();
+        debug('#preview', 'onDestroy', this.was_accepted);
         Tweener.addTween(this.fog, {
             time: prefs.animation_time,
             opacity: 0,

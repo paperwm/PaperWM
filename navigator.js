@@ -115,7 +115,7 @@ var ActionDispatcher = class {
         // visual destruction on key-press and signal to the release handler
         // that we should destroy the dispactcher too
         // https://github.com/paperwm/PaperWM/issues/70
-        if (keysym == Clutter.Escape) {
+        if (keysym == Clutter.KEY_Escape) {
             this.navigator.destroy();
             this._destroy = true;
             return Clutter.EVENT_STOP;

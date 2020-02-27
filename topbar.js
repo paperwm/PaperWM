@@ -46,19 +46,51 @@ var colors = [
     '#46A046', '#267726', '#ffffff', '#000000'
 ];
 
+function createButton(icon_name, accessible_name) {
+    return new St.Button({reactive: true,
+                          can_focus: true,
+                          track_hover: true,
+                          accessible_name,
+                          style_class: 'button workspace-icon-button',
+                          child: new St.Icon({icon_name})
+                         });
+}
+
 var PopupMenuEntryHelper = function constructor(text) {
-        this.label = new St.Entry({
-            text,
-            // While not a search entry, this looks much better
-            style_class:'search-entry',
-            name: 'workspace-name-entry',
-            track_hover: true,
-            reactive: true,
-            can_focus: true
-        });
-        this.actor.add(this.label, {expand: true});
-        this.actor.label_actor = this.label;
-        this.label.clutter_text.connect('activate', this.emit.bind(this, 'activate'));
+    this.label = new St.Entry({
+        text,
+        // While not a search entry, this looks much better
+        style_class:'search-entry',
+        name: 'workspace-name-entry',
+        track_hover: true,
+        reactive: true,
+        can_focus: true
+    });
+
+    this.label.set_style(`
+      width: 232px;
+`);
+
+
+    this.prevIcon = createButton('go-previous-symbolic', 'previous workspace setting');
+    this.nextIcon = createButton('go-next-symbolic', 'next workspace setting');
+
+    this.nextIcon.connect('clicked', () => {
+        let space = Tiling.cycleWorkspaceSettings(-1);
+        this.label.text = space.name;
+        this.nextIcon.grab_key_focus();
+    });
+    this.prevIcon.connect('clicked', () => {
+        let space = Tiling.cycleWorkspaceSettings(1);
+        this.label.text = space.name;
+        this.prevIcon.grab_key_focus();
+    });
+
+    this.actor.add(this.prevIcon, {expand: true});
+    this.actor.add(this.label, {expand: true});
+    this.actor.add(this.nextIcon, {expand: true});
+    this.actor.label_actor = this.label;
+    this.label.clutter_text.connect('activate', this.emit.bind(this, 'activate'));
 }
 
 var PopupMenuEntry;
@@ -76,6 +108,7 @@ if (Utils.version[1] === 32) {
 
             PopupMenuEntryHelper.call(this, text);
         }
+
 
         activate(event) {
             this.label.grab_key_focus();
@@ -200,27 +233,6 @@ class WorkspaceMenu extends PanelMenu.Button {
         };
         this.signals.connect(this.entry.label.clutter_text, 'text-changed',
                              changed);
-        // let clicked = () => {
-        //     let name = this.entry.entry.text;
-        //     let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
-        //     space.settings.set_string('name', name);
-        //     this.setName(name);
-        // };
-        // this.signals.connect(this.entry.button, 'clicked',
-        //                      clicked.bind(this.entry));
-
-        // let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
-        // this.entry.actor.text = space.name;
-        // this.colors.entry.actor.text = space.color;
-
-        // this.colors = new ColorEntry(space.color);
-
-        // this._contentBox = new St.BoxLayout({vertical: true});
-        // this._contentBox.layout_manager.spacing = 10;
-        // this._contentBox.set_style('margin: 10px 20px;');
-        // this._contentBox.add_actor(this.entry.actor);
-        // this._contentBox.add_actor(this.colors.actor);
-        // this.menu.box.add_actor(this._contentBox);
 
         // this._zenItem = new PopupMenu.PopupSwitchMenuItem('Hide top bar', false);
         // this.menu.addMenuItem(this._zenItem);
@@ -228,21 +240,17 @@ class WorkspaceMenu extends PanelMenu.Button {
         //     Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', !item.state);
         // });
 
-        function createButton(icon_name, accessible_name) {
-            return new St.Button({reactive: true,
-                                  can_focus: true,
-                                  track_hover: true,
-                                  accessible_name,
-                                  style_class: 'system-menu-action',
-                                  child: new St.Icon({icon_name})
-            });
-        }
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        this.prefsIcon = createButton('preferences-system-symbolic', 'workspace preference');
-        this.prevIcon = createButton('go-previous-symbolic', 'previous workspace setting');
-        this.nextIcon = createButton('go-next-symbolic', 'next workspace setting');
 
-        this.prefsIcon.connect('clicked', () => {
+        this._prefItem = new PopupMenu.PopupImageMenuItem('Workspace preference', 'preferences-system-symbolic');
+        this.menu.addMenuItem(this._prefItem);
+
+        // this.prefsIcon = createButton('preferences-system-symbolic', 'workspace preference');
+        // this.prevIcon = createButton('go-previous-symbolic', 'previous workspace setting');
+        // this.nextIcon = createButton('go-next-symbolic', 'next workspace setting');
+
+        this._prefItem.connect('activate', () => {
             this.menu.close(true);
             let wi = workspaceManager.get_active_workspace_index();
             let env = GLib.get_environ();
@@ -254,25 +262,11 @@ class WorkspaceMenu extends PanelMenu.Button {
             }
         });
 
-        this.nextIcon.connect('clicked', () => {
-            let space = Tiling.cycleWorkspaceSettings(-1);
-            this.entry.label.text = space.name;
-            menu.nextIcon.grab_key_focus();
-        });
-        this.prevIcon.connect('clicked', () => {
-            let space = Tiling.cycleWorkspaceSettings(1);
-            this.entry.label.text = space.name;
-            menu.prevIcon.grab_key_focus();
-        });
 
-        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        // this.iconBox = new St.BoxLayout();
+        // this.menu.box.add(this.iconBox);
 
-        this.iconBox = new St.BoxLayout();
-        this.menu.box.add(this.iconBox);
-
-        this.iconBox.add(this.prevIcon, { expand: true, x_fill: false });
-        this.iconBox.add(this.prefsIcon, { expand: true, x_fill: false });
-        this.iconBox.add(this.nextIcon, { expand: true, x_fill: false });
+        // this.iconBox.add(this.prefsIcon, { expand: true, x_fill: false });
 
         // this.entry.actor.width = this.colors.actor.width;
         // this.colors.entry.actor.width = this.colors.actor.width;
@@ -454,6 +448,16 @@ class WorkspaceMenu extends PanelMenu.Button {
         }
 
         return Clutter.EVENT_PROPAGATE;
+    }
+
+    vfunc_event(event) {
+        // Ugly hack to work on 3.34 at the same time as 3.36> vfunc_event is
+        // active on 3.34, but upstream still connects _onEvent resulting in
+        // double events.
+        if (Utils.version[1] < 35) {
+            return;
+        }
+        this._onEvent(null, event)
     }
 
     // WorkspaceMenu.prototype._onOpenStateChanged = function

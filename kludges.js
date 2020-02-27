@@ -173,6 +173,31 @@ if (version[0] >= 3 && version[1] < 34) {
     };
 }
 
+// Polyfill
+if (!Clutter.Actor.prototype.raise_top) {
+    Clutter.Actor.prototype.raise = function raise(above) {
+        const parent = this.get_parent();
+        if (!parent)
+            return;
+        parent.set_child_above_sibling(this, above);
+    }
+    Clutter.Actor.prototype.raise_top = function raise_top() {
+        this.raise(null);
+    }
+    Clutter.Actor.prototype.reparent = function reparent(newParent) {
+        const parent = this.get_parent();
+        if (parent) {
+            parent.remove_child(this);
+        }
+        newParent.add_child(this);
+    }
+}
+
+if (! Clutter.Vertex) {
+    const {Graphene} = imports.gi;
+    Clutter.Vertex = Graphene.Point3D;
+}
+
 // Workspace.Workspace._realRecalculateWindowPositions
 // Sort tiled windows in the correct order
 function _realRecalculateWindowPositions(flags) {
@@ -333,7 +358,9 @@ function init() {
     registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions');
     registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow');
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
-    registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated');
+    if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
+        registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
+
 
     // Work around https://gitlab.gnome.org/GNOME/gnome-shell/issues/1884
     if (!WindowManager.WindowManager.prototype._removeEffect) {
@@ -393,8 +420,6 @@ function enable() {
     onlyScratchInOverview();
 
 
-    // Disable switching the workspace after 4 finger swipe.
-    WindowManager.TouchpadWorkspaceSwitchAction.prototype._checkActivated = () => false;
     /* The «native» workspace animation can be now (3.30) be disabled as it
        calls out of the function bound to the `switch-workspace` signal.
      */
