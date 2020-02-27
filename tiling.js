@@ -2432,12 +2432,13 @@ function insertWindow(metaWindow, {existing}) {
 
 function animateDown(metaWindow) {
 
+    let space = spaces.spaceOfWindow(metaWindow);
+    let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
-    let space = spaces.spaceOfWindow(metaWindow);
     Tweener.addTween(metaWindow.clone, {
-        y: (panelBox.height + prefs.vertical_margin)*space.showTopBar ,
+        y:  workArea.y,
         time: prefs.animation_time,
     });
 }
