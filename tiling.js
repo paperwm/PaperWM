@@ -153,7 +153,7 @@ class Space extends Array {
         label.hide();
 
         let selection = new St.Widget({name: 'selection',
-                                       style_class: 'tile-preview'});
+                                       style_class: 'paperwm-selection tile-preview'});
         this.selection = selection;
 
         clip.space = this;

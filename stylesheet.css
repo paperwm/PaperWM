@@ -14,3 +14,7 @@
 .workspace-icon-button StIcon {
     icon-size: 16px;
 }
+
+.paperwm-selection {
+    border-radius: 8px;
+}

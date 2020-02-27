@@ -64,6 +64,7 @@ var ActionDispatcher = class {
     show(backward, binding, mask) {
         this._modifierMask = SwitcherPopup.primaryModifier(mask);
         this.navigator = getNavigator();
+        TopBar.fixTopBar();
         let actionId = Keybindings.idOf(binding);
         if(actionId === Meta.KeyBindingAction.NONE) {
             try {
