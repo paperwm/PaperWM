@@ -2635,11 +2635,11 @@ function grabEnd(metaWindow, type) {
 function focus_handler(metaWindow, user_data) {
     debug("focus:", metaWindow.title, utils.framestr(metaWindow.get_frame_rect()));
 
-    TopBar.fixTopBar();
 
     if (Scratch.isScratchWindow(metaWindow)) {
         spaces.get(workspaceManager.get_active_workspace()).setSelectionInactive();
         Scratch.makeScratch(metaWindow);
+        TopBar.fixTopBar();
         return;
     }
 
@@ -2689,6 +2689,7 @@ function focus_handler(metaWindow, user_data) {
     metaWindow.raise();
 
     ensureViewport(metaWindow, space);
+    TopBar.fixTopBar();
 }
 var focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
 
