@@ -2098,15 +2098,25 @@ class Spaces extends Map {
 }
 Signals.addSignalMethods(Spaces.prototype);
 
+function is_override_redirect(metaWindow) {
+    // Note: is_overrride_redirect() seem to be false for all wayland windows
+    const windowType = metaWindow.windowType;
+    return (
+        metaWindow.is_override_redirect()
+            || windowType === Meta.WindowType.DROPDOWN_MENU
+            || windowType === Meta.WindowType.TOOLTIP
+    );
+}
+
 function registerWindow(metaWindow) {
+    if (is_override_redirect(metaWindow)) {
+        return false;
+    }
+
     if (metaWindow.clone) {
         // Should no longer be possible, but leave a trace just to be sure
         utils.warn("window already registered", metaWindow.title);
         utils.print_stacktrace();
-    }
-
-    if (metaWindow.is_override_redirect()) {
-        return false;
     }
 
     let actor = metaWindow.get_compositor_private();
