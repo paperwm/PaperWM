@@ -327,6 +327,7 @@ var Navigator = class Navigator {
         TopBar.fixTopBar();
 
         Main.wm._blockAnimations = this._block;
+        this.space.moveDone();
 
         this.emit('destroy', this.was_accepted);
         navigator = false;
