@@ -489,10 +489,9 @@ class Space extends Array {
         });
     }
 
-    // Space.prototype.isVisible = function
     isVisible(metaWindow) {
         let clone = metaWindow.clone;
-        let x = clone.targetX + this.targetX;
+        let x = clone.x + this.cloneContainer.x;
         let workArea = this.workArea();
         let min = workArea.x;
 
