@@ -204,10 +204,6 @@ var Navigator = class Navigator {
         this.minimaps = new Map();
 
         TopBar.fixTopBar();
-        let selected = this.space.selectedWindow;
-        if (selected && selected.fullscreen) {
-            Tiling.animateDown(selected);
-        }
 
         this.space.startAnimate();
     }

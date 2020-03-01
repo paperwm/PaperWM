@@ -2541,7 +2541,8 @@ function ensureViewport(meta_window, space, force) {
 
     debug('Moving', meta_window.title);
 
-    if (space.selectedWindow.fullscreen) {
+    if (space.selectedWindow.fullscreen &&
+        !meta_window.fullscreen) {
         animateDown(space.selectedWindow);
     }
     let x = ensuredX(meta_window, space);
@@ -2550,11 +2551,17 @@ function ensureViewport(meta_window, space, force) {
     let selected = space.selectedWindow;
     let frame = meta_window.get_frame_rect();
     if (!inPreview && selected.fullscreen) {
-        Tweener.addTween(selected.clone,
-                         { y: frame.y - space.monitor.y,
-                           time: prefs.animation_time,
-                              onComplete: space.moveDone.bind(space)
-                         });
+        let y = 0;
+        let ty = selected.clone.get_transition('y');
+        if (!space.isVisible(selected)) {
+            selected.clone.y = y;
+        } else if (!ty || ty.get_interval().final !== y) {
+            Tweener.addTween(selected.clone,
+                             { y: y,
+                               time: prefs.animation_time,
+                               onComplete: space.moveDone.bind(space)
+                             });
+        }
     }
     move_to(space, meta_window, {
         x, force
