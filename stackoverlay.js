@@ -411,7 +411,7 @@ var StackOverlay = class StackOverlay {
             overlay.raise(neighbour.get_compositor_private());
         }
 
-        if (space.selectedWindow.fullscreen)
+        if (space.selectedWindow.fullscreen || space.selectedWindow.maximized_vertically)
             overlay.hide();
         else
             overlay.show();
