@@ -337,7 +337,9 @@ class Space extends Array {
                 targetHeight = f.height;
             }
             if (mw.maximized_vertically) {
-                y = f.y - space.monitor.y;
+                // NOTE: This should really be f.y - monitor.y, but eg. firefox
+                // on wayland reports the wrong y coordinates at this point.
+                y = y - prefs.vertical_margin;
             }
 
             // When resize is synchronous, ie. for X11 windows
