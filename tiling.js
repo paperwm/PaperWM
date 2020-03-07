@@ -2214,6 +2214,7 @@ function enable(errorNotification) {
             s.selectedWindow && ensureViewport(s.selectedWindow, s, true);
             s.monitor.clickOverlay.show();
         });
+        TopBar.fixTopBar()
     }
 
     if (Main.layoutManager._startingUp) {
