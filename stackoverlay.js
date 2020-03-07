@@ -363,7 +363,7 @@ var StackOverlay = class StackOverlay {
             return false;
         };
 
-        if (space === null) {
+        if (space === null || Tiling.inPreview) {
             // No target. Eg. if we're at the left- or right-most window
             return bail();
         }
