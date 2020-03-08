@@ -461,7 +461,7 @@ var MoveGrab = class MoveGrab {
         // metaWindow.change_workspace(space.workspace)
         // space.workspace.activate(global.get_current_time());
         Tiling.inGrab = false;
-        Navigator.getNavigator().finish(destSpace);
+        Navigator.getNavigator().finish(destSpace, metaWindow);
         global.display.set_cursor(Meta.Cursor.DEFAULT);
     }
 

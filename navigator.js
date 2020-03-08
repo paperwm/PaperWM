@@ -231,14 +231,14 @@ var Navigator = class Navigator {
         this.was_accepted = true;
     }
 
-    finish(space) {
+    finish(space, focus) {
         if (grab)
             return;
         this.accept();
-        this.destroy(space);
+        this.destroy(space, focus);
     }
 
-    destroy(space) {
+    destroy(space, focus) {
         this.minimaps.forEach(m => {
             if (typeof(m) === 'number')
                 Mainloop.source_remove(m);
@@ -304,8 +304,11 @@ var Navigator = class Navigator {
         selected = this.space.indexOf(selected) !== -1 ? selected :
                    this.space.selectedWindow;
 
-        let focus = display.focus_window;
-        if (focus && focus.is_on_all_workspaces())
+        let curFocus = display.focus_window;
+        if (force && curFocus && curFocus.is_on_all_workspaces())
+            selected = curFocus;
+
+        if (focus)
             selected = focus;
 
         if (selected && !Tiling.inGrab) {
