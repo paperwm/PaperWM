@@ -638,7 +638,9 @@ function resetConflicts() {
                 Main.wm._toggleCalendar.bind(Main.wm));
             break;
         case  'toggle-application-view':
-            const viewSelector = Main.overview._controls.viewSelector;
+            // overview._controls: Backward compatibility for 3.34 and below:
+            const viewSelector = (Main.overview.viewSelector || Main.overview._controls.viewSelector);
+
             Main.wm.setCustomKeybindingHandler(
                 name,
                 Shell.ActionMode.NORMAL |
