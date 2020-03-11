@@ -348,7 +348,7 @@
 
     <key type="b" name="use-default-background">
         <default>false</default>
-        <summary>Use the default gnome shell background</summary>
+        <summary>Use the default GNOME Shell background</summary>
     </key>
 
     <key type="b" name="default-show-top-bar">
