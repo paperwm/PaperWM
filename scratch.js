@@ -19,7 +19,9 @@ function focusMonitor() {
     if (global.display.focus_window) {
         return Main.layoutManager.monitors[global.display.focus_window.get_monitor()]
     } else {
-        return Main.layoutManager.primaryMonitor;
+        let [pointerX, pointerY, mask] = global.get_pointer();
+        let monitor = utils.monitorOfPoint(pointerX, pointerY);
+        return monitor || Main.layoutManager.primaryMonitor;
     }
 }
 
