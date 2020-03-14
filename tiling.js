@@ -1273,6 +1273,12 @@ class Spaces extends Map {
         this.signals.connect(workspaceManager, 'notify::n-workspaces',
                              utils.dynamic_function_ref('workspacesChanged', this).bind(this));
 
+        if (workspaceManager.reorder_workspace) {
+            // Compatibility: only in recent gnome-shell versions
+            this.signals.connect(workspaceManager, 'workspaces-reordered',
+                                 utils.dynamic_function_ref('workspacesChanged', this).bind(this));
+        }
+
         let OVERRIDE_SCHEMA;
         if (global.screen) {
             OVERRIDE_SCHEMA = 'org.gnome.shell.overrides';
