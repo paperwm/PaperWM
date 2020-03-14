@@ -425,6 +425,20 @@ function openNavigatorHandler(actionName, keystr) {
     }
 }
 
+function getActionIdByActionName(actionName) {
+    // HACK!!
+    try {
+        return Meta.prefs_get_keybinding_action(actionName);
+    } catch(e) {
+        try {
+            return parseInt(e.message.split(" ")[0]);
+        } catch(e2) {
+            print("Could not find actionId for", actionName);
+            return Meta.KeyBindingAction.NONE;
+        }
+    }
+}
+
 function getBoundActionId(keystr) {
     let [dontcare, keycodes, mask] =
         Gtk.accelerator_parse_with_keycode(keystr);
