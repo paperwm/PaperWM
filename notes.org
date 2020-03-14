@@ -294,3 +294,5 @@ To turn on off without disrupting flow too much use ~GLib.setenv("CLUTTER_SHOW_F
 ** Focus and active workspace
 It's not possible the have a focused window which doesn't belong to the active workspace
 ~global.display.focus_window.workspace === workspaceManger.get_active_workspace()~
+* Clutter animation
+  ~time: 0~ does not result in an instant animation. A default duration seems to be selected instead.
