@@ -47,8 +47,13 @@ function registerMinimapAction(name, handler) {
     registerAction(
         name,
         handler,
-        {settings: settings, opensNavigator: true, opensMinimap: true});
-
+        {
+            settings: settings,
+            opensNavigator: true,
+            opensMinimap: true,
+            mutterFlags: Meta.KeyBindingFlags.PER_WINDOW
+        }
+    );
 }
 
 
