@@ -20,6 +20,7 @@ var Settings = Extension.imports.settings;
 var keystrToKeycombo = Settings.keystrToKeycombo;
 
 var Navigator = Extension.imports.navigator;
+var Tiling = Extension.imports.tiling;
 
 var display = global.display;
 
@@ -259,12 +260,12 @@ var asKeyHandler;
 if (global.screen) {
     asKeyHandler = (actionHandler) =>
         (display, screen, mw, binding) => {
-            return actionHandler(mw, null, {display, screen, binding});
+            return actionHandler(mw, Tiling.spaces.selectedSpace, {display, screen, binding});
         };
 } else {
     asKeyHandler = (actionHandler) =>
         (display, mw, binding) => {
-            return actionHandler(mw, null, {display, binding});
+            return actionHandler(mw, Tiling.spaces.selectedSpace, {display, binding});
         };
 }
 
