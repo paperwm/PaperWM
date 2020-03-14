@@ -270,3 +270,29 @@ function cycleEdgeSnap(binding = "<Super>u") {
         Tiling.move_to(space, mw, {x: targetX});
     }, {activeInNavigator: true});
 }
+
+function reorderWorkspace(bindingUp = "<Alt><Super>Page_Up", bindingDown = "<Alt><Super>Page_Down") {
+    if (!global.workspace_manager.reorder_workspace) {
+        print("Reorder workspaces not supported by this gnome-shell version");
+        return;
+    }
+    function moveWorkspace(dir, metaWindow, space) {
+        if (!space)
+            return;
+
+        let nextI = Math.min(Tiling.spaces.size-1 , Math.max(0, space.workspace.index() + dir));
+        global.workspace_manager.reorder_workspace(space.workspace, nextI);
+    }
+
+    Keybindings.bindkey(
+        bindingUp, "reorder-workspace-up",
+        moveWorkspace.bind(null, -1),
+        { activeInNavigator: true }
+    );
+
+    Keybindings.bindkey(
+        bindingDown, "reorder-workspace-down",
+        moveWorkspace.bind(null, 1),
+        { activeInNavigator: true }
+    );
+}
