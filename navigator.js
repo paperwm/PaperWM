@@ -153,6 +153,9 @@ var ActionDispatcher = class {
         let metaWindow = space.selectedWindow;
 
         if (action && action.options.activeInNavigator) {
+            if (!metaWindow && (action.options.mutterFlags & Meta.KeyBindingFlags.PER_WINDOW)) {
+                return;
+            }
             if (action.options.opensMinimap) {
                 this.navigator._showMinimap(space);
             }

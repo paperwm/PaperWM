@@ -264,7 +264,7 @@ if (global.screen) {
 }
 
 function impliedOptions(options) {
-    options = Object.assign({}, options);
+    options = {mutterFlags: Meta.KeyBindingFlags.NONE, ...options};
 
     if (options.opensMinimap)
         options.opensNavigator = true;
@@ -285,7 +285,7 @@ function impliedOptions(options) {
  * }
  */
 function registerAction(actionName, handler, options) {
-    options = impliedOptions(options)
+    options = impliedOptions(options);
 
     let {
         settings,
