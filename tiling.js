@@ -540,7 +540,7 @@ class Space extends Array {
 
     isWindowAtPoint(metaWindow, x, y) {
         let clone = metaWindow.clone;
-        let wX = clone.targetX + this.cloneContainer.x;
+        let wX = clone.x + this.cloneContainer.x;
         return x >= wX && x <= wX + clone.width &&
             y >= clone.y && y <= clone.y + clone.height;
     }
@@ -622,6 +622,8 @@ class Space extends Array {
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
         let clone = metaWindow.clone;
+        if (clone.get_parent() !== this.cloneContainer)
+            utils.trace('wrong parent', metaWindow);
         this.cloneContainer.remove_actor(clone);
         // Don't destroy the selection highlight widget
         if (clone.first_child.name === 'selection')
@@ -785,12 +787,23 @@ class Space extends Array {
         return column.indexOf(metaWindow);
     }
 
+    globalToViewport(gx, gy) {
+        let [ok, vx, vy] = this.actor.transform_stage_point(gx, gy);
+        return [Math.round(vx), Math.round(vy)];
+    }
+
     /** Transform global coordinates to scroll cooridinates (cloneContainer relative) */
-    globalToScroll(gx, gy, useTarget=false) {
-        // NB: must use this.cloneContainer.transform_stage_point(gx, gy) if stuff is not simply translated
-        let x = gx - this.monitor.x - (useTarget ? this.targetX : this.cloneContainer.x);
-        let y = gy - this.monitor.y - this.cloneContainer.y;
-        return [x, y];
+    globalToScroll(gx, gy, {useTarget = false} = {}) {
+        // Use the smart transform on the actor, as that's the one we scale etc.
+        // We can then use straight translation on the scroll which makes it possible to use target instead if wanted.
+        let [vx, vy] = this.globalToViewport(gx, gy);
+        let sx = vx - (useTarget ? this.targetX : this.cloneContainer.x);
+        let sy = vy - this.cloneContainer.y;
+        return [Math.round(sx), Math.round(sy)];
+    }
+
+    viewportToScroll(vx, vy=0) {
+        return [vx - this.cloneContainer.x, vy - this.cloneContainer.y];
     }
 
     moveDone() {
@@ -799,7 +812,7 @@ class Space extends Array {
             Navigator.navigating || inPreview ||
             Main.overview.visible ||
             // Block when we're carrying a window in dnd
-            (inGrab && inGrab.dnd && inGrab.window)
+            (inGrab && inGrab.window)
            ) {
             return;
         }
@@ -1057,16 +1070,55 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         this.signals.connect(
             this.background, 'button-press-event',
             (actor, event) => {
-                let [aX, aY, mask] = global.get_pointer();
-                let [ok, x, y] =
-                    this.actor.transform_stage_point(aX, aY);
+                if (inGrab) {
+                    return;
+                }
+                let [gx, gy, $] = global.get_pointer();
+                let [ok, x, y] = this.actor.transform_stage_point(gx, gy);
                 let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
-                let nav = Navigator.getNavigator();
                 if (windowAtPoint) {
                     ensureViewport(windowAtPoint, this);
+                    inGrab = new Extension.imports.grab.MoveGrab(windowAtPoint, Meta.GrabOp.MOVING, this);
+                    inGrab.begin();
+                } else if (inPreview) {
+                    spaces.selectedSpace = this;
+                    Navigator.getNavigator().finish();
                 }
-                spaces.selectedSpace = this;
-                nav.finish();
+            });
+
+        this.signals.connect(
+            this.background, 'scroll-event',
+            (actor, event) => {
+                if (!inGrab && !Navigator.navigating)
+                    return;
+                let dir = event.get_scroll_direction();
+                if (dir === Clutter.ScrollDirection.SMOOTH)
+                    return;
+                // print(dir, Clutter.ScrollDirection.SMOOTH, Clutter.ScrollDirection.UP, Clutter.ScrollDirection.DOWN)
+                let dx
+                log(utils.ppEnumValue(dir, Clutter.ScrollDirection))
+                // let dx = dir === Clutter.ScrollDirection.DOWN ? -1 : 1
+                // let [dx, dy] = event.get_scroll_delta()
+
+                let [gx, gy] = event.get_coords();
+                if (!gx) {
+                    print("Noooo");
+                    return;
+                }
+                print(dx, gx, gy);
+
+                switch (dir) {
+                    case Clutter.ScrollDirection.LEFT:
+                    case Clutter.ScrollDirection.UP:
+                        this.switchLeft();
+                        break;
+                    case Clutter.ScrollDirection.RIGHT:
+                    case Clutter.ScrollDirection.DOWN:
+                        this.switchRight();
+                        break;
+                }
+                // spaces.selectedSpace = this;
+                // nav.finish();
             });
 
         this.signals.connect(
@@ -1564,6 +1616,19 @@ class Spaces extends Map {
         let from = workspaceManager.get_workspace_by_index(fromIndex);
         let toSpace = this.spaceOf(to);
         let fromSpace = this.spaceOf(from);
+
+        if (inGrab && inGrab.window) {
+            inGrab.window.change_workspace(toSpace.workspace);
+        }
+
+        for (let metaWindow of toSpace.getWindows()) {
+            // Make sure all windows belong to the correct workspace.
+            // Note: The 'switch-workspace' signal (this method) runs before mutter decides on focus window.
+            // This simplifies other code moving windows between workspaces.
+            // Eg.: The DnD-window defer changing its workspace until the workspace actually is activated.
+            //      This ensures the DnD window keep focus the whole time.
+            metaWindow.change_workspace(toSpace.workspace);
+        }
 
         if (inPreview === PreviewMode.NONE && toSpace.monitor === fromSpace.monitor) {
             // Only start an animation if we're moving between workspaces on the
@@ -2641,10 +2706,13 @@ function grabBegin(metaWindow, type) {
         case Meta.GrabOp.MOVING:
             inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
 
-            if (!inGrab.initialSpace || inGrab.initialSpace.indexOf(metaWindow) === -1)
-                return;
+            if (utils.getModiferState() & Clutter.ModifierType.CONTROL_MASK) {
+                inGrab.begin();
+                inGrab.beginDnD();
+            } else if (inGrab.initialSpace && inGrab.initialSpace.indexOf(metaWindow) > -1) {
+                inGrab.begin();
+            }
 
-            inGrab.begin();
             break;
         case Meta.GrabOp.RESIZING_NW:
         case Meta.GrabOp.RESIZING_N:
@@ -2669,7 +2737,7 @@ function grabBegin(metaWindow, type) {
 }
 
 function grabEnd(metaWindow, type) {
-    if (!inGrab)
+    if (!inGrab || inGrab.dnd || inGrab.grabbed)
         return;
 
     inGrab.end();

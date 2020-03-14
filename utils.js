@@ -80,6 +80,16 @@ function ppEnumValue(value, genum) {
     }
 }
 
+function ppModiferState(state) {
+    let mods = [];
+    for (let [mod, mask] of Object.entries(imports.gi.Clutter.ModifierType)) {
+        if (mask & state) {
+            mods.push(mod);
+        }
+    }
+    return mods.join(", ")
+}
+
 /**
  * Look up the function by name at call time. This makes it convenient to
  * redefine the function without re-registering all signal handler, keybindings,
@@ -209,12 +219,16 @@ function toggleCloneMarks() {
     // NB: doesn't clean up signal on disable
 
     function markCloneOf(metaWindow) {
-        if (metaWindow.clone)
+        if (metaWindow.clone) {
             metaWindow.clone.opacity = 190;
+            metaWindow.clone.background_color = imports.gi.Clutter.color_from_string("red")[1];
+        }
     }
     function unmarkCloneOf(metaWindow) {
-        if (metaWindow.clone)
+        if (metaWindow.clone) {
             metaWindow.clone.opacity = 255;
+            metaWindow.clone.background_color = null;
+        }
     }
 
     let windows = display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
@@ -260,6 +274,29 @@ function warpPointer(x, y) {
     }
 }
 
+/**
+ * Return current modifiers state (or'ed Clutter.ModifierType.*)
+ * NB: Only on wayland. (Returns 0 on X11)
+ *
+ * Note: It's possible to get the modifier state through Gdk on X11, but move
+ * grabs is not triggered when ctrl is held down, making it useless for our purpose atm.
+ */
+function getModiferState() {
+    if (!Meta.is_wayland_compositor())
+        return 0;
+
+    let keyboard;
+    if (Clutter.DeviceManager) {
+        let dm = Clutter.DeviceManager.get_default();
+        keyboard = dm.get_core_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+    } else {
+        let backend = Clutter.get_default_backend();
+        let seat = backend.get_default_seat();
+        keyboard = seat.get_keyboard();
+    }
+    return keyboard.get_modifier_state();
+}
+
 function monitorOfPoint(x, y) {
     // get_monitor_index_for_rect "helpfully" returns the primary monitor index for out of bounds rects..
     const Main = imports.ui.main;
@@ -274,6 +311,38 @@ function monitorOfPoint(x, y) {
     return null;
 }
 
+
+function indent(level, str) {
+    let blank = ""
+    for (let i = 0; i < level; i++) {
+        blank += "  "
+    }
+    return blank + str
+}
+
+
+function fmt(actor) {
+    let extra = [
+        `${actor.get_position()}`,
+        `${actor.get_size()}`,
+    ];
+    let metaWindow = actor.meta_window || actor.metaWindow;
+    if (metaWindow) {
+        metaWindow = `(mw: ${metaWindow.title})`;
+        extra.push(metaWindow);
+    }
+    return `${actor.toString()} ${extra.join(" | ")}`;
+}
+
+function printActorTree(node, fmt=fmt, limit=Infnity, level=1) {
+    if (level > limit) {
+        return;
+    }
+    print(indent(level, fmt(node)));
+    for (let child of node.get_children()) {
+        printActorTree(child, fmt, limit, level+1);
+    }
+}
 
 class Signals extends Map {
     static get [Symbol.species]() { return Map; }
@@ -346,3 +415,73 @@ var tweener = {
         return actor.get_transition('x') || actor.get_transition('y') || actor.get_transition('scale-x') || actor.get_transition('scale-x');
     }
 };
+
+function isMetaWindow(obj) {
+    return obj && obj.window_type && obj.get_compositor_private;
+}
+
+function trace(topic, ...args) {
+    if (!topic.match(/.*/)) {
+        return;
+    }
+
+    if (isMetaWindow(args[0])) {
+        windowTrace(topic, ...args);
+    } else {
+        let trace = shortTrace(1).join(" < ");
+        let extraInfo = args.length > 0 ? "\n\t" + args.map(x => x.toString()).join("\n\t") : ""
+        log(topic, trace, extraInfo);
+    }
+}
+
+let existingWindows = new Set();
+
+function windowTrace(topic, metaWindow, ...rest) {
+    if (existingWindows.has(metaWindow)) {
+        return;
+    }
+
+    log(topic, infoMetaWindow(metaWindow).join("\n"), ...rest.join("\n"));
+}
+
+function infoMetaWindow(metaWindow) {
+    let id = metaWindow.toString().split(" ")[4];
+    let trace = shortTrace(3).join(" < ");
+    let info = [
+        `(win: ${id}) ${trace}`,
+        `Title: ${metaWindow.title}`,
+    ];
+    if (!metaWindow.window_type === Meta.WindowType.NORMAL) {
+        info.push(`Type: ${ppEnumValue(metaWindow.window_type, Meta.WindowType)}`);
+    }
+    if (!metaWindow.get_compositor_private()) {
+        info.push(`- no actor`);
+    }
+    if (metaWindow.is_on_all_workspaces()) {
+        info.push(`- is_on_all_workspaces`);
+    }
+    if (metaWindow.above) {
+        info.push(`- above`);
+    }
+    if (Extension.imports.scratch.isScratchWindow(metaWindow)) {
+        info.push(`- scratch`);
+    }
+    return info;
+}
+
+function shortTrace(skip=0) {
+    let trace = new Error().stack.split("\n").map(s => {
+        let words = s.split(/[@/]/)
+        let cols = s.split(":")
+        let ln = parseInt(cols[2])
+        if (ln === null)
+            ln = "?"
+
+        return [words[0], ln]
+    })
+    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : f+":"+ln);
+    return trace.slice(skip+1, skip+5);
+}
+
+
+// Meta.remove_verbose_topic(Meta.DebugTopic.FOCUS)
