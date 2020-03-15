@@ -346,7 +346,22 @@ var StackOverlay = class StackOverlay {
             y2: workArea.y + workArea.height - 1,
             directions
         });
-        this.pressureBarrier.addBarrier(this.barrier);
+
+        this.barrier.connect('hit', (_, event) => {
+            let [x, y, mod] = global.get_pointer();
+            for (let [k, v] of Object.entries(Clutter.ModifierType)) {
+                if (Clutter.ModifierType[k] & mod) {
+                    // print(k);
+                }
+            }
+
+            if (mod & Clutter.ModifierType.MOD4_MASK) {
+                this.barrier.release(event);
+                // this.pressureBarrier.removeBarrier(this.barrier);
+            }
+        });
+
+        // this.pressureBarrier.addBarrier(this.barrier);
     }
 
     setTarget(space, index) {
