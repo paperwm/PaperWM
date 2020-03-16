@@ -112,6 +112,20 @@ function findNext(cur, values, slack=0) {
     return values[0]; // cycle
 }
 
+function arrayEqual(a, b) {
+    if (a === b)
+        return true;
+    if (!a || !b)
+        return false;
+    if (a.length !== b.length)
+        return false;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i])
+            return false;
+    }
+    return true;
+}
+
 function swap(array, i, j) {
     let temp = array[i];
     array[i] = array[j];
