@@ -82,6 +82,7 @@ function repl() {
 
     virtStage.hide()
     virtStage.show()
+    virtStage.y = 400
 }
 
 /** tiling position given:
