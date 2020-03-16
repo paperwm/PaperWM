@@ -385,10 +385,14 @@ class Space extends Array {
             return;
         if (this._inLayout)
             return;
+        print("LAYOUT")
         this._inLayout = true;
         this.startAnimate();
 
         let time = animate ? prefs.animation_time : 0;
+        if (window.instant) {
+            time = 0;
+        }
         let gap = prefs.window_gap;
         let x = 0;
         let selectedIndex = this.selectedIndex();
@@ -491,18 +495,41 @@ class Space extends Array {
         });
     }
 
-    isVisible(metaWindow) {
+    // Space.prototype.isVisible = function
+    isVisible(metaWindow, margin=0) {
         let clone = metaWindow.clone;
         let x = clone.x + this.cloneContainer.x;
         let workArea = this.workArea();
         let min = workArea.x;
 
-        if (x + clone.width < min
-            || x > min + workArea.width) {
+        if (x - margin + clone.width < min
+            || x + margin > min + workArea.width) {
             return false;
         } else {
             return true;
         }
+    }
+
+    isFullyVisible(metaWindow) {
+        let clone = metaWindow.clone;
+        let x = clone.targetX + this.targetX;
+        let workArea = this.workArea();
+        let min = workArea.x;
+
+        return min <= x && x + clone.width < min + workArea.width;
+    }
+
+    visibleRatio(metaWindow) {
+
+        let clone = metaWindow.clone;
+        let x = clone.targetX + this.targetX;
+        let workArea = this.workArea();
+        let min = workArea.x;
+
+        let left = min - x
+        let right = x + clone.width
+
+        return min <= x && x + clone.width < min + workArea.width;
     }
 
     isPlaceable(metaWindow) {
@@ -729,6 +756,9 @@ class Space extends Array {
     switch(direction) {
         let space = this;
         let index = space.selectedIndex();
+        if (index === -1) {
+            return;
+        }
         let row = space[index].indexOf(space.selectedWindow);
         switch (direction) {
         case Meta.MotionDirection.RIGHT:
@@ -1578,10 +1608,14 @@ class Spaces extends Map {
         let monitor = Scratch.focusMonitor();
         let currentSpace = this.monitors.get(monitor);
         let i = display.get_monitor_neighbor_index(monitor.index, direction);
+        print("switch", utils.ppEnumValue(direction, Meta.DisplayDirection), i, monitor.index)
+        print("currentSpace", currentSpace.name)
+        print("focus window", global.display.focus_window)
         if (i === -1)
             return;
         let newMonitor = Main.layoutManager.monitors[i];
         let space = this.monitors.get(newMonitor);
+        print("nextSpace", space.name)
 
         if (move && focus) {
             let metaWindow = focus.get_transient_for() || focus;
@@ -1617,6 +1651,7 @@ class Spaces extends Map {
         let toSpace = this.spaceOf(to);
         let fromSpace = this.spaceOf(from);
 
+        print("switchWorkspace", fromSpace.monitor.index, toSpace.monitor.index)
         if (inGrab && inGrab.window) {
             inGrab.window.change_workspace(toSpace.workspace);
         }
@@ -2235,6 +2270,9 @@ function resizeHandler(metaWindow) {
     if (inGrab && inGrab.window === metaWindow)
         return;
 
+    print("resize-handler-width", metaWindow.get_frame_rect().width)
+    // print("RESIZE\n", GLib.on_error_stack_trace(GLib.get_prgname()));
+
     let f = metaWindow.get_frame_rect();
     let needLayout = false;
     if (metaWindow._targetWidth !== f.width || metaWindow._targetHeight !== f.height) {
@@ -2652,7 +2690,7 @@ function updateSelection(space, metaWindow) {
  * Move the column containing @meta_window to x, y and propagate the change
  * in @space. Coordinates are relative to monitor and y is optional.
  */
-function move_to(space, metaWindow, { x, y, force }) {
+function move_to(space, metaWindow, { x, y, force, instant }) {
     if (space.indexOf(metaWindow) === -1)
         return;
 
