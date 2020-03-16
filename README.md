@@ -198,7 +198,7 @@ It's possible to create simple rules for placing new windows. Currently most use
     });
 ```
 
-The `wm_class` of a window can be looked up by clicking <kbd>Super</kbd><kbd>Insert</kbd> and then checking the value of `metaWindow.wm_class` in emacs or looking glass.
+The `wm_class` of a window can be looked up by clicking <kbd>Super</kbd><kbd>Insert</kbd> and then checking the value of `metaWindow.wm_class` in emacs or looking glass, or typing `xprop | grep WM_CLASS` at the command line then clicking on the window.
 
 ### New Window Handlers
 
