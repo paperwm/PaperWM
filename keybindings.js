@@ -270,7 +270,7 @@ if (global.screen) {
 }
 
 function impliedOptions(options) {
-    options = {mutterFlags: Meta.KeyBindingFlags.NONE, ...options};
+    options = options = Object.assign({mutterFlags: Meta.KeyBindingFlags.NONE}, options);
 
     if (options.opensMinimap)
         options.opensNavigator = true;
