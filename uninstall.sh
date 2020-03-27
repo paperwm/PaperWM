@@ -19,4 +19,4 @@ if [[ "$LINK" != "$REPO" ]]; then
     echo "$EXT" does not link to "$REPO", refusing to remove
     exit 1
 fi
-rm $EXT
+rm -Rf $EXT
