@@ -76,7 +76,7 @@ function repl() {
 
     function sync(space_=space) {
         let columns = layout(
-            fromSpace(space_),
+            fromSpace(space_, scale),
             workArea,
             prefs
         );
@@ -98,9 +98,6 @@ function repl() {
     virtStage.show()
     virtStage.y = 400
 }
-
-Utils.printActorTree(space.actor, Utils.mkFmt({nameOnly: true}))
-Utils.printActorTree(virtStage, Utils.mkFmt({nameOnly: true}), {collapseChains: false})
 
 /** tiling position given:
     m_s: monitor position
@@ -127,7 +124,7 @@ function renderAndView(container, columns) {
     render(columns, container);
 }
 
-function fromSpace(space, scale=0.1) {
+function fromSpace(space, scale=1) {
     return space.map(
         col => col.map(
             metaWindow => {
