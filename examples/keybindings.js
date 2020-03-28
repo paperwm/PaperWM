@@ -126,6 +126,45 @@ function cycleWorkspaceSettings(binding = "<Super>q") {
     );
 }
 
+function expand(binding = "<Super><Shift>l") {
+    var Tiling = Extension.imports.tiling;
+
+    function findNonVisibleIndex(space, metaWindow, dir=1, margin=1) {
+        let k = space.indexOf(metaWindow) + dir;
+        while (0 <= k && k < space.length && space.isFullyVisible(space[k][0], margin)) {
+            k += dir;
+        }
+        return k
+    }
+
+    function action(metaWindow) {
+        let space = Tiling.spaces.spaceOfWindow(metaWindow);
+
+        let a = findNonVisibleIndex(space, metaWindow, -1);
+        let b = findNonVisibleIndex(space, metaWindow,  1);
+
+        let leftMost = space[a+1][0];
+        let availableLeft = space.targetX + leftMost.clone.targetX;
+
+        let rightMost = space[b-1][0];
+        let rightEdge = space.targetX + rightMost.clone.targetX + rightMost.clone.width;
+        let availableRight = space.width - rightEdge;
+
+        let f = metaWindow.get_frame_rect();
+        let available = f.width + availableRight + availableLeft - Tiling.prefs.horizontal_margin*2;
+
+        if (a+1 === b-1) {
+            // We're the only window
+            Tiling.toggleMaximizeHorizontally(metaWindow)
+        } else {
+            metaWindow.move_resize_frame(true, f.x, f.y, available, f.height);
+            Tiling.move_to(space, space[a+1][0], { x: Tiling.prefs.horizontal_margin })
+        }
+    }
+
+    Keybindings.bindkey(binding, "expand-available-width", action, {activeInNavigator: true});
+}
+
 function showNavigator(binding = "<Super>j") {
     Keybindings.bindkey(binding, "show-minimap", () => null, { opensMinimap: true })
 }
