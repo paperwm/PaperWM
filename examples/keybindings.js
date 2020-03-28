@@ -84,9 +84,10 @@ function swapNeighbours(binding = "<Super>y") {
         let space = Tiling.spaces.spaceOfWindow(mw)
         let i = space.indexOf(mw);
         if (space[i+1]) {
-            space.swap(Meta.MotionDirection.RIGHT, space[i+1][0])
+            space.swap(Meta.MotionDirection.RIGHT, space[i+1][0]);
+            space[i+1].map(mw => mw.clone.raise_top());
         }
-    }, {activeInNavigator: true})
+    }, {activeInNavigator: true});
 }
 
 function cycleMonitor(binding = "<Super>d") {
