@@ -165,6 +165,101 @@ function expand(binding = "<Super><Shift>l") {
     Keybindings.bindkey(binding, "expand-available-width", action, {activeInNavigator: true});
 }
 
+function cycleLayouts(binding = "<Super>d") {
+    var Tiling = Extension.imports.tiling;
+    var Virt = Extension.imports.virtTiling;
+    var Tweener = Extension.imports.utils.tweener;
+    var Utils = Extension.imports.utils;
+    var prefs = Tiling.prefs;
+
+    const splits = [
+        [0.5, 0.5],
+        [0.7, 0.3],
+        [0.3, 0.7]
+    ];
+
+    function moveTo(space, metaWindow, target) {
+        space.startAnimate();
+        space.targetX = target;
+        Tweener.addTween(space.cloneContainer,
+                         { x: space.targetX,
+                           time: prefs.animation_time,
+                           onComplete: space.moveDone.bind(space)
+                         });
+
+        space.fixOverlays(metaWindow);
+    }
+
+    function action(metaWindow, space, {navigator}={}) {
+        const m = 50
+        space = Tiling.spaces.spaceOfWindow(metaWindow);
+
+        prefs = {...prefs, minimum_margin: Tiling.minimumMargin()}
+
+        const tiling = Virt.layout(Virt.fromSpace(space), space.workArea(), prefs);
+
+        function resize(i, width) {
+            for (let w of tiling[i]) {
+                w.width = width;
+            }
+        }
+
+        let k = space.indexOf(metaWindow);
+        let next = space.length > k+1 && space.isVisible(space[k+1][0], m) && space[k+1][0];
+        let prev = k > 0 && space.isVisible(space[k-1][0], m) && space[k-1][0];
+
+
+        let neighbour = next || prev;
+        let f = metaWindow.get_frame_rect();
+        let f2 = neighbour.get_frame_rect();
+
+        let neighbourK = space.indexOf(neighbour);
+
+        let available = space.width - Tiling.prefs.horizontal_margin*2 - Tiling.prefs.window_gap;
+
+        let s1 = f.width / available;
+        let s2 = f2.width / available;
+
+        let state;
+        if (!navigator["cycle-layouts"]) {
+            navigator["cycle-layouts"] = {i: Utils.eq(s1, splits[0][0]) ? 1 : 0 }
+        }
+        state = navigator["cycle-layouts"];
+
+        let [a, b] = splits[(state.i++) % splits.length];
+
+        let metaWindowWidth = Math.round(available * a);;
+        metaWindow.move_resize_frame(true, f.x, f.y, metaWindowWidth, f.height);
+        resize(k, metaWindowWidth);
+
+        let neighbourWidth = Math.round(available * b);
+        neighbour.move_resize_frame(true, f2.x, f2.y, neighbourWidth, f2.height);
+        resize(neighbourK, neighbourWidth);
+
+        Virt.layout(tiling, space.workArea(), prefs);
+
+        let margin = Tiling.prefs.horizontal_margin;
+        let width = f.width;
+        let workarea = space.workArea();
+        let wax = workarea.x - space.monitor.x;
+
+        let leftSnapPos = wax + margin;
+        let rightSnapPos = wax + workarea.width - metaWindowWidth - margin;
+
+        if (neighbour == next) {
+            print("next", metaWindow.title, leftSnapPos, tiling[k][0].x);
+            moveTo(space, metaWindow, leftSnapPos - tiling[k][0].x);
+            // Tiling.move_to(space, metaWindow, {x: leftSnapPos});
+        } else {
+            print("prev", neighbour.title, rightSnapPos, tiling[neighbourK][0].x);
+            moveTo(space, neighbour, leftSnapPos - tiling[neighbourK][0].x);
+            // Tiling.move_to(space, neighbour, {x: leftSnapPos});
+        }
+    }
+
+    Keybindings.bindkey(binding, "cycle-layouts", action, { opensNavigator: true })
+}
+
 function showNavigator(binding = "<Super>j") {
     Keybindings.bindkey(binding, "show-minimap", () => null, { opensMinimap: true })
 }
