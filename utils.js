@@ -289,6 +289,92 @@ function monitorOfPoint(x, y) {
 }
 
 
+function indent(level, str) {
+    let blank = ""
+    for (let i = 0; i < level; i++) {
+        blank += "  "
+    }
+    return blank + str
+}
+
+
+function mkFmt({nameOnly}={nameOnly: false}) {
+    function defaultFmt(actor, prefix="") {
+        const fmtNum = num => num.toFixed(0);
+        let extra = [
+            `${actor.get_position().map(fmtNum)}`,
+            `${actor.get_size().map(fmtNum)}`,
+        ];
+        let metaWindow = actor.meta_window || actor.metaWindow;
+        if (metaWindow) {
+            metaWindow = `(mw: ${metaWindow.title})`;
+            extra.push(metaWindow);
+        }
+        const extraStr = extra.join(" | ");
+        let actorId = "";
+        if (nameOnly) {
+            actorId = actor.name ? actor.name : (prefix.length == 0 ? "" : "#")
+        } else {
+            actorId = actor.toString();
+        }
+        actorId = prefix+actorId
+        let spacing = actorId.length > 0 ? " " : ""
+        return `*${spacing}${actorId} ${extraStr}`;
+    }
+    return defaultFmt;
+}
+
+function printActorTree(node, fmt=mkFmt(), options={}, state=null) {
+    state = Object.assign({}, (state || {level: 0, actorPrefix: ""}))
+    const defaultOptions = {
+        limit: 9999,
+        collapseChains: true,
+    };
+    options = Object.assign(defaultOptions, options)
+
+    if (state.level > options.limit) {
+        return;
+    }
+    let collapse = false;
+    if (options.collapseChains) {
+        /*
+          a
+            b
+              s
+              t
+            c 30,10
+              u
+          ->
+          a.b.s
+          a.b.t 
+          a.b.c ...
+            u
+            
+            
+        */
+        if (node.get_children().length > 0) {
+            if (node.x === 0 && node.y === 0) {
+                state.actorPrefix += (node.name ? node.name : "#") + "."
+                // print("#### ", state.actorPrefix)
+                collapse = true
+            } else {
+                collapse = false
+            }
+        } else {
+            collapse = false
+        }
+    }
+    if (!collapse) {
+        print(indent(state.level, fmt(node, state.actorPrefix)));
+        state.actorPrefix = "";
+        state.level += 1;
+    }
+
+    for (let child of node.get_children()) {
+        printActorTree(child, fmt, options, state)
+    }
+}
+
 class Signals extends Map {
     static get [Symbol.species]() { return Map; }
 
