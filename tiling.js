@@ -123,17 +123,17 @@ class Space extends Array {
         this._floating = [];
         this._populated = false;
 
-        let clip = new Clutter.Actor();
+        let clip = new Clutter.Actor({name: "clip"});
         this.clip = clip;
-        let actor = new Clutter.Actor();
+        let actor = new Clutter.Actor({name: "space-actor"});
 
         this._visible = true;
         this.hide(); // We keep the space actor hidden when inactive due to performance
 
         this.actor = actor;
-        let cloneClip = new Clutter.Actor();
+        let cloneClip = new Clutter.Actor({name: "clone-clip"});
         this.cloneClip = cloneClip;
-        let cloneContainer = new St.Widget();
+        let cloneContainer = new St.Widget({name: "clone-container"});
         this.cloneContainer = cloneContainer;
 
         // Pick up the same css as the top bar label
@@ -165,7 +165,7 @@ class Space extends Array {
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
 
-        this.border = new St.Widget();
+        this.border = new St.Widget({name: "border"});
         this.actor.add_actor(this.border);
         this.border.hide();
 
@@ -1090,6 +1090,7 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         let metaBackground = new Meta.Background(meta_display);
         this.background = new Meta.BackgroundActor(
             Object.assign({
+                name: "background",
                 monitor: monitor.index, background: metaBackground,
                 reactive: true // Disable the background menu
             }, meta_display)
