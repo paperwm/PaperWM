@@ -126,6 +126,11 @@ function arrayEqual(a, b) {
     return true;
 }
 
+/** Is the floating point numbers equal enough */
+function eq(a, b, epsilon=0.00000001) {
+    return Math.abs(a-b) < epsilon;
+}
+
 function swap(array, i, j) {
     let temp = array[i];
     array[i] = array[j];
