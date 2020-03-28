@@ -8,7 +8,8 @@ if (imports.misc.extensionUtils.extensions) {
 var Clutter = imports.gi.Clutter
 var St = imports.gi.St
 
-var Tiling = Extension.imports.tiling
+var Tiling = Extension.imports.tiling;
+var Utils = Extension.imports.utils;
 let fitProportionally = Tiling.fitProportionally
 
 let prefs = {
@@ -22,19 +23,29 @@ function repl() {
     if (virtStage)
         virtStage.destroy()
 
+    let realMonitor = space.monitor
+    let scale = 0.10
+    let padding = 10
+    const monitorWidth = realMonitor.width * scale
+    const monitorHeight = realMonitor.height * scale
     let stageStyle = `background-color: white;`
     virtStage = new St.Widget({
-        style: stageStyle, height: 80, width: 800
+        name: "stage",
+        style: stageStyle,
+        height: monitorHeight + padding*2,
+        width: monitorWidth*3
     })
 
-    let canvasStyle = `background-color: yellow;`
+    // let canvasStyle = `background-color: yellow;`
     canvasStyle = ""
-    let canvas = new St.Widget({name: "canvas", style: canvasStyle, x: 5, y: 5})
+    // let canvas = new St.Widget({name: "canvas", style: canvasStyle, x: 5, y: 5})
     let monitorStyle = `background-color: blue;`
     let monitor = new St.Widget({
         name: "monitor0", 
         style: monitorStyle,
-        x: virtStage.width/2 - 300/2, y: 0, width: 300, height: virtStage.height - 10
+        x: virtStage.width/2 - monitorWidth/2, y: padding,
+        width: monitorWidth,
+        height: virtStage.height - padding*2
     })
 
     let panel = new St.Widget({
@@ -47,43 +58,49 @@ function repl() {
     })
     let workArea = {
         x: monitor.x,
-        y: monitor.y + panel.height,
+        y: panel.height,
         width: monitor.width,
         height: monitor.height - panel.height,
     }
 
-    let tilingContainer = new St.Widget()
-
+    let tilingStyle = `background-color: rgba(190, 190, 0, 0.3);`
+    let tilingContainer = new St.Widget({name: "tiling", style: tilingStyle})
 
     global.stage.add_actor(virtStage)
-    virtStage.add_actor(canvas)
-    canvas.add_actor(monitor)
+    virtStage.x = 3000
+    virtStage.y = 300
+
+    virtStage.add_actor(monitor)
     monitor.add_actor(panel)
+    monitor.add_actor(tilingContainer)
 
-    canvas.add_actor(tilingContainer)
-    virtStage.x = 1000
-
-    renderAndView(
-        tilingContainer,
-        layout(
-            fromSpace(space),
+    function sync(space_=space) {
+        let columns = layout(
+            fromSpace(space_),
             workArea,
             prefs
-        )
-    )
+        );
+        renderAndView(
+            tilingContainer,
+            columns
+        );
+        tilingContainer.x = space_.targetX * scale;
+    }
 
-    let columns = layout(
-        fromSpace(space),
-        workArea,
-        prefs
-    )
+    sync()
+
+    Utils.printActorTree(virtStage, Utils.mkFmt({nameOnly: true}))
 
     movecolumntoviewportposition(tilingContainer, monitor, columns[1][0], 30)
+    // Utils.printA
 
     virtStage.hide()
     virtStage.show()
     virtStage.y = 400
 }
+
+Utils.printActorTree(space.actor, Utils.mkFmt({nameOnly: true}))
+Utils.printActorTree(virtStage, Utils.mkFmt({nameOnly: true}), {collapseChains: false})
 
 /** tiling position given:
     m_s: monitor position
@@ -99,37 +116,34 @@ function t_s(m_s, w_m, w_t) {
    relative to the viewport (or workArea?)
  */
 function movecolumntoviewportposition(tilingActor, viewport, window, x) {
-    tilingActor.x = t_s(viewport.x, x, window.x)
+    tilingActor.x = t_s(viewport.x, x, window.x);
 }
 
 function renderAndView(container, columns) {
-    let tiling = render(columns)
-    if (container.first_child)
-        container.first_child.destroy()
+    for (let child of container.get_children()) {
+        child.destroy();
+    }
 
-    container.add_actor(tiling)
+    render(columns, container);
 }
 
-function fromSpace(space) {
+function fromSpace(space, scale=0.1) {
     return space.map(
         col => col.map(
             metaWindow => {
-                let f = metaWindow.get_frame_rect()
+                let f = metaWindow.get_frame_rect();
                 return {
-                    width: f.width / 10,
-                    height: f.height / 10,
-                }
+                    width: f.width * scale,
+                    height: f.height * scale,
+                };
             }
         )
     )
 }
 
 /** Render a dummy view of the windows */
-function render(columns) {
-    let windowStyle = `border: black solid 1px; background-color: red`
-    let tilingStyle = `background-color: rgba(190, 190, 0, 0.5);`
-    // tilingStyle = ""
-    let tiling = new St.Widget({name: "tiling", style: tilingStyle})
+function render(columns, tiling) {
+    const windowStyle = `border: black solid 1px; background-color: red`;
 
     function createWindowActor(window) {
         return new St.Widget({
@@ -138,16 +152,15 @@ function render(columns) {
             height: window.height,
             x: window.x,
             y: window.y
-        })
+        });
     }
 
     for (let col of columns) {
         for (let window of col) {
-            let windowActor = createWindowActor(window)
-            tiling.add_actor(windowActor)
+            let windowActor = createWindowActor(window);
+            tiling.add_actor(windowActor);
         }
     }
-    return tiling
 }
 
 function allocateDefault(column, availableHeight, preAllocatedWindow) {
