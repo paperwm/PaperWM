@@ -384,7 +384,9 @@ var StackOverlay = class StackOverlay {
 
         if (this._direction === Meta.MotionDirection.LEFT) {
             let column = space[space.indexOf(metaWindow) + 1];
-            let neighbour = column && column[0];
+            let neighbour = column &&
+                global.display.sort_windows_by_stacking(column).reverse()[0];
+
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
 
@@ -396,7 +398,8 @@ var StackOverlay = class StackOverlay {
             overlay.raise(neighbour.get_compositor_private());
         } else {
             let column = space[space.indexOf(metaWindow) - 1];
-            let neighbour = column && column[0];
+            let neighbour = column &&
+                global.display.sort_windows_by_stacking(column).reverse()[0];
             if (!neighbour)
                 return bail(); // Should normally have a neighbour. Bail!
 
