@@ -540,15 +540,13 @@ function enable () {
     signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
         let monitors = Tiling.spaces.monitors;
         if (!settings.prefs.topbar_follow_focus) {
-            let to = moveTopBarToPrimary(Main.layoutManager.focusMonitor, moveTopBar);
+            let to = moveTopBarToPrimary(Main.layoutManager.focusMonitor);
             let space = monitors.get(to);
             updateWorkspaceIndicator(space.workspace.index());
-            for (let [workspace, space] of Tiling.spaces) {
-                space.layout();
-            }
-
         }
-
+        for (let [workspace, space] of Tiling.spaces) {
+            space.layout();
+        }
     });
 
     signals.connect(panelBox, 'show', () => {
@@ -625,15 +623,14 @@ function setWorkspaceName (name) {
 }
 
 function setMonitor(monitor) {
-    if (!prefs.topbar_follow_focus) {
-        monitor = Main.layoutManager.primaryMonitor;
+    if (prefs.topbar_follow_focus) {
+        monitor = moveTopBarTo(monitor);
     }
-    fixTopBar();
+    panelMonitor = monitor;
     return monitor;
 }
 
-function moveTopBarToPrimary() {
-    let monitor = Main.layoutManager.primaryMonitor;
+function moveTopBarTo(monitor) {
     let panelBox = Main.layoutManager.panelBox;
     panelMonitor = monitor;
     panelBox.set_position(monitor.x, monitor.y);
