@@ -540,7 +540,7 @@ function enable () {
     signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
         let monitors = Tiling.spaces.monitors;
         if (!settings.prefs.topbar_follow_focus) {
-            moveTopBarTo(Main.layoutManager.prim);
+            moveTopBarTo(Main.layoutManager.primaryMonitor);
         }
         let to = setMonitor(Main.layoutManager.focusMonitor);
         let space = monitors.get(to);
