@@ -221,12 +221,15 @@ function toggleCloneMarks() {
     function markCloneOf(metaWindow) {
         if (metaWindow.clone) {
             metaWindow.clone.opacity = 190;
+            metaWindow.clone.__oldOpacity = 190;
+
             metaWindow.clone.background_color = imports.gi.Clutter.color_from_string("red")[1];
         }
     }
     function unmarkCloneOf(metaWindow) {
         if (metaWindow.clone) {
             metaWindow.clone.opacity = 255;
+            metaWindow.clone.__oldOpacity = 255;
             metaWindow.clone.background_color = null;
         }
     }
