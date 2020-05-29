@@ -279,25 +279,10 @@ function warpPointer(x, y) {
 
 /**
  * Return current modifiers state (or'ed Clutter.ModifierType.*)
- * NB: Only on wayland. (Returns 0 on X11)
- *
- * Note: It's possible to get the modifier state through Gdk on X11, but move
- * grabs is not triggered when ctrl is held down, making it useless for our purpose atm.
  */
 function getModiferState() {
-    if (!Meta.is_wayland_compositor())
-        return 0;
-
-    let keyboard;
-    if (Clutter.DeviceManager) {
-        let dm = Clutter.DeviceManager.get_default();
-        keyboard = dm.get_core_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
-    } else {
-        let backend = Clutter.get_default_backend();
-        let seat = backend.get_default_seat();
-        keyboard = seat.get_keyboard();
-    }
-    return keyboard.get_modifier_state();
+    let [x, y, mods] = global.get_pointer();
+    return mods;
 }
 
 function monitorOfPoint(x, y) {
