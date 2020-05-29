@@ -147,6 +147,7 @@ var MoveGrab = class MoveGrab {
             params.y = gy
         }
 
+        clone.__oldOpacity = clone.opacity
         Tweener.addTween(clone, params);
 
         this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
@@ -369,7 +370,7 @@ var MoveGrab = class MoveGrab {
             time: prefs.animation_time,
             scale_x: 1,
             scale_y: 1,
-            opacity: 255
+            opacity: clone.__oldOpacity || 255
         };
 
         if (this.dnd) {
@@ -423,7 +424,7 @@ var MoveGrab = class MoveGrab {
                 actor.set_scale(clone.scale_x, clone.scale_y);
                 actor.opacity = clone.opacity;
 
-                clone.opacity = 255;
+                clone.opacity = clone.__oldOpacity || 255;
                 clone.set_scale(1, 1);
                 clone.set_pivot_point(0, 0);
 
