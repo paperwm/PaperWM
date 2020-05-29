@@ -196,7 +196,7 @@ It's possible to create simple rules for placing new windows. Currently most use
     });
 ```
 
-The `wm_class` of a window can be looked up by clicking <kbd>Super</kbd><kbd>Insert</kbd> and then checking the value of `metaWindow.wm_class` in emacs or looking glass.
+The `wm_class` of a window can be found by using looking glass: <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd> Go to the "Windows" section at the top right and find the window. X11 users can also use the `xprop` command line tool.
 
 ### New Window Handlers
 
