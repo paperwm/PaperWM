@@ -302,7 +302,8 @@ var MoveGrab = class MoveGrab {
 
     motion(actor, event) {
         let metaWindow = this.window;
-        let [gx, gy] = event.get_coords();
+        // let [gx, gy] = event.get_coords();
+        let [gx, gy, $] = global.get_pointer();
         let [dx, dy] = this.pointerOffset;
         let clone = metaWindow.clone;
 
