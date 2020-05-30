@@ -37,6 +37,9 @@ var prefs = {};
  'cycle-width-steps', 'cycle-height-steps', 'topbar-follow-focus']
     .forEach((k) => setState(null, k));
 
+prefs.__defineGetter__("minimum_margin", function() { return Math.min(15, this.horizontal_margin) });
+
+
 function setVerticalMargin() {
     let vMargin = settings.get_int('vertical-margin');
     let gap = settings.get_int('window-gap');

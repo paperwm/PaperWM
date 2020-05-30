@@ -42,8 +42,6 @@ var backgroundSettings = new Gio.Settings({
 var borderWidth = 8;
 // Mutter prevints windows from being placed further off the screen than 75 pixels.
 var stack_margin = 75;
-// Minimum margin
-var minimumMargin = () => Math.min(15, prefs.horizontal_margin);
 
 // Some features use this to determine if to sizes is considered equal. ie. `abs(w1 - w2) < sizeSlack`
 var sizeSlack = 30;
@@ -422,7 +420,7 @@ class Space extends Array {
             } else {
                 targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
             }
-            targetWidth = Math.min(targetWidth, workArea.width - 2*minimumMargin());
+            targetWidth = Math.min(targetWidth, workArea.width - 2*prefs.minimum_margin);
 
             let resultingWidth, relayout;
             let allocator = options.customAllocators && options.customAllocators[i];
@@ -2640,10 +2638,10 @@ function ensuredX(meta_window, space) {
     } else if (x + frame.width === max) {
         // When opening new windows at the end, in the background, we want to
         // show some minimup margin
-        x = max - minimumMargin() - frame.width;
+        x = max - prefs.minimum_margin - frame.width;
     } else if (x === min) {
         // Same for the start (though the case isn't as common)
-        x = min + minimumMargin();
+        x = min + prefs.minimum_margin;
     }
 
     return x;
@@ -2944,7 +2942,7 @@ function toggleMaximizeHorizontally(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
-    let reqWidth = workArea.width - minimumMargin()*2;
+    let reqWidth = workArea.width - prefs.minimum_margin*2;
 
     // Some windows only resize in increments > 1px so we can't rely on a precise width
     // Hopefully this heuristic is good enough
@@ -2958,9 +2956,9 @@ function toggleMaximizeHorizontally(metaWindow) {
 
         metaWindow.unmaximizedRect = null;
     } else {
-        let x = workArea.x + space.monitor.x + minimumMargin();
+        let x = workArea.x + space.monitor.x + prefs.minimum_margin;
         metaWindow.unmaximizedRect = frame;
-        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - minimumMargin()*2, frame.height);
+        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - prefs.minimum_margin*2, frame.height);
     }
 }
 
@@ -3067,9 +3065,9 @@ function cycleWindowWidth(metaWindow) {
     let targetX = frame.x;
 
     if (Scratch.isScratchWindow(metaWindow)) {
-        if (targetX+targetWidth > workArea.x + workArea.width - minimumMargin()) {
+        if (targetX+targetWidth > workArea.x + workArea.width - prefs.minimum_margin) {
             // Move the window so it remains fully visible
-            targetX = workArea.x + workArea.width - minimumMargin() - targetWidth;
+            targetX = workArea.x + workArea.width - prefs.minimum_margin - targetWidth;
         }
     }
 
