@@ -249,9 +249,10 @@ function bindTileOut(left="<Super><Ctrl>k", right="<Super><Ctrl>l") {
 }
 
 
-function bindFitAvailable(focus = "<Super>l", right="<Super><Shift>l") {
-    Keybindings.bindkey(focus, "fit-available-width", fitAvailable, {activeInNavigator: true});
-    Keybindings.bindkey(right, "fit-available-width-right", useNeigbour(1, fitAvailable), {activeInNavigator: true});
+function bindFitAvailable(left="<Super>j", focus = "<Super>k", right="<Super>l") {
+    left && Keybindings.bindkey(left, "fit-available-width-left", useNeigbour(-1, fitAvailable), {activeInNavigator: true});
+    focus && Keybindings.bindkey(focus, "fit-available-width", fitAvailable, {activeInNavigator: true});
+    right && Keybindings.bindkey(right, "fit-available-width-right", useNeigbour(1, fitAvailable), {activeInNavigator: true});
 }
 
 function bindCycleLayoutDirection(left="<Super><Shift>d", right="<Super>d") {
