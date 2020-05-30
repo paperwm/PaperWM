@@ -36,9 +36,6 @@ function repl() {
         width: monitorWidth*3
     })
 
-    // let canvasStyle = `background-color: yellow;`
-    canvasStyle = ""
-    // let canvas = new St.Widget({name: "canvas", style: canvasStyle, x: 5, y: 5})
     let monitorStyle = `background-color: blue;`
     let monitor = new St.Widget({
         name: "monitor0", 
@@ -92,7 +89,6 @@ function repl() {
     Utils.printActorTree(virtStage, Utils.mkFmt({nameOnly: true}))
 
     movecolumntoviewportposition(tilingContainer, monitor, columns[1][0], 30)
-    // Utils.printA
 
     virtStage.hide()
     virtStage.show()
