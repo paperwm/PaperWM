@@ -17,12 +17,12 @@ var prefs = Tiling.prefs;
 /** Adapts an action handler to operate on the neighbour in the given direction */
 function useNeigbour(dir, action) {
     return (metaWindow) => {
-        let space = Tiling.spaces.spaceOfWindow(metaWindow)
-        let i = space.indexOf(metaWindow)
+        let space = Tiling.spaces.spaceOfWindow(metaWindow);
+        let i = space.indexOf(metaWindow);
         if (!space[i+dir])
-            return action(undefined)
+            return action(undefined);
 
-        return action(space[i+dir][0])
+        return action(space[i+dir][0]);
     }
 }
 
@@ -107,10 +107,10 @@ function fitAvailable(metaWindow) {
 
     if (a+1 === b-1) {
         // We're the only window
-        Tiling.toggleMaximizeHorizontally(metaWindow)
+        Tiling.toggleMaximizeHorizontally(metaWindow);
     } else {
         metaWindow.move_resize_frame(true, f.x, f.y, available, f.height);
-        Tiling.move_to(space, space[a+1][0], { x: Tiling.prefs.horizontal_margin })
+        Tiling.move_to(space, space[a+1][0], { x: Tiling.prefs.horizontal_margin });
     }
 }
 
@@ -125,13 +125,13 @@ function cycleLayoutDirection(dir) {
     ];
 
     return (metaWindow, space, {navigator}={}) => {
-        let k = space.indexOf(metaWindow)
-        let j = k+dir
-        let neighbourCol = space[j]
+        let k = space.indexOf(metaWindow);
+        let j = k+dir;
+        let neighbourCol = space[j];
         if (!neighbourCol)
-            return
+            return;
 
-        let neighbour = neighbourCol[0]
+        let neighbour = neighbourCol[0];
 
         let tiling = mkVirtTiling(space)
 
@@ -145,7 +145,7 @@ function cycleLayoutDirection(dir) {
 
         let state;
         if (!navigator["cycle-layouts"]) {
-            navigator["cycle-layouts"] = {i: Utils.eq(s1, splits[0][0]) ? 1 : 0 }
+            navigator["cycle-layouts"] = {i: Utils.eq(s1, splits[0][0]) ? 1 : 0 };
         }
         state = navigator["cycle-layouts"];
 
@@ -162,7 +162,7 @@ function cycleLayoutDirection(dir) {
 
         Virt.layout(tiling, space.workArea(), prefs);
 
-        let snapLeft = getLeftSnapPosition(space)
+        let snapLeft = getLeftSnapPosition(space);
 
         if (dir === 1)
             moveToViewport(space, tiling, k, snapLeft);
@@ -173,7 +173,7 @@ function cycleLayoutDirection(dir) {
 
 function cycleLayouts(binding = "<Super>d") {
     function action(metaWindow, space, {navigator}={}) {
-        const m = 50
+        const m = 50;
         space = Tiling.spaces.spaceOfWindow(metaWindow);
 
         let k = space.indexOf(metaWindow);
@@ -183,9 +183,9 @@ function cycleLayouts(binding = "<Super>d") {
         let neighbour = next || prev;
 
         if (neighbour === next) {
-            return cycleLayoutDirection(1)(metaWindow, space, {navigator})
+            return cycleLayoutDirection(1)(metaWindow, space, {navigator});
         } else {
-            return cycleLayoutDirection(-1)(metaWindow, space, {navigator})
+            return cycleLayoutDirection(-1)(metaWindow, space, {navigator});
         }
     }
 
