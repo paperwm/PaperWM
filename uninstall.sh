@@ -19,4 +19,12 @@ if [[ "$LINK" != "$REPO" ]]; then
     echo "$EXT" does not link to "$REPO", refusing to remove
     exit 1
 fi
-rm $EXT
+if [ -L "$EXT" ]; then
+    rm "$EXT"
+else
+    read -p "Remove $EXT? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        rm -rf $EXT
+    fi
+fi
