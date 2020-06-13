@@ -251,6 +251,14 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
 
 See `examples/keybindings.js` for more examples.
 
+## Fixed Window Size ##
+
+Currently it is not possible to have a default fixed window size.
+Please check the following issues for progress / info:
+
+* https://github.com/paperwm/PaperWM/issues/304
+* https://github.com/paperwm/PaperWM/pull/189
+* https://github.com/paperwm/PaperWM/issues/311
 
 ## Recommended Gnome Shell Settings ##
 
