@@ -10,6 +10,7 @@ var Meta = imports.gi.Meta;
 var AltTab = imports.ui.altTab;
 var Main = imports.ui.main;
 var Tweener = Extension.imports.utils.tweener;
+var Gio = imports.gi.Gio;
 
 var Scratch = Extension.imports.scratch;
 var Tiling = Extension.imports.tiling;
@@ -18,6 +19,10 @@ var utils = Extension.imports.utils;
 var debug = utils.debug;
 
 var prefs = Extension.imports.settings.prefs;
+
+var switcherSettings = new Gio.Settings({
+    schema_id: 'org.gnome.shell.window-switcher'
+})
 
 var LiveAltTab = utils.registerClass(
 class LiveAltTab extends AltTab.WindowSwitcherPopup {
@@ -30,7 +35,8 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
     _getWindowList(reverse) {
         let tabList = global.display.get_tab_list(
             Meta.TabList.NORMAL_ALL,
-            global.workspace_manager.get_active_workspace())
+            switcherSettings.get_boolean('current-workspace-only') ?
+                global.workspace_manager.get_active_workspace() : null)
             .filter(w => !Scratch.isScratchWindow(w));
 
         let scratch = Scratch.getScratchWindows();
