@@ -189,7 +189,6 @@ GSETTINGS_SCHEMA_DIR=$HOME/.local/share/gnome-shell/extensions/paperwm@hedning:m
 It's possible to create simple rules for placing new windows. Currently most useful when a window should be placed in the scratch layer automatically. An example, best placed in the `init` part of `user.js`:
 
 ```javascript
-    let Tiling = Extension.imports.Tiling;
     Tiling.defwinprop({
         wm_class: "Spotify",
         scratch_layer: true,
