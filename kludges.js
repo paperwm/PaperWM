@@ -383,6 +383,9 @@ function init() {
     // Kill pinch gestures as they work pretty bad (especially when 3-finger swiping)
     registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0);
 
+    if (Main.wm._swipeTracker)
+        registerOverrideProp(Main.wm._swipeTracker._touchpadGesture, "enabled", false);
+
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', (win) => {
         let metaWindow = win.meta_window;
         return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
