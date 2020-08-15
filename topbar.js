@@ -86,9 +86,9 @@ var PopupMenuEntryHelper = function constructor(text) {
         this.prevIcon.grab_key_focus();
     });
 
-    this.actor.add(this.prevIcon, {expand: true});
-    this.actor.add(this.label, {expand: true});
-    this.actor.add(this.nextIcon, {expand: true});
+    this.actor.add_actor(this.prevIcon, {expand: true});
+    this.actor.add_actor(this.label, {expand: true});
+    this.actor.add_actor(this.nextIcon, {expand: true});
     this.actor.label_actor = this.label;
     this.label.clutter_text.connect('activate', this.emit.bind(this, 'activate'));
 }

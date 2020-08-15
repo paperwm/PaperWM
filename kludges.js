@@ -360,7 +360,8 @@ function init() {
     registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
     registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
-    registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition');
+    if (Workspace.WindowClone)
+        registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
     registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions');
     registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow');
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
@@ -452,7 +453,6 @@ function enable() {
 
         };
 
-    Workspace.WindowClone.prototype.getOriginalPosition = getOriginalPosition;
     Workspace.Workspace.prototype._realRecalculateWindowPositions = _realRecalculateWindowPositions;
     // Prevent any extra sorting of the overview
     Workspace.UnalignedLayoutStrategy.prototype._sortRow = (row) => row;

@@ -434,12 +434,12 @@ class Space extends Array {
 
             if (relayout) {
                 if (fixPointAttempCount < 5) {
-                    log("Trying to find layout fixpoint", fixPointAttempCount+1)
+                    print("Trying to find layout fixpoint", fixPointAttempCount+1)
                     i--;
                     fixPointAttempCount++;
                     continue;
                 } else {
-                    log("Bail at fixpoint, max tries reached")
+                    print("Bail at fixpoint, max tries reached")
                 }
             }
 

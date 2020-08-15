@@ -341,7 +341,7 @@ function bindkey(keystr, actionName=null, handler=null, options={}) {
     } else {
         let boundAction = keycomboMap[keycombo];
         if (boundAction && boundAction != action) {
-            log("Rebinding", keystr, "to", actionName, "from", boundAction.name);
+            print("Rebinding", keystr, "to", actionName, "from", boundAction.name);
             disableAction(boundAction)
         }
 

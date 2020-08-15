@@ -110,7 +110,7 @@ Main.wm.allowKeybinding(name, Shell.ActionMode.ALL);
 global.display.connect(
     'accelerator-activated',
     function(display, action, deviceId, timestamp){
-        log('Accelerator Activated: [display={}, action={}, deviceId={}, timestamp={}]',
+        print('Accelerator Activated: [display={}, action={}, deviceId={}, timestamp={}]',
             display, action, deviceId, timestamp)
     })
 #+END_SRC
