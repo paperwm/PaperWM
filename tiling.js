@@ -2482,6 +2482,15 @@ function animateDown(metaWindow) {
     });
 }
 
+function isCentered(metaWindow, space) {
+    space = space || spaces.spaceOfWindow(metaWindow)
+    let workArea = space.workArea()
+    let clone = metaWindow.clone;
+    let f = metaWindow.get_frame_rect();
+    let x = clone.targetX + space.targetX;
+    return x + (f.width)/2 === workArea.x + workArea.width/2
+}
+
 function ensuredX(meta_window, space) {
     let index = space.indexOf(meta_window);
     let last = space.selectedWindow;
@@ -2502,7 +2511,9 @@ function ensuredX(meta_window, space) {
     let workArea = space.workArea();
     let min = workArea.x;
     let max = min + workArea.width;
-    if (meta_window.fullscreen) {
+    if (isCentered(last, space)) {
+        x = min + Math.round((workArea.width - frame.width)/2);
+    } else if (meta_window.fullscreen) {
         x = 0;
     } else if (index == 0 && x <= min) {
         // Always align the first window to the display's left edge
