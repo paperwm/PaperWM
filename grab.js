@@ -45,7 +45,7 @@ var MoveGrab = class MoveGrab {
 
     begin({center} = {}) {
         this.center = center;
-        log(`begin`)
+        print(`begin`)
         if (this.grabbed)
             return;
         this.grabbed = true
@@ -85,7 +85,7 @@ var MoveGrab = class MoveGrab {
         }
         !center && clone.set_pivot_point(px, py);
         center && clone.set_pivot_point(0, 0);
-        log('pointeroffset', this.pointerOffset, clone.get_pivot_point())
+        print('pointeroffset', this.pointerOffset, clone.get_pivot_point())
 
         this.signals.connect(global.stage, "button-release-event", this.end.bind(this));
         this.signals.connect(global.stage, "motion-event", this.motion.bind(this));
@@ -107,7 +107,7 @@ var MoveGrab = class MoveGrab {
             return;
         this.center = center;
         this.dnd = true;
-        log(`beginDND`)
+        print(`beginDND`)
         Navigator.getNavigator()
                  .minimaps.forEach(m => typeof(m) === 'number' ?
                                    Mainloop.source_remove(m) : m.hide());
@@ -133,7 +133,7 @@ var MoveGrab = class MoveGrab {
         let single = i !== -1 && space[i].length === 1;
         space.removeWindow(metaWindow);
         clone.reparent(Main.uiGroup);
-        log(`begin dnd`, point.x, point.y)
+        print(`begin dnd`, point.x, point.y)
         clone.x = Math.round(point.x);
         clone.y = Math.round(point.y);
         let newScale = clone.scale_x*space.actor.scale_x;
@@ -313,7 +313,7 @@ var MoveGrab = class MoveGrab {
 
         if (this.dnd) {
             if (tx) {
-                log(`motion`, tx, this.pointerOffset)
+                print(`motion`, tx, this.pointerOffset)
                 tx.set_to(gx - dx)
                 ty.set_to(gy - dy)
             } else {
@@ -355,7 +355,7 @@ var MoveGrab = class MoveGrab {
     }
 
     end() {
-        log(`end`)
+        print(`end`)
         this.signals.destroy();
 
         let metaWindow = this.window;

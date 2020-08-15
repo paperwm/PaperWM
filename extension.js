@@ -54,13 +54,13 @@ function run(method) {
 
 function safeCall(name, method) {
     try {
-        log("#paperwm", `${method} ${name}`);
+        print("#paperwm", `${method} ${name}`);
         let module = Extension.imports[name];
         module && module[method] && module[method].call(module, errorNotification);
         return true;
     } catch(e) {
-        log("#paperwm", `${name} failed ${method}`);
-        log(`JS ERROR: ${e}\n${e.stack}`);
+        print("#paperwm", `${name} failed ${method}`);
+        print(`JS ERROR: ${e}\n${e.stack}`);
         errorNotification(
             "PaperWM",
             `Error occured in ${name} @${method}:\n\n${e.message}`,

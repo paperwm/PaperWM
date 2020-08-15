@@ -1036,7 +1036,7 @@ border: ${borderWidth}px ${this.color};
 border-radius: ${borderWidth}px;
 box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
 `);
-        this.background.background.set_color(Clutter.color_from_string(color)[1]);
+        this.background.content.background.set_color(Clutter.color_from_string(color)[1])
     }
 
     updateBackground() {
@@ -1053,7 +1053,9 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
             file = Gio.File.new_for_uri('resource:///org/gnome/shell/theme/noise-texture.png');
             style = BackgroundStyle.WALLPAPER;
         }
-        this.background.background.set_file(file, style);
+
+
+        this.background.content.background.set_file(file, style);
     }
 
     updateName() {
@@ -1089,10 +1091,14 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         this.background = new Meta.BackgroundActor(
             Object.assign({
                 name: "background",
-                monitor: monitor.index, background: metaBackground,
+                monitor: monitor.index,
                 reactive: true // Disable the background menu
             }, meta_display)
         );
+
+        this.background.content.set({
+            background: metaBackground
+        })
 
         this.actor.insert_child_below(this.background, null);
 
@@ -1125,7 +1131,7 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
                     return;
                 // print(dir, Clutter.ScrollDirection.SMOOTH, Clutter.ScrollDirection.UP, Clutter.ScrollDirection.DOWN)
                 let dx
-                log(utils.ppEnumValue(dir, Clutter.ScrollDirection))
+                // log(utils.ppEnumValue(dir, Clutter.ScrollDirection))
                 // let dx = dir === Clutter.ScrollDirection.DOWN ? -1 : 1
                 // let [dx, dy] = event.get_scroll_delta()
 
