@@ -110,7 +110,7 @@ function disable() {
 let start, dxs = [], dts = [];
 function horizontalScroll(actor, event) {
     if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
-        event.get_touchpad_gesture_finger_count() > 3) {
+        event.get_touchpad_gesture_finger_count() < 3) {
         return Clutter.EVENT_PROPAGATE;
     }
     const phase = event.get_gesture_phase();
