@@ -995,7 +995,7 @@ border: ${borderWidth}px ${this.color};
 border-radius: ${borderWidth}px;
 box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
 `);
-        this.background.background.set_color(Clutter.color_from_string(color)[1]);
+        this.metaBackground.set_color(Clutter.color_from_string(color)[1]);
     }
 
     updateBackground() {
@@ -1012,7 +1012,7 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
             file = Gio.File.new_for_uri('resource:///org/gnome/shell/theme/noise-texture.png');
             style = BackgroundStyle.WALLPAPER;
         }
-        this.background.background.set_file(file, style);
+        this.metaBackground.set_file(file, style);
     }
 
     updateName() {
@@ -1041,16 +1041,28 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
 
         let monitor = this.monitor;
         const GDesktopEnums = imports.gi.GDesktopEnums;
-        let meta_display = global.screen ?
+        let backgroundParams = global.screen ?
             { meta_screen: global.screen } :
             { meta_display: display };
-        let metaBackground = new Meta.Background(meta_display);
+
+        let metaBackground = new Meta.Background(backgroundParams);
+        // gnome-shell 3.38
+        if (Meta.BackgroundActor.prototype.set_background) {
+            backgroundParams.background = metaBackground
+        }
         this.background = new Meta.BackgroundActor(
             Object.assign({
-                monitor: monitor.index, background: metaBackground,
+                monitor: monitor.index,
                 reactive: true // Disable the background menu
-            }, meta_display)
+            }, backgroundParams)
         );
+
+        if (this.background.content) {
+            this.background.content.set({
+                background: metaBackground
+            })
+        }
+        this.metaBackground = metaBackground
 
         this.actor.insert_child_below(this.background, null);
 
