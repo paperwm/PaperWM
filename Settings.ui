@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.1 -->
+<!-- Generated with glade 3.36.0 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkAdjustment" id="horizontal-friction-adjustment">
     <property name="upper">10</property>
-    <property name="step_increment">0.10000000000000001</property>
+    <property name="step_increment">0.1</property>
     <property name="page_increment">1</property>
   </object>
   <object class="GtkAdjustment" id="horizontal-sensitivity-adjustment">
     <property name="upper">10</property>
-    <property name="step_increment">0.10000000000000001</property>
+    <property name="step_increment">0.1</property>
     <property name="page_increment">10</property>
   </object>
   <object class="GtkAdjustment" id="horizontal_margin">
@@ -24,12 +24,12 @@
   </object>
   <object class="GtkAdjustment" id="vertical-friction-adjustment">
     <property name="upper">10</property>
-    <property name="step_increment">0.10000000000000001</property>
+    <property name="step_increment">0.1</property>
     <property name="page_increment">10</property>
   </object>
   <object class="GtkAdjustment" id="vertical-sensitivity-adjustment">
     <property name="upper">10</property>
-    <property name="step_increment">0.10000000000000001</property>
+    <property name="step_increment">0.1</property>
     <property name="page_increment">10</property>
   </object>
   <object class="GtkAdjustment" id="vertical_margin">
@@ -523,19 +523,20 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <child>
-                          <object class="GtkGrid" id="workspace_grid3">
+                          <object class="GtkGrid" id="workspace_grid10">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="margin_left">12</property>
                             <property name="margin_right">12</property>
                             <property name="margin_top">6</property>
                             <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
                             <child>
-                              <object class="GtkLabel" id="horizontal_margin2">
+                              <object class="GtkLabel" id="scratch_in_overview_label">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="hexpand">True</property>
-                                <property name="label" translatable="yes">Only scratch in overview</property>
+                                <property name="label" translatable="yes">Show scratch windows in overview</property>
                                 <property name="xalign">0</property>
                               </object>
                               <packing>
@@ -544,9 +545,15 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkSwitch" id="only-scratch-in-overview">
+                              <object class="GtkComboBoxText" id="scratch-in-overview">
                                 <property name="visible">True</property>
-                                <property name="can_focus">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="hexpand">False</property>
+                                <items>
+                                  <item id="always" translatable="yes">Always</item>
+                                  <item id="only" translatable="yes">Only</item>
+                                  <item id="never" translatable="yes">Never</item>
+                                </items>
                               </object>
                               <packing>
                                 <property name="left_attach">1</property>
@@ -571,7 +578,7 @@
                             <property name="margin_bottom">6</property>
                             <property name="column_spacing">32</property>
                             <child>
-                              <object class="GtkLabel" id="horizontal_margin3">
+                              <object class="GtkLabel" id="override_hot_corner_label">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="hexpand">True</property>

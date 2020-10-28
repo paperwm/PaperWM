@@ -390,7 +390,10 @@ function init() {
 
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', (win) => {
         let metaWindow = win.meta_window;
-        return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+        if (settings.get_boolean('only-scratch-in-overview'))
+            return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+        if (settings.get_boolean('disable-scratch-in-overview'))
+            return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
     });
 
     signals = new utils.Signals();
@@ -418,16 +421,20 @@ function enable() {
                     disableHotcorners);
     disableHotcorners();
 
-    function onlyScratchInOverview() {
-        if (settings.get_boolean('only-scratch-in-overview')) {
+    function scratchInOverview() {
+        let onlyScratch = settings.get_boolean('only-scratch-in-overview');
+        let disableScratch = settings.get_boolean('disable-scratch-in-overview');
+        if (onlyScratch || disableScratch) {
             enableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         } else {
             disableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         }
     }
     signals.connect(settings, 'changed::only-scratch-in-overview',
-                    onlyScratchInOverview);
-    onlyScratchInOverview();
+                    scratchInOverview);
+    signals.connect(settings, 'changed::disable-scratch-in-overview',
+                    scratchInOverview);
+    scratchInOverview();
 
 
     /* The «native» workspace animation can be now (3.30) be disabled as it
