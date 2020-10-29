@@ -119,12 +119,26 @@ class SettingsWidget {
         vFric.connect('value-changed', fricChanged);
         hFric.connect('value-changed', fricChanged);
 
-        let onlyScratch = this.builder.get_object('only-scratch-in-overview');
-        onlyScratch.state =
-            this._settings.get_boolean('only-scratch-in-overview');
-        onlyScratch.connect('state-set', (obj, state) => {
-            this._settings.set_boolean('only-scratch-in-overview',
-                                       state);
+        let scratchOverview = this.builder.get_object('scratch-in-overview');
+        if (this._settings.get_boolean('only-scratch-in-overview'))
+            scratchOverview.set_active_id('only');
+        else if (this._settings.get_boolean('disable-scratch-in-overview'))
+            scratchOverview.set_active_id('never');
+        else
+            scratchOverview.set_active_id('always');
+
+        scratchOverview.connect('changed', (obj) => {
+            if (obj.get_active_id() == 'only') {
+                this._settings.set_boolean('only-scratch-in-overview', true);
+                this._settings.set_boolean('disable-scratch-in-overview', false);
+            } else if (obj.get_active_id() == 'never') {
+                this._settings.set_boolean('only-scratch-in-overview', false);
+                this._settings.set_boolean('disable-scratch-in-overview', true);
+            } else {
+                this._settings.set_boolean('only-scratch-in-overview', false);
+                this._settings.set_boolean('disable-scratch-in-overview', false);
+            }
+                
         });
 
         let disableCorner = this.builder.get_object('override-hot-corner');
