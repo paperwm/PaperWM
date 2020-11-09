@@ -379,7 +379,7 @@ function init() {
                                   });
     }
 
-    if (version[1] > 32)
+    if (version[1] > 32 && version[1] < 37)
         registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', computeLayout);
 
     // Kill pinch gestures as they work pretty bad (especially when 3-finger swiping)
