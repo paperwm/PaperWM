@@ -380,11 +380,14 @@ function init() {
     }
 
     let layout = computeLayout
-    if (version[1] > 37)
+    if (version[1] > 37) {
         layout = computeLayout338
+        registerOverridePrototype(Workspace.WorkspaceLayout, 'addWindow', addWindow)
+    }
 
     if (version[1] > 32)
         registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
+
 
     // Kill pinch gestures as they work pretty bad (especially when 3-finger swiping)
     registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0);
@@ -598,6 +601,26 @@ function computeLayout(windows, layout) {
     layout.gridHeight = gridHeight;
 }
 
+function sortWindows(a, b) {
+    let aw = a.metaWindow;
+    let bw = b.metaWindow;
+    let spaceA = Tiling.spaces.spaceOfWindow(aw)
+    let spaceB = Tiling.spaces.spaceOfWindow(bw)
+    let ia = spaceA.indexOf(aw);
+    let ib = spaceB.indexOf(bw);
+    print(aw.title, bw.title, spaceA.actor, spaceB.actor)
+    if (spaceA !== spaceB || (ia === -1 && ib === -1)) {
+        return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
+    }
+    if (ia === -1) {
+        return -1;
+    }
+    if (ib === -1) {
+        return 1;
+    }
+    return ia - ib;
+}
+
 function computeLayout338(windows, layout) {
     let numRows = layout.numRows;
 
@@ -613,24 +636,7 @@ function computeLayout338(windows, layout) {
 
     let sortedWindows = windows.slice();
     // Sort windows in tiling order
-    sortedWindows.sort((a, b) => {
-        let aw = a.metaWindow;
-        let bw = b.metaWindow;
-        let spaceA = Tiling.spaces.spaceOfWindow(aw)
-        let spaceB = Tiling.spaces.spaceOfWindow(bw)
-        let ia = spaceA.indexOf(aw);
-        let ib = spaceB.indexOf(bw);
-        if (spaceA !== spaceB || (ia === -1 && ib === -1)) {
-            return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
-        }
-        if (ia === -1) {
-            return -1;
-        }
-        if (ib === -1) {
-            return 1;
-        }
-        return ia - ib;
-    });
+    sortedWindows.sort(sortWindows);
 
     let windowIdx = 0;
     for (let i = 0; i < numRows; i++) {
@@ -760,3 +766,29 @@ function _checkWorkspaces() {
     this._checkWorkspacesId = 0;
     return false;
 };
+
+
+function addWindow(window, metaWindow) {
+    if (this._windows.has(window))
+        return;
+
+    this._windows.set(window, {
+        metaWindow,
+        sizeChangedId: metaWindow.connect('size-changed', () => {
+            this._layout = null;
+            this.layout_changed();
+        }),
+        destroyId: window.connect('destroy', () =>
+            this.removeWindow(window)),
+        currentTransition: null,
+    });
+
+    this._sortedWindows.push(window);
+    this._sortedWindows.sort(sortWindows);
+
+    this._syncOverlay(window);
+    this._container.add_child(window);
+
+    this._layout = null;
+    this.layout_changed();
+}
