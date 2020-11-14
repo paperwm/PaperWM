@@ -389,7 +389,7 @@ function init() {
         registerOverrideProp(Main.wm._swipeTracker._touchpadGesture, "enabled", false);
 
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', (win) => {
-        let metaWindow = win.meta_window;
+        let metaWindow = win.meta_window || win;
         if (settings.get_boolean('only-scratch-in-overview'))
             return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
         if (settings.get_boolean('disable-scratch-in-overview'))
