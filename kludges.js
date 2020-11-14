@@ -611,10 +611,26 @@ function computeLayout338(windows, layout) {
 
     let idealRowWidth = totalWidth / numRows;
 
-    // Sort windows vertically to minimize travel distance.
-    // This affects what rows the windows get placed in.
     let sortedWindows = windows.slice();
-    sortedWindows.sort((a, b) => a.windowCenter.y - b.windowCenter.y);
+    // Sort windows in tiling order
+    sortedWindows.sort((a, b) => {
+        let aw = a.metaWindow;
+        let bw = b.metaWindow;
+        let spaceA = Tiling.spaces.spaceOfWindow(aw)
+        let spaceB = Tiling.spaces.spaceOfWindow(bw)
+        let ia = spaceA.indexOf(aw);
+        let ib = spaceB.indexOf(bw);
+        if (spaceA !== spaceB || (ia === -1 && ib === -1)) {
+            return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
+        }
+        if (ia === -1) {
+            return -1;
+        }
+        if (ib === -1) {
+            return 1;
+        }
+        return ia - ib;
+    });
 
     let windowIdx = 0;
     for (let i = 0; i < numRows; i++) {
