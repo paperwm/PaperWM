@@ -609,7 +609,7 @@ function sortWindows(a, b) {
     let ia = spaceA.indexOf(aw);
     let ib = spaceB.indexOf(bw);
     print(aw.title, bw.title, spaceA.actor, spaceB.actor)
-    if (spaceA !== spaceB || (ia === -1 && ib === -1)) {
+    if ((ia === -1 && ib === -1)) {
         return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
     }
     if (ia === -1) {
