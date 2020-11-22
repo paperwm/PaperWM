@@ -276,6 +276,9 @@ var savedProps;
 savedProps = savedProps || new Map();
 
 function registerOverrideProp(obj, name, override) {
+    if (!obj)
+        return
+
     let saved = getSavedProp(obj, name) || obj[name];
     let props = savedProps.get(obj);
     if (!props) {
@@ -289,6 +292,9 @@ function registerOverrideProp(obj, name, override) {
 }
 
 function registerOverridePrototype(obj, name, override) {
+    if (!obj)
+        return
+
     registerOverrideProp(obj.prototype, name, override);
 }
 
@@ -362,8 +368,11 @@ function init() {
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
     if (Workspace.WindowClone)
         registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
-    registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions');
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow');
+
+    registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions', _realRecalculateWindowPositions);
+
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
+
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
     if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
         registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
@@ -468,9 +477,6 @@ function enable() {
         };
 
     Workspace.Workspace.prototype._realRecalculateWindowPositions = _realRecalculateWindowPositions;
-    // Prevent any extra sorting of the overview
-    Workspace.UnalignedLayoutStrategy.prototype._sortRow = (row) => row;
-
 
     // Don't hide notifications when there's fullscreen windows in the workspace.
     // Fullscreen windows aren't special in paperWM and might not even be
@@ -635,8 +641,8 @@ function computeLayout338(windows, layout) {
     let idealRowWidth = totalWidth / numRows;
 
     let sortedWindows = windows.slice();
-    // Sort windows in tiling order
-    sortedWindows.sort(sortWindows);
+    // addWindow should have made sure we're already sorted.
+    // sortedWindows.sort(sortWindows);
 
     let windowIdx = 0;
     for (let i = 0; i < numRows; i++) {
