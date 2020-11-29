@@ -144,7 +144,8 @@ class Space extends Array {
             p.style = `
                 background-color: transparent;
                 border-image: none;
-                background-image: none
+                background-image: none;
+                border: none;
             `;
         }
         labelParent.add_actor(labelParent2);
