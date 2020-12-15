@@ -1588,6 +1588,8 @@ class Spaces extends Map {
             // Only start an animation if we're moving between workspaces on the
             // same monitor
             this._initWorkspaceSequence();
+        } else {
+            this.selectedSpace.setMonitor(this.selectedSpace.monitor, false);
         }
 
         this.stack = this.stack.filter(s => s !== toSpace);
@@ -1995,6 +1997,8 @@ class Spaces extends Map {
             return;
         }
 
+        this._updateMonitor();
+
         Tweener.addTween(to.actor,
                          { x: 0,
                            y: 0,
@@ -2019,6 +2023,14 @@ class Spaces extends Map {
             above = above.get_next_sibling();
         }
 
+    }
+
+    _updateMonitor() {
+        let monitorSpaces = this._getOrderedSpaces(this.selectedSpace.monitor);
+        let currentMonitor = this.selectedSpace.monitor;
+        monitorSpaces.forEach((space, i) => {
+            space.setMonitor(currentMonitor, false);
+        });
     }
 
     addSpace(workspace) {
