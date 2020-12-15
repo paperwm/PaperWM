@@ -4,7 +4,7 @@ REPO="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 UUID=paperwm@hedning:matrix.org
 EXT_DIR=${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions
 mkdir -p "$EXT_DIR"
-ln -sn "$REPO" "$EXT_DIR"/"$UUID"
+ln -snf "$REPO" "$EXT_DIR"/"$UUID"
 
 cat <<EOF
 
