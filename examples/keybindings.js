@@ -236,6 +236,60 @@ function tileInto(leftBinding="<Super>less", rightBinding="<Super><Shift>less") 
         Keybindings.bindkey(rightBinding, "tile-into-right-column", tileIntoDirection(1), options);
 }
 
+function stackUnstack(basebinding = '<Super><Alt><Ctrl>') {
+    // less: '<'
+    let Tiling = Extension.imports.tiling;
+
+    const stackUnstackDirection = (dir=-1) => (metaWindow) => {
+        let space = Tiling.spaces.spaceOfWindow(metaWindow);
+        let column_idx = space.indexOf(metaWindow);
+        if (column_idx < 0)
+            return;
+        let column = space[column_idx];
+
+        if (column.length >= 2) {
+            // this is a stacked window
+            // move it into a new column
+            let row_idx = column.indexOf(metaWindow);
+            if (row_idx < 0)
+                return;
+
+            let removed = column.splice(row_idx, 1)[0];
+            let new_column_idx = column_idx;
+            if (dir === 1)
+                new_column_idx += 1;
+
+            space.splice(new_column_idx, 0, [removed]);
+        }
+        else {
+            // this is an unstacked window
+            // move it into a stack
+
+            // can't stack into a column that doesn't exist
+            if (column_idx == 0 && dir == -1)
+                return;
+            if (column_idx + 1 >= space.length && dir == 1)
+                return;
+
+            let windowToMove = column[0];
+            space[column_idx + dir].push(windowToMove);
+
+            // is it necessary to remove the window from the column before removing the column?
+            column.splice(0, 1);
+            
+            space.splice(column_idx, 1);
+        }
+
+        space.layout(true, {
+            customAllocators: { [space.indexOf(metaWindow)]: Tiling.allocateEqualHeight }
+        });
+        space.emit("full-layout");
+    }
+
+    let options = { activeInNavigator: true };
+    Keybindings.bindkey(`${basebinding}Left`, "stack-unstack-left", stackUnstackDirection(-1), options);
+    Keybindings.bindkey(`${basebinding}Right`, "stack-unstack-right", stackUnstackDirection(1), options);
+}
 
 function cycleEdgeSnap(binding = "<Super>u") {
     var Tiling = Extension.imports.tiling;
