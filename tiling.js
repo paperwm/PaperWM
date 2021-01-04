@@ -2519,10 +2519,10 @@ function ensuredX(meta_window, space) {
         x = 0;
     } else if (index == 0 && x <= min) {
         // Always align the first window to the display's left edge
-        x = min;
+        x = min + prefs.horizontal_margin;
     } else if (index == space.length-1 && x + frame.width >= max) {
         // Always align the first window to the display's right edge
-        x = max - frame.width;
+        x = max - frame.width - prefs.horizontal_margin;
     } else if (frame.width > workArea.width*0.9 - 2*(prefs.horizontal_margin + prefs.window_gap)) {
         // Consider the window to be wide and center it
         x = min + Math.round((workArea.width - frame.width)/2);
