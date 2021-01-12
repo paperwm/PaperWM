@@ -2515,7 +2515,7 @@ function ensuredX(meta_window, space) {
     let workArea = space.workArea();
     let min = workArea.x;
     let max = min + workArea.width;
-    if (meta_window.fullscreen) {
+    if (meta_window.fullscreen || meta_window.maximized_horizontally) {
         x = 0;
     } else if (index == 0 && x <= min) {
         // Always align the first window to the display's left edge
@@ -2526,7 +2526,6 @@ function ensuredX(meta_window, space) {
     } else if (frame.width > workArea.width*0.9 - 2*(prefs.horizontal_margin + prefs.window_gap)) {
         // Consider the window to be wide and center it
         x = min + Math.round((workArea.width - frame.width)/2);
-
     } else if (x + frame.width > max) {
         // Align to the right prefs.horizontal_margin
         x = max - prefs.horizontal_margin - frame.width;
