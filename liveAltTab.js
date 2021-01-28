@@ -148,16 +148,12 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
     }
 
     _onDestroy() {
-        if(!this.was_accepted) {
-            // Select the starting window
-            this._select(0);
-        }
         super._onDestroy();
         debug('#preview', 'onDestroy', this.was_accepted);
         Tweener.addTween(this.fog, {
             time: prefs.animation_time,
             opacity: 0,
-            onComplete: () => {
+            onStopped: () => {
                 this.fog.destroy();
                 this.fog = null;
                 // this.space.cloneContainer.remove_effect(this.blur);
@@ -166,11 +162,14 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
                 this.space.moveDone();
             }
         });
-        let to = this._switcherList.windows[this._selectedIndex];
+        let index = this.was_accepted ? this._selectedIndex : 0
+        let to = this._switcherList.windows[index];
         Tiling.focus_handler(to);
-        let actor = to.get_compositor_private();
-        actor.x = this.clone.x;
-        actor.y = this.clone.y;
+        if (this.was_accepted) {
+            let actor = to.get_compositor_private();
+            actor.x = this.clone.x;
+            actor.y = this.clone.y;
+        }
         actor.set_scale(1, 1);
     }
 });
