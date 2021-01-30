@@ -89,6 +89,27 @@ function swapNeighbours(binding = "<Super>y") {
     }, {activeInNavigator: true})
 }
 
+/**
+   Before: |[ A ][ *B* ]|[  C  ]
+   After:  |[ A ][ *C* ]|[  B  ]
+*/
+function swapWithRight(binding = "<Super><Shift>d") {
+    var Tiling = Extension.imports.tiling;
+    var Utils = Extension.imports.utils;
+
+    Keybindings.bindkey(binding, "swap-with-right", mw => {
+        let space = Tiling.spaces.spaceOfWindow(mw);
+        let i = space.indexOf(mw);
+        if (i === space.length - 1)
+            return;
+
+        Utils.swap(space, i, i+1);
+        space.layout(false);
+        space.emit("full-layout");
+        Main.activateWindow(space[i][0]);
+    }, { opensMinimap: true });
+}
+
 function cycleMonitor(binding = "<Super>d") {
     var Tiling = Extension.imports.tiling;
     var Main = imports.ui.main;
