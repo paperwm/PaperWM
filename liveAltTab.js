@@ -165,8 +165,8 @@ class LiveAltTab extends AltTab.WindowSwitcherPopup {
         let index = this.was_accepted ? this._selectedIndex : 0
         let to = this._switcherList.windows[index];
         Tiling.focus_handler(to);
+        let actor = to.get_compositor_private();
         if (this.was_accepted) {
-            let actor = to.get_compositor_private();
             actor.x = this.clone.x;
             actor.y = this.clone.y;
         }
