@@ -157,6 +157,22 @@ class SettingsWidget {
                                        state);
         });
 
+        let isolateMonitors = this.builder.get_object('isolate-monitors');
+        isolateMonitors.state =
+            this._settings.get_boolean('isolate-monitors');
+            isolateMonitors.connect('state-set', (obj, state) => {
+            this._settings.set_boolean('isolate-monitors',
+                                       state);
+        });
+
+        let showEmptySpaces = this.builder.get_object('show-empty-spaces');
+        showEmptySpaces.state =
+            this._settings.get_boolean('show-empty-spaces');
+        showEmptySpaces.connect('state-set', (obj, state) => {
+            this._settings.set_boolean('show-empty-spaces',
+                                       state);
+        });
+
 
         // Workspaces
 

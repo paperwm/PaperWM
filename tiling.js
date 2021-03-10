@@ -1778,9 +1778,7 @@ class Spaces extends Map {
         TopBar.fixTopBar();
         const scale = 0.9;
         let space = this.spaceOf(workspaceManager.get_active_workspace());
-        let mru = [...this.stack];
-        this.monitors.forEach(space => mru.splice(mru.indexOf(space), 1));
-        mru = [space, ...mru];
+        let mru = this._getMru();
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.hide();
@@ -1850,6 +1848,22 @@ class Spaces extends Map {
         }
     }
 
+    _getMru() {
+        let mru = [...this.stack];
+        let activeSpace = this.spaceOf(workspaceManager.get_active_workspace());
+        if (prefs.isolate_monitors) {
+            mru = mru.filter(
+                (space) => space !== activeSpace && space.monitor === activeSpace.monitor,
+            );
+        } else {
+            this.monitors.forEach((space) => mru.splice(mru.indexOf(space), 1));
+        }
+        if (!prefs.show_empty_spaces) {
+            mru = mru.filter((space) => space.length > 0);
+        }
+        return [activeSpace, ...mru];
+    }
+
     selectStackSpace(direction, move) {
 
         // if in sequence preview do not run stack preview
@@ -1858,11 +1872,7 @@ class Spaces extends Map {
         }
 
         const scale = 0.9;
-        let space = this.spaceOf(workspaceManager.get_active_workspace());
-        let mru = [...this.stack];
-
-        this.monitors.forEach(space => mru.splice(mru.indexOf(space), 1));
-        mru = [space, ...mru];
+        let mru = this._getMru()
 
         if (!inPreview) {
             this._initWorkspaceStack();

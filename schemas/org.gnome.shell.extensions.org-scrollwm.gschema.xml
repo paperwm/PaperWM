@@ -366,6 +366,16 @@
         <summary>Make the top bar follow the focused monitor</summary>
     </key>
 
+    <key type="b" name="isolate-monitors">
+        <default>false</default>
+        <summary>Isolate monitors when switching workspaces</summary>
+    </key>
+
+    <key type="b" name="show-empty-spaces">
+        <default>true</default>
+        <summary>Show empty workspaces when switching workspaces</summary>
+    </key>
+
     <key type="d" name="animation-time">
         <default>0.25</default>
         <summary>Duration of animations in seconds</summary>
