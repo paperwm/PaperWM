@@ -403,8 +403,10 @@ function init() {
         registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
 
 
-    // Kill pinch gestures as they work pretty bad (especially when 3-finger swiping)
-    registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0);
+    // Kill pinch gestures as they work pretty bad (especially when 3-finger swipin
+    if (version[1] < 40) {
+        registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0)
+    }
 
     if (Main.wm._swipeTracker)
         registerOverrideProp(Main.wm._swipeTracker._touchpadGesture, "enabled", false);
