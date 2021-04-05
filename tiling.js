@@ -2180,7 +2180,7 @@ class Spaces extends Map {
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
 
-        if (utils.version[1] < 34) {
+        if (utils.version[1] < 34 || utils.version[1] >= 40) {
             animateWindow(metaWindow);
         } else {
             /* HACK 3.34: Hidden actors aren't allocated if hidden, use opacity
