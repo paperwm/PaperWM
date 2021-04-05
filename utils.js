@@ -10,6 +10,9 @@ var workspaceManager = global.workspace_manager;
 var display = global.display;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
+if (version[0] !== 3) {
+    version = [3, ...version]
+}
 
 var registerClass;
 {

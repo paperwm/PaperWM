@@ -12,7 +12,6 @@ if (imports.misc.extensionUtils.extensions) {
     Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
 }
 
-
 var Meta = imports.gi.Meta;
 var Gio = imports.gi.Gio;
 var Main = imports.ui.main;
@@ -28,6 +27,8 @@ var Tiling = Extension.imports.tiling;
 var settings = Convenience.getSettings();
 var Clutter = imports.gi.Clutter;
 let St = imports.gi.St;
+
+var version = Extension.imports.utils.version
 
 function overrideHotCorners() {
     for (let corner of Main.layoutManager.hotCorners) {
@@ -88,7 +89,6 @@ if (!Clutter.Actor.prototype.set) {
 }
 
 // Polyfill gnome-3.34 transition API, taken from gnome-shell/js/ui/environment.js
-const version = imports.misc.config.PACKAGE_VERSION.split('.');
 if (version[0] >= 3 && version[1] < 34) {
     function _makeEaseCallback(params, cleanup) {
         let onComplete = params.onComplete;
