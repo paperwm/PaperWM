@@ -49,9 +49,9 @@ function swapArrayElements(array, i, j) {
 
 function ok(okValue) {
     if(okValue[0]) {
-        return okValue[1]
+        return okValue[1];
     } else {
-        return null
+        return null;
     }
 }
 
@@ -68,6 +68,8 @@ class SettingsWidget {
         this._notebook = this.builder.get_object('paperwm_settings');
         this.widget = this._notebook;
         this._notebook.page = selectedTab;
+        this._backgroundFilter = new Gtk.FileFilter();
+        this._backgroundFilter.add_pixbuf_formats();
 
         // General
 
@@ -138,7 +140,7 @@ class SettingsWidget {
                 this._settings.set_boolean('only-scratch-in-overview', false);
                 this._settings.set_boolean('disable-scratch-in-overview', false);
             }
-                
+
         });
 
         let disableCorner = this.builder.get_object('override-hot-corner');
@@ -315,34 +317,44 @@ class SettingsWidget {
         let nameEntry = new Gtk.Entry();
         let colorButton = new Gtk.ColorButton();
 
-        let backgroundBox = new Gtk.Box({spacing: 32});  // same spacing as used in glade for default background
-        let background = new Gtk.Button({
-            label: "Choose Workspace Folder"
-        });
-        background.connect('clicked', () => {
-            let fileChooser = new Gtk.FileChooserNative({
-                title: "Choose Workspace Folder",
-                action: Gtk.FileChooseAction.SELECT_FOLDER,
-                accept_label: "Select",
-                cancel_label: "Cancel"
-            });
-            fileChooser.show();
-        });
-        let clearBackground = new Gtk.Button({label: 'Clear', sensitive: settings.get_string('background') != ''});
-        let hideTopBarSwitch = new Gtk.Switch({active: !settings.get_boolean('show-top-bar')});
-        backgroundBox.append(background)
-        backgroundBox.append(clearBackground)
+        // Background
 
-        // let directoryChooser = new Gtk.FileChooserDialog({
-        //     action: Gtk.FileChooserAction.SELECT_FOLDER,
-        //     title: 'Select workspace directory'
-        // });
+        let backgroundBox = new Gtk.Box({spacing: 32});  // same spacing as used in glade for default background
+        let background = createFileChooserButton(
+            settings,
+            'background',
+            {
+                action: Gtk.FileChooserAction.OPEN,
+                title: 'Select workspace background',
+                filter: this._backgroundFilter,
+                select_multiple: false,
+                modal: true,
+                transient_for: this.widget.get_root()
+            }
+        );
+        let clearBackground = new Gtk.Button({label: 'Clear', sensitive: settings.get_string('background') != ''});
+
+        let hideTopBarSwitch = new Gtk.Switch({active: !settings.get_boolean('show-top-bar')});
+        backgroundBox.append(background);
+        backgroundBox.append(clearBackground);
+
+        let directoryChooser = createFileChooserButton(
+            settings,
+            'directory',
+            {
+                action: Gtk.FileChooserAction.SELECT_FOLDER,
+                title: 'Select workspace background',
+                select_multiple: false,
+                modal: true,
+                transient_for: this.widget.get_root()
+            }
+        );
 
         list.append(createRow('Name', nameEntry));
         list.append(createRow('Color', colorButton));
         list.append(createRow('Background', backgroundBox));
         list.append(createRow('Hide top bar', hideTopBarSwitch));
-        // list.append(createRow('Directory', directoryChooser));
+        list.append(createRow('Directory', directoryChooser));
 
         let rgba = new Gdk.RGBA();
         let color = settings.get_string('color');
@@ -352,12 +364,6 @@ class SettingsWidget {
 
         rgba.parse(color);
         colorButton.set_rgba(rgba);
-
-        // let filename = settings.get_string('background');
-        // if (filename === '')
-        //     background.unselect_all();
-        // else
-        //     background.set_filename(filename);
 
         nameEntry.set_text(this.getWorkspaceName(settings, index));
 
@@ -384,32 +390,14 @@ class SettingsWidget {
             background.unselect_all();
         });
 
-        // background.connect('file-set', () => {
-        //     let filename = background.get_filename();
-        //     settings.set_string('background', filename);
-        //     clearBackground.sensitive = filename != '';
-        // });
-
-        // clearBackground.connect('clicked', () => {
-        //     background.unselect_all();  // Note: does not trigger 'file-set'
-        //     settings.reset('background');
-        //     clearBackground.sensitive = settings.get_string('background') != '';
-        // });
+        clearBackground.connect('clicked', () => {
+            settings.reset('background');
+            clearBackground.sensitive = settings.get_string('background') != '';
+        });
 
         hideTopBarSwitch.connect('state-set', (gtkswitch_, state) => {
             settings.set_boolean('show-top-bar', !state);
         });
-
-        // let dir = settings.get_string('directory')
-        // if (dir === '')
-        //     directoryChooser.unselect_all();
-        // else
-        //     directoryChooser.set_filename(dir)
-
-        // directoryChooser.connect('file-set', () => {
-        //     let dir = directoryChooser.get_filename();
-        //     settings.set_string('directory', dir);
-        // });
 
         return list;
     }
@@ -645,15 +633,11 @@ function createKeybindingWidget(settings, searchEntry) {
 
 function parseAccelerator(accelerator) {
     let key, mods;
-    // if (accelerator.match(/Above_Tab/)) {
-    //     let keymap = Gdk.Keymap.get_default();
-    //     let entries = keymap.get_entries_for_keycode(49)[1];
-    //     let keyval = keymap.lookup_key(entries[0]);
-    //     let name = Gtk.accelerator_name(keyval, 0);
-    //     accelerator = accelerator.replace('Above_Tab', name);
-    // }
+    if (accelerator.match(/Above_Tab/)) {
+        accelerator = accelerator.replace('Above_Tab', 'grave');
+    }
 
-    [success, key, mods] = Gtk.accelerator_parse(accelerator);
+    [key, mods] = Gtk.accelerator_parse(accelerator);
     return [key, mods];
 }
 
@@ -738,7 +722,6 @@ function annotateKeybindings(model, settings) {
         if (conflict.length > 0) {
             let keystr = Settings.keycomboToKeystr(combo);
             tooltip = `${keystr} overrides ${conflict[0].conflicts} in ${conflict[0].settings.path}`;
-
             model.set_value(iter, COLUMN_TOOLTIP,
                             GLib.markup_escape_text(tooltip, -1));
             model.set_value(iter, COLUMN_WARNING, true);
@@ -748,6 +731,35 @@ function annotateKeybindings(model, settings) {
 
         return false;
     });
+}
+
+function createFileChooserButton(settings, key, properties) {
+    const button = new Gtk.Button();
+    syncStringSetting(settings, key, (path) => {
+        button.label = path == '' ? '(none)' : GLib.filename_display_basename(path);
+    });
+    button.connect('clicked', () => {
+        const chooser = new Gtk.FileChooserDialog(properties);
+        let path = settings.get_string(key);
+        if (path !== undefined && path != '') chooser.set_file(Gio.File.new_from_path(value));
+        chooser.add_button('Open', Gtk.ResponseType.OK);
+        chooser.add_button('Cancel', Gtk.ResponseType.CANCEL);
+        chooser.connect('response', (dialog, response) => {
+            if (response === Gtk.ResponseType.OK) {
+                settings.set_string(key, chooser.get_file().get_path());
+            }
+            chooser.close();
+        });
+        chooser.show();
+    });
+    return button;
+}
+
+function syncStringSetting(settings, key, callback) {
+    settings.connect('changed::' + key, () => {
+        callback(settings.get_string(key));
+    });
+    callback(settings.get_string(key));
 }
 
 function init() {
@@ -761,5 +773,6 @@ function buildPrefsWidget() {
     }
     let settings = new SettingsWidget(selectedTab, selectedWorkspace || 0);
     let widget = settings.widget;
+    widget.show();
     return widget;
 }
