@@ -65,9 +65,10 @@ class SettingsWidget {
 
         this.builder = Gtk.Builder.new_from_file(Extension.path + '/Settings.ui');
 
-        this._notebook = this.builder.get_object('paperwm_settings');
-        this.widget = this._notebook;
-        this._notebook.page = selectedTab;
+        this.aboutButton = this.builder.get_object('about_button');
+        this.switcher = this.builder.get_object('switcher');
+        this.widget = this.builder.get_object('paperwm_settings');
+        this.widget.pages.select_item(selectedTab, true);
         this._backgroundFilter = new Gtk.FileFilter();
         this._backgroundFilter.add_pixbuf_formats();
 
@@ -772,7 +773,12 @@ function buildPrefsWidget() {
         selectedTab = 1;
     }
     let settings = new SettingsWidget(selectedTab, selectedWorkspace || 0);
-    let widget = settings.widget;
-    widget.show();
-    return widget;
+    GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+        let window = settings.widget.get_root();
+        let headerbar = window.get_titlebar();
+        headerbar.pack_start(settings.aboutButton);
+        headerbar.set_title_widget(settings.switcher);
+        return false;
+    });
+    return settings.widget;
 }
