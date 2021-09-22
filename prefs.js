@@ -311,19 +311,19 @@ class SettingsWidget {
 
         let list = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
-            can_focus: false,
+            focusable: false,
         });
-        list.append(new Gtk.LevelBar());
-
         let nameEntry = new Gtk.Entry();
         let colorButton = new Gtk.ColorButton();
 
         // Background
 
-        let backgroundBox = new Gtk.Box({spacing: 32});  // same spacing as used in glade for default background
+        let backgroundBox = new Gtk.Box({spacing: 16});
         let background = createFileChooserButton(
             settings,
             'background',
+            'image-x-generic',
+            'document-open-symbolic',
             {
                 action: Gtk.FileChooserAction.OPEN,
                 title: 'Select workspace background',
@@ -333,15 +333,22 @@ class SettingsWidget {
                 transient_for: this.widget.get_root()
             }
         );
-        let clearBackground = new Gtk.Button({label: 'Clear', sensitive: settings.get_string('background') != ''});
-
-        let hideTopBarSwitch = new Gtk.Switch({active: !settings.get_boolean('show-top-bar')});
+        let clearBackground = new Gtk.Button({
+            icon_name: 'edit-clear-symbolic',
+            tooltip_text: 'Clear workspace background',
+            sensitive: settings.get_string('background') != ''
+        });
         backgroundBox.append(background);
         backgroundBox.append(clearBackground);
 
+        let hideTopBarSwitch = new Gtk.Switch({active: !settings.get_boolean('show-top-bar')});
+
+        let directoryBox = new Gtk.Box({spacing: 16});
         let directoryChooser = createFileChooserButton(
             settings,
             'directory',
+            'folder',
+            'folder-open-symbolic',
             {
                 action: Gtk.FileChooserAction.SELECT_FOLDER,
                 title: 'Select workspace background',
@@ -350,12 +357,19 @@ class SettingsWidget {
                 transient_for: this.widget.get_root()
             }
         );
+        let clearDirectory = new Gtk.Button({
+            icon_name: 'edit-clear-symbolic',
+            tooltip_text: 'Clear workspace directory',
+            sensitive: settings.get_string('directory') != ''
+        });
+        directoryBox.append(directoryChooser);
+        directoryBox.append(clearDirectory);
 
         list.append(createRow('Name', nameEntry));
         list.append(createRow('Color', colorButton));
         list.append(createRow('Background', backgroundBox));
         list.append(createRow('Hide top bar', hideTopBarSwitch));
-        list.append(createRow('Directory', directoryChooser));
+        list.append(createRow('Directory', directoryBox));
 
         let rgba = new Gdk.RGBA();
         let color = settings.get_string('color');
@@ -393,11 +407,22 @@ class SettingsWidget {
 
         clearBackground.connect('clicked', () => {
             settings.reset('background');
+        });
+
+        settings.connect('changed::background', () => {
             clearBackground.sensitive = settings.get_string('background') != '';
         });
 
         hideTopBarSwitch.connect('state-set', (gtkswitch_, state) => {
             settings.set_boolean('show-top-bar', !state);
+        });
+
+        clearDirectory.connect('clicked', () => {
+            settings.reset('directory');
+        });
+
+        settings.connect('changed::directory', () => {
+            clearDirectory.sensitive = settings.get_string('directory') != '';
         });
 
         return list;
@@ -734,22 +759,37 @@ function annotateKeybindings(model, settings) {
     });
 }
 
-function createFileChooserButton(settings, key, properties) {
-    const button = new Gtk.Button();
-    syncStringSetting(settings, key, (path) => {
-        button.label = path == '' ? '(none)' : GLib.filename_display_basename(path);
+function createFileChooserButton(settings, key, iconName, symbolicIconName, properties) {
+    const buttonIcon = Gtk.Image.new_from_icon_name(iconName);
+    const buttonLabel = new Gtk.Label();
+    const buttonBox = new Gtk.Box({
+        orientation: Gtk.Orientation.HORIZONTAL,
+        spacing: 8
+    });
+
+    buttonBox.append(buttonIcon);
+    buttonBox.append(buttonLabel);
+    if (symbolicIconName) {
+        buttonBox.append(new Gtk.Image({icon_name: symbolicIconName, margin_start: 8}));
+    }
+
+    const button = new Gtk.Button({child: buttonBox});
+
+    syncStringSetting(settings, key, path => {
+        buttonIcon.visible = path != '';
+        buttonLabel.label = path == '' ? '(None)' : GLib.filename_display_basename(path);
     });
     button.connect('clicked', () => {
         const chooser = new Gtk.FileChooserDialog(properties);
         let path = settings.get_string(key);
-        if (path !== undefined && path != '') chooser.set_file(Gio.File.new_from_path(value));
+        if (path != '') chooser.set_file(Gio.File.new_for_path(path));
         chooser.add_button('Open', Gtk.ResponseType.OK);
         chooser.add_button('Cancel', Gtk.ResponseType.CANCEL);
         chooser.connect('response', (dialog, response) => {
             if (response === Gtk.ResponseType.OK) {
                 settings.set_string(key, chooser.get_file().get_path());
             }
-            chooser.close();
+            chooser.destroy();
         });
         chooser.show();
     });
@@ -775,6 +815,7 @@ function buildPrefsWidget() {
     let settings = new SettingsWidget(selectedTab, selectedWorkspace || 0);
     GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
         let window = settings.widget.get_root();
+        window.modal = false;
         let headerbar = window.get_titlebar();
         headerbar.pack_start(settings.aboutButton);
         headerbar.set_title_widget(settings.switcher);
