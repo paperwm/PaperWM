@@ -742,53 +742,7 @@
         <property name="name">keybindings</property>
         <property name="title" translatable="yes">Keybindings</property>
         <property name="child">
-          <object class="GtkBox">
-            <property name="focusable">False</property>
-            <property name="orientation">vertical</property>
-            <child>
-              <object class="GtkSearchBar">
-                <property name="hexpand">True</property>
-                <property name="search_mode_enabled">True</property>
-                <property name="child">
-                  <object class="GtkSearchEntry" id="keybinding_search">
-                    <property name="can_focus">True</property>
-                  </object>
-                </property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkScrolledWindow">
-                <property name="hscrollbar_policy">never</property>
-                <child>
-                  <object class="GtkViewport">
-                    <property name="focusable">False</property>
-                    <child>
-                      <object class="GtkBox" id="keybindings">
-                        <property name="focusable">False</property>
-                        <property name="margin_start">36</property>
-                        <property name="margin_end">36</property>
-                        <property name="margin_top">36</property>
-                        <property name="margin_bottom">36</property>
-                        <property name="vexpand">1</property>
-                        <property name="halign">center</property>
-                        <property name="width_request">480</property>
-                        <property name="orientation">vertical</property>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-          </object>
+          <object class="KeybindingsPane" />
         </property>
       </object>
     </child>

@@ -235,6 +235,17 @@ function keycomboToKeystr(combo) {
     return keystr;
 }
 
+function keycomboToKeylab(combo) {
+    let [mutterKey, mods] = combo.split('|').map(s => Number.parseInt(s));
+    let key = mutterKey;
+    if (mutterKey === META_KEY_ABOVE_TAB)
+        key = 97; // a
+    let keylab = Gtk.accelerator_get_label(key, mods);
+    if (mutterKey === META_KEY_ABOVE_TAB)
+        keylab = keylab.replace(/a$/, 'Above_Tab');
+    return keylab;
+}
+
 function generateKeycomboMap(settings) {
     let map = {};
     for (let name of settings.list_keys()) {

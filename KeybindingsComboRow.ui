@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0" />
+  <template class="ComboRow" parent="GtkListBoxRow">
+    <property name="selectable">False</property>
+    <property name="activatable">True</property>
+    <property name="focusable">True</property>
+    <property name="focus-on-click">True</property>
+
+    <property name="child">
+      <object class="GtkStack" id="stack">
+        <child>
+          <object class="GtkStackPage">
+            <property name="child">
+              <object class="GtkBox" id="shortcutPage">
+                <property name="hexpand">True</property>
+                <property name="spacing">12</property>
+                <child>
+                  <object class="GtkShortcutLabel" id="shortcutLabel">
+                    <property name="disabled_text" translatable="yes">Disabled</property>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkMenuButton" id="conflictButton">
+                    <property name="tooltip_text" translatable="yes">Conflicts</property>
+                    <property name="icon_name">dialog-error-symbolic</property>
+                    <property name="popover">conflictPopover</property>
+                    <property name="visible">False</property>
+                    <style>
+                      <class name="flat" />
+                      <class name="circular" />
+                    </style>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkButton" id="deleteButton">
+                    <property name="hexpand">True</property>
+                    <property name="halign">end</property>
+                    <property name="tooltip_text" translatable="yes">Remove shortcut</property>
+                    <property name="icon_name">edit-clear-symbolic</property>
+                    <style>
+                      <class name="flat" />
+                      <class name="circular" />
+                    </style>
+                    <signal name="clicked" handler="_onDeleteButtonClicked" />
+                  </object>
+                </child>
+
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStackPage">
+            <property name="child">
+              <object class="GtkLabel" id="placeholderPage">
+                <property name="hexpand">True</property>
+                <property name="xalign">0.0</property>
+                <property name="use_markup">True</property>
+                <property name="label" translatable="yes">&lt;i&gt;Add shortcut…&lt;/i&gt;</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStackPage">
+            <property name="child">
+              <object class="GtkLabel" id="editPage">
+                <property name="use_markup">True</property>
+                <property name="label" translatable="yes">Enter keyboard shortcut, &lt;b&gt;Backspace&lt;/b&gt; to delete or &lt;b&gt;Esc&lt;/b&gt; to cancel</property>
+              </object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </property>
+  </template>
+
+  <object class="GtkPopover" id="conflictPopover">
+    <child>
+      <object class="GtkBox" id="about">
+        <property name="focusable">False</property>
+        <property name="orientation">vertical</property>
+        <property name="margin-start">12</property>
+        <property name="margin-end">12</property>
+        <property name="margin-top">12</property>
+        <property name="margin-bottom">12</property>
+        <property name="spacing">8</property>
+
+        <child>
+          <object class="GtkLabel">
+            <property name="label" translatable="yes">Conflicts:</property>
+            <style>
+              <class name="heading" />
+            </style>
+          </object>
+        </child>
+
+        <child>
+          <object class="GtkListBox" id="conflictList">
+            <property name="selection-mode">none</property>
+            <signal name="row-activated"
+                    handler="_onConflictRowActivated" />
+
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

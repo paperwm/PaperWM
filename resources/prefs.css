@@ -1,0 +1,43 @@
+list.keybindings > row {
+    padding: 0 0;
+    background-color: transparent;
+}
+
+list.keybindings > row:hover {
+    background-color: transparent;
+}
+
+list.keybindings > row.expanded {
+    background-color: alpha(darker(@theme_base_color), 0.33);
+}
+
+list.keybindings > row.expanded:backdrop:not(:hover):not(:active):not(:selected) {
+    background-color: alpha(darker(@theme_unfocused_base_color), 0.33);
+}
+
+list.keybindings > row .header,
+list.combos > row {
+    padding: 8px 12px;
+    min-height: 32px;
+}
+
+list.keybindings > row .header:hover {
+    background-color: alpha(@theme_fg_color, 0.10);
+}
+
+list.keybindings > row .header:hover:backdrop {
+    background-color: alpha(@theme_unfocused_fg_color, 0.10);
+}
+
+list.keybindings > row.expanded label.description {
+    font-weight: bold;
+}
+
+list.combos {
+    background-color: transparent;
+}
+
+list.combos > .editing {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}

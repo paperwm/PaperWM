@@ -4,11 +4,11 @@ const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
-const Mainloop = imports.mainloop;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Convenience = Extension.imports.convenience;
+const { KeybindingsPane } = Extension.imports.prefsKeybinding;
 
 const WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
 const KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
@@ -47,7 +47,7 @@ function swapArrayElements(array, i, j) {
     return array;
 }
 
-function ok(okValue) {
+function getOk(okValue) {
     if(okValue[0]) {
         return okValue[1];
     } else {
@@ -216,91 +216,6 @@ class SettingsWidget {
 
         workspaceCombo.set_active(selectedWorkspace);
 
-        // Keybindings
-
-        let settings = Convenience.getSettings(KEYBINDINGS_KEY);
-        let box = this.builder.get_object('keybindings');
-        box.spacing = 12;
-
-        let searchEntry = this.builder.get_object('keybinding_search');
-
-        let windowFrame = new Gtk.Frame({label: _('Windows'),
-                                         label_xalign: 0.5});
-        let windows = createKeybindingWidget(settings, searchEntry);
-        box.append(windowFrame);
-        windowFrame.set_child(windows);
-
-
-        ['new-window', 'close-window', 'switch-next', 'switch-previous',
-          'switch-left', 'switch-right', 'switch-up', 'switch-down',
-          'switch-first', 'switch-last', 'live-alt-tab', 'live-alt-tab-backward',
-          'move-left', 'move-right', 'move-up', 'move-down',
-          'slurp-in', 'barf-out', 'center-horizontally',
-          'paper-toggle-fullscreen', 'toggle-maximize-width', 'resize-h-inc',
-          'resize-h-dec', 'resize-w-inc', 'resize-w-dec', 'cycle-width',
-          'cycle-height', 'take-window']
-            .forEach(k => {
-            addKeybinding(windows.model.child_model, settings, k);
-        });
-
-        annotateKeybindings(windows.model.child_model, settings);
-
-        let workspaceFrame = new Gtk.Frame({label: _('Workspaces'),
-                                            label_xalign: 0.5});
-        let workspaces = createKeybindingWidget(settings, searchEntry);
-        box.append(workspaceFrame);
-        workspaceFrame.set_child(workspaces);
-
-        ['previous-workspace', 'previous-workspace-backward',
-         'move-previous-workspace', 'move-previous-workspace-backward',
-         'switch-up-workspace', 'switch-down-workspace',
-         'move-up-workspace', 'move-down-workspace'
-        ]
-            .forEach(k => {
-                addKeybinding(workspaces.model.child_model, settings, k);
-            });
-
-        annotateKeybindings(workspaces.model.child_model, settings);
-
-        let monitorFrame = new Gtk.Frame({label: _('Monitors'),
-                                          label_xalign: 0.5});
-        let monitors = createKeybindingWidget(settings, searchEntry);
-        box.append(monitorFrame);
-        monitorFrame.set_child(monitors);
-
-        ['switch-monitor-right',
-         'switch-monitor-left',
-         'switch-monitor-above',
-         'switch-monitor-below',
-         'move-monitor-right',
-         'move-monitor-left',
-         'move-monitor-above',
-         'move-monitor-below',
-        ].forEach(k => {
-                addKeybinding(monitors.model.child_model, settings, k);
-            });
-
-        annotateKeybindings(monitors.model.child_model, settings);
-
-
-        let scratchFrame = new Gtk.Frame({label: _('Scratch layer'),
-                                          label_xalign: 0.5});
-        let scratch = createKeybindingWidget(settings, searchEntry);
-        box.append(scratchFrame);
-        scratchFrame.set_child(scratch);
-
-        ['toggle-scratch-layer', 'toggle-scratch', "toggle-scratch-window"]
-            .forEach(k => {
-                addKeybinding(scratch.model.child_model, settings, k);
-            });
-
-        annotateKeybindings(scratch.model.child_model, settings);
-
-        searchEntry.connect('changed', () => {
-            [windows, workspaces, monitors, scratch].map(tw => tw.model).forEach(m => m.refilter());
-        });
-
-
         // About
         let versionLabel = this.builder.get_object('extension_version');
         let version = Extension.metadata.version.toString();
@@ -456,6 +371,10 @@ function createRow(text, widget, signal, handler) {
     return box;
 }
 
+function createKeybindingSection(settings, searchEntry) {
+    let model = new Gtk.ListStore();
+}
+
 function createKeybindingWidget(settings, searchEntry) {
     let model = new Gtk.TreeStore();
     let filteredModel = new Gtk.TreeModelFilter({child_model: model});
@@ -463,7 +382,7 @@ function createKeybindingWidget(settings, searchEntry) {
         (model, iter) => {
             let desc = model.get_value(iter, COLUMN_DESCRIPTION);
 
-            if(ok(model.iter_parent(iter)) || desc === null) {
+            if(getOk(model.iter_parent(iter)) || desc === null) {
                 return true;
             }
 
@@ -519,7 +438,7 @@ function createKeybindingWidget(settings, searchEntry) {
 
     accelRenderer.connect("accel-edited",
             (accelRenderer, path, key, mods, hwCode) => {
-                let iter = ok(filteredModel.get_iter_from_string(path));
+                let iter = getOk(filteredModel.get_iter_from_string(path));
                 if(!iter)
                     return;
 
@@ -538,7 +457,7 @@ function createKeybindingWidget(settings, searchEntry) {
                 if (index === -1) {
                     accels.push(accelString);
                 } else {
-                    accels[index] = accelString
+                    accels[index] = accelString;
                 }
                 settings.set_strv(id, accels);
 
@@ -547,7 +466,7 @@ function createKeybindingWidget(settings, searchEntry) {
                     model.set_value(iter, COLUMN_INDEX, accels.length-1);
                     model.set_value(iter, COLUMN_DESCRIPTION, "...");
 
-                    let parent = ok(model.iter_parent(iter));
+                    let parent = getOk(model.iter_parent(iter));
                     newEmptyRow = model.insert_after(parent, iter);
                 } else if (index === 0 && !model.iter_has_child(iter)) {
                     newEmptyRow = model.insert(iter, -1);
@@ -568,7 +487,7 @@ function createKeybindingWidget(settings, searchEntry) {
 
     accelRenderer.connect("accel-cleared",
             (accelRenderer, path) => {
-                let iter = ok(filteredModel.get_iter_from_string(path));
+                let iter = getOk(filteredModel.get_iter_from_string(path));
                 if(!iter)
                     return;
 
@@ -593,7 +512,7 @@ function createKeybindingWidget(settings, searchEntry) {
                 if (index === 0) {
                     parent = iter.copy();
                 } else {
-                    parent = ok(model.iter_parent(iter));
+                    parent = getOk(model.iter_parent(iter));
                 }
                 nextSibling = parent.copy();
 
@@ -627,7 +546,7 @@ function createKeybindingWidget(settings, searchEntry) {
     resetColumn.add_attribute(resetRenderer, "visible", COLUMN_RESET);
 
     resetRenderer.connect('toggled', (renderer, path) => {
-        let iter = ok(filteredModel.get_iter_from_string(path));
+        let iter = getOk(filteredModel.get_iter_from_string(path));
         if(!iter)
             return;
         iter = filteredModel.convert_iter_to_child_iter(iter);
@@ -638,7 +557,7 @@ function createKeybindingWidget(settings, searchEntry) {
             model.set_value(iter, COLUMN_RESET, false);
         }
 
-        let parent = ok(model.iter_parent(iter)) || iter.copy();
+        let parent = getOk(model.iter_parent(iter)) || iter.copy();
         let nextSibling = parent.copy();
         if(!model.iter_next(nextSibling))
             nextSibling = null;
@@ -663,7 +582,10 @@ function parseAccelerator(accelerator) {
         accelerator = accelerator.replace('Above_Tab', 'grave');
     }
 
-    [key, mods] = Gtk.accelerator_parse(accelerator);
+    [ok, key, mods] = Gtk.accelerator_parse(accelerator);
+
+    log(`PaperWM: parseAccelerator(${accelerator}) -> [${key}, ${mods}]`);
+
     return [key, mods];
 }
 
@@ -671,7 +593,7 @@ function transpose(colValPairs) {
     let colKeys = [], values = [];
     colValPairs.forEach(([k, v]) => {
         colKeys.push(k); values.push(v);
-    })
+    });
     return [colKeys, values];
 }
 
@@ -740,13 +662,13 @@ function annotateKeybindings(model, settings) {
         let accels = settings.get_strv(id);
         let index = model.get_value(iter, COLUMN_INDEX);
         if (index === -1 || accels.length === 0)
-            return;
+            return true;
         let combo = Settings.keystrToKeycombo(accels[index]);
 
         let conflict = warning(id, combo);
         let tooltip = null;
         if (conflict.length > 0) {
-            let keystr = Settings.keycomboToKeystr(combo);
+            let keystr = Settings.keycomboToKeylab(combo);
             tooltip = `${keystr} overrides ${conflict[0].conflicts} in ${conflict[0].settings.path}`;
             model.set_value(iter, COLUMN_TOOLTIP,
                             GLib.markup_escape_text(tooltip, -1));
@@ -804,6 +726,13 @@ function syncStringSetting(settings, key, callback) {
 }
 
 function init() {
+    const provider = new Gtk.CssProvider();
+    provider.load_from_path(Extension.dir.get_path() + '/resources/prefs.css');
+    Gtk.StyleContext.add_provider_for_display(
+        Gdk.Display.get_default(),
+        provider,
+        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+    );
 }
 
 function buildPrefsWidget() {
