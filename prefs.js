@@ -653,7 +653,7 @@ function parseAccelerator(accelerator) {
     //     accelerator = accelerator.replace('Above_Tab', name);
     // }
 
-    [key, mods] = Gtk.accelerator_parse(accelerator);
+    [success, key, mods] = Gtk.accelerator_parse(accelerator);
     return [key, mods];
 }
 
