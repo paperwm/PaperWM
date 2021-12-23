@@ -46,8 +46,6 @@ var stack_margin = 75;
 // Some features use this to determine if to sizes is considered equal. ie. `abs(w1 - w2) < sizeSlack`
 var sizeSlack = 30;
 
-var panelBox = Main.layoutManager.panelBox;
-
 var PreviewMode = {NONE: 0, STACK: 1, SEQUENTIAL: 2};
 var inPreview = PreviewMode.NONE;
 
@@ -260,11 +258,8 @@ class Space extends Array {
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
         workArea.x -= this.monitor.x;
         workArea.y -= this.monitor.y;
-        let topBarAdjustment = this.showTopBar && (prefs.topbar_follow_focus || this.monitor === Main.layoutManager.primaryMonitor) ?
-            panelBox.height : 0;
-        workArea.height = (workArea.y + workArea.height -
-                               topBarAdjustment - prefs.vertical_margin - prefs.vertical_margin_bottom);
-        workArea.y = topBarAdjustment + prefs.vertical_margin;
+        workArea.height -= prefs.vertical_margin + prefs.vertical_margin_bottom;
+        workArea.y += prefs.vertical_margin;
         return workArea;
     }
 

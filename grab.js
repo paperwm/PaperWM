@@ -190,7 +190,7 @@ var MoveGrab = class MoveGrab {
         const rowZoneMargin = 250 + halfGap;
 
         let target = null;
-        const tilingHeight = space.height - Tiling.panelBox.height;
+        const tilingHeight = space.height - Main.layoutManager.panelBox.height;
 
         let fakeClone = {
             targetX: null,
@@ -237,7 +237,7 @@ var MoveGrab = class MoveGrab {
                     marginB: columnZoneMarginViz,
                     space: space,
                     actorParams: {
-                        y: Tiling.panelBox.height,
+                        y: Main.layoutManager.panelBox.height,
                         height: tilingHeight
                     }
                 };
