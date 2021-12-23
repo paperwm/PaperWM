@@ -2,7 +2,7 @@
   "uuid": "paperwm@hedning:matrix.org",
   "name": "PaperWM",
   "description": "Tiling window manager with a twist",
-  "url": "https://github.com/PaperWM-community/PaperWM",
+  "url": "https://github.com/paperwm/PaperWM",
   "settings-schema": "org.gnome.Shell.Extensions.PaperWM",
   "shell-version": [ "40", "41" ],
   "version": "41.0"
