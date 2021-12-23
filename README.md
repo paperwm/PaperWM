@@ -1,11 +1,3 @@
-# This is a *soft* fork of [PaperWM](https://github.com/paperwm/PaperWM) #
-
-PaperWM's maintainer(s) have been unresponsive since April, 2021. However, they have not said that they are stepping down from maintainership; it may just be a busy period in their lives, etc.
-
-Meanwhile, Gnome 40 introduced changes which broke PaperWM. Several people independently started fixing the issues for themselves. This repository is for them to coordinate, so they don't end up introducing incompatible patches; **the goal is for this work to eventually be merged back upstream**, not to start an independent development effort.
-
-For details, see https://github.com/paperwm/PaperWM/issues/376#issuecomment-988178131 (and comments below).
-
 # PaperWM #
 
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://paperwm.zulipchat.com)
