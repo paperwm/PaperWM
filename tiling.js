@@ -1391,9 +1391,9 @@ class Spaces extends Map {
         this.signals.connect(display, 'window-created',
                         this.window_created.bind(this));
         this.signals.connect(display, 'grab-op-begin',
-                        (display, d, mw, type) => grabBegin(mw, type));
+                        (display, mw, type) => grabBegin(mw, type));
         this.signals.connect(display, 'grab-op-end',
-                        (display, d, mw, type) => grabEnd(mw, type));
+                        (display, mw, type) => grabEnd(mw, type));
 
         this.signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChanged.bind(this));
 
