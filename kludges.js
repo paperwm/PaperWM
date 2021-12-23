@@ -404,7 +404,7 @@ function init() {
     if (version[1] > 32)
         registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
 
-    if (version[1] > 39) {
+    if (version[1] >= 40) {
         layout = computeLayout40
         registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout)
     }
