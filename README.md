@@ -2,9 +2,9 @@
 
 PaperWM's maintainer(s) have been unresponsive since April, 2021. However, they have not said that they are stepping down from maintainership; it may just be a busy period in their lives, etc.
 
-Meanwhile, Gnome 40 introduced changes which broke PaperWM. Several people independently started fixing the issues for themselves. This repository is for them to coordinate, so they don't end up introducing incompatible patches; **the goal is for this work to eventually be merged back upstream**, not to start an independent development effort.
+Meanwhile, Gnome 40 introduced changes which broke PaperWM. Several people independently started fixing the issues for themselves. This repository is for them to coordinate, so they don't end up introducing incompatible patches; **the goal is for this work to eventually be merged back upstream**, not to start an independent development effort. This is happening on the [`next-release` branch](https://github.com/PaperWM-community/PaperWM/tree/next-release), and there is a [draft pull request](https://github.com/paperwm/PaperWM/pull/396) to merge it back upstream. (`develop` is still set as the default branch here, so that people will see this message, which shouldn't be part of the PR 😄)
 
-For details, see https://github.com/paperwm/PaperWM/issues/376#issuecomment-988178131 (and comments below).
+For details, see https://github.com/paperwm/PaperWM/issues/376#issuecomment-988178131 (and comments below) and the [discussions](https://github.com/PaperWM-community/PaperWM/discussions) on this repository.
 
 # PaperWM #
 
