@@ -18,6 +18,7 @@ var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var Workspace = imports.ui.workspace;
 var WindowManager = imports.ui.windowManager;
+var WorkspaceAnimation = imports.ui.workspaceAnimation;
 var Shell = imports.gi.Shell;
 var utils = Extension.imports.utils;
 var Params = imports.misc.params;
@@ -265,6 +266,12 @@ function getOriginalPosition() {
     return [x, y];
 }
 
+// WorkspaceAnimation.WorkspaceAnimationController.animateSwitch
+// Disable the workspace switching animation in Gnome 40+
+function animateSwitch(_from, _to, _direction, onComplete) {
+    onComplete();
+};
+
 function disableHotcorners() {
     let override = settings.get_boolean("override-hot-corner");
     if (override) {
@@ -371,6 +378,7 @@ var signals;
 function init() {
     registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
     registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
+    registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch', animateSwitch);
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
     if (Workspace.WindowClone)
         registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
