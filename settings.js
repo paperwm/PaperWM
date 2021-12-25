@@ -302,24 +302,30 @@ function findConflicts(schemas) {
 */
 var winprops = [];
 
-function winprop_match_p(meta_window, prop) {
-    let wm_class = meta_window.wm_class || "";
-    let title = meta_window.title;
-    if (prop.wm_class.constructor === RegExp) {
-        if (!wm_class.match(prop.wm_class))
-            return false;
-    } else if (prop.wm_class !== wm_class) {
-        return false;
-    }
-    if (prop.title) {
-        if (prop.title.constructor === RegExp) {
-            if (!title.match(prop.title))
+function _winprop_match_p_helper(user_attr_prop, win_prop) {
+    // matches user-supplied conditions with null checking
+    if (user_attr_prop) {
+        if (user_attr_prop.constructor === RegExp) {
+            // treat prop condition as regex
+            if (!win_prop.match(user_attr_prop))
                 return false;
         } else {
-            if (prop.title !== title)
+            // treat prop condition as string
+            if (user_attr_prop !== win_prop)
                 return false;
         }
     }
+
+    return true;
+}
+
+function winprop_match_p(meta_window, prop) {
+    // check wm_class
+    if (!_winprop_match_helper(prop.wm_class, meta_window.wm_class))
+        return false;
+    // check wm_title
+    if (!_winprop_match_helper(prop.title, meta_window.title))
+        return false;
 
     return true;
 }
