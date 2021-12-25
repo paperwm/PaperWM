@@ -311,7 +311,7 @@ function _winprop_match_p_helper(user_attr_prop, win_prop) {
                 return false;
         } else {
             // treat prop condition as string
-            if (user_attr_prop !== win_prop)
+            if (user_attr_prop !== String(win_prop))
                 return false;
         }
     }
@@ -321,10 +321,10 @@ function _winprop_match_p_helper(user_attr_prop, win_prop) {
 
 function winprop_match_p(meta_window, prop) {
     // check wm_class
-    if (!_winprop_match_helper(prop.wm_class, meta_window.wm_class))
+    if (!_winprop_match_p_helper(prop.wm_class, meta_window.wm_class))
         return false;
     // check wm_title
-    if (!_winprop_match_helper(prop.title, meta_window.title))
+    if (!_winprop_match_p_helper(prop.title, meta_window.title))
         return false;
 
     return true;
