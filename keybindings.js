@@ -505,7 +505,7 @@ function enableAction(action) {
 
     } else {
         if (keycomboMap[action.keycombo]) {
-            Utils.warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name)
+            Utils.warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name);
             return Meta.KeyBindingAction.NONE;
         }
 
