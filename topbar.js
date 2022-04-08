@@ -86,9 +86,9 @@ var PopupMenuEntryHelper = function constructor(text) {
         this.prevIcon.grab_key_focus();
     });
 
-    this.actor.add_actor(this.prevIcon, {expand: true});
-    this.actor.add_actor(this.label, {expand: true});
-    this.actor.add_actor(this.nextIcon, {expand: true});
+    this.actor.add_actor(this.prevIcon);
+    this.actor.add_actor(this.label);
+    this.actor.add_actor(this.nextIcon);
     this.actor.label_actor = this.label;
     this.label.clutter_text.connect('activate', this.emit.bind(this, 'activate'));
 }
@@ -202,7 +202,7 @@ class WorkspaceMenu extends PanelMenu.Button {
     _init() {
         super._init(0.5, 'Workspace', false);
 
-        this.actor.name = 'workspace-button';
+        this.name = 'workspace-button';
 
         let scale = display.get_monitor_scale(Main.layoutManager.primaryIndex);
         this._label = new St.Label({
@@ -214,7 +214,7 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         this.setName(Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()));
 
-        this.actor.add_actor(this._label);
+        this.add_actor(this._label);
 
         this.signals = new Utils.Signals();
         this.signals.connect(global.window_manager,
@@ -420,6 +420,8 @@ class WorkspaceMenu extends PanelMenu.Button {
                 let y = this.selected.actor.y;
                 let friction = 0.5;
                 while (test()) {
+
+                    log("while start")
                     let dy = this.velocity*16;
                     y -= dy;
                     // log(`calc target: ${dy} ${y} ${this.velocity}`);
@@ -493,7 +495,7 @@ var menu;
 var orginalActivitiesText;
 var screenSignals, signals;
 function init () {
-    let label = Main.panel.statusArea.activities.actor.first_child;
+    let label = Main.panel.statusArea.activities.first_child;
     orginalActivitiesText = label.text;
     screenSignals = [];
     signals = new Utils.Signals();
@@ -501,7 +503,7 @@ function init () {
 
 var panelBoxShowId, panelBoxHideId;
 function enable () {
-    Main.panel.statusArea.activities.actor.hide();
+    Main.panel.statusArea.activities.hide();
 
     menu = new WorkspaceMenu();
     // Work around 'actor' warnings
@@ -521,8 +523,6 @@ function enable () {
 
     // Force transparency
     panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
-    [Main.panel._rightCorner, Main.panel._leftCorner]
-        .forEach(c => c.actor.opacity = 0);
 
     screenSignals.push(
         workspaceManager.connect_after('workspace-switched',
