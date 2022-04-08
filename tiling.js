@@ -108,7 +108,7 @@ function init() {
 
    To transform a stage point to space coordinates: `space.actor.transform_stage_point(aX, aY)`
  */
-class Space extends Array {
+var Space = class Space extends Array {
     constructor (workspace, container, doInit) {
         super(0);
         this.workspace = workspace;
@@ -1337,7 +1337,7 @@ var StackPositions = {
 
    TODO: Move initialization to enable
 */
-class Spaces extends Map {
+var Spaces = class Spaces extends Map {
     // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
     static get [Symbol.species]() { return Map; }
 

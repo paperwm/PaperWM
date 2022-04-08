@@ -55,7 +55,7 @@ function getOk(okValue) {
     }
 }
 
-class SettingsWidget {
+var SettingsWidget = class SettingsWidget {
     /**
        selectedWorkspace: index of initially selected workspace in workspace settings tab
        selectedTab: index of initially shown tab
