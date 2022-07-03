@@ -280,4 +280,4 @@ These extensions are good complements to PaperWM:
 
 ## Prior work ##
 
-A similar idea was apparently tried out a while back: http://10gui.com/
+A similar idea was apparently tried out a while back: [10/GUI](https://web.archive.org/web/20201123162403/http://10gui.com/)
