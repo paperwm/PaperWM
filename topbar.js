@@ -505,13 +505,13 @@ function enable () {
 
     menu = new WorkspaceMenu();
     // Work around 'actor' warnings
-    let panelActor = Main.panel.actor;
+    let panel = Main.panel;
     function fixLabel(label) {
         let point = new Clutter.Vertex({x: 0, y: 0});
-        let r = label.apply_relative_transform_to_point(panelActor, point);
+        let r = label.apply_relative_transform_to_point(panel, point);
 
         for (let [workspace, space] of Tiling.spaces) {
-            space.label.set_position(panelActor.x + Math.round(r.x), panelActor.y + Math.round(r.y));
+            space.label.set_position(panel.x + Math.round(r.x), panel.y + Math.round(r.y));
             let fontDescription = label.clutter_text.font_description;
             space.label.clutter_text.set_font_description(fontDescription);
         }
@@ -520,7 +520,7 @@ function enable () {
     menu.actor.show();
 
     // Force transparency
-    panelActor.set_style('background-color: rgba(0, 0, 0, 0.35);');
+    panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
     [Main.panel._rightCorner, Main.panel._leftCorner]
         .forEach(c => c.actor.opacity = 0);
 

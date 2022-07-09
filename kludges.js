@@ -506,7 +506,7 @@ function enable() {
         MessageTray.prototype._updateState
             = function () {
                 let hasMonitor = Main.layoutManager.primaryMonitor != null;
-                this.actor.visible = !this._bannerBlocked && hasMonitor && this._banner != null;
+                this.visible = !this._bannerBlocked && hasMonitor && this._banner != null;
                 if (this._bannerBlocked || !hasMonitor)
                     return;
 
