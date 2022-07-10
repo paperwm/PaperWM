@@ -302,16 +302,17 @@ function findConflicts(schemas) {
 */
 var winprops = [];
 
-function _winprop_match_p_helper(user_attr_prop, win_prop) {
+function _winprop_match_p_helper(user_attr_prop, _win_prop) {
     // matches user-supplied conditions with null checking
     if (user_attr_prop) {
+        let win_prop = String(_win_prop);
         if (user_attr_prop.constructor === RegExp) {
             // treat prop condition as regex
             if (!win_prop.match(user_attr_prop))
                 return false;
         } else {
             // treat prop condition as string
-            if (user_attr_prop !== String(win_prop))
+            if (user_attr_prop !== win_prop)
                 return false;
         }
     }
