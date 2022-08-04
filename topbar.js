@@ -569,9 +569,7 @@ function disable() {
     menu.destroy();
     menu = null;
     Main.panel.statusArea.activities.actor.show();
-    Main.panel.actor.set_style('');
-    [Main.panel._rightCorner, Main.panel._leftCorner]
-        .forEach(c => c.actor.opacity = 255);
+    Main.panel.set_style("");
 
     screenSignals.forEach(id => workspaceManager.disconnect(id));
     screenSignals = [];
