@@ -12,15 +12,16 @@ if (imports.misc.extensionUtils.extensions) {
     Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
 }
 
-
 var Meta = imports.gi.Meta;
 var Gio = imports.gi.Gio;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var Workspace = imports.ui.workspace;
 var WindowManager = imports.ui.windowManager;
+var WorkspaceAnimation = imports.ui.workspaceAnimation;
 var Shell = imports.gi.Shell;
 var utils = Extension.imports.utils;
+var Params = imports.misc.params;
 
 var Convenience = Extension.imports.convenience;
 var Scratch = Extension.imports.scratch;
@@ -28,6 +29,8 @@ var Tiling = Extension.imports.tiling;
 var settings = Convenience.getSettings();
 var Clutter = imports.gi.Clutter;
 let St = imports.gi.St;
+
+var version = Extension.imports.utils.version
 
 function overrideHotCorners() {
     for (let corner of Main.layoutManager.hotCorners) {
@@ -50,6 +53,11 @@ if (!global.display.get_monitor_neighbor_index) {
     global.display.constructor.prototype.get_monitor_neighbor_index = function(...args) {
         return global.screen.get_monitor_neighbor_index(...args);
     }
+}
+
+
+if (!global.display.set_cursor) {
+    global.display.constructor.prototype.set_cursor = global.screen.set_cursor.bind(global.screen);
 }
 
 // polyfill for 3.28
@@ -83,7 +91,6 @@ if (!Clutter.Actor.prototype.set) {
 }
 
 // Polyfill gnome-3.34 transition API, taken from gnome-shell/js/ui/environment.js
-const version = imports.misc.config.PACKAGE_VERSION.split('.');
 if (version[0] >= 3 && version[1] < 34) {
     function _makeEaseCallback(params, cleanup) {
         let onComplete = params.onComplete;
@@ -259,6 +266,12 @@ function getOriginalPosition() {
     return [x, y];
 }
 
+// WorkspaceAnimation.WorkspaceAnimationController.animateSwitch
+// Disable the workspace switching animation in Gnome 40+
+function animateSwitch(_from, _to, _direction, onComplete) {
+    onComplete();
+};
+
 function disableHotcorners() {
     let override = settings.get_boolean("override-hot-corner");
     if (override) {
@@ -365,6 +378,7 @@ var signals;
 function init() {
     registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
     registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
+    registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch', animateSwitch);
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
     if (Workspace.WindowClone)
         registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
@@ -394,12 +408,19 @@ function init() {
         registerOverridePrototype(Workspace.WorkspaceLayout, 'addWindow', addWindow)
     }
 
+
     if (version[1] > 32)
         registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
 
+    if (version[1] >= 40) {
+        layout = computeLayout40
+        registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout)
+    }
 
-    // Kill pinch gestures as they work pretty bad (especially when 3-finger swiping)
-    registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0);
+    // Kill pinch gestures as they work pretty bad (especially when 3-finger swipin
+    if (version[1] < 40) {
+        registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0)
+    }
 
     if (Main.wm._swipeTracker)
         registerOverrideProp(Main.wm._swipeTracker._touchpadGesture, "enabled", false);
@@ -485,7 +506,7 @@ function enable() {
         MessageTray.prototype._updateState
             = function () {
                 let hasMonitor = Main.layoutManager.primaryMonitor != null;
-                this.actor.visible = !this._bannerBlocked && hasMonitor && this._banner != null;
+                this.visible = !this._bannerBlocked && hasMonitor && this._banner != null;
                 if (this._bannerBlocked || !hasMonitor)
                     return;
 
@@ -625,6 +646,72 @@ function sortWindows(a, b) {
         return 1;
     }
     return ia - ib;
+}
+
+function computeLayout40(windows, layoutParams) {
+    layoutParams = Params.parse(layoutParams, {
+        numRows: 0,
+    });
+
+    if (layoutParams.numRows === 0)
+        throw new Error(`${this.constructor.name}: No numRows given in layout params`);
+
+    let numRows = layoutParams.numRows;
+
+    let rows = [];
+    let totalWidth = 0;
+    for (let i = 0; i < windows.length; i++) {
+        let window = windows[i];
+        let s = this._computeWindowScale(window);
+        totalWidth += window.boundingBox.width * s;
+    }
+
+    let idealRowWidth = totalWidth / numRows;
+
+    let sortedWindows = windows.slice();
+    // addWindow should have made sure we're already sorted.
+    // sortedWindows.sort(sortWindows);
+
+    let windowIdx = 0;
+    for (let i = 0; i < numRows; i++) {
+        let row = this._newRow();
+        rows.push(row);
+
+        for (; windowIdx < sortedWindows.length; windowIdx++) {
+            let window = sortedWindows[windowIdx];
+            let s = this._computeWindowScale(window);
+            let width = window.boundingBox.width * s;
+            let height = window.boundingBox.height * s;
+            row.fullHeight = Math.max(row.fullHeight, height);
+
+            // either new width is < idealWidth or new width is nearer from idealWidth then oldWidth
+            if (this._keepSameRow(row, window, width, idealRowWidth) || (i == numRows - 1)) {
+                row.windows.push(window);
+                row.fullWidth += width;
+            } else {
+                break;
+            }
+        }
+    }
+
+    let gridHeight = 0;
+    let maxRow;
+    for (let i = 0; i < numRows; i++) {
+        let row = rows[i];
+        this._sortRow(row);
+
+        if (!maxRow || row.fullWidth > maxRow.fullWidth)
+            maxRow = row;
+        gridHeight += row.fullHeight;
+    }
+
+    return {
+        numRows,
+        rows,
+        maxColumns: maxRow.windows.length,
+        gridWidth: maxRow.fullWidth,
+        gridHeight
+    };
 }
 
 function computeLayout338(windows, layout) {

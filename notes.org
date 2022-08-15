@@ -290,3 +290,9 @@ The absolute path of the an extension: `Extension.dir.get_path()`
 Clutter prints the FPS at regular intervals if ~CLUTTER_SHOW_FPS~ is set when gnome-shell starts. Where the output ends up depends on how gnome-shell was started. On my system it ends up in the system journal (journalctl)
 
 To turn on off without disrupting flow too much use ~GLib.setenv("CLUTTER_SHOW_FPS", "1", true)~ and restart gnome-shell.
+* Invariants
+** Focus and active workspace
+It's not possible the have a focused window which doesn't belong to the active workspace
+~global.display.focus_window.workspace === workspaceManger.get_active_workspace()~
+* Clutter animation
+  ~time: 0~ does not result in an instant animation. A default duration seems to be selected instead.

@@ -201,6 +201,24 @@ function hide() {
     });
 }
 
+function animateWindows() {
+    let ws = getScratchWindows().filter(w => !w.minimized);
+    ws = global.display.sort_windows_by_stacking(ws);
+    for (let w of ws) {
+        let parent = w.clone.get_parent()
+        parent && parent.remove_child(w.clone);
+        Main.uiGroup.insert_child_below(w.clone, Main.layoutManager.panelBox)
+        let f = w.get_frame_rect();
+        w.clone.set_position(f.x, f.y);
+        Tiling.animateWindow(w);
+    }
+}
+
+function showWindows() {
+    let ws = getScratchWindows().filter(w => !w.minimized);
+    ws.forEach(Tiling.showWindow)
+}
+
 // Monkey patch the alt-space menu
 var PopupMenu = imports.ui.popupMenu;
 var WindowMenu = imports.ui.windowMenu;

@@ -156,7 +156,8 @@ var ActionDispatcher = class {
             if (!metaWindow && (action.options.mutterFlags & Meta.KeyBindingFlags.PER_WINDOW)) {
                 return;
             }
-            if (action.options.opensMinimap) {
+
+            if (!Tiling.inGrab && action.options.opensMinimap) {
                 this.navigator._showMinimap(space);
             }
             action.handler(metaWindow, space, {navigator: this.navigator});
@@ -164,6 +165,10 @@ var ActionDispatcher = class {
                 this.navigator.minimaps.forEach(m => typeof(m) === 'number' ?
                                                 Mainloop.source_remove(m) : m.hide());
             }
+            if (Tiling.inGrab && !Tiling.inGrab.dnd && Tiling.inGrab.window) {
+                Tiling.inGrab.beginDnD();
+            }
+
             return true;
         } else if (mutterActionId == Meta.KeyBindingAction.MINIMIZE) {
             metaWindow.minimize();
@@ -197,7 +202,6 @@ var Navigator = class Navigator {
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
         // Meta.disable_unredirect_for_screen(screen);
-
         this.space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
 
         this._startWindow = this.space.selectedWindow;
@@ -208,6 +212,7 @@ var Navigator = class Navigator {
 
         TopBar.fixTopBar();
 
+        Scratch.animateWindows();
         this.space.startAnimate();
     }
 
@@ -230,20 +235,24 @@ var Navigator = class Navigator {
         this.was_accepted = true;
     }
 
-    finish() {
+    finish(space, focus) {
         if (grab)
             return;
         this.accept();
-        this.destroy();
+        this.destroy(space, focus);
     }
 
-    destroy() {
+    destroy(space, focus) {
         this.minimaps.forEach(m => {
             if (typeof(m) === 'number')
                 Mainloop.source_remove(m);
             else
                 m.destroy();
         });
+
+        if (Tiling.inGrab && !Tiling.inGrab.dnd) {
+            Tiling.inGrab.beginDnD()
+        }
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
@@ -253,8 +262,9 @@ var Navigator = class Navigator {
 
         if (force) {
             this.space.monitor.clickOverlay.hide();
-            this.space = Tiling.spaces.selectedSpace;
         }
+
+        this.space = space || Tiling.spaces.selectedSpace;
 
         let from = this.from;
         let selected = this.space.selectedWindow;
@@ -267,46 +277,64 @@ var Navigator = class Navigator {
                 selected = display.focus_window;
         }
 
-        if (this.monitor !== this.space.monitor) {
-            this.space.setMonitor(this.monitor, true);
-        }
-
+        let visible = [];
         for (let monitor of Main.layoutManager.monitors) {
-            if (monitor === this.monitor || !monitor.clickOverlay)
+            visible.push( Tiling.spaces.monitors.get(monitor));
+            if (monitor === this.monitor)
                 continue;
             monitor.clickOverlay.activate();
         }
 
-        if (this.space === from && force) {
+        if (!visible.includes(space) && this.monitor !== this.space.monitor) {
+            this.space.setMonitor(this.monitor, true);
+        }
+
+        if (this.space === from) {
             // Animate the selected space into full view - normally this
             // happens on workspace switch, but activating the same workspace
             // again doesn't trigger a switch signal
-            Tiling.spaces.animateToSpace(this.space);
+            if (force) {
+                const workspaceId = this.space.workspace.index();
+                Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId);
+            }
+        } else {
+            if (Tiling.inGrab && Tiling.inGrab.window) {
+                this.space.workspace.activate_with_focus(Tiling.inGrab.window, global.get_current_time());
+            } else {
+                this.space.workspace.activate(global.get_current_time());
+            }
         }
 
         selected = this.space.indexOf(selected) !== -1 ? selected :
                    this.space.selectedWindow;
-        if (selected &&
-            (!force ||
-             !(display.focus_window && display.focus_window.is_on_all_workspaces())) ) {
 
-            let hasFocus = selected.has_focus();
+        let curFocus = display.focus_window;
+        if (force && curFocus && curFocus.is_on_all_workspaces())
+            selected = curFocus;
+
+        if (focus)
+            selected = focus;
+
+        if (selected && !Tiling.inGrab) {
+            let hasFocus = selected && selected.has_focus();
             selected.foreach_transient(mw => hasFocus = mw.has_focus() || hasFocus);
-            if (!hasFocus) {
-                Main.activateWindow(selected);
+            if (hasFocus) {
+                Tiling.focus_handler(selected)
             } else {
-                // Typically on cancel - the `focus` signal won't run
-                // automatically, so we run it manually
-                Tiling.focus_handler(selected);
+                Main.activateWindow(selected);
             }
-            debug('#preview', 'Finish', selected.title);
-        } else {
-            this.space.workspace.activate(global.get_current_time());
         }
+        if (selected && Tiling.inGrab && !this.was_accepted) {
+            Tiling.focus_handler(selected)
+        }
+
+        if (!Tiling.inGrab)
+            Scratch.showWindows();
 
         TopBar.fixTopBar();
 
         Main.wm._blockAnimations = this._block;
+        this.space.moveDone();
 
         this.emit('destroy', this.was_accepted);
         navigator = false;

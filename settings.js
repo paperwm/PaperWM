@@ -37,6 +37,9 @@ var prefs = {};
  'cycle-width-steps', 'cycle-height-steps', 'topbar-follow-focus']
     .forEach((k) => setState(null, k));
 
+prefs.__defineGetter__("minimum_margin", function() { return Math.min(15, this.horizontal_margin) });
+
+
 function setVerticalMargin() {
     let vMargin = settings.get_int('vertical-margin');
     let gap = settings.get_int('window-gap');
@@ -215,6 +218,7 @@ function keystrToKeycombo(keystr) {
         aboveTab = true;
     }
     let [key, mask] = Gtk.accelerator_parse(keystr);
+
     if (aboveTab)
         key = META_KEY_ABOVE_TAB;
     return `${key}|${mask}`; // Since js doesn't have a mapable tuple type
@@ -229,6 +233,17 @@ function keycomboToKeystr(combo) {
     if (mutterKey === META_KEY_ABOVE_TAB)
         keystr = keystr.replace(/a$/, 'Above_Tab');
     return keystr;
+}
+
+function keycomboToKeylab(combo) {
+    let [mutterKey, mods] = combo.split('|').map(s => Number.parseInt(s));
+    let key = mutterKey;
+    if (mutterKey === META_KEY_ABOVE_TAB)
+        key = 97; // a
+    let keylab = Gtk.accelerator_get_label(key, mods);
+    if (mutterKey === META_KEY_ABOVE_TAB)
+        keylab = keylab.replace(/a$/, 'Above_Tab');
+    return keylab;
 }
 
 function generateKeycomboMap(settings) {

@@ -10,6 +10,9 @@ var workspaceManager = global.workspace_manager;
 var display = global.display;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
+if (version[0] !== 3) {
+    version = [3, ...version]
+}
 
 var registerClass;
 {
@@ -80,6 +83,16 @@ function ppEnumValue(value, genum) {
     }
 }
 
+function ppModiferState(state) {
+    let mods = [];
+    for (let [mod, mask] of Object.entries(imports.gi.Clutter.ModifierType)) {
+        if (mask & state) {
+            mods.push(mod);
+        }
+    }
+    return mods.join(", ")
+}
+
 /**
  * Look up the function by name at call time. This makes it convenient to
  * redefine the function without re-registering all signal handler, keybindings,
@@ -110,6 +123,25 @@ function findNext(cur, values, slack=0) {
         }
     }
     return values[0]; // cycle
+}
+
+function arrayEqual(a, b) {
+    if (a === b)
+        return true;
+    if (!a || !b)
+        return false;
+    if (a.length !== b.length)
+        return false;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i])
+            return false;
+    }
+    return true;
+}
+
+/** Is the floating point numbers equal enough */
+function eq(a, b, epsilon=0.00000001) {
+    return Math.abs(a-b) < epsilon;
 }
 
 function swap(array, i, j) {
@@ -209,12 +241,19 @@ function toggleCloneMarks() {
     // NB: doesn't clean up signal on disable
 
     function markCloneOf(metaWindow) {
-        if (metaWindow.clone)
+        if (metaWindow.clone) {
             metaWindow.clone.opacity = 190;
+            metaWindow.clone.__oldOpacity = 190;
+
+            metaWindow.clone.background_color = imports.gi.Clutter.color_from_string("red")[1];
+        }
     }
     function unmarkCloneOf(metaWindow) {
-        if (metaWindow.clone)
+        if (metaWindow.clone) {
             metaWindow.clone.opacity = 255;
+            metaWindow.clone.__oldOpacity = 255;
+            metaWindow.clone.background_color = null;
+        }
     }
 
     let windows = display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
@@ -260,6 +299,14 @@ function warpPointer(x, y) {
     }
 }
 
+/**
+ * Return current modifiers state (or'ed Clutter.ModifierType.*)
+ */
+function getModiferState() {
+    let [x, y, mods] = global.get_pointer();
+    return mods;
+}
+
 function monitorOfPoint(x, y) {
     // get_monitor_index_for_rect "helpfully" returns the primary monitor index for out of bounds rects..
     const Main = imports.ui.main;
@@ -274,6 +321,92 @@ function monitorOfPoint(x, y) {
     return null;
 }
 
+
+function indent(level, str) {
+    let blank = ""
+    for (let i = 0; i < level; i++) {
+        blank += "  "
+    }
+    return blank + str
+}
+
+
+function mkFmt({nameOnly}={nameOnly: false}) {
+    function defaultFmt(actor, prefix="") {
+        const fmtNum = num => num.toFixed(0);
+        let extra = [
+            `${actor.get_position().map(fmtNum)}`,
+            `${actor.get_size().map(fmtNum)}`,
+        ];
+        let metaWindow = actor.meta_window || actor.metaWindow;
+        if (metaWindow) {
+            metaWindow = `(mw: ${metaWindow.title})`;
+            extra.push(metaWindow);
+        }
+        const extraStr = extra.join(" | ");
+        let actorId = "";
+        if (nameOnly) {
+            actorId = actor.name ? actor.name : (prefix.length == 0 ? "" : "#")
+        } else {
+            actorId = actor.toString();
+        }
+        actorId = prefix+actorId
+        let spacing = actorId.length > 0 ? " " : ""
+        return `*${spacing}${actorId} ${extraStr}`;
+    }
+    return defaultFmt;
+}
+
+function printActorTree(node, fmt=mkFmt(), options={}, state=null) {
+    state = Object.assign({}, (state || {level: 0, actorPrefix: ""}))
+    const defaultOptions = {
+        limit: 9999,
+        collapseChains: true,
+    };
+    options = Object.assign(defaultOptions, options)
+
+    if (state.level > options.limit) {
+        return;
+    }
+    let collapse = false;
+    if (options.collapseChains) {
+        /*
+          a
+            b
+              s
+              t
+            c 30,10
+              u
+          ->
+          a.b.s
+          a.b.t 
+          a.b.c ...
+            u
+            
+            
+        */
+        if (node.get_children().length > 0) {
+            if (node.x === 0 && node.y === 0) {
+                state.actorPrefix += (node.name ? node.name : "#") + "."
+                // print("#### ", state.actorPrefix)
+                collapse = true
+            } else {
+                collapse = false
+            }
+        } else {
+            collapse = false
+        }
+    }
+    if (!collapse) {
+        print(indent(state.level, fmt(node, state.actorPrefix)));
+        state.actorPrefix = "";
+        state.level += 1;
+    }
+
+    for (let child of node.get_children()) {
+        printActorTree(child, fmt, options, state)
+    }
+}
 
 class Signals extends Map {
     static get [Symbol.species]() { return Map; }
@@ -346,3 +479,73 @@ var tweener = {
         return actor.get_transition('x') || actor.get_transition('y') || actor.get_transition('scale-x') || actor.get_transition('scale-x');
     }
 };
+
+function isMetaWindow(obj) {
+    return obj && obj.window_type && obj.get_compositor_private;
+}
+
+function trace(topic, ...args) {
+    if (!topic.match(/.*/)) {
+        return;
+    }
+
+    if (isMetaWindow(args[0])) {
+        windowTrace(topic, ...args);
+    } else {
+        let trace = shortTrace(1).join(" < ");
+        let extraInfo = args.length > 0 ? "\n\t" + args.map(x => x.toString()).join("\n\t") : ""
+        log(topic, trace, extraInfo);
+    }
+}
+
+let existingWindows = new Set();
+
+function windowTrace(topic, metaWindow, ...rest) {
+    if (existingWindows.has(metaWindow)) {
+        return;
+    }
+
+    log(topic, infoMetaWindow(metaWindow).join("\n"), ...rest.join("\n"));
+}
+
+function infoMetaWindow(metaWindow) {
+    let id = metaWindow.toString().split(" ")[4];
+    let trace = shortTrace(3).join(" < ");
+    let info = [
+        `(win: ${id}) ${trace}`,
+        `Title: ${metaWindow.title}`,
+    ];
+    if (!metaWindow.window_type === Meta.WindowType.NORMAL) {
+        info.push(`Type: ${ppEnumValue(metaWindow.window_type, Meta.WindowType)}`);
+    }
+    if (!metaWindow.get_compositor_private()) {
+        info.push(`- no actor`);
+    }
+    if (metaWindow.is_on_all_workspaces()) {
+        info.push(`- is_on_all_workspaces`);
+    }
+    if (metaWindow.above) {
+        info.push(`- above`);
+    }
+    if (Extension.imports.scratch.isScratchWindow(metaWindow)) {
+        info.push(`- scratch`);
+    }
+    return info;
+}
+
+function shortTrace(skip=0) {
+    let trace = new Error().stack.split("\n").map(s => {
+        let words = s.split(/[@/]/)
+        let cols = s.split(":")
+        let ln = parseInt(cols[2])
+        if (ln === null)
+            ln = "?"
+
+        return [words[0], ln]
+    })
+    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : f+":"+ln);
+    return trace.slice(skip+1, skip+5);
+}
+
+
+// Meta.remove_verbose_topic(Meta.DebugTopic.FOCUS)

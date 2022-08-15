@@ -84,9 +84,10 @@ function swapNeighbours(binding = "<Super>y") {
         let space = Tiling.spaces.spaceOfWindow(mw)
         let i = space.indexOf(mw);
         if (space[i+1]) {
-            space.swap(Meta.MotionDirection.RIGHT, space[i+1][0])
+            space.swap(Meta.MotionDirection.RIGHT, space[i+1][0]);
+            space[i+1].map(mw => mw.clone.raise_top());
         }
-    }, {activeInNavigator: true})
+    }, {activeInNavigator: true});
 }
 
 /**
@@ -145,6 +146,7 @@ function cycleWorkspaceSettings(binding = "<Super>q") {
         mw => Tiling.cycleWorkspaceSettings(1), { activeInNavigator: true }
     );
 }
+
 
 function showNavigator(binding = "<Super>j") {
     Keybindings.bindkey(binding, "show-minimap", () => null, { opensMinimap: true })
@@ -227,34 +229,8 @@ function adjustWidth(incBinding="<Super>plus", decBinding="<Super>minus", increm
     Keybindings.bindkey(decBinding, "dec-width", adjuster(-increment));
 }
 
-function tileInto(leftBinding="<Super>less", rightBinding="<Super><Shift>less") {
-    // less: '<'
-    let Tiling = Extension.imports.tiling;
-
-    const tileIntoDirection = (dir=-1) => (metaWindow) => {
-        let space = Tiling.spaces.spaceOfWindow(metaWindow);
-        let jFrom = space.indexOf(metaWindow);
-        let jTo = jFrom + dir;
-        if (jTo < 0 || jTo >= space.length)
-            return;
-
-        space[jFrom].splice(space.rowOf(metaWindow), 1);
-        space[jTo].push(metaWindow);
-
-        if (space[jFrom].length === 0) {
-            space.splice(jFrom, 1);
-        }
-        space.layout(true, {
-            customAllocators: { [space.indexOf(metaWindow)]: Tiling.allocateEqualHeight }
-        });
-        space.emit("full-layout");
-    }
-
-    let options = { activeInNavigator: true };
-    if (leftBinding)
-        Keybindings.bindkey(leftBinding, "tile-into-left-column", tileIntoDirection(-1), options);
-    if (rightBinding)
-        Keybindings.bindkey(rightBinding, "tile-into-right-column", tileIntoDirection(1), options);
+function tileInto(leftBinding="<Super><Shift>less", rightBinding="<Super><Shift>less") {
+    Extension.imports.examples.layouts.bindTileInto(leftBinding, rightBinding);
 }
 
 function stackUnstack(basebinding = '<Super><Alt><Ctrl>') {

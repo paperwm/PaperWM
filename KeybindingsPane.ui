@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <template class="KeybindingsPane" parent="GtkBox">
+    <property name="focusable">False</property>
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkSearchEntry" id="search">
+        <property name="activates-default">False</property>
+        <property name="halign">center</property>
+        <property name="margin-top">12</property>
+        <signal name="search-changed"
+                handler="_onSearchChanged" />
+      </object>
+    </child>
+    <child>
+      <object class="GtkScrolledWindow">
+        <property name="hscrollbar_policy">never</property>
+        <child>
+          <object class="GtkViewport">
+            <property name="focusable">False</property>
+            <property name="vexpand">True</property>
+            <child>
+              <object class="GtkListBox" id="listbox">
+                <property name="hexpand">True</property>
+                <property name="margin_start">36</property>
+                <property name="margin_end">36</property>
+                <property name="margin_top">12</property>
+                <property name="margin_bottom">36</property>
+                <property name="width_request">480</property>
+                <style>
+                  <class name="keybindings" />
+                  <class name="frame" />
+                </style>
+                <signal name="row-activated"
+                        handler="_onRowActivated" />
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

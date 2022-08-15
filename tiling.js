@@ -42,13 +42,9 @@ var backgroundSettings = new Gio.Settings({
 var borderWidth = 8;
 // Mutter prevints windows from being placed further off the screen than 75 pixels.
 var stack_margin = 75;
-// Minimum margin
-var minimumMargin = () => Math.min(15, prefs.horizontal_margin);
 
 // Some features use this to determine if to sizes is considered equal. ie. `abs(w1 - w2) < sizeSlack`
 var sizeSlack = 30;
-
-var panelBox = Main.layoutManager.panelBox;
 
 var PreviewMode = {NONE: 0, STACK: 1, SEQUENTIAL: 2};
 var inPreview = PreviewMode.NONE;
@@ -123,17 +119,17 @@ class Space extends Array {
         this._floating = [];
         this._populated = false;
 
-        let clip = new Clutter.Actor();
+        let clip = new Clutter.Actor({name: "clip"});
         this.clip = clip;
-        let actor = new Clutter.Actor();
+        let actor = new Clutter.Actor({name: "space-actor"});
 
         this._visible = true;
         this.hide(); // We keep the space actor hidden when inactive due to performance
 
         this.actor = actor;
-        let cloneClip = new Clutter.Actor();
+        let cloneClip = new Clutter.Actor({name: "clone-clip"});
         this.cloneClip = cloneClip;
-        let cloneContainer = new St.Widget();
+        let cloneContainer = new St.Widget({name: "clone-container"});
         this.cloneContainer = cloneContainer;
 
         // Pick up the same css as the top bar label
@@ -166,7 +162,7 @@ class Space extends Array {
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
 
-        this.border = new St.Widget();
+        this.border = new St.Widget({name: "border"});
         this.actor.add_actor(this.border);
         this.border.hide();
 
@@ -262,11 +258,8 @@ class Space extends Array {
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
         workArea.x -= this.monitor.x;
         workArea.y -= this.monitor.y;
-        let topBarAdjustment = this.showTopBar && (prefs.topbar_follow_focus || this.monitor === Main.layoutManager.primaryMonitor) ?
-            panelBox.height : 0;
-        workArea.height = (workArea.y + workArea.height -
-                               topBarAdjustment - prefs.vertical_margin - prefs.vertical_margin_bottom);
-        workArea.y = topBarAdjustment + prefs.vertical_margin;
+        workArea.height -= prefs.vertical_margin + prefs.vertical_margin_bottom;
+        workArea.y += prefs.vertical_margin;
         return workArea;
     }
 
@@ -386,10 +379,14 @@ class Space extends Array {
             return;
         if (this._inLayout)
             return;
+        print("LAYOUT")
         this._inLayout = true;
         this.startAnimate();
 
         let time = animate ? prefs.animation_time : 0;
+        if (window.instant) {
+            time = 0;
+        }
         let gap = prefs.window_gap;
         let x = 0;
         let selectedIndex = this.selectedIndex();
@@ -418,7 +415,7 @@ class Space extends Array {
             } else {
                 targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
             }
-            targetWidth = Math.min(targetWidth, workArea.width - 2*minimumMargin());
+            targetWidth = Math.min(targetWidth, workArea.width - 2*prefs.minimum_margin);
 
             let resultingWidth, relayout;
             let allocator = options.customAllocators && options.customAllocators[i];
@@ -492,18 +489,41 @@ class Space extends Array {
         });
     }
 
-    isVisible(metaWindow) {
+    // Space.prototype.isVisible = function
+    isVisible(metaWindow, margin=0) {
         let clone = metaWindow.clone;
         let x = clone.x + this.cloneContainer.x;
         let workArea = this.workArea();
         let min = workArea.x;
 
-        if (x + clone.width < min
-            || x > min + workArea.width) {
+        if (x - margin + clone.width < min
+            || x + margin > min + workArea.width) {
             return false;
         } else {
             return true;
         }
+    }
+
+    isFullyVisible(metaWindow) {
+        let clone = metaWindow.clone;
+        let x = clone.targetX + this.targetX;
+        let workArea = this.workArea();
+        let min = workArea.x;
+
+        return min <= x && x + clone.width < min + workArea.width;
+    }
+
+    visibleRatio(metaWindow) {
+
+        let clone = metaWindow.clone;
+        let x = clone.targetX + this.targetX;
+        let workArea = this.workArea();
+        let min = workArea.x;
+
+        let left = min - x
+        let right = x + clone.width
+
+        return min <= x && x + clone.width < min + workArea.width;
     }
 
     isPlaceable(metaWindow) {
@@ -541,7 +561,7 @@ class Space extends Array {
 
     isWindowAtPoint(metaWindow, x, y) {
         let clone = metaWindow.clone;
-        let wX = clone.targetX + this.cloneContainer.x;
+        let wX = clone.x + this.cloneContainer.x;
         return x >= wX && x <= wX + clone.width &&
             y >= clone.y && y <= clone.y + clone.height;
     }
@@ -623,6 +643,8 @@ class Space extends Array {
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
         let clone = metaWindow.clone;
+        if (clone.get_parent() !== this.cloneContainer)
+            utils.trace('wrong parent', metaWindow);
         this.cloneContainer.remove_actor(clone);
         // Don't destroy the selection highlight widget
         if (clone.first_child.name === 'selection')
@@ -728,6 +750,9 @@ class Space extends Array {
     switch(direction) {
         let space = this;
         let index = space.selectedIndex();
+        if (index === -1) {
+            return;
+        }
         let row = space[index].indexOf(space.selectedWindow);
         switch (direction) {
         case Meta.MotionDirection.RIGHT:
@@ -786,12 +811,23 @@ class Space extends Array {
         return column.indexOf(metaWindow);
     }
 
+    globalToViewport(gx, gy) {
+        let [ok, vx, vy] = this.actor.transform_stage_point(gx, gy);
+        return [Math.round(vx), Math.round(vy)];
+    }
+
     /** Transform global coordinates to scroll cooridinates (cloneContainer relative) */
-    globalToScroll(gx, gy, useTarget=false) {
-        // NB: must use this.cloneContainer.transform_stage_point(gx, gy) if stuff is not simply translated
-        let x = gx - this.monitor.x - (useTarget ? this.targetX : this.cloneContainer.x);
-        let y = gy - this.monitor.y - this.cloneContainer.y;
-        return [x, y];
+    globalToScroll(gx, gy, {useTarget = false} = {}) {
+        // Use the smart transform on the actor, as that's the one we scale etc.
+        // We can then use straight translation on the scroll which makes it possible to use target instead if wanted.
+        let [vx, vy] = this.globalToViewport(gx, gy);
+        let sx = vx - (useTarget ? this.targetX : this.cloneContainer.x);
+        let sy = vy - this.cloneContainer.y;
+        return [Math.round(sx), Math.round(sy)];
+    }
+
+    viewportToScroll(vx, vy=0) {
+        return [vx - this.cloneContainer.x, vy - this.cloneContainer.y];
     }
 
     moveDone() {
@@ -800,7 +836,7 @@ class Space extends Array {
             Navigator.navigating || inPreview ||
             Main.overview.visible ||
             // Block when we're carrying a window in dnd
-            (inGrab && inGrab.dnd && inGrab.window)
+            (inGrab && inGrab.window)
            ) {
             return;
         }
@@ -1053,6 +1089,7 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         }
         this.background = new Meta.BackgroundActor(
             Object.assign({
+                name: "background",
                 monitor: monitor.index,
                 reactive: true // Disable the background menu
             }, backgroundParams)
@@ -1070,16 +1107,55 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         this.signals.connect(
             this.background, 'button-press-event',
             (actor, event) => {
-                let [aX, aY, mask] = global.get_pointer();
-                let [ok, x, y] =
-                    this.actor.transform_stage_point(aX, aY);
+                if (inGrab) {
+                    return;
+                }
+                let [gx, gy, $] = global.get_pointer();
+                let [ok, x, y] = this.actor.transform_stage_point(gx, gy);
                 let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
-                let nav = Navigator.getNavigator();
                 if (windowAtPoint) {
                     ensureViewport(windowAtPoint, this);
+                    inGrab = new Extension.imports.grab.MoveGrab(windowAtPoint, Meta.GrabOp.MOVING, this);
+                    inGrab.begin();
+                } else if (inPreview) {
+                    spaces.selectedSpace = this;
+                    Navigator.getNavigator().finish();
                 }
-                spaces.selectedSpace = this;
-                nav.finish();
+            });
+
+        this.signals.connect(
+            this.background, 'scroll-event',
+            (actor, event) => {
+                if (!inGrab && !Navigator.navigating)
+                    return;
+                let dir = event.get_scroll_direction();
+                if (dir === Clutter.ScrollDirection.SMOOTH)
+                    return;
+                // print(dir, Clutter.ScrollDirection.SMOOTH, Clutter.ScrollDirection.UP, Clutter.ScrollDirection.DOWN)
+                let dx
+                log(utils.ppEnumValue(dir, Clutter.ScrollDirection))
+                // let dx = dir === Clutter.ScrollDirection.DOWN ? -1 : 1
+                // let [dx, dy] = event.get_scroll_delta()
+
+                let [gx, gy] = event.get_coords();
+                if (!gx) {
+                    print("Noooo");
+                    return;
+                }
+                print(dx, gx, gy);
+
+                switch (dir) {
+                    case Clutter.ScrollDirection.LEFT:
+                    case Clutter.ScrollDirection.UP:
+                        this.switchLeft();
+                        break;
+                    case Clutter.ScrollDirection.RIGHT:
+                    case Clutter.ScrollDirection.DOWN:
+                        this.switchRight();
+                        break;
+                }
+                // spaces.selectedSpace = this;
+                // nav.finish();
             });
 
         this.signals.connect(
@@ -1310,9 +1386,9 @@ class Spaces extends Map {
         this.signals.connect(display, 'window-created',
                         this.window_created.bind(this));
         this.signals.connect(display, 'grab-op-begin',
-                        (display, d, mw, type) => grabBegin(mw, type));
+                        (display, mw, type) => grabBegin(mw, type));
         this.signals.connect(display, 'grab-op-end',
-                        (display, d, mw, type) => grabEnd(mw, type));
+                        (display, mw, type) => grabEnd(mw, type));
 
         this.signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChanged.bind(this));
 
@@ -1545,10 +1621,14 @@ class Spaces extends Map {
         let monitor = Scratch.focusMonitor();
         let currentSpace = this.monitors.get(monitor);
         let i = display.get_monitor_neighbor_index(monitor.index, direction);
+        print("switch", utils.ppEnumValue(direction, Meta.DisplayDirection), i, monitor.index)
+        print("currentSpace", currentSpace.name)
+        print("focus window", global.display.focus_window)
         if (i === -1)
             return;
         let newMonitor = Main.layoutManager.monitors[i];
         let space = this.monitors.get(newMonitor);
+        print("nextSpace", space.name)
 
         if (move && focus) {
             let metaWindow = focus.get_transient_for() || focus;
@@ -1583,6 +1663,20 @@ class Spaces extends Map {
         let from = workspaceManager.get_workspace_by_index(fromIndex);
         let toSpace = this.spaceOf(to);
         let fromSpace = this.spaceOf(from);
+
+        print("switchWorkspace", fromSpace.monitor.index, toSpace.monitor.index)
+        if (inGrab && inGrab.window) {
+            inGrab.window.change_workspace(toSpace.workspace);
+        }
+
+        for (let metaWindow of toSpace.getWindows()) {
+            // Make sure all windows belong to the correct workspace.
+            // Note: The 'switch-workspace' signal (this method) runs before mutter decides on focus window.
+            // This simplifies other code moving windows between workspaces.
+            // Eg.: The DnD-window defer changing its workspace until the workspace actually is activated.
+            //      This ensures the DnD window keep focus the whole time.
+            metaWindow.change_workspace(toSpace.workspace);
+        }
 
         if (inPreview === PreviewMode.NONE && toSpace.monitor === fromSpace.monitor) {
             // Only start an animation if we're moving between workspaces on the
@@ -2093,7 +2187,7 @@ class Spaces extends Map {
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
 
-        if (utils.version[1] < 34) {
+        if (utils.version[1] < 34 || utils.version[1] >= 40) {
             animateWindow(metaWindow);
         } else {
             /* HACK 3.34: Hidden actors aren't allocated if hidden, use opacity
@@ -2200,6 +2294,9 @@ function destroyHandler(actor) {
 function resizeHandler(metaWindow) {
     if (inGrab && inGrab.window === metaWindow)
         return;
+
+    print("resize-handler-width", metaWindow.get_frame_rect().width)
+    // print("RESIZE\n", GLib.on_error_stack_trace(GLib.get_prgname()));
 
     let f = metaWindow.get_frame_rect();
     let needLayout = false;
@@ -2548,10 +2645,10 @@ function ensuredX(meta_window, space) {
     } else if (x + frame.width === max) {
         // When opening new windows at the end, in the background, we want to
         // show some minimup margin
-        x = max - minimumMargin() - frame.width;
+        x = max - prefs.minimum_margin - frame.width;
     } else if (x === min) {
         // Same for the start (though the case isn't as common)
-        x = min + minimumMargin();
+        x = min + prefs.minimum_margin;
     }
 
     return x;
@@ -2618,7 +2715,7 @@ function updateSelection(space, metaWindow) {
  * Move the column containing @meta_window to x, y and propagate the change
  * in @space. Coordinates are relative to monitor and y is optional.
  */
-function move_to(space, metaWindow, { x, y, force }) {
+function move_to(space, metaWindow, { x, y, force, instant }) {
     if (space.indexOf(metaWindow) === -1)
         return;
 
@@ -2672,10 +2769,13 @@ function grabBegin(metaWindow, type) {
         case Meta.GrabOp.MOVING:
             inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
 
-            if (!inGrab.initialSpace || inGrab.initialSpace.indexOf(metaWindow) === -1)
-                return;
+            if (utils.getModiferState() & Clutter.ModifierType.CONTROL_MASK) {
+                inGrab.begin();
+                inGrab.beginDnD();
+            } else if (inGrab.initialSpace && inGrab.initialSpace.indexOf(metaWindow) > -1) {
+                inGrab.begin();
+            }
 
-            inGrab.begin();
             break;
         case Meta.GrabOp.RESIZING_NW:
         case Meta.GrabOp.RESIZING_N:
@@ -2700,7 +2800,7 @@ function grabBegin(metaWindow, type) {
 }
 
 function grabEnd(metaWindow, type) {
-    if (!inGrab)
+    if (!inGrab || inGrab.dnd || inGrab.grabbed)
         return;
 
     inGrab.end();
@@ -2849,7 +2949,7 @@ function toggleMaximizeHorizontally(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
-    let reqWidth = workArea.width - minimumMargin()*2;
+    let reqWidth = workArea.width - prefs.minimum_margin*2;
 
     // Some windows only resize in increments > 1px so we can't rely on a precise width
     // Hopefully this heuristic is good enough
@@ -2863,9 +2963,9 @@ function toggleMaximizeHorizontally(metaWindow) {
 
         metaWindow.unmaximizedRect = null;
     } else {
-        let x = workArea.x + space.monitor.x + minimumMargin();
+        let x = workArea.x + space.monitor.x + prefs.minimum_margin;
         metaWindow.unmaximizedRect = frame;
-        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - minimumMargin()*2, frame.height);
+        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - prefs.minimum_margin*2, frame.height);
     }
 }
 
@@ -2972,9 +3072,9 @@ function cycleWindowWidth(metaWindow) {
     let targetX = frame.x;
 
     if (Scratch.isScratchWindow(metaWindow)) {
-        if (targetX+targetWidth > workArea.x + workArea.width - minimumMargin()) {
+        if (targetX+targetWidth > workArea.x + workArea.width - prefs.minimum_margin) {
             // Move the window so it remains fully visible
-            targetX = workArea.x + workArea.width - minimumMargin() - targetWidth;
+            targetX = workArea.x + workArea.width - prefs.minimum_margin - targetWidth;
         }
     }
 
@@ -3178,6 +3278,9 @@ function slurp(metaWindow) {
 }
 
 function barf(metaWindow) {
+    if (!metaWindow)
+        return;
+
     let space = spaces.spaceOfWindow(metaWindow);
     let index = space.indexOf(metaWindow);
     if (index === -1)
