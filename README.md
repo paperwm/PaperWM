@@ -4,7 +4,7 @@
 
 PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension providing scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
-Supports Gnome Shell from 3.28 to 3.38 on X11 and wayland.
+Supports Gnome Shell from 3.40 to 3.41 on X11 and wayland. An older version supports Gnome Shell from 3.28 to 3.38.
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
@@ -27,7 +27,7 @@ To uninstall simply run `./uninstall.sh`.
 You'll by default follow the
 [develop](https://github.com/paperwm/PaperWM/tree/develop) branch. If you want a
 possibly more stable experience you can follow the releases by checking out the
-[master](https://github.com/paperwm/PaperWM/tree/master) branch.
+[master](https://github.com/paperwm/PaperWM/tree/master) branch. **[Version 38.2](https://github.com/paperwm/PaperWM/releases/tag/38.2) is the latest which supports Gnome Shell versions less than 40.**
 
 Cloning the repo directly into `$XDG_DATA_HOME` also works (you can then run
 `install.sh` to enable PaperWM):
