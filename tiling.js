@@ -2238,6 +2238,8 @@ function registerWindow(metaWindow) {
         // Should no longer be possible, but leave a trace just to be sure
         utils.warn("window already registered", metaWindow.title);
         utils.print_stacktrace();
+        // Can now happen when setting session-modes to "unlock-dialog"
+        return false
     }
 
     let actor = metaWindow.get_compositor_private();
