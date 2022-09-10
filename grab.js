@@ -52,7 +52,8 @@ var MoveGrab = class MoveGrab {
         this.grabbed = true
         global.display.end_grab_op(global.get_current_time());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
-
+        this.dispatcher = new Navigator.getActionDispatcher(Clutter.GrabState.POINTER)
+        this.actor = this.dispatcher.actor
 
         for (let [monitor, $] of Tiling.spaces.monitors) {
             monitor.clickOverlay.deactivate();
@@ -87,8 +88,8 @@ var MoveGrab = class MoveGrab {
         !center && clone.set_pivot_point(px, py);
         center && clone.set_pivot_point(0, 0);
 
-        this.signals.connect(global.stage, "button-release-event", this.end.bind(this));
-        this.signals.connect(global.stage, "motion-event", this.motion.bind(this));
+        this.signals.connect(this.actor, "button-release-event", this.end.bind(this));
+        this.signals.connect(this.actor, "motion-event", this.motion.bind(this));
         this.signals.connect(
             global.screen || global.display, "window-entered-monitor",
             this.beginDnD.bind(this)
@@ -429,6 +430,7 @@ var MoveGrab = class MoveGrab {
                 params.onStopped = () => { actor.set_pivot_point(0, 0) };
                 Tweener.addTween(actor, params);
             }
+            Navigator.getNavigator().accept();
         } else if (this.initialSpace.indexOf(metaWindow) !== -1){
             let space = this.initialSpace;
             destSpace = space;
@@ -453,15 +455,15 @@ var MoveGrab = class MoveGrab {
 
         this.initialSpace.layout();
 
-        // let monitor = monitorAtPoint(gx, gy);
-        // let space = Tiling.spaces.monitors.get(monitor);
-
         // // Make sure the window is on the correct workspace.
         // // If the window is transient this will take care of its parent too.
         // metaWindow.change_workspace(space.workspace)
         // space.workspace.activate(global.get_current_time());
         Tiling.inGrab = false;
-        Navigator.getNavigator().finish(destSpace, metaWindow);
+        if (this.dispatcher) {
+            Navigator.dismissDispatcher(Clutter.GrabState.POINTER)
+        }
+
         global.display.set_cursor(Meta.Cursor.DEFAULT);
     }
 

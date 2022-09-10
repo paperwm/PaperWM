@@ -27,10 +27,13 @@ const stage = global.stage
 
 var Gdk = imports.gi.Gdk;
 
+/**@type {import('@gi-types/meta').WorkspaceManager} */
 var workspaceManager = global.workspace_manager;
 var display = global.display;
 
+/** @type {Spaces} */
 var spaces;
+
 
 var Minimap = Extension.imports.minimap;
 var Scratch = Extension.imports.scratch;
@@ -1127,6 +1130,7 @@ border-radius: ${borderWidth}px;
                 let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
                 if (windowAtPoint) {
                     ensureViewport(windowAtPoint, this);
+                    spaces.selectedSpace = this
                     inGrab = new Extension.imports.grab.MoveGrab(windowAtPoint, Meta.GrabOp.MOVING, this);
                     inGrab.begin();
                 } else if (inPreview) {

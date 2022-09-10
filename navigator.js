@@ -12,11 +12,11 @@ if (imports.misc.extensionUtils.extensions) {
     Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
 }
 
-var SwitcherPopup = imports.ui.switcherPopup;
 var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var GLib = imports.gi.GLib;
+/** @type {import('@gi-types/clutter10')} */
 var Clutter = imports.gi.Clutter;
 var Tweener = Extension.imports.utils.tweener;
 var Signals = imports.signals;
@@ -34,38 +34,72 @@ var prefs = Extension.imports.settings.prefs;
 var workspaceManager = global.workspace_manager;
 var display = global.display;
 
+const stage = global.stage
+
 var scale = 0.9;
 var navigating = false;
 var grab = null;
+
+
+/** @type {ActionDispatcher} */
+var dispatcher = null
+
+function dec2bin(dec){
+    return (dec >>> 0).toString(2);
+}
+
+const modMask = Clutter.ModifierType.SUPER_MASK |
+    Clutter.ModifierType.HYPER_MASK |
+    Clutter.ModifierType.META_MASK |
+    Clutter.ModifierType.CONTROL_MASK |
+    Clutter.ModifierType.MOD1_MASK |
+    // Clutter.ModifierType.MOD2_MASK | uhmm, for some reason this is triggered on keygrab
+    Clutter.ModifierType.MOD3_MASK |
+    Clutter.ModifierType.MOD4_MASK |
+    Clutter.ModifierType.MOD5_MASK
+
+function getModLock(mods) {
+    return mods & modMask
+}
 
 /**
    Handle catching keyevents and dispatching actions
 
    Adapted from SwitcherPopup, without any visual handling.
  */
-var ActionDispatcher = class {
-    constructor() {
-        this.actor = new Clutter.Actor();
-        this.actor.set_flags(Clutter.ActorFlags.REACTIVE);
-        Main.uiGroup.add_actor(this.actor);
+ class ActionDispatcher {
+    /**@type {import('@gi-types/clutter10').GrabState} */
+    mode
 
-        let grabHandle = Main.pushModal(this.actor);
+    constructor() {
+        debug("#dispatch", "created")
+        this.signals = new utils.Signals()
+        this.actor = Tiling.spaces.spaceContainer
+        this.actor.set_flags(Clutter.ActorFlags.REACTIVE);
+        this.navigator = getNavigator();
+
+        if (grab) {
+            debug("#dispatch", "already in grab")
+            return
+        }
+
+        // grab = stage.grab(this.actor)
+        grab = Main.pushModal(this.actor)
         // We expect at least a keyboard grab here
-        if ((grabHandle.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
+        if ((grab.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
             Main.popModal(grabHandle);
             log("Failed to grab modal");
             throw new Error('Could not grab modal')
         }
-        grab = grabHandle;
 
-        this.actor.connect('key-press-event', this._keyPressEvent.bind(this));
-        this.actor.connect('key-release-event', this._keyReleaseEvent.bind(this));
+        this.signals.connect(this.actor, 'key-press-event', this._keyPressEvent.bind(this))
+        this.signals.connect(this.actor, 'key-release-event', this._keyReleaseEvent.bind(this))
 
         this._noModsTimeoutId = 0;
     }
 
     show(backward, binding, mask) {
-        this._modifierMask = SwitcherPopup.primaryModifier(mask);
+        this._modifierMask = getModLock(mask);
         this.navigator = getNavigator();
         TopBar.fixTopBar();
         let actionId = Keybindings.idOf(binding);
@@ -102,16 +136,21 @@ var ActionDispatcher = class {
         if (this._noModsTimeoutId != 0)
             Mainloop.source_remove(this._noModsTimeoutId);
 
-        this._noModsTimeoutId = Mainloop.timeout_add(0,
-                                                     () => {
-                                                         this._finish(global.get_current_time());
-                                                         this._noModsTimeoutId = 0;
-                                                         return GLib.SOURCE_REMOVE;
-                                                     });
+        this._noModsTimeoutId = Mainloop.timeout_add(
+            0,
+            () => {
+                this._finish(global.get_current_time());
+                this._noModsTimeoutId = 0;
+                return GLib.SOURCE_REMOVE;
+            });
     }
 
     _keyPressEvent(actor, event) {
+        if (!this._modifierMask) {
+            this._modifierMask = getModLock(event.get_state())
+        }
         let keysym = event.get_key_symbol();
+
         let action = global.display.get_keybinding_action(event.get_key_code(), event.get_state());
 
         // Popping the modal on keypress doesn't work properly, as the release
@@ -120,8 +159,8 @@ var ActionDispatcher = class {
         // that we should destroy the dispactcher too
         // https://github.com/paperwm/PaperWM/issues/70
         if (keysym == Clutter.KEY_Escape) {
-            this.navigator.destroy();
             this._destroy = true;
+            getNavigator().destroy();
             return Clutter.EVENT_STOP;
         }
 
@@ -133,7 +172,7 @@ var ActionDispatcher = class {
     _keyReleaseEvent(actor, event) {
         let keysym = event.get_key_symbol();
         if (this._destroy) {
-            this.destroy();
+            // dismissDispatcher(Clutter.GrabState.KEYBOARD)
         }
 
         if (this._modifierMask) {
@@ -154,6 +193,7 @@ var ActionDispatcher = class {
         let action = Keybindings.byId(mutterActionId);
         let space = Tiling.spaces.selectedSpace;
         let metaWindow = space.selectedWindow;
+        const nav = getNavigator()
 
         if (action && action.options.activeInNavigator) {
             if (!metaWindow && (action.options.mutterFlags & Meta.KeyBindingFlags.PER_WINDOW)) {
@@ -161,7 +201,7 @@ var ActionDispatcher = class {
             }
 
             if (!Tiling.inGrab && action.options.opensMinimap) {
-                this.navigator._showMinimap(space);
+                nav._showMinimap(space);
             }
             action.handler(metaWindow, space, {navigator: this.navigator});
             if (space !== Tiling.spaces.selectedSpace) {
@@ -181,29 +221,43 @@ var ActionDispatcher = class {
     }
 
     _finish(timestamp) {
-        debug('#preview', 'finish');
-        this.navigator.accept();
-        this.destroy();
+        let nav = getNavigator();
+        getNavigator().accept();
+        dismissDispatcher(Clutter.GrabState.KEYBOARD)
+        !this._destroy && nav.destroy();
     }
 
     destroy() {
         if (this._noModsTimeoutId != 0)
             Mainloop.source_remove(this._noModsTimeoutId);
 
-        Main.popModal(grab);
-        grab = null;
-        this.actor.destroy();
-        this.actor = null;
+        try {
+            if (grab) {
+                Main.popModal(grab)
+                grab = null;
+            }
+        } catch(e) {
+            utils.debug("Failed to release grab: ", e)
+        }
 
+        this.actor.unset_flags(Clutter.ActorFlags.REACTIVE);
+        this.signals.destroy()
         // We have already destroyed the navigator
-        !this._destroy && this.navigator.destroy();
+        getNavigator().destroy();
+        dispatcher = null
     }
 }
 
+var index = 0
 var navigator;
-var Navigator = class Navigator {
+class NavigatorClass {
     constructor() {
+        debug("#navigator", "nav created")
         navigating = true;
+
+        this.was_accepted = false;
+        this.index = index++
+        
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
         // Meta.disable_unredirect_for_screen(screen);
@@ -294,12 +348,13 @@ var Navigator = class Navigator {
             this.space.setMonitor(this.monitor, true);
         }
 
+        const workspaceId = this.space.workspace.index();
+        const fromId = from.workspace.index();
         if (this.space === from) {
             // Animate the selected space into full view - normally this
             // happens on workspace switch, but activating the same workspace
             // again doesn't trigger a switch signal
             if (force) {
-                const workspaceId = this.space.workspace.index();
                 Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId);
             }
         } else {
@@ -345,6 +400,7 @@ var Navigator = class Navigator {
         navigator = false;
     }
 }
+var Navigator = NavigatorClass
 Signals.addSignalMethods(Navigator.prototype);
 
 function getNavigator() {
@@ -355,7 +411,37 @@ function getNavigator() {
     return navigator;
 }
 
+
+/**
+ * 
+ * @param {import('@gi-types/clutter10').GrabState} mode 
+ * @returns {ActionDispatcher}
+ */
+function getActionDispatcher(mode) {
+    if (dispatcher) {
+        dispatcher.mode |= mode
+        return dispatcher
+    }
+    dispatcher = new ActionDispatcher()
+    return getActionDispatcher(mode)
+}
+
+/**
+ * 
+ * @param {import('@gi-types/clutter10').GrabState} mode 
+ */
+function dismissDispatcher(mode) {
+    if (!dispatcher) {
+        return
+    }
+
+    dispatcher.mode ^= mode
+    if (dispatcher.mode === Clutter.GrabState.NONE) {
+        dispatcher.destroy()
+    }
+}
+
 function preview_navigate(meta_window, space, {display, screen, binding}) {
-    let tabPopup = new ActionDispatcher();
+    let tabPopup = getActionDispatcher(Clutter.GrabState.KEYBOARD);
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
