@@ -379,7 +379,6 @@ var Space = class Space extends Array {
             return;
         if (this._inLayout)
             return;
-        print("LAYOUT")
         this._inLayout = true;
         this.startAnimate();
 
@@ -1133,7 +1132,7 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
                     return;
                 // print(dir, Clutter.ScrollDirection.SMOOTH, Clutter.ScrollDirection.UP, Clutter.ScrollDirection.DOWN)
                 let dx
-                log(utils.ppEnumValue(dir, Clutter.ScrollDirection))
+                // log(utils.ppEnumValue(dir, Clutter.ScrollDirection))
                 // let dx = dir === Clutter.ScrollDirection.DOWN ? -1 : 1
                 // let [dx, dy] = event.get_scroll_delta()
 
@@ -1142,7 +1141,7 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
                     print("Noooo");
                     return;
                 }
-                print(dx, gx, gy);
+                // print(dx, gx, gy);
 
                 switch (dir) {
                     case Clutter.ScrollDirection.LEFT:
@@ -1664,7 +1663,6 @@ var Spaces = class Spaces extends Map {
         let toSpace = this.spaceOf(to);
         let fromSpace = this.spaceOf(from);
 
-        print("switchWorkspace", fromSpace.monitor.index, toSpace.monitor.index)
         if (inGrab && inGrab.window) {
             inGrab.window.change_workspace(toSpace.workspace);
         }
