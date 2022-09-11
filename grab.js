@@ -468,10 +468,10 @@ var MoveGrab = class MoveGrab {
     activateDndTarget(zone, first) {
         function mkZoneActor(props) {
             let actor = new St.Widget({style_class: "tile-preview"});
-            actor.x = props.x;
-            actor.y = props.y;
-            actor.width = props.width;
-            actor.height = props.height;
+            actor.x = props.x ?? 0
+            actor.y = props.y ?? 0;
+            actor.width = props.width ?? 0;
+            actor.height = props.height ?? 0;
             return actor;
         }
 
