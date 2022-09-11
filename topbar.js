@@ -519,7 +519,7 @@ function enable () {
         }
     }
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
-    menu.actor.show();
+    menu.show();
 
     // Force transparency
     panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
