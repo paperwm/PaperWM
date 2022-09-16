@@ -7,15 +7,23 @@ if (imports.misc.extensionUtils.extensions) {
 
 var GLib = imports.gi.GLib;
 var Tweener = Extension.imports.utils.tweener;
+/** @type {import("@gi-types/meta")} */
 var Meta = imports.gi.Meta;
+/** @type {import("@gi-types/clutter10")} */
 var Clutter = imports.gi.Clutter;
+/** @type {import("@gi-types/st")} */
 var St = imports.gi.St;
+/** @type {import("@gi-types/st")} */
 var Main = imports.ui.main;
+/** @type {import("@gi-types/shell")} */
 var Shell = imports.gi.Shell;
 var Gio = imports.gi.Gio;
 var Signals = imports.signals;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
+
+/** @type {import('@gi-types/meta').Stage} */
+const stage = global.stage
 
 var Gdk = imports.gi.Gdk;
 
@@ -109,6 +117,12 @@ function init() {
    To transform a stage point to space coordinates: `space.actor.transform_stage_point(aX, aY)`
  */
 var Space = class Space extends Array {
+    /** @type {import('@gi-types/clutter10').Actor} */
+    actor
+
+    /** @type {import('@gi-types/meta').BackgroundActor} */
+    background
+    
     constructor (workspace, container, doInit) {
         super(0);
         this.workspace = workspace;
@@ -2140,6 +2154,11 @@ var Spaces = class Spaces extends Map {
         return this.get(meta_window.get_workspace());
     };
 
+    /**
+     * 
+     * @param {import('@gi-types/meta').Workspace} workspace 
+     * @returns {Space}
+     */
     spaceOf(workspace) {
         return this.get(workspace);
     };
@@ -2174,6 +2193,11 @@ var Spaces = class Spaces extends Map {
         return out;
     }
 
+    /** 
+     * 
+     * @param display {}
+     * @param metaWindow {import("@gi-types/meta").Window}
+     */
     window_created(display, metaWindow, user_data) {
         if (!registerWindow(metaWindow)) {
             return;
