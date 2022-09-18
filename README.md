@@ -4,7 +4,7 @@
 
 PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension providing scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
-Supports Gnome Shell from 3.28 to 3.38 on X11 and wayland.
+Supports Gnome Shell from 3.28 to 42 on X11 and wayland.
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
@@ -12,7 +12,13 @@ We hang out on [zulip](https://paperwm.zulipchat.com).
 
 ## Installation
 
-Clone the repo and run the
+Clone the repo and check out the branch supporting the Gnome Shell version you're running.
+
+42: https://github.com/paperwm/PaperWM/tree/gnome-42
+40: https://github.com/paperwm/PaperWM/tree/gnome-40
+3.28-3.38: https://github.com/paperwm/PaperWM/releases/tag/38.2
+
+
 [`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script
 from the repository. The installer will create a link to the repo in
 `$XDG_DATA_HOME/gnome-shell/extensions/`. It will then ask if you want to apply
@@ -23,18 +29,6 @@ Settings](#recommended-gnome-shell-settings)) and lastly it will ask to enable P
 ```
 
 To uninstall simply run `./uninstall.sh`.
-
-You'll by default follow the
-[develop](https://github.com/paperwm/PaperWM/tree/develop) branch. If you want a
-possibly more stable experience you can follow the releases by checking out the
-[master](https://github.com/paperwm/PaperWM/tree/master) branch.
-
-Cloning the repo directly into `$XDG_DATA_HOME` also works (you can then run
-`install.sh` to enable PaperWM):
-```bash
-git clone 'https://github.com/paperwm/PaperWM.git' \
-    "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/paperwm@hedning:matrix.org"
-```
 
 Running the extension will automatically install a user config file as described in [Development & user configuration](#development--user-configuration).
 
