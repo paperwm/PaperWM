@@ -14,9 +14,9 @@ We hang out on [zulip](https://paperwm.zulipchat.com).
 
 Clone the repo and check out the branch supporting the Gnome Shell version you're running.
 
-42: https://github.com/paperwm/PaperWM/tree/gnome-42
-40: https://github.com/paperwm/PaperWM/tree/gnome-40
-3.28-3.38: https://github.com/paperwm/PaperWM/releases/tag/38.2
+- 42: https://github.com/paperwm/PaperWM/tree/gnome-42
+- 40: https://github.com/paperwm/PaperWM/tree/gnome-40
+- 3.28-3.38: https://github.com/paperwm/PaperWM/releases/tag/38.2
 
 
 [`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script
