@@ -645,7 +645,6 @@ function sortWindows(a, b) {
     let spaceB = Tiling.spaces.spaceOfWindow(bw)
     let ia = spaceA.indexOf(aw);
     let ib = spaceB.indexOf(bw);
-    print(aw.title, bw.title, spaceA.actor, spaceB.actor)
     if ((ia === -1 && ib === -1)) {
         return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
     }

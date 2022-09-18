@@ -526,7 +526,6 @@ var MoveGrab = class MoveGrab {
 
 var ResizeGrab = class ResizeGrab {
     constructor(metaWindow, type) {
-        print("Resize grab begin", metaWindow.title)
         this.window = metaWindow;
         this.signals = new Utils.Signals();
 

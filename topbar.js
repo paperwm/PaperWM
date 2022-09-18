@@ -421,7 +421,6 @@ class WorkspaceMenu extends PanelMenu.Button {
                 let friction = 0.5;
                 while (test()) {
 
-                    log("while start")
                     let dy = this.velocity*16;
                     y -= dy;
                     // log(`calc target: ${dy} ${y} ${this.velocity}`);

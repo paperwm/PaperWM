@@ -448,12 +448,11 @@ var Space = class Space extends Array {
 
             if (relayout) {
                 if (fixPointAttempCount < 5) {
-                    print("Trying to find layout fixpoint", fixPointAttempCount+1)
                     i--;
                     fixPointAttempCount++;
                     continue;
                 } else {
-                    print("Bail at fixpoint, max tries reached")
+                    log("Bail at fixpoint, max tries reached")
                 }
             }
 
@@ -659,8 +658,6 @@ var Space = class Space extends Array {
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
         let clone = metaWindow.clone;
-        if (clone.get_parent() !== this.cloneContainer)
-            utils.trace('wrong parent', metaWindow);
         this.cloneContainer.remove_actor(clone);
         // Don't destroy the selection highlight widget
         if (clone.first_child.name === 'selection')
@@ -1155,10 +1152,8 @@ border-radius: ${borderWidth}px;
 
                 let [gx, gy] = event.get_coords();
                 if (!gx) {
-                    print("Noooo");
                     return;
                 }
-                // print(dx, gx, gy);
 
                 switch (dir) {
                     case Clutter.ScrollDirection.LEFT:
@@ -1637,14 +1632,10 @@ var Spaces = class Spaces extends Map {
         let monitor = Scratch.focusMonitor();
         let currentSpace = this.monitors.get(monitor);
         let i = display.get_monitor_neighbor_index(monitor.index, direction);
-        print("switch", utils.ppEnumValue(direction, Meta.DisplayDirection), i, monitor.index)
-        print("currentSpace", currentSpace.name)
-        print("focus window", global.display.focus_window)
         if (i === -1)
             return;
         let newMonitor = Main.layoutManager.monitors[i];
         let space = this.monitors.get(newMonitor);
-        print("nextSpace", space.name)
 
         if (move && focus) {
             let metaWindow = focus.get_transient_for() || focus;
@@ -2321,9 +2312,6 @@ function destroyHandler(actor) {
 function resizeHandler(metaWindow) {
     if (inGrab && inGrab.window === metaWindow)
         return;
-
-    print("resize-handler-width", metaWindow.get_frame_rect().width)
-    // print("RESIZE\n", GLib.on_error_stack_trace(GLib.get_prgname()));
 
     let f = metaWindow.get_frame_rect();
     let needLayout = false;
