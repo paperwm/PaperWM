@@ -28,7 +28,7 @@ function calcOffset(metaWindow) {
     return [x_offset, y_offset];
 }
 
-class Minimap extends Array {
+var Minimap = class Minimap extends Array {
     constructor(space, monitor) {
         super();
         this.space = space;

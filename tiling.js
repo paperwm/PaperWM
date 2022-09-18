@@ -7,22 +7,33 @@ if (imports.misc.extensionUtils.extensions) {
 
 var GLib = imports.gi.GLib;
 var Tweener = Extension.imports.utils.tweener;
+/** @type {import("@gi-types/meta")} */
 var Meta = imports.gi.Meta;
+/** @type {import("@gi-types/clutter10")} */
 var Clutter = imports.gi.Clutter;
+/** @type {import("@gi-types/st")} */
 var St = imports.gi.St;
+/** @type {import("@gi-types/st")} */
 var Main = imports.ui.main;
+/** @type {import("@gi-types/shell")} */
 var Shell = imports.gi.Shell;
 var Gio = imports.gi.Gio;
 var Signals = imports.signals;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
 
+/** @type {import('@gi-types/meta').Stage} */
+const stage = global.stage
+
 var Gdk = imports.gi.Gdk;
 
+/**@type {import('@gi-types/meta').WorkspaceManager} */
 var workspaceManager = global.workspace_manager;
 var display = global.display;
 
+/** @type {Spaces} */
 var spaces;
+
 
 var Minimap = Extension.imports.minimap;
 var Scratch = Extension.imports.scratch;
@@ -38,6 +49,9 @@ var prefs = Settings.prefs;
 var backgroundSettings = new Gio.Settings({
     schema_id: 'org.gnome.desktop.background'
 })
+var interfaceSettings = new Gio.Settings({
+    schema_id: "org.gnome.desktop.interface",
+});
 
 var borderWidth = 8;
 // Mutter prevints windows from being placed further off the screen than 75 pixels.
@@ -108,7 +122,13 @@ function init() {
 
    To transform a stage point to space coordinates: `space.actor.transform_stage_point(aX, aY)`
  */
-class Space extends Array {
+var Space = class Space extends Array {
+    /** @type {import('@gi-types/clutter10').Actor} */
+    actor
+
+    /** @type {import('@gi-types/meta').BackgroundActor} */
+    background
+    
     constructor (workspace, container, doInit) {
         super(0);
         this.workspace = workspace;
@@ -223,12 +243,22 @@ class Space extends Array {
 
         const Convenience = Extension.imports.convenience;
         const settings = Convenience.getSettings();
+        this.signals.connect(
+            interfaceSettings,
+            "changed::color-scheme",
+            this.updateBackground.bind(this)
+          );
         this.signals.connect(settings, 'changed::default-background',
                              this.updateBackground.bind(this));
         this.signals.connect(settings, 'changed::use-default-background',
                              this.updateBackground.bind(this));
         this.signals.connect(backgroundSettings, 'changed::picture-uri',
                              this.updateBackground.bind(this));
+        this.signals.connect(
+            backgroundSettings,
+            "changed::picture-uri-dark",
+            this.updateBackground.bind(this)
+        );
     }
 
     show() {
@@ -379,7 +409,6 @@ class Space extends Array {
             return;
         if (this._inLayout)
             return;
-        print("LAYOUT")
         this._inLayout = true;
         this.startAnimate();
 
@@ -432,12 +461,11 @@ class Space extends Array {
 
             if (relayout) {
                 if (fixPointAttempCount < 5) {
-                    print("Trying to find layout fixpoint", fixPointAttempCount+1)
                     i--;
                     fixPointAttempCount++;
                     continue;
                 } else {
-                    print("Bail at fixpoint, max tries reached")
+                    log("Bail at fixpoint, max tries reached")
                 }
             }
 
@@ -643,8 +671,6 @@ class Space extends Array {
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
         let clone = metaWindow.clone;
-        if (clone.get_parent() !== this.cloneContainer)
-            utils.trace('wrong parent', metaWindow);
         this.cloneContainer.remove_actor(clone);
         // Don't destroy the selection highlight widget
         if (clone.first_child.name === 'selection')
@@ -1030,7 +1056,6 @@ class Space extends Array {
         this.border.set_style(`
 border: ${borderWidth}px ${this.color};
 border-radius: ${borderWidth}px;
-box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
 `);
         this.metaBackground.set_color(Clutter.color_from_string(color)[1]);
     }
@@ -1041,7 +1066,11 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
         const BackgroundStyle = imports.gi.GDesktopEnums.BackgroundStyle;
         let style = BackgroundStyle.ZOOM;
         if (!path && useDefault) {
-            path = backgroundSettings.get_string('picture-uri');
+            if (interfaceSettings.get_string("color-scheme") === "default") {
+                path = backgroundSettings.get_string("picture-uri");
+            } else {
+                path = backgroundSettings.get_string("picture-uri-dark");
+            }
         }
 
         let file = Gio.File.new_for_commandline_arg(path);
@@ -1115,6 +1144,7 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
                 let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
                 if (windowAtPoint) {
                     ensureViewport(windowAtPoint, this);
+                    spaces.selectedSpace = this
                     inGrab = new Extension.imports.grab.MoveGrab(windowAtPoint, Meta.GrabOp.MOVING, this);
                     inGrab.begin();
                 } else if (inPreview) {
@@ -1133,16 +1163,14 @@ box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, .7);
                     return;
                 // print(dir, Clutter.ScrollDirection.SMOOTH, Clutter.ScrollDirection.UP, Clutter.ScrollDirection.DOWN)
                 let dx
-                log(utils.ppEnumValue(dir, Clutter.ScrollDirection))
+                // log(utils.ppEnumValue(dir, Clutter.ScrollDirection))
                 // let dx = dir === Clutter.ScrollDirection.DOWN ? -1 : 1
                 // let [dx, dy] = event.get_scroll_delta()
 
                 let [gx, gy] = event.get_coords();
                 if (!gx) {
-                    print("Noooo");
                     return;
                 }
-                print(dx, gx, gy);
 
                 switch (dir) {
                     case Clutter.ScrollDirection.LEFT:
@@ -1337,7 +1365,7 @@ var StackPositions = {
 
    TODO: Move initialization to enable
 */
-class Spaces extends Map {
+var Spaces = class Spaces extends Map {
     // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
     static get [Symbol.species]() { return Map; }
 
@@ -1621,14 +1649,10 @@ class Spaces extends Map {
         let monitor = Scratch.focusMonitor();
         let currentSpace = this.monitors.get(monitor);
         let i = display.get_monitor_neighbor_index(monitor.index, direction);
-        print("switch", utils.ppEnumValue(direction, Meta.DisplayDirection), i, monitor.index)
-        print("currentSpace", currentSpace.name)
-        print("focus window", global.display.focus_window)
         if (i === -1)
             return;
         let newMonitor = Main.layoutManager.monitors[i];
         let space = this.monitors.get(newMonitor);
-        print("nextSpace", space.name)
 
         if (move && focus) {
             let metaWindow = focus.get_transient_for() || focus;
@@ -1664,7 +1688,6 @@ class Spaces extends Map {
         let toSpace = this.spaceOf(to);
         let fromSpace = this.spaceOf(from);
 
-        print("switchWorkspace", fromSpace.monitor.index, toSpace.monitor.index)
         if (inGrab && inGrab.window) {
             inGrab.window.change_workspace(toSpace.workspace);
         }
@@ -2143,6 +2166,11 @@ class Spaces extends Map {
         return this.get(meta_window.get_workspace());
     };
 
+    /**
+     * 
+     * @param {import('@gi-types/meta').Workspace} workspace 
+     * @returns {Space}
+     */
     spaceOf(workspace) {
         return this.get(workspace);
     };
@@ -2177,6 +2205,11 @@ class Spaces extends Map {
         return out;
     }
 
+    /** 
+     * 
+     * @param display {}
+     * @param metaWindow {import("@gi-types/meta").Window}
+     */
     window_created(display, metaWindow, user_data) {
         if (!registerWindow(metaWindow)) {
             return;
@@ -2238,6 +2271,8 @@ function registerWindow(metaWindow) {
         // Should no longer be possible, but leave a trace just to be sure
         utils.warn("window already registered", metaWindow.title);
         utils.print_stacktrace();
+        // Can now happen when setting session-modes to "unlock-dialog"
+        return false
     }
 
     let actor = metaWindow.get_compositor_private();
@@ -2294,9 +2329,6 @@ function destroyHandler(actor) {
 function resizeHandler(metaWindow) {
     if (inGrab && inGrab.window === metaWindow)
         return;
-
-    print("resize-handler-width", metaWindow.get_frame_rect().width)
-    // print("RESIZE\n", GLib.on_error_stack_trace(GLib.get_prgname()));
 
     let f = metaWindow.get_frame_rect();
     let needLayout = false;

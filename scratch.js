@@ -65,7 +65,11 @@ function makeScratch(metaWindow) {
         // Figure out some stuff before the window is removed from the tiling
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
         fromTiling = space.indexOf(metaWindow) > -1;
-        windowPositionSeen = metaWindow.clone.get_transformed_position().map(Math.round);
+        if (fromTiling) {
+            windowPositionSeen = metaWindow.clone
+                .get_transformed_position()
+                .map(Math.round);
+        }
     }
 
     metaWindow[float] = true;

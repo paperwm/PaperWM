@@ -55,20 +55,30 @@ function getOk(okValue) {
     }
 }
 
-class SettingsWidget {
+var SettingsWidget = class SettingsWidget {
     /**
        selectedWorkspace: index of initially selected workspace in workspace settings tab
        selectedTab: index of initially shown tab
      */
-    constructor(selectedTab=0, selectedWorkspace=0 ) {
+    constructor(prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
+
+        log(`settingsWidget: ${prefsWindow} ${selectedPage}`)
+
         this._settings = Convenience.getSettings();
 
         this.builder = Gtk.Builder.new_from_file(Extension.path + '/Settings.ui');
+        this.window = prefsWindow;
+
+        const pages = [
+          this.builder.get_object('general_page'),
+          this.builder.get_object('workspaces_page'),
+          this.builder.get_object('keybindings_page')
+        ];
+    
+        pages.forEach(page => prefsWindow.add(page))
+        prefsWindow.set_visible_page(pages[selectedPage])
 
         this.aboutButton = this.builder.get_object('about_button');
-        this.switcher = this.builder.get_object('switcher');
-        this.widget = this.builder.get_object('paperwm_settings');
-        this.widget.pages.select_item(selectedTab, true);
         this._backgroundFilter = new Gtk.FileFilter();
         this._backgroundFilter.add_pixbuf_formats();
 
@@ -149,7 +159,7 @@ class SettingsWidget {
             this._settings.get_boolean('override-hot-corner');
         disableCorner.connect('state-set', (obj, state) => {
             this._settings.set_boolean('override-hot-corner',
-                                       state);
+                state);
         });
 
         let topbarFollowFocus = this.builder.get_object('topbar-follow-focus');
@@ -157,7 +167,7 @@ class SettingsWidget {
             this._settings.get_boolean('topbar-follow-focus');
         topbarFollowFocus.connect('state-set', (obj, state) => {
             this._settings.set_boolean('topbar-follow-focus',
-                                       state);
+                state);
         });
 
 
@@ -168,14 +178,14 @@ class SettingsWidget {
             this._settings.get_boolean('use-default-background');
         defaultBackgroundSwitch.connect('state-set', (obj, state) => {
             this._settings.set_boolean('use-default-background',
-                                       state);
+                state);
         });
         const backgroundPanelButton = this.builder.get_object('gnome-background-panel');
         backgroundPanelButton.connect('clicked', () => {
             GLib.spawn_async(null, ['gnome-control-center', 'background'],
-                             GLib.get_environ(),
-                             GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
-                             null);
+                GLib.get_environ(),
+                GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                null);
         });
 
         let useDefault = this._settings.get_boolean('use-default-background');
@@ -245,7 +255,7 @@ class SettingsWidget {
                 filter: this._backgroundFilter,
                 select_multiple: false,
                 modal: true,
-                transient_for: this.widget.get_root()
+                transient_for: this.window.get_root()
             }
         );
         let clearBackground = new Gtk.Button({
@@ -269,7 +279,7 @@ class SettingsWidget {
                 title: 'Select workspace background',
                 select_multiple: false,
                 modal: true,
-                transient_for: this.widget.get_root()
+                transient_for: this.window.get_root()
             }
         );
         let clearDirectory = new Gtk.Button({
@@ -735,20 +745,21 @@ function init() {
     );
 }
 
-function buildPrefsWidget() {
-    let selectedWorkspace = GLib.getenv("PAPERWM_PREFS_SELECTED_WORKSPACE");
-    let selectedTab = 0;
-    if (selectedWorkspace) {
-        selectedTab = 1;
-    }
-    let settings = new SettingsWidget(selectedTab, selectedWorkspace || 0);
-    GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
-        let window = settings.widget.get_root();
-        window.modal = false;
-        let headerbar = window.get_titlebar();
-        headerbar.pack_start(settings.aboutButton);
-        headerbar.set_title_widget(settings.switcher);
-        return false;
-    });
-    return settings.widget;
+function fillPreferencesWindow(window) {
+    log(`fill ${window}`)
+    let selectedWorkspace = null;
+    try {
+        const tempFile = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace');
+        [, contents] = tempFile.load_contents(null);
+        const decoder = new TextDecoder('utf-8');
+        const contentsString = decoder.decode(contents);
+        let workspaceN = parseInt(contentsString);
+        if (!isNaN(workspaceN)) {
+            selectedWorkspace = workspaceN;
+        }
+        tempFile.delete(null);
+    } catch (e) { }
+
+    let selectedTab = selectedWorkspace !== null ? 1 : 0;
+    new SettingsWidget(window, selectedTab, selectedWorkspace || 0);
 }

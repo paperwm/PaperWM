@@ -422,6 +422,16 @@ function init() {
         registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0)
     }
 
+    const overviewSwipeTracker = Main.overview._swipeTracker
+    if (overviewSwipeTracker) {
+        registerOverrideProp(overviewSwipeTracker, "enabled", false)
+    }
+
+    const workspaceSwipeTracker = Main.wm._workspaceAnimation?._swipeTracker
+    if (workspaceSwipeTracker) {
+        registerOverrideProp(workspaceSwipeTracker, "enabled", false)
+    }
+
     if (Main.wm._swipeTracker)
         registerOverrideProp(Main.wm._swipeTracker._touchpadGesture, "enabled", false);
 
@@ -635,7 +645,6 @@ function sortWindows(a, b) {
     let spaceB = Tiling.spaces.spaceOfWindow(bw)
     let ia = spaceA.indexOf(aw);
     let ib = spaceB.indexOf(bw);
-    print(aw.title, bw.title, spaceA.actor, spaceB.actor)
     if ((ia === -1 && ib === -1)) {
         return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
     }

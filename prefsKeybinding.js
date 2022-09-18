@@ -753,6 +753,8 @@ const ComboRow = GObject.registerClass({
     }
 
     _updateState() {
+        if (!this._stack) { return; }
+
         if (this.editing) {
             this.add_css_class('editing');
             this._stack.visible_child = this._editPage;

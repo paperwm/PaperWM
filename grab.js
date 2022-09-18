@@ -44,14 +44,16 @@ var MoveGrab = class MoveGrab {
     }
 
     begin({center} = {}) {
+        Utils.debug("#grab", "begin")
+
         this.center = center;
-        log(`begin`)
         if (this.grabbed)
             return;
         this.grabbed = true
         global.display.end_grab_op(global.get_current_time());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
-
+        this.dispatcher = new Navigator.getActionDispatcher(Clutter.GrabState.POINTER)
+        this.actor = this.dispatcher.actor
 
         for (let [monitor, $] of Tiling.spaces.monitors) {
             monitor.clickOverlay.deactivate();
@@ -85,10 +87,9 @@ var MoveGrab = class MoveGrab {
         }
         !center && clone.set_pivot_point(px, py);
         center && clone.set_pivot_point(0, 0);
-        log('pointeroffset', this.pointerOffset, clone.get_pivot_point())
 
-        this.signals.connect(global.stage, "button-release-event", this.end.bind(this));
-        this.signals.connect(global.stage, "motion-event", this.motion.bind(this));
+        this.signals.connect(this.actor, "button-release-event", this.end.bind(this));
+        this.signals.connect(this.actor, "motion-event", this.motion.bind(this));
         this.signals.connect(
             global.screen || global.display, "window-entered-monitor",
             this.beginDnD.bind(this)
@@ -107,7 +108,7 @@ var MoveGrab = class MoveGrab {
             return;
         this.center = center;
         this.dnd = true;
-        log(`beginDND`)
+        Utils.debug("#grab", "begin DnD")
         Navigator.getNavigator()
                  .minimaps.forEach(m => typeof(m) === 'number' ?
                                    Mainloop.source_remove(m) : m.hide());
@@ -133,7 +134,6 @@ var MoveGrab = class MoveGrab {
         let single = i !== -1 && space[i].length === 1;
         space.removeWindow(metaWindow);
         clone.reparent(Main.uiGroup);
-        log(`begin dnd`, point.x, point.y)
         clone.x = Math.round(point.x);
         clone.y = Math.round(point.y);
         let newScale = clone.scale_x*space.actor.scale_x;
@@ -313,7 +313,6 @@ var MoveGrab = class MoveGrab {
 
         if (this.dnd) {
             if (tx) {
-                log(`motion`, tx, this.pointerOffset)
                 tx.set_to(gx - dx)
                 ty.set_to(gy - dy)
             } else {
@@ -355,7 +354,7 @@ var MoveGrab = class MoveGrab {
     }
 
     end() {
-        log(`end`)
+        Utils.debug("#grab", "end")
         this.signals.destroy();
 
         let metaWindow = this.window;
@@ -431,6 +430,7 @@ var MoveGrab = class MoveGrab {
                 params.onStopped = () => { actor.set_pivot_point(0, 0) };
                 Tweener.addTween(actor, params);
             }
+            Navigator.getNavigator().accept();
         } else if (this.initialSpace.indexOf(metaWindow) !== -1){
             let space = this.initialSpace;
             destSpace = space;
@@ -455,25 +455,25 @@ var MoveGrab = class MoveGrab {
 
         this.initialSpace.layout();
 
-        // let monitor = monitorAtPoint(gx, gy);
-        // let space = Tiling.spaces.monitors.get(monitor);
-
         // // Make sure the window is on the correct workspace.
         // // If the window is transient this will take care of its parent too.
         // metaWindow.change_workspace(space.workspace)
         // space.workspace.activate(global.get_current_time());
         Tiling.inGrab = false;
-        Navigator.getNavigator().finish(destSpace, metaWindow);
+        if (this.dispatcher) {
+            Navigator.dismissDispatcher(Clutter.GrabState.POINTER)
+        }
+
         global.display.set_cursor(Meta.Cursor.DEFAULT);
     }
 
     activateDndTarget(zone, first) {
         function mkZoneActor(props) {
             let actor = new St.Widget({style_class: "tile-preview"});
-            actor.x = props.x;
-            actor.y = props.y;
-            actor.width = props.width;
-            actor.height = props.height;
+            actor.x = props.x ?? 0
+            actor.y = props.y ?? 0;
+            actor.width = props.width ?? 0;
+            actor.height = props.height ?? 0;
             return actor;
         }
 
@@ -526,7 +526,6 @@ var MoveGrab = class MoveGrab {
 
 var ResizeGrab = class ResizeGrab {
     constructor(metaWindow, type) {
-        print("Resize grab begin", metaWindow.title)
         this.window = metaWindow;
         this.signals = new Utils.Signals();
 
