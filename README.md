@@ -19,7 +19,7 @@ Clone the repo and check out the branch supporting the Gnome Shell version you'r
 - 3.28-3.38: https://github.com/paperwm/PaperWM/releases/tag/38.2
 
 
-[`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script
+Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script
 from the repository. The installer will create a link to the repo in
 `$XDG_DATA_HOME/gnome-shell/extensions/`. It will then ask if you want to apply
 the recommended settings (see [Recommended
