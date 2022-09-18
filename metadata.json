@@ -4,7 +4,7 @@
   "description": "Tiling window manager with a twist",
   "url": "https://github.com/paperwm/PaperWM",
   "settings-schema": "org.gnome.Shell.Extensions.PaperWM",
-  "shell-version": [ "40", "41", "42" ],
+  "shell-version": [ "42" ],
   "version": "42.0",
   "session-modes":  [ "unlock-dialog", "user" ]
 }
