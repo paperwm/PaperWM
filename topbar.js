@@ -253,13 +253,10 @@ class WorkspaceMenu extends PanelMenu.Button {
         this._prefItem.connect('activate', () => {
             this.menu.close(true);
             let wi = workspaceManager.get_active_workspace_index();
-            let env = GLib.get_environ();
-            env.push(`PAPERWM_PREFS_SELECTED_WORKSPACE=${wi}`);
-            try {
-                GLib.spawn_async(null, ['gnome-shell-extension-prefs',  'paperwm@hedning:matrix.org'],
-                                 env, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
-            } catch(e) {
-            }
+            let temp_file = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace')
+            temp_file.replace_contents(wi.toString(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null)
+            imports.misc.extensionUtils.openPrefs()
+    
         });
 
 
