@@ -1,3 +1,5 @@
+const { St } = imports.gi;
+
 // polyfill workspace_manager that was introduced in 3.30 (must happen before modules are imported)
 if (!global.workspace_manager) {
     global.workspace_manager = global.screen;
@@ -179,6 +181,12 @@ function initUserConfig() {
 
     if (hasUserConfigFile()) {
         Extension.imports.searchPath.push(getConfigDir().get_path());
+    }
+
+    let userStylesheet = getConfigDir().get_child("user.css");
+    if (userStylesheet.query_exists(null)) {
+        let themeContext = St.ThemeContext.get_for_stage(global.stage);
+        themeContext.get_theme().load_stylesheet(userStylesheet);
     }
 }
 
