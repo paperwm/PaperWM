@@ -371,6 +371,11 @@
         <summary>Duration of animations in seconds</summary>
     </key>
 
+    <key type="b" name="found-dash-to-panel">
+        <default>false</default>
+        <summary>Automatically set on startup when Dash to Panel is enabled. Any changes to this setting will be reset.</summary>
+    </key>
+
     <child name="keybindings" schema="org.gnome.Shell.Extensions.PaperWM.Keybindings"/>
     <child name="workspaces" schema="org.gnome.Shell.Extensions.PaperWM.WorkspaceList"/>
 

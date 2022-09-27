@@ -1443,6 +1443,9 @@ var Spaces = class Spaces extends Map {
         // Initialize spaces _after_ monitors are set up
         this.forEach(space => space.init());
 
+        // Refresh wallpaper in case it changed (Night Theme Switcher)
+        this.forEach(space => space.updateBackground());
+
         this.stack = this.mru();
     }
 
@@ -1601,8 +1604,10 @@ var Spaces = class Spaces extends Map {
             this.removeSpace(space);
         }
 
-        this.spaceContainer.destroy();
-        this.spaceContainer = null;
+        if (this.spaceContainer) {
+            this.spaceContainer.destroy();
+            this.spaceContainer = null;
+        }
     }
 
     workspacesChanged() {
@@ -2270,7 +2275,7 @@ function registerWindow(metaWindow) {
     if (metaWindow.clone) {
         // Should no longer be possible, but leave a trace just to be sure
         utils.warn("window already registered", metaWindow.title);
-        utils.print_stacktrace();
+        //utils.print_stacktrace();
         // Can now happen when setting session-modes to "unlock-dialog"
         return false
     }

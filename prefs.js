@@ -169,6 +169,10 @@ var SettingsWidget = class SettingsWidget {
             this._settings.set_boolean('topbar-follow-focus',
                 state);
         });
+        if (this._settings.get_boolean('found-dash-to-panel')) {
+            topbarFollowFocus.set_sensitive(false);
+            topbarFollowFocus.get_parent().set_tooltip_text("Incompatible with Dash to Panel.");
+        }
 
 
         // Workspaces

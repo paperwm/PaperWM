@@ -33,6 +33,8 @@ var panelMonitor;
 var workspaceManager = global.workspace_manager;
 var display = global.display;
 
+var hasDashToPanel = (Main.extensionManager._enabledExtensions.find(m => m == "dash-to-panel@jderose9.github.com") !== undefined);
+
 
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
 var colors = [
@@ -499,26 +501,32 @@ function init () {
 
 var panelBoxShowId, panelBoxHideId;
 function enable () {
-    Main.panel.statusArea.activities.hide();
+    // Let Dash to Panel take care of that.
+    if (hasDashToPanel) {
+        Settings.settings.set_boolean("found-dash-to-panel", true);
+        log("Dash to Panel detected, won't create workspace button.");
+    } else {
+        Main.panel.statusArea.activities.hide();
 
-    menu = new WorkspaceMenu();
-    // Work around 'actor' warnings
-    let panel = Main.panel;
-    function fixLabel(label) {
-        let point = new Clutter.Vertex({x: 0, y: 0});
-        let r = label.apply_relative_transform_to_point(panel, point);
+        menu = new WorkspaceMenu();
+        // Work around 'actor' warnings
+        let panel = Main.panel;
+        function fixLabel(label) {
+            let point = new Clutter.Vertex({x: 0, y: 0});
+            let r = label.apply_relative_transform_to_point(panel, point);
 
-        for (let [workspace, space] of Tiling.spaces) {
-            space.label.set_position(panel.x + Math.round(r.x), panel.y + Math.round(r.y));
-            let fontDescription = label.clutter_text.font_description;
-            space.label.clutter_text.set_font_description(fontDescription);
+            for (let [workspace, space] of Tiling.spaces) {
+                space.label.set_position(panel.x + Math.round(r.x), panel.y + Math.round(r.y));
+                let fontDescription = label.clutter_text.font_description;
+                space.label.clutter_text.set_font_description(fontDescription);
+            }
         }
-    }
-    Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
-    menu.show();
+        Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
+        menu.show();
 
-    // Force transparency
-    panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
+        // Force transparency
+        panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
+    }
 
     screenSignals.push(
         workspaceManager.connect_after('workspace-switched',
@@ -533,18 +541,21 @@ function enable () {
         fixTopBar();
     });
 
-    signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
-        let monitors = Tiling.spaces.monitors;
-        if (!settings.prefs.topbar_follow_focus) {
-            moveTopBarTo(Main.layoutManager.primaryMonitor);
-        }
-        let to = setMonitor(Main.layoutManager.focusMonitor);
-        let space = monitors.get(to);
-        updateWorkspaceIndicator(space.workspace.index());
-        for (let [workspace, space] of Tiling.spaces) {
-            space.layout();
-        }
-    });
+    // Dash to Panel uses multiple panels, follow-focus would break this.
+    if (!hasDashToPanel) {
+        signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
+            let monitors = Tiling.spaces.monitors;
+            if (!settings.prefs.topbar_follow_focus) {
+                moveTopBarTo(Main.layoutManager.primaryMonitor);
+            }
+            let to = setMonitor(Main.layoutManager.focusMonitor);
+            let space = monitors.get(to);
+            updateWorkspaceIndicator(space.workspace.index());
+            for (let [workspace, space] of Tiling.spaces) {
+                space.layout();
+            }
+        });
+    }
 
     signals.connect(panelBox, 'show', () => {
         fixTopBar();
@@ -553,17 +564,23 @@ function enable () {
         fixTopBar();
     });
 
-    fixLabel(menu._label);
-    signals.connect(menu._label, 'notify::allocation', fixLabel);
-    signals.connectOneShot(menu._label, 'notify::allocation', () => {
-        setMonitor(Main.layoutManager.primaryMonitor);
-    })
+    if (menu) {
+        fixLabel(menu._label);
+        signals.connect(menu._label, 'notify::allocation', fixLabel);
+        signals.connectOneShot(menu._label, 'notify::allocation', () => {
+            setMonitor(Main.layoutManager.primaryMonitor);
+        })
+    }
 }
 
 function disable() {
     signals.destroy();
-    menu.destroy();
-    menu = null;
+
+    // Condition above could skip creating the activities button.
+    if (menu) {
+        menu.destroy();
+        menu = null;
+    }
     Main.panel.statusArea.activities.actor.show();
     Main.panel.set_style("");
 

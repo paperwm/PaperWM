@@ -194,7 +194,8 @@ var ClickOverlay = class ClickOverlay {
                 overlay.clone.destroy();
                 overlay.clone = null;
             }
-            actor.destroy();
+            if (actor)
+                actor.destroy();
             overlay.removeBarrier();
         }
         this.enterMonitor.destroy();
