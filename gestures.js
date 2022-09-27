@@ -144,6 +144,49 @@ function horizontalScroll(actor, event) {
     }
 }
 
+let walk = 0;
+let sdx = null;
+function horizontalTouchScroll(actor, event) {
+  const type = event.type()
+  const [myx, myy] = event.get_coords();
+
+  switch (type) {
+    case Clutter.EventType.TOUCH_BEGIN:
+      this.vx = 0;
+      dxs = [];
+      dts = [];
+      sdx = myx;
+      walk = 0;
+      start = this.targetX;
+      this.hState = Clutter.TouchpadGesturePhase.UPDATE;
+      Tweener.removeTweens(this.cloneContainer);
+      navigator = Navigator.getNavigator();
+      direction = DIRECTIONS.Horizontal;
+      update(this, 0, event.get_time());
+      return Clutter.EVENT_PROPAGATE
+    case Clutter.EventType.TOUCH_UPDATE:
+      let dx = 0;
+      if (sdx !== null) {
+        dx = myx - sdx;
+      }
+      sdx = myx;
+      walk = walk + Math.abs(dx);
+
+      update(this, -dx, event.get_time() * .75)
+      return Clutter.EVENT_PROPAGATE
+    case Clutter.EventType.TOUCH_CANCEL:
+    case Clutter.EventType.TOUCH_END:
+      done(this, event);
+      dxs = [];
+      dts = [];
+      sdx = null;
+      walk = 0;
+      this.hState = Clutter.TouchpadGesturePhase.END;
+      if (walk < 20) return Clutter.EVENT_PROPAGATE; // Don't steal non-swipe events
+      else return Clutter.EVENT_STOP;
+  }
+}
+
 function update(space, dx, t) {
 
     dxs.push(dx);
