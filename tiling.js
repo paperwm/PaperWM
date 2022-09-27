@@ -24,6 +24,8 @@ export let spaces;
 
 let borderWidth = 8;
 
+var prefs = Settings.prefs;
+
 // Mutter prevints windows from being placed further off the screen than 75 pixels.
 export const stack_margin = 75;
 
@@ -1891,6 +1893,10 @@ export const Spaces = class Spaces extends Map {
 
         // Initialize spaces _after_ monitors are set up
         this.forEach(space => space.init());
+        // Bind to visible workspace when starting up
+        signals.disconnect(Main.panel);
+        signals.connect(Main.panel, "captured-event", Gestures.horizontalTouchScroll.bind(this.get(workspaceManager.get_active_workspace())));
+
         this.stack = this.mru();
     }
 
@@ -2254,6 +2260,10 @@ export const Spaces = class Spaces extends Map {
                 continue;
             monitor.clickOverlay.activate();
         }
+
+        // Update panel to handle target workspace
+        signals.disconnect(Main.panel);
+        signals.connect(Main.panel, "captured-event", Gestures.horizontalTouchScroll.bind(toSpace));
 
         inPreview = PreviewMode.NONE;
     }
