@@ -430,7 +430,8 @@ var MoveGrab = class MoveGrab {
                 params.onStopped = () => { actor.set_pivot_point(0, 0) };
                 Tweener.addTween(actor, params);
             }
-            Navigator.getNavigator().accept();
+
+            Navigator.getNavigator().accept()
         } else if (this.initialSpace.indexOf(metaWindow) !== -1){
             let space = this.initialSpace;
             destSpace = space;
@@ -447,6 +448,7 @@ var MoveGrab = class MoveGrab {
             Tweener.addTween(clone, params);
 
             Tiling.ensureViewport(metaWindow, space);
+            Navigator.getNavigator().accept()
         }
 
         // NOTE: we reset window here so `window-added` will handle the window,
