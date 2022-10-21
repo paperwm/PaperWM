@@ -305,14 +305,14 @@ var winprops = [];
 function winprop_match_p(meta_window, prop) {
     let wm_class = meta_window.wm_class || "";
     let title = meta_window.title;
-    if (prop.wm_class.constructor === RegExp) {
+    if (prop.wm_class instanceof RegExp) {
         if (!wm_class.match(prop.wm_class))
             return false;
     } else if (prop.wm_class !== wm_class) {
         return false;
     }
     if (prop.title) {
-        if (prop.title.constructor === RegExp) {
+        if (prop.title instanceof RegExp) {
             if (!title.match(prop.title))
                 return false;
         } else {
