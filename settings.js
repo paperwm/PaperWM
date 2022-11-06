@@ -15,6 +15,7 @@ if (imports.misc.extensionUtils.extensions) {
     }
 }
 
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
 var Gtk = imports.gi.Gtk;
@@ -74,11 +75,11 @@ function setSchemas() {
         new Gio.Settings({schema_id: "org.gnome.desktop.wm.keybindings"}),
         new Gio.Settings({schema_id: "org.gnome.shell.keybindings"})
     ];
-    schemaSource = Gio.SettingsSchemaSource.new_from_directory(
-        GLib.build_filenamev([Extension.path, "schemas"]),
-        Gio.SettingsSchemaSource.get_default(),
-        false
-    );
+    const GioSSS = Gio.SettingsSchemaSource;
+    const schemaDir = Me.dir.get_child("schemas");
+    schemaSource = schemaDir.query_exists(null) ?
+        GioSSS.new_from_directory(schemaDir.get_path(), GioSSS.get_default(), false) :
+        GioSSS.get_default();
 
     workspaceList = new Gio.Settings({
         settings_schema: schemaSource.lookup(WORKSPACE_LIST_KEY, true)
