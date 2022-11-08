@@ -1842,7 +1842,7 @@ var Spaces = class Spaces extends Map {
             if (navigator._moving == null || (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
-                    {navigator: Navigator.getNavigator()});
+                    { navigator });
             }
         }
 
