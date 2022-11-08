@@ -1835,10 +1835,15 @@ var Spaces = class Spaces extends Map {
         let from = monitorSpaces.indexOf(this.selectedSpace);
         let newSpace = this.selectedSpace;
         let to = from;
+
         if (move && this.selectedSpace.selectedWindow) {
-            takeWindow(this.selectedSpace.selectedWindow,
-                       this.selectedSpace,
-                       {navigator: Navigator.getNavigator()});
+            const navigator = Navigator.getNavigator();
+
+            if (navigator._moving == null || (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
+                takeWindow(this.selectedSpace.selectedWindow,
+                    this.selectedSpace,
+                    {navigator: Navigator.getNavigator()});
+            }
         }
 
         if (direction === Meta.MotionDirection.DOWN)
