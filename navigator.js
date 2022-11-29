@@ -223,8 +223,8 @@ function getModLock(mods) {
     _finish(timestamp) {
         let nav = getNavigator();
         getNavigator().accept();
-        dismissDispatcher(Clutter.GrabState.KEYBOARD)
         !this._destroy && nav.destroy();
+        dismissDispatcher(Clutter.GrabState.KEYBOARD)
     }
 
     destroy() {
