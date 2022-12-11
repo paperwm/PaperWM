@@ -2536,7 +2536,15 @@ function insertWindow(metaWindow, {existing}) {
             connectSizeChanged();
             Scratch.makeScratch(metaWindow);
             if (scratchIsFocused) {
-                Main.activateWindow(metaWindow);
+                /**
+                 * fix for potential mutter change/regression (currently seeing in
+                 * GNOME 43.1.  See https://github.com/paperwm/PaperWM/issues/448).
+                 * Now using "transitions-completed" signal before
+                 * activating new window on scratch layer.
+                 */
+                signals.connectOneShot(actor,'transitions-completed', () => {
+                    Main.activateWindow(metaWindow);
+                });
             }
             return;
         }
