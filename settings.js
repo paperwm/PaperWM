@@ -84,6 +84,7 @@ function setSchemas() {
         settings_schema: schemaSource.lookup(WORKSPACE_LIST_KEY, true)
     });
 }
+
 setSchemas(); // Initialize imediately so prefs.js can import properly
 function init() {
     settings.connect('changed', setState);
