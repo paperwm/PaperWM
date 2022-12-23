@@ -586,6 +586,11 @@ function fixTopBar() {
     let focusIsScratch = focus && Scratch.isScratchWindow(focus)
     let fullscreen = selected && selected.fullscreen && !(focusIsScratch);
     let hideTopBar = !spaces.monitors.get(panelMonitor).showTopBar
+    // hide topbar for fullscreen scratch windows
+    if (focusIsScratch && focus.fullscreen) {
+        panelBox.hide();
+        return;
+    }
     if (normal && hideTopBar) {
         // Update the workarea to support hide top bar
         panelBox.scale_y = 0;
@@ -596,6 +601,7 @@ function fixTopBar() {
         panelBox.hide();
         return;
     }
+
     panelBox.scale_y = 1;
     panelBox.show();
 }
