@@ -33,18 +33,22 @@ var Minimap = class Minimap extends Array {
         super();
         this.space = space;
         this.monitor = monitor;
-        let actor = new St.Widget({name: 'minimap-background',
-                                    style_class: 'switcher-list'});
+        let actor = new St.Widget({
+            name: 'minimap',
+            style_class: 'paperwm-minimap switcher-list'
+        });
         this.actor = actor;
         actor.height = space.height*0.20;
 
-        let highlight = new St.Widget({name: 'minimap-highlight',
-                                       style_class: 'item-box'});
+        let highlight = new St.Widget({
+            name: 'minimap-selection',
+            style_class: 'paperwm-minimap-selection item-box'
+        });
         highlight.add_style_pseudo_class('selected');
         this.highlight = highlight;
-        let label = new St.Label();
+        let label = new St.Label({style_class: 'paperwm-minimap-label'});
         label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
-        this.label = label;;
+        this.label = label;
 
         let clip = new St.Widget({name: 'container-clip'});
         this.clip = clip;
