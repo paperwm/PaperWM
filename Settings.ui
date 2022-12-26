@@ -45,6 +45,12 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="minimap_scale">
+    <property name="upper">0.95</property>
+    <property name="lower">0.05</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">0.10</property>
+  </object>
   <object class="AdwPreferencesPage" id="general_page">
     <property name="icon-name">text-x-generic-symbolic</property>
     <property name="title" translatable="yes">General</property>
@@ -423,7 +429,7 @@
           <object class="GtkLabel">
             <property name="halign">start</property>
             <property name="hexpand">True</property>
-            <property name="label" translatable="yes">Toggles</property>
+            <property name="label" translatable="yes">Settings</property>
             <attributes>
               <attribute name="weight" value="bold" />
             </attributes>
@@ -436,6 +442,48 @@
             <style>
               <class name="frame" />
             </style>
+            <child>
+              <object class="GtkListBoxRow">
+                <property name="activatable">False</property>
+                <property name="focusable">False</property>
+                <child>
+                  <object class="GtkGrid" id="workspace_grid11">
+                    <property name="focusable">False</property>
+                    <property name="tooltip_text" translatable="yes">This setting controls the "size" of mini-map tiles as compared to their actual window size (e.g. "0.15" corresponds to a mini-map tile size being approximately 15% of the actual window size).</property>
+                    <property name="margin_start">12</property>
+                    <property name="margin_end">12</property>
+                    <property name="margin_top">6</property>
+                    <property name="margin_bottom">6</property>
+                    <property name="column_spacing">32</property>
+                    <child>
+                      <object class="GtkLabel" id="workspace_label11">
+                        <property name="focusable">False</property>
+                        <property name="hexpand">1</property>
+                        <property name="label" translatable="yes">Mini-map scale (size)</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                          <property name="column">0</property>
+                          <property name="row">0</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="minimap_scale_spin">
+                        <property name="adjustment">minimap_scale</property>
+                        <property name="digits">2</property>
+                        <property name="snap_to_ticks">1</property>
+                        <property name="numeric">1</property>
+                        <property name="update_policy">if-valid</property>
+                        <layout>
+                          <property name="column">1</property>
+                          <property name="row">0</property>
+                        </layout>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
             <child>
               <object class="GtkListBoxRow">
                 <property name="activatable">False</property>
