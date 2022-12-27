@@ -449,7 +449,7 @@
                 <child>
                   <object class="GtkGrid" id="workspace_grid11">
                     <property name="focusable">False</property>
-                    <property name="tooltip_text" translatable="yes">This setting controls the "size" of mini-map tiles as compared to their actual window size (e.g. "0.15" corresponds to a mini-map tile size being approximately 15% of the actual window size).</property>
+                    <property name="tooltip_text" translatable="yes">This setting controls the "size" of mini-map tiles as compared to their actual window size (e.g. "0.15" corresponds to a mini-map tile size being approximately 15% of the actual window size)</property>
                     <property name="margin_start">12</property>
                     <property name="margin_end">12</property>
                     <property name="margin_top">6</property>
