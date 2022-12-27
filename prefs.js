@@ -109,6 +109,36 @@ var SettingsWidget = class SettingsWidget {
             this._settings.set_int('vertical-margin-bottom', bottomMargin.get_value());
         });
 
+        let cycleWidths = this.builder.get_object('cycle_widths_entry');
+        let widthArray = this._settings.get_value('cycle-width-steps').deep_unpack();
+        cycleWidths.set_text(widthArray.toString().replaceAll(',', ', '));
+        cycleWidths.connect('changed', () => {
+            let varr = cycleWidths.get_text()
+                .replaceAll(',', ' ')
+                .split(' ')
+                .filter(Number);
+            this._settings.set_value('cycle-width-steps', new GLib.Variant('ad', varr));
+        });
+        this.builder.get_object('cycle_widths_reset_button').connect('clicked', () => {
+            // text value here should match the gshema value for cycle-width-steps
+            cycleWidths.set_text('0.38195, 0.5, 0.61804');
+        });
+
+        let cycleHeights = this.builder.get_object('cycle_heights_entry');
+        let heightArray = this._settings.get_value('cycle-height-steps').deep_unpack();
+        cycleHeights.set_text(heightArray.toString().replaceAll(',', ', '));
+        cycleHeights.connect('changed', () => {
+            let varr = cycleHeights.get_text()
+                .replaceAll(',', ' ')
+                .split(' ')
+                .filter(Number);
+            this._settings.set_value('cycle-height-steps', new GLib.Variant('ad', varr));
+        });
+        this.builder.get_object('cycle_heights_reset_button').connect('clicked', () => {
+            // text value here should match the gshema value for cycle-height-steps
+            cycleHeights.set_text('0.38195, 0.5, 0.61804');
+        });
+
         let vSens = this.builder.get_object('vertical-sensitivity');
         let hSens = this.builder.get_object('horizontal-sensitivity');
         let [sx, sy] = this._settings.get_value('swipe-sensitivity').deep_unpack();
