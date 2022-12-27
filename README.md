@@ -201,7 +201,7 @@ Below is a few examples of setting window properties for _Spotify_ and _Alacritt
     });
 
     Tiling.defwinprop({
-        wm_class: "gnome-terminal",
+        wm_class: "Gnome-terminal",
         preferredWidth: 650,
     });
 
