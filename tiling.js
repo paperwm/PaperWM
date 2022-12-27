@@ -343,20 +343,10 @@ var Space = class Space extends Array {
             let resizable = !mw.fullscreen &&
                 mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
             
-            if (mw.preferredWidthStep) {
-                let ws = mw.preferredWidthStep;
-                let widths = getCycleWindowWidths(mw);
-                if (ws == 3) {
-                    signals.connectOneShot(mw.get_compositor_private(),'transitions-completed', () => {
-                        toggleMaximizeHorizontally(mw);
-                    });
-                }
-                else if (typeof widths[ws] == 'undefined') {
-                    utils.warn("Could not set preferredWidthStep");
-                } else {
-                    targetWidth = widths[ws];
-                }
-                delete mw.preferredWidthStep;
+            if (mw.preferredWidthRatio) {
+                let availableWidth = space.workArea().width - prefs.horizontal_margin*2 - prefs.window_gap;
+                targetWidth = Math.floor(availableWidth * Math.min(mw.preferredWidthRatio, 1.0));
+                delete mw.preferredWidthRatio;
             }
             if (mw.preferredWidth) {
                 targetWidth = mw.preferredWidth;
@@ -2552,7 +2542,7 @@ function insertWindow(metaWindow, {existing}) {
 
             // pass winprop properties to metaWindow
             metaWindow.preferredWidth = winprop.preferredWidth;
-            metaWindow.preferredWidthStep = winprop.preferredWidthStep;
+            metaWindow.preferredWidthRatio = winprop.preferredWidthRatio;
         }
 
         if (addToScratch) {
