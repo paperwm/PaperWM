@@ -115,7 +115,7 @@ var SettingsWidget = class SettingsWidget {
         cycleWidths.connect('changed', () => {
             let varr = cycleWidths.get_text()
                 .replaceAll(',', ' ')
-                .split(' ')
+                .split(/\s+/)
                 .filter(Number);
             this._settings.set_value('cycle-width-steps', new GLib.Variant('ad', varr));
         });
@@ -130,7 +130,7 @@ var SettingsWidget = class SettingsWidget {
         cycleHeights.connect('changed', () => {
             let varr = cycleHeights.get_text()
                 .replaceAll(',', ' ')
-                .split(' ')
+                .split(/\s+/)
                 .filter(Number);
             this._settings.set_value('cycle-height-steps', new GLib.Variant('ad', varr));
         });

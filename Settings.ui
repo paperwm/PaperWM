@@ -253,7 +253,7 @@
               <object class="GtkListBoxRow" id="general_row_4">
                 <property name="activatable">False</property>
                 <property name="focusable">False</property>
-                <property name="tooltip_text" translatable="yes">Ratio values (comma or whitespace separated) representing the "useful window widths" that will be cycled through</property>
+                <property name="tooltip_text" translatable="yes">Comma separated values representing the "useful window widths" that will be cycled through. Values can be either ratio or pixel values. Mixed ratio and pixel values are not supported.</property>
                 <child>
                   <object class="GtkGrid" id="workspace_grid3">
                     <property name="focusable">False</property>
@@ -305,7 +305,7 @@
               <object class="GtkListBoxRow" id="general_row_5">
                 <property name="activatable">False</property>
                 <property name="focusable">False</property>
-                <property name="tooltip_text" translatable="yes">Ratio values (comma or whitespace separated) representing the "useful window heights" that will be cycled through</property>
+                <property name="tooltip_text" translatable="yes">Comma separated values representing the "useful window heights" that will be cycled through. Values can be either ratio or pixel values. Mixed ratio and pixel values are not supported.</property>
                 <child>
                   <object class="GtkGrid" id="workspace_grid12">
                     <property name="focusable">False</property>
