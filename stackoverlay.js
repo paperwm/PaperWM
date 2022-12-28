@@ -268,7 +268,7 @@ var StackOverlay = class StackOverlay {
 
             let monitor = this.monitor;
             if (this._direction === Meta.MotionDirection.RIGHT)
-                x = monitor.x + monitor.width - clone.get_transformed_size()[0];
+                x = monitor.x + monitor.width - (0.15 * clone.width);
             else
                 x = monitor.x;
             clone.set_position(x, y);
