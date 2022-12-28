@@ -263,12 +263,13 @@ var StackOverlay = class StackOverlay {
             Tiling.animateWindow(this.target);
 
             this.clone = clone;
-            clone.set_scale(0.15, 0.15);
+            let scale = prefs.minimap_scale;
+            clone.set_scale(scale, scale);
             Main.uiGroup.add_actor(clone);
 
             let monitor = this.monitor;
             if (this._direction === Meta.MotionDirection.RIGHT)
-                x = monitor.x + monitor.width - (0.15 * clone.width);
+                x = monitor.x + monitor.width - (scale * clone.width);
             else
                 x = monitor.x;
             clone.set_position(x, y);
