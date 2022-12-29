@@ -132,10 +132,9 @@ var SettingsWidget = class SettingsWidget {
         hFric.connect('value-changed', fricChanged);
 
         let minimapScale = this.builder.get_object('minimap_scale_spin');
-        let scale = this._settings.get_double('minimap-scale');
-        minimapScale.set_value(scale);
+        minimapScale.set_value(this._settings.get_double('minimap-scale')*100.0);
         minimapScale.connect('value-changed', () => {
-            this._settings.set_double('minimap-scale', minimapScale.get_value());
+            this._settings.set_double('minimap-scale', minimapScale.get_value()/100.0);
         });
 
         let scratchOverview = this.builder.get_object('scratch-in-overview');
