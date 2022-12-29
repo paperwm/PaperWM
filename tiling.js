@@ -342,14 +342,23 @@ var Space = class Space extends Array {
 
             let resizable = !mw.fullscreen &&
                 mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
-            
-            if (mw.preferredWidthRatio) {
-                let availableWidth = space.workArea().width - prefs.horizontal_margin*2 - prefs.window_gap;
-                targetWidth = Math.floor(availableWidth * Math.min(mw.preferredWidthRatio, 1.0));
-                delete mw.preferredWidthRatio;
-            }
+
             if (mw.preferredWidth) {
-                targetWidth = mw.preferredWidth;
+                let prop = mw.preferredWidth;
+                if (prop.value <= 0) {
+                    utils.warn("invalid preferredWidth value");
+                }
+                else if (prop.unit == 'px') {
+                    targetWidth = prop.value;
+                }
+                else if (prop.unit == '%') {
+                    let availableWidth = space.workArea().width - prefs.horizontal_margin*2 - prefs.window_gap;
+                    targetWidth = Math.floor(availableWidth * Math.min(prop.value/100.0, 1.0));
+                }
+                else {
+                    utils.warn("invalid preferredWidth unit:", prop.unit);
+                }
+
                 delete mw.preferredWidth;
             }
 
@@ -2542,7 +2551,6 @@ function insertWindow(metaWindow, {existing}) {
 
             // pass winprop properties to metaWindow
             metaWindow.preferredWidth = winprop.preferredWidth;
-            metaWindow.preferredWidthRatio = winprop.preferredWidthRatio;
         }
 
         if (addToScratch) {

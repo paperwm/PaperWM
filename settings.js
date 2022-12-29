@@ -333,5 +333,15 @@ function find_winprop(meta_window)  {
 }
 
 function defwinprop(spec) {
+    // process preferredWidth - expects inputs like 50% or 400px
+    if (spec.preferredWidth) {
+        let value = new Number((spec.preferredWidth.match(/\d+/) ?? ['0'])[0]);
+        let unit = (spec.preferredWidth.match(/[a-zA-Z%]+/) ?? ['no unit'])[0].toLowerCase();
+        spec.preferredWidth = {
+            value,
+            unit,
+        }
+    }
+
     winprops.push(spec);
 }
