@@ -3180,7 +3180,7 @@ function activateLastWindow(mw, space) {
 }
 
 /**
- * Calls `activateWindow` only after it's window transitions are complete.
+ * Calls `activateWindow` only after (currently in-flight) transitions are complete.
  * The standard `Main.activateWindow(mw)` should be used in general, but this method
  * may be requried under certain use cases to avoid gnome/mutter issues (See 
  * https://github.com/paperwm/PaperWM/issues/448 for an example where this is required).
