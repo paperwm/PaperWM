@@ -2536,7 +2536,7 @@ function insertWindow(metaWindow, {existing}) {
             connectSizeChanged();
             Scratch.makeScratch(metaWindow);
             if (scratchIsFocused) {
-               activateWindowAfterTransitions(metaWindow);
+               activateWindowAfterTransitions(actor, metaWindow);
             }
             return;
         }
@@ -3187,7 +3187,7 @@ function activateLastWindow(mw, space) {
  * 
  * @param {MetaWindow} mw 
  */
-function activateWindowAfterTransitions(mw) {
+function activateWindowAfterTransitions(actor, mw) {
     signals.connectOneShot(actor,'transitions-completed', () => {
         Main.activateWindow(mw);
     });
