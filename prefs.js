@@ -126,10 +126,10 @@ var SettingsWidget = class SettingsWidget {
 
             element.connect('changed', () => {
                 // process values
-                // check if values are ratio or pixel
+                // check if values are percent or pixel
                 let value = element.get_text();
-                let isPercent = value.includes('%');
-                let isPixels = value.includes("px");
+                let isPercent = value.split(';').map(v => v.trim()).every(v => /^.*%$/.test(v));
+                let isPixels = value.split(';').map(v => v.trim()).every(v => /^.*px$/.test(v));
                 if (isPercent && isPixels) {
                     log("cycle width/height values cannot mix percentage and pixel values");
                     element.add_css_class('error');

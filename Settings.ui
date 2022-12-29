@@ -289,6 +289,8 @@
                         </child>
                         <child>
                           <object class="GtkEntry" id="cycle_widths_entry">
+                            <property name="width_chars">24</property>
+                            <property name="max_width_chars">24</property>
                             <layout>
                               <property name="column">2</property>
                               <property name="row">0</property>
@@ -305,7 +307,7 @@
               <object class="GtkListBoxRow" id="general_row_5">
                 <property name="activatable">False</property>
                 <property name="focusable">False</property>
-                <property name="tooltip_text" translatable="yes">Comma separated values representing the "useful window heights" that will be cycled through. Values can be either ratio or pixel values. Mixed ratio and pixel values are not supported.</property>
+                <property name="tooltip_text" translatable="yes">Semicolon separated values of "useful window heights" that will be cycled through. Values types can be either percentage (of available screen width), e.g. "50%" or pixel values, e.g. "500px". Mixed value types are not supported.</property>
                 <child>
                   <object class="GtkGrid" id="workspace_grid12">
                     <property name="focusable">False</property>
@@ -341,6 +343,8 @@
                         </child>
                         <child>
                           <object class="GtkEntry" id="cycle_heights_entry">
+                            <property name="width_chars">24</property>
+                            <property name="max_width_chars">24</property>
                             <layout>
                               <property name="column">1</property>
                               <property name="row">0</property>
