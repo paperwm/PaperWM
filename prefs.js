@@ -114,7 +114,7 @@ var SettingsWidget = class SettingsWidget {
             let element = this.builder.get_object(elementName);
             let steps = this._settings.get_value(settingName).deep_unpack();
 
-             // need to check if current values are ratio or pixel ==> assume if <=1 is ratio
+             // need to check if current values are ratio or pixel ==> assume if all <=1 is ratio
             let isRatio = steps.every(v => v <= 1);
             let value;
             if (isRatio) {
@@ -140,7 +140,6 @@ var SettingsWidget = class SettingsWidget {
                     element.add_css_class('error');
                     return;
                 }
-                element.remove_css_class('error');
     
                 // now process element value into internal array
                 let varr = value
@@ -149,8 +148,17 @@ var SettingsWidget = class SettingsWidget {
                     .map(v => v.replaceAll(/[^\d.]/g, '')) // strip everything but digits and period
                     .filter(v => v.length > 0) // needed to remove invalid inputs
                     .map(Number) // only accept valid numbers
-                    .map(v => isPercent ? v/100.0 : v);
-    
+                    .map(v => isPercent ? v/100.0 : v)
+                    .sort((a,b) => a - b); // sort values to ensure monotonicity
+
+                // check to make sure if percent than input cannot be > 100%
+                if (isPercent && varr.some(v => v > 1)) {
+                    log("cycle width/height percent inputs cannot be greater than 100%");
+                    element.add_css_class('error');
+                    return;
+                }
+                element.remove_css_class('error');
+                
                 this._settings.set_value('cycle-width-steps', new GLib.Variant('ad', varr));
             });
             this.builder.get_object(resetElementName).connect('clicked', () => {
