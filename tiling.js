@@ -2536,15 +2536,7 @@ function insertWindow(metaWindow, {existing}) {
             connectSizeChanged();
             Scratch.makeScratch(metaWindow);
             if (scratchIsFocused) {
-                /**
-                 * fix for potential mutter change/regression (currently seeing in
-                 * GNOME 43.1.  See https://github.com/paperwm/PaperWM/issues/448).
-                 * Now using "transitions-completed" signal before
-                 * activating new window on scratch layer.
-                 */
-                signals.connectOneShot(actor,'transitions-completed', () => {
-                    Main.activateWindow(metaWindow);
-                });
+               activateWindowAfterTransitions(metaWindow);
             }
             return;
         }
@@ -3185,6 +3177,20 @@ function activateFirstWindow(mw, space) {
 function activateLastWindow(mw, space) {
     space = space || spaces.spaceOf(workspaceManager.get_active_workspace());
     activateNthWindow(space.length - 1, space);
+}
+
+/**
+ * Calls `activateWindow` only after it's window transitions are complete.
+ * The standard `Main.activateWindow(mw)` should be used in general, but this method
+ * may be requried under certain use cases to avoid gnome/mutter issues (See 
+ * https://github.com/paperwm/PaperWM/issues/448 for an example where this is required).
+ * 
+ * @param {MetaWindow} mw 
+ */
+function activateWindowAfterTransitions(mw) {
+    signals.connectOneShot(actor,'transitions-completed', () => {
+        Main.activateWindow(mw);
+    });
 }
 
 function centerWindowHorizontally(metaWindow) {
