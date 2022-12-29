@@ -109,35 +109,57 @@ var SettingsWidget = class SettingsWidget {
             this._settings.set_int('vertical-margin-bottom', bottomMargin.get_value());
         });
 
-        let cycleWidths = this.builder.get_object('cycle_widths_entry');
-        let widthArray = this._settings.get_value('cycle-width-steps').deep_unpack();
-        cycleWidths.set_text(widthArray.toString().replaceAll(',', ', '));
-        cycleWidths.connect('changed', () => {
-            let varr = cycleWidths.get_text()
-                .replaceAll(',', ' ')
-                .split(/\s+/)
-                .filter(Number);
-            this._settings.set_value('cycle-width-steps', new GLib.Variant('ad', varr));
-        });
-        this.builder.get_object('cycle_widths_reset_button').connect('clicked', () => {
-            // text value here should match the gshema value for cycle-width-steps
-            cycleWidths.set_text('0.38195, 0.5, 0.61804');
-        });
+        // processing function for cycle values
+        let cycleProcessor = (elementName, settingName, resetElementName) => {
+            let element = this.builder.get_object(elementName);
+            let steps = this._settings.get_value(settingName).deep_unpack();
 
-        let cycleHeights = this.builder.get_object('cycle_heights_entry');
-        let heightArray = this._settings.get_value('cycle-height-steps').deep_unpack();
-        cycleHeights.set_text(heightArray.toString().replaceAll(',', ', '));
-        cycleHeights.connect('changed', () => {
-            let varr = cycleHeights.get_text()
-                .replaceAll(',', ' ')
-                .split(/\s+/)
-                .filter(Number);
-            this._settings.set_value('cycle-height-steps', new GLib.Variant('ad', varr));
-        });
-        this.builder.get_object('cycle_heights_reset_button').connect('clicked', () => {
-            // text value here should match the gshema value for cycle-height-steps
-            cycleHeights.set_text('0.38195, 0.5, 0.61804');
-        });
+             // need to check if current values are ratio or pixel ==> assume if <=1 is ratio
+            let isRatio = steps.every(v => v <= 1);
+            let value;
+            if (isRatio) {
+                value = steps.map(v => (v*100.0).toString() + "%").toString();
+            } else {
+                value = steps.map(v => v.toString() + "px").toString();
+            }
+            element.set_text(value.replaceAll(',', '; '));
+
+            element.connect('changed', () => {
+                // process values
+                // check if values are ratio or pixel
+                let value = element.get_text();
+                let isPercent = value.includes('%');
+                let isPixels = value.includes("px");
+                if (isPercent && isPixels) {
+                    log("cycle width/height values cannot mix percentage and pixel values");
+                    element.add_css_class('error');
+                    return;
+                }
+                if (!isPercent && !isPixels) {
+                    log("no cycle width/height value units present");
+                    element.add_css_class('error');
+                    return;
+                }
+                element.remove_css_class('error');
+    
+                // now process element value into internal array
+                let varr = value
+                    .split(';')
+                    .map(v => v.trim())
+                    .map(v => v.replaceAll(/[^\d.]/g, '')) // strip everything but digits and period
+                    .filter(v => v.length > 0) // needed to remove invalid inputs
+                    .map(Number) // only accept valid numbers
+                    .map(v => isPercent ? v/100.0 : v);
+    
+                this._settings.set_value('cycle-width-steps', new GLib.Variant('ad', varr));
+            });
+            this.builder.get_object(resetElementName).connect('clicked', () => {
+                // text value here should match the gshema value for cycle-width-steps
+                element.set_text('38.195%; 50%; 61.804%');
+            });
+        };
+        cycleProcessor('cycle_widths_entry', 'cycle-width-steps', 'cycle_widths_reset_button');
+        cycleProcessor('cycle_heights_entry', 'cycle-height-steps', 'cycle_heights_reset_button');
 
         let vSens = this.builder.get_object('vertical-sensitivity');
         let hSens = this.builder.get_object('horizontal-sensitivity');

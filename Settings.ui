@@ -253,7 +253,7 @@
               <object class="GtkListBoxRow" id="general_row_4">
                 <property name="activatable">False</property>
                 <property name="focusable">False</property>
-                <property name="tooltip_text" translatable="yes">Comma separated values representing the "useful window widths" that will be cycled through. Values can be either ratio or pixel values. Mixed ratio and pixel values are not supported.</property>
+                <property name="tooltip_text" translatable="yes">Semicolon separated values of "useful window widths" that will be cycled through. Values types can be either percentage (of available screen width), e.g. "50%" or pixel values, e.g. "500px". Mixed value types are not supported.</property>
                 <child>
                   <object class="GtkGrid" id="workspace_grid3">
                     <property name="focusable">False</property>
