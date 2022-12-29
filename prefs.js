@@ -159,7 +159,7 @@ var SettingsWidget = class SettingsWidget {
                 }
                 element.remove_css_class('error');
                 
-                this._settings.set_value('cycle-width-steps', new GLib.Variant('ad', varr));
+                this._settings.set_value(settingName, new GLib.Variant('ad', varr));
             });
             this.builder.get_object(resetElementName).connect('clicked', () => {
                 // text value here should match the gshema value for cycle-width-steps
