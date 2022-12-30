@@ -577,6 +577,7 @@ function fixTopBar() {
     let space = Tiling.spaces?.monitors.get(panelMonitor) ?? false;
     if (!space)
         return;
+    
     // normal ==> not in overview AND not in tiling workspace view
     let normal = !Main.overview.visible && !Tiling.inPreview
     // selected is current (tiled) selected window (can be different to focused window)
@@ -585,26 +586,23 @@ function fixTopBar() {
     let focus = display.focus_window
     // check if a scratch window is currently focused
     let focusIsScratch = focus && Scratch.isScratchWindow(focus)
-    // check if currently fullscreened (check both focused scratch and tiled selected)
+    // check if is currently fullscreened (address both focused scratch / tiled selected windows)
     let fullscreen = focusIsScratch ? focus.fullscreen : selected && selected.fullscreen;
     
-    // if normal view and current workspace is set NOT to show topbar ==> hide topbar
     if (normal && !space.showTopBar) {
-        // Update the workarea to support hide top bar
-        panelBox.scale_y = 0;
+        // is normal view and current workspace is set NOT to show topbar ==> hide topbar
+        panelBox.scale_y = 0; // Update the workarea to support hide top bar
         panelBox.hide();
-        return;
     }
-
-    // if normal view and window (either tiled or scratched) is fullscreen ==> hide topbar
-    if (normal && fullscreen) {
+    else if (normal && fullscreen) {
+        // is normal view and window (either tiled or scratched) is fullscreen ==> hide topbar
         panelBox.hide();
-        return;
     }
-
-    // fallback: if here, not fullscreened etc. ==> show topbar
-    panelBox.scale_y = 1;
-    panelBox.show();
+    else {
+        // not normal, not fullscreened etc. ==> show topbar
+        panelBox.scale_y = 1;
+        panelBox.show();
+    }
 }
 
 /**
