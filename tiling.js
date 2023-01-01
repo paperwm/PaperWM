@@ -356,7 +356,7 @@ var Space = class Space extends Array {
                     targetWidth = Math.floor(availableWidth * Math.min(prop.value/100.0, 1.0));
                 }
                 else {
-                    utils.warn("invalid preferredWidth unit:", prop.unit);
+                    utils.warn("invalid preferredWidth unit:", "'" + prop.unit + "'", "(should be 'px' or '%')");
                 }
 
                 delete mw.preferredWidth;

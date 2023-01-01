@@ -335,12 +335,21 @@ function find_winprop(meta_window)  {
 function defwinprop(spec) {
     // process preferredWidth - expects inputs like 50% or 400px
     if (spec.preferredWidth) {
-        let value = new Number((spec.preferredWidth.match(/\d+/) ?? ['0'])[0]);
-        let unit = (spec.preferredWidth.match(/[a-zA-Z%]+/) ?? ['no unit'])[0].toLowerCase();
         spec.preferredWidth = {
-            value,
-            unit,
+            // value is first contiguous block of digits
+            value: new Number((spec.preferredWidth.match(/\d+/) ?? ['0'])[0]),
+            // unit is first contiguous block of apha chars or % char
+            unit: (spec.preferredWidth.match(/[a-zA-Z%]+/) ?? ['NO_UNIT'])[0],
         }
+    }
+
+    // if spec with same wm_class already exists, update it (to avoid duplicates)
+    // need to wrap in `String()` to correctly compare regex wm_class
+    let existing = winprops.findIndex(s => String(s.wm_class) === String(spec.wm_class));
+    if (existing >= 0) {
+        winprops.splice(existing, spec); // replace
+    } else {
+        winprops.push(spec);
     }
 
     winprops.push(spec);
