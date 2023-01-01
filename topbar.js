@@ -585,8 +585,8 @@ function fixTopBar() {
     // current focused window (can be different to selected tile window, e.g. floating/scratch window)
     let focused = display.focus_window;
     // check if focused window is floating or a scratch window
-    let focusIsFloatOrScratch = focused && space.isFloating(focused) || focused && Scratch.isScratchWindow(focused);
-    // check if is currently fullscreened (address both focused scratch / tiled selected windows)
+    let focusIsFloatOrScratch = focused && (space.isFloating(focused) || Scratch.isScratchWindow(focused));
+    // check if is currently fullscreened (address both focused scratch, floating or tiled windows)
     let fullscreen = focusIsFloatOrScratch ? focused.fullscreen : selected && selected.fullscreen;
     
     if (normal && !space.showTopBar) {
@@ -595,7 +595,7 @@ function fixTopBar() {
         panelBox.hide();
     }
     else if (normal && fullscreen) {
-        // is normal view and window (either tiled or scratched) is fullscreen ==> hide topbar
+        // is normal view and window (either tiled, floating or scratched) is fullscreen ==> hide topbar
         panelBox.hide();
     }
     else {
