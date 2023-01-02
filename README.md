@@ -267,8 +267,9 @@ See `examples/keybindings.js` for more examples.
 
 ## Fixed Window Size ##
 
-Currently it is not possible to have a default fixed window size.
-Please check the following issues for progress / info:
+See the [Winprops](#winprops) section for a way to set the default _width_ of windows identified by their `wm_class` window property.
+
+Currently it is not possible to have a default fixed window height.  Please check the following issues for progress / info:
 
 * https://github.com/paperwm/PaperWM/issues/304
 * https://github.com/paperwm/PaperWM/pull/189
