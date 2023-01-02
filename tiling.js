@@ -2557,7 +2557,7 @@ function insertWindow(metaWindow, {existing}) {
             connectSizeChanged();
             Scratch.makeScratch(metaWindow);
             if (scratchIsFocused) {
-                Main.activateWindow(metaWindow);
+               activateWindowAfterRendered(actor, metaWindow);
             }
             return;
         }
@@ -3204,6 +3204,19 @@ function activateFirstWindow(mw, space) {
 function activateLastWindow(mw, space) {
     space = space || spaces.spaceOf(workspaceManager.get_active_workspace());
     activateNthWindow(space.length - 1, space);
+}
+
+/**
+ * Calls `activateWindow` only after an actor is visible and rendered on the stage.
+ * The standard `Main.activateWindow(mw)` should be used in general, but this method
+ * may be requried under certain use cases (such as activating a floating window 
+ * programmatically before it's rendered, see 
+ * https://github.com/paperwm/PaperWM/issues/448 for details).
+ */
+function activateWindowAfterRendered(actor, mw) {
+    signals.connectOneShot(actor,'show', () => {
+        Main.activateWindow(mw);
+    });
 }
 
 function centerWindowHorizontally(metaWindow) {
