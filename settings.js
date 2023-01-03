@@ -34,7 +34,7 @@ var prefs = {};
 ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
  'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
  'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
- 'cycle-width-steps', 'cycle-height-steps', 'topbar-follow-focus']
+ 'cycle-width-steps', 'cycle-height-steps', 'topbar-follow-focus', 'winprops']
     .forEach((k) => setState(null, k));
 
 prefs.__defineGetter__("minimum_margin", function() { return Math.min(15, this.horizontal_margin) });
@@ -105,6 +105,8 @@ function init() {
         scratch_layer: true,
         focus: true,
     });
+
+    addWinpropsFromGSettings();
 }
 
 var id;
@@ -117,7 +119,6 @@ function disable() {
 }
 
 /// Workspaces
-
 
 function getWorkspaceSettings(index) {
     let list = workspaceList.get_strv('list');
@@ -288,7 +289,6 @@ function findConflicts(schemas) {
     return conflicts;
 }
 
-
 /// Winprops
 
 /**
@@ -351,4 +351,44 @@ function defwinprop(spec) {
     } else {
         winprops.push(spec);
     }
+}
+
+/**
+ * Adds user-defined winprops from gsettings (as defined in 
+ * org.gnome.shell.extensions.paperwm.winprops) to the winprops array.
+ */
+function addWinpropsFromGSettings() {
+    // add gsetting (user config) winprops
+    settings.get_value('winprops').deep_unpack()
+        .map(value => JSON.parse(value))
+        .forEach(prop => {
+            // test if wm_class is a regex expression
+            if (/^\/.+\/[igmsuy]*$/.test(prop.wm_class)) {
+                // extract inner regex and flags from wm_class
+                let matches = prop.wm_class.match(/^\/(.+)\/([igmsuy]*)$/);
+                let inner = matches[1];
+                let flags = matches[2];
+                prop.wm_class = new RegExp(inner, flags);
+            }
+            prop.gsetting = true; // set property that is from user gsettings
+            defwinprop(prop);
+        });
+}
+
+/**
+ * Removes winprops with the `gsetting:true` property from the winprops array.
+ */
+function removeGSettingWinpropsFromArray() {
+    winprops = winprops.filter(prop => !prop.gsetting ?? true);
+}
+
+/**
+ * Effectively reloads winprops from gsettings.
+ * This is a convenience function which removes gsetting winprops from winprops
+ * array and then adds the currently defined 
+ * org.gnome.shell.extensions.paperwm.winprops winprops.
+ */
+function reloadWinpropsFromGSettings() {
+    removeGSettingWinpropsFromArray();
+    addWinpropsFromGSettings();
 }

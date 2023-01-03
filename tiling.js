@@ -73,8 +73,12 @@ function init() {
     oldMonitors = new Map();
 
     backgroundGroup = Main.layoutManager._backgroundGroup;
-}
 
+    // connect to settings and update winprops array when it's updated
+    Settings.settings.connect('changed::winprops', () => {
+        Settings.reloadWinpropsFromGSettings();
+    });
+}
 
 /**
    Scrolled and tiled per monitor workspace.
