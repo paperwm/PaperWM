@@ -28,8 +28,9 @@ var WinpropsPane = GObject.registerClass({
         super._init(params);
 
         this._listbox.set_filter_func(row => {
-            let search = this._search.get_text();
-            return row.winprop.wm_class.includes(search) || row._accelLabel.label.includes(search);
+            let search = this._search.get_text().toLowerCase();
+            return row.winprop.wm_class.toLowerCase().includes(search) || 
+                row._accelLabel.label.toLowerCase().includes(search);
         });
         this._search.connect('changed', () => {
             this._listbox.invalidate_filter();
