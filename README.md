@@ -190,7 +190,9 @@ Property              | Input type                          | Input example | De
 `scratch_layer`       | Boolean                             | `true`, `false`  | if `true` window will be placed on the scratch layer.
 `preferredWidth`      | String value with `%` or `px` unit         | `"50%"`, `"450px"`    | resizes the window width to the preferred width when it's created. </br>_Note<sup>1</sup>: property not applicable to windows on scratch layer._
 
-Below is a few examples of setting window properties for _Spotify_ and _Alacritty_.  The below examples are best placed in the `init` part of `user.js`:
+Window properties can be added using the `Winprops` tab of the PaperWM extension settings.
+
+Alternatively, you can also define winprops in the `user.js` configuration file.  Below is a few examples of setting window properties for _Spotify_ and _Alacritty_.  The below examples are best placed in the `init` part of `user.js`:
 
 ```javascript
     Tiling.defwinprop({
@@ -211,6 +213,8 @@ Below is a few examples of setting window properties for _Spotify_ and _Alacritt
 ```
 
 The `wm_class` or `title` of a window can be found by using looking glass: <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd> Go to the "Windows" section at the top right and find the window. X11 users can also use the `xprop` command line tool (`title` is referred as `WM_NAME` in `xprop`). The match of `wm_class` and `title` are with an OR condition; and in addition to a plain string matching, a constructed [`RegExp()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/RegExp) can be used to utilise regex matching.
+
+_Note: if you use the `user.js` approach you will need to logout and then login to have them take effect._
 
 ### New Window Handlers
 
