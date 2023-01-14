@@ -2845,21 +2845,16 @@ function grabEnd(metaWindow, type) {
     inGrab = false;
 }
 
+/**
+ * Sets the selected window on other workspaces inactive.
+ * Particularly noticable with multi-monitor setups.
+ */
 function setAllWorkspacesInactive() {
-    try {
-        for (let i = 0; i < workspaceManager.get_n_workspaces(); i++) {
-            const ws = workspaceManager.get_workspace_by_index(i);
-            if (ws) {
-                spaces.get(ws).setSelectionInactive();
-            }
+    for (let i = 0; i < workspaceManager.get_n_workspaces(); i++) {
+        let ws = workspaceManager.get_workspace_by_index(i);
+        if (ws) {
+            spaces.get(ws).setSelectionInactive();
         }
-    } catch (e) {
-        log('#paperwm error in setAllWorkspacesInactive');
-        log(`JS ERROR: ${e}\n${e.stack}`);
-        errorNotification(
-            "PaperWM",
-            `Error occured in setAllWorkspacesInactive:\n\n${e.message}`,
-            e.stack);
     }
 }
 
