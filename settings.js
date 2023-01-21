@@ -372,7 +372,7 @@ function addWinpropsFromGSettings() {
                 prop.wm_class = new RegExp(inner, flags);
             }
             if (/^\/.+\/[igmsuy]*$/.test(prop.title)) {
-                // extract inner regex and flags from wm_class
+                // extract inner regex and flags from title
                 let matches = prop.title.match(/^\/(.+)\/([igmsuy]*)$/);
                 let inner = matches[1];
                 let flags = matches[2];

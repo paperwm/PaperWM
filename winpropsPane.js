@@ -27,10 +27,13 @@ var WinpropsPane = GObject.registerClass({
     _init(params = {}) {
         super._init(params);
 
+        // define search box filter function (searches wm_class, title, and accelLabel)
         this._listbox.set_filter_func(row => {
             let search = this._search.get_text().toLowerCase();
-            return row.winprop.wm_class.toLowerCase().includes(search) || 
-                row._accelLabel.label.toLowerCase().includes(search);
+            let wmclass = row.winprop.wm_class?.toLowerCase() ?? '';
+            let title = row.winprop.title?.toLowerCase() ?? '';
+            let accelLabel = row._accelLabel.label?.toLowerCase() ?? '';
+            return wmclass.includes(search) || title.includes(search) || accelLabel.includes(search);
         });
         this._search.connect('changed', () => {
             this._listbox.invalidate_filter();
@@ -222,8 +225,11 @@ var WinpropsRow = GObject.registerClass({
         if (this.winprop.wm_class) {
             return this.winprop.wm_class;
         }
-        if (this.winprop.title) {
+        else if (this.winprop.title) {
             return this.winprop.title;
+        }
+        else {
+            return '';
         }
     }
 
@@ -284,9 +290,8 @@ var WinpropsRow = GObject.registerClass({
         // if wmClass, use that, otherwise use title (fallback)
         if (this.winprop.wm_class) {
             this._descLabel.label = this.winprop.wm_class;
-            return;
         } 
-        if (this.winprop.title) {
+        else if (this.winprop.title) {
             this._descLabel.label = this.winprop.title;
             return;
         }
