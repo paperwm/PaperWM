@@ -233,9 +233,18 @@ var SettingsWidget = class SettingsWidget {
         let winprops = this._settings.get_value('winprops').deep_unpack()
             .map(p => JSON.parse(p));
         // sort a little nicer
+        let valueFn = (wp) =>  {
+            if (wp.wm_class) {
+                return wp.wm_class;
+            }
+            if (wp.title) {
+                return wp.title;
+            }
+            return '';
+        }
         winprops.sort((a,b) => {
-            let aa = a.wm_class.replaceAll(/[/]/g, '');
-            let bb = b.wm_class.replaceAll(/[/]/g, '');
+            let aa = valueFn(a).replaceAll(/[/]/g, '');
+            let bb = valueFn(b).replaceAll(/[/]/g, '');
             return aa.localeCompare(bb);
         });
         let winpropsPane = this.builder.get_object('winpropsPane');
@@ -243,7 +252,7 @@ var SettingsWidget = class SettingsWidget {
         winpropsPane.connect('changed', () => {
             // update gsettings with changes
             let rows = winpropsPane.rows
-                .filter(r => r.winprop.wm_class)
+                .filter(r => r.checkHasWmClassOrTitle())
                 .map(r => JSON.stringify(r.winprop));
 
             this._settings.set_value('winprops', new GLib.Variant('as', rows));

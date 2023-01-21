@@ -343,9 +343,11 @@ function defwinprop(spec) {
         }
     }
 
-    // if spec with same wm_class already exists, update it (to avoid duplicates)
+    // if spec with same wm_class && title already exists, update it (to avoid duplicates)
     // need to wrap in `String()` to correctly compare regex wm_class
-    let existing = winprops.findIndex(s => String(s.wm_class) === String(spec.wm_class));
+    let existing = winprops.findIndex(s => 
+        String(s.wm_class) === String(spec.wm_class) && 
+        String(s.title) === String(spec.title));
     if (existing >= 0) {
         winprops.splice(existing, spec); // replace
     } else {
@@ -362,13 +364,20 @@ function addWinpropsFromGSettings() {
     settings.get_value('winprops').deep_unpack()
         .map(value => JSON.parse(value))
         .forEach(prop => {
-            // test if wm_class is a regex expression
+            // test if wm_class or title is a regex expression
             if (/^\/.+\/[igmsuy]*$/.test(prop.wm_class)) {
                 // extract inner regex and flags from wm_class
                 let matches = prop.wm_class.match(/^\/(.+)\/([igmsuy]*)$/);
                 let inner = matches[1];
                 let flags = matches[2];
                 prop.wm_class = new RegExp(inner, flags);
+            }
+            if (/^\/.+\/[igmsuy]*$/.test(prop.title)) {
+                // extract inner regex and flags from wm_class
+                let matches = prop.title.match(/^\/(.+)\/([igmsuy]*)$/);
+                let inner = matches[1];
+                let flags = matches[2];
+                prop.title = new RegExp(inner, flags);
             }
             prop.gsetting = true; // set property that is from user gsettings
             defwinprop(prop);

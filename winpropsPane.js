@@ -102,6 +102,7 @@ var WinpropsRow = GObject.registerClass({
         'revealer',
         'optionList',
         'wmClass',
+        'title',
         'scratchLayer',
         'preferredWidth',
         'deleteButton',
@@ -129,18 +130,24 @@ var WinpropsRow = GObject.registerClass({
     _init(params = {}) {
         super._init(params);        
 
+        // description label
+        this._setDescLabel();
+        
         // set the values to current state and connect to 'changed' signal
-        this._descLabel.label = this.winprop.wm_class;
-        this._wmClass.set_text(this.winprop.wm_class);
+        this._wmClass.set_text(this.winprop.wm_class ?? '');
         this._wmClass.connect('changed', () => {
             // check if null or empty (we still emit changed if wm_class is wiped)
-            if (!this._wmClass.get_text()) {
-                this._setError(this._wmClass);
-            } else {
-                this._setError(this._wmClass, false);
-            }
+            this.checkHasWmClassOrTitle();
             this.winprop.wm_class = this._wmClass.get_text();
-            this._descLabel.label = this.winprop.wm_class;
+            this._setDescLabel();
+            this.emit('changed');
+        });
+
+        this._title.set_text(this.winprop.title ?? '');
+        this._title.connect('changed', () => {
+            this.checkHasWmClassOrTitle();
+            this.winprop.title = this._title.get_text();
+            this._setDescLabel();            
             this.emit('changed');
         });
 
@@ -191,6 +198,35 @@ var WinpropsRow = GObject.registerClass({
         this._updateState();
     }
 
+    /**
+     * Checks has an input for either wmClass or title.
+     * Sets 'error' cssClass is neither.
+     */
+    checkHasWmClassOrTitle() {
+        if (!this._wmClass.get_text() && !this._title.get_text()) {
+            this._setError(this._wmClass);
+            this._setError(this._title);
+            return false;
+        } else {
+            this._setError(this._wmClass, false);
+            this._setError(this._title, false);
+            return true;
+        }
+    }
+
+    /**
+     * Get the wmClass if it exists, otherwise returns the title.
+     * @returns String
+     */
+    getWmClassOrTitle() {
+        if (this.winprop.wm_class) {
+            return this.winprop.wm_class;
+        }
+        if (this.winprop.title) {
+            return this.winprop.title;
+        }
+    }
+
     _setError(child, option = true) {
         if (child) {
             if (option) {
@@ -237,6 +273,22 @@ var WinpropsRow = GObject.registerClass({
             return 'preferred width';
         } else {
             return 'no setting';
+        }
+    }
+
+    /**
+     * Sets the description label for this row.
+     * @returns boolean
+     */
+    _setDescLabel() {
+        // if wmClass, use that, otherwise use title (fallback)
+        if (this.winprop.wm_class) {
+            this._descLabel.label = this.winprop.wm_class;
+            return;
+        } 
+        if (this.winprop.title) {
+            this._descLabel.label = this.winprop.title;
+            return;
         }
     }
 

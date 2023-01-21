@@ -103,6 +103,39 @@
                         <property name="margin_top">6</property>
                         <property name="margin_bottom">6</property>
                         <property name="column_spacing">32</property>
+                        <property name="tooltip_markup" translatable="yes">Window title value used to identify windows to have these winprops applied.  Can be a &lt;i&gt;string&lt;/i&gt; or &lt;i&gt;javascript regex expression literal&lt;/i&gt;.</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="focusable">False</property>
+                            <property name="hexpand">1</property>
+                            <property name="label" translatable="yes">title</property>
+                            <property name="xalign">0</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="title">
+                            <property name="width_chars">24</property>
+                            <property name="max_width_chars">24</property>
+                            <layout>
+                              <property name="column">2</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkGrid">
+                        <property name="focusable">False</property>
+                        <property name="margin_start">12</property>
+                        <property name="margin_end">12</property>
+                        <property name="margin_top">6</property>
+                        <property name="margin_bottom">6</property>
+                        <property name="column_spacing">32</property>
                         <child>
                           <object class="GtkLabel">
                             <property name="focusable">False</property>
