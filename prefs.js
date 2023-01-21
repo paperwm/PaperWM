@@ -120,7 +120,6 @@ var SettingsWidget = class SettingsWidget {
         vSens.connect('value-changed', sensChanged);
         hSens.connect('value-changed', sensChanged);
 
-
         let vFric = this.builder.get_object('vertical-friction');
         let hFric = this.builder.get_object('horizontal-friction');
         let [fx, fy] = this._settings.get_value('swipe-friction').deep_unpack();
@@ -131,6 +130,12 @@ var SettingsWidget = class SettingsWidget {
         };
         vFric.connect('value-changed', fricChanged);
         hFric.connect('value-changed', fricChanged);
+
+        let minimapScale = this.builder.get_object('minimap_scale_spin');
+        minimapScale.set_value(this._settings.get_double('minimap-scale')*100.0);
+        minimapScale.connect('value-changed', () => {
+            this._settings.set_double('minimap-scale', minimapScale.get_value()/100.0);
+        });
 
         let scratchOverview = this.builder.get_object('scratch-in-overview');
         if (this._settings.get_boolean('only-scratch-in-overview'))
