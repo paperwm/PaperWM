@@ -1,7 +1,6 @@
 <schemalist>
 
   <!-- Keybindings -->
-
   <schema id="org.gnome.Shell.Extensions.PaperWM.Keybindings"
           path="/org/gnome/shell/extensions/paperwm/keybindings/">
 
@@ -290,6 +289,11 @@
     <key type="i" name="window-gap">
       <default>20</default>
       <summary>Minimum gap between windows</summary>
+    </key>
+
+    <key type="d" name="minimap-scale">
+      <default>0.15</default>
+      <summary>Scale of mini mini-map tiles compared to their actual window size.</summary>
     </key>
 
     <key type="b" name="override-hot-corner">
