@@ -190,7 +190,9 @@ Property              | Input type                          | Input example | De
 `scratch_layer`       | Boolean                             | `true`, `false`  | if `true` window will be placed on the scratch layer.
 `preferredWidth`      | String value with `%` or `px` unit         | `"50%"`, `"450px"`    | resizes the window width to the preferred width when it's created. </br>_Note<sup>1</sup>: property not applicable to windows on scratch layer._
 
-Window properties can be added using the `Winprops` tab of the PaperWM extension settings.
+Window properties can be added using the `Winprops` tab of the PaperWM extension settings:
+
+https://user-images.githubusercontent.com/30424662/211422647-79e64d56-5dbb-4054-b9a6-32bf3194b636.mp4
 
 Alternatively, you can also define winprops in the `user.js` configuration file.  Below is a few examples of setting window properties for _Spotify_ and _Alacritty_.  The below examples are best placed in the `init` part of `user.js`:
 
