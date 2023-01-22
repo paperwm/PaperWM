@@ -48,12 +48,36 @@ function setVerticalMargin() {
 let timerId;
 function onWindowGapChanged() {
     setVerticalMargin();
-    if (timerId)
+    if (timerId) {
         imports.mainloop.source_remove(timerId);
+    }
     timerId = imports.mainloop.timeout_add(500, () => {
         Extension.imports.tiling.spaces.mru().forEach(space => {
             space.layout();
         });
+        timerId = null;
+    });
+}
+
+/**
+ * Moves the last window to the edge of the screen so users
+ * can visualise edge tiling margin changes.
+ */
+function onEdgeTilingChanged() {
+    if (timerId) {
+        imports.mainloop.source_remove(timerId);
+    }
+    timerId = imports.mainloop.timeout_add(500, () => {
+        let ws = global.workspace_manager.get_active_workspace();
+        let tiling = Extension.imports.tiling;
+        let space = tiling.spaces.spaceOf(ws);     
+        let mw = space.getWindows()[space.getWindows().length - 1];
+        if (mw) {
+            tiling.move_to(space, mw, {
+                x:space.workArea().width
+            });
+            tiling.ensureViewport(mw);
+        }
         timerId = null;
     });
 }
@@ -89,6 +113,7 @@ function init() {
     settings.connect('changed', setState);
     settings.connect('changed::vertical-margin', onWindowGapChanged);
     settings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
+    settings.connect('changed::tiling-edge-margin', onEdgeTilingChanged);
     settings.connect('changed::window-gap', onWindowGapChanged);
     setVerticalMargin();
 
