@@ -2661,7 +2661,7 @@ function ensuredX(meta_window, space) {
     let workArea = space.workArea();
     let min = workArea.x;
     let max = min + workArea.width;
-    if (meta_window.fullscreen || meta_window.maximized_horizontally) {
+    if (meta_window.fullscreen) {
         x = 0;
     } else if (index == 0 && x <= min) {
         // Always align the first window to the display's left edge
@@ -2690,7 +2690,6 @@ function ensuredX(meta_window, space) {
 
     return x;
 }
-
 
 /**
    Make sure that `meta_window` is in view, scrolling the space if needed.
