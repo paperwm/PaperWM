@@ -109,6 +109,12 @@ var SettingsWidget = class SettingsWidget {
             this._settings.set_int('vertical-margin-bottom', bottomMargin.get_value());
         });
 
+        let tilingEdgeMargin = this.builder.get_object('tiling_edge_margin_spinner');
+        tilingEdgeMargin.set_value(this._settings.get_int('tiling-edge-margin'));
+        tilingEdgeMargin.connect('value-changed', () => {
+            this._settings.set_int('tiling-edge-margin', tilingEdgeMargin.get_value());
+        });
+
         // processing function for cycle values
         let cycleProcessor = (elementName, settingName, resetElementName) => {
             let element = this.builder.get_object(elementName);

@@ -40,6 +40,11 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="tiling_edge_margin">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkAdjustment" id="window_gap">
     <property name="upper">99</property>
     <property name="step_increment">1</property>
@@ -242,6 +247,50 @@
                         <property name="max_width_chars">2</property>
                         <property name="text" translatable="yes">0</property>
                         <property name="adjustment">vertical_margin_bottom</property>
+                        <property name="snap_to_ticks">1</property>
+                        <property name="numeric">1</property>
+                        <property name="update_policy">if-valid</property>
+                        <layout>
+                          <property name="column">1</property>
+                          <property name="row">0</property>
+                        </layout>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkListBoxRow">
+                <property name="activatable">False</property>
+                <property name="focusable">False</property>
+                <property name="tooltip_text" translatable="yes">Minimum margin from screen edges to the leftmost and rightmost window edges</property>
+                <child>
+                  <object class="GtkGrid">
+                    <property name="focusable">False</property>
+                    <property name="margin_start">12</property>
+                    <property name="margin_end">12</property>
+                    <property name="margin_top">6</property>
+                    <property name="margin_bottom">6</property>
+                    <property name="column_spacing">32</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="focusable">False</property>
+                        <property name="hexpand">1</property>
+                        <property name="label" translatable="yes">Tiling edge margin</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                          <property name="column">0</property>
+                          <property name="row">0</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="tiling_edge_margin_spinner">
+                        <property name="width_chars">2</property>
+                        <property name="max_width_chars">2</property>
+                        <property name="text" translatable="yes">0</property>
+                        <property name="adjustment">tiling_edge_margin</property>
                         <property name="snap_to_ticks">1</property>
                         <property name="numeric">1</property>
                         <property name="update_policy">if-valid</property>
