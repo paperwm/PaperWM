@@ -287,6 +287,11 @@
         <summary>Minimum margin from windows bottom edge</summary>
     </key>
 
+    <key type="i" name="tiling-edge-margin">
+      <default>0</default>
+      <summary>Minimum margin from the screen edge to the left and right tiling edge</summary>
+    </key>
+
     <key type="i" name="window-gap">
       <default>20</default>
       <summary>Minimum gap between windows</summary>
