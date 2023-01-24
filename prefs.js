@@ -113,6 +113,66 @@ var SettingsWidget = class SettingsWidget {
             this._settings.set_int('vertical-margin-bottom', bottomMargin.get_value());
         });
 
+        // processing function for cycle values
+        let cycleProcessor = (elementName, settingName, resetElementName) => {
+            let element = this.builder.get_object(elementName);
+            let steps = this._settings.get_value(settingName).deep_unpack();
+
+             // need to check if current values are ratio or pixel ==> assume if all <=1 is ratio
+            let isRatio = steps.every(v => v <= 1);
+            let value;
+            if (isRatio) {
+                value = steps.map(v => (v*100.0).toString() + "%").toString();
+            } else {
+                value = steps.map(v => v.toString() + "px").toString();
+            }
+            element.set_text(value.replaceAll(',', '; '));
+
+            element.connect('changed', () => {
+                // process values
+                // check if values are percent or pixel
+                let value = element.get_text();
+                let isPercent = value.split(';').map(v => v.trim()).every(v => /^.*%$/.test(v));
+                let isPixels = value.split(';').map(v => v.trim()).every(v => /^.*px$/.test(v));
+                if (isPercent && isPixels) {
+                    log("cycle width/height values cannot mix percentage and pixel values");
+                    element.add_css_class('error');
+                    return;
+                }
+                if (!isPercent && !isPixels) {
+                    log("no cycle width/height value units present");
+                    element.add_css_class('error');
+                    return;
+                }
+    
+                // now process element value into internal array
+                let varr = value
+                    .split(';')
+                    .map(v => v.trim())
+                    .map(v => v.replaceAll(/[^\d.]/g, '')) // strip everything but digits and period
+                    .filter(v => v.length > 0) // needed to remove invalid inputs
+                    .map(Number) // only accept valid numbers
+                    .map(v => isPercent ? v/100.0 : v)
+                    .sort((a,b) => a - b); // sort values to ensure monotonicity
+
+                // check to make sure if percent than input cannot be > 100%
+                if (isPercent && varr.some(v => v > 1)) {
+                    log("cycle width/height percent inputs cannot be greater than 100%");
+                    element.add_css_class('error');
+                    return;
+                }
+                element.remove_css_class('error');
+                
+                this._settings.set_value(settingName, new GLib.Variant('ad', varr));
+            });
+            this.builder.get_object(resetElementName).connect('clicked', () => {
+                // text value here should match the gshema value for cycle-width-steps
+                element.set_text('38.195%; 50%; 61.804%');
+            });
+        };
+        cycleProcessor('cycle_widths_entry', 'cycle-width-steps', 'cycle_widths_reset_button');
+        cycleProcessor('cycle_heights_entry', 'cycle-height-steps', 'cycle_heights_reset_button');
+
         let vSens = this.builder.get_object('vertical-sensitivity');
         let hSens = this.builder.get_object('horizontal-sensitivity');
         let [sx, sy] = this._settings.get_value('swipe-sensitivity').deep_unpack();

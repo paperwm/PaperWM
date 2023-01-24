@@ -1857,10 +1857,15 @@ var Spaces = class Spaces extends Map {
         let from = monitorSpaces.indexOf(this.selectedSpace);
         let newSpace = this.selectedSpace;
         let to = from;
+
         if (move && this.selectedSpace.selectedWindow) {
-            takeWindow(this.selectedSpace.selectedWindow,
-                       this.selectedSpace,
-                       {navigator: Navigator.getNavigator()});
+            const navigator = Navigator.getNavigator();
+
+            if (navigator._moving == null || (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
+                takeWindow(this.selectedSpace.selectedWindow,
+                    this.selectedSpace,
+                    { navigator });
+            }
         }
 
         if (direction === Meta.MotionDirection.DOWN)
@@ -2759,6 +2764,12 @@ function ensureViewport(meta_window, space, force) {
 function updateSelection(space, metaWindow) {
     let clone = metaWindow.clone;
     let cloneActor = clone.cloneActor;
+
+    // first set all selections inactive
+    // this means not active workspaces are shown as inactive
+    setAllWorkspacesInactive();
+
+    // then set the new selection active
     space.setSelectionActive();
     if (space.selection.get_parent() === clone)
         return;
@@ -2864,13 +2875,26 @@ function grabEnd(metaWindow, type) {
     inGrab = false;
 }
 
+/**
+ * Sets the selected window on other workspaces inactive.
+ * Particularly noticable with multi-monitor setups.
+ */
+function setAllWorkspacesInactive() {
+    for (let i = 0; i < workspaceManager.get_n_workspaces(); i++) {
+        let ws = workspaceManager.get_workspace_by_index(i);
+        if (ws) {
+            spaces.get(ws).setSelectionInactive();
+        }
+    }
+}
+
 // `MetaWindow::focus` handling
 function focus_handler(metaWindow, user_data) {
     debug("focus:", metaWindow.title, utils.framestr(metaWindow.get_frame_rect()));
 
 
     if (Scratch.isScratchWindow(metaWindow)) {
-        spaces.get(workspaceManager.get_active_workspace()).setSelectionInactive();
+        setAllWorkspacesInactive();
         Scratch.makeScratch(metaWindow);
         TopBar.fixTopBar();
         return;

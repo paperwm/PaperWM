@@ -255,6 +255,114 @@
                 </child>
               </object>
             </child>
+            <child>
+              <object class="GtkListBoxRow" id="general_row_4">
+                <property name="activatable">False</property>
+                <property name="focusable">False</property>
+                <property name="tooltip_text" translatable="yes">Semicolon separated values of "useful window widths" that will be cycled through. Values types can be either percentage (of available screen width), e.g. "50%" or pixel values, e.g. "500px". Mixed value types are not supported.</property>
+                <child>
+                  <object class="GtkGrid" id="workspace_grid3">
+                    <property name="focusable">False</property>
+                    <property name="margin_start">12</property>
+                    <property name="margin_end">12</property>
+                    <property name="margin_top">6</property>
+                    <property name="margin_bottom">6</property>
+                    <property name="column_spacing">32</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="focusable">False</property>
+                        <property name="hexpand">1</property>
+                        <property name="label" translatable="yes">Useful window widths</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                          <property name="column">0</property>
+                          <property name="row">0</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkGrid">
+                        <layout>
+                          <property name="column">1</property>
+                          <property name="row">0</property>
+                        </layout>
+                        <child>
+                          <object class="GtkButton" id="cycle_widths_reset_button">
+                            <property name="margin_end">8</property>
+                            <property name="label">reset</property>
+                            <property name="tooltip_text" translatable="yes">Resets width values to the default PaperWM width values</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="cycle_widths_entry">
+                            <property name="width_chars">24</property>
+                            <property name="max_width_chars">24</property>
+                            <layout>
+                              <property name="column">2</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                        </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkListBoxRow" id="general_row_5">
+                <property name="activatable">False</property>
+                <property name="focusable">False</property>
+                <property name="tooltip_text" translatable="yes">Semicolon separated values of "useful window heights" that will be cycled through. Values types can be either percentage (of available screen width), e.g. "50%" or pixel values, e.g. "500px". Mixed value types are not supported.</property>
+                <child>
+                  <object class="GtkGrid" id="workspace_grid12">
+                    <property name="focusable">False</property>
+                    <property name="margin_start">12</property>
+                    <property name="margin_end">12</property>
+                    <property name="margin_top">6</property>
+                    <property name="margin_bottom">6</property>
+                    <property name="column_spacing">32</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="focusable">False</property>
+                        <property name="hexpand">1</property>
+                        <property name="label" translatable="yes">Useful window heights</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                          <property name="column">0</property>
+                          <property name="row">0</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkGrid">
+                        <layout>
+                          <property name="column">1</property>
+                          <property name="row">0</property>
+                        </layout>
+                        <child>
+                          <object class="GtkButton" id="cycle_heights_reset_button">
+                            <property name="margin_end">8</property>
+                            <property name="label">reset</property>
+                            <property name="tooltip_text" translatable="yes">Resets height values to the default PaperWM height values</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="cycle_heights_entry">
+                            <property name="width_chars">24</property>
+                            <property name="max_width_chars">24</property>
+                            <layout>
+                              <property name="column">1</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                        </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
           </object>
         </child>
         <child>
