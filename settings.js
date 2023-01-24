@@ -342,16 +342,27 @@ function defwinprop(spec) {
         }
     }
 
-    // if spec with same wm_class && title already exists, update it (to avoid duplicates)
-    // need to wrap in `String()` to correctly compare regex wm_class
-    let existing = winprops.findIndex(s => 
-        String(s.wm_class) === String(spec.wm_class) && 
-        String(s.title) === String(spec.title));
-    if (existing >= 0) {
-        winprops.splice(existing, spec); // replace
-    } else {
-        winprops.push(spec);
-    }
+    /**
+     * we order specs with gsettings rirst ==> gsetting winprops take precedence
+     * over winprops defined in user.js.  This was done since gsetting winprops
+     * are easier to add/remove (and can be added/removed/edited instantly without
+     * restarting shell).
+     */
+    // add winprop
+    winprops.push(spec);
+
+    // now order winprops with gsettings first
+    winprops.sort((a,b) => {
+        if (a.gsetting && !b.gsetting) {
+            return -1;
+        }
+        else if (!a.gsetting && b.gsetting) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    });
 }
 
 /**

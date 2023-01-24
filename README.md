@@ -216,7 +216,9 @@ Alternatively, you can also define winprops in the `user.js` configuration file.
 
 The `wm_class` or `title` of a window can be found by using looking glass: <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd> Go to the "Windows" section at the top right and find the window. X11 users can also use the `xprop` command line tool (`title` is referred as `WM_NAME` in `xprop`). The match of `wm_class` and `title` are with an OR condition; and in addition to a plain string matching, a constructed [`RegExp()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/RegExp) can be used to utilise regex matching.
 
-_Note: if you use the `user.js` approach you will need to logout and then login to have them take effect._
+_Note<sup>1</sup>: `Winprops` defined in the PaperWM extension settings take precedence over `Winrprops` defined using the `user.js` method._
+
+_Note<sup>2</sup>: if you use the `user.js` method you will need to restart Gnome shell to have them take effect._
 
 ### New Window Handlers
 
