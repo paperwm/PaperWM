@@ -77,8 +77,9 @@ if [[ "(true, 'true')" == "$RET" ]]; then
         gnome-shell-extension-tool --enable="$UUID"
     fi
 else
-    echo Something went wrong:
-    echo $RET | sed -e "s/(true, '\"//" | sed -e "s/\\\\n/\n/g"
-    
-    echo You may need to enable PaperWM manually
+    # String is already quoted and escaped; we want to print the unescaped version
+    unescaped="$(echo "$RET" | sed -e "s/(true, '\"//" | sed -e "s/\\\\n/\n/g")"
+
+    echo "Could not enable PaperWM automatically. You may need to enable it manually."
+    printf 'Debug output: %s\n' "$unescaped"
 fi
