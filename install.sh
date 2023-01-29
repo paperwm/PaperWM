@@ -77,8 +77,8 @@ if [[ "(true, 'true')" == "$RET" ]]; then
         gnome-shell-extension-tool --enable="$UUID"
     fi
 else
-    echo something went wrong:
+    echo Something went wrong:
     echo $RET | sed -e "s/(true, '\"//" | sed -e "s/\\\\n/\n/g"
     
-    echo Success
+    echo You may need to enable PaperWM manually
 fi
