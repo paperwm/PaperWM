@@ -231,7 +231,13 @@ var StackOverlay = class StackOverlay {
 
             // remove/cleanup the previous preview
             this.removePreview();
-            Mainloop.timeout_add(200, this.triggerPreview.bind(this));
+            Mainloop.timeout_add(200, () => {
+                // if pointer is still at edge (within 2px), trigger preview
+                let [x, y, mask] = global.get_pointer();
+                if (x <= 2 || x >= this.monitor.width - 2) {
+                    this.triggerPreview.bind(this)();
+                }
+            });
             return true;
         });
 
