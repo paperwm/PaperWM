@@ -16,6 +16,7 @@ list.keybindings > row.expanded:backdrop:not(:hover):not(:active):not(:selected)
 }
 
 list.keybindings > row .header,
+list.winprops > row .header,
 list.combos > row {
     padding: 8px 12px;
     min-height: 32px;
@@ -40,4 +41,8 @@ list.combos {
 list.combos > .editing {
     background-color: @theme_selected_bg_color;
     color: @theme_selected_fg_color;
+}
+
+.winprops .option-list {
+    background-color: transparent;
 }

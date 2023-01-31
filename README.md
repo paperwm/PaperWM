@@ -183,7 +183,18 @@ GSETTINGS_SCHEMA_DIR=$HOME/.local/share/gnome-shell/extensions/paperwm@hedning:m
 
 ### Winprops
 
-It's possible to create simple rules for placing new windows. Currently most useful when a window should be placed in the scratch layer automatically. An example, best placed in the `init` part of `user.js`:
+It's possible to set window properties using simple rules that will be applied when placing new windows. Properties can applied to windows identified by their `wm_class` or `title`.  The following properties are currently supported:
+
+Property              | Input type                          | Input example | Description
+----------------------|-------------------------------------|------------------|------------------
+`scratch_layer`       | Boolean                             | `true`, `false`  | if `true` window will be placed on the scratch layer.
+`preferredWidth`      | String value with `%` or `px` unit         | `"50%"`, `"450px"`    | resizes the window width to the preferred width when it's created. </br>_Note<sup>1</sup>: property not applicable to windows on scratch layer._
+
+Window properties can be added using the `Winprops` tab of the PaperWM extension settings:
+
+https://user-images.githubusercontent.com/30424662/211422647-79e64d56-5dbb-4054-b9a6-32bf3194b636.mp4
+
+Alternatively, you can also define winprops in the `user.js` configuration file.  Below is a few examples of setting window properties for _Spotify_ and _Alacritty_.  The below examples are best placed in the `init` part of `user.js`:
 
 ```javascript
     Tiling.defwinprop({
@@ -191,9 +202,23 @@ It's possible to create simple rules for placing new windows. Currently most use
         title: "Window Title",
         scratch_layer: true,
     });
+
+    Tiling.defwinprop({
+        wm_class: "firefox",
+        preferredWidth: "900px",
+    });
+
+    Tiling.defwinprop({
+        wm_class: /alacritty/i,
+        preferredWidth: "50%",
+    });
 ```
 
 The `wm_class` or `title` of a window can be found by using looking glass: <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd> Go to the "Windows" section at the top right and find the window. X11 users can also use the `xprop` command line tool (`title` is referred as `WM_NAME` in `xprop`). The match of `wm_class` and `title` are with an OR condition; and in addition to a plain string matching, a constructed [`RegExp()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/RegExp) can be used to utilise regex matching.
+
+_Note<sup>1</sup>: `Winprops` defined in the PaperWM extension settings take precedence over `Winrprops` defined using the `user.js` method._
+
+_Note<sup>2</sup>: if you use the `user.js` method you will need to restart Gnome shell to have them take effect._
 
 ### New Window Handlers
 
@@ -250,8 +275,9 @@ See `examples/keybindings.js` for more examples.
 
 ## Fixed Window Size ##
 
-Currently it is not possible to have a default fixed window size.
-Please check the following issues for progress / info:
+See the [Winprops](#winprops) section for a way to set the default _width_ of windows identified by their `wm_class` window property.
+
+Currently it is not possible to have a default fixed window height.  Please check the following issues for progress / info:
 
 * https://github.com/paperwm/PaperWM/issues/304
 * https://github.com/paperwm/PaperWM/pull/189

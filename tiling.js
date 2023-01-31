@@ -73,8 +73,12 @@ function init() {
     oldMonitors = new Map();
 
     backgroundGroup = Main.layoutManager._backgroundGroup;
-}
 
+    // connect to settings and update winprops array when it's updated
+    Settings.settings.connect('changed::winprops', () => {
+        Settings.reloadWinpropsFromGSettings();
+    });
+}
 
 /**
    Scrolled and tiled per monitor workspace.
@@ -343,6 +347,25 @@ var Space = class Space extends Array {
             let resizable = !mw.fullscreen &&
                 mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
+            if (mw.preferredWidth) {
+                let prop = mw.preferredWidth;
+                if (prop.value <= 0) {
+                    utils.warn("invalid preferredWidth value");
+                }
+                else if (prop.unit == 'px') {
+                    targetWidth = prop.value;
+                }
+                else if (prop.unit == '%') {
+                    let availableWidth = space.workArea().width - prefs.horizontal_margin*2 - prefs.window_gap;
+                    targetWidth = Math.floor(availableWidth * Math.min(prop.value/100.0, 1.0));
+                }
+                else {
+                    utils.warn("invalid preferredWidth unit:", "'" + prop.unit + "'", "(should be 'px' or '%')");
+                }
+
+                delete mw.preferredWidth;
+            }
+
             if (resizable) {
                 const hasNewTarget = mw._targetWidth !== targetWidth || mw._targetHeight !== targetHeight;
                 const targetReached = f.width === targetWidth && f.height === targetHeight;
@@ -401,7 +424,6 @@ var Space = class Space extends Array {
         }
         return [targetWidth, widthChanged || heightChanged, y];
     }
-
 
     layout(animate = true, options={}) {
         // Guard against recursively calling layout
@@ -2535,6 +2557,9 @@ function insertWindow(metaWindow, {existing}) {
             if (winprop.focus) {
                 Main.activateWindow(metaWindow);
             }
+
+            // pass winprop properties to metaWindow
+            metaWindow.preferredWidth = winprop.preferredWidth;
         }
 
         if (addToScratch) {
@@ -3107,14 +3132,11 @@ function resizeWDec(metaWindow) {
     metaWindow.move_resize_frame(true, targetX, frame.y, targetWidth, frame.height);
 }
 
-function cycleWindowWidth(metaWindow) {
+function getCycleWindowWidths(metaWindow) {
     let steps = prefs.cycle_width_steps;
-
     let frame = metaWindow.get_frame_rect();
-    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
-    workArea.x += space.monitor.x;
 
     if (steps[0] <= 1) {
         // Steps are specifed as ratios -> convert to pixels
@@ -3123,8 +3145,17 @@ function cycleWindowWidth(metaWindow) {
         steps = steps.map(x => Math.floor(x*availableWidth));
     }
 
+   return steps;
+}
+
+function cycleWindowWidth(metaWindow) {
+    let frame = metaWindow.get_frame_rect();
+    let space = spaces.spaceOfWindow(metaWindow);
+    let workArea = space.workArea();
+    workArea.x += space.monitor.x;
+
     // 10px slack to avoid locking up windows that only resize in increments > 1px
-    let targetWidth = Math.min(utils.findNext(frame.width, steps, sizeSlack), workArea.width);
+    let targetWidth = Math.min(utils.findNext(frame.width, getCycleWindowWidths(metaWindow), sizeSlack), workArea.width);
     let targetX = frame.x;
 
     if (Scratch.isScratchWindow(metaWindow)) {

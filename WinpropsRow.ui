@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0" />
+  <template class="WinpropsRow" parent="GtkListBoxRow">
+    <style>
+      <class name="winprop-row" />
+    </style>
+    <property name="selectable">False</property>
+    <property name="activatable">True</property>
+    <property name="focusable">True</property>
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkBox" id="header">
+            <property name="spacing">12</property>
+            <style>
+              <class name="header" />
+            </style>
+            <child>
+              <object class="GtkLabel" id="descLabel">
+                <style>
+                  <class name="description" />
+                </style>
+                <property name="ellipsize">end</property>
+                <property name="halign">start</property>
+                <property name="lines">1</property>
+                <property name="wrap">True</property>
+                <property name="wrap-mode">word-char</property>
+                <property name="xalign">0</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="accelLabel">
+                <property name="hexpand">True</property>
+                <property name="halign">end</property>
+                <property name="xalign">1.0</property>
+                <property name="use-markup">True</property>
+                <style>
+                  <class name="dim-label" />
+                </style>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkRevealer" id="revealer">
+            <child>
+              <object class="GtkGrid">
+                <property name="hexpand">True</property>
+
+                <child>
+                  <object class="GtkListBox" id="optionList">
+                    <property name="activate-on-single-click">True</property>
+                    <property name="hexpand">True</property>
+                    <property name="selection-mode">none</property>
+                    <style>
+                      <class name="option-list" />
+                    </style>
+                    <layout>
+                      <property name="row">0</property>
+                      <property name="column">0</property>
+                      <property name="column-span">2</property>
+                    </layout>
+                    <child>
+                      <object class="GtkGrid">
+                        <property name="focusable">False</property>
+                        <property name="margin_start">12</property>
+                        <property name="margin_end">12</property>
+                        <property name="margin_top">6</property>
+                        <property name="margin_bottom">6</property>
+                        <property name="column_spacing">32</property>
+                        <property name="tooltip_markup" translatable="yes">Window class value used to identify windows to have these winprops applied.  Can be a &lt;i&gt;string&lt;/i&gt; or &lt;i&gt;javascript regex expression literal&lt;/i&gt;.</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="focusable">False</property>
+                            <property name="hexpand">1</property>
+                            <property name="label" translatable="yes">wm_class</property>
+                            <property name="xalign">0</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="wmClass">
+                            <property name="width_chars">24</property>
+                            <property name="max_width_chars">24</property>
+                            <layout>
+                              <property name="column">2</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkGrid">
+                        <property name="focusable">False</property>
+                        <property name="margin_start">12</property>
+                        <property name="margin_end">12</property>
+                        <property name="margin_top">6</property>
+                        <property name="margin_bottom">6</property>
+                        <property name="column_spacing">32</property>
+                        <property name="tooltip_markup" translatable="yes">Window title value used to identify windows to have these winprops applied.  Can be a &lt;i&gt;string&lt;/i&gt; or &lt;i&gt;javascript regex expression literal&lt;/i&gt;.</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="focusable">False</property>
+                            <property name="hexpand">1</property>
+                            <property name="label" translatable="yes">title</property>
+                            <property name="xalign">0</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="title">
+                            <property name="width_chars">24</property>
+                            <property name="max_width_chars">24</property>
+                            <layout>
+                              <property name="column">2</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkGrid">
+                        <property name="focusable">False</property>
+                        <property name="margin_start">12</property>
+                        <property name="margin_end">12</property>
+                        <property name="margin_top">6</property>
+                        <property name="margin_bottom">6</property>
+                        <property name="column_spacing">32</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="focusable">False</property>
+                            <property name="hexpand">1</property>
+                            <property name="label" translatable="yes">Open on scratch layer</property>
+                            <property name="xalign">0</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkSwitch" id="scratchLayer">
+                            <layout>
+                              <property name="column">1</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkGrid">
+                        <property name="focusable">False</property>
+                        <property name="margin_start">12</property>
+                        <property name="margin_end">12</property>
+                        <property name="margin_top">6</property>
+                        <property name="margin_bottom">6</property>
+                        <property name="column_spacing">32</property>
+                        <property name="tooltip_markup" translatable="yes">Preferred width.  Can be a percent value (e.g. &lt;i&gt;50%&lt;/i&gt;) or pixel value (e.g. &lt;i&gt;500px&lt;/i&gt;). &lt;i&gt;Note: this property is ignored for windows opened on the scratch layer.&lt;/i&gt;</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="focusable">False</property>
+                            <property name="hexpand">1</property>
+                            <property name="use_markup">True</property>
+                            <property name="label" translatable="yes">Preferred width (with &lt;b&gt;%&lt;/b&gt; or &lt;b&gt;px&lt;/b&gt; unit)</property>
+                            <property name="xalign">0</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="preferredWidth">
+                            <property name="width_chars">12</property>
+                            <property name="max_width_chars">12</property>
+                            <layout>
+                              <property name="column">2</property>
+                              <property name="row">0</property>
+                            </layout>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="deleteButton">
+                    <property name="label" translatable="yes">Delete</property>
+                    <property name="hexpand">True</property>
+                    <property name="halign">end</property>
+                    <property name="margin-top">8px</property>
+                    <property name="margin-end">12px</property>
+                    <property name="margin-bottom">8px</property>
+                    <layout>
+                      <property name="row">1</property>
+                      <property name="column">1</property>
+                    </layout>
+                    <style>
+                      <class name="destructive-action" />
+                    </style>
+                    <signal name="clicked" handler="_onDeleteButtonClicked" />
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

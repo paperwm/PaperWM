@@ -885,10 +885,17 @@
     </child>
   </object>
   <object class="AdwPreferencesPage" id="keybindings_page">
-    <property name="title" translatable="yes">Keybindings</property>\
+    <property name="title" translatable="yes">Keybindings</property>
     <property name="icon-name">emblem-system-symbolic</property>
     <child>
       <object class="KeybindingsPane" />
+    </child>
+  </object>
+  <object class="AdwPreferencesPage" id="winprops_page">
+    <property name="title" translatable="yes">Winprops</property>
+    <property name="icon-name">sidebar-show-right-symbolic</property>
+    <child>
+      <object class="WinpropsPane" id="winpropsPane" />
     </child>
   </object>
   <object class="GtkPopover" id="about_popover">
