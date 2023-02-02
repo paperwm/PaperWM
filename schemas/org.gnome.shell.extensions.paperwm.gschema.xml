@@ -55,7 +55,6 @@
       <summary>Move window one workspace up</summary>
     </key>
 
-
     <key type="as" name="move-monitor-right">
         <default><![CDATA[['<Super><Shift><Ctrl>Right']]]></default>
         <summary>Move the active window to the right monitor</summary>
@@ -378,6 +377,11 @@
     <key type="d" name="animation-time">
         <default>0.25</default>
         <summary>Duration of animations in seconds</summary>
+    </key>
+
+    <key type="as" name="winprops">
+        <default><![CDATA[[]]]></default>
+        <summary>Array of winprops as (JSON) string objects</summary>
     </key>
 
     <child name="keybindings" schema="org.gnome.Shell.Extensions.PaperWM.Keybindings"/>

@@ -574,30 +574,29 @@ function disable() {
 }
 
 function fixTopBar() {
-    let spaces = Tiling.spaces
-    if (!spaces)
-        return;
-    let space = spaces.monitors.get(panelMonitor);
+    let space = Tiling.spaces?.monitors.get(panelMonitor) ?? false;
     if (!space)
         return;
-    let normal = !Main.overview.visible && !Tiling.inPreview
-    let selected = spaces.monitors.get(panelMonitor).selectedWindow
-    let focus = display.focus_window
-    let focusIsScratch = focus && Scratch.isScratchWindow(focus)
-    let fullscreen = selected && selected.fullscreen && !(focusIsScratch);
-    let hideTopBar = !spaces.monitors.get(panelMonitor).showTopBar
-    if (normal && hideTopBar) {
-        // Update the workarea to support hide top bar
-        panelBox.scale_y = 0;
+    
+    let normal = !Main.overview.visible && !Tiling.inPreview;
+    // selected is current (tiled) selected window (can be different to focused window)
+    let selected = space.selectedWindow;
+    let focused = display.focus_window;
+    let focusIsFloatOrScratch = focused && (space.isFloating(focused) || Scratch.isScratchWindow(focused));
+    // check if is currently fullscreened (check focused-floating, focused-scratch, and selected/tiled window)
+    let fullscreen = focusIsFloatOrScratch ? focused.fullscreen : selected && selected.fullscreen;
+    
+    if (normal && !space.showTopBar) {
+        panelBox.scale_y = 0; // Update the workarea to support hide top bar
         panelBox.hide();
-        return;
     }
-    if (normal && fullscreen) {
+    else if (normal && fullscreen) {
         panelBox.hide();
-        return;
     }
-    panelBox.scale_y = 1;
-    panelBox.show();
+    else {
+        panelBox.scale_y = 1;
+        panelBox.show();
+    }
 }
 
 /**
