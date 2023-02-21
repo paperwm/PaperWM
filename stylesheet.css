@@ -18,3 +18,8 @@
 .paperwm-selection {
     border-radius: 8px;
 }
+
+.paperwm-window-indicator {
+    background-color: rgba(0, 255, 149, 0.60);
+    border-radius: 1px;
+}

@@ -213,10 +213,6 @@ var Space = class Space extends Array {
             name: 'windowIndicator',
             style_class: 'paperwm-window-indicator'
         });
-        this.windowIndicator.style = `
-            background-color: red;
-            border-radius: 2px;
-        `
         this.windowIndicator.hide();
         this.actor.add_actor(this.windowIndicator);
 
