@@ -34,7 +34,6 @@ var display = global.display;
 /** @type {Spaces} */
 var spaces;
 
-
 var Minimap = Extension.imports.minimap;
 var Scratch = Extension.imports.scratch;
 var Gestures = Extension.imports.gestures;
@@ -173,8 +172,10 @@ var Space = class Space extends Array {
         this.label = label;
         label.hide();
 
-        let selection = new St.Widget({name: 'selection',
-                                       style_class: 'paperwm-selection tile-preview'});
+        let selection = new St.Widget({
+            name: 'selection',
+            style_class: 'paperwm-selection tile-preview'
+        });
         this.selection = selection;
 
         clip.space = this;
@@ -207,6 +208,17 @@ var Space = class Space extends Array {
         this.selectedWindow = null;
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
+
+        this.windowIndicator = new St.Widget({
+            name: 'windowIndicator',
+            style_class: 'paperwm-window-indicator'
+        });
+        this.windowIndicator.style = `
+            background-color: red;
+            border-radius: 2px;
+        `
+        this.windowIndicator.hide();
+        this.actor.add_actor(this.windowIndicator);
 
         if (doInit)
             this.init();
@@ -1121,6 +1133,30 @@ border-radius: ${borderWidth}px;
         }
     }
 
+    updateWindowIndicator() {
+        // number of windows
+        let nw = this.getWindows().length;
+        let width = this.monitor.width;
+
+        if (nw <= 0) {
+            this.windowIndicator.hide();
+            return;
+        } else {
+            this.windowIndicator.show();
+        }
+
+        let winseg = width / nw;
+        this.windowIndicator.width = winseg;
+        this.windowIndicator.height = TopBar.panelBox.height;
+
+        // index of currently selected window
+        let windex = this.indexOf(this.selectedWindow);
+        this.windowIndicator.x = windex * winseg;
+
+        // FIX: sometimes topbar can lose transparency (mainly if other extensions override)
+        TopBar.forceTransparency();
+    }
+
     createBackground() {
         if (this.background) {
             this.signals.disconnect(this.background)
@@ -1841,7 +1877,6 @@ var Spaces = class Spaces extends Map {
     }
 
     selectSequenceSpace(direction, move) {
-
         // if in stack preview do not run sequence preview
         if (inPreview === PreviewMode.STACK) {
             return;
@@ -2098,7 +2133,7 @@ var Spaces = class Spaces extends Map {
 
         let onComplete = () => {
             // Hide any spaces that aren't visible This
-            // avoids a nasty permance degregration in some
+            // avoids a nasty preformance degregration in some
             // cases
             for (const space of spaces.values()) {
                 if (!visible.get(space)) {
@@ -2481,6 +2516,8 @@ function remove_handler(workspace, meta_window) {
             meta_window.clone = null;
         }
     }
+
+    space.updateWindowIndicator();
 }
 
 
@@ -2759,6 +2796,8 @@ function ensureViewport(meta_window, space, force) {
     selected.clone.raise_top();
     updateSelection(space, meta_window);
     space.emit('select');
+
+    space.updateWindowIndicator();
 }
 
 function updateSelection(space, metaWindow) {

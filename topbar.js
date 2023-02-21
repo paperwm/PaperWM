@@ -69,8 +69,7 @@ var PopupMenuEntryHelper = function constructor(text) {
 
     this.label.set_style(`
       width: 232px;
-`);
-
+    `);
 
     this.prevIcon = createButton('go-previous-symbolic', 'previous workspace setting');
     this.nextIcon = createButton('go-next-symbolic', 'next workspace setting');
@@ -517,8 +516,7 @@ function enable () {
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.show();
 
-    // Force transparency
-    panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
+    forceTransparency();
 
     screenSignals.push(
         workspaceManager.connect_after('workspace-switched',
@@ -571,6 +569,10 @@ function disable() {
     screenSignals = [];
 
     panelBox.scale_y = 1;
+}
+
+function forceTransparency() {
+    Main.panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
 }
 
 function fixTopBar() {
