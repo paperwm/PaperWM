@@ -3571,7 +3571,6 @@ function cycleWorkspaceSettings(dir=1) {
     return space;
 }
 
-
 // Backward compatibility
 function defwinprop(...args) {
     return Settings.defwinprop(...args);

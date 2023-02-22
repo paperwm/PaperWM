@@ -550,6 +550,15 @@ function enable () {
     signals.connect(panelBox, 'hide', () => {
         fixTopBar();
     });
+    /**
+     * force transparency after hiding overview.  Mainloop timeout
+     * needed here to happens on call stack after hidden
+     */
+    signals.connect(Main.overview, 'hidden', () => {
+          imports.mainloop.timeout_add(0, () => {
+            forceTransparency();
+          });
+    })
 
     fixLabel(menu._label);
     signals.connect(menu._label, 'notify::allocation', fixLabel);
