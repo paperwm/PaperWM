@@ -503,7 +503,6 @@ var Space = class Space extends Array {
         }
         this._inLayout = false;
 
-
         let oldWidth = this.cloneContainer.width;
         let min = workArea.x;
         let auto = (this.targetX + oldWidth >= min + workArea.width && this.targetX <= 0)
@@ -1130,24 +1129,23 @@ border-radius: ${borderWidth}px;
     }
 
     updateWindowPositionBar() {
-        // number of windows
-        let nw = this.getWindows().length;
-        let width = this.monitor.width;
-
-        if (nw <= 0) {
+        // number of columns (a column have one or more windows)
+        let cols = this.length;
+        if (cols <= 0) {
             this.windowPositionBar.hide();
             return;
         } else {
             this.windowPositionBar.show();
         }
-
-        let winseg = width / nw;
-        this.windowPositionBar.width = winseg;
+        
+        let width = this.monitor.width;
+        let segments = width / cols;
+        this.windowPositionBar.width = segments;
         this.windowPositionBar.height = TopBar.panelBox.height;
 
         // index of currently selected window
         let windex = this.indexOf(this.selectedWindow);
-        this.windowPositionBar.x = windex * winseg;
+        this.windowPositionBar.x = windex * segments;
     }
 
     createBackground() {
