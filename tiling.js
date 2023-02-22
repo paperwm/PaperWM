@@ -211,7 +211,7 @@ var Space = class Space extends Array {
 
         this.windowIndicator = new St.Widget({
             name: 'windowIndicator',
-            style_class: 'paperwm-window-indicator'
+            style_class: 'paperwm-window-indicator tile-preview'
         });
         this.windowIndicator.hide();
         this.actor.add_actor(this.windowIndicator);
