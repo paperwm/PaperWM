@@ -209,12 +209,12 @@ var Space = class Space extends Array {
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
 
-        this.windowIndicator = new St.Widget({
-            name: 'windowIndicator',
-            style_class: 'paperwm-window-indicator tile-preview'
+        this.windowPositionBar = new St.Widget({
+            name: 'windowPositionBar',
+            style_class: 'paperwm-window-position-bar tile-preview'
         });
-        this.windowIndicator.hide();
-        this.actor.add_actor(this.windowIndicator);
+        this.windowPositionBar.hide();
+        this.actor.add_actor(this.windowPositionBar);
 
         if (doInit)
             this.init();
@@ -1129,28 +1129,25 @@ border-radius: ${borderWidth}px;
         }
     }
 
-    updateWindowIndicator() {
+    updateWindowPositionBar() {
         // number of windows
         let nw = this.getWindows().length;
         let width = this.monitor.width;
 
         if (nw <= 0) {
-            this.windowIndicator.hide();
+            this.windowPositionBar.hide();
             return;
         } else {
-            this.windowIndicator.show();
+            this.windowPositionBar.show();
         }
 
         let winseg = width / nw;
-        this.windowIndicator.width = winseg;
-        this.windowIndicator.height = TopBar.panelBox.height;
+        this.windowPositionBar.width = winseg;
+        this.windowPositionBar.height = TopBar.panelBox.height;
 
         // index of currently selected window
         let windex = this.indexOf(this.selectedWindow);
-        this.windowIndicator.x = windex * winseg;
-
-        // FIX: sometimes topbar can lose transparency (mainly if other extensions override)
-        TopBar.forceTransparency();
+        this.windowPositionBar.x = windex * winseg;
     }
 
     createBackground() {
@@ -2513,7 +2510,7 @@ function remove_handler(workspace, meta_window) {
         }
     }
 
-    space.updateWindowIndicator();
+    space.updateWindowPositionBar();
 }
 
 
@@ -2793,7 +2790,7 @@ function ensureViewport(meta_window, space, force) {
     updateSelection(space, meta_window);
     space.emit('select');
 
-    space.updateWindowIndicator();
+    space.updateWindowPositionBar();
 }
 
 function updateSelection(space, metaWindow) {
