@@ -1131,7 +1131,7 @@ border-radius: ${borderWidth}px;
     updateWindowPositionBar() {
         // number of columns (a column have one or more windows)
         let cols = this.length;
-        if (cols <= 0) {
+        if (cols <= 1) {
             this.windowPositionBar.hide();
             return;
         } else {
