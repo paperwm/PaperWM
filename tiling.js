@@ -2514,8 +2514,6 @@ function remove_handler(workspace, meta_window) {
             meta_window.clone = null;
         }
     }
-
-    space.updateWindowPositionBar();
 }
 
 
@@ -2794,8 +2792,6 @@ function ensureViewport(meta_window, space, force) {
     selected.clone.raise_top();
     updateSelection(space, meta_window);
     space.emit('select');
-
-    space.updateWindowPositionBar();
 }
 
 function updateSelection(space, metaWindow) {
@@ -2808,6 +2804,7 @@ function updateSelection(space, metaWindow) {
 
     // then set the new selection active
     space.setSelectionActive();
+    space.updateWindowPositionBar();
     if (space.selection.get_parent() === clone)
         return;
     space.selection.reparent(clone);
