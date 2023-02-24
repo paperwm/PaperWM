@@ -530,7 +530,7 @@ function enable () {
             return;
         fixTopBar();
     });
-
+    
     signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
         let monitors = Tiling.spaces.monitors;
         if (!settings.prefs.topbar_follow_focus) {
@@ -541,6 +541,12 @@ function enable () {
         updateWorkspaceIndicator(space.workspace.index());
         for (let [workspace, space] of Tiling.spaces) {
             space.layout();
+        }
+    });
+
+    signals.connect(Settings.settings, 'changed::show-window-position-bar', (settings, key) => {
+        for (let [workspace, space] of Tiling.spaces) {
+            space.updateWindowPositionBar();
         }
     });
 
