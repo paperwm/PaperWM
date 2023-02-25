@@ -90,6 +90,8 @@ function init() {
     Extension = imports.misc.extensionUtils.getCurrentExtension();
     convenience = Extension.imports.convenience;
 
+    checkGnomeShellVersionCompatibility();
+
     if(initRun) {
         log(`#startup Reinitialized against our will! Skip adding bindings again to not cause trouble.`);
         return;
@@ -127,6 +129,25 @@ function disable() {
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
 var Main = imports.ui.main;
+var Config = imports.misc.config;
+
+function checkGnomeShellVersionCompatibility() {
+    const gnomeShellVersion = Config.PACKAGE_VERSION;
+    const supportedVersions = Extension.metadata["shell-version"];
+    for (const version of supportedVersions) {
+        if (gnomeShellVersion.startsWith(version)) {
+            return;
+        }
+    }
+
+    // did not find a supported version
+    print("#paperwm", `WARNING: Running on unsupported version of gnome shell (${gnomeShellVersion})`);
+    print("#paperwm", `WARNING: Supported versions: ${supportedVersions}`);
+    const msg = `Running on unsupported version of gnome shell (${gnomeShellVersion}).
+Supported versions: ${supportedVersions}.
+Please upgrade/downgrade your gnome shell to a supported version or upgrade/downgrade PaperWM.`;
+    errorNotification("PaperWM warning", msg);
+}
 
 function getConfigDir() {
     return Gio.file_new_for_path(GLib.get_user_config_dir() + '/paperwm');
