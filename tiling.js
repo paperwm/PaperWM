@@ -209,6 +209,12 @@ var Space = class Space extends Array {
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
 
+        this.windowPositionBarBackdrop = new St.Widget({
+            name: 'windowPositionBarBackdrop',
+        });
+        this.windowPositionBarBackdrop.style = TopBar.styles.transparent;
+        this.actor.add_actor(this.windowPositionBarBackdrop);
+
         this.showWindowPositionBar = prefs.show_window_position_bar;
         this.windowPositionBar = new St.Widget({
             name: 'windowPositionBar',
@@ -216,6 +222,7 @@ var Space = class Space extends Array {
         });
         this.windowPositionBar.hide(); // default on empty space
         this.actor.add_actor(this.windowPositionBar);
+        this.windowPositionBar.raise_top();
 
         if (doInit)
             this.init();
@@ -236,6 +243,10 @@ var Space = class Space extends Array {
             this.targetX = oldSpace.targetX;
         }
         this.cloneContainer.x = this.targetX;
+        
+        this.windowPositionBarBackdrop.width = this.monitor.width;
+        this.windowPositionBarBackdrop.height = TopBar.panelBox.height;
+        
         this.getWindows().forEach(w => {
             animateWindow(w);
         });
@@ -1053,17 +1064,42 @@ var Space = class Space extends Array {
         this.signals.connect(this.settings, 'changed::background',
                              this.updateBackground.bind(this));
         this.signals.connect(Settings.settings, 'changed::default-show-top-bar',
-                             this.updateShowTopBar.bind(this));
+                             this.showTopBarChanged.bind(this));
         this.signals.connect(this.settings, 'changed::show-top-bar',
-                             this.updateShowTopBar.bind(this));
+                             this.showTopBarChanged.bind(this));
     }
 
-    updateShowTopBar() {
+    /**
+     * Returns the user show-top-bar setting if it exists, otherwise returns the
+     * default-show-top-bar setting.
+     * @returns Boolean
+     */
+    getShowTopBarSetting() {
         let showTopBar = prefs.default_show_top_bar;
         let userValue = this.settings.get_user_value('show-top-bar');
         if (userValue) {
             showTopBar = userValue.unpack();
         }
+
+        return showTopBar;
+    }
+
+    showTopBarChanged() {
+        let showTopBar = this.getShowTopBarSetting();
+
+        // remove window position bar actors
+        this.actor.remove_actor(this.windowPositionBarBackdrop);
+        this.actor.remove_actor(this.windowPositionBar);
+        if (showTopBar) {
+            this.actor.add_actor(this.windowPositionBarBackdrop);
+            this.actor.add_actor(this.windowPositionBar);
+        }
+
+        this.updateShowTopBar();
+    }
+
+    updateShowTopBar() {
+        let showTopBar = this.getShowTopBarSetting();
 
         if (showTopBar) {
             this.showTopBar = 1;
@@ -1792,6 +1828,7 @@ var Spaces = class Spaces extends Map {
         }
 
         inPreview = PreviewMode.NONE;
+        TopBar.setClearStyle();
     }
 
     _getOrderedSpaces(monitor) {
@@ -1811,6 +1848,7 @@ var Spaces = class Spaces extends Map {
             return;
         }
         inPreview = PreviewMode.SEQUENTIAL;
+        TopBar.setTransparentStyle();
 
         if (Main.panel.statusArea.appMenu) {
             Main.panel.statusArea.appMenu.container.hide();
@@ -1945,11 +1983,11 @@ var Spaces = class Spaces extends Map {
     }
 
     _initWorkspaceStack() {
-
         if (inPreview)
             return;
 
         inPreview = PreviewMode.STACK;
+        TopBar.setTransparentStyle();
 
         // Always show the topbar when using the workspace stack
         TopBar.fixTopBar();
@@ -2925,7 +2963,6 @@ function setAllWorkspacesInactive() {
 // `MetaWindow::focus` handling
 function focus_handler(metaWindow, user_data) {
     debug("focus:", metaWindow.title, utils.framestr(metaWindow.get_frame_rect()));
-
 
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();

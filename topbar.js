@@ -46,6 +46,11 @@ var colors = [
     '#46A046', '#267726', '#ffffff', '#000000'
 ];
 
+var styles = {
+    clear: 'background-color: rgba(0, 0, 0, 0);',
+    transparent: 'background-color: rgba(0, 0, 0, 0.35);'
+};
+
 function createButton(icon_name, accessible_name) {
     return new St.Button({reactive: true,
                           can_focus: true,
@@ -516,7 +521,7 @@ function enable () {
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.show();
 
-    forceTransparency();
+    setClearStyle();
 
     screenSignals.push(
         workspaceManager.connect_after('workspace-switched',
@@ -557,12 +562,12 @@ function enable () {
         fixTopBar();
     });
     /**
-     * force transparency after hiding overview.  Mainloop timeout
-     * needed here to happens on call stack after hidden
+     * Set clear-style after hiding overview.  Mainloop timeout
+     * needed here to execute after hidden is finished.
      */
     signals.connect(Main.overview, 'hidden', () => {
           imports.mainloop.timeout_add(0, () => {
-            forceTransparency();
+            setClearStyle();
           });
     })
 
@@ -586,8 +591,12 @@ function disable() {
     panelBox.scale_y = 1;
 }
 
-function forceTransparency() {
-    Main.panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
+function setClearStyle() {
+    Main.panel.set_style(styles.clear);
+}
+
+function setTransparentStyle() {
+    Main.panel.set_style(styles.transparent);
 }
 
 function fixTopBar() {
