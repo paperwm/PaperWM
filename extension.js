@@ -90,7 +90,7 @@ function init() {
     Extension = imports.misc.extensionUtils.getCurrentExtension();
     convenience = Extension.imports.convenience;
 
-    checkGnomeShellVersionCompatibility();
+    warnAboutGnomeShellVersionCompatibility();
 
     if(initRun) {
         log(`#startup Reinitialized against our will! Skip adding bindings again to not cause trouble.`);
@@ -131,7 +131,9 @@ var GLib = imports.gi.GLib;
 var Main = imports.ui.main;
 var Config = imports.misc.config;
 
-function checkGnomeShellVersionCompatibility() {
+// Checks gnome shell version compatibility and warns the user when running on
+// and unsupported version.
+function warnAboutGnomeShellVersionCompatibility() {
     const gnomeShellVersion = Config.PACKAGE_VERSION;
     const supportedVersions = Extension.metadata["shell-version"];
     for (const version of supportedVersions) {
@@ -142,11 +144,16 @@ function checkGnomeShellVersionCompatibility() {
 
     // did not find a supported version
     print("#paperwm", `WARNING: Running on unsupported version of gnome shell (${gnomeShellVersion})`);
-    print("#paperwm", `WARNING: Supported versions: ${supportedVersions}`);
+    print("#paperwm", `Supported versions: ${supportedVersions}`);
     const msg = `Running on unsupported version of gnome shell (${gnomeShellVersion}).
 Supported versions: ${supportedVersions}.
-Please upgrade/downgrade your gnome shell to a supported version or upgrade/downgrade PaperWM.`;
-    errorNotification("PaperWM warning", msg);
+Click for more information.`;
+
+    const notification = notify("PaperWM Warning", msg);
+    notification.connect('activated', () => {
+        imports.misc.util.spawn(["xdg-open", "https://github.com/paperwm/PaperWM/wiki/Warning:-Running-on-unsupported-version-of-gnome-shell"]);
+        notification.destroy();
+    });
 }
 
 function getConfigDir() {
