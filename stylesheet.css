@@ -1,9 +1,3 @@
-.paper-mm-selected-window {
-    border: 10px cyan; /* if we need to operate in pre-scaled dimension */
-    border-radius: 5px;
-}
-
-
 .workspace-icon-button {
     -st-icon-style: symbolic;
     border: none;
@@ -16,5 +10,10 @@
 }
 
 .paperwm-selection {
+    /* matches border radius of default gnome windows */
+    border-radius: 12px 12px 0px 0px;
+}
+
+.paperwm-minimap-selection {
     border-radius: 8px;
 }
