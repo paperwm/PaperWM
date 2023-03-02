@@ -228,13 +228,23 @@ var StackOverlay = class StackOverlay {
                 this.clone.destroy();
                 this.clone = null;
             }
+
+            // remove/cleanup the previous preview
+            this.removePreview();
+            Mainloop.timeout_add(200, () => {
+                // if pointer is still at edge (within 2px), trigger preview
+                let [x, y, mask] = global.get_pointer();
+                if (x <= 2 || x >= this.monitor.width - 2) {
+                    this.triggerPreview.bind(this)();
+                }
+            });
             return true;
         });
 
         this.signals.connect(overlay, 'enter-event', this.triggerPreview.bind(this));
         this.signals.connect(overlay,'leave-event', this.removePreview.bind(this));
         this.signals.connect(Settings.settings, 'changed::pressure-barrier',
-                             this.updateBarrier.bind(this, true));
+            this.updateBarrier.bind(this, true));
 
         this.updateBarrier();
 
@@ -275,7 +285,8 @@ var StackOverlay = class StackOverlay {
             clone.set_position(x, y);
         });
 
-        this._removeId = Mainloop.timeout_add_seconds(2, this.removePreview.bind(this));
+        // uncomment to remove the preview after a timeout
+        //this._removeId = Mainloop.timeout_add_seconds(2, this.removePreview.bind(this));
     }
 
     removePreview() {
