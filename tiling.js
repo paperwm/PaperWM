@@ -2666,13 +2666,16 @@ function animateDown(metaWindow) {
     });
 }
 
+/**
+ * Return true if current selected window is centered.
+ */
 function isCentered(metaWindow, space) {
     space = space || spaces.spaceOfWindow(metaWindow)
     let workArea = space.workArea()
     let clone = metaWindow.clone;
-    let f = metaWindow.get_frame_rect();
-    let x = clone.targetX + space.targetX;
-    return x + (f.width)/2 === workArea.x + workArea.width/2
+    let frame = metaWindow.get_frame_rect();
+    let x = clone.targetX + space.targetX;    
+    return x === workArea.x + Math.round(workArea.width/2 - frame.width/2);
 }
 
 function ensuredX(meta_window, space) {
@@ -2696,7 +2699,8 @@ function ensuredX(meta_window, space) {
     let min = workArea.x;
     let max = min + workArea.width;
     if (isCentered(last, space)) {
-        x = min + Math.round((workArea.width - frame.width)/2);
+        // current window is centered, continue centering
+        x = workArea.x + Math.round(workArea.width/2 - frame.width/2);
     } else if (meta_window.fullscreen) {
         x = 0;
     } else if (index == 0 && x <= min) {
