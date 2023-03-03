@@ -3262,12 +3262,24 @@ function activateWindowAfterRendered(actor, mw) {
     });
 }
 
+/**
+ * Centers the currently selected window.
+ */
 function centerWindowHorizontally(metaWindow) {
     const frame = metaWindow.get_frame_rect();
     const space = spaces.spaceOfWindow(metaWindow);
+    const index = space.indexOf(metaWindow);
     const monitor = space.monitor;
     const workArea = space.workArea();
-    const targetX = workArea.x + Math.round(workArea.width/2 - frame.width/2);
+
+    let targetX;
+    // if already centered, then uncenter by moving selected window to left edge
+    if (isCentered(metaWindow, space)) {
+        // check if is against left tiling edge
+        targetX = workArea.x + index == 0 ? 0 : prefs.horizontal_margin;
+    } else {
+        targetX = workArea.x + Math.round((workArea.width - frame.width)/2);
+    }
     const dx = targetX - (metaWindow.clone.targetX + space.targetX);
 
     let [pointerX, pointerY, mask] = global.get_pointer();
