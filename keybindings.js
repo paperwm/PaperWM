@@ -341,7 +341,7 @@ function bindkey(keystr, actionName=null, handler=null, options={}) {
     } else {
         let boundAction = keycomboMap[keycombo];
         if (boundAction && boundAction != action) {
-            log("Rebinding", keystr, "to", actionName, "from", boundAction.name);
+            print("Rebinding", keystr, "to", actionName, "from", boundAction.name);
             disableAction(boundAction)
         }
 
@@ -505,7 +505,7 @@ function enableAction(action) {
 
     } else {
         if (keycomboMap[action.keycombo]) {
-            Utils.warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name)
+            Utils.warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name);
             return Meta.KeyBindingAction.NONE;
         }
 
@@ -659,7 +659,7 @@ function resetConflicts() {
             break;
         case  'toggle-application-view':
             // overview._controls: Backward compatibility for 3.34 and below:
-            const viewSelector = (Main.overview.viewSelector || Main.overview._controls.viewSelector);
+                const viewSelector = (Main.overview._overview._controls || Main.overview.viewSelector || Main.overview._controls.viewSelector);
 
             Main.wm.setCustomKeybindingHandler(
                 name,

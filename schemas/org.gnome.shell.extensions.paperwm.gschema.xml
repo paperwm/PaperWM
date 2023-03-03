@@ -1,7 +1,6 @@
 <schemalist>
 
   <!-- Keybindings -->
-
   <schema id="org.gnome.Shell.Extensions.PaperWM.Keybindings"
           path="/org/gnome/shell/extensions/paperwm/keybindings/">
 
@@ -55,7 +54,6 @@
       <default><![CDATA[['<Super><Ctrl>Page_Up']]]></default>
       <summary>Move window one workspace up</summary>
     </key>
-
 
     <key type="as" name="move-monitor-right">
         <default><![CDATA[['<Super><Shift><Ctrl>Right']]]></default>
@@ -293,6 +291,11 @@
       <summary>Minimum gap between windows</summary>
     </key>
 
+    <key type="d" name="minimap-scale">
+      <default>0.15</default>
+      <summary>Scale of mini mini-map tiles compared to their actual window size.</summary>
+    </key>
+
     <key type="b" name="override-hot-corner">
         <default>true</default>
         <summary>Disable the upper left hot corner</summary>
@@ -301,6 +304,11 @@
     <key type="b" name="only-scratch-in-overview">
         <default>false</default>
         <summary>Limit window previews in the overview to scratch windows</summary>
+    </key>
+
+    <key type="b" name="disable-scratch-in-overview">
+        <default>false</default>
+        <summary>Don't show scratch windows in the overview</summary>
     </key>
 
     <key type="b" name="use-workspace-name">
@@ -364,6 +372,11 @@
     <key type="d" name="animation-time">
         <default>0.25</default>
         <summary>Duration of animations in seconds</summary>
+    </key>
+
+    <key type="as" name="winprops">
+        <default><![CDATA[[]]]></default>
+        <summary>Array of winprops as (JSON) string objects</summary>
     </key>
 
     <child name="keybindings" schema="org.gnome.Shell.Extensions.PaperWM.Keybindings"/>

@@ -86,9 +86,9 @@ var PopupMenuEntryHelper = function constructor(text) {
         this.prevIcon.grab_key_focus();
     });
 
-    this.actor.add(this.prevIcon, {expand: true});
-    this.actor.add(this.label, {expand: true});
-    this.actor.add(this.nextIcon, {expand: true});
+    this.actor.add_actor(this.prevIcon);
+    this.actor.add_actor(this.label);
+    this.actor.add_actor(this.nextIcon);
     this.actor.label_actor = this.label;
     this.label.clutter_text.connect('activate', this.emit.bind(this, 'activate'));
 }
@@ -202,7 +202,7 @@ class WorkspaceMenu extends PanelMenu.Button {
     _init() {
         super._init(0.5, 'Workspace', false);
 
-        this.actor.name = 'workspace-button';
+        this.name = 'workspace-button';
 
         let scale = display.get_monitor_scale(Main.layoutManager.primaryIndex);
         this._label = new St.Label({
@@ -214,7 +214,7 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         this.setName(Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()));
 
-        this.actor.add_actor(this._label);
+        this.add_actor(this._label);
 
         this.signals = new Utils.Signals();
         this.signals.connect(global.window_manager,
@@ -253,13 +253,10 @@ class WorkspaceMenu extends PanelMenu.Button {
         this._prefItem.connect('activate', () => {
             this.menu.close(true);
             let wi = workspaceManager.get_active_workspace_index();
-            let env = GLib.get_environ();
-            env.push(`PAPERWM_PREFS_SELECTED_WORKSPACE=${wi}`);
-            try {
-                GLib.spawn_async(null, ['gnome-shell-extension-prefs',  'paperwm@hedning:matrix.org'],
-                                 env, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
-            } catch(e) {
-            }
+            let temp_file = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace')
+            temp_file.replace_contents(wi.toString(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null)
+            imports.misc.extensionUtils.openPrefs()
+    
         });
 
 
@@ -420,6 +417,7 @@ class WorkspaceMenu extends PanelMenu.Button {
                 let y = this.selected.actor.y;
                 let friction = 0.5;
                 while (test()) {
+
                     let dy = this.velocity*16;
                     y -= dy;
                     // log(`calc target: ${dy} ${y} ${this.velocity}`);
@@ -493,7 +491,7 @@ var menu;
 var orginalActivitiesText;
 var screenSignals, signals;
 function init () {
-    let label = Main.panel.statusArea.activities.actor.first_child;
+    let label = Main.panel.statusArea.activities.first_child;
     orginalActivitiesText = label.text;
     screenSignals = [];
     signals = new Utils.Signals();
@@ -501,28 +499,26 @@ function init () {
 
 var panelBoxShowId, panelBoxHideId;
 function enable () {
-    Main.panel.statusArea.activities.actor.hide();
+    Main.panel.statusArea.activities.hide();
 
     menu = new WorkspaceMenu();
     // Work around 'actor' warnings
-    let panelActor = Main.panel.actor;
+    let panel = Main.panel;
     function fixLabel(label) {
         let point = new Clutter.Vertex({x: 0, y: 0});
-        let r = label.apply_relative_transform_to_point(panelActor, point);
+        let r = label.apply_relative_transform_to_point(panel, point);
 
         for (let [workspace, space] of Tiling.spaces) {
-            space.label.set_position(panelActor.x + Math.round(r.x), panelActor.y + Math.round(r.y));
+            space.label.set_position(panel.x + Math.round(r.x), panel.y + Math.round(r.y));
             let fontDescription = label.clutter_text.font_description;
             space.label.clutter_text.set_font_description(fontDescription);
         }
     }
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
-    menu.actor.show();
+    menu.show();
 
     // Force transparency
-    panelActor.set_style('background-color: rgba(0, 0, 0, 0.35);');
-    [Main.panel._rightCorner, Main.panel._leftCorner]
-        .forEach(c => c.actor.opacity = 0);
+    panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
 
     screenSignals.push(
         workspaceManager.connect_after('workspace-switched',
@@ -534,7 +530,7 @@ function enable () {
     signals.connect(Main.overview, 'hidden', () => {
         if (Tiling.spaces.selectedSpace.showTopBar)
             return;
-        hide();
+        fixTopBar();
     });
 
     signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
@@ -569,9 +565,7 @@ function disable() {
     menu.destroy();
     menu = null;
     Main.panel.statusArea.activities.actor.show();
-    Main.panel.actor.set_style('');
-    [Main.panel._rightCorner, Main.panel._leftCorner]
-        .forEach(c => c.actor.opacity = 255);
+    Main.panel.set_style("");
 
     screenSignals.forEach(id => workspaceManager.disconnect(id));
     screenSignals = [];
@@ -580,30 +574,29 @@ function disable() {
 }
 
 function fixTopBar() {
-    let spaces = Tiling.spaces
-    if (!spaces)
-        return;
-    let space = spaces.monitors.get(panelMonitor);
+    let space = Tiling.spaces?.monitors.get(panelMonitor) ?? false;
     if (!space)
         return;
-    let normal = !Main.overview.visible && !Tiling.inPreview
-    let selected = spaces.monitors.get(panelMonitor).selectedWindow
-    let focus = display.focus_window
-    let focusIsScratch = focus && Scratch.isScratchWindow(focus)
-    let fullscreen = selected && selected.fullscreen && !(focusIsScratch);
-    let hideTopBar = !spaces.monitors.get(panelMonitor).showTopBar
-    if (normal && hideTopBar) {
-        // Update the workarea to support hide top bar
-        panelBox.scale_y = 0;
+    
+    let normal = !Main.overview.visible && !Tiling.inPreview;
+    // selected is current (tiled) selected window (can be different to focused window)
+    let selected = space.selectedWindow;
+    let focused = display.focus_window;
+    let focusIsFloatOrScratch = focused && (space.isFloating(focused) || Scratch.isScratchWindow(focused));
+    // check if is currently fullscreened (check focused-floating, focused-scratch, and selected/tiled window)
+    let fullscreen = focusIsFloatOrScratch ? focused.fullscreen : selected && selected.fullscreen;
+    
+    if (normal && !space.showTopBar) {
+        panelBox.scale_y = 0; // Update the workarea to support hide top bar
         panelBox.hide();
-        return;
     }
-    if (normal && fullscreen) {
+    else if (normal && fullscreen) {
         panelBox.hide();
-        return;
     }
-    panelBox.scale_y = 1;
-    panelBox.show();
+    else {
+        panelBox.scale_y = 1;
+        panelBox.show();
+    }
 }
 
 /**

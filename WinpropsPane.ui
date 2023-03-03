@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <template class="WinpropsPane" parent="GtkBox">
+    <property name="focusable">False</property>
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkBox">
+          <property name="focusable">False</property>
+          <property name="halign">center</property>
+          <property name="orientation">horizontal</property>
+          <property name="spacing">12</property>
+      <child>
+        <object class="GtkSearchEntry" id="search">
+          <property name="activates-default">False</property>
+          <property name="halign">center</property>
+          <property name="margin-top">12</property>
+        </object>
+      </child>
+      <child>
+        <object class="GtkButton" id="addButton">
+          <property name="label" translatable="yes">Add Winprop</property>
+          <property name="hexpand">True</property>
+          <property name="halign">center</property>
+          <property name="margin-top">12px</property>
+          <signal name="clicked" handler="_onAddButtonClicked" />
+          <style>
+            <class name="winprops" />
+            <class name="add-button" />
+            <class name="suggested-action" />
+          </style>
+        </object>
+      </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel">
+        <property name="label" translatable="yes">&lt;i&gt;Winprops allow setting window properties to be applied to new windows&lt;/i&gt;</property>
+        <property name="max_width_chars">-1</property>
+        <property name="margin-top">12px</property>
+        <property name="margin-bottom">2px</property>
+        <property name="use_markup">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkScrolledWindow" id="scrolledWindow">
+        <property name="hscrollbar_policy">never</property>
+        <child>
+          <object class="GtkViewport">
+            <property name="focusable">False</property>
+            <property name="vexpand">True</property>
+            <child>
+              <object class="GtkListBox" id="listbox">
+                <property name="hexpand">True</property>
+                <property name="margin_start">36</property>
+                <property name="margin_end">36</property>
+                <property name="margin_top">12</property>
+                <property name="margin_bottom">36</property>
+                <property name="width_request">480</property>
+                <property name="show_separators">True</property>
+                <style>
+                  <class name="keybindings" />
+                  <class name="winprops" />
+                  <class name="frame" />
+                </style>
+                <signal name="row-activated" handler="_onRowActivated" />
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

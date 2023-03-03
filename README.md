@@ -4,7 +4,7 @@
 
 PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension providing scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
-Supports Gnome Shell from 3.28 to 3.36 on X11 and wayland.
+Supports Gnome Shell from 3.28 to 43 on X11 and wayland.
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
@@ -12,8 +12,15 @@ We hang out on [zulip](https://paperwm.zulipchat.com).
 
 ## Installation
 
-Clone the repo and run the
-[`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script
+Clone the repo and check out the branch supporting the Gnome Shell version you're running.
+
+- 43 (experimental, please report bugs): https://github.com/paperwm/PaperWM/tree/develop
+- 42: https://github.com/paperwm/PaperWM/tree/gnome-42
+- 40: https://github.com/paperwm/PaperWM/tree/gnome-40
+- 3.28-3.38: https://github.com/paperwm/PaperWM/releases/tag/38.2
+
+
+Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script
 from the repository. The installer will create a link to the repo in
 `$XDG_DATA_HOME/gnome-shell/extensions/`. It will then ask if you want to apply
 the recommended settings (see [Recommended
@@ -23,18 +30,6 @@ Settings](#recommended-gnome-shell-settings)) and lastly it will ask to enable P
 ```
 
 To uninstall simply run `./uninstall.sh`.
-
-You'll by default follow the
-[develop](https://github.com/paperwm/PaperWM/tree/develop) branch. If you want a
-possibly more stable experience you can follow the releases by checking out the
-[master](https://github.com/paperwm/PaperWM/tree/master) branch.
-
-Cloning the repo directly into `$XDG_DATA_HOME` also works (you can then run
-`install.sh` to enable PaperWM):
-```bash
-git clone 'https://github.com/paperwm/PaperWM.git' \
-    "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/paperwm@hedning:matrix.org"
-```
 
 Running the extension will automatically install a user config file as described in [Development & user configuration](#development--user-configuration).
 
@@ -174,6 +169,8 @@ When the tiling is active <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> selects
 
 A default user configuration, `user.js`, is created in `~/.config/paperwm/` with three functions `init`, `enable` and `disable`. `init` will run only once on startup, `enable` and `disable` will be run whenever extensions are being told to disable and enable themselves. Eg. when locking the screen with <kbd>Super</kbd><kbd>L</kbd>.
 
+You can also supply a custom `user.css` in `~/.config/paperwm/`, and paperwm will override its own default stylesheet located at the extension installation location, e.g., `~/.local/share/gnome-shell/extensions/paperwm@hedning:matrix.org/user.css  or `/usr/share/gnome-shell/extensions/paperwm@hedning:matrix.org/user.css`.
+
 We also made an emacs package, [gnome-shell-mode](https://github.com/paperwm/gnome-shell-mode), to make hacking on the config and writing extensions a more pleasant experience. To support this out of the box we also install a `metadata.json` so gnome-shell-mode will pick up the correct file context, giving you completion and interactive evaluation ala. looking glass straight in emacs.
 
 Pressing <kbd>Super</kbd><kbd>Insert</kbd> will assign the active window to a global variable `metaWindow`, its [window actor](https://developer.gnome.org/meta/stable/MetaWindowActor.html) to `actor`, its [workspace](https://developer.gnome.org/meta/stable/MetaWorkspace.html) to `workspace` and its PaperWM style workspace to `space`. This makes it easy to inspect state and test things out.
@@ -186,17 +183,42 @@ GSETTINGS_SCHEMA_DIR=$HOME/.local/share/gnome-shell/extensions/paperwm@hedning:m
 
 ### Winprops
 
-It's possible to create simple rules for placing new windows. Currently most useful when a window should be placed in the scratch layer automatically. An example, best placed in the `init` part of `user.js`:
+It's possible to set window properties using simple rules that will be applied when placing new windows. Properties can applied to windows identified by their `wm_class` or `title`.  The following properties are currently supported:
+
+Property              | Input type                          | Input example | Description
+----------------------|-------------------------------------|------------------|------------------
+`scratch_layer`       | Boolean                             | `true`, `false`  | if `true` window will be placed on the scratch layer.
+`preferredWidth`      | String value with `%` or `px` unit         | `"50%"`, `"450px"`    | resizes the window width to the preferred width when it's created. </br>_Note<sup>1</sup>: property not applicable to windows on scratch layer._
+
+Window properties can be added using the `Winprops` tab of the PaperWM extension settings:
+
+https://user-images.githubusercontent.com/30424662/211422647-79e64d56-5dbb-4054-b9a6-32bf3194b636.mp4
+
+Alternatively, you can also define winprops in the `user.js` configuration file.  Below is a few examples of setting window properties for _Spotify_ and _Alacritty_.  The below examples are best placed in the `init` part of `user.js`:
 
 ```javascript
-    let Tiling = Extension.imports.Tiling;
     Tiling.defwinprop({
         wm_class: "Spotify",
+        title: "Window Title",
         scratch_layer: true,
+    });
+
+    Tiling.defwinprop({
+        wm_class: "firefox",
+        preferredWidth: "900px",
+    });
+
+    Tiling.defwinprop({
+        wm_class: /alacritty/i,
+        preferredWidth: "50%",
     });
 ```
 
-The `wm_class` of a window can be found by using looking glass: <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd> Go to the "Windows" section at the top right and find the window. X11 users can also use the `xprop` command line tool.
+The `wm_class` or `title` of a window can be found by using looking glass: <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd> Go to the "Windows" section at the top right and find the window. X11 users can also use the `xprop` command line tool (`title` is referred as `WM_NAME` in `xprop`). The match of `wm_class` and `title` are with an OR condition; and in addition to a plain string matching, a constructed [`RegExp()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/RegExp) can be used to utilise regex matching.
+
+_Note<sup>1</sup>: `Winprops` defined in the PaperWM extension settings take precedence over `Winrprops` defined using the `user.js` method._
+
+_Note<sup>2</sup>: if you use the `user.js` method you will need to restart Gnome shell to have them take effect._
 
 ### New Window Handlers
 
@@ -253,8 +275,9 @@ See `examples/keybindings.js` for more examples.
 
 ## Fixed Window Size ##
 
-Currently it is not possible to have a default fixed window size.
-Please check the following issues for progress / info:
+See the [Winprops](#winprops) section for a way to set the default _width_ of windows identified by their `wm_class` window property.
+
+Currently it is not possible to have a default fixed window height.  Please check the following issues for progress / info:
 
 * https://github.com/paperwm/PaperWM/issues/304
 * https://github.com/paperwm/PaperWM/pull/189
@@ -281,4 +304,4 @@ These extensions are good complements to PaperWM:
 
 ## Prior work ##
 
-A similar idea was apparently tried out a while back: http://10gui.com/
+A similar idea was apparently tried out a while back: [10/GUI](https://web.archive.org/web/20201123162403/http://10gui.com/)

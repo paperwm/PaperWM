@@ -67,7 +67,7 @@ function createAppIcon(metaWindow, size) {
 
 /**
  */
-class ClickOverlay {
+var ClickOverlay = class ClickOverlay {
     constructor(monitor, onlyOnPrimary) {
         this.monitor = monitor;
         this.onlyOnPrimary = onlyOnPrimary;
@@ -228,13 +228,23 @@ var StackOverlay = class StackOverlay {
                 this.clone.destroy();
                 this.clone = null;
             }
+
+            // remove/cleanup the previous preview
+            this.removePreview();
+            Mainloop.timeout_add(200, () => {
+                // if pointer is still at edge (within 2px), trigger preview
+                let [x, y, mask] = global.get_pointer();
+                if (x <= 2 || x >= this.monitor.width - 2) {
+                    this.triggerPreview.bind(this)();
+                }
+            });
             return true;
         });
 
         this.signals.connect(overlay, 'enter-event', this.triggerPreview.bind(this));
         this.signals.connect(overlay,'leave-event', this.removePreview.bind(this));
         this.signals.connect(Settings.settings, 'changed::pressure-barrier',
-                             this.updateBarrier.bind(this, true));
+            this.updateBarrier.bind(this, true));
 
         this.updateBarrier();
 
@@ -263,18 +273,20 @@ var StackOverlay = class StackOverlay {
             Tiling.animateWindow(this.target);
 
             this.clone = clone;
-            clone.set_scale(0.15, 0.15);
+            let scale = prefs.minimap_scale;
+            clone.set_scale(scale, scale);
             Main.uiGroup.add_actor(clone);
 
             let monitor = this.monitor;
             if (this._direction === Meta.MotionDirection.RIGHT)
-                x = monitor.x + monitor.width - clone.get_transformed_size()[0];
+                x = monitor.x + monitor.width - (scale * clone.width);
             else
                 x = monitor.x;
             clone.set_position(x, y);
         });
 
-        this._removeId = Mainloop.timeout_add_seconds(2, this.removePreview.bind(this));
+        // uncomment to remove the preview after a timeout
+        //this._removeId = Mainloop.timeout_add_seconds(2, this.removePreview.bind(this));
     }
 
     removePreview() {
@@ -373,6 +385,8 @@ var StackOverlay = class StackOverlay {
         let column = space[index];
         this.target = mru.filter(w => column.includes(w))[0];
         let metaWindow = this.target;
+        if (!metaWindow)
+            return;
 
         let overlay = this.overlay;
         let actor = metaWindow.get_compositor_private();

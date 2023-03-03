@@ -5,4 +5,6 @@
   (org-indent-mode . t))
  (js-mode
   (mode . gnome-shell))
+ (js2-mode
+  (js2-basic-offset . 4))
  )

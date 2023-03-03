@@ -18,8 +18,6 @@ var debug = utils.debug;
 
 var prefs = Extension.imports.settings.prefs;
 
-var MINIMAP_SCALE = 0.15;
-
 function calcOffset(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
     let frame = metaWindow.get_frame_rect();
@@ -28,29 +26,33 @@ function calcOffset(metaWindow) {
     return [x_offset, y_offset];
 }
 
-class Minimap extends Array {
+var Minimap = class Minimap extends Array {
     constructor(space, monitor) {
         super();
         this.space = space;
         this.monitor = monitor;
-        let actor = new St.Widget({name: 'minimap-background',
-                                    style_class: 'switcher-list'});
+        let actor = new St.Widget({
+            name: 'minimap',
+            style_class: 'paperwm-minimap switcher-list'
+        });
         this.actor = actor;
         actor.height = space.height*0.20;
 
-        let highlight = new St.Widget({name: 'minimap-highlight',
-                                       style_class: 'item-box'});
+        let highlight = new St.Widget({
+            name: 'minimap-selection',
+            style_class: 'paperwm-minimap-selection item-box'
+        });
         highlight.add_style_pseudo_class('selected');
         this.highlight = highlight;
-        let label = new St.Label();
+        let label = new St.Label({style_class: 'paperwm-minimap-label'});
         label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
-        this.label = label;;
+        this.label = label;
 
         let clip = new St.Widget({name: 'container-clip'});
         this.clip = clip;
         let container = new St.Widget({name: 'minimap-container'});
         this.container = container;
-        container.height = Math.round(space.height*MINIMAP_SCALE) - prefs.window_gap;
+        container.height = Math.round(space.height*prefs.minimap_scale) - prefs.window_gap;
 
         actor.add_actor(highlight);
         actor.add_actor(label);
@@ -113,6 +115,7 @@ class Minimap extends Array {
     show(animate) {
         if (this.destroyed)
             return;
+        this.layout();
         let time = animate ? 0.25 : 0;
         this.actor.show();
         Tweener.addTween(this.actor,
@@ -155,10 +158,11 @@ class Minimap extends Array {
         let meta_window = clone.meta_window;
         let buffer = meta_window.get_buffer_rect();
         let frame = meta_window.get_frame_rect();
-        clone.set_size(buffer.width*MINIMAP_SCALE, buffer.height*MINIMAP_SCALE - prefs.window_gap);
-        clone.set_position(((buffer.x - frame.x)*MINIMAP_SCALE),
-                           (buffer.y - frame.y)*MINIMAP_SCALE);
-        container.set_size(frame.width*MINIMAP_SCALE, frame.height*MINIMAP_SCALE);
+        let scale = prefs.minimap_scale;
+        clone.set_size(buffer.width*scale, buffer.height*scale - prefs.window_gap);
+        clone.set_position(((buffer.x - frame.x)*scale),
+                           (buffer.y - frame.y)*scale);
+        container.set_size(frame.width*scale, frame.height*scale);
     }
 
     layout() {

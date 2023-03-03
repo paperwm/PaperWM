@@ -47,7 +47,6 @@ function init() {
     overrideWithFallback(
         Shell.App, "launch_action",
         (fallback, app, name, ...args) => {
-            log(`ShellApp.launch_action ${name}`);
             if (name === 'new-window')
                 return spawnWithFallback(fallback, app);
             else {
@@ -59,7 +58,6 @@ function init() {
     overrideWithFallback(
         Gio.DesktopAppInfo, "launch",
         (fallback, appInfo) => {
-            log(`DesktopAppInfo.launch`);
             return spawnWithFallback(fallback, appInfo.get_id());
         }
     );
@@ -67,7 +65,6 @@ function init() {
     overrideWithFallback(
         Gio.DesktopAppInfo, "launch_action",
         (fallback, appInfo, name, ...args) => {
-            log(`DesktopAppInfo.launch_action ${name}`);
             if (name === 'new-window')
                 return spawnWithFallback(fallback, appInfo.get_id());
             else {
@@ -97,7 +94,7 @@ function launchFromWorkspaceDir(app, workspace=null) {
     cmd = cmd.replace(/%./g, "");
     let [success, cmdArgs] = GLib.shell_parse_argv(cmd);
     if (!success) {
-        print("launchFromWorkspaceDir:", "Could not parse command line", cmd);
+        log("launchFromWorkspaceDir:", "Could not parse command line", cmd);
         throw CouldNotLaunch;
     }
     GLib.spawn_async(dir, cmdArgs, GLib.get_environ(), GLib.SpawnFlags.SEARCH_PATH, null);
@@ -177,7 +174,6 @@ function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir=false) {
     return (app, space) => {
         let workspace = space.workspace;
         let commandline = expandCommandline(commandlineTemplate, workspace);
-        print("Launching", commandline);
         let workingDir = spawnInWorkspaceDir ? getWorkspaceDirectory(workspace) : null;
         let [success, cmdArgs] = GLib.shell_parse_argv(commandline);
         if (success) {

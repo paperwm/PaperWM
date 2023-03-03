@@ -65,7 +65,11 @@ function makeScratch(metaWindow) {
         // Figure out some stuff before the window is removed from the tiling
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
         fromTiling = space.indexOf(metaWindow) > -1;
-        windowPositionSeen = metaWindow.clone.get_transformed_position().map(Math.round);
+        if (fromTiling) {
+            windowPositionSeen = metaWindow.clone
+                .get_transformed_position()
+                .map(Math.round);
+        }
     }
 
     metaWindow[float] = true;
@@ -131,7 +135,6 @@ function unmakeScratch(metaWindow) {
 function toggle(metaWindow) {
     if (isScratchWindow(metaWindow)) {
         unmakeScratch(metaWindow);
-        hide();
     } else {
         makeScratch(metaWindow);
 
@@ -199,6 +202,24 @@ function hide() {
     windows.map(function(meta_window) {
         meta_window.minimize();
     });
+}
+
+function animateWindows() {
+    let ws = getScratchWindows().filter(w => !w.minimized);
+    ws = global.display.sort_windows_by_stacking(ws);
+    for (let w of ws) {
+        let parent = w.clone.get_parent()
+        parent && parent.remove_child(w.clone);
+        Main.uiGroup.insert_child_below(w.clone, Main.layoutManager.panelBox)
+        let f = w.get_frame_rect();
+        w.clone.set_position(f.x, f.y);
+        Tiling.animateWindow(w);
+    }
+}
+
+function showWindows() {
+    let ws = getScratchWindows().filter(w => !w.minimized);
+    ws.forEach(Tiling.showWindow)
 }
 
 // Monkey patch the alt-space menu

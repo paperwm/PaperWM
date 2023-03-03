@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0" />
+  <template class="KeybindingsRow" parent="GtkListBoxRow">
+    <style>
+      <class name="keybinding" />
+    </style>
+    <property name="selectable">False</property>
+    <property name="activatable">True</property>
+    <property name="focusable">True</property>
+
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+
+        <child>
+          <object class="GtkBox" id="header">
+            <property name="spacing">12</property>
+            <style>
+              <class name="header" />
+            </style>
+
+            <child>
+              <object class="GtkLabel" id="descLabel">
+                <style>
+                  <class name="description" />
+                </style>
+                <property name="ellipsize">end</property>
+                <property name="halign">start</property>
+                <property name="lines">1</property>
+                <property name="wrap">True</property>
+                <property name="wrap-mode">word-char</property>
+                <property name="xalign">0</property>
+              </object>
+            </child>
+
+            <child>
+              <object class="GtkImage" id="conflictIcon">
+                <property name="visible">False</property>
+                <property name="icon-name">dialog-error-symbolic</property>
+                <property name="halign">start</property>
+              </object>
+            </child>
+
+            <child>
+              <object class="GtkLabel" id="accelLabel">
+                <property name="hexpand">True</property>
+                <property name="halign">end</property>
+                <property name="xalign">1.0</property>
+                <property name="use-markup">True</property>
+                <style>
+                  <class name="dim-label" />
+                </style>
+              </object>
+            </child>
+          </object>
+        </child>
+
+        <child>
+          <object class="GtkRevealer" id="revealer">
+            <child>
+              <object class="GtkGrid">
+                <property name="hexpand">True</property>
+
+                <child>
+                  <object class="GtkListBox" id="comboList">
+                    <property name="activate-on-single-click">True</property>
+                    <property name="hexpand">True</property>
+                    <property name="selection-mode">none</property>
+                    <style>
+                      <class name="combos" />
+                    </style>
+                    <signal name="row-activated"
+                            handler="_onRowActivated" />
+                    <layout>
+                      <property name="row">0</property>
+                      <property name="column">0</property>
+                      <property name="column-span">2</property>
+                    </layout>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkButton" id="resetButton">
+                    <property name="label" translatable="yes">Reset</property>
+                    <property name="action-name">keybinding.reset</property>
+                    <property name="halign">start</property>
+                    <property name="margin-start">12px</property>
+                    <property name="margin-top">8px</property>
+                    <property name="margin-bottom">8px</property>
+                    <layout>
+                      <property name="row">1</property>
+                      <property name="column">0</property>
+                    </layout>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkButton" id="addButton">
+                    <property name="label" translatable="yes">Add shortcut…</property>
+                    <property name="action-name">keybinding.add</property>
+                    <property name="hexpand">True</property>
+                    <property name="halign">end</property>
+                    <property name="margin-top">8px</property>
+                    <property name="margin-end">12px</property>
+                    <property name="margin-bottom">8px</property>
+
+                    <layout>
+                      <property name="row">1</property>
+                      <property name="column">1</property>
+                    </layout>
+                    <style>
+                      <class name="suggested-action" />
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

@@ -1,3 +1,5 @@
+const { St } = imports.gi;
+
 // polyfill workspace_manager that was introduced in 3.30 (must happen before modules are imported)
 if (!global.workspace_manager) {
     global.workspace_manager = global.screen;
@@ -54,13 +56,13 @@ function run(method) {
 
 function safeCall(name, method) {
     try {
-        log("#paperwm", `${method} ${name}`);
+        print("#paperwm", `${method} ${name}`);
         let module = Extension.imports[name];
         module && module[method] && module[method].call(module, errorNotification);
         return true;
     } catch(e) {
-        log("#paperwm", `${name} failed ${method}`);
-        log(`JS ERROR: ${e}\n${e.stack}`);
+        print("#paperwm", `${name} failed ${method}`);
+        print(`JS ERROR: ${e}\n${e.stack}`);
         errorNotification(
             "PaperWM",
             `Error occured in ${name} @${method}:\n\n${e.message}`,
@@ -87,6 +89,8 @@ function init() {
     // let extfile = Gio.file_new_for_path( Extension.imports.extension.__file__);
     Extension = imports.misc.extensionUtils.getCurrentExtension();
     convenience = Extension.imports.convenience;
+
+    warnAboutGnomeShellVersionCompatibility();
 
     if(initRun) {
         log(`#startup Reinitialized against our will! Skip adding bindings again to not cause trouble.`);
@@ -125,6 +129,32 @@ function disable() {
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
 var Main = imports.ui.main;
+var Config = imports.misc.config;
+
+// Checks gnome shell version compatibility and warns the user when running on
+// and unsupported version.
+function warnAboutGnomeShellVersionCompatibility() {
+    const gnomeShellVersion = Config.PACKAGE_VERSION;
+    const supportedVersions = Extension.metadata["shell-version"];
+    for (const version of supportedVersions) {
+        if (gnomeShellVersion.startsWith(version)) {
+            return;
+        }
+    }
+
+    // did not find a supported version
+    print("#paperwm", `WARNING: Running on unsupported version of gnome shell (${gnomeShellVersion})`);
+    print("#paperwm", `Supported versions: ${supportedVersions}`);
+    const msg = `Running on unsupported version of gnome shell (${gnomeShellVersion}).
+Supported versions: ${supportedVersions}.
+Click for more information.`;
+
+    const notification = notify("PaperWM Warning", msg);
+    notification.connect('activated', () => {
+        imports.misc.util.spawn(["xdg-open", "https://github.com/paperwm/PaperWM/wiki/Warning:-Running-on-unsupported-version-of-gnome-shell"]);
+        notification.destroy();
+    });
+}
 
 function getConfigDir() {
     return Gio.file_new_for_path(GLib.get_user_config_dir() + '/paperwm');
@@ -135,7 +165,7 @@ function hasUserConfigFile() {
 }
 
 function installConfig() {
-    log("#rc", "Installing config");
+    print("#rc", "Installing config");
     const configDir = getConfigDir();
     configDir.make_directory_with_parents(null);
 
@@ -172,13 +202,19 @@ function initUserConfig() {
         } catch(e) {
             errorNotification("PaperWM",
                               `Failed to install user config: ${e.message}`, e.stack);
-            log("#rc", "Install failed", e.message);
+            print("#rc", "Install failed", e.message);
         }
 
     }
 
     if (hasUserConfigFile()) {
         Extension.imports.searchPath.push(getConfigDir().get_path());
+    }
+
+    let userStylesheet = getConfigDir().get_child("user.css");
+    if (userStylesheet.query_exists(null)) {
+        let themeContext = St.ThemeContext.get_for_stage(global.stage);
+        themeContext.get_theme().load_stylesheet(userStylesheet);
     }
 }
 
@@ -194,7 +230,7 @@ function notify(msg, details, params) {
     Main.messageTray.add(source);
     let notification = new MessageTray.Notification(source, msg, details, params);
     notification.setResident(true); // Usually more annoying that the notification disappear than not
-    source.notify(notification);
+    source.showNotification(notification);
     return notification;
 }
 

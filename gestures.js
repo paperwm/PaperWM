@@ -39,10 +39,16 @@ var time;
 var vState;
 var navigator;
 var direction = undefined;
+// 1 is natural scrolling, -1 is unnatural
+var natural = 1;
 function enable() {
     // Touchpad swipes only works in Wayland
     if (!Meta.is_wayland_compositor())
         return;
+
+    var touchpadSettings = new Gio.Settings({
+        schema_id: 'org.gnome.desktop.peripherals.touchpad'
+    });
 
     signals.destroy();
     /**
@@ -56,7 +62,7 @@ function enable() {
      */
     signals.connect(stage, 'captured-event', (actor, event) => {
         if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
-            event.get_touchpad_gesture_finger_count() > 3 ||
+            event.get_touchpad_gesture_finger_count() < 3 ||
             (Main.actionMode & Shell.ActionMode.OVERVIEW) > 0) {
             return Clutter.EVENT_PROPAGATE;
         }
@@ -75,12 +81,13 @@ function enable() {
                 }
             }
             if (direction === DIRECTIONS.Vertical) {
-                updateVertical(-dy*prefs.swipe_sensitivity[1], event.get_time());
+                updateVertical(-dy*natural*prefs.swipe_sensitivity[1], event.get_time());
                 return Clutter.EVENT_STOP;
             }
             return Clutter.EVENT_PROPAGATE;
         case Clutter.TouchpadGesturePhase.BEGIN:
             time = event.get_time();
+            natural = touchpadSettings.get_boolean("natural-scroll") ? 1 : -1;
             direction = undefined;
             navigator = Navigator.getNavigator();
             navigator.connect('destroy', () => {
@@ -110,7 +117,7 @@ function disable() {
 let start, dxs = [], dts = [];
 function horizontalScroll(actor, event) {
     if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
-        event.get_touchpad_gesture_finger_count() > 3) {
+        event.get_touchpad_gesture_finger_count() < 3) {
         return Clutter.EVENT_PROPAGATE;
     }
     const phase = event.get_gesture_phase();
@@ -126,7 +133,7 @@ function horizontalScroll(actor, event) {
             Tweener.removeTweens(this.cloneContainer);
             direction = DIRECTIONS.Horizontal;
         }
-        return update(this, -dx*prefs.swipe_sensitivity[0], event.get_time());
+        return update(this, -dx*natural*prefs.swipe_sensitivity[0], event.get_time());
     case Clutter.TouchpadGesturePhase.CANCEL:
     case Clutter.TouchpadGesturePhase.END:
         this.hState = phase;

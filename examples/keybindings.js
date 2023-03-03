@@ -84,9 +84,31 @@ function swapNeighbours(binding = "<Super>y") {
         let space = Tiling.spaces.spaceOfWindow(mw)
         let i = space.indexOf(mw);
         if (space[i+1]) {
-            space.swap(Meta.MotionDirection.RIGHT, space[i+1][0])
+            space.swap(Meta.MotionDirection.RIGHT, space[i+1][0]);
+            space[i+1].map(mw => mw.clone.raise_top());
         }
-    }, {activeInNavigator: true})
+    }, {activeInNavigator: true});
+}
+
+/**
+   Before: |[ A ][ *B* ]|[  C  ]
+   After:  |[ A ][ *C* ]|[  B  ]
+*/
+function swapWithRight(binding = "<Super><Shift>d") {
+    var Tiling = Extension.imports.tiling;
+    var Utils = Extension.imports.utils;
+
+    Keybindings.bindkey(binding, "swap-with-right", mw => {
+        let space = Tiling.spaces.spaceOfWindow(mw);
+        let i = space.indexOf(mw);
+        if (i === space.length - 1)
+            return;
+
+        Utils.swap(space, i, i+1);
+        space.layout(false);
+        space.emit("full-layout");
+        Main.activateWindow(space[i][0]);
+    }, { opensMinimap: true });
 }
 
 function cycleMonitor(binding = "<Super>d") {
@@ -124,6 +146,7 @@ function cycleWorkspaceSettings(binding = "<Super>q") {
         mw => Tiling.cycleWorkspaceSettings(1), { activeInNavigator: true }
     );
 }
+
 
 function showNavigator(binding = "<Super>j") {
     Keybindings.bindkey(binding, "show-minimap", () => null, { opensMinimap: true })
@@ -206,23 +229,54 @@ function adjustWidth(incBinding="<Super>plus", decBinding="<Super>minus", increm
     Keybindings.bindkey(decBinding, "dec-width", adjuster(-increment));
 }
 
-function tileInto(leftBinding="<Super>less", rightBinding="<Super><Shift>less") {
+function tileInto(leftBinding="<Super><Shift>less", rightBinding="<Super><Shift>less") {
+    Extension.imports.examples.layouts.bindTileInto(leftBinding, rightBinding);
+}
+
+function stackUnstack(basebinding = '<Super><Alt><Ctrl>') {
     // less: '<'
     let Tiling = Extension.imports.tiling;
 
-    const tileIntoDirection = (dir=-1) => (metaWindow) => {
+    const stackUnstackDirection = (dir=-1) => (metaWindow) => {
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
-        let jFrom = space.indexOf(metaWindow);
-        let jTo = jFrom + dir;
-        if (jTo < 0 || jTo >= space.length)
+        let column_idx = space.indexOf(metaWindow);
+        if (column_idx < 0)
             return;
+        let column = space[column_idx];
 
-        space[jFrom].splice(space.rowOf(metaWindow), 1);
-        space[jTo].push(metaWindow);
+        if (column.length >= 2) {
+            // this is a stacked window
+            // move it into a new column
+            let row_idx = column.indexOf(metaWindow);
+            if (row_idx < 0)
+                return;
 
-        if (space[jFrom].length === 0) {
-            space.splice(jFrom, 1);
+            let removed = column.splice(row_idx, 1)[0];
+            let new_column_idx = column_idx;
+            if (dir === 1)
+                new_column_idx += 1;
+
+            space.splice(new_column_idx, 0, [removed]);
         }
+        else {
+            // this is an unstacked window
+            // move it into a stack
+
+            // can't stack into a column that doesn't exist
+            if (column_idx == 0 && dir == -1)
+                return;
+            if (column_idx + 1 >= space.length && dir == 1)
+                return;
+
+            let windowToMove = column[0];
+            space[column_idx + dir].push(windowToMove);
+
+            // is it necessary to remove the window from the column before removing the column?
+            column.splice(0, 1);
+            
+            space.splice(column_idx, 1);
+        }
+
         space.layout(true, {
             customAllocators: { [space.indexOf(metaWindow)]: Tiling.allocateEqualHeight }
         });
@@ -230,12 +284,9 @@ function tileInto(leftBinding="<Super>less", rightBinding="<Super><Shift>less") 
     }
 
     let options = { activeInNavigator: true };
-    if (leftBinding)
-        Keybindings.bindkey(leftBinding, "tile-into-left-column", tileIntoDirection(-1), options);
-    if (rightBinding)
-        Keybindings.bindkey(rightBinding, "tile-into-right-column", tileIntoDirection(1), options);
+    Keybindings.bindkey(`${basebinding}Left`, "stack-unstack-left", stackUnstackDirection(-1), options);
+    Keybindings.bindkey(`${basebinding}Right`, "stack-unstack-right", stackUnstackDirection(1), options);
 }
-
 
 function cycleEdgeSnap(binding = "<Super>u") {
     var Tiling = Extension.imports.tiling;
