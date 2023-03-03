@@ -115,6 +115,12 @@ var Minimap = class Minimap extends Array {
     show(animate) {
         if (this.destroyed)
             return;
+
+        // if minimap_scale preference is 0, then don't show
+        if (prefs.minimap_scale <= 0) {
+            return;
+        }
+        
         this.layout();
         let time = animate ? 0.25 : 0;
         this.actor.show();
