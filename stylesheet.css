@@ -1,8 +1,10 @@
-.paper-mm-selected-window {
-    border: 10px cyan; /* if we need to operate in pre-scaled dimension */
-    border-radius: 5px;
+.topbar-clear {
+    background-color: rgba(0, 0, 0, 0);
 }
 
+.topbar-transparent {
+    background-color: rgba(0, 0, 0, 0.35)
+}
 
 .workspace-icon-button {
     -st-icon-style: symbolic;
@@ -17,6 +19,10 @@
 
 .paperwm-selection {
     border-radius: 8px;
+}
+
+.paperwm-window-position-bar-backdrop {
+    background-color: rgba(0, 0, 0, 0.35);
 }
 
 .paperwm-window-position-bar {

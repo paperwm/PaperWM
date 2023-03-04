@@ -211,8 +211,8 @@ var Space = class Space extends Array {
 
         this.windowPositionBarBackdrop = new St.Widget({
             name: 'windowPositionBarBackdrop',
+            style_class: 'paperwm-window-position-bar-backdrop'
         });
-        this.windowPositionBarBackdrop.style = TopBar.styles.transparent;
         this.actor.add_actor(this.windowPositionBarBackdrop);
 
         this.showWindowPositionBar = prefs.show_window_position_bar;

@@ -46,11 +46,6 @@ var colors = [
     '#46A046', '#267726', '#ffffff', '#000000'
 ];
 
-var styles = {
-    clear: 'background-color: rgba(0, 0, 0, 0);',
-    transparent: 'background-color: rgba(0, 0, 0, 0.35);'
-};
-
 function createButton(icon_name, accessible_name) {
     return new St.Button({reactive: true,
                           can_focus: true,
@@ -592,11 +587,11 @@ function disable() {
 }
 
 function setClearStyle() {
-    Main.panel.set_style(styles.clear);
+    Main.panel.style_class = 'topbar-clear';
 }
 
 function setTransparentStyle() {
-    Main.panel.set_style(styles.transparent);
+    Main.panel.style_class = 'topbar-transparent';
 }
 
 function fixTopBar() {
