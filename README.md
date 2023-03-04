@@ -273,6 +273,26 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
 
 See `examples/keybindings.js` for more examples.
 
+### Window Position Bar (colored bar segment added to Gnome Top Bar)
+
+[#476](https://github.com/paperwm/PaperWM/pull/476) added a coloured window position bar to the Gnome Top Bar.  This allows users to visually identify the current selected window position of the scrollable viewport in the current workspace.
+
+You can disable/enable the window indicator bar via `dconf` with the following commands (executed from a terminal):
+
+To disable the bar execute:
+```
+dconf write /org/gnome/shell/extensions/paperwm/show-window-position-bar false
+```
+
+To enable the bar execute:
+```
+dconf write /org/gnome/shell/extensions/paperwm/show-window-position-bar true
+```
+
+You can modify and override the styles of both the coloured position bar and the dimmed "position bar backdrop" by overriding the `paperwm-window-position-bar` and `paperwm-window-position-bar-backdrop` CSS classes respectively (see `user.css` in [Development & user configuration](#development--user-configuration) section for more information).
+
+_Note: PaperWM overrides the default Gnome Top Bar style to be completely transparent so that the dimmed `window-position-bar-backdrop` element and the `window-position-bar` element are visible._
+
 ## Fixed Window Size ##
 
 See the [Winprops](#winprops) section for a way to set the default _width_ of windows identified by their `wm_class` window property.
