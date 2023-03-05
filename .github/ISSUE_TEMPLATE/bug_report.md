@@ -23,11 +23,21 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Version (please complete the following information):**
-- Gnome version: [e.g. 43.3, you can see this in Settings > About]
-- PaperWM version: [e.g. branch gnome-40, tag 38.2, if you are using develop please include the commit]
- - Distribution: [e.g. Ubuntu 22.04, Arch Linux (optional)]
-- Any other installed gnome extensions: [if you think they are related to the issue]
+**System information:**
+Please execute `./gather-system-info.sh` in you PaperWM clone and paste the output below.
+
+```
+Example:
+Distribution: Arch Linux
+GNOME Shell 43.3
+PaperWM branch/tag: develop
+PaperWM commit: 223ff883bca9bf20dbf066eceda891cb6e8be931
+Enabled extensions:
+- paperwm@hedning:matrix.org
+- switcher@landau.fi
+- dash-to-panel@jderose9.github.com
+- appindicatorsupport@rgcjonas.gmail.com
+```
 
 **Additional context**
 Add any other context about the problem here.
