@@ -3283,22 +3283,38 @@ function centerWindowHorizontally(metaWindow) {
 }
 
 /**
+ * Sets the focus mode for a space.
+ * @param {Space} space 
+ * @param {FocusModes} mode 
+ */
+function setFocusMode(space, mode) {
+    space = space ?? spaces.spaceOf(workspaceManager.get_active_workspace());
+    space.focusMode = mode;
+    if (mode === FocusModes.DEFAULT) {
+        TopBar.focusMenu.setIconDefault();
+    }
+    else if (mode === FocusModes.CENTRE) {
+        TopBar.focusMenu.setIconCenter();
+        if (space.selectedWindow) {
+            centerWindowHorizontally(space.selectedWindow);
+        }
+    }
+}
+
+/**
  * Enables CENTRE focusMode if not currently enabled, otherwise switches back to DEFAULT mode.
  * NOTE: if more FocusModes are added in the future (e.g. zenmode etc.) then
  * will likely need to track/store the mode before switching to center mode.
  * Not needed at the moment though.
+ * @param {Space} space 
  */
 function toggleCentreFocusMode(space) {
     space = space ?? spaces.spaceOf(workspaceManager.get_active_workspace());
-    if (space.focusMode == FocusModes.CENTRE) {
-        space.focusMode = FocusModes.DEFAULT;
+    if (space.focusMode === FocusModes.CENTRE) {
+        setFocusMode(space, FocusModes.DEFAULT);
     } 
     else {
-        space.focusMode = FocusModes.CENTRE;
-        // center current active window
-        if (space.selectedWindow) {
-            centerWindowHorizontally(space.selectedWindow);
-        }
+        setFocusMode(space, FocusModes.CENTRE);
     }
 }
 

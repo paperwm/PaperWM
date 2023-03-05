@@ -197,6 +197,29 @@ class ColorEntry {
     }
 }
 
+var FocusMenu = Utils.registerClass(
+class FocusMenu extends PanelMenu.Button {
+    _init() {
+        super._init(0.0, 'FocusMode');
+        
+        this._icon = new St.Icon({
+            style_class: 'system-status-icon', 
+         });
+
+        this.setIconDefault();
+        this.add_child(this._icon);
+    }
+
+    setIconDefault() {
+        this._icon.icon_name = 'sidebar-show-right-symbolic';
+    }
+
+    setIconCenter() {
+        this._icon.icon_name = 'preferences-desktop-multitasking-symbolic';
+    }
+}
+);
+
 var WorkspaceMenu = Utils.registerClass(
 class WorkspaceMenu extends PanelMenu.Button {
     _init() {
@@ -487,6 +510,7 @@ class WorkspaceMenu extends PanelMenu.Button {
     }
 });
 
+var focusMenu;
 var menu;
 var orginalActivitiesText;
 var screenSignals, signals;
@@ -501,6 +525,9 @@ var panelBoxShowId, panelBoxHideId;
 function enable () {
     Main.panel.statusArea.activities.hide();
 
+    focusMenu = new FocusMenu();
+    Main.panel.addToStatusArea('FocusMode', focusMenu, 0, 'left');
+
     menu = new WorkspaceMenu();
     // Work around 'actor' warnings
     let panel = Main.panel;
@@ -514,7 +541,7 @@ function enable () {
             space.label.clutter_text.set_font_description(fontDescription);
         }
     }
-    Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
+    Main.panel.addToStatusArea('WorkspaceMenu', menu, 1, 'left');
     menu.show();
 
     // Force transparency
