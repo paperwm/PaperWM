@@ -709,6 +709,12 @@
                 </child>
               </object>
             </child>
+            <child>
+              <object class="GtkButton" id="reload-css">
+                <property name="label">Reload CSS</property>
+                <property name="tooltip_text" translatable="yes">Reload all currently loaded CSS files (from all extensions and the user.css)</property>
+              </object>
+            </child>>
           </object>
         </child>
       </object>

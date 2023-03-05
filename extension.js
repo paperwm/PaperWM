@@ -105,6 +105,13 @@ function init() {
 
 function enable() {
     log(`#paperwm enable ${SESSIONID}`);
+
+    let userStylesheet = getConfigDir().get_child("user.css");
+    if (userStylesheet.query_exists(null)) {
+        let themeContext = St.ThemeContext.get_for_stage(global.stage);
+        themeContext.get_theme().load_stylesheet(userStylesheet);
+    }
+
     if (enabled) {
         log('enable called without calling disable');
         return;
@@ -209,12 +216,6 @@ function initUserConfig() {
 
     if (hasUserConfigFile()) {
         Extension.imports.searchPath.push(getConfigDir().get_path());
-    }
-
-    let userStylesheet = getConfigDir().get_child("user.css");
-    if (userStylesheet.query_exists(null)) {
-        let themeContext = St.ThemeContext.get_for_stage(global.stage);
-        themeContext.get_theme().load_stylesheet(userStylesheet);
     }
 }
 

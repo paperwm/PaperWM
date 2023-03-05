@@ -1,3 +1,10 @@
+/*
+ * Defines the extensions settings window.
+ *
+ * This file is automatically loaded by gnome-shell when opening the settings
+ * for this extension (e.g. by clicking the "Settings" button in the Extensions
+ * app).
+ */
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
@@ -237,6 +244,13 @@ var SettingsWidget = class SettingsWidget {
         topbarFollowFocus.connect('state-set', (obj, state) => {
             this._settings.set_boolean('topbar-follow-focus',
                 state);
+        });
+
+        let reloadCssButton = this.builder.get_object('reload-css');
+        log("reload-css button", reloadCssButton);
+        reloadCssButton.connect('clicked', () => {
+            log("reload-css clicked");
+            imports.ui.main.loadTheme();
         });
 
         // Workspaces
@@ -833,6 +847,7 @@ function syncStringSetting(settings, key, callback) {
 }
 
 function init() {
+    log("prefs here");
     const provider = new Gtk.CssProvider();
     provider.load_from_path(Extension.dir.get_path() + '/resources/prefs.css');
     Gtk.StyleContext.add_provider_for_display(
