@@ -217,9 +217,9 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.add_actor(this._label);
 
         this.signals = new Utils.Signals();
-        this.signals.connect(global.window_manager,
-                             'switch-workspace',
-                             this.workspaceSwitched.bind(this));
+        this.signals.connect(workspaceManager,
+                             'workspace-switched',
+                             (_wm, _fromIndex, toIndex) => this.workspaceSwitched(toIndex));
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem(_('Workspace Settings')));
 
@@ -470,8 +470,15 @@ class WorkspaceMenu extends PanelMenu.Button {
         // this._zenItem._switch.setToggleState(!space.showTopBar);
     }
 
-    workspaceSwitched(wm, fromIndex, toIndex) {
-        updateWorkspaceIndicator(toIndex);
+    workspaceSwitched(toIndex) {
+        let monitor = Main.layoutManager.findMonitorForActor(this);
+        let space = Tiling.spaces.spaceOf(global.workspaceManager.get_workspace_by_index(toIndex));
+        let onMonitor = space && space.monitor == monitor;
+        let nav = Navigator.navigator;
+
+        if (onMonitor || (Tiling.inPreview && nav && nav.from.monitor === panelMonitor)) {
+            this.setName(space.name);
+        }
     }
 
     destroy() {
@@ -487,7 +494,8 @@ class WorkspaceMenu extends PanelMenu.Button {
     }
 });
 
-var menu;
+var menus = [];
+
 var orginalActivitiesText;
 var screenSignals, signals;
 function init () {
@@ -498,72 +506,49 @@ function init () {
 }
 
 var panelBoxShowId, panelBoxHideId;
-function enable () {
-    Main.panel.statusArea.activities.hide();
 
-    menu = new WorkspaceMenu();
-    // Work around 'actor' warnings
-    let panel = Main.panel;
-    function fixLabel(label) {
-        let point = new Clutter.Vertex({x: 0, y: 0});
-        let r = label.apply_relative_transform_to_point(panel, point);
+// map from monitor to panel
+var panels = {};
+var extensionChangedHandler;
+const DASH_TO_PANEL_UUID = "dash-to-panel@jderose9.github.com";
 
-        for (let [workspace, space] of Tiling.spaces) {
-            space.label.set_position(panel.x + Math.round(r.x), panel.y + Math.round(r.y));
-            let fontDescription = label.clutter_text.font_description;
-            space.label.clutter_text.set_font_description(fontDescription);
+function _enableForDashToPanel() {
+    for (let dtdPanel of global.dashToPanel.panels) {
+        if (dtdPanel.panelBox !== Main.layoutManager.panelBox) {
+            menus.push(_enableMenu(dtdPanel.panel, dtdPanel.panelBox, false));
         }
     }
-    Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
-    menu.show();
-
-    // Force transparency
-    panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
-
-    screenSignals.push(
-        workspaceManager.connect_after('workspace-switched',
-                                    (workspaceManager, from, to) => {
-                                        updateWorkspaceIndicator(to);
-                                    }));
-
-    signals.connect(Main.overview, 'showing', fixTopBar);
-    signals.connect(Main.overview, 'hidden', () => {
-        if (Tiling.spaces.selectedSpace.showTopBar)
-            return;
-        fixTopBar();
-    });
-
-    signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
-        let monitors = Tiling.spaces.monitors;
-        if (!settings.prefs.topbar_follow_focus) {
-            moveTopBarTo(Main.layoutManager.primaryMonitor);
-        }
-        let to = setMonitor(Main.layoutManager.focusMonitor);
-        let space = monitors.get(to);
-        updateWorkspaceIndicator(space.workspace.index());
-        for (let [workspace, space] of Tiling.spaces) {
-            space.layout();
+    signals.connectOneShot(global.dashToPanel, "panels-created", () => {
+        for (let dtdPanel of global.dashToPanel.panels) {
+            if (dtdPanel.panelBox !== Main.layoutManager.panelBox) {
+                menus.push(_enableMenu(dtdPanel.panel, dtdPanel.panelBox, false));
+            }
         }
     });
+}
 
-    signals.connect(panelBox, 'show', () => {
-        fixTopBar();
-    });
-    signals.connect(panelBox, 'hide', () => {
-        fixTopBar();
-    });
+function enable() {
+    menus.push(_enableMenu(Main.panel, Main.layoutManager.panelBox, true));
 
-    fixLabel(menu._label);
-    signals.connect(menu._label, 'notify::allocation', fixLabel);
-    signals.connectOneShot(menu._label, 'notify::allocation', () => {
-        setMonitor(Main.layoutManager.primaryMonitor);
-    })
+    if (global.dashToPanel) {
+        log("Found dash-to-panel. Setting up panels.");
+        _enableForDashToPanel();
+    } else {
+        // dash-to-panel loaded after this extension
+        let onChange = signals.connect(Main.extensionManager, "extension-state-changed", (data, extension) => {
+            if (extension.uuid === DASH_TO_PANEL_UUID && extension.state === 1) {
+                log("dash-to-panel enabled. Setting up panels.");
+                _enableForDashToPanel();
+                signals.disconnect(Main.extensionManager, onChange);
+            }
+        });
+    }
 }
 
 function disable() {
     signals.destroy();
-    menu.destroy();
-    menu = null;
+    menus.forEach(menu => menu.destroy());
+    menus = [];
     Main.panel.statusArea.activities.actor.show();
     Main.panel.set_style("");
 
@@ -573,7 +558,7 @@ function disable() {
     panelBox.scale_y = 1;
 }
 
-function fixTopBar() {
+function fixTopBar(panel) {
     let space = Tiling.spaces?.monitors.get(panelMonitor) ?? false;
     if (!space)
         return;
@@ -599,28 +584,88 @@ function fixTopBar() {
     }
 }
 
-/**
-   Override the activities label with the workspace name.
-   let workspaceIndex = 0
-*/
-function updateWorkspaceIndicator (index) {
-    let spaces = Tiling.spaces;
-    let space = spaces && spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
-    let onMonitor = space && space.monitor === panelMonitor;
-    let nav = Navigator.navigator
-    if (onMonitor || (Tiling.inPreview && nav && nav.from.monitor === panelMonitor))
-        setWorkspaceName(space.name);
-};
+function _enableMenu(panel, panelBox, isPrimary) {
+    panel.statusArea.activities.hide();
 
-function setWorkspaceName (name) {
-    menu && menu.setName(name);
+    const menu = new WorkspaceMenu();
+
+    // Work around 'actor' warnings
+    function fixLabel(label) {
+        log(`#paperwm.topbar fixLabel ${label.text}`);
+        let point = new Clutter.Vertex({x: 0, y: 0});
+        let r = label.apply_relative_transform_to_point(panel, point);
+
+        for (let [workspace, space] of Tiling.spaces) {
+            space.label.set_position(panel.x + Math.round(r.x), panel.y + Math.round(r.y));
+            let fontDescription = label.clutter_text.font_description;
+            space.label.clutter_text.set_font_description(fontDescription);
+        }
+    }
+
+    panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
+    menu.show();
+
+    // Force transparency
+    panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
+
+    // TODO I think not needed
+    // screenSignals.push(
+    //     workspaceManager.connect_after('workspace-switched',
+    //                                 (workspaceManager, from, to) => {
+    //                                     updateWorkspaceIndicator(to);
+    //                                 }));
+
+    signals.connect(Main.overview, 'showing', fixTopBar);
+    signals.connect(Main.overview, 'hidden', () => {
+        if (Tiling.spaces.selectedSpace.showTopBar)
+            return;
+        fixTopBar();
+    });
+
+    if (isPrimary) {
+        signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
+            let monitors = Tiling.spaces.monitors;
+            if (!prefs.topbar_follow_focus) {
+                moveTopBarTo(Main.layoutManager.primaryMonitor);
+            }
+            let to = setMonitor(Main.layoutManager.focusMonitor);
+            let space = monitors.get(to);
+            menu.workspaceSwitched(to);
+            for (let [workspace, space] of Tiling.spaces) {
+                space.layout();
+            }
+        });
+    }
+
+    signals.connect(panelBox, 'show', () => {
+        fixTopBar();
+    });
+    signals.connect(panelBox, 'hide', () => {
+        fixTopBar();
+    });
+
+    fixLabel(menu._label);
+    signals.connect(menu._label, 'notify::allocation', fixLabel);
+    signals.connectOneShot(menu._label, 'notify::allocation', () => {
+        let monitor = Main.layoutManager.findMonitorForActor(panel);
+        setMonitor(monitor);
+    });
+
+    return menu;
 }
+
+// needed for the indicator to update during "stacked workspace switching"
+function updateWorkspaceIndicator(index) {
+    menus.forEach(menu => {
+        menu.workspaceSwitched(index);
+    });
+};
 
 function setMonitor(monitor) {
     if (prefs.topbar_follow_focus) {
         moveTopBarTo(monitor);
     } else {
-        monitor = Main.layoutManager.primaryMonitor
+        monitor = Main.layoutManager.primaryMonitor;
     }
     panelMonitor = monitor;
     return monitor;
