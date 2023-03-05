@@ -44,6 +44,7 @@ const actions = {
         'slurp-in',
         'barf-out',
         'center-horizontally',
+        'toggle-center-mode',
         'paper-toggle-fullscreen',
         'toggle-maximize-width',
         'resize-h-inc',
