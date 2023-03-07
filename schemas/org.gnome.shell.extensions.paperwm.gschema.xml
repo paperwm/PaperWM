@@ -108,6 +108,11 @@
         <default><![CDATA[['<Super>t']]]></default>
         <summary>Take the window, dropping it when finished navigating</summary>
     </key>
+    
+    <key type="as" name="switch-focus-mode">
+      <default><![CDATA[['<Super><Shift>c']]]></default>
+      <summary>Switch between focus modes (default or center-window focus mode)</summary>
+    </key>
 
     <key type="as" name="switch-next">
       <default><![CDATA[['<Super>period']]]></default>
@@ -203,10 +208,6 @@
     <key type="as" name="center-horizontally">
       <default><![CDATA[['<Super>c']]]></default>
       <summary>Center window horizontally</summary>
-    </key>
-    <key type="as" name="toggle-center-mode">
-      <default><![CDATA[['<Super><Shift>c']]]></default>
-      <summary>Toggle "center" mode (automatically centers window on select)</summary>
     </key>
 
     <key type="as" name="toggle-maximize-width">

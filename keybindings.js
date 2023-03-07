@@ -160,6 +160,10 @@ function init() {
                                              Scratch),
                         Meta.KeyBindingFlags.PER_WINDOW);
 
+    registerPaperAction("switch-focus-mode",
+                        dynamic_function_ref("switchFocusMode",
+                                             Tiling));
+
     registerPaperAction("develop-set-globals",
                         dynamic_function_ref("setDevGlobals",
                                              Utils));
@@ -198,10 +202,6 @@ function init() {
                         dynamic_function_ref("centerWindowHorizontally",
                                        Tiling),
                         Meta.KeyBindingFlags.PER_WINDOW);
-
-    registerPaperAction("toggle-center-mode",
-                        dynamic_function_ref("toggleCentreFocusMode",
-                                       Tiling));
 
     registerPaperAction('new-window',
                         dynamic_function_ref('duplicateWindow',

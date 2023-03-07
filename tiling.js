@@ -3319,7 +3319,7 @@ function setFocusMode(mode, space, push=true) {
  * Not needed at the moment though.
  * @param {Space} space
  */
-function toggleCentreFocusMode(space) {
+function switchFocusMode(space) {
     space = space ?? spaces.spaceOf(workspaceManager.get_active_workspace());
     if (space.focusMode === FocusModes.CENTRE) {
         setFocusMode(FocusModes.DEFAULT, space);
