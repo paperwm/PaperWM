@@ -530,7 +530,7 @@ function enable () {
             return;
         fixTopBar();
     });
-    
+
     signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
         let monitors = Tiling.spaces.monitors;
         if (!settings.prefs.topbar_follow_focus) {

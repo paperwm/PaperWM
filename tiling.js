@@ -1182,6 +1182,7 @@ border-radius: ${borderWidth}px;
         }
         
         let width = this.monitor.width;
+        this.windowPositionBarBackdrop.width = width;
         let segments = width / cols;
         this.windowPositionBar.width = segments;
         this.windowPositionBar.height = TopBar.panelBox.height;
