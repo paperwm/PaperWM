@@ -1,3 +1,8 @@
+.focus-mode-icon {
+    icon-size: 16px;
+    padding: 8px 0 0 22px;
+}
+
 .workspace-icon-button {
     -st-icon-style: symbolic;
     border: none;

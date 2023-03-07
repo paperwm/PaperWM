@@ -148,6 +148,8 @@ var Space = class Space extends Array {
 
         // default focusMode (can be overriden by saved user pref in Space.init method)
         this.focusMode = FocusModes.DEFAULT;
+        this.focusModeIcon = new TopBar.FocusIcon('focus-mode-icon');
+        this.focusModeIcon.setMode(FocusModes.DEFAULT);
 
         let clip = new Clutter.Actor({name: "clip"});
         this.clip = clip;
@@ -188,6 +190,7 @@ var Space = class Space extends Array {
 
         container.add_actor(clip);
         clip.add_actor(actor);
+        actor.add_child(this.focusModeIcon);
         actor.add_actor(labelParent);
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
@@ -1847,7 +1850,6 @@ var Spaces = class Spaces extends Map {
     }
 
     selectSequenceSpace(direction, move) {
-
         // if in stack preview do not run sequence preview
         if (inPreview === PreviewMode.STACK) {
             return;
@@ -2001,7 +2003,6 @@ var Spaces = class Spaces extends Map {
     }
 
     selectStackSpace(direction, move) {
-
         // if in sequence preview do not run stack preview
         if (inPreview === PreviewMode.SEQUENTIAL) {
             return;
@@ -3291,6 +3292,7 @@ function centerWindowHorizontally(metaWindow) {
 function setFocusMode(mode, space, push=true) {
     space = space ?? spaces.spaceOf(workspaceManager.get_active_workspace());
     space.focusMode = mode;
+    space.focusModeIcon.setMode(mode);
     push && TopBar.focusMenu.setFocusMode(mode);
 
     // if centre also center selectedWindow

@@ -69,8 +69,7 @@ var PopupMenuEntryHelper = function constructor(text) {
 
     this.label.set_style(`
       width: 232px;
-`);
-
+    `);
 
     this.prevIcon = createButton('go-previous-symbolic', 'previous workspace setting');
     this.nextIcon = createButton('go-next-symbolic', 'next workspace setting');
@@ -197,14 +196,32 @@ class ColorEntry {
     }
 }
 
+/**
+ * FocusMode icon class.
+ */
+var FocusIcon = Utils.registerClass(
+class FocusIcon extends St.Icon {
+    _init(styleClass='') {
+        super._init({style_class: styleClass});
+    }
+
+    setMode(mode) {
+        if (mode === Tiling.FocusModes.DEFAULT) {
+            this.icon_name = 'sidebar-show-right-symbolic';
+        }
+        else if (mode === Tiling.FocusModes.CENTRE) {
+            this.icon_name = 'preferences-desktop-multitasking-symbolic';
+        }
+    }
+}
+);
+
 var FocusMenu = Utils.registerClass(
 class FocusMenu extends PanelMenu.Button {
     _init() {
         super._init(0.0, 'FocusMode');
         
-        this._icon = new St.Icon({
-            style_class: 'system-status-icon',
-        });
+        this._icon = new FocusIcon('system-status-icon');
 
         this.setFocusMode(Tiling.FocusModes.DEFAULT);
         this.add_child(this._icon);
@@ -219,12 +236,7 @@ class FocusMenu extends PanelMenu.Button {
      */
     setFocusMode(mode, push=false) {
         this.focusMode = mode;
-        if (mode === Tiling.FocusModes.DEFAULT) {
-            this._icon.icon_name = 'sidebar-show-right-symbolic';
-        }
-        else if (mode === Tiling.FocusModes.CENTRE) {
-            this._icon.icon_name = 'preferences-desktop-multitasking-symbolic';
-        }
+        this._icon.setMode(mode);
 
         // if push, call Tiling.setFocusMode
         push && Tiling.setFocusMode(mode, undefined, false);
@@ -239,6 +251,10 @@ class FocusMenu extends PanelMenu.Button {
     }
 
     _onClicked(actor, event) {
+        if (Tiling.inPreview != Tiling.PreviewMode.NONE || Main.overview.visible) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+
         if (event.type() !== Clutter.EventType.TOUCH_BEGIN && 
             event.type() !== Clutter.EventType.BUTTON_PRESS) {
             return Clutter.EVENT_PROPAGATE;
