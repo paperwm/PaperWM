@@ -149,7 +149,7 @@ var Space = class Space extends Array {
         // default focusMode (can be overriden by saved user pref in Space.init method)
         this.focusMode = FocusModes.DEFAULT;
         this.focusModeIcon = new TopBar.FocusIcon('focus-mode-icon');
-        this.focusModeIcon.setMode(FocusModes.DEFAULT);
+        this.focusModeIcon.setVisible(false); // hide by default
 
         let clip = new Clutter.Actor({name: "clip"});
         this.clip = clip;
@@ -1767,6 +1767,7 @@ var Spaces = class Spaces extends Map {
         }
 
         inPreview = PreviewMode.NONE;
+        this.showSpaceFocusIcons(false);
     }
 
     _getOrderedSpaces(monitor) {
@@ -1786,6 +1787,7 @@ var Spaces = class Spaces extends Map {
             return;
         }
         inPreview = PreviewMode.SEQUENTIAL;
+        this.showSpaceFocusIcons();
 
         if (Main.panel.statusArea.appMenu) {
             Main.panel.statusArea.appMenu.container.hide();
@@ -1920,11 +1922,11 @@ var Spaces = class Spaces extends Map {
     }
 
     _initWorkspaceStack() {
-
-        if (inPreview)
+        if (inPreview) {
             return;
-
+        }
         inPreview = PreviewMode.STACK;
+        this.showSpaceFocusIcons();
 
         // Always show the topbar when using the workspace stack
         TopBar.fixTopBar();
@@ -2081,7 +2083,6 @@ var Spaces = class Spaces extends Map {
     }
 
     animateToSpace(to, from, callback) {
-
         let currentPreviewMode = inPreview;
         inPreview = PreviewMode.NONE;
 
@@ -2283,6 +2284,14 @@ var Spaces = class Spaces extends Map {
             insertWindow(metaWindow, {existing: false});
         });
     };
+
+    /**
+     * Shows or hides focus icons in spaces.
+     * @param {boolean} show 
+     */
+    showSpaceFocusIcons(show = true) {
+        this.forEach(s => s.focusModeIcon.setVisible(show));
+    }
 }
 Signals.addSignalMethods(Spaces.prototype);
 

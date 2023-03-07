@@ -203,8 +203,13 @@ var FocusIcon = Utils.registerClass(
 class FocusIcon extends St.Icon {
     _init(styleClass='') {
         super._init({style_class: styleClass});
+        this.setMode(Tiling.FocusModes.DEFAULT);
     }
 
+    /**
+     * Set the mode that this icon will display.
+     * @param {Tiling.FocusModes} mode 
+     */
     setMode(mode) {
         if (mode === Tiling.FocusModes.DEFAULT) {
             this.icon_name = 'sidebar-show-right-symbolic';
@@ -212,6 +217,14 @@ class FocusIcon extends St.Icon {
         else if (mode === Tiling.FocusModes.CENTRE) {
             this.icon_name = 'preferences-desktop-multitasking-symbolic';
         }
+    }
+
+    /**
+     * Sets visibility of icon.
+     * @param {boolean} visible 
+     */
+    setVisible(visible = true) {
+        this.visible = visible;
     }
 }
 );
