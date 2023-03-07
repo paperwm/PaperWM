@@ -289,7 +289,7 @@ To enable the bar execute:
 dconf write /org/gnome/shell/extensions/paperwm/show-window-position-bar true
 ```
 
-You can modify and override the styles of both the coloured position bar and the dimmed "position bar backdrop" by overriding the `paperwm-window-position-bar` and `paperwm-window-position-bar-backdrop` CSS classes respectively (see `user.css` in [Development & user configuration](#development--user-configuration) section for more information).
+You can modify and override the styles of both the coloured position bar and the dimmed "position bar backdrop" by overriding the `paperwm-window-position-bar` and `paperwm-window-position-bar-backdrop` CSS classes respectively (see `user.css` in [Development & user configuration](#development--user-configuration) section for more information). The `paperwm-window-position-bar` will also inherit the selection color (same as window borders) from `tile-preview`.
 
 _Note: PaperWM overrides the default Gnome Top Bar style to be completely transparent so that the dimmed `window-position-bar-backdrop` element and the `window-position-bar` element are visible._
 
