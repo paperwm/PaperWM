@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Zulip Chat
+    url: https://paperwm.zulipchat.com/
+    about: Talk to us on Zulip.
