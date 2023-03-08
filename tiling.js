@@ -458,21 +458,22 @@ var Space = class Space extends Array {
         let selectedIndex = this.selectedIndex();
         let workArea = this.workArea();
 
-        // compensate to keep window position bar on all monitors
-        const panelBoxHeight = TopBar.panelBox.height;
-        const monitor = prefs.topbar_follow_focus ? 
-            TopBar.panelMonitor :
-            Main.layoutManager.primaryMonitor;
-        if (monitor !== this.monitor) {
-            workArea.y += panelBoxHeight;
-            workArea.height -= panelBoxHeight;
-        }
-
         // Happens on monitors-changed
         if (workArea.width === 0) {
             this._inLayout = false;
             return;
         }
+
+        // compensate to keep window position bar on all monitors
+        const panelBoxHeight = TopBar.panelBox.height;
+        const monitor = prefs.topbar_follow_focus ? 
+            Main.layoutManager.focusMonitor :
+            Main.layoutManager.primaryMonitor;
+        if (monitor !== this.monitor) {
+            workArea.y += panelBoxHeight;
+            workArea.height -= panelBoxHeight;
+        }
+        
         let availableHeight = workArea.height;
         let y0 = workArea.y;
         let fixPointAttempCount = 0;

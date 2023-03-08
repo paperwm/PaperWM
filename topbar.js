@@ -533,21 +533,17 @@ function enable () {
 
     signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
         let monitors = Tiling.spaces.monitors;
-        if (!settings.prefs.topbar_follow_focus) {
-            moveTopBarTo(Main.layoutManager.primaryMonitor);
-        }
-        let to = setMonitor(Main.layoutManager.focusMonitor);
+        let to = prefs.topbar_follow_focus ?
+            Main.layoutManager.focusMonitor :
+            Main.layoutManager.primaryMonitor;
+        moveTopBarTo(to);
+        setMonitor(to);
         let space = monitors.get(to);
         updateWorkspaceIndicator(space.workspace.index());
-        for (let [workspace, space] of Tiling.spaces) {
-            space.layout();
-        }
     });
 
     signals.connect(Settings.settings, 'changed::show-window-position-bar', (settings, key) => {
-        for (let [workspace, space] of Tiling.spaces) {
-            space.updateWindowPositionBar();
-        }
+        Tiling.spaces && Tiling.spaces.forEach(s => s.updateWindowPositionBar());
     });
 
     signals.connect(panelBox, 'show', () => {
