@@ -309,6 +309,22 @@ var Space = class Space extends Array {
         workArea.y -= this.monitor.y;
         workArea.height -= prefs.vertical_margin + prefs.vertical_margin_bottom;
         workArea.y += prefs.vertical_margin;
+
+        // compensate to keep window position bar on all monitors
+        const panelBoxHeight = TopBar.panelBox.height;
+        if (prefs.topbar_follow_focus) {
+            if (Main.layoutManager.focusMonitor !== this.monitor) {
+                workArea.y += panelBoxHeight;
+                workArea.height -= panelBoxHeight;
+            }
+        } 
+        else {
+            if (Main.layoutManager.primaryMonitor !== this.monitor) {
+                workArea.y += panelBoxHeight;
+                workArea.height -= panelBoxHeight;
+            }
+        }
+
         return workArea;
     }
 
@@ -973,7 +989,6 @@ var Space = class Space extends Array {
     }
 
     startAnimate(grabWindow) {
-
         if (!this._isAnimating && !Meta.is_wayland_compositor()) {
             // Tracking the background fixes issue #80
             // It also let us activate window clones clicked during animation
@@ -2736,7 +2751,6 @@ function insertWindow(metaWindow, {existing}) {
 }
 
 function animateDown(metaWindow) {
-
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
@@ -3513,7 +3527,6 @@ function moveDownSpace(mw, space) {
 function moveUpSpace(mw, space) {
     spaces.selectSequenceSpace(Meta.MotionDirection.UP, true);
 }
-
 
 /**
    Detach the @metaWindow, storing it at the bottom right corner while
