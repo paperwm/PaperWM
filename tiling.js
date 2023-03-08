@@ -309,22 +309,6 @@ var Space = class Space extends Array {
         workArea.y -= this.monitor.y;
         workArea.height -= prefs.vertical_margin + prefs.vertical_margin_bottom;
         workArea.y += prefs.vertical_margin;
-
-        // compensate to keep window position bar on all monitors
-        const panelBoxHeight = TopBar.panelBox.height;
-        if (prefs.topbar_follow_focus) {
-            if (Main.layoutManager.focusMonitor !== this.monitor) {
-                workArea.y += panelBoxHeight;
-                workArea.height -= panelBoxHeight;
-            }
-        } 
-        else {
-            if (Main.layoutManager.primaryMonitor !== this.monitor) {
-                workArea.y += panelBoxHeight;
-                workArea.height -= panelBoxHeight;
-            }
-        }
-
         return workArea;
     }
 
@@ -473,6 +457,17 @@ var Space = class Space extends Array {
         let x = 0;
         let selectedIndex = this.selectedIndex();
         let workArea = this.workArea();
+
+        // compensate to keep window position bar on all monitors
+        const panelBoxHeight = TopBar.panelBox.height;
+        const monitor = prefs.topbar_follow_focus ? 
+            TopBar.panelMonitor :
+            Main.layoutManager.primaryMonitor;
+        if (monitor !== this.monitor) {
+            workArea.y += panelBoxHeight;
+            workArea.height -= panelBoxHeight;
+        }
+
         // Happens on monitors-changed
         if (workArea.width === 0) {
             this._inLayout = false;
@@ -1312,7 +1307,7 @@ border-radius: ${borderWidth}px;
         this.width = monitor.width;
         this.height = monitor.height;
 
-        let time = animate ? 0.25 : 0;
+        let time = animate ? prefs.animation_time : 0;
 
         Tweener.addTween(this.actor,
                         {x: 0, y: 0, scale_x: 1, scale_y: 1,
@@ -2501,6 +2496,9 @@ function enable(errorNotification) {
             s.monitor.clickOverlay.show();
         });
         TopBar.fixTopBar()
+
+        // run a final layout for multi-monitor topbar and window position indicator init
+        imports.mainloop.timeout_add(200, () => spaces.forEach(s => s.layout(false)));
     }
 
     if (Main.layoutManager._startingUp) {
