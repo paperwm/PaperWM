@@ -155,20 +155,15 @@ var Space = class Space extends Array {
         let cloneContainer = new St.Widget({name: "clone-container"});
         this.cloneContainer = cloneContainer;
 
-        // Pick up the same css as the top bar label
-        let label = new St.Label();
         let labelParent = new St.Widget({name: 'panel'});
-        let labelParent2 = new St.Widget({style_class: 'panel-button'});
-        for (let p of [labelParent, labelParent2]) {
-            p.style = `
+            labelParent.style = `
                 background-color: transparent;
                 border-image: none;
                 background-image: none;
                 border: none;
             `;
-        }
-        labelParent.add_actor(labelParent2);
-        labelParent2.add_actor(label);
+        let label = new St.Label();
+        labelParent.add_actor(label);
         this.label = label;
         label.hide();
 
@@ -1829,7 +1824,22 @@ var Spaces = class Spaces extends Map {
         }
 
         inPreview = PreviewMode.NONE;
-        TopBar.setClearStyle();
+        this.setSpaceTopbarElementsVisible(false);
+    }
+
+    /**
+     * A space contains several elements that are duplicated (in the topbar) so that
+     * they can be seen in the space "topbar" when switching workspaces. This function
+     * sets these elements' visibility when not needed.
+     * @param {boolean} visible 
+     */
+    setSpaceTopbarElementsVisible(visible=true) {
+        visible ? TopBar.setTransparentStyle() : TopBar.setClearStyle();
+
+        // set visibility on space elements (like workspace name)
+        this.forEach(s => {
+            visible ? s.label.show() : s.label.hide();
+        });
     }
 
     _getOrderedSpaces(monitor) {
@@ -1849,7 +1859,7 @@ var Spaces = class Spaces extends Map {
             return;
         }
         inPreview = PreviewMode.SEQUENTIAL;
-        TopBar.setTransparentStyle();
+        this.setSpaceTopbarElementsVisible();
 
         if (Main.panel.statusArea.appMenu) {
             Main.panel.statusArea.appMenu.container.hide();
@@ -1988,7 +1998,7 @@ var Spaces = class Spaces extends Map {
             return;
 
         inPreview = PreviewMode.STACK;
-        TopBar.setTransparentStyle();
+        this.setSpaceTopbarElementsVisible();
 
         // Always show the topbar when using the workspace stack
         TopBar.fixTopBar();
