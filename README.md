@@ -277,7 +277,7 @@ See `examples/keybindings.js` for more examples.
 
 [#476](https://github.com/paperwm/PaperWM/pull/476) added a coloured window position bar to the Gnome Top Bar.  This allows users to visually identify the current selected window position of the scrollable viewport in the current workspace.
 
-You can disable/enable the window indicator bar via `dconf` with the following commands (executed from a terminal):
+You can disable the window position bar via `dconf` with the following commands (executed from a terminal):
 
 To disable the bar execute:
 ```

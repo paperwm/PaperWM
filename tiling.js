@@ -464,13 +464,15 @@ var Space = class Space extends Array {
         }
 
         // compensate to keep window position bar on all monitors
-        const panelBoxHeight = TopBar.panelBox.height;
-        const monitor = prefs.topbar_follow_focus ? 
-            Main.layoutManager.focusMonitor :
-            Main.layoutManager.primaryMonitor;
-        if (monitor !== this.monitor) {
-            workArea.y += panelBoxHeight;
-            workArea.height -= panelBoxHeight;
+        if (prefs.show_window_position_bar) {
+            const panelBoxHeight = TopBar.panelBox.height;
+            const monitor = prefs.topbar_follow_focus ?
+                Main.layoutManager.focusMonitor :
+                Main.layoutManager.primaryMonitor;
+            if (monitor !== this.monitor) {
+                workArea.y += panelBoxHeight;
+                workArea.height -= panelBoxHeight;
+            }
         }
         
         let availableHeight = workArea.height;
@@ -1183,6 +1185,22 @@ border-radius: ${borderWidth}px;
         else {
             [this.windowPositionBarBackdrop, this.windowPositionBar]
                 .forEach(i => this.actor.remove_actor(i));
+        }
+    }
+
+    /**
+     * Shows or hides this space's window position bar. Useful for temporarily
+     * hiding the position bar (e.g. for fullscreen mode).
+     * @param {boolean} show 
+     */
+    showWindowPositionBar(show=true) {
+        if (show) {
+            [this.windowPositionBarBackdrop, this.windowPositionBar]
+                .forEach(i => i.show());
+        }
+        else {
+            [this.windowPositionBarBackdrop, this.windowPositionBar]
+                .forEach(i => i.hide());
         }
     }
 
@@ -2592,7 +2610,6 @@ function add_filter(meta_window) {
     return true;
 }
 
-
 /**
    Handle windows leaving workspaces.
  */
@@ -2614,7 +2631,6 @@ function remove_handler(workspace, meta_window) {
         }
     }
 }
-
 
 /**
    Handle windows entering workspaces.
@@ -2847,7 +2863,6 @@ function ensuredX(meta_window, space) {
     return x;
 }
 
-
 /**
    Make sure that `meta_window` is in view, scrolling the space if needed.
  */
@@ -2909,7 +2924,6 @@ function updateSelection(space, metaWindow) {
     clone.set_child_below_sibling(space.selection, cloneActor);
     allocateClone(metaWindow);
 }
-
 
 /**
  * Move the column containing @meta_window to x, y and propagate the change
