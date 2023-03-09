@@ -762,6 +762,13 @@ var Space = class Space extends Array {
         return true;
     }
 
+    /**
+     * Returns true iff this space has a currently fullscreened window.
+     */
+    hasFullScreenWindow() {
+        return this.getWindows().some(el => el.fullscreen);
+    }
+
     swap(direction, metaWindow) {
         metaWindow = metaWindow || this.selectedWindow;
 
@@ -1210,6 +1217,14 @@ border-radius: ${borderWidth}px;
             return;
         }
         
+        // space has a fullscreen window, hide window position bar
+        if (this.hasFullScreenWindow()) {
+            this.showWindowPositionBar(false);
+            return;
+        }
+        // if here has not fullscreen window, show as per usual
+        this.showWindowPositionBar();
+
         // number of columns (a column have one or more windows)
         let cols = this.length;
         if (cols <= 1) {
@@ -1332,7 +1347,6 @@ border-radius: ${borderWidth}px;
             this.updateColor()
         }
         let background = this.background;
-
 
         let cloneContainer = this.cloneContainer;
         let clip = this.clip;
