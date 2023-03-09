@@ -208,16 +208,15 @@ var Space = class Space extends Array {
             name: 'windowPositionBarBackdrop',
             style_class: 'paperwm-window-position-bar-backdrop'
         });
-        this.actor.add_actor(this.windowPositionBarBackdrop);
-
-        this.showWindowPositionBar = prefs.show_window_position_bar;
         this.windowPositionBar = new St.Widget({
             name: 'windowPositionBar',
             style_class: 'paperwm-window-position-bar tile-preview'
         });
         this.windowPositionBar.hide(); // default on empty space
-        this.actor.add_actor(this.windowPositionBar);
         this.windowPositionBar.raise_top();
+        if (prefs.show_window_position_bar) {
+            this.enableWindowPositionBar();
+        }
 
         if (doInit)
             this.init();
@@ -1171,10 +1170,25 @@ border-radius: ${borderWidth}px;
         }
     }
 
+    /**
+     * Enables or disables this space's window position bar.
+     * @param {boolean} enable 
+     */
+    enableWindowPositionBar(enable=true) {
+        if (enable) {
+            [this.windowPositionBarBackdrop, this.windowPositionBar]
+                .forEach(i => this.actor.add_actor(i));
+            this.updateWindowPositionBar();
+        }
+        else {
+            [this.windowPositionBarBackdrop, this.windowPositionBar]
+                .forEach(i => this.actor.remove_actor(i));
+        }
+    }
+
     updateWindowPositionBar() {
-        // if pref show-window-position-bar is set to false, hide
+        // if pref show-window-position-bar, exit
         if (!prefs.show_window_position_bar) {
-            this.windowPositionBar.hide();
             return;
         }
         
@@ -1845,7 +1859,10 @@ var Spaces = class Spaces extends Map {
      * @param {boolean} visible 
      */
     setSpaceTopbarElementsVisible(visible=true) {
-        visible ? TopBar.setTransparentStyle() : TopBar.setClearStyle();
+        // if windowPositionBar shown, we want the topbar style to be transparent if visible
+        if (prefs.show_window_position_bar) {
+            visible ? TopBar.setTransparentStyle() : TopBar.setClearStyle();
+        }
 
         // set visibility on space elements (like workspace name)
         this.forEach(s => {
@@ -2369,6 +2386,25 @@ var Spaces = class Spaces extends Map {
             insertWindow(metaWindow, {existing: false});
         });
     };
+
+    /**
+     * Checks whether the window position bar should be enabled.
+     */
+    showWindowPositionBarChanged() {
+        if (prefs.show_window_position_bar) {
+            this.forEach(s => {
+                s.enableWindowPositionBar();
+            });
+        }
+        if (!prefs.show_window_position_bar) {
+            // should be in normal topbar mode
+            this.forEach(s => {
+                s.enableWindowPositionBar(false);
+            });
+        }
+
+        TopBar.fixStyle();
+    }
 }
 Signals.addSignalMethods(Spaces.prototype);
 

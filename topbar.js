@@ -516,7 +516,7 @@ function enable () {
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.show();
 
-    setClearStyle();
+    fixStyle();
 
     screenSignals.push(
         workspaceManager.connect_after('workspace-switched',
@@ -543,7 +543,7 @@ function enable () {
     });
 
     signals.connect(Settings.settings, 'changed::show-window-position-bar', (settings, key) => {
-        Tiling.spaces && Tiling.spaces.forEach(s => s.updateWindowPositionBar());
+        Tiling.spaces && Tiling.spaces.showWindowPositionBarChanged();
     });
 
     signals.connect(panelBox, 'show', () => {
@@ -558,7 +558,7 @@ function enable () {
      */
     signals.connect(Main.overview, 'hidden', () => {
           imports.mainloop.timeout_add(0, () => {
-            setClearStyle();
+            fixStyle();
           });
     })
 
@@ -588,6 +588,13 @@ function setClearStyle() {
 
 function setTransparentStyle() {
     Main.panel.style_class = 'topbar-transparent';
+}
+
+/**
+ * Applies correct style based on whether we use the windowPositionBar or not.
+ */
+function fixStyle() {
+    prefs.show_window_position_bar ? setClearStyle() : setTransparentStyle();
 }
 
 function fixTopBar() {
