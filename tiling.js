@@ -239,8 +239,10 @@ var Space = class Space extends Array {
         }
         this.cloneContainer.x = this.targetX;
         
+        // init window position bar and space topbar elements
         this.windowPositionBarBackdrop.width = this.monitor.width;
         this.windowPositionBarBackdrop.height = TopBar.panelBox.height;
+        this.setSpaceTopbarElementsVisible(false);
         
         this.getWindows().forEach(w => {
             animateWindow(w);
@@ -1126,6 +1128,13 @@ var Space = class Space extends Array {
         this.layout();
     }
 
+    /**
+     * Returns true if this space has the topbar.
+     */
+    hasTopBar() {
+        return this.monitor && this.monitor === TopBar.panelMonitor;
+    }
+
     updateColor() {
         let color = this.settings.get_string('color');
         if (color === '') {
@@ -1223,8 +1232,16 @@ border-radius: ${borderWidth}px;
             this.showWindowPositionBar(false);
             return;
         }
-        // if here has not fullscreen window, show as per usual
-        this.showWindowPositionBar();
+        else {
+            // if here has no fullscreen window, show as per usual
+            this.showWindowPositionBar();
+        }
+
+        // show space duplicate elements if not primary monitor
+        if (!this.hasTopBar()) {
+            this.labelParent.raise_top();
+            this.label.show();
+        }
 
         // number of columns (a column have one or more windows)
         let cols = this.length;
@@ -1244,6 +1261,29 @@ border-radius: ${borderWidth}px;
         // index of currently selected window
         let windex = this.indexOf(this.selectedWindow);
         this.windowPositionBar.x = windex * segments;
+    }
+
+    /**
+     * A space contains several elements that are duplicated (in the topbar) so that
+     * they can be seen in the space "topbar" when switching workspaces. This function
+     * sets these elements' visibility when not needed.
+     * @param {boolean} visible 
+     */
+    setSpaceTopbarElementsVisible(visible=true, changeTopBarStyle=true) {
+        // if windowPositionBar shown, we want the topbar style to be transparent if visible
+        if (prefs.show_window_position_bar) {
+            if (changeTopBarStyle) {
+                visible ? TopBar.setTransparentStyle() : TopBar.setClearStyle();
+            }
+
+            // if on different monitor then override to show elements
+            if (!this.hasTopBar()) {
+                visible = true;
+            }
+        }
+
+        visible && this.labelParent.raise_top();
+        visible ? this.label.show() : this.label.hide();
     }
 
     createBackground() {
@@ -1886,21 +1926,13 @@ var Spaces = class Spaces extends Map {
     }
 
     /**
-     * A space contains several elements that are duplicated (in the topbar) so that
-     * they can be seen in the space "topbar" when switching workspaces. This function
-     * sets these elements' visibility when not needed.
+     * See Space.setSpaceTopbarElementsVisible function for what this does.
      * @param {boolean} visible 
      */
-    setSpaceTopbarElementsVisible(visible=true) {
-        // if windowPositionBar shown, we want the topbar style to be transparent if visible
-        if (prefs.show_window_position_bar) {
-            visible ? TopBar.setTransparentStyle() : TopBar.setClearStyle();
-        }
-
+    setSpaceTopbarElementsVisible(visible=true, changeTopBarStyle=true) {
         // set visibility on space elements (like workspace name)
         this.forEach(s => {
-            s.labelParent.raise_top();
-            visible ? s.label.show() : s.label.hide();
+            s.setSpaceTopbarElementsVisible(visible, changeTopBarStyle);
         });
     }
 
