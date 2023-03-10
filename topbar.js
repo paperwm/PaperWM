@@ -543,7 +543,10 @@ function enable () {
     });
 
     signals.connect(Settings.settings, 'changed::show-window-position-bar', (settings, key) => {
-        Tiling.spaces && Tiling.spaces.showWindowPositionBarChanged();
+        const spaces = Tiling.spaces;
+        spaces.setSpaceTopbarElementsVisible(false);
+        spaces.forEach(s => s.layout(false));
+        spaces.showWindowPositionBarChanged();
     });
 
     signals.connect(panelBox, 'show', () => {
