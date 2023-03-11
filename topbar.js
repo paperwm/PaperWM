@@ -601,8 +601,7 @@ function enable () {
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 1, 'left');
     menu.show();
 
-    // Force transparency
-    panel.set_style('background-color: rgba(0, 0, 0, 0.35);');
+    fixStyle();
 
     screenSignals.push(
         workspaceManager.connect_after('workspace-switched',
@@ -619,15 +618,20 @@ function enable () {
 
     signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
         let monitors = Tiling.spaces.monitors;
-        if (!settings.prefs.topbar_follow_focus) {
-            moveTopBarTo(Main.layoutManager.primaryMonitor);
-        }
-        let to = setMonitor(Main.layoutManager.focusMonitor);
+        let to = prefs.topbar_follow_focus ?
+            Main.layoutManager.focusMonitor :
+            Main.layoutManager.primaryMonitor;
+        moveTopBarTo(to);
+        setMonitor(to);
         let space = monitors.get(to);
         updateWorkspaceIndicator(space.workspace.index());
-        for (let [workspace, space] of Tiling.spaces) {
-            space.layout();
-        }
+    });
+
+    signals.connect(Settings.settings, 'changed::show-window-position-bar', (settings, key) => {
+        const spaces = Tiling.spaces;
+        spaces.setSpaceTopbarElementsVisible(false);
+        spaces.forEach(s => s.layout(false));
+        spaces.showWindowPositionBarChanged();
     });
 
     signals.connect(panelBox, 'show', () => {
@@ -636,6 +640,15 @@ function enable () {
     signals.connect(panelBox, 'hide', () => {
         fixTopBar();
     });
+    /**
+     * Set clear-style after hiding overview.  Mainloop timeout
+     * needed here to execute after hidden is finished.
+     */
+    signals.connect(Main.overview, 'hidden', () => {
+          imports.mainloop.timeout_add(0, () => {
+            fixStyle();
+          });
+    })
 
     fixLabel(menu._label);
     signals.connect(menu._label, 'notify::allocation', fixLabel);
@@ -657,6 +670,21 @@ function disable() {
     screenSignals = [];
 
     panelBox.scale_y = 1;
+}
+
+function setClearStyle() {
+    Main.panel.style_class = 'topbar-clear';
+}
+
+function setTransparentStyle() {
+    Main.panel.style_class = 'topbar-transparent';
+}
+
+/**
+ * Applies correct style based on whether we use the windowPositionBar or not.
+ */
+function fixStyle() {
+    prefs.show_window_position_bar ? setClearStyle() : setTransparentStyle();
 }
 
 function fixTopBar() {

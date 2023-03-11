@@ -374,6 +374,11 @@
         <summary>Make the top bar follow the focused monitor</summary>
     </key>
 
+    <key type="b" name="show-window-position-bar">
+        <default>true</default>
+        <summary>Show the window position bar in the topbar</summary>
+    </key>
+
     <key type="d" name="animation-time">
         <default>0.25</default>
         <summary>Duration of animations in seconds</summary>
