@@ -33,7 +33,7 @@ GNOME Shell 43.3
 PaperWM branch/tag: develop
 PaperWM commit: 223ff883bca9bf20dbf066eceda891cb6e8be931
 Enabled extensions:
-- paperwm@hedning:matrix.org
+- paperwm@hedning.matrix.org
 - switcher@landau.fi
 - dash-to-panel@jderose9.github.com
 - appindicatorsupport@rgcjonas.gmail.com

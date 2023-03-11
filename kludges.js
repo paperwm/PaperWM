@@ -7,9 +7,9 @@
 
 var Extension;
 if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
+    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning.matrix.org"];
 } else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
+    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning.matrix.org");
 }
 
 var Meta = imports.gi.Meta;
