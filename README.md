@@ -181,7 +181,7 @@ Pressing <kbd>Super</kbd><kbd>Insert</kbd> will assign the active window to a gl
 GSETTINGS_SCHEMA_DIR=$HOME/.local/share/gnome-shell/extensions/paperwm@hedning:matrix.org/schemas dconf-editor /org/gnome/shell/extensions/paperwm/
 ```
 
-### Winprops
+### Setting window specific properities
 
 It's possible to set window properties using simple rules that will be applied when placing new windows. Properties can applied to windows identified by their `wm_class` or `title`.  The following properties are currently supported:
 
@@ -272,6 +272,24 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
 ```
 
 See `examples/keybindings.js` for more examples.
+
+### Window Position Bar (colored bar segment added to Gnome Top Bar)
+
+
+
+[#476](https://github.com/paperwm/PaperWM/pull/476) added a coloured window position bar to the Gnome Top Bar.  This allows users to visually identify the current selected window position of the scrollable viewport in the current workspace.  This is demonstrated in the following video:
+
+https://user-images.githubusercontent.com/30424662/221416159-464d7512-5174-451b-9035-0ee84f9eb4ec.mp4
+
+The the window position bar can be _disabled_ from `PaperWM extension settings` or via `dconf`, e.g. by executing the following command a terminal: 
+
+```
+dconf write /org/gnome/shell/extensions/paperwm/show-window-position-bar false
+```
+
+You can style both the coloured position bar and the dimmed "position bar backdrop" by overriding the `paperwm-window-position-bar` and `paperwm-window-position-bar-backdrop` CSS classes respectively (see `user.css` in [Development & user configuration](#development--user-configuration) section for more information). The `paperwm-window-position-bar` will also inherit the selection color (same as window borders) from `tile-preview`.
+
+_Note: PaperWM overrides the default Gnome Top Bar style to be completely transparent so that the dimmed `window-position-bar-backdrop` and`window-position-bar` elements are visible._
 
 ## Fixed Window Size ##
 

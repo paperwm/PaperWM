@@ -223,6 +223,14 @@ var SettingsWidget = class SettingsWidget {
 
         });
 
+        let enableWindowPositionBar = this.builder.get_object('enable-window-position-bar');
+        enableWindowPositionBar.state =
+            this._settings.get_boolean('show-window-position-bar');
+            enableWindowPositionBar.connect('state-set', (obj, state) => {
+            this._settings.set_boolean('show-window-position-bar',
+                state);
+        });
+
         let disableCorner = this.builder.get_object('override-hot-corner');
         disableCorner.state =
             this._settings.get_boolean('override-hot-corner');

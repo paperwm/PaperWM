@@ -34,7 +34,6 @@ var display = global.display;
 /** @type {Spaces} */
 var spaces;
 
-
 var Minimap = Extension.imports.minimap;
 var Scratch = Extension.imports.scratch;
 var Gestures = Extension.imports.gestures;
@@ -156,25 +155,23 @@ var Space = class Space extends Array {
         let cloneContainer = new St.Widget({name: "clone-container"});
         this.cloneContainer = cloneContainer;
 
-        // Pick up the same css as the top bar label
-        let label = new St.Label();
         let labelParent = new St.Widget({name: 'panel'});
-        let labelParent2 = new St.Widget({style_class: 'panel-button'});
-        for (let p of [labelParent, labelParent2]) {
-            p.style = `
-                background-color: transparent;
-                border-image: none;
-                background-image: none;
-                border: none;
-            `;
-        }
-        labelParent.add_actor(labelParent2);
-        labelParent2.add_actor(label);
+        labelParent.style = `
+            background-color: transparent;
+            border-image: none;
+            background-image: none;
+            border: none;
+        `;
+        this.labelParent = labelParent;
+        let label = new St.Label();
+        labelParent.add_actor(label);
         this.label = label;
         label.hide();
 
-        let selection = new St.Widget({name: 'selection',
-                                       style_class: 'paperwm-selection tile-preview'});
+        let selection = new St.Widget({
+            name: 'selection',
+            style_class: 'paperwm-selection tile-preview'
+        });
         this.selection = selection;
 
         clip.space = this;
@@ -208,6 +205,20 @@ var Space = class Space extends Array {
         this.leftStack = 0; // not implemented
         this.rightStack = 0; // not implemented
 
+        this.windowPositionBarBackdrop = new St.Widget({
+            name: 'windowPositionBarBackdrop',
+            style_class: 'paperwm-window-position-bar-backdrop'
+        });
+        this.windowPositionBar = new St.Widget({
+            name: 'windowPositionBar',
+            style_class: 'paperwm-window-position-bar tile-preview'
+        });
+        this.windowPositionBar.hide(); // default on empty space
+        this.windowPositionBar.raise_top();
+        if (prefs.show_window_position_bar) {
+            this.enableWindowPositionBar();
+        }
+
         if (doInit)
             this.init();
     }
@@ -227,6 +238,12 @@ var Space = class Space extends Array {
             this.targetX = oldSpace.targetX;
         }
         this.cloneContainer.x = this.targetX;
+        
+        // init window position bar and space topbar elements
+        this.windowPositionBarBackdrop.width = this.monitor.width;
+        this.windowPositionBarBackdrop.height = TopBar.panelBox.height;
+        this.setSpaceTopbarElementsVisible(false);
+        
         this.getWindows().forEach(w => {
             animateWindow(w);
         });
@@ -442,11 +459,25 @@ var Space = class Space extends Array {
         let x = 0;
         let selectedIndex = this.selectedIndex();
         let workArea = this.workArea();
+
         // Happens on monitors-changed
         if (workArea.width === 0) {
             this._inLayout = false;
             return;
         }
+
+        // compensate to keep window position bar on all monitors
+        if (prefs.show_window_position_bar) {
+            const panelBoxHeight = TopBar.panelBox.height;
+            const monitor = prefs.topbar_follow_focus ?
+                Main.layoutManager.focusMonitor :
+                Main.layoutManager.primaryMonitor;
+            if (monitor !== this.monitor) {
+                workArea.y += panelBoxHeight;
+                workArea.height -= panelBoxHeight;
+            }
+        }
+        
         let availableHeight = workArea.height;
         let y0 = workArea.y;
         let fixPointAttempCount = 0;
@@ -494,7 +525,6 @@ var Space = class Space extends Array {
             x += resultingWidth + gap;
         }
         this._inLayout = false;
-
 
         let oldWidth = this.cloneContainer.width;
         let min = workArea.x;
@@ -735,6 +765,13 @@ var Space = class Space extends Array {
         return true;
     }
 
+    /**
+     * Returns true iff this space has a currently fullscreened window.
+     */
+    hasFullScreenWindow() {
+        return this.getWindows().some(el => el.fullscreen);
+    }
+
     swap(direction, metaWindow) {
         metaWindow = metaWindow || this.selectedWindow;
 
@@ -959,7 +996,6 @@ var Space = class Space extends Array {
     }
 
     startAnimate(grabWindow) {
-
         if (!this._isAnimating && !Meta.is_wayland_compositor()) {
             // Tracking the background fixes issue #80
             // It also let us activate window clones clicked during animation
@@ -1045,17 +1081,42 @@ var Space = class Space extends Array {
         this.signals.connect(this.settings, 'changed::background',
                              this.updateBackground.bind(this));
         this.signals.connect(Settings.settings, 'changed::default-show-top-bar',
-                             this.updateShowTopBar.bind(this));
+                             this.showTopBarChanged.bind(this));
         this.signals.connect(this.settings, 'changed::show-top-bar',
-                             this.updateShowTopBar.bind(this));
+                             this.showTopBarChanged.bind(this));
     }
 
-    updateShowTopBar() {
+    /**
+     * Returns the user show-top-bar setting if it exists, otherwise returns the
+     * default-show-top-bar setting.
+     * @returns Boolean
+     */
+    getShowTopBarSetting() {
         let showTopBar = prefs.default_show_top_bar;
         let userValue = this.settings.get_user_value('show-top-bar');
         if (userValue) {
             showTopBar = userValue.unpack();
         }
+
+        return showTopBar;
+    }
+
+    showTopBarChanged() {
+        let showTopBar = this.getShowTopBarSetting();
+
+        // remove window position bar actors
+        this.actor.remove_actor(this.windowPositionBarBackdrop);
+        this.actor.remove_actor(this.windowPositionBar);
+        if (showTopBar) {
+            this.actor.add_actor(this.windowPositionBarBackdrop);
+            this.actor.add_actor(this.windowPositionBar);
+        }
+
+        this.updateShowTopBar();
+    }
+
+    updateShowTopBar() {
+        let showTopBar = this.getShowTopBarSetting();
 
         if (showTopBar) {
             this.showTopBar = 1;
@@ -1065,6 +1126,13 @@ var Space = class Space extends Array {
         this._populated && TopBar.fixTopBar();
 
         this.layout();
+    }
+
+    /**
+     * Returns true if this space has the topbar.
+     */
+    hasTopBar() {
+        return this.monitor && this.monitor === TopBar.panelMonitor;
     }
 
     updateColor() {
@@ -1119,6 +1187,103 @@ border-radius: ${borderWidth}px;
         if (this.workspace === workspaceManager.get_active_workspace()) {
             TopBar.updateWorkspaceIndicator(this.workspace.index());
         }
+    }
+
+    /**
+     * Enables or disables this space's window position bar.
+     * @param {boolean} enable 
+     */
+    enableWindowPositionBar(enable=true) {
+        if (enable) {
+            [this.windowPositionBarBackdrop, this.windowPositionBar]
+                .forEach(i => this.actor.add_actor(i));
+            this.updateWindowPositionBar();
+        }
+        else {
+            [this.windowPositionBarBackdrop, this.windowPositionBar]
+                .forEach(i => this.actor.remove_actor(i));
+        }
+    }
+
+    /**
+     * Shows or hides this space's window position bar. Useful for temporarily
+     * hiding the position bar (e.g. for fullscreen mode).
+     * @param {boolean} show 
+     */
+    showWindowPositionBar(show=true) {
+        if (show) {
+            [this.windowPositionBarBackdrop, this.windowPositionBar]
+                .forEach(i => i.show());
+        }
+        else {
+            [this.windowPositionBarBackdrop, this.windowPositionBar]
+                .forEach(i => i.hide());
+        }
+    }
+
+    updateWindowPositionBar() {
+        // if pref show-window-position-bar, exit
+        if (!prefs.show_window_position_bar) {
+            return;
+        }
+        
+        // space has a fullscreen window, hide window position bar
+        if (this.hasFullScreenWindow()) {
+            this.showWindowPositionBar(false);
+            return;
+        }
+        else {
+            // if here has no fullscreen window, show as per usual
+            this.showWindowPositionBar();
+        }
+
+        // show space duplicate elements if not primary monitor
+        if (!this.hasTopBar()) {
+            this.labelParent.raise_top();
+            this.label.show();
+        }
+
+        // number of columns (a column have one or more windows)
+        let cols = this.length;
+        if (cols <= 1) {
+            this.windowPositionBar.hide();
+            return;
+        } else {
+            this.windowPositionBar.show();
+        }
+        
+        let width = this.monitor.width;
+        this.windowPositionBarBackdrop.width = width;
+        let segments = width / cols;
+        this.windowPositionBar.width = segments;
+        this.windowPositionBar.height = TopBar.panelBox.height;
+
+        // index of currently selected window
+        let windex = this.indexOf(this.selectedWindow);
+        this.windowPositionBar.x = windex * segments;
+    }
+
+    /**
+     * A space contains several elements that are duplicated (in the topbar) so that
+     * they can be seen in the space "topbar" when switching workspaces. This function
+     * sets these elements' visibility when not needed.
+     * @param {boolean} visible 
+     */
+    setSpaceTopbarElementsVisible(visible=true, changeTopBarStyle=true) {
+        // if windowPositionBar shown, we want the topbar style to be transparent if visible
+        if (prefs.show_window_position_bar) {
+            if (changeTopBarStyle) {
+                visible ? TopBar.setTransparentStyle() : TopBar.setClearStyle();
+            }
+
+            // if on different monitor then override to show elements
+            if (!this.hasTopBar()) {
+                visible = true;
+            }
+        }
+
+        visible && this.labelParent.raise_top();
+        visible ? this.label.show() : this.label.hide();
     }
 
     createBackground() {
@@ -1224,14 +1389,13 @@ border-radius: ${borderWidth}px;
         }
         let background = this.background;
 
-
         let cloneContainer = this.cloneContainer;
         let clip = this.clip;
 
         this.width = monitor.width;
         this.height = monitor.height;
 
-        let time = animate ? 0.25 : 0;
+        let time = animate ? prefs.animation_time : 0;
 
         Tweener.addTween(this.actor,
                         {x: 0, y: 0, scale_x: 1, scale_y: 1,
@@ -1758,6 +1922,18 @@ var Spaces = class Spaces extends Map {
         }
 
         inPreview = PreviewMode.NONE;
+        this.setSpaceTopbarElementsVisible(false);
+    }
+
+    /**
+     * See Space.setSpaceTopbarElementsVisible function for what this does.
+     * @param {boolean} visible 
+     */
+    setSpaceTopbarElementsVisible(visible=true, changeTopBarStyle=true) {
+        // set visibility on space elements (like workspace name)
+        this.forEach(s => {
+            s.setSpaceTopbarElementsVisible(visible, changeTopBarStyle);
+        });
     }
 
     _getOrderedSpaces(monitor) {
@@ -1777,6 +1953,7 @@ var Spaces = class Spaces extends Map {
             return;
         }
         inPreview = PreviewMode.SEQUENTIAL;
+        this.setSpaceTopbarElementsVisible();
 
         if (Main.panel.statusArea.appMenu) {
             Main.panel.statusArea.appMenu.container.hide();
@@ -1841,7 +2018,6 @@ var Spaces = class Spaces extends Map {
     }
 
     selectSequenceSpace(direction, move) {
-
         // if in stack preview do not run sequence preview
         if (inPreview === PreviewMode.STACK) {
             return;
@@ -1912,11 +2088,11 @@ var Spaces = class Spaces extends Map {
     }
 
     _initWorkspaceStack() {
-
         if (inPreview)
             return;
 
         inPreview = PreviewMode.STACK;
+        this.setSpaceTopbarElementsVisible();
 
         // Always show the topbar when using the workspace stack
         TopBar.fixTopBar();
@@ -2098,7 +2274,7 @@ var Spaces = class Spaces extends Map {
 
         let onComplete = () => {
             // Hide any spaces that aren't visible This
-            // avoids a nasty permance degregration in some
+            // avoids a nasty preformance degregration in some
             // cases
             for (const space of spaces.values()) {
                 if (!visible.get(space)) {
@@ -2276,6 +2452,25 @@ var Spaces = class Spaces extends Map {
             insertWindow(metaWindow, {existing: false});
         });
     };
+
+    /**
+     * Checks whether the window position bar should be enabled.
+     */
+    showWindowPositionBarChanged() {
+        if (prefs.show_window_position_bar) {
+            this.forEach(s => {
+                s.enableWindowPositionBar();
+            });
+        }
+        if (!prefs.show_window_position_bar) {
+            // should be in normal topbar mode
+            this.forEach(s => {
+                s.enableWindowPositionBar(false);
+            });
+        }
+
+        TopBar.fixStyle();
+    }
 }
 Signals.addSignalMethods(Spaces.prototype);
 
@@ -2404,6 +2599,9 @@ function enable(errorNotification) {
             s.monitor.clickOverlay.show();
         });
         TopBar.fixTopBar()
+
+        // run a final layout for multi-monitor topbar and window position indicator init
+        imports.mainloop.timeout_add(200, () => spaces.forEach(s => s.layout(false)));
     }
 
     if (Main.layoutManager._startingUp) {
@@ -2460,7 +2658,6 @@ function add_filter(meta_window) {
     return true;
 }
 
-
 /**
    Handle windows leaving workspaces.
  */
@@ -2482,7 +2679,6 @@ function remove_handler(workspace, meta_window) {
         }
     }
 }
-
 
 /**
    Handle windows entering workspaces.
@@ -2654,7 +2850,6 @@ function insertWindow(metaWindow, {existing}) {
 }
 
 function animateDown(metaWindow) {
-
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
@@ -2716,7 +2911,6 @@ function ensuredX(meta_window, space) {
     return x;
 }
 
-
 /**
    Make sure that `meta_window` is in view, scrolling the space if needed.
  */
@@ -2771,13 +2965,13 @@ function updateSelection(space, metaWindow) {
 
     // then set the new selection active
     space.setSelectionActive();
+    space.updateWindowPositionBar();
     if (space.selection.get_parent() === clone)
         return;
     space.selection.reparent(clone);
     clone.set_child_below_sibling(space.selection, cloneActor);
     allocateClone(metaWindow);
 }
-
 
 /**
  * Move the column containing @meta_window to x, y and propagate the change
@@ -2891,7 +3085,6 @@ function setAllWorkspacesInactive() {
 // `MetaWindow::focus` handling
 function focus_handler(metaWindow, user_data) {
     debug("focus:", metaWindow.title, utils.framestr(metaWindow.get_frame_rect()));
-
 
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
@@ -3432,7 +3625,6 @@ function moveUpSpace(mw, space) {
     spaces.selectSequenceSpace(Meta.MotionDirection.UP, true);
 }
 
-
 /**
    Detach the @metaWindow, storing it at the bottom right corner while
    navigating. When done, insert all the detached windows again.
@@ -3535,7 +3727,6 @@ function cycleWorkspaceSettings(dir=1) {
     }
     return space;
 }
-
 
 // Backward compatibility
 function defwinprop(...args) {

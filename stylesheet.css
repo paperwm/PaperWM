@@ -1,3 +1,11 @@
+.topbar-clear {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.topbar-transparent {
+    background-color: rgba(0, 0, 0, 0.35)
+}
+
 .workspace-icon-button {
     -st-icon-style: symbolic;
     border: none;
@@ -16,4 +24,13 @@
 
 .paperwm-minimap-selection {
     border-radius: 8px;
+}
+
+.paperwm-window-position-bar-backdrop {
+    background-color: rgba(0, 0, 0, 0.35);
+}
+
+.paperwm-window-position-bar {
+    border: 0; /* disable border to calm it down a bit */
+    border-radius: 1px;
 }
