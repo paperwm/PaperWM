@@ -149,6 +149,7 @@ var Space = class Space extends Array {
         this.focusMode = FocusModes.DEFAULT;
         this.focusModeIcon = new TopBar.FocusIcon('focus-mode-icon');
         this.focusModeIcon.setVisible(false); // hide by default
+        let unfocusXPosition = null;
 
         let clip = new Clutter.Actor({name: "clip"});
         this.clip = clip;
@@ -595,7 +596,7 @@ var Space = class Space extends Array {
 
     isFullyVisible(metaWindow) {
         let clone = metaWindow.clone;
-        let x = clone.targetX + this.targetX;
+        let x = this.visibleX(metaWindow);
         let workArea = this.workArea();
         let min = workArea.x;
 
@@ -603,9 +604,8 @@ var Space = class Space extends Array {
     }
 
     visibleRatio(metaWindow) {
-
         let clone = metaWindow.clone;
-        let x = clone.targetX + this.targetX;
+        let x = this.visibleX(metaWindow);
         let workArea = this.workArea();
         let min = workArea.x;
 
@@ -617,7 +617,7 @@ var Space = class Space extends Array {
 
     isPlaceable(metaWindow) {
         let clone = metaWindow.clone;
-        let x = clone.targetX + this.targetX;
+        let x = this.visibleX(metaWindow);
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
         let min = workArea.x - this.monitor.x;
 
@@ -686,7 +686,7 @@ var Space = class Space extends Array {
                 return
             let f = w.get_frame_rect();
             let clone = w.clone;
-            let x = clone.targetX + this.targetX;
+            let x = this.visibleX(w);
             let y = this.monitor.y + clone.targetY;
             x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
             x += this.monitor.x;
@@ -882,6 +882,20 @@ var Space = class Space extends Array {
         ensureViewport(metaWindow, space);
     }
 
+    /**
+     * Return the x position of the visible element of this window.
+     */
+    visibleX(metaWindow) {
+        return metaWindow.clone.targetX + this.targetX;
+    }
+
+    /**
+     * Return the y position of the visible element of this window.
+     */
+    visibleY(metaWindow) {
+        return metaWindow.clone.targetY + this.monitor.y;
+    }
+
     positionOf(metaWindow) {
         metaWindow = metaWindow || this.selectedWindow;
         let index, row;
@@ -956,10 +970,9 @@ var Space = class Space extends Array {
             if (unMovable)
                 return;
 
-            let clone = w.clone;
             let f = w.get_frame_rect();
-            let x = clone.targetX + this.targetX;
-            let y = monitor.y + clone.targetY;
+            let x = this.visibleX(w);
+            let y = this.visibleY(w);
             x = Math.max(stack_margin - f.width, x);
             x = Math.min(this.width - stack_margin, x);
             x += monitor.x;
@@ -2898,6 +2911,7 @@ function ensuredX(meta_window, space) {
     let workArea = space.workArea();
     let min = workArea.x;
     let max = min + workArea.width;
+    
     if (space.focusMode == FocusModes.CENTRE) {
         // window switching should centre focus
         x = workArea.x + Math.round(workArea.width/2 - frame.width/2);
@@ -2912,7 +2926,6 @@ function ensuredX(meta_window, space) {
     } else if (frame.width > workArea.width*0.9 - 2*(prefs.horizontal_margin + prefs.window_gap)) {
         // Consider the window to be wide and center it
         x = min + Math.round((workArea.width - frame.width)/2);
-
     } else if (x + frame.width > max) {
         // Align to the right prefs.horizontal_margin
         x = max - prefs.horizontal_margin - frame.width;
@@ -3501,9 +3514,28 @@ function setFocusMode(mode, space, push=true) {
 
     // if centre also center selectedWindow
     if (mode === FocusModes.CENTRE) {
-        if (space.selectedWindow) {
-            centerWindowHorizontally(space.selectedWindow);
+        const selwin = space.selectedWindow;
+        if (selwin) {
+            // check it closer to min or max of workArea
+            const workArea = space.workArea();
+            const frame = selwin.get_frame_rect();
+            const winMidpoint = space.visibleX(selwin) + frame.width/2;
+            const monMidpoint = workArea.width/2;
+            if (winMidpoint <= monMidpoint) {
+                space.unfocusXPosition = 0;
+            } else {
+                space.unfocusXPosition = workArea.width;
+            }
+            centerWindowHorizontally(selwin);
         }
+    }
+
+    // if normal and has saved x position from previous
+    if (mode === FocusModes.DEFAULT && space.unfocusXPosition != null) {
+        move_to(space, space.selectedWindow, {
+            x:space.unfocusXPosition});
+        ensureViewport(space.selectedWindow, space, true);
+        space.unfocusXPosition = null;
     }
 }
 
