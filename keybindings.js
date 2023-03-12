@@ -161,7 +161,7 @@ function init() {
                         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("switch-focus-mode",
-                        dynamic_function_ref("switchFocusMode",
+                        dynamic_function_ref("switchToNextFocusMode",
                                              Tiling));
 
     registerPaperAction("develop-set-globals",

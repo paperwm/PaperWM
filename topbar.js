@@ -190,7 +190,7 @@ class ColorEntry {
     }
 
     clicked() {
-        let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
+        let space = Tiling.spaces.getActiveSpace();
         let color = this.entry.actor.text;
         space.settings.set_string('color', color);
     }
@@ -201,10 +201,29 @@ class ColorEntry {
  */
 var FocusIcon = Utils.registerClass(
 class FocusIcon extends St.Icon {
-    _init(styleClass='') {
-        super._init({style_class: styleClass});
-    }
+        _init(styleClass = '') {
+            super._init({
+                reactive: true,
+                style_class: styleClass
+            });
 
+            this.connect('button-press-event', () => {
+                if (this.clickFunction) {
+                    this.clickFunction();
+                }
+            });
+        }
+
+    /**
+     * Sets a function to be executed on click.
+     * @param {Function} clickFunction 
+     * @returns 
+     */
+    setClickFunction(clickFunction) {
+        this.clickFunction = clickFunction;
+        return this;
+    }
+    
     /**
      * Set the mode that this icon will display.
      * @param {Tiling.FocusModes} mode
@@ -251,23 +270,11 @@ class FocusButton extends PanelMenu.Button {
     /**
      * Sets the focus mode with this button.
      * @param {*} mode 
-     * @param {Boolean} push: if true also calls the Tiling.setFocusMode method
      */
-    setFocusMode(mode, push=false) {
+    setFocusMode(mode) {
         this.focusMode = mode;
         this._icon.setMode(mode);
-
-        // if push, call Tiling.setFocusMode
-        push && Tiling.setFocusMode(mode, undefined, false);
         return this;
-    }
-
-    switchToNextFocusMode() {
-        const numModes = Object.keys(Tiling.FocusModes).length;
-        // for currMode we switch to 1-based to use it validly in remainder operation
-        const currMode = Object.values(Tiling.FocusModes).indexOf(this.focusMode) + 1;
-        const nextMode = (currMode % numModes);
-        this.setFocusMode(nextMode, true);
     }
 
     _onClicked(actor, event) {
@@ -280,7 +287,7 @@ class FocusButton extends PanelMenu.Button {
             return Clutter.EVENT_PROPAGATE;
         }
 
-        this.switchToNextFocusMode();
+        Tiling.switchToNextFocusMode();
         return Clutter.EVENT_PROPAGATE;
     }
 }
@@ -437,7 +444,7 @@ class WorkspaceMenu extends PanelMenu.Button {
             && event.get_scroll_direction() === Clutter.ScrollDirection.SMOOTH) {
 
             let spaces = Tiling.spaces;
-            let active = spaces.spaceOf(workspaceManager.get_active_workspace());
+            let active = spaces.getActiveSpace();
 
             let [dx, dy] = event.get_scroll_delta();
             dy *= active.height*0.05;
@@ -549,7 +556,7 @@ class WorkspaceMenu extends PanelMenu.Button {
         if (!open)
             return;
 
-        let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
+        let space = Tiling.spaces.getActiveSpace();
         this.entry.label.text = space.name;
         GLib.idle_add(GLib.PRIORITY_DEFAULT, this.entry.activate.bind(this.entry));
 

@@ -149,6 +149,9 @@ var Space = class Space extends Array {
         this.focusMode = FocusModes.DEFAULT;
         this.focusModeIcon = new TopBar.FocusIcon('focus-mode-icon')
             .setMode(this.focusMode)
+            .setClickFunction(() => {
+                switchToNextFocusMode(this);
+            })
             .setVisible(false); // hide by default
         this.unfocusXPosition = null; // init
 
@@ -2066,7 +2069,7 @@ var Spaces = class Spaces extends Map {
             return;
         }
 
-        let currentSpace = this.spaceOf(workspaceManager.get_active_workspace());
+        let currentSpace = this.getActiveSpace();
         let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
 
         if (!inPreview) {
@@ -2141,7 +2144,7 @@ var Spaces = class Spaces extends Map {
         // Always show the topbar when using the workspace stack
         TopBar.fixTopBar();
         const scale = 0.9;
-        let space = this.spaceOf(workspaceManager.get_active_workspace());
+        let space = this.getActiveSpace();
         let mru = [...this.stack];
         this.monitors.forEach(space => mru.splice(mru.indexOf(space), 1));
         mru = [space, ...mru];
@@ -2221,7 +2224,7 @@ var Spaces = class Spaces extends Map {
         }
 
         const scale = 0.9;
-        let space = this.spaceOf(workspaceManager.get_active_workspace());
+        let space = this.getActiveSpace();
         let mru = [...this.stack];
 
         this.monitors.forEach(space => mru.splice(mru.indexOf(space), 1));
@@ -2419,6 +2422,22 @@ var Spaces = class Spaces extends Map {
     spaceOf(workspace) {
         return this.get(workspace);
     };
+
+    /**
+     * Returns the currently active space.
+     */
+    getActiveSpace() {
+        return this.spaceOf(workspaceManager.get_active_workspace());
+    }
+
+    /**
+     * Returns true if the space is the currently active space.
+     * @param {Space} space 
+     * @returns 
+     */
+    isActiveSpace(space) {
+        return space === this.getActiveSpace();
+    }
 
     /**
        Return an array of Space's ordered in most recently used order.
@@ -3458,18 +3477,18 @@ function cycleWindowHeight(metaWindow) {
 }
 
 function activateNthWindow(n, space) {
-    space = space || spaces.spaceOf(workspaceManager.get_active_workspace());
+    space = space || spaces.getActiveSpace();
     let nth = space[n][0];
     ensureViewport(nth, space);
 }
 
 function activateFirstWindow(mw, space) {
-    space = space || spaces.spaceOf(workspaceManager.get_active_workspace());
+    space = space || spaces.getActiveSpace();
     activateNthWindow(0, space);
 }
 
 function activateLastWindow(mw, space) {
-    space = space || spaces.spaceOf(workspaceManager.get_active_workspace());
+    space = space || spaces.getActiveSpace();
     activateNthWindow(space.length - 1, space);
 }
 
@@ -3517,13 +3536,14 @@ function centerWindowHorizontally(metaWindow) {
  * Sets the focus mode for a space.
  * @param {FocusModes} mode 
  * @param {Space} space
- * @param {boolean} push: if true also pushes change to Topbar.focusButton
  */
-function setFocusMode(mode, space, push=true) {
-    space = space ?? spaces.spaceOf(workspaceManager.get_active_workspace());
+function setFocusMode(mode, space) {
+    space = space ?? spaces.getActiveSpace();
     space.focusMode = mode;
     space.focusModeIcon.setMode(mode);
-    push && TopBar.focusButton.setFocusMode(mode);
+    if (space.hasTopBar()) {
+        TopBar.focusButton.setFocusMode(mode);
+    }
 
     const workArea = space.workArea();
     const selectedWin = space.selectedWindow;
@@ -3565,20 +3585,16 @@ function setFocusMode(mode, space, push=true) {
 }
 
 /**
- * Enables CENTRE focusMode if not currently enabled, otherwise switches back to DEFAULT mode.
- * NOTE: if more FocusModes are added in the future (e.g. zenmode etc.) then
- * will likely need to track/store the mode before switching to center mode.
- * Not needed at the moment though.
- * @param {Space} space
+ * Switches to the next focus mode for a space.
+ * @param {Space} space 
  */
-function switchFocusMode(space) {
-    space = space ?? spaces.spaceOf(workspaceManager.get_active_workspace());
-    if (space.focusMode === FocusModes.CENTRE) {
-        setFocusMode(FocusModes.DEFAULT, space);
-    } 
-    else {
-        setFocusMode(FocusModes.CENTRE, space);
-    }
+function switchToNextFocusMode(space) {
+    space = space ?? spaces.getActiveSpace();
+    const numModes = Object.keys(FocusModes).length;
+    // for currMode we switch to 1-based to use it validly in remainder operation
+    const currMode = Object.values(FocusModes).indexOf(space.focusMode) + 1;
+    const nextMode = (currMode % numModes);
+    setFocusMode(nextMode, space);
 }
 
 /**
