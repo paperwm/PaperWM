@@ -3512,28 +3512,40 @@ function setFocusMode(mode, space, push=true) {
     space.focusModeIcon.setMode(mode);
     push && TopBar.focusMenu.setFocusMode(mode);
 
+    const workArea = space.workArea();
+    const selectedWin = space.selectedWindow;
     // if centre also center selectedWindow
     if (mode === FocusModes.CENTRE) {
-        const selwin = space.selectedWindow;
-        if (selwin) {
+        if (selectedWin) {
             // check it closer to min or max of workArea
-            const workArea = space.workArea();
-            const frame = selwin.get_frame_rect();
-            const winMidpoint = space.visibleX(selwin) + frame.width/2;
-            const monMidpoint = workArea.width/2;
-            if (winMidpoint <= monMidpoint) {
+            const frame = selectedWin.get_frame_rect();
+            const winMidpoint = space.visibleX(selectedWin) + frame.width/2;
+            const workAreaMidpoint = workArea.width/2;
+            if (winMidpoint <= workAreaMidpoint) {
                 space.unfocusXPosition = 0;
             } else {
                 space.unfocusXPosition = workArea.width;
             }
-            centerWindowHorizontally(selwin);
+            centerWindowHorizontally(selectedWin);
         }
     }
 
     // if normal and has saved x position from previous
     if (mode === FocusModes.DEFAULT && space.unfocusXPosition != null) {
-        move_to(space, space.selectedWindow, {
-            x:space.unfocusXPosition});
+        // if window is first, move to left edge
+        let position;
+        if (space.indexOf(selectedWin) == 0) {
+            position = 0;
+        }
+        // if windows is last, move to right edge
+        else if (space.indexOf(selectedWin) == space.length - 1) {
+            position = workArea.width;
+        }
+        else {
+            position = space.unfocusXPosition;
+        }
+        // do the move
+        move_to(space, space.selectedWindow, {x:position});
         ensureViewport(space.selectedWindow, space, true);
         space.unfocusXPosition = null;
     }
