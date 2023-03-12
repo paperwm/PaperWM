@@ -216,6 +216,7 @@ class FocusIcon extends St.Icon {
         else if (mode === Tiling.FocusModes.CENTRE) {
             this.icon_name = 'preferences-desktop-multitasking-symbolic';
         }
+        return this;
     }
 
     /**
@@ -224,6 +225,7 @@ class FocusIcon extends St.Icon {
      */
     setVisible(visible = true) {
         this.visible = visible;
+        return this;
     }
 }
 );
@@ -257,6 +259,7 @@ class FocusButton extends PanelMenu.Button {
 
         // if push, call Tiling.setFocusMode
         push && Tiling.setFocusMode(mode, undefined, false);
+        return this;
     }
 
     switchToNextFocusMode() {

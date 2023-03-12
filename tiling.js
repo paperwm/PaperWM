@@ -147,9 +147,9 @@ var Space = class Space extends Array {
 
         // default focusMode (can be overriden by saved user pref in Space.init method)
         this.focusMode = FocusModes.DEFAULT;
-        this.focusModeIcon = new TopBar.FocusIcon('focus-mode-icon');
-        this.focusModeIcon.setMode(this.focusMode);
-        this.focusModeIcon.setVisible(false); // hide by default
+        this.focusModeIcon = new TopBar.FocusIcon('focus-mode-icon')
+            .setMode(this.focusMode)
+            .setVisible(false); // hide by default
         this.unfocusXPosition = null; // init
 
         let clip = new Clutter.Actor({name: "clip"});
