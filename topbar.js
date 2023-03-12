@@ -203,14 +203,13 @@ var FocusIcon = Utils.registerClass(
 class FocusIcon extends St.Icon {
     _init(styleClass='') {
         super._init({style_class: styleClass});
-        this.setMode(Tiling.FocusModes.DEFAULT);
     }
 
     /**
      * Set the mode that this icon will display.
-     * @param {Tiling.FocusModes} mode 
+     * @param {Tiling.FocusModes} mode
      */
-    setMode(mode) {
+    setMode(mode=Tiling.FocusModes.DEFAULT) {
         if (mode === Tiling.FocusModes.DEFAULT) {
             this.icon_name = 'sidebar-show-right-symbolic';
         }
@@ -229,14 +228,19 @@ class FocusIcon extends St.Icon {
 }
 );
 
-var FocusMenu = Utils.registerClass(
-class FocusMenu extends PanelMenu.Button {
+var FocusButton = Utils.registerClass({
+    Signals: {
+        'focus-button-added': {},
+    }
+},
+class FocusButton extends PanelMenu.Button {
     _init() {
         super._init(0.0, 'FocusMode');
         
+        this.focusMode = Tiling.FocusModes.DEFAULT;
         this._icon = new FocusIcon('system-status-icon');
+        this.setFocusMode(this.focusMode);
 
-        this.setFocusMode(Tiling.FocusModes.DEFAULT);
         this.add_child(this._icon);
 
         this.connect('event', this._onClicked.bind(this));
@@ -338,7 +342,6 @@ class WorkspaceMenu extends PanelMenu.Button {
             temp_file.replace_contents(wi.toString(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null)
             imports.misc.extensionUtils.openPrefs()
         });
-
 
         // this.iconBox = new St.BoxLayout();
         // this.menu.box.add(this.iconBox);
@@ -567,8 +570,8 @@ class WorkspaceMenu extends PanelMenu.Button {
     }
 });
 
-var focusMenu;
 var menu;
+var focusButton;
 var orginalActivitiesText;
 var screenSignals, signals;
 function init () {
@@ -581,9 +584,6 @@ function init () {
 var panelBoxShowId, panelBoxHideId;
 function enable () {
     Main.panel.statusArea.activities.hide();
-
-    focusMenu = new FocusMenu();
-    Main.panel.addToStatusArea('FocusMode', focusMenu, 0, 'left');
 
     menu = new WorkspaceMenu();
     // Work around 'actor' warnings
@@ -598,8 +598,16 @@ function enable () {
             space.label.clutter_text.set_font_description(fontDescription);
         }
     }
-    Main.panel.addToStatusArea('WorkspaceMenu', menu, 1, 'left');
+    Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.show();
+
+    focusButton = new FocusButton();
+    Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');
+    signals.connect(focusButton, 'notify::allocation', () => {
+        const pos = focusButton.apply_relative_transform_to_point(panel, 
+            new Clutter.Vertex({ x: 0, y: 0 }));
+        Tiling.spaces.setFocusIconPosition(pos.x, pos.y);
+    });
 
     fixStyle();
 
@@ -659,8 +667,8 @@ function enable () {
 
 function disable() {
     signals.destroy();
-    focusMenu.destroy();
-    focusMenu = null;
+    focusButton.destroy();
+    focusButton = null;
     menu.destroy();
     menu = null;
     Main.panel.statusArea.activities.actor.show();
@@ -726,7 +734,7 @@ function updateWorkspaceIndicator (index) {
         setWorkspaceName(space.name);
 
         // also update focus mode
-        focusMenu.setFocusMode(space.focusMode);
+        focusButton.setFocusMode(space.focusMode);
     }
 };
 

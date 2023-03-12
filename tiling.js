@@ -148,8 +148,9 @@ var Space = class Space extends Array {
         // default focusMode (can be overriden by saved user pref in Space.init method)
         this.focusMode = FocusModes.DEFAULT;
         this.focusModeIcon = new TopBar.FocusIcon('focus-mode-icon');
+        this.focusModeIcon.setMode(this.focusMode);
         this.focusModeIcon.setVisible(false); // hide by default
-        let unfocusXPosition = null;
+        this.unfocusXPosition = null; // init
 
         let clip = new Clutter.Actor({name: "clip"});
         this.clip = clip;
@@ -188,8 +189,8 @@ var Space = class Space extends Array {
 
         container.add_actor(clip);
         clip.add_actor(actor);
-        actor.add_child(this.focusModeIcon);
         actor.add_actor(labelParent);
+        actor.add_child(this.focusModeIcon);
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
 
@@ -248,7 +249,7 @@ var Space = class Space extends Array {
             this.targetX = oldSpace.targetX;
         }
         this.cloneContainer.x = this.targetX;
-        
+
         // init window position bar and space topbar elements
         this.windowPositionBarBackdrop.width = this.monitor.width;
         this.windowPositionBarBackdrop.height = TopBar.panelBox.height;
@@ -1305,10 +1306,11 @@ border-radius: ${borderWidth}px;
         }
 
         if (visible) {
-            this.focusModeIcon.raise_top();
             this.labelParent.raise_top();
-            this.focusModeIcon.show();
             this.label.show();
+
+            this.focusModeIcon.raise_top();
+            this.focusModeIcon.show();
         }
         else {
             this.focusModeIcon.hide();
@@ -1963,6 +1965,17 @@ var Spaces = class Spaces extends Map {
         // set visibility on space elements (like workspace name)
         this.forEach(s => {
             s.setSpaceTopbarElementsVisible(visible, changeTopBarStyle);
+        });
+    }
+
+    /**
+     * Sets the focusIconPosition for all spaces.
+     * @param {int} x 
+     * @param {int} y 
+     */
+    setFocusIconPosition(x=0, y=0) {
+        this.forEach(s => {
+            s.focusModeIcon.set_position(x, y);
         });
     }
 
@@ -3504,13 +3517,13 @@ function centerWindowHorizontally(metaWindow) {
  * Sets the focus mode for a space.
  * @param {FocusModes} mode 
  * @param {Space} space
- * @param {boolean} push: if true also pushes change to Topbar.focusMenu
+ * @param {boolean} push: if true also pushes change to Topbar.focusButton
  */
 function setFocusMode(mode, space, push=true) {
     space = space ?? spaces.spaceOf(workspaceManager.get_active_workspace());
     space.focusMode = mode;
     space.focusModeIcon.setMode(mode);
-    push && TopBar.focusMenu.setFocusMode(mode);
+    push && TopBar.focusButton.setFocusMode(mode);
 
     const workArea = space.workArea();
     const selectedWin = space.selectedWindow;
