@@ -176,7 +176,8 @@ var Space = class Space extends Array {
             border: none;
         `;
         this.labelParent = labelParent;
-        let label = new St.Label();
+        let label = new St.Label({reactive: true});
+        label.connect('button-press-event', () => Main.overview.toggle());
         labelParent.add_actor(label);
         this.label = label;
         label.hide();
