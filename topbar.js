@@ -587,11 +587,6 @@ function init () {
     orginalActivitiesText = label.text;
     screenSignals = [];
     signals = new Utils.Signals();
-
-    // load focus icons
-    const path = imports.misc.extensionUtils.getCurrentExtension().dir.get_path();
-    this.gIconFocusDefault = Gio.icon_new_for_string(`${path}/resources/focus-mode-default-symbolic.svg`);
-    this.gIconFocusCenter = Gio.icon_new_for_string(`${path}/resources/focus-mode-center-symbolic.svg`);
 }
 
 var panelBoxShowId, panelBoxHideId;
