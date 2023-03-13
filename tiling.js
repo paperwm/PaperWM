@@ -157,7 +157,7 @@ var Space = class Space extends Array {
                 switchToNextFocusMode(this);
             })
             .setVisible(false); // hide by default
-        this.focusModeIcon.name = 'panel';
+        this.showFocusModeIcon();
         this.unfocusXPosition = null; // init
 
         let clip = new Clutter.Actor({name: "clip"});
@@ -1315,13 +1315,24 @@ border-radius: ${borderWidth}px;
         if (visible) {
             this.labelWrapper.raise_top();
             this.label.show();
-
-            this.focusModeIcon.raise_top();
-            this.focusModeIcon.show();
+            this.showFocusModeIcon(true);
         }
         else {
-            this.focusModeIcon.hide();
             this.label.hide();
+            this.showFocusModeIcon(false);
+        }
+    }
+
+    /**
+     * Shows the focusModeIcon space element.
+     * @param {boolean} show 
+     */
+    showFocusModeIcon(show=true) {
+        if (show && prefs.show_focus_mode_icon) {
+            this.focusModeIcon.raise_top();
+            this.focusModeIcon.show();
+        } else {
+            this.focusModeIcon.hide();
         }
     }
 

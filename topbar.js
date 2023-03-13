@@ -611,6 +611,7 @@ function enable () {
             new Clutter.Vertex({ x: 0, y: 0 }));
         Tiling.spaces.setFocusIconPosition(pos.x, pos.y);
     });
+    fixFocusModeIcon();
 
     fixStyle();
 
@@ -643,6 +644,10 @@ function enable () {
         spaces.setSpaceTopbarElementsVisible(false);
         spaces.forEach(s => s.layout(false));
         spaces.showWindowPositionBarChanged();
+    });
+
+    signals.connect(Settings.settings, 'changed::show-focus-mode-icon', (settings, key) => {
+        fixFocusModeIcon();
     });
 
     signals.connect(panelBox, 'show', () => {
@@ -722,6 +727,11 @@ function fixTopBar() {
         panelBox.scale_y = 1;
         panelBox.show();
     }
+}
+
+function fixFocusModeIcon() {
+    prefs.show_focus_mode_icon ? focusButton.show() : focusButton.hide();
+    Tiling.spaces.forEach(s => s.showFocusModeIcon());
 }
 
 /**
