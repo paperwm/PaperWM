@@ -18,6 +18,7 @@ var PopupMenu = imports.ui.popupMenu;
 var Clutter = imports.gi.Clutter;
 var Main = imports.ui.main;
 var Tweener = Extension.imports.utils.tweener;
+var Path = imports.misc.extensionUtils.getCurrentExtension().dir.get_path();
 
 var Tiling = Extension.imports.tiling;
 var Navigator = Extension.imports.navigator;
@@ -107,7 +108,6 @@ if (Utils.version[1] === 32) {
 
             PopupMenuEntryHelper.call(this, text);
         }
-
 
         activate(event) {
             this.label.grab_key_focus();
@@ -201,15 +201,19 @@ class ColorEntry {
  */
 var FocusIcon = Utils.registerClass(
 class FocusIcon extends St.Icon {
-        _init(properties = {}) {
-            super._init(properties);
+    // read in focus icons from resources folder
+    static gIconDefault = Gio.icon_new_for_string(`${Path}/resources/focus-mode-default-symbolic.svg`);
+    static gIconCenter = Gio.icon_new_for_string(`${Path}/resources/focus-mode-center-symbolic.svg`);
 
-            this.connect('button-press-event', () => {
-                if (this.clickFunction) {
-                    this.clickFunction();
-                }
-            });
-        }
+    _init(properties = {}) {
+        super._init(properties);
+
+        this.connect('button-press-event', () => {
+            if (this.clickFunction) {
+                this.clickFunction();
+            }
+        });
+    }
 
     /**
      * Sets a function to be executed on click.
@@ -225,12 +229,13 @@ class FocusIcon extends St.Icon {
      * Set the mode that this icon will display.
      * @param {Tiling.FocusModes} mode
      */
-    setMode(mode=Tiling.FocusModes.DEFAULT) {
+    setMode(mode) {
+        mode = mode ?? Tiling.FocusModes.DEFAULT;
         if (mode === Tiling.FocusModes.DEFAULT) {
-            this.icon_name = 'sidebar-show-right-symbolic';
+            this.gicon = FocusIcon.gIconDefault;
         }
-        else if (mode === Tiling.FocusModes.CENTRE) {
-            this.icon_name = 'preferences-desktop-multitasking-symbolic';
+        else if (mode === Tiling.FocusModes.CENTER) {
+            this.gicon = FocusIcon.gIconCenter;
         }
         return this;
     }
@@ -582,6 +587,11 @@ function init () {
     orginalActivitiesText = label.text;
     screenSignals = [];
     signals = new Utils.Signals();
+
+    // load focus icons
+    const path = imports.misc.extensionUtils.getCurrentExtension().dir.get_path();
+    this.gIconFocusDefault = Gio.icon_new_for_string(`${path}/resources/focus-mode-default-symbolic.svg`);
+    this.gIconFocusCenter = Gio.icon_new_for_string(`${path}/resources/focus-mode-center-symbolic.svg`);
 }
 
 var panelBoxShowId, panelBoxHideId;
