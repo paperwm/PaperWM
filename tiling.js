@@ -147,12 +147,17 @@ var Space = class Space extends Array {
 
         // default focusMode (can be overriden by saved user pref in Space.init method)
         this.focusMode = FocusModes.DEFAULT;
-        this.focusModeIcon = new TopBar.FocusIcon('focus-mode-icon')
+        this.focusModeIcon = new TopBar.FocusIcon({
+            reactive: true,
+            name: 'panel',
+            style_class: 'space-focus-mode-icon',
+        })
             .setMode(this.focusMode)
             .setClickFunction(() => {
                 switchToNextFocusMode(this);
             })
             .setVisible(false); // hide by default
+        this.focusModeIcon.name = 'panel';
         this.unfocusXPosition = null; // init
 
         let clip = new Clutter.Actor({name: "clip"});
@@ -168,17 +173,15 @@ var Space = class Space extends Array {
         let cloneContainer = new St.Widget({name: "clone-container"});
         this.cloneContainer = cloneContainer;
 
-        let labelParent = new St.Widget({name: 'panel'});
-        labelParent.style = `
-            background-color: transparent;
-            border-image: none;
-            background-image: none;
-            border: none;
-        `;
-        this.labelParent = labelParent;
-        let label = new St.Label({reactive: true});
-        label.connect('button-press-event', () => Main.overview.toggle());
-        labelParent.add_actor(label);
+        let labelWrapper = new St.Widget({
+            reactive: true,
+            name: 'panel',
+            style_class: 'space-label-wrapper',
+        });
+        labelWrapper.connect('button-press-event', () => Main.overview.toggle());
+        this.labelWrapper = labelWrapper;
+        let label = new St.Label();
+        labelWrapper.add_actor(label);
         this.label = label;
         label.hide();
 
@@ -193,7 +196,7 @@ var Space = class Space extends Array {
 
         container.add_actor(clip);
         clip.add_actor(actor);
-        actor.add_actor(labelParent);
+        actor.add_actor(labelWrapper);
         actor.add_child(this.focusModeIcon);
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
@@ -1266,7 +1269,7 @@ border-radius: ${borderWidth}px;
 
         // show space duplicate elements if not primary monitor
         if (!this.hasTopBar()) {
-            this.labelParent.raise_top();
+            this.labelWrapper.raise_top();
             this.label.show();
         }
 
@@ -1310,7 +1313,7 @@ border-radius: ${borderWidth}px;
         }
 
         if (visible) {
-            this.labelParent.raise_top();
+            this.labelWrapper.raise_top();
             this.label.show();
 
             this.focusModeIcon.raise_top();

@@ -1,6 +1,15 @@
-.focus-mode-icon {
+.space-label-wrapper {
+    padding: 0 12px 0 0;
+    background-color: transparent;
+    border-image: none;
+    background-image: none;
+    border: none;
+}
+
+.space-focus-mode-icon {
     icon-size: 16px;
-    padding: 8px 0 0 21px;
+    padding: 0px 21px 0 21px;
+    background-color: transparent;
 }
 
 .topbar-clear {
