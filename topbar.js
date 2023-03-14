@@ -201,12 +201,12 @@ class ColorEntry {
  */
 var FocusIcon = Utils.registerClass(
 class FocusIcon extends St.Icon {
-    // read in focus icons from resources folder
-    static gIconDefault = Gio.icon_new_for_string(`${Path}/resources/focus-mode-default-symbolic.svg`);
-    static gIconCenter = Gio.icon_new_for_string(`${Path}/resources/focus-mode-center-symbolic.svg`);
-
     _init(properties = {}) {
         super._init(properties);
+
+        // read in focus icons from resources folder
+        this.gIconDefault = Gio.icon_new_for_string(`${Path}/resources/focus-mode-default-symbolic.svg`);
+        this.gIconCenter = Gio.icon_new_for_string(`${Path}/resources/focus-mode-center-symbolic.svg`);
 
         this.connect('button-press-event', () => {
             if (this.clickFunction) {
@@ -232,10 +232,10 @@ class FocusIcon extends St.Icon {
     setMode(mode) {
         mode = mode ?? Tiling.FocusModes.DEFAULT;
         if (mode === Tiling.FocusModes.DEFAULT) {
-            this.gicon = FocusIcon.gIconDefault;
+            this.gicon = this.gIconDefault;
         }
         else if (mode === Tiling.FocusModes.CENTER) {
-            this.gicon = FocusIcon.gIconCenter;
+            this.gicon = this.gIconCenter;
         }
         return this;
     }
@@ -257,12 +257,55 @@ class FocusButton extends PanelMenu.Button {
         super._init(0.0, 'FocusMode');
         
         this.focusMode = Tiling.FocusModes.DEFAULT;
-        this._icon = new FocusIcon({style_class: 'system-status-icon'});
+        this._icon = new FocusIcon({
+            reactive: true,
+            style_class: 'system-status-icon'
+        });
+        this._initToolTip();
+        
         this.setFocusMode(this.focusMode);
-
         this.add_child(this._icon);
-
         this.connect('event', this._onClicked.bind(this));
+        this.connect('notify::allocation', () => {
+            let point = this._icon.apply_transform_to_point(new Clutter.Vertex({x: 0, y: 0}));
+            let pos = this.get_position();
+            log('position', pos.x, pos.y);
+        });
+    }
+
+    _initToolTip() {
+        const tt = new St.Label({style_class: 'focus-button-tooltip'});
+        tt.hide();
+        global.stage.add_child(tt);
+        this._icon.connect('enter-event', icon => {
+            this._setTooltipText();
+            tt.show();
+        });
+        this._icon.connect('leave-event', icon => {
+            tt.hide();
+        });
+        this.tooltip = tt;
+    }
+
+    setTooltipPosition(x, y) {
+        this.tooltip.set_position(x, y);
+    }
+
+    _setTooltipText() {
+        const markup = (color, mode) => {
+            this.tooltip.clutter_text
+                .set_markup(
+`    <i>Window focus mode</i>
+Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
+        };
+        if (this.focusMode == Tiling.FocusModes.DEFAULT) {
+            markup('#6be67b', 'DEFAULT');
+        }
+        else if (this.focusMode == Tiling.FocusModes.CENTER) {
+            markup('#6be6cb', 'CENTER');
+        } else {
+            this.tooltip.set_text('');
+        }
     }
 
     /**
@@ -272,6 +315,7 @@ class FocusButton extends PanelMenu.Button {
     setFocusMode(mode) {
         this.focusMode = mode;
         this._icon.setMode(mode);
+        this._setTooltipText()
         return this;
     }
 
@@ -615,6 +659,7 @@ function enable () {
         const pos = focusButton.apply_relative_transform_to_point(panel, 
             new Clutter.Vertex({ x: 0, y: 0 }));
         Tiling.spaces.setFocusIconPosition(pos.x, pos.y);
+        focusButton.setTooltipPosition(Math.max(0, pos.x - 56), pos.y + 34);
     });
     fixFocusModeIcon();
 

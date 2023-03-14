@@ -12,6 +12,13 @@
     background-color: transparent;
 }
 
+.focus-button-tooltip {
+    background-color: rgba(0, 0, 0, 0.35);
+    padding: 8px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
 .topbar-clear {
     background-color: rgba(0, 0, 0, 0);
 }

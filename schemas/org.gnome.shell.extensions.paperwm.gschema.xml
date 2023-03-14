@@ -111,7 +111,7 @@
     
     <key type="as" name="switch-focus-mode">
       <default><![CDATA[['<Super><Shift>c']]]></default>
-      <summary>Switch between focus modes (default or center-window focus mode)</summary>
+      <summary>Switch between Window Focus Modes (e.g. default, center)</summary>
     </key>
 
     <key type="as" name="switch-next">
