@@ -266,11 +266,6 @@ class FocusButton extends PanelMenu.Button {
         this.setFocusMode(this.focusMode);
         this.add_child(this._icon);
         this.connect('event', this._onClicked.bind(this));
-        this.connect('notify::allocation', () => {
-            let point = this._icon.apply_transform_to_point(new Clutter.Vertex({x: 0, y: 0}));
-            let pos = this.get_position();
-            log('position', pos.x, pos.y);
-        });
     }
 
     _initToolTip() {
@@ -278,7 +273,8 @@ class FocusButton extends PanelMenu.Button {
         tt.hide();
         global.stage.add_child(tt);
         this._icon.connect('enter-event', icon => {
-            this._setTooltipText();
+            this._updateTooltipPosition();
+            this._updateTooltipText();
             tt.show();
         });
         this._icon.connect('leave-event', icon => {
@@ -287,11 +283,17 @@ class FocusButton extends PanelMenu.Button {
         this.tooltip = tt;
     }
 
-    setTooltipPosition(x, y) {
-        this.tooltip.set_position(x, y);
+    /**
+     * Updates tooltip position relative to this button.
+     */
+    _updateTooltipPosition() {
+        //const offset = Tiling.spaces.getActiveSpace().width;
+        let point = this.apply_transform_to_point(
+            new Clutter.Vertex({x: 0, y: 0}));
+        this.tooltip.set_position(Math.max(0, point.x - 56), point.y + 34);
     }
 
-    _setTooltipText() {
+    _updateTooltipText() {
         const markup = (color, mode) => {
             this.tooltip.clutter_text
                 .set_markup(
@@ -315,7 +317,7 @@ Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
     setFocusMode(mode) {
         this.focusMode = mode;
         this._icon.setMode(mode);
-        this._setTooltipText()
+        this._updateTooltipText()
         return this;
     }
 
@@ -659,7 +661,6 @@ function enable () {
         const pos = focusButton.apply_relative_transform_to_point(panel, 
             new Clutter.Vertex({ x: 0, y: 0 }));
         Tiling.spaces.setFocusIconPosition(pos.x, pos.y);
-        focusButton.setTooltipPosition(Math.max(0, pos.x - 56), pos.y + 34);
     });
     fixFocusModeIcon();
 

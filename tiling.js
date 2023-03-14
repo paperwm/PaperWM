@@ -1683,7 +1683,7 @@ var Spaces = class Spaces extends Map {
          * Ensures correct window layout with multi-monitors, and if windows already exist on init, 
          * (e.g. resetting gnome-shell) then will ensure selectedWindow is activated.
          */
-        imports.mainloop.timeout_add(0, () => {
+        imports.mainloop.timeout_add(200, () => {
             const space = spaces.getActiveSpace();
             if (space.selectedWindow) {
                 space.layout(false);
