@@ -201,12 +201,19 @@ class ColorEntry {
  */
 var FocusIcon = Utils.registerClass(
 class FocusIcon extends St.Icon {
-    _init(properties = {}) {
+    _init(properties = {}, tooltip_x_point=0) {
         super._init(properties);
+        this.reactive = true;
+
+        // allow custom x position for tooltip
+        this.tooltip_x_point = tooltip_x_point;
 
         // read in focus icons from resources folder
         this.gIconDefault = Gio.icon_new_for_string(`${Path}/resources/focus-mode-default-symbolic.svg`);
         this.gIconCenter = Gio.icon_new_for_string(`${Path}/resources/focus-mode-center-symbolic.svg`);
+
+        this._initToolTip();
+        this.setMode();
 
         this.connect('button-press-event', () => {
             if (this.clickFunction) {
@@ -224,6 +231,50 @@ class FocusIcon extends St.Icon {
         this.clickFunction = clickFunction;
         return this;
     }
+
+    _initToolTip() {
+        const tt = new St.Label({style_class: 'focus-button-tooltip'});
+        tt.hide();
+        global.stage.add_child(tt);
+        this.connect('enter-event', icon => {
+            this._updateTooltipPosition(this.tooltip_x_point);
+            this._updateTooltipText();
+            tt.show();
+        });
+        this.connect('leave-event', (icon, event) => {
+            if (!this.has_pointer) {
+                tt.hide();
+            }
+        });
+        this.tooltip = tt;
+    }
+
+    /**
+     * Updates tooltip position relative to this button.
+     */
+    _updateTooltipPosition(xpoint=0) {
+        //const offset = Tiling.spaces.getActiveSpace().width;
+        let point = this.apply_transform_to_point(
+            new Clutter.Vertex({x: xpoint, y: 0}));
+        this.tooltip.set_position(Math.max(0, point.x - 62), point.y + 34);
+    }
+
+    _updateTooltipText() {
+        const markup = (color, mode) => {
+            this.tooltip.clutter_text
+                .set_markup(
+`    <i>Window focus mode</i>
+Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
+        };
+        if (this.mode === Tiling.FocusModes.DEFAULT) {
+            markup('#6be67b', 'DEFAULT');
+        }
+        else if (this.mode === Tiling.FocusModes.CENTER) {
+            markup('#6be6cb', 'CENTER');
+        } else {
+            this.tooltip.set_text('');
+        }
+    }
     
     /**
      * Set the mode that this icon will display.
@@ -231,12 +282,14 @@ class FocusIcon extends St.Icon {
      */
     setMode(mode) {
         mode = mode ?? Tiling.FocusModes.DEFAULT;
+        this.mode = mode;
         if (mode === Tiling.FocusModes.DEFAULT) {
             this.gicon = this.gIconDefault;
         }
         else if (mode === Tiling.FocusModes.CENTER) {
             this.gicon = this.gIconCenter;
         }
+        this._updateTooltipText()
         return this;
     }
 
@@ -256,58 +309,13 @@ class FocusButton extends PanelMenu.Button {
     _init() {
         super._init(0.0, 'FocusMode');
         
-        this.focusMode = Tiling.FocusModes.DEFAULT;
         this._icon = new FocusIcon({
-            reactive: true,
-            style_class: 'system-status-icon'
-        });
-        this._initToolTip();
+            style_class: 'system-status-icon focus-mode-button'
+        }, -10);
         
-        this.setFocusMode(this.focusMode);
+        this.setFocusMode();
         this.add_child(this._icon);
         this.connect('event', this._onClicked.bind(this));
-    }
-
-    _initToolTip() {
-        const tt = new St.Label({style_class: 'focus-button-tooltip'});
-        tt.hide();
-        global.stage.add_child(tt);
-        this._icon.connect('enter-event', icon => {
-            this._updateTooltipPosition();
-            this._updateTooltipText();
-            tt.show();
-        });
-        this._icon.connect('leave-event', icon => {
-            tt.hide();
-        });
-        this.tooltip = tt;
-    }
-
-    /**
-     * Updates tooltip position relative to this button.
-     */
-    _updateTooltipPosition() {
-        //const offset = Tiling.spaces.getActiveSpace().width;
-        let point = this.apply_transform_to_point(
-            new Clutter.Vertex({x: 0, y: 0}));
-        this.tooltip.set_position(Math.max(0, point.x - 56), point.y + 34);
-    }
-
-    _updateTooltipText() {
-        const markup = (color, mode) => {
-            this.tooltip.clutter_text
-                .set_markup(
-`    <i>Window focus mode</i>
-Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
-        };
-        if (this.focusMode == Tiling.FocusModes.DEFAULT) {
-            markup('#6be67b', 'DEFAULT');
-        }
-        else if (this.focusMode == Tiling.FocusModes.CENTER) {
-            markup('#6be6cb', 'CENTER');
-        } else {
-            this.tooltip.set_text('');
-        }
     }
 
     /**
@@ -315,9 +323,9 @@ Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
      * @param {*} mode 
      */
     setFocusMode(mode) {
+        mode = mode ?? Tiling.FocusModes.DEFAULT;
         this.focusMode = mode;
         this._icon.setMode(mode);
-        this._updateTooltipText()
         return this;
     }
 

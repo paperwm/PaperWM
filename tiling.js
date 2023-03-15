@@ -148,7 +148,6 @@ var Space = class Space extends Array {
         // default focusMode (can be overriden by saved user pref in Space.init method)
         this.focusMode = FocusModes.DEFAULT;
         this.focusModeIcon = new TopBar.FocusIcon({
-            reactive: true,
             name: 'panel',
             style_class: 'space-focus-mode-icon',
         })
