@@ -14,6 +14,7 @@ We hang out on [zulip](https://paperwm.zulipchat.com).
 
 Clone the repo and check out the branch supporting the Gnome Shell version you're running.
 
+- 44 (experimental, not officially supported yet, please report bugs): https://github.com/paperwm/PaperWM/tree/develop
 - 43 (experimental, please report bugs): https://github.com/paperwm/PaperWM/tree/develop
 - 42: https://github.com/paperwm/PaperWM/tree/gnome-42
 - 40: https://github.com/paperwm/PaperWM/tree/gnome-40
