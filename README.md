@@ -274,7 +274,7 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
 
 See `examples/keybindings.js` for more examples.
 
-## Window Position Bar (colored bar segment added to Gnome Top Bar)
+## Window Position Bar (colored bar segment in Top Bar)
 
 
 
