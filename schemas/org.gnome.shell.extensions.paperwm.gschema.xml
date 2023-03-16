@@ -108,6 +108,11 @@
         <default><![CDATA[['<Super>t']]]></default>
         <summary>Take the window, dropping it when finished navigating</summary>
     </key>
+    
+    <key type="as" name="switch-focus-mode">
+      <default><![CDATA[['<Super><Shift>c']]]></default>
+      <summary>Switch between Window Focus Modes (e.g. default, center)</summary>
+    </key>
 
     <key type="as" name="switch-next">
       <default><![CDATA[['<Super>period']]]></default>
@@ -243,7 +248,7 @@
       </key>
       <key type="b" name="show-top-bar">
           <default>true</default>
-          <summary>Wether to hide the top bar or not</summary>
+          <summary>Show the topbar</summary>
       </key>
       <key type="s" name="color">
           <default>''</default>
@@ -372,6 +377,11 @@
     <key type="b" name="show-window-position-bar">
         <default>true</default>
         <summary>Show the window position bar in the topbar</summary>
+    </key>
+
+    <key type="b" name="show-focus-mode-icon">
+        <default>true</default>
+        <summary>Show the focus mode icon in the topbar</summary>
     </key>
 
     <key type="d" name="animation-time">

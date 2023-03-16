@@ -37,6 +37,7 @@ const actions = {
         'switch-last',
         'live-alt-tab',
         'live-alt-tab-backward',
+        'switch-focus-mode',
         'move-left',
         'move-right',
         'move-up',

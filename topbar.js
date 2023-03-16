@@ -18,6 +18,7 @@ var PopupMenu = imports.ui.popupMenu;
 var Clutter = imports.gi.Clutter;
 var Main = imports.ui.main;
 var Tweener = Extension.imports.utils.tweener;
+var Path = imports.misc.extensionUtils.getCurrentExtension().dir.get_path();
 
 var Tiling = Extension.imports.tiling;
 var Navigator = Extension.imports.navigator;
@@ -108,7 +109,6 @@ if (Utils.version[1] === 32) {
             PopupMenuEntryHelper.call(this, text);
         }
 
-
         activate(event) {
             this.label.grab_key_focus();
         }
@@ -190,11 +190,160 @@ class ColorEntry {
     }
 
     clicked() {
-        let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
+        let space = Tiling.spaces.getActiveSpace();
         let color = this.entry.actor.text;
         space.settings.set_string('color', color);
     }
 }
+
+/**
+ * FocusMode icon class.
+ */
+var FocusIcon = Utils.registerClass(
+class FocusIcon extends St.Icon {
+    _init(properties = {}, tooltip_x_point=0) {
+        super._init(properties);
+        this.reactive = true;
+
+        // allow custom x position for tooltip
+        this.tooltip_x_point = tooltip_x_point;
+
+        // read in focus icons from resources folder
+        this.gIconDefault = Gio.icon_new_for_string(`${Path}/resources/focus-mode-default-symbolic.svg`);
+        this.gIconCenter = Gio.icon_new_for_string(`${Path}/resources/focus-mode-center-symbolic.svg`);
+
+        this._initToolTip();
+        this.setMode();
+
+        this.connect('button-press-event', () => {
+            if (this.clickFunction) {
+                this.clickFunction();
+            }
+        });
+    }
+
+    /**
+     * Sets a function to be executed on click.
+     * @param {Function} clickFunction 
+     * @returns 
+     */
+    setClickFunction(clickFunction) {
+        this.clickFunction = clickFunction;
+        return this;
+    }
+
+    _initToolTip() {
+        const tt = new St.Label({style_class: 'focus-button-tooltip'});
+        tt.hide();
+        global.stage.add_child(tt);
+        this.connect('enter-event', icon => {
+            this._updateTooltipPosition(this.tooltip_x_point);
+            this._updateTooltipText();
+            tt.show();
+        });
+        this.connect('leave-event', (icon, event) => {
+            if (!this.has_pointer) {
+                tt.hide();
+            }
+        });
+        this.tooltip = tt;
+    }
+
+    /**
+     * Updates tooltip position relative to this button.
+     */
+    _updateTooltipPosition(xpoint=0) {
+        //const offset = Tiling.spaces.getActiveSpace().width;
+        let point = this.apply_transform_to_point(
+            new Clutter.Vertex({x: xpoint, y: 0}));
+        this.tooltip.set_position(Math.max(0, point.x - 62), point.y + 34);
+    }
+
+    _updateTooltipText() {
+        const markup = (color, mode) => {
+            this.tooltip.clutter_text
+                .set_markup(
+`    <i>Window focus mode</i>
+Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
+        };
+        if (this.mode === Tiling.FocusModes.DEFAULT) {
+            markup('#6be67b', 'DEFAULT');
+        }
+        else if (this.mode === Tiling.FocusModes.CENTER) {
+            markup('#6be6cb', 'CENTER');
+        } else {
+            this.tooltip.set_text('');
+        }
+    }
+    
+    /**
+     * Set the mode that this icon will display.
+     * @param {Tiling.FocusModes} mode
+     */
+    setMode(mode) {
+        mode = mode ?? Tiling.FocusModes.DEFAULT;
+        this.mode = mode;
+        if (mode === Tiling.FocusModes.DEFAULT) {
+            this.gicon = this.gIconDefault;
+        }
+        else if (mode === Tiling.FocusModes.CENTER) {
+            this.gicon = this.gIconCenter;
+        }
+        this._updateTooltipText()
+        return this;
+    }
+
+    /**
+     * Sets visibility of icon.
+     * @param {boolean} visible 
+     */
+    setVisible(visible = true) {
+        this.visible = visible;
+        return this;
+    }
+}
+);
+
+var FocusButton = Utils.registerClass(
+class FocusButton extends PanelMenu.Button {
+    _init() {
+        super._init(0.0, 'FocusMode');
+        
+        this._icon = new FocusIcon({
+            style_class: 'system-status-icon focus-mode-button'
+        }, -10);
+        
+        this.setFocusMode();
+        this.add_child(this._icon);
+        this.connect('event', this._onClicked.bind(this));
+    }
+
+    /**
+     * Sets the focus mode with this button.
+     * @param {*} mode 
+     */
+    setFocusMode(mode) {
+        mode = mode ?? Tiling.FocusModes.DEFAULT;
+        this.focusMode = mode;
+        this._icon.setMode(mode);
+        return this;
+    }
+
+    _onClicked(actor, event) {
+        if (Tiling.inPreview != Tiling.PreviewMode.NONE || Main.overview.visible) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+
+        if (event.type() !== Clutter.EventType.TOUCH_BEGIN && 
+            event.type() !== Clutter.EventType.BUTTON_PRESS) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+
+        Tiling.switchToNextFocusMode();
+        return Clutter.EVENT_PROPAGATE;
+    }
+}
+);
 
 var WorkspaceMenu = Utils.registerClass(
 class WorkspaceMenu extends PanelMenu.Button {
@@ -241,7 +390,6 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-
         this._prefItem = new PopupMenu.PopupImageMenuItem('Workspace preference', 'preferences-system-symbolic');
         this.menu.addMenuItem(this._prefItem);
 
@@ -255,9 +403,7 @@ class WorkspaceMenu extends PanelMenu.Button {
             let temp_file = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace')
             temp_file.replace_contents(wi.toString(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null)
             imports.misc.extensionUtils.openPrefs()
-    
         });
-
 
         // this.iconBox = new St.BoxLayout();
         // this.menu.box.add(this.iconBox);
@@ -350,7 +496,7 @@ class WorkspaceMenu extends PanelMenu.Button {
             && event.get_scroll_direction() === Clutter.ScrollDirection.SMOOTH) {
 
             let spaces = Tiling.spaces;
-            let active = spaces.spaceOf(workspaceManager.get_active_workspace());
+            let active = spaces.getActiveSpace();
 
             let [dx, dy] = event.get_scroll_delta();
             dy *= active.height*0.05;
@@ -462,7 +608,7 @@ class WorkspaceMenu extends PanelMenu.Button {
         if (!open)
             return;
 
-        let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
+        let space = Tiling.spaces.getActiveSpace();
         this.entry.label.text = space.name;
         GLib.idle_add(GLib.PRIORITY_DEFAULT, this.entry.activate.bind(this.entry));
 
@@ -487,6 +633,7 @@ class WorkspaceMenu extends PanelMenu.Button {
 });
 
 var menu;
+var focusButton;
 var orginalActivitiesText;
 var screenSignals, signals;
 function init () {
@@ -515,6 +662,15 @@ function enable () {
     }
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     menu.show();
+
+    focusButton = new FocusButton();
+    Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');
+    signals.connect(focusButton, 'notify::allocation', () => {
+        const pos = focusButton.apply_relative_transform_to_point(panel, 
+            new Clutter.Vertex({ x: 0, y: 0 }));
+        Tiling.spaces.setFocusIconPosition(pos.x, pos.y);
+    });
+    fixFocusModeIcon();
 
     fixStyle();
 
@@ -549,6 +705,10 @@ function enable () {
         spaces.showWindowPositionBarChanged();
     });
 
+    signals.connect(Settings.settings, 'changed::show-focus-mode-icon', (settings, key) => {
+        fixFocusModeIcon();
+    });
+
     signals.connect(panelBox, 'show', () => {
         fixTopBar();
     });
@@ -574,6 +734,8 @@ function enable () {
 
 function disable() {
     signals.destroy();
+    focusButton.destroy();
+    focusButton = null;
     menu.destroy();
     menu = null;
     Main.panel.statusArea.activities.show();
@@ -626,6 +788,11 @@ function fixTopBar() {
     }
 }
 
+function fixFocusModeIcon() {
+    prefs.show_focus_mode_icon ? focusButton.show() : focusButton.hide();
+    Tiling.spaces.forEach(s => s.showFocusModeIcon());
+}
+
 /**
    Override the activities label with the workspace name.
    let workspaceIndex = 0
@@ -635,8 +802,12 @@ function updateWorkspaceIndicator (index) {
     let space = spaces && spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
     let onMonitor = space && space.monitor === panelMonitor;
     let nav = Navigator.navigator
-    if (onMonitor || (Tiling.inPreview && nav && nav.from.monitor === panelMonitor))
+    if (onMonitor || (Tiling.inPreview && nav && nav.from.monitor === panelMonitor)) {
         setWorkspaceName(space.name);
+
+        // also update focus mode
+        focusButton.setFocusMode(space.focusMode);
+    }
 };
 
 function setWorkspaceName (name) {

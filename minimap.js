@@ -122,7 +122,7 @@ var Minimap = class Minimap extends Array {
         }
         
         this.layout();
-        let time = animate ? 0.25 : 0;
+        let time = animate ? prefs.animation_time : 0;
         this.actor.show();
         Tweener.addTween(this.actor,
                          {opacity: 255, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO});
@@ -131,7 +131,7 @@ var Minimap = class Minimap extends Array {
     hide(animate) {
         if (this.destroyed)
             return;
-        let time = animate ? 0.25 : 0;
+        let time = animate ? prefs.animation_time : 0;
         Tweener.addTween(this.actor,
                          {opacity: 0, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO,
                           onComplete: () => this.actor.hide() });

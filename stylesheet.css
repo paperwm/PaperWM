@@ -1,3 +1,25 @@
+.space-label-wrapper {
+    padding: 0 10px 0 0;
+    background-color: transparent;
+    border-image: none;
+    background-image: none;
+    border: none;
+}
+
+.space-focus-mode-icon {
+    icon-size: 16px;
+    padding: 0 18px 0 18px;
+    margin-left: 3px;
+    background-color: transparent;
+}
+
+.focus-button-tooltip {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 8px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
 .topbar-clear {
     background-color: rgba(0, 0, 0, 0);
 }
