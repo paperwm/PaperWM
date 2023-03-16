@@ -2578,10 +2578,9 @@ function registerWindow(metaWindow) {
     }
 
     if (metaWindow.clone) {
-        // Should no longer be possible, but leave a trace just to be sure
+        // Can now happen when setting session-modes to "unlock-dialog" or
+        // resetting gnome-shell in-place (e.g. on X11)
         utils.warn("window already registered", metaWindow.title);
-        utils.print_stacktrace();
-        // Can now happen when setting session-modes to "unlock-dialog"
         return false
     }
 

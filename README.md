@@ -273,7 +273,7 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
 
 See `examples/keybindings.js` for more examples.
 
-### Window Position Bar (colored bar segment added to Gnome Top Bar)
+## Window Position Bar (colored bar segment added to Gnome Top Bar)
 
 
 
@@ -281,7 +281,7 @@ See `examples/keybindings.js` for more examples.
 
 https://user-images.githubusercontent.com/30424662/221416159-464d7512-5174-451b-9035-0ee84f9eb4ec.mp4
 
-The the window position bar can be _disabled_ from `PaperWM extension settings` or via `dconf`, e.g. by executing the following command a terminal: 
+The the window position bar can be _disabled_ from `PaperWM extension settings` or via `dconf`, e.g. by executing the following command in a terminal: 
 
 ```
 dconf write /org/gnome/shell/extensions/paperwm/show-window-position-bar false
@@ -290,6 +290,21 @@ dconf write /org/gnome/shell/extensions/paperwm/show-window-position-bar false
 You can style both the coloured position bar and the dimmed "position bar backdrop" by overriding the `paperwm-window-position-bar` and `paperwm-window-position-bar-backdrop` CSS classes respectively (see `user.css` in [Development & user configuration](#development--user-configuration) section for more information). The `paperwm-window-position-bar` will also inherit the selection color (same as window borders) from `tile-preview`.
 
 _Note: PaperWM overrides the default Gnome Top Bar style to be completely transparent so that the dimmed `window-position-bar-backdrop` and`window-position-bar` elements are visible._
+
+## Window Focus Mode ##
+
+[#482](https://github.com/paperwm/PaperWM/pull/482) added the concept of `window focus modes` to PaperWM.  A `focus mode` controls how windows are "focused".  For example, the `CENTER` focus mode causes all windows to be centered horizontally on selection, whereas the `DEFAULT` focus mode is the traditional PaperWM behaviour.
+
+Focus modes can be toggled by user-settable keybinding (default is `Super`+`Shift`+`c`), or by clicking the new focus-mode button in the topbar:
+
+![Focus mode button](media/focus-mode-button.png)
+
+You may prefer to hide the focus mode icon.  You can do so by executing the following command in a terminal:
+
+```
+dconf write /org/gnome/shell/extensions/paperwm/show-focus-mode-icon false
+```
+
 
 ## Fixed Window Size ##
 
