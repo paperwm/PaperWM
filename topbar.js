@@ -576,7 +576,7 @@ function disable() {
     signals.destroy();
     menu.destroy();
     menu = null;
-    Main.panel.statusArea.activities.actor.show();
+    Main.panel.statusArea.activities.show();
     Main.panel.set_style("");
 
     screenSignals.forEach(id => workspaceManager.disconnect(id));

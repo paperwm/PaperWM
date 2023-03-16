@@ -77,8 +77,9 @@ var SESSIONID = ""+(new Date().getTime());
  * The extension sometimes go through multiple init -> enable -> disable
  * cycles. So we need to keep track of whether we're initialized..
  */
-var initRun;
+var initRun = false;
 var enabled = false;
+let lastDisabledTime = 0; // init (epoch ms)
 
 var Extension, convenience;
 function init() {
@@ -116,13 +117,27 @@ function enable() {
 
 function disable() {
     log(`#paperwm disable ${SESSIONID}`);
+    /**
+     * The below acts as a guard against multiple disable -> enable -> disable
+     * calls that can caused by gnome during unlocking.  This rapid enable/disable
+     * cycle can cause mutter (and other) issues since paperwm hasn't had sufficient 
+     * time to destroy/clean-up signals, actors, etc. before the next enable/disable 
+     * cycle begins.  The below guard forces at least 500 milliseconds before a 
+     * subsequent disable can be called.
+     */
+    if (Math.abs(Date.now() - lastDisabledTime) <= 500) {
+        log('disable has just been called');
+        return;
+    }
     if (!enabled) {
         log('disable called without calling enable');
         return;
     }
 
-    if (run('disable'))
+    if (run('disable')) {
         enabled = false;
+        lastDisabledTime = Date.now();
+    }
 }
 
 
