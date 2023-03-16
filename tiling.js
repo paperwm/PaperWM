@@ -2974,12 +2974,6 @@ function ensuredX(meta_window, space) {
         x = workArea.x + Math.round(workArea.width/2 - frame.width/2);
     } else if (meta_window.fullscreen) {
         x = 0;
-    } else if (index == 0 && x <= min) {
-        // Always align the first window to the display's left edge
-        x = min;
-    } else if (index == space.length-1 && x + frame.width >= max) {
-        // Always align the first window to the display's right edge
-        x = max - frame.width;
     } else if (frame.width > workArea.width*0.9 - 2*(prefs.horizontal_margin + prefs.window_gap)) {
         // Consider the window to be wide and center it
         x = min + Math.round((workArea.width - frame.width)/2);
