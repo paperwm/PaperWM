@@ -201,11 +201,12 @@ class ColorEntry {
  */
 var FocusIcon = Utils.registerClass(
 class FocusIcon extends St.Icon {
-    _init(properties = {}, tooltip_x_point=0) {
+    _init(properties = {}, tooltip_parent, tooltip_x_point=0) {
         super._init(properties);
         this.reactive = true;
 
         // allow custom x position for tooltip
+        this.tooltip_parent = tooltip_parent ?? this;
         this.tooltip_x_point = tooltip_x_point;
 
         // read in focus icons from resources folder
@@ -236,12 +237,12 @@ class FocusIcon extends St.Icon {
         const tt = new St.Label({style_class: 'focus-button-tooltip'});
         tt.hide();
         global.stage.add_child(tt);
-        this.connect('enter-event', icon => {
+        this.tooltip_parent.connect('enter-event', icon => {
             this._updateTooltipPosition(this.tooltip_x_point);
             this._updateTooltipText();
             tt.show();
         });
-        this.connect('leave-event', (icon, event) => {
+        this.tooltip_parent.connect('leave-event', (icon, event) => {
             if (!this.has_pointer) {
                 tt.hide();
             }
@@ -311,7 +312,7 @@ class FocusButton extends PanelMenu.Button {
         
         this._icon = new FocusIcon({
             style_class: 'system-status-icon focus-mode-button'
-        }, -10);
+        }, this, -10);
         
         this.setFocusMode();
         this.add_child(this._icon);
