@@ -374,10 +374,10 @@ function restoreMethod(obj, name) {
 
 var signals;
 var swipeTrackers = [
-    Main.overview?._swipeTracker,
-    Main.overview?._overview?._controls?._workspacesDisplay?._swipeTracker,
-    Main.wm?._swipeTracker,
-    Main.wm._workspaceAnimation?._swipeTracker
+    Main?.overview?._swipeTracker,
+    Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker,
+    Main?.wm?._swipeTracker,
+    Main?.wm?._workspaceAnimation?._swipeTracker
 ].filter(t => t !== undefined);
 function init() {
     registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
