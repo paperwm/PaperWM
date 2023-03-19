@@ -41,6 +41,7 @@ var TopBar = Extension.imports.topbar;
 var Navigator = Extension.imports.navigator;
 var ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
 var Settings = Extension.imports.settings;
+var Kludges = Extension.imports.kludges;
 var Me = Extension.imports.tiling;
 
 var prefs = Settings.prefs;
@@ -276,7 +277,11 @@ var Space = class Space extends Array {
                              utils.dynamic_function_ref("remove_handler", Me));
         this.signals.connect(Main.overview, 'showing',
                              this.startAnimate.bind(this));
-        this.signals.connect(Main.overview, 'hidden', this.moveDone.bind(this));
+        this.signals.connect(Main.overview, 'hidden', () => {
+            // after overview hidden, swipetrackers are reset by gnome, ensure are disabled here
+            Kludges.swipeTrackers.forEach(t => t.enabled = false);
+            this.moveDone();
+        });
 
         const Convenience = Extension.imports.convenience;
         const settings = Convenience.getSettings();

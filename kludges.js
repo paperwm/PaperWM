@@ -55,7 +55,6 @@ if (!global.display.get_monitor_neighbor_index) {
     }
 }
 
-
 if (!global.display.set_cursor) {
     global.display.constructor.prototype.set_cursor = global.screen.set_cursor.bind(global.screen);
 }
@@ -339,7 +338,6 @@ function getSavedPrototype(obj, name) {
     return getSavedProp(obj.prototype, name);
 }
 
-
 function disableOverride(obj, name) {
     obj[name] = getSavedProp(obj, name);
 }
@@ -375,6 +373,11 @@ function restoreMethod(obj, name) {
 }
 
 var signals;
+var swipeTrackers = [
+    Main.overview?._swipeTracker,
+    Main.wm._workspaceAnimation?._swipeTracker,
+    Main.overview?._overview?._controls?._workspacesDisplay?._swipeTracker
+].filter(t => t !== undefined);
 function init() {
     registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
     registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
@@ -390,7 +393,6 @@ function init() {
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
     if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
         registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
-
 
     // Work around https://gitlab.gnome.org/GNOME/gnome-shell/issues/1884
     if (!WindowManager.WindowManager.prototype._removeEffect) {
@@ -422,18 +424,10 @@ function init() {
         registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0)
     }
 
-    const overviewSwipeTracker = Main.overview._swipeTracker
-    if (overviewSwipeTracker) {
-        registerOverrideProp(overviewSwipeTracker, "enabled", false)
-    }
-
-    const workspaceSwipeTracker = Main.wm._workspaceAnimation?._swipeTracker
-    if (workspaceSwipeTracker) {
-        registerOverrideProp(workspaceSwipeTracker, "enabled", false)
-    }
-
-    if (Main.wm._swipeTracker)
-        registerOverrideProp(Main.wm._swipeTracker._touchpadGesture, "enabled", false);
+    // disable swipe gesture trackers
+    swipeTrackers.forEach(t => {
+        registerOverrideProp(t, "enabled", false);
+    });
 
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', (win) => {
         let metaWindow = win.meta_window || win;
@@ -585,7 +579,7 @@ function disable() {
     Main.layoutManager._updateHotCorners();
 }
 
-// 3.32 overivew layout
+// 3.32 overview layout
 function computeLayout(windows, layout) {
     let numRows = layout.numRows;
 
@@ -868,7 +862,6 @@ function _checkWorkspaces() {
     this._checkWorkspacesId = 0;
     return false;
 };
-
 
 function addWindow(window, metaWindow) {
     if (this._windows.has(window))
