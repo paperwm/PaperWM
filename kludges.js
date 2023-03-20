@@ -372,13 +372,18 @@ function restoreMethod(obj, name) {
         obj[name] = method;
 }
 
-var signals;
+/**
+ * Swipetrackers that should be disabled.  Locations of swipetrackers may
+ * move from gnome version to gnome version.  Next to the swipe tracker locations
+ * below are the gnome versions when they were first (or last) seen.
+ */
 var swipeTrackers = [
-    Main?.overview?._swipeTracker,
-    Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker,
-    Main?.wm?._swipeTracker,
-    Main?.wm?._workspaceAnimation?._swipeTracker
-].filter(t => t !== undefined);
+    Main?.overview?._swipeTracker, // gnome 40+
+    Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker, // gnome 40+
+    Main?.wm?._workspaceAnimation?._swipeTracker, // gnome 40+
+    Main?.wm?._swipeTracker // gnome 38 (and below)
+].filter(t => typeof t !== 'undefined');
+var signals;
 function init() {
     registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
     registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
@@ -478,7 +483,7 @@ function enable() {
             disableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         }
     }
-    signals.connect(settings, 'changed::only-scratch-in-overview',scratchInOverview);
+    signals.connect(settings, 'changed::only-scratch-in-overview', scratchInOverview);
     signals.connect(settings, 'changed::disable-scratch-in-overview', scratchInOverview);
     scratchInOverview();
 
