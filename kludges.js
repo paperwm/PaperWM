@@ -458,10 +458,16 @@ function enable() {
     });
     actions.forEach(a => global.stage.remove_action(a))
 
-
-    signals.connect(settings, 'changed::override-hot-corner',
-                    disableHotcorners);
+    signals.connect(settings, 'changed::override-hot-corner', disableHotcorners);
     disableHotcorners();
+
+    /**
+     * Swipetrackers are reset by gnome during overview, once exits overview
+     * ensure swipe trackers are reset.
+     */
+    signals.connect(Main.overview, 'hidden', () => {
+        swipeTrackers.forEach(t => t.enabled = false);
+    });
 
     function scratchInOverview() {
         let onlyScratch = settings.get_boolean('only-scratch-in-overview');
@@ -472,10 +478,8 @@ function enable() {
             disableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         }
     }
-    signals.connect(settings, 'changed::only-scratch-in-overview',
-                    scratchInOverview);
-    signals.connect(settings, 'changed::disable-scratch-in-overview',
-                    scratchInOverview);
+    signals.connect(settings, 'changed::only-scratch-in-overview',scratchInOverview);
+    signals.connect(settings, 'changed::disable-scratch-in-overview', scratchInOverview);
     scratchInOverview();
 
 
@@ -499,7 +503,6 @@ function enable() {
             switchData.inProgress = false;
 
             switchData.container = new Clutter.Actor();
-
         };
 
     Workspace.Workspace.prototype._realRecalculateWindowPositions = _realRecalculateWindowPositions;
