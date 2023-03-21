@@ -55,7 +55,6 @@ if (!global.display.get_monitor_neighbor_index) {
     }
 }
 
-
 if (!global.display.set_cursor) {
     global.display.constructor.prototype.set_cursor = global.screen.set_cursor.bind(global.screen);
 }
@@ -339,7 +338,6 @@ function getSavedPrototype(obj, name) {
     return getSavedProp(obj.prototype, name);
 }
 
-
 function disableOverride(obj, name) {
     obj[name] = getSavedProp(obj, name);
 }
@@ -374,6 +372,17 @@ function restoreMethod(obj, name) {
         obj[name] = method;
 }
 
+/**
+ * Swipetrackers that should be disabled.  Locations of swipetrackers may
+ * move from gnome version to gnome version.  Next to the swipe tracker locations
+ * below are the gnome versions when they were first (or last) seen.
+ */
+var swipeTrackers = [
+    Main?.overview?._swipeTracker, // gnome 40+
+    Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker, // gnome 40+
+    Main?.wm?._workspaceAnimation?._swipeTracker, // gnome 40+
+    Main?.wm?._swipeTracker // gnome 38 (and below)
+].filter(t => typeof t !== 'undefined');
 var signals;
 function init() {
     registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
@@ -390,7 +399,6 @@ function init() {
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
     if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
         registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
-
 
     // Work around https://gitlab.gnome.org/GNOME/gnome-shell/issues/1884
     if (!WindowManager.WindowManager.prototype._removeEffect) {
@@ -422,18 +430,10 @@ function init() {
         registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0)
     }
 
-    const overviewSwipeTracker = Main.overview._swipeTracker
-    if (overviewSwipeTracker) {
-        registerOverrideProp(overviewSwipeTracker, "enabled", false)
-    }
-
-    const workspaceSwipeTracker = Main.wm._workspaceAnimation?._swipeTracker
-    if (workspaceSwipeTracker) {
-        registerOverrideProp(workspaceSwipeTracker, "enabled", false)
-    }
-
-    if (Main.wm._swipeTracker)
-        registerOverrideProp(Main.wm._swipeTracker._touchpadGesture, "enabled", false);
+    // disable swipe gesture trackers
+    swipeTrackers.forEach(t => {
+        registerOverrideProp(t, "enabled", false);
+    });
 
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', (win) => {
         let metaWindow = win.meta_window || win;
@@ -463,10 +463,16 @@ function enable() {
     });
     actions.forEach(a => global.stage.remove_action(a))
 
-
-    signals.connect(settings, 'changed::override-hot-corner',
-                    disableHotcorners);
+    signals.connect(settings, 'changed::override-hot-corner', disableHotcorners);
     disableHotcorners();
+
+    /**
+     * Swipetrackers are reset by gnome during overview, once exits overview
+     * ensure swipe trackers are reset.
+     */
+    signals.connect(Main.overview, 'hidden', () => {
+        swipeTrackers.forEach(t => t.enabled = false);
+    });
 
     function scratchInOverview() {
         let onlyScratch = settings.get_boolean('only-scratch-in-overview');
@@ -477,10 +483,8 @@ function enable() {
             disableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         }
     }
-    signals.connect(settings, 'changed::only-scratch-in-overview',
-                    scratchInOverview);
-    signals.connect(settings, 'changed::disable-scratch-in-overview',
-                    scratchInOverview);
+    signals.connect(settings, 'changed::only-scratch-in-overview', scratchInOverview);
+    signals.connect(settings, 'changed::disable-scratch-in-overview', scratchInOverview);
     scratchInOverview();
 
 
@@ -504,7 +508,6 @@ function enable() {
             switchData.inProgress = false;
 
             switchData.container = new Clutter.Actor();
-
         };
 
     Workspace.Workspace.prototype._realRecalculateWindowPositions = _realRecalculateWindowPositions;
@@ -573,8 +576,6 @@ function enable() {
                 this._notificationExpired = false;
             };
     }
-
-
 }
 
 function disable() {
@@ -585,7 +586,7 @@ function disable() {
     Main.layoutManager._updateHotCorners();
 }
 
-// 3.32 overivew layout
+// 3.32 overview layout
 function computeLayout(windows, layout) {
     let numRows = layout.numRows;
 
@@ -868,7 +869,6 @@ function _checkWorkspaces() {
     this._checkWorkspacesId = 0;
     return false;
 };
-
 
 function addWindow(window, metaWindow) {
     if (this._windows.has(window))
