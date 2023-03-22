@@ -717,13 +717,10 @@ function enable () {
         fixTopBar();
     });
     /**
-     * Set clear-style after hiding overview.  Mainloop timeout
-     * needed here to execute after hidden is finished.
+     * Set clear-style when hiding overview.
      */
-    signals.connect(Main.overview, 'hidden', () => {
-          imports.mainloop.timeout_add(0, () => {
-            fixStyle();
-          });
+    signals.connect(Main.overview, 'hiding', () => {
+        fixStyle();
     })
 
     fixLabel(menu._label);
