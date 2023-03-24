@@ -217,7 +217,7 @@ Alternatively, you can also define winprops in the `user.js` configuration file.
 
 The `wm_class` or `title` of a window can be found by using looking glass: <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd> Go to the "Windows" section at the top right and find the window. X11 users can also use the `xprop` command line tool (`title` is referred as `WM_NAME` in `xprop`). The match of `wm_class` and `title` are with an OR condition; and in addition to a plain string matching, a constructed [`RegExp()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/RegExp) can be used to utilise regex matching.
 
-_Note<sup>1</sup>: `Winprops` defined in the PaperWM extension settings take precedence over `Winrprops` defined using the `user.js` method._
+_Note<sup>1</sup>: `Winprops` defined in the PaperWM extension settings take precedence over `Winprops` defined using the `user.js` method._
 
 _Note<sup>2</sup>: if you use the `user.js` method you will need to restart Gnome shell to have them take effect._
 
@@ -276,8 +276,6 @@ See `examples/keybindings.js` for more examples.
 
 ## Window Position Bar (colored bar segment in Top Bar)
 
-
-
 [#476](https://github.com/paperwm/PaperWM/pull/476) added a coloured window position bar to the Gnome Top Bar.  This allows users to visually identify the current selected window position of the scrollable viewport in the current workspace.  This is demonstrated in the following video:
 
 https://user-images.githubusercontent.com/30424662/221416159-464d7512-5174-451b-9035-0ee84f9eb4ec.mp4
@@ -306,10 +304,22 @@ You may prefer to hide the focus mode icon.  You can do so by executing the foll
 dconf write /org/gnome/shell/extensions/paperwm/show-focus-mode-icon false
 ```
 
+## Gnome TopBar opacity / styling
+
+PaperWM by default changes the opacity of the Gnome TopBar.  This may cause conflicts with other extensions that users prefer to use that may also style the Gnome TopBar.
+
+You may prefer to PaperWM not impact TopBar styling.  You can do so by executing the following command from a terminal:
+
+```
+dconf write /org/gnome/shell/extensions/paperwm/disable-topbar-styling true
+```
+_Note<sup>1</sup>: you will need to restart Gnome shell after changing this setting, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only)_.
+
+_Note<sup>2</sup>: several PaperWM specific features are dependent on changing the Gnome TopBar to function correctly.  If you choose to disable PaperWM's ability to change the TopBar styles (with the setting above), you may also want to disable the [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar))_.
 
 ## Fixed Window Size ##
 
-See the [Winprops](#winprops) section for a way to set the default _width_ of windows identified by their `wm_class` window property.
+See the [Winprops](#setting-window-specific-properities) section for a way to set the default _width_ of windows identified by their `wm_class` window property.
 
 Currently it is not possible to have a default fixed window height.  Please check the following issues for progress / info:
 
