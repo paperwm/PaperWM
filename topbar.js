@@ -699,6 +699,13 @@ function enable () {
         updateWorkspaceIndicator(space.workspace.index());
     });
 
+    signals.connect(Settings.settings, 'changed::disable-topbar-styling', (settings, key) => {
+        const status = prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
+        Extension.imports.extension.notify(
+            `PaperWM: TopBar styling has been ${status}`, 
+            `A restart of Gnome is required! (e.g. logout then login again)`)
+    });
+
     signals.connect(Settings.settings, 'changed::show-window-position-bar', (settings, key) => {
         const spaces = Tiling.spaces;
         spaces.setSpaceTopbarElementsVisible(false);
@@ -746,10 +753,16 @@ function disable() {
 }
 
 function setClearStyle() {
+    if (prefs.disable_topbar_styling) {
+        return;
+    }
     Main.panel.style_class = 'topbar-clear';
 }
 
 function setTransparentStyle() {
+    if (prefs.disable_topbar_styling) {
+        return;
+    }
     Main.panel.style_class = 'topbar-transparent';
 }
 
