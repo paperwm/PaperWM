@@ -18,6 +18,7 @@ var Main = imports.ui.main;
 /** @type {import("@gi-types/shell")} */
 var Shell = imports.gi.Shell;
 var Gio = imports.gi.Gio;
+var Mainloop = imports.mainloop;
 var Signals = imports.signals;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
@@ -277,7 +278,7 @@ var Space = class Space extends Array {
         this.signals.connect(Main.overview, 'showing',
                              this.startAnimate.bind(this));
         this.signals.connect(Main.overview, 'hidden', this.moveDone.bind(this));
-
+        
         const Convenience = Extension.imports.convenience;
         const settings = Convenience.getSettings();
         this.signals.connect(
@@ -1682,7 +1683,7 @@ var Spaces = class Spaces extends Map {
          * Ensures correct window layout with multi-monitors, and if windows already exist on init, 
          * (e.g. resetting gnome-shell) then will ensure selectedWindow is activated.
          */
-        imports.mainloop.timeout_add(200, () => {
+        Mainloop.timeout_add(200, () => {
             const space = spaces.getActiveSpace();
             if (space.selectedWindow) {
                 space.layout(false);
@@ -1749,7 +1750,7 @@ var Spaces = class Spaces extends Map {
             });
             this.spaceContainer.show();
 
-            imports.mainloop.timeout_add(
+            Mainloop.timeout_add(
                 20, () => { this._monitorsChanging = false; });
 
             activeSpace.monitor.clickOverlay.deactivate();
@@ -2688,7 +2689,7 @@ function enable(errorNotification) {
         TopBar.fixTopBar()
 
         // run a final layout for multi-monitor topbar and window position indicator init
-        imports.mainloop.timeout_add(200, () => spaces.forEach(s => s.layout(false)));
+        Mainloop.timeout_add(200, () => spaces.forEach(s => s.layout(false)));
     }
 
     if (Main.layoutManager._startingUp) {
@@ -2699,7 +2700,7 @@ function enable(errorNotification) {
     } else {
         // NOTE: this needs to happen after kludges.enable() have run, so we do
         // it in a timeout
-        imports.mainloop.timeout_add(0, initWorkspaces);
+        Mainloop.timeout_add(0, initWorkspaces);
     }
 }
 
