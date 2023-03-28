@@ -1081,6 +1081,14 @@ var Space = class Space extends Array {
         }
     }
 
+    hideSelection() {
+        this.selection.style_class = 'background-clear';
+    }
+
+    showSelection() {
+        this.selection.style_class = 'paperwm-selection tile-preview';
+    }
+
     setSelectionActive() {
         this.selection.opacity = 255;
     }
@@ -2520,7 +2528,7 @@ var Spaces = class Spaces extends Map {
                So even if we set it again in `first-frame` that is too late
                since that happens _after_ mutter have drawn the frame.
 
-               So we kill visibily on the first the `queue-redraw`.
+               So we kill visibily on the first `queue-redraw`.
             */
             signals.connectOneShot(actor, 'queue-redraw', () =>  {
                 actor.opacity = 0;
@@ -2911,9 +2919,11 @@ function insertWindow(metaWindow, {existing}) {
 
     if (!existing) {
         actor.opacity = 0;
+        actor.visible = false;
         clone.x = clone.targetX;
         clone.y = clone.targetY;
-        clone.set_scale(0, 0);
+        clone.set_scale(0, 1);
+        space.hideSelection();
         Tweener.addTween(clone, {
             scale_x: 1,
             scale_y: 1,
@@ -2921,6 +2931,7 @@ function insertWindow(metaWindow, {existing}) {
             onStopped: () => {
                 connectSizeChanged(true);
                 space.layout();
+                space.showSelection();
             }
         });
     } else {

@@ -1,3 +1,7 @@
+.background-clear {
+    background-color: rgba(0, 0, 0, 0);
+}
+
 .space-label-wrapper {
     padding: 0 10px 0 0;
     background-color: transparent;
@@ -18,10 +22,6 @@
     padding: 8px;
     border-radius: 8px;
     font-weight: 600;
-}
-
-.topbar-clear {
-    background-color: rgba(0, 0, 0, 0);
 }
 
 .topbar-transparent {
