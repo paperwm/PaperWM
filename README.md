@@ -306,9 +306,9 @@ dconf write /org/gnome/shell/extensions/paperwm/show-focus-mode-icon false
 
 ## Gnome TopBar opacity / styling
 
-PaperWM by default changes the opacity of the Gnome TopBar.  This styling may conflict with the styling of other extensions (that you may prefer have style the TopBar).
+PaperWM by default changes the opacity of the Gnome TopBar.  This styling is used for certain PaperWM features.  However, this styling may conflict with the TopBar styling of other extensions (that you may prefer have style the TopBar instead).
 
-You can set PaperWM to _not_ change TopBar styling by executing the following command from a terminal:
+Users can disable PaperWM's ability to change TopBar styling by executing the following command from a terminal:
 
 ```
 dconf write /org/gnome/shell/extensions/paperwm/disable-topbar-styling true
