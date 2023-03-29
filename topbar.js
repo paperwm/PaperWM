@@ -749,7 +749,7 @@ function disable() {
 }
 
 function setClearStyle() {
-    Main.panel.style_class = 'topbar-clear';
+    Main.panel.style_class = 'background-clear';
 }
 
 function setTransparentStyle() {
