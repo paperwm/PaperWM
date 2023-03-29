@@ -756,7 +756,7 @@ function setClearStyle() {
     if (prefs.disable_topbar_styling) {
         return;
     }
-    Main.panel.style_class = 'topbar-clear';
+    Main.panel.style_class = 'background-clear';
 }
 
 function setTransparentStyle() {

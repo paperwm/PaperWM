@@ -9,6 +9,7 @@ var Meta = imports.gi.Meta;
 var Clutter = imports.gi.Clutter;
 var St = imports.gi.St;
 var Main = imports.ui.main;
+var Mainloop = imports.mainloop;
 
 var Tiling = Extension.imports.tiling;
 var Scratch = Extension.imports.scratch;
@@ -110,8 +111,8 @@ var MoveGrab = class MoveGrab {
         this.dnd = true;
         Utils.debug("#grab", "begin DnD")
         Navigator.getNavigator()
-                 .minimaps.forEach(m => typeof(m) === 'number' ?
-                                   Mainloop.source_remove(m) : m.hide());
+            .minimaps.forEach(m => typeof (m) === 'number' ?
+                Mainloop.source_remove(m) : m.hide());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
         let metaWindow = this.window;
         let actor = metaWindow.get_compositor_private();
@@ -455,7 +456,12 @@ var MoveGrab = class MoveGrab {
         // and layout will work correctly etc.
         this.window = null;
 
+
         this.initialSpace.layout();
+        // ensure window is properly activated after layout/ensureViewport tweens
+        Mainloop.timeout_add(0, () => {
+            Main.activateWindow(metaWindow);
+        });
 
         // // Make sure the window is on the correct workspace.
         // // If the window is transient this will take care of its parent too.
