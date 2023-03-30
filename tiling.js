@@ -268,16 +268,16 @@ var Space = class Space extends Array {
 
         let selected = this.selectedWindow;
         if (selected) {
-            ensureViewport(selected, this, true);
+            ensureViewport(selected, this, { force:true });
         }
 
-        this.signals.connect(workspace, "window-added",
-                             utils.dynamic_function_ref("add_handler", Me));
-        this.signals.connect(workspace, "window-removed",
-                             utils.dynamic_function_ref("remove_handler", Me));
-        this.signals.connect(Main.overview, 'showing',
-                             this.startAnimate.bind(this));
-        this.signals.connect(Main.overview, 'hidden', this.moveDone.bind(this));
+        this.signals.connect(workspace, "window-added", utils.dynamic_function_ref("add_handler", Me));
+        this.signals.connect(workspace, "window-removed", utils.dynamic_function_ref("remove_handler", Me));
+        this.signals.connect(Main.overview, 'showing', this.startAnimate.bind(this));
+        this.signals.connect(Main.overview, 'hidden', this.moveDone.bind(this, (window) => {
+            // after moveDone, ensureViewport on display.focus_window (see moveDone function)
+            ensureViewport(window, this, { force: true })
+        }));
         
         const Convenience = Extension.imports.convenience;
         const settings = Convenience.getSettings();
@@ -286,16 +286,10 @@ var Space = class Space extends Array {
             "changed::color-scheme",
             this.updateBackground.bind(this)
           );
-        this.signals.connect(settings, 'changed::default-background',
-                             this.updateBackground.bind(this));
-        this.signals.connect(settings, 'changed::use-default-background',
-                             this.updateBackground.bind(this));
-        this.signals.connect(backgroundSettings, 'changed::picture-uri',
-                             this.updateBackground.bind(this));
-        this.signals.connect(
-            backgroundSettings,
-            "changed::picture-uri-dark",
-            this.updateBackground.bind(this)
+        this.signals.connect(settings, 'changed::default-background', this.updateBackground.bind(this));
+        this.signals.connect(settings, 'changed::use-default-background', this.updateBackground.bind(this));
+        this.signals.connect(backgroundSettings, 'changed::picture-uri', this.updateBackground.bind(this));
+        this.signals.connect(backgroundSettings, "changed::picture-uri-dark", this.updateBackground.bind(this)
         );
     }
 
@@ -818,7 +812,7 @@ var Space = class Space extends Array {
 
         this.layout();
         this.emit('swapped', index, targetIndex, row, targetRow);
-        ensureViewport(this.selectedWindow, this, true);
+        ensureViewport(this.selectedWindow, this, { force:true });
     }
 
     switchLinear(dir) {
@@ -945,7 +939,7 @@ var Space = class Space extends Array {
         return [vx - this.cloneContainer.x, vy - this.cloneContainer.y];
     }
 
-    moveDone() {
+    moveDone(focusedWindowCallback = (focusedWindow) => {}) {
         if (this.cloneContainer.x !== this.targetX ||
             this.actor.y !== 0 ||
             Navigator.navigating || inPreview ||
@@ -1019,6 +1013,9 @@ var Space = class Space extends Array {
         if (this.selectedWindow && this.selectedWindow === display.focus_window) {
             let index = this.indexOf(this.selectedWindow);
             this[index].forEach(w => w.lastFrame = w.get_frame_rect());
+
+            // callback on display.focusWindow window
+            focusedWindowCallback(display.focus_window);
         }
 
         this.emit('move-done');
@@ -1753,7 +1750,7 @@ var Spaces = class Spaces extends Map {
                 space.layout(false);
                 let selected = space.selectedWindow;
                 if (selected) {
-                    ensureViewport(selected, space, true);
+                    ensureViewport(selected, space, { force:true });
                 }
             });
             this.spaceContainer.show();
@@ -2691,7 +2688,7 @@ function enable(errorNotification) {
 
         // Fix the stack overlay
         spaces.mru().reverse().forEach(s => {
-            s.selectedWindow && ensureViewport(s.selectedWindow, s, true);
+            s.selectedWindow && ensureViewport(s.selectedWindow, s, { force:true });
             s.monitor.clickOverlay.show();
         });
         TopBar.fixTopBar()
@@ -3010,8 +3007,10 @@ function ensuredX(meta_window, space) {
 /**
    Make sure that `meta_window` is in view, scrolling the space if needed.
  */
-function ensureViewport(meta_window, space, force) {
+function ensureViewport(meta_window, space, options={ force, moveto }) {
     space = space || spaces.spaceOfWindow(meta_window);
+    force = options?.force ?? false;
+    moveto = options?.moveto ?? true;
 
     let index = space.indexOf(meta_window);
     if (index === -1 || space.length === 0)
@@ -3041,9 +3040,12 @@ function ensureViewport(meta_window, space, force) {
                              });
         }
     }
-    move_to(space, meta_window, {
-        x, force
-    });
+
+    if (moveto) {
+        move_to(space, meta_window, {
+            x, force,
+        });
+    }
 
     selected.raise();
     selected.clone.raise_top();
@@ -3233,8 +3235,14 @@ function focus_handler(metaWindow, user_data) {
     let stack = sortWindows(space, neighbours);
     stack.forEach(w => w.raise());
     metaWindow.raise();
-
-    ensureViewport(metaWindow, space);
+    
+    /**
+     * Call to move viewport to metaWindow, except if in overview - if in
+     * overview, we'll ensure viewport on focused window AFTER overview is
+     * hidden.
+     */
+    ensureViewport(metaWindow, space, { moveto:!Main.overview.visible });
+    
     TopBar.fixTopBar();
 }
 var focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
@@ -3610,7 +3618,7 @@ function setFocusMode(mode, space) {
         }
         // do the move
         move_to(space, space.selectedWindow, {x:position});
-        ensureViewport(space.selectedWindow, space, true);
+        ensureViewport(space.selectedWindow, space, { force:true });
         space.unfocusXPosition = null;
     }
 }
@@ -3733,7 +3741,7 @@ function slurp(metaWindow) {
         customAllocators: { [to]: allocateEqualHeight }
     });
     space.emit("full-layout");
-    ensureViewport(metaWindowToEnsure, space, true);
+    ensureViewport(metaWindowToEnsure, space, { force:true });
 }
 
 function barf(metaWindow) {
@@ -3756,7 +3764,7 @@ function barf(metaWindow) {
         customAllocators: { [index]: allocateEqualHeight }
     })
     space.emit("full-layout")
-    ensureViewport(space.selectedWindow, space, true);
+    ensureViewport(space.selectedWindow, space, { force:true });
 }
 
 function selectPreviousSpace(mw, space) {
