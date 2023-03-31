@@ -699,6 +699,13 @@ function enable () {
         updateWorkspaceIndicator(space.workspace.index());
     });
 
+    signals.connect(Settings.settings, 'changed::disable-topbar-styling', (settings, key) => {
+        const status = prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
+        Extension.imports.extension.notify(
+            `PaperWM: TopBar styling has been ${status}`, 
+            `A restart of Gnome is required! (e.g. logout then login again)`)
+    });
+
     signals.connect(Settings.settings, 'changed::show-window-position-bar', (settings, key) => {
         const spaces = Tiling.spaces;
         spaces.setSpaceTopbarElementsVisible(false);
@@ -717,13 +724,10 @@ function enable () {
         fixTopBar();
     });
     /**
-     * Set clear-style after hiding overview.  Mainloop timeout
-     * needed here to execute after hidden is finished.
+     * Set clear-style when hiding overview.
      */
-    signals.connect(Main.overview, 'hidden', () => {
-          imports.mainloop.timeout_add(0, () => {
-            fixStyle();
-          });
+    signals.connect(Main.overview, 'hiding', () => {
+        fixStyle();
     })
 
     fixLabel(menu._label);
@@ -749,10 +753,16 @@ function disable() {
 }
 
 function setClearStyle() {
+    if (prefs.disable_topbar_styling) {
+        return;
+    }
     Main.panel.style_class = 'background-clear';
 }
 
 function setTransparentStyle() {
+    if (prefs.disable_topbar_styling) {
+        return;
+    }
     Main.panel.style_class = 'topbar-transparent';
 }
 
