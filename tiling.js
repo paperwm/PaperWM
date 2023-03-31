@@ -1971,7 +1971,7 @@ var Spaces = class Spaces extends Map {
         let monitor = toSpace.monitor;
         this.monitors.set(monitor, toSpace);
 
-        this.animateToSpace(toSpace, fromSpace);
+        this.animateToSpace(toSpace, fromSpace, () => this.setSpaceTopbarElementsVisible(false));
 
         TopBar.setMonitor(toSpace.monitor);
         toSpace.monitor.clickOverlay.deactivate();
@@ -1992,7 +1992,6 @@ var Spaces = class Spaces extends Map {
         }
 
         inPreview = PreviewMode.NONE;
-        this.setSpaceTopbarElementsVisible(false);
     }
 
     /**
@@ -2034,7 +2033,6 @@ var Spaces = class Spaces extends Map {
             return;
         }
         inPreview = PreviewMode.SEQUENTIAL;
-        this.setSpaceTopbarElementsVisible();
 
         if (Main.panel.statusArea.appMenu) {
             Main.panel.statusArea.appMenu.container.hide();
@@ -2139,6 +2137,7 @@ var Spaces = class Spaces extends Map {
         newSpace = monitorSpaces[to];
         this.selectedSpace = newSpace;
 
+        this.setSpaceTopbarElementsVisible();
         TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
         const scale = 0.825;
@@ -2158,13 +2157,12 @@ var Spaces = class Spaces extends Map {
             }
 
             space.show();
-            Tweener.addTween(space.actor,
-                             {y: space_y,
-                              time: prefs.animation_time,
-                              scale_x: scale,
-                              scale_y: scale,
-                             });
-
+            Tweener.addTween(space.actor, {
+                y: space_y,
+                time: prefs.animation_time,
+                scale_x: scale,
+                scale_y: scale,
+            });
         });
     }
 
@@ -2174,7 +2172,6 @@ var Spaces = class Spaces extends Map {
         }
 
         inPreview = PreviewMode.STACK;
-        this.setSpaceTopbarElementsVisible();
 
         // Always show the topbar when using the workspace stack
         TopBar.fixTopBar();
@@ -2297,6 +2294,7 @@ var Spaces = class Spaces extends Map {
         newSpace = mru[to];
         this.selectedSpace = newSpace;
 
+        this.setSpaceTopbarElementsVisible();
         TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
         mru.forEach((space, i) => {
@@ -2417,8 +2415,10 @@ var Spaces = class Spaces extends Map {
             let space = above.space;
             if (!visible.get(space)) {
                 Tweener.addTween(space.actor,
-                                 {x: 0, y: space.height + 20,
-                                  time: prefs.animation_time });
+                    {
+                        x: 0, y: space.height + 20,
+                        time: prefs.animation_time,
+                    });
             }
             above = above.get_next_sibling();
         }
