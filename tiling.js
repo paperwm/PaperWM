@@ -3006,11 +3006,17 @@ function ensuredX(meta_window, space) {
 
 /**
    Make sure that `meta_window` is in view, scrolling the space if needed.
+ * @param meta_window 
+ * @param {Space} space 
+ * @param {Object} options
+ * @param {boolean} options.force 
+ * @param {boolean} options.moveto if true, executes a move_to animated action
+ * @returns 
  */
-function ensureViewport(meta_window, space, options={ force:false, moveto:true }) {
+function ensureViewport(meta_window, space, options={}) {
     space = space || spaces.spaceOfWindow(meta_window);
-    force = options?.force ?? false;
-    moveto = options?.moveto ?? true;
+    let force = options?.force ?? false;
+    let moveto = options?.moveto ?? true;
 
     let index = space.indexOf(meta_window);
     if (index === -1 || space.length === 0)
@@ -3026,7 +3032,6 @@ function ensureViewport(meta_window, space, options={ force:false, moveto:true }
 
     space.selectedWindow = meta_window;
     let selected = space.selectedWindow;
-    let frame = meta_window.get_frame_rect();
     if (!inPreview && selected.fullscreen) {
         let y = 0;
         let ty = selected.clone.get_transition('y');
