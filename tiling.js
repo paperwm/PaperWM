@@ -3007,7 +3007,7 @@ function ensuredX(meta_window, space) {
 /**
    Make sure that `meta_window` is in view, scrolling the space if needed.
  */
-function ensureViewport(meta_window, space, options={ force, moveto }) {
+function ensureViewport(meta_window, space, options={ force:false, moveto:true }) {
     space = space || spaces.spaceOfWindow(meta_window);
     force = options?.force ?? false;
     moveto = options?.moveto ?? true;
