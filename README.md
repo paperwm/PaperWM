@@ -301,14 +301,14 @@ Focus modes can be toggled by user-settable keybinding (default is `Super`+`Shif
 
 ### Setting the default focus mode
 
-The default focus mode is the standard PaperWM focus mode (i.e. not centered).  This can be changed according to preference by setting the `default-focus-mode` setting via `dconf` or `gsettings`.  
+The default focus mode is the standard PaperWM focus mode (i.e. not centered).  This can be changed according to preference by changing the `default-focus-mode` setting via `dconf` or `gsettings`.  
 
 To set the default focus mode to `CENTER`, execute the following from a terminal:
 ```
 dconf write /org/gnome/shell/extensions/paperwm/default-focus-mode 1
 ```
 
-To undo to, or revert to the original PaperWM behaviour (by default), execute the following:
+To undo, or revert to the original PaperWM behaviour, execute the following:
 ```
 dconf write /org/gnome/shell/extensions/paperwm/default-focus-mode 0
 ```
