@@ -146,11 +146,11 @@ var Space = class Space extends Array {
         this._populated = false;
 
         // default focusMode (can be overriden by saved user pref in Space.init method)
-        this.focusMode = Settings.getDefaultFocusMode();
+        this.focusMode = FocusModes.DEFAULT;
         this.focusModeIcon = new TopBar.FocusIcon({
             name: 'panel',
             style_class: 'space-focus-mode-icon',
-        })
+        })  
             .setClickFunction(() => {
                 switchToNextFocusMode(this);
             })
@@ -259,9 +259,9 @@ var Space = class Space extends Array {
         this.windowPositionBarBackdrop.width = this.monitor.width;
         this.windowPositionBarBackdrop.height = TopBar.panelBox.height;
         this.setSpaceTopbarElementsVisible(false);
-        
+
         // apply default focus mode
-        setFocusMode(this.focusMode, this);
+        setFocusMode(Settings.getDefaultFocusMode(), this);
 
         this.getWindows().forEach(w => {
             animateWindow(w);

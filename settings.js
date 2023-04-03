@@ -21,7 +21,6 @@ var Gtk = imports.gi.Gtk;
 
 var Convenience = Extension.imports.convenience;
 var settings = Convenience.getSettings();
-var Tiling = Extension.imports.tiling;
 var workspaceSettingsCache = {};
 
 var WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
@@ -126,7 +125,7 @@ function disable() {
 function getDefaultFocusMode() {
     // find matching focus mode
     const mode = prefs.default_focus_mode;
-    const modes = Tiling.FocusModes;
+    const modes = Extension.imports.tiling.FocusModes;
     let result = null;
     Object.entries(modes).forEach(([k,v]) => {
         if (v === mode) {
