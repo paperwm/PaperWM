@@ -66,8 +66,7 @@ var inPreview = PreviewMode.NONE;
 // DEFAULT mode is normal/original PaperWM window focus behaviour
 var FocusModes = {DEFAULT: 0, CENTER: 1};
 
-var signals, oldSpaces, backgroundGroup, oldMonitors, WindowCloneLayout,
-    grabSignals;
+var signals, oldSpaces, backgroundGroup, oldMonitors, WindowCloneLayout, grabSignals;
 function init() {
     // Symbol to retrieve the focus handler id
     signals = new utils.Signals();
@@ -147,12 +146,11 @@ var Space = class Space extends Array {
         this._populated = false;
 
         // default focusMode (can be overriden by saved user pref in Space.init method)
-        this.focusMode = FocusModes.DEFAULT;
+        this.focusMode = Settings.getDefaultFocusMode();
         this.focusModeIcon = new TopBar.FocusIcon({
             name: 'panel',
             style_class: 'space-focus-mode-icon',
         })
-            .setMode(this.focusMode)
             .setClickFunction(() => {
                 switchToNextFocusMode(this);
             })
@@ -262,6 +260,9 @@ var Space = class Space extends Array {
         this.windowPositionBarBackdrop.height = TopBar.panelBox.height;
         this.setSpaceTopbarElementsVisible(false);
         
+        // apply default focus mode
+        setFocusMode(this.focusMode, this);
+
         this.getWindows().forEach(w => {
             animateWindow(w);
         });
@@ -271,32 +272,23 @@ var Space = class Space extends Array {
             ensureViewport(selected, this, true);
         }
 
-        this.signals.connect(workspace, "window-added",
-                             utils.dynamic_function_ref("add_handler", Me));
-        this.signals.connect(workspace, "window-removed",
-                             utils.dynamic_function_ref("remove_handler", Me));
-        this.signals.connect(Main.overview, 'showing',
-                             this.startAnimate.bind(this));
+        this.signals.connect(workspace, "window-added", utils.dynamic_function_ref("add_handler", Me));
+        this.signals.connect(workspace, "window-removed", utils.dynamic_function_ref("remove_handler", Me));
+        this.signals.connect(Main.overview, 'showing', this.startAnimate.bind(this));
         this.signals.connect(Main.overview, 'hidden', this.moveDone.bind(this));
+
+        this.signals.connect(Settings.settings, 'changed::default-focus-mode', () => {
+            setFocusMode(Settings.getDefaultFocusMode(), this);
+        });
         
         const Convenience = Extension.imports.convenience;
         const settings = Convenience.getSettings();
-        this.signals.connect(
-            interfaceSettings,
-            "changed::color-scheme",
-            this.updateBackground.bind(this)
-          );
-        this.signals.connect(settings, 'changed::default-background',
-                             this.updateBackground.bind(this));
-        this.signals.connect(settings, 'changed::use-default-background',
-                             this.updateBackground.bind(this));
-        this.signals.connect(backgroundSettings, 'changed::picture-uri',
-                             this.updateBackground.bind(this));
-        this.signals.connect(
-            backgroundSettings,
-            "changed::picture-uri-dark",
-            this.updateBackground.bind(this)
-        );
+        this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
+
+        this.signals.connect(settings, 'changed::default-background', this.updateBackground.bind(this));
+        this.signals.connect(settings, 'changed::use-default-background', this.updateBackground.bind(this));
+        this.signals.connect(backgroundSettings, 'changed::picture-uri', this.updateBackground.bind(this));
+        this.signals.connect(backgroundSettings, "changed::picture-uri-dark", this.updateBackground.bind(this));
     }
 
     show() {

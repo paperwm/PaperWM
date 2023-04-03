@@ -220,31 +220,27 @@ var SettingsWidget = class SettingsWidget {
                 this._settings.set_boolean('only-scratch-in-overview', false);
                 this._settings.set_boolean('disable-scratch-in-overview', false);
             }
-
         });
 
         let enableWindowPositionBar = this.builder.get_object('enable-window-position-bar');
         enableWindowPositionBar.state =
             this._settings.get_boolean('show-window-position-bar');
             enableWindowPositionBar.connect('state-set', (obj, state) => {
-            this._settings.set_boolean('show-window-position-bar',
-                state);
+            this._settings.set_boolean('show-window-position-bar', state);
         });
 
         let disableCorner = this.builder.get_object('override-hot-corner');
         disableCorner.state =
             this._settings.get_boolean('override-hot-corner');
         disableCorner.connect('state-set', (obj, state) => {
-            this._settings.set_boolean('override-hot-corner',
-                state);
+            this._settings.set_boolean('override-hot-corner', state);
         });
 
         let topbarFollowFocus = this.builder.get_object('topbar-follow-focus');
         topbarFollowFocus.state =
             this._settings.get_boolean('topbar-follow-focus');
         topbarFollowFocus.connect('state-set', (obj, state) => {
-            this._settings.set_boolean('topbar-follow-focus',
-                state);
+            this._settings.set_boolean('topbar-follow-focus', state);
         });
 
         // Workspaces
