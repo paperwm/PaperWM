@@ -258,6 +258,8 @@ var StackOverlay = class StackOverlay {
     triggerPreview() {
         if ("_previewId" in this)
             return;
+        if (!this.target)
+            return;
         this._previewId = Mainloop.timeout_add(100, () => {
             delete this._previewId;
             if (this.clone) {
