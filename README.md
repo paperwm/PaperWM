@@ -290,7 +290,7 @@ You can style both the coloured position bar and the dimmed "position bar backdr
 
 _Note: PaperWM overrides the default Gnome Top Bar style to be completely transparent so that the dimmed `window-position-bar-backdrop` and`window-position-bar` elements are visible._
 
-## Window Focus Mode ##
+## Window Focus Mode
 
 [#482](https://github.com/paperwm/PaperWM/pull/482) added the concept of `window focus modes` to PaperWM.  A `focus mode` controls how windows are "focused".  For example, the `CENTER` focus mode causes all windows to be centered horizontally on selection, whereas the `DEFAULT` focus mode is the traditional PaperWM behaviour.
 
@@ -298,7 +298,26 @@ Focus modes can be toggled by user-settable keybinding (default is `Super`+`Shif
 
 ![Focus mode button](media/focus-mode-button.png)
 
-You may prefer to hide the focus mode icon.  You can do so by executing the following command in a terminal:
+
+### Setting the default focus mode
+
+The default focus mode is the standard PaperWM focus mode (i.e. not centered).  This can be changed according to preference by changing the `default-focus-mode` setting via `dconf` or `gsettings`.  
+
+To set the default focus mode to `CENTER`, execute the following from a terminal:
+```
+dconf write /org/gnome/shell/extensions/paperwm/default-focus-mode 1
+```
+
+To undo, or revert to the original PaperWM behaviour, execute the following:
+```
+dconf write /org/gnome/shell/extensions/paperwm/default-focus-mode 0
+```
+
+_Note: changing this setting during a PaperWM session will set all spaces to the new default focus mode._
+
+### Hiding the focus mode icon
+
+Users may also prefer to hide the focus mode icon.  You can do so by executing the following command in a terminal:
 
 ```
 dconf write /org/gnome/shell/extensions/paperwm/show-focus-mode-icon false

@@ -662,7 +662,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkSwitch" id="enable-window-position-bar">
+                      <object class="GtkSwitch" id="show-window-position-bar">
                         <layout>
                           <property name="column">1</property>
                           <property name="row">0</property>

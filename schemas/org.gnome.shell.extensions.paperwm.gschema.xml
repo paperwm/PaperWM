@@ -267,7 +267,6 @@
       </key>
   </schema>
 
-
   <schema id="org.gnome.Shell.Extensions.PaperWM" path="/org/gnome/shell/extensions/paperwm/">
 
     <key type="b" name="has-installed-config-template">
@@ -367,6 +366,11 @@
     <key type="b" name="default-show-top-bar">
         <default>true</default>
         <summary>Show the top bar on workspaces by default</summary>
+    </key>
+
+    <key type="i" name="default-focus-mode">
+        <default>0</default>
+        <summary>Set the default focus mode. 0:DEFAULT 1:CENTER</summary>
     </key>
 
     <key type="b" name="topbar-follow-focus">
