@@ -206,8 +206,7 @@ var StackOverlay = class StackOverlay {
 
         this._direction = direction;
 
-        let overlay = new Clutter.Actor({ reactive: true
-                                          , name: "stack-overlay" });
+        let overlay = new Clutter.Actor({ reactive: true, name: "stack-overlay" });
 
         // Uncomment to debug the overlays
         // overlay.background_color = Clutter.color_from_string('green')[1];
@@ -231,27 +230,70 @@ var StackOverlay = class StackOverlay {
             // remove/cleanup the previous preview
             this.removePreview();
             Mainloop.timeout_add(200, () => {
-                // if pointer is still at edge (within 2px), trigger preview
+                // if pointer is still at edge (within some band), trigger preview
+                let edgeBand = 3;
                 let [x, y, mask] = global.get_pointer();
-                if (x <= 2 || x >= this.monitor.width - 2) {
+                if (x <= edgeBand || x >= this.monitor.width - edgeBand) {
                     this.triggerPreview.bind(this)();
                 }
             });
             return true;
         });
 
-        this.signals.connect(overlay, 'enter-event', this.triggerPreview.bind(this));
-        this.signals.connect(overlay,'leave-event', this.removePreview.bind(this));
-        this.signals.connect(Settings.settings, 'changed::pressure-barrier',
-            this.updateBarrier.bind(this, true));
-
+        this.initPreviewBarrier();
+        this.signals.connect(Settings.settings, 'changed::pressure-barrier', this.updateBarrier.bind(this, true));
         this.updateBarrier();
-
+        
         global.window_group.add_child(overlay);
         Main.layoutManager.trackChrome(overlay);
 
         this.overlay = overlay;
         this.setTarget(null);
+    }
+
+    removePreviewBarrier() {
+        if (this.previewBarrier) {
+            if (this.previewPressureBarrier) {
+                this.previewPressureBarrier.removeBarrier(this.previewBarrier);
+            }
+            this.previewBarrier.destroy();
+            this.previewBarrier = null;
+            this.previewPressureBarrier.destroy();
+        }
+    }
+    
+    /**
+     * Initialises the preview pressure barrier.
+     */
+    initPreviewBarrier() {
+        this.removePreviewBarrier();
+
+        const Layout = imports.ui.layout;
+        this.previewPressureBarrier = new Layout.PressureBarrier(100,
+            prefs.animation_time*1000, Shell.ActionMode.NORMAL);
+        
+            let monitor = this.monitor;
+            let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
+        let x1, directions;
+        if (this._direction === Meta.MotionDirection.LEFT) {
+            x1 = monitor.x,
+            directions = Meta.BarrierDirection.POSITIVE_X;
+        } else {
+            x1 = monitor.x + monitor.width - 1,
+            directions = Meta.BarrierDirection.NEGATIVE_X;
+        }
+        this.previewBarrier = new Meta.Barrier({
+            display: global.display,
+            x1, x2: x1,
+            y1: workArea.y + 1,
+            y2: workArea.y + workArea.height - 1,
+            directions
+        });
+
+        // remove preview once leave the barrier
+        this.previewBarrier.connect('left', () => this.removePreview());
+        this.previewPressureBarrier.addBarrier(this.previewBarrier);
+        this.previewPressureBarrier.connect('trigger', () => this.triggerPreview());
     }
 
     triggerPreview() {
@@ -388,8 +430,10 @@ var StackOverlay = class StackOverlay {
             return;
 
         const Layout = imports.ui.layout;
-        this.pressureBarrier = new Layout.PressureBarrier(100, 0.25*1000, Shell.ActionMode.NORMAL);
-        // Show the overlay on fullscreen windows when applying pressure to the edge
+        this.pressureBarrier = new Layout.PressureBarrier(100, prefs.animation_time*1000, 
+            Shell.ActionMode.NORMAL);
+        
+            // Show the overlay on fullscreen windows when applying pressure to the edge
         // The above leave-event handler will take care of hiding the overlay
         this.pressureBarrier.connect('trigger', () => {
             this.pressureBarrier._reset();
