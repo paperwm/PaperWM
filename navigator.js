@@ -189,13 +189,15 @@ function getModLock(mods) {
     }
 
     _doAction(mutterActionId) {
-
         let action = Keybindings.byId(mutterActionId);
         let space = Tiling.spaces.selectedSpace;
         let metaWindow = space.selectedWindow;
-        const nav = getNavigator()
+        const nav = getNavigator();
 
-        if (action && action.options.activeInNavigator) {
+        if (mutterActionId == Meta.KeyBindingAction.MINIMIZE) {
+            metaWindow.minimize();
+        } else if (action && action.options.activeInNavigator) {
+            // action is performed while navigator is open (e.g. switch-left)
             if (!metaWindow && (action.options.mutterFlags & Meta.KeyBindingFlags.PER_WINDOW)) {
                 return;
             }
@@ -211,13 +213,12 @@ function getModLock(mods) {
             if (Tiling.inGrab && !Tiling.inGrab.dnd && Tiling.inGrab.window) {
                 Tiling.inGrab.beginDnD();
             }
-
-            return true;
-        } else if (mutterActionId == Meta.KeyBindingAction.MINIMIZE) {
-            metaWindow.minimize();
+        } else if (action && prefs.allow_all_actions_in_navigator) {
+            // closes navigator and action is performed afterwards
+            // (e.g. switch-monitor-left)
+            this._resetNoModsTimeout();
+            Mainloop.timeout_add(0, () => action.handler(metaWindow, space));
         }
-
-        return false;
     }
 
     _finish(timestamp) {

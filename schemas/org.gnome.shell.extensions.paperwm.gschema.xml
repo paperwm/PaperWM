@@ -393,6 +393,11 @@
         <summary>Show the focus mode icon in the topbar</summary>
     </key>
 
+    <key type="b" name="allow-all-actions-in-navigator">
+        <default>false</default>
+        <summary>Allow using all actions/keybindings while the navigator/minimal is open.</summary>
+    </key>
+
     <key type="d" name="animation-time">
         <default>0.25</default>
         <summary>Duration of animations in seconds</summary>

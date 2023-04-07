@@ -36,7 +36,7 @@ var prefs = {};
  'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
  'cycle-width-steps', 'cycle-height-steps', 'topbar-follow-focus', 'minimap-scale', 
  'winprops', 'show-window-position-bar', 'show-focus-mode-icon', 'disable-topbar-styling',
- 'default-focus-mode']
+ 'default-focus-mode', 'allow-all-actions-in-navigator']
     .forEach((k) => setState(null, k));
 
 prefs.__defineGetter__("minimum_margin", function() { return Math.min(15, this.horizontal_margin) });
