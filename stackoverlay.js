@@ -240,9 +240,11 @@ var StackOverlay = class StackOverlay {
             return true;
         });
 
-        this.initPreviewBarrier();
         this.signals.connect(Settings.settings, 'changed::pressure-barrier', this.updateBarrier.bind(this, true));
         this.updateBarrier();
+        
+        this.signals.connect(Settings.settings, 'changed::preview-pressure-threshold', this.initPreviewBarrier.bind(this));
+        this.initPreviewBarrier();
         
         global.window_group.add_child(overlay);
         Main.layoutManager.trackChrome(overlay);
@@ -269,7 +271,8 @@ var StackOverlay = class StackOverlay {
         this.removePreviewBarrier();
 
         const Layout = imports.ui.layout;
-        this.previewPressureBarrier = new Layout.PressureBarrier(100,
+        this.previewPressureBarrier = new Layout.PressureBarrier(
+            prefs.preview_pressure_threshold,
             prefs.animation_time*1000, Shell.ActionMode.NORMAL);
         
             let monitor = this.monitor;

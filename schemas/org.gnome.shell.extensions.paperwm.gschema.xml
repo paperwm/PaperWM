@@ -320,6 +320,11 @@
         <summary>Replace the Activities text with the current workspace name</summary>
     </key>
 
+    <key type="i" name="preview-pressure-threshold">
+      <default>100</default>
+      <summary>Window preview pressure threhold (when touching left/right edges)</summary>
+    </key>
+
     <key type="b" name="pressure-barrier">
         <default>false</default>
         <summary>Enable pressure barriers at the monitor edges</summary>
