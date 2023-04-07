@@ -221,25 +221,6 @@ var StackOverlay = class StackOverlay {
         overlay.width = Tiling.stack_margin;
 
         this.signals = new utils.Signals();
-        this.signals.connect(overlay, 'button-press-event', () => {
-            Main.activateWindow(this.target);
-            if (this.clone) {
-                this.animatePreviewOut();
-            }
-
-            // remove/cleanup the previous preview
-            this.removePreview();
-            Mainloop.timeout_add(200, () => {
-                // if pointer is still at edge (within some band), trigger preview
-                let edgeBand = 3;
-                let [x, y, mask] = global.get_pointer();
-                if (x <= edgeBand || x >= this.monitor.width - edgeBand) {
-                    this.triggerPreview.bind(this)();
-                }
-            });
-            return true;
-        });
-
         this.signals.connect(Settings.settings, 'changed::pressure-barrier', this.updateBarrier.bind(this, true));
         this.updateBarrier();
         
@@ -346,8 +327,27 @@ var StackOverlay = class StackOverlay {
     animatePreviewIn() {
         let [x, y, mask] = global.get_pointer();
         let actor = this.target.get_compositor_private();
-        let clone = new Clutter.Clone({source: actor});
+        let clone = new Clutter.Clone({source: actor, reactive: true});
         this.clone = clone;
+
+        // on clone click, activate target and setup for next preview
+        this.signals.connect(clone, 'button-press-event', () => {
+            Main.activateWindow(this.target);
+            if (this.clone) {
+                this.animatePreviewOut();
+            }
+
+            // remove/cleanup the previous preview
+            this.removePreview();
+            Mainloop.timeout_add(200, () => {
+                // if pointer is still at edge (within some band), trigger preview
+                let edgeBand = 3;
+                let [x, y, mask] = global.get_pointer();
+                if (x <= edgeBand || x >= this.monitor.width - edgeBand) {
+                    this.triggerPreview();
+                }
+            });
+        });
 
         // Remove any window clips, and show the metaWindow.clone's
         actor.remove_clip();
