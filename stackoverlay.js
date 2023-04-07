@@ -225,8 +225,7 @@ var StackOverlay = class StackOverlay {
         this.signals.connect(overlay, 'button-press-event', () => {
             Main.activateWindow(this.target);
             if (this.clone) {
-                this.clone.destroy();
-                this.clone = null;
+                this.hidePreview();
             }
 
             // remove/cleanup the previous preview
@@ -263,28 +262,10 @@ var StackOverlay = class StackOverlay {
         this._previewId = Mainloop.timeout_add(100, () => {
             delete this._previewId;
             if (this.clone) {
-                this.clone.destroy();
-                this.clone = null;
+                this.destroyClone();
             }
 
-            let [x, y, mask] = global.get_pointer();
-            let actor = this.target.get_compositor_private();
-            let clone = new Clutter.Clone({source: actor});
-            // Remove any window clips, and show the metaWindow.clone's
-            actor.remove_clip();
-            Tiling.animateWindow(this.target);
-
-            this.clone = clone;
-            let scale = prefs.minimap_scale;
-            clone.set_scale(scale, scale);
-            Main.uiGroup.add_actor(clone);
-
-            let monitor = this.monitor;
-            if (this._direction === Meta.MotionDirection.RIGHT)
-                x = monitor.x + monitor.width - (scale * clone.width);
-            else
-                x = monitor.x;
-            clone.set_position(x, y);
+            this.showPreview();
         });
 
         // uncomment to remove the preview after a timeout
@@ -301,14 +282,74 @@ var StackOverlay = class StackOverlay {
             delete this._removeId;
         }
 
-        if (!this.clone)
-            return;
+        this.hidePreview();
+    }
 
-        this.clone.destroy();
-        this.clone = null;
-        let space = Tiling.spaces.spaceOfWindow(this.target);
-        // Show the WindowActors again and re-apply clipping
-        space.moveDone();
+    /**
+     * Centralised method to instantly destroy preview (clone).
+     */
+    destroyClone() {
+        if (this.clone) {
+            this.clone.destroy();
+            this.clone = null;
+        }
+    }
+
+    /**
+     * Shows the window preview in from the side it was triggered on.
+     */
+    showPreview() {
+        let [x, y, mask] = global.get_pointer();
+        let actor = this.target.get_compositor_private();
+        let clone = new Clutter.Clone({source: actor});
+        this.clone = clone;
+
+        // Remove any window clips, and show the metaWindow.clone's
+        actor.remove_clip();
+        Tiling.animateWindow(this.target);
+
+        // set clone parameters
+        let scale = 0.3;
+        clone.opacity = 255*0.95;
+        
+        clone.set_scale(scale, scale);
+        Main.uiGroup.add_actor(clone);
+        
+        let monitor = this.monitor;
+        let scaleWidth = scale * clone.width;
+        let scaleHeight = scale * clone.height;
+        if (this._direction === Meta.MotionDirection.RIGHT) {
+            x = monitor.x + monitor.width - scaleWidth;
+        }
+        else {
+            x = monitor.x;
+        }
+
+        // calculate y position - center of mouse
+        y = y - (scale * clone.height)/2;
+
+        // bound to remain within view
+        let workArea = this.getWorkArea();
+        y = Math.max(y, workArea.y);
+        y = Math.min(y, workArea.y + workArea.height - scaleHeight);
+
+        clone.set_position(x, y);
+    }
+
+    /**
+     * Hides window preview out and destroys preview.
+     */
+    hidePreview() {
+        if (!this.clone) {
+            return;
+        }
+
+        this.destroyClone();
+        if (this.target) {
+            // Show the WindowActors again and re-apply clipping
+            let space = Tiling.spaces.spaceOfWindow(this.target);
+            space.moveDone();
+        }
     }
 
     removeBarrier() {
@@ -343,7 +384,7 @@ var StackOverlay = class StackOverlay {
         });
 
         const overlay = this.overlay;
-        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        let workArea = this.getWorkArea();
         let monitor = this.monitor;
         let x1, directions;
         if (this._direction === Meta.MotionDirection.LEFT) {
@@ -364,11 +405,7 @@ var StackOverlay = class StackOverlay {
     }
 
     setTarget(space, index) {
-
-        if (this.clone) {
-            this.clone.destroy();
-            this.clone = null;
-        }
+        this.hidePreview();
 
         let bail = () => {
             this.target = null;
@@ -437,5 +474,13 @@ var StackOverlay = class StackOverlay {
         this.updateBarrier();
 
         return true;
+    }
+
+    /**
+     * Convenience method to return WorkArea for current monitor.
+     * @returns WorkArea
+     */
+    getWorkArea() {
+        return Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
     }
 };
