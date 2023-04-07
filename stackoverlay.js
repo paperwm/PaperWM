@@ -225,8 +225,7 @@ var StackOverlay = class StackOverlay {
         this.signals.connect(overlay, 'button-press-event', () => {
             Main.activateWindow(this.target);
             if (this.clone) {
-                this.clone.destroy();
-                this.clone = null;
+                this.animatePreviewOut();
             }
 
             // remove/cleanup the previous preview
@@ -263,28 +262,10 @@ var StackOverlay = class StackOverlay {
         this._previewId = Mainloop.timeout_add(100, () => {
             delete this._previewId;
             if (this.clone) {
-                this.clone.destroy();
-                this.clone = null;
+                this.animatePreviewOut();
             }
 
-            let [x, y, mask] = global.get_pointer();
-            let actor = this.target.get_compositor_private();
-            let clone = new Clutter.Clone({source: actor});
-            // Remove any window clips, and show the metaWindow.clone's
-            actor.remove_clip();
-            Tiling.animateWindow(this.target);
-
-            this.clone = clone;
-            let scale = prefs.minimap_scale;
-            clone.set_scale(scale, scale);
-            Main.uiGroup.add_actor(clone);
-
-            let monitor = this.monitor;
-            if (this._direction === Meta.MotionDirection.RIGHT)
-                x = monitor.x + monitor.width - (scale * clone.width);
-            else
-                x = monitor.x;
-            clone.set_position(x, y);
+            this.animatePreviewIn();
         });
 
         // uncomment to remove the preview after a timeout
@@ -301,14 +282,87 @@ var StackOverlay = class StackOverlay {
             delete this._removeId;
         }
 
-        if (!this.clone)
+        if (!this.clone) {
             return;
+        }
 
-        this.clone.destroy();
-        this.clone = null;
-        let space = Tiling.spaces.spaceOfWindow(this.target);
-        // Show the WindowActors again and re-apply clipping
-        space.moveDone();
+        this.animatePreviewOut();
+    }
+
+    /**
+     * Animates the window preview in from the side it was triggered on.
+     */
+    animatePreviewIn() {
+        let [x, y, mask] = global.get_pointer();
+        let actor = this.target.get_compositor_private();
+        let clone = new Clutter.Clone({source: actor});
+        this.clone = clone;
+
+        // Remove any window clips, and show the metaWindow.clone's
+        actor.remove_clip();
+        Tiling.animateWindow(this.target);
+
+        // set clone parameters
+        let scale = 0.95;
+        let peek = 300; // number of pixels to "peek" in
+        clone.opacity = 255*0.95;
+        
+        clone.set_scale(scale, scale);
+        Main.uiGroup.add_actor(clone);
+        
+        let monitor = this.monitor;
+        let scaleWidth = scale * clone.width;
+        let startPosition; // position to place clone before animating in
+        if (this._direction === Meta.MotionDirection.RIGHT) {
+            startPosition = monitor.x + monitor.width;
+            x = startPosition - peek;
+        }
+        else {
+            startPosition = monitor.x - clone.width;
+            x = monitor.x - scaleWidth + peek;
+        }
+
+        // calculate y position - center of monitor
+        let scaleHeight = scale * clone.height;
+        y = monitor.height/2 - scaleHeight/2;
+
+        // set position and animate in
+        clone.set_position(startPosition, y);
+        Tweener.addTween(clone, {
+            x, time: prefs.animation_time,
+        });
+    }
+
+    /**
+     * Animates the window preview out and destroys preview on completion.
+     */
+    animatePreviewOut() {
+        if (!this.clone) {
+            return;
+        }
+        
+        let clone = this.clone;
+        let monitor = this.monitor;
+        let x;
+        if (this._direction === Meta.MotionDirection.RIGHT) {
+            x = monitor.x + monitor.width;
+        }
+        else {
+            x = monitor.x - clone.width;
+        }
+
+        Tweener.addTween(this.clone, {
+            x, time: prefs.animation_time,
+            onComplete: () => {
+                this.clone.destroy();
+                this.clone = null;
+                if (this.target) {
+                    // Show the WindowActors again and re-apply clipping
+                    let space = Tiling.spaces.spaceOfWindow(this.target);
+                    space.moveDone();
+                }
+            }
+        });
     }
 
     removeBarrier() {
@@ -366,8 +420,7 @@ var StackOverlay = class StackOverlay {
     setTarget(space, index) {
 
         if (this.clone) {
-            this.clone.destroy();
-            this.clone = null;
+            this.animatePreviewOut();
         }
 
         let bail = () => {
