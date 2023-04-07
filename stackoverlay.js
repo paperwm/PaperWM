@@ -331,7 +331,7 @@ var StackOverlay = class StackOverlay {
         this.clone = clone;
 
         // on clone click, activate target and setup for next preview
-        this.signals.connect(clone, 'button-press-event', () => {
+        this.signals.connectOneShot(clone, 'button-press-event', () => {
             Main.activateWindow(this.target);
             if (this.clone) {
                 this.animatePreviewOut();
