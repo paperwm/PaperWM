@@ -262,7 +262,7 @@ var StackOverlay = class StackOverlay {
         this._previewId = Mainloop.timeout_add(100, () => {
             delete this._previewId;
             if (this.clone) {
-                this.animatePreviewOut();
+                this.destroyClone();
             }
 
             this.animatePreviewIn();
@@ -282,11 +282,17 @@ var StackOverlay = class StackOverlay {
             delete this._removeId;
         }
 
-        if (!this.clone) {
-            return;
-        }
-
         this.animatePreviewOut();
+    }
+
+    /**
+     * Centralised method to instantly destroy preview (clone).
+     */
+    destroyClone() {
+        if (this.clone) {
+            this.clone.destroy();
+            this.clone = null;
+        }
     }
 
     /**
@@ -353,8 +359,7 @@ var StackOverlay = class StackOverlay {
         Tweener.addTween(this.clone, {
             x, time: prefs.animation_time,
             onComplete: () => {
-                this.clone.destroy();
-                this.clone = null;
+                this.destroyClone();
                 if (this.target) {
                     // Show the WindowActors again and re-apply clipping
                     let space = Tiling.spaces.spaceOfWindow(this.target);
@@ -417,10 +422,7 @@ var StackOverlay = class StackOverlay {
     }
 
     setTarget(space, index) {
-
-        if (this.clone) {
-            this.animatePreviewOut();
-        }
+        this.animatePreviewOut();
 
         let bail = () => {
             this.target = null;
