@@ -303,7 +303,7 @@ var StackOverlay = class StackOverlay {
         Tiling.animateWindow(this.target);
 
         // set clone parameters
-        let scale = 0.95;
+        let scale = 0.90;
         let peek = 300; // number of pixels to "peek" in
         clone.opacity = 255*0.95;
         
@@ -322,9 +322,8 @@ var StackOverlay = class StackOverlay {
             x = monitor.x - scaleWidth + peek;
         }
 
-        // calculate y position - center of monitor
-        let scaleHeight = scale * clone.height;
-        y = monitor.height/2 - scaleHeight/2;
+        // calculate y position - center of actor
+        y = actor.y + (clone.height * (1 - scale)) / 2;
 
         // set position and animate in
         clone.set_position(startPosition, y);
