@@ -48,13 +48,14 @@ var colors = [
 ];
 
 function createButton(icon_name, accessible_name) {
-    return new St.Button({reactive: true,
-                          can_focus: true,
-                          track_hover: true,
-                          accessible_name,
-                          style_class: 'button workspace-icon-button',
-                          child: new St.Icon({icon_name})
-                         });
+    return new St.Button({
+        reactive: true,
+        can_focus: true,
+        track_hover: true,
+        accessible_name,
+        style_class: 'button workspace-icon-button',
+        child: new St.Icon({ icon_name })
+    });
 }
 
 var PopupMenuEntryHelper = function constructor(text) {
@@ -677,9 +678,7 @@ function enable () {
 
     screenSignals.push(
         workspaceManager.connect_after('workspace-switched',
-                                    (workspaceManager, from, to) => {
-                                        updateWorkspaceIndicator(to);
-                                    }));
+            (workspaceManager, from, to) => updateWorkspaceIndicator(to)));
 
     signals.connect(Main.overview, 'showing', fixTopBar);
     signals.connect(Main.overview, 'hidden', () => {
@@ -711,6 +710,10 @@ function enable () {
         spaces.setSpaceTopbarElementsVisible(false);
         spaces.forEach(s => s.layout(false));
         spaces.showWindowPositionBarChanged();
+    });
+
+    signals.connect(Settings.settings, 'changed::show-workspace-indicator', (settings, key) => {
+        fixWorkspaceIndicator();
     });
 
     signals.connect(Settings.settings, 'changed::show-focus-mode-icon', (settings, key) => {
@@ -799,6 +802,11 @@ function fixTopBar() {
     }
 }
 
+function fixWorkspaceIndicator() {
+    prefs.show_workspace_indicator ? menu.show() : menu.hide();
+    Tiling.spaces.forEach(s => s.showWorkspaceIndicator());
+}
+
 function fixFocusModeIcon() {
     prefs.show_focus_mode_icon ? focusButton.show() : focusButton.hide();
     Tiling.spaces.forEach(s => s.showFocusModeIcon());
@@ -808,7 +816,7 @@ function fixFocusModeIcon() {
    Override the activities label with the workspace name.
    let workspaceIndex = 0
 */
-function updateWorkspaceIndicator (index) {
+function updateWorkspaceIndicator(index) {
     let spaces = Tiling.spaces;
     let space = spaces && spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
     let onMonitor = space && space.monitor === panelMonitor;

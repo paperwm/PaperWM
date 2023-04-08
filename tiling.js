@@ -1318,13 +1318,25 @@ border-radius: ${borderWidth}px;
         }
 
         if (visible) {
-            this.labelWrapper.raise_top();
-            this.label.show();
+            this.showWorkspaceIndicator(true);
             this.showFocusModeIcon(true);
         }
         else {
-            this.label.hide();
+            this.showWorkspaceIndicator(false);
             this.showFocusModeIcon(false);
+        }
+    }
+
+    /**
+     * Shows the workspace indicator space element.
+     * @param {boolean} show 
+     */
+    showWorkspaceIndicator(show=true) {
+        if (show && prefs.show_workspace_indicator) {
+            this.labelWrapper.raise_top();
+            this.labelWrapper.show();
+        } else {
+            this.labelWrapper.hide();
         }
     }
 
