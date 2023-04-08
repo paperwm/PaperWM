@@ -20,6 +20,13 @@ fi
 
 gnome-shell --version
 
+echo -n "Display server: "
+if [ "${XDG_SESSION_TYPE}" = "wayland" ]; then
+    echo "Wayland"
+else
+    echo "Xorg"
+fi
+
 echo -n "PaperWM branch/tag: "
 git symbolic-ref --short -q HEAD || git name-rev --tags --name-only --no-undefined "$(git rev-parse HEAD)"
 echo -n "PaperWM commit: "
