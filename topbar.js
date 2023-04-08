@@ -657,13 +657,13 @@ function enable () {
         let r = label.apply_relative_transform_to_point(panel, point);
 
         for (let [workspace, space] of Tiling.spaces) {
-            space.label.set_position(panel.x + Math.round(r.x), panel.y + Math.round(r.y));
+            space.workspaceLabel.set_position(panel.x + Math.round(r.x), panel.y + Math.round(r.y));
             let fontDescription = label.clutter_text.font_description;
-            space.label.clutter_text.set_font_description(fontDescription);
+            space.workspaceLabel.clutter_text.set_font_description(fontDescription);
         }
     }
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
-    menu.show();
+    fixWorkspaceIndicator();
 
     focusButton = new FocusButton();
     Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');

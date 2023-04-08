@@ -171,17 +171,17 @@ var Space = class Space extends Array {
         let cloneContainer = new St.Widget({name: "clone-container"});
         this.cloneContainer = cloneContainer;
 
-        let labelWrapper = new St.Widget({
+        let workspaceIndicator = new St.Widget({
             reactive: true,
             name: 'panel',
-            style_class: 'space-label-wrapper',
+            style_class: 'space-workspace-indicator',
         });
-        labelWrapper.connect('button-press-event', () => Main.overview.toggle());
-        this.labelWrapper = labelWrapper;
-        let label = new St.Label();
-        labelWrapper.add_actor(label);
-        this.label = label;
-        label.hide();
+        workspaceIndicator.connect('button-press-event', () => Main.overview.toggle());
+        this.workspaceIndicator = workspaceIndicator;
+        let workspaceLabel = new St.Label();
+        workspaceIndicator.add_actor(workspaceLabel);
+        this.workspaceLabel = workspaceLabel;
+        workspaceLabel.hide();
 
         let selection = new St.Widget({
             name: 'selection',
@@ -194,7 +194,7 @@ var Space = class Space extends Array {
 
         container.add_actor(clip);
         clip.add_actor(actor);
-        actor.add_actor(labelWrapper);
+        actor.add_actor(workspaceIndicator);
         actor.add_child(this.focusModeIcon);
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
@@ -1208,15 +1208,15 @@ border-radius: ${borderWidth}px;
 
     updateName() {
         if (prefs.use_workspace_name) {
-            this.label.show();
+            this.workspaceLabel.show();
         } else {
-            this.label.hide();
+            this.workspaceLabel.hide();
         }
         let name = this.settings.get_string('name');
         if (name === '')
             name = Meta.prefs_get_workspace_name(this.workspace.index());
         Meta.prefs_change_workspace_name(this.workspace.index(), name);
-        this.label.text = name;
+        this.workspaceLabel.text = name;
         this.name = name;
 
         if (this.workspace === workspaceManager.get_active_workspace()) {
@@ -1274,8 +1274,8 @@ border-radius: ${borderWidth}px;
 
         // show space duplicate elements if not primary monitor
         if (!this.hasTopBar()) {
-            this.labelWrapper.raise_top();
-            this.label.show();
+            this.workspaceIndicator.raise_top();
+            this.workspaceLabel.show();
         }
 
         // number of columns (a column have one or more windows)
@@ -1333,10 +1333,10 @@ border-radius: ${borderWidth}px;
      */
     showWorkspaceIndicator(show=true) {
         if (show && prefs.show_workspace_indicator) {
-            this.labelWrapper.raise_top();
-            this.labelWrapper.show();
+            this.workspaceIndicator.raise_top();
+            this.workspaceIndicator.show();
         } else {
-            this.labelWrapper.hide();
+            this.workspaceIndicator.hide();
         }
     }
 
