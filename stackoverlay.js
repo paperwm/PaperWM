@@ -309,7 +309,7 @@ var StackOverlay = class StackOverlay {
         Tiling.animateWindow(this.target);
 
         // set clone parameters
-        let scale = 0.3;
+        let scale = prefs.minimap_scale;
         clone.opacity = 255*0.95;
         
         clone.set_scale(scale, scale);
