@@ -650,6 +650,7 @@ function enable () {
     Main.panel.statusArea.activities.hide();
 
     menu = new WorkspaceMenu();
+
     // Work around 'actor' warnings
     let panel = Main.panel;
     function fixLabel(label) {
@@ -662,18 +663,21 @@ function enable () {
             space.workspaceLabel.clutter_text.set_font_description(fontDescription);
         }
     }
+
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     fixWorkspaceIndicator();
 
+    // when menu is shown or hidden, also update the space focusModeIcon positions
+    signals.connect(menu, 'show', setSpaceFocusModeIconPositions.bind(this, 100));
+    signals.connect(menu, 'hide', setSpaceFocusModeIconPositions.bind(this, 100));
+
+    // setup focusButton and space focusModeIcons
     focusButton = new FocusButton();
     Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');
     signals.connect(focusButton, 'notify::allocation', () => {
-        const pos = focusButton.apply_relative_transform_to_point(panel, 
-            new Clutter.Vertex({ x: 0, y: 0 }));
-        Tiling.spaces.setFocusIconPosition(pos.x, pos.y);
+        setSpaceFocusModeIconPositions();
     });
     fixFocusModeIcon();
-
     fixStyle();
 
     screenSignals.push(
@@ -810,6 +814,19 @@ function fixWorkspaceIndicator() {
 function fixFocusModeIcon() {
     prefs.show_focus_mode_icon ? focusButton.show() : focusButton.hide();
     Tiling.spaces.forEach(s => s.showFocusModeIcon());
+}
+
+/**
+ * Sets the space focusModeIcon position based off the position
+ * of the focusButton (mimics it).
+ * @param {Number} timeout needed to allow update before querying position.
+ */
+function setSpaceFocusModeIconPositions(timeout=0) {
+    imports.mainloop.timeout_add(timeout, () => {
+        const pos = focusButton.apply_relative_transform_to_point(Main.panel, 
+            new Clutter.Vertex({ x: 0, y: 0 }));
+        Tiling.spaces.setFocusIconPosition(pos.x, pos.y);
+    });
 }
 
 /**
