@@ -534,7 +534,7 @@ function enable () {
     signals.connect(Main.overview, 'hidden', () => {
         if (Tiling.spaces.selectedSpace.showTopBar)
             return;
-        hide();
+        fixTopBar();
     });
 
     signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {

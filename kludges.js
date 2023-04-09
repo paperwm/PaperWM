@@ -276,6 +276,9 @@ var savedProps;
 savedProps = savedProps || new Map();
 
 function registerOverrideProp(obj, name, override) {
+    if (!obj)
+        return
+
     let saved = getSavedProp(obj, name) || obj[name];
     let props = savedProps.get(obj);
     if (!props) {
@@ -289,6 +292,9 @@ function registerOverrideProp(obj, name, override) {
 }
 
 function registerOverridePrototype(obj, name, override) {
+    if (!obj)
+        return
+
     registerOverrideProp(obj.prototype, name, override);
 }
 
@@ -362,8 +368,11 @@ function init() {
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
     if (Workspace.WindowClone)
         registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
-    registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions');
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow');
+
+    registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions', _realRecalculateWindowPositions);
+
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
+
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
     if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
         registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
@@ -379,8 +388,15 @@ function init() {
                                   });
     }
 
+    let layout = computeLayout
+    if (version[1] > 37) {
+        layout = computeLayout338
+        registerOverridePrototype(Workspace.WorkspaceLayout, 'addWindow', addWindow)
+    }
+
     if (version[1] > 32)
-        registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', computeLayout);
+        registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
+
 
     // Kill pinch gestures as they work pretty bad (especially when 3-finger swiping)
     registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0);
@@ -389,8 +405,11 @@ function init() {
         registerOverrideProp(Main.wm._swipeTracker._touchpadGesture, "enabled", false);
 
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', (win) => {
-        let metaWindow = win.meta_window;
-        return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+        let metaWindow = win.meta_window || win;
+        if (settings.get_boolean('only-scratch-in-overview'))
+            return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+        if (settings.get_boolean('disable-scratch-in-overview'))
+            return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
     });
 
     signals = new utils.Signals();
@@ -418,16 +437,20 @@ function enable() {
                     disableHotcorners);
     disableHotcorners();
 
-    function onlyScratchInOverview() {
-        if (settings.get_boolean('only-scratch-in-overview')) {
+    function scratchInOverview() {
+        let onlyScratch = settings.get_boolean('only-scratch-in-overview');
+        let disableScratch = settings.get_boolean('disable-scratch-in-overview');
+        if (onlyScratch || disableScratch) {
             enableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         } else {
             disableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         }
     }
     signals.connect(settings, 'changed::only-scratch-in-overview',
-                    onlyScratchInOverview);
-    onlyScratchInOverview();
+                    scratchInOverview);
+    signals.connect(settings, 'changed::disable-scratch-in-overview',
+                    scratchInOverview);
+    scratchInOverview();
 
 
     /* The «native» workspace animation can be now (3.30) be disabled as it
@@ -454,9 +477,6 @@ function enable() {
         };
 
     Workspace.Workspace.prototype._realRecalculateWindowPositions = _realRecalculateWindowPositions;
-    // Prevent any extra sorting of the overview
-    Workspace.UnalignedLayoutStrategy.prototype._sortRow = (row) => row;
-
 
     // Don't hide notifications when there's fullscreen windows in the workspace.
     // Fullscreen windows aren't special in paperWM and might not even be
@@ -587,6 +607,82 @@ function computeLayout(windows, layout) {
     layout.gridHeight = gridHeight;
 }
 
+function sortWindows(a, b) {
+    let aw = a.metaWindow;
+    let bw = b.metaWindow;
+    let spaceA = Tiling.spaces.spaceOfWindow(aw)
+    let spaceB = Tiling.spaces.spaceOfWindow(bw)
+    let ia = spaceA.indexOf(aw);
+    let ib = spaceB.indexOf(bw);
+    print(aw.title, bw.title, spaceA.actor, spaceB.actor)
+    if ((ia === -1 && ib === -1)) {
+        return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
+    }
+    if (ia === -1) {
+        return -1;
+    }
+    if (ib === -1) {
+        return 1;
+    }
+    return ia - ib;
+}
+
+function computeLayout338(windows, layout) {
+    let numRows = layout.numRows;
+
+    let rows = [];
+    let totalWidth = 0;
+    for (let i = 0; i < windows.length; i++) {
+        let window = windows[i];
+        let s = this._computeWindowScale(window);
+        totalWidth += window.boundingBox.width * s;
+    }
+
+    let idealRowWidth = totalWidth / numRows;
+
+    let sortedWindows = windows.slice();
+    // addWindow should have made sure we're already sorted.
+    // sortedWindows.sort(sortWindows);
+
+    let windowIdx = 0;
+    for (let i = 0; i < numRows; i++) {
+        let row = this._newRow();
+        rows.push(row);
+
+        for (; windowIdx < sortedWindows.length; windowIdx++) {
+            let window = sortedWindows[windowIdx];
+            let s = this._computeWindowScale(window);
+            let width = window.boundingBox.width * s;
+            let height = window.boundingBox.height * s;
+            row.fullHeight = Math.max(row.fullHeight, height);
+
+            // either new width is < idealWidth or new width is nearer from idealWidth then oldWidth
+            if (this._keepSameRow(row, window, width, idealRowWidth) || (i == numRows - 1)) {
+                row.windows.push(window);
+                row.fullWidth += width;
+            } else {
+                break;
+            }
+        }
+    }
+
+    let gridHeight = 0;
+    let maxRow;
+    for (let i = 0; i < numRows; i++) {
+        let row = rows[i];
+        this._sortRow(row);
+
+        if (!maxRow || row.fullWidth > maxRow.fullWidth)
+            maxRow = row;
+        gridHeight += row.fullHeight;
+    }
+
+    layout.rows = rows;
+    layout.maxColumns = maxRow.windows.length;
+    layout.gridWidth = maxRow.fullWidth;
+    layout.gridHeight = gridHeight;
+}
+
 const wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
 function _checkWorkspaces() {
     let workspaceManager = global.workspace_manager;
@@ -676,3 +772,29 @@ function _checkWorkspaces() {
     this._checkWorkspacesId = 0;
     return false;
 };
+
+
+function addWindow(window, metaWindow) {
+    if (this._windows.has(window))
+        return;
+
+    this._windows.set(window, {
+        metaWindow,
+        sizeChangedId: metaWindow.connect('size-changed', () => {
+            this._layout = null;
+            this.layout_changed();
+        }),
+        destroyId: window.connect('destroy', () =>
+            this.removeWindow(window)),
+        currentTransition: null,
+    });
+
+    this._sortedWindows.push(window);
+    this._sortedWindows.sort(sortWindows);
+
+    this._syncOverlay(window);
+    this._container.add_child(window);
+
+    this._layout = null;
+    this.layout_changed();
+}
