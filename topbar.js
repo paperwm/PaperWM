@@ -821,7 +821,8 @@ function fixFocusModeIcon() {
  * of the focusButton (mimics it).
  * @param {Number} timeout needed to allow update before querying position.
  */
-function setSpaceFocusModeIconPositions(timeout=0) {
+function setSpaceFocusModeIconPositions(timeout) {
+    timeout = timeout ?? 0;
     imports.mainloop.timeout_add(timeout, () => {
         const pos = focusButton.apply_relative_transform_to_point(Main.panel, 
             new Clutter.Vertex({ x: 0, y: 0 }));
