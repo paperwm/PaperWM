@@ -197,9 +197,9 @@ _Note: experimental, incomplete or deprecated settings may not be listed below._
 #### `animation-time`
 Changes the animation speed for PaperWM animations (e.g. animations shown for switching windows or workspaces etc.).
 
-__Input type:__ _number_ (should be strictly greater than 0)
-
-__Default value__: 0.25
+Input type | Default value 
+-----------|---------------
+_number_ (should be strictly greater than 0) | 0.25
 
 __Example:__ speeding up animations
 ```
@@ -211,9 +211,9 @@ Sets the (default) background used for PaperWM workspaces.  If set PaperWM will 
 
 _Note, you can override this for individual workspaces in the settings UI._
 
-__Input type:__ _absolute path_ of image
-
-__Default value__: _empty_
+Input type | Default value 
+-----------|---------------
+_absolute path_ of image | _empty_
 
 __Example:__
 ```
@@ -237,9 +237,10 @@ Uses the PaperWM workspace name in the in the workspace indicator in the TopBar.
 
 _Note: this does not disable the workspace indicator, but simply makes it looks like default gnome `Activities` button._
 
-__Input type:__ _boolean_ (`true` or `false`)
+Input type | Default value 
+-----------|---------------
+_Boolean_ (`true` or `false`) | `true`
 
-__Default value__: `true`
 
 __Example:__
 ```
@@ -249,9 +250,10 @@ dconf write /org/gnome/shell/extensions/paperwm/use-workspace-name false
 #### `workspace-colors`
 Sets the workspace background color palette.
 
-__Input type:__ _String array of colors_
+Input type | Default value 
+-----------|---------------
+_String array of colors_ | `['#314E6C', '#565248', '#445632', '#663822', '#494066',   '#826647', '#4B6983', '#807D74', '#5D7555', '#884631', '#625B81', '#B39169', '#7590AE', '#BAB5AB', '#83A67F', '#C1665A', '#887FA3', '#E0C39E']`
 
-__Default value__: `['#314E6C', '#565248', '#445632', '#663822', '#494066',   '#826647', '#4B6983', '#807D74', '#5D7555', '#884631', '#625B81', '#B39169', '#7590AE', '#BAB5AB', '#83A67F', '#C1665A', '#887FA3', '#E0C39E']`
 
 ### Setting window specific properities
 
