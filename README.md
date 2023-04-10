@@ -196,7 +196,7 @@ _Note: experimental, incomplete or deprecated settings may not be listed below._
 
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
-<code>animation&#8209;time</code> | Changes animation speed for PaperWM animations.  Lower values means faster animations. | _number_ (should be strictly greater than 0) | 0.25 
+<code>animation&#8209;time</code> | Changes PaperWM animation speed.  Lower values means faster animations. | _number_ (should be >= 0) | 0.25 
 
 __Example:__ speeding up animations
 ```
@@ -205,7 +205,7 @@ dconf write /org/gnome/shell/extensions/paperwm/animation-time 0.15
 
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
-<code>default&#8209;background</code> | Sets the (default) background used for PaperWM workspaces.  If set PaperWM will use this background instead of colors defined in `workspace-colors`. | _absolute path_ of image | _empty_
+<code>default&#8209;background</code>| Sets the (default) background used for PaperWM workspaces.  If set will use this background instead of colors defined in `workspace-colors`. | _absolute path_ | _empty_
 
 _Note: you can override this for individual workspaces in the settings UI._
 
@@ -216,7 +216,7 @@ dconf write /org/gnome/shell/extensions/paperwm/default-background '"/home/user/
 
 Setting | Description | Reference
 --------|-------------|----------
-<code>default&#8209;focus&#8209;mode</code> | Sets the default focus mode that will be used in workspaces. | See [Setting the default focus mode](#setting-the-default-focus-mode).
+<code>default&#8209;focus&#8209;mode</code> | Sets default focus mode used in workspaces. | See [Setting the default focus mode](#setting-the-default-focus-mode).
 
 Setting | Description | Reference
 --------|-------------|----------
@@ -224,15 +224,15 @@ Setting | Description | Reference
 
 Setting | Description | Reference
 --------|-------------|----------
-<code>show&#8209;focus&#8209;mode&#8209;icon</code> | Shows (or hides) the focus mode icon in the TopBar. | See [Hiding the focus mode icon](#hiding-the-focus-mode-icon).
+<code>show&#8209;focus&#8209;mode&#8209;icon</code> | Shows/hides the focus mode icon in TopBar. | See [Hiding the focus mode icon](#hiding-the-focus-mode-icon).
 
 Setting | Description | Reference
 --------|-------------|----------
-<code>show&#8209;window&#8209;position&#8209;bar</code>| Shows (or disables/hides) the window position indicator bar in the Topbar. | See [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar).
+<code>show&#8209;window&#8209;position&#8209;bar</code>| Shows/hides the window position indicator bar in Topbar. | See [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar).
 
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
-<code>use&#8209;workspace&#8209;name</code> | Use PaperWM workspace name in workspace indicator in the TopBar.  Setting to false uses the gnome default name (i.e. `Activities). | _Boolean_ (`true` or `false`) | `true`
+<code>use&#8209;workspace&#8209;name</code> | Use PaperWM workspace name in workspace indicator in the TopBar.  Setting to false uses the gnome default name (i.e. `Activities`). | _Boolean_ | `true`
 
 _Note: this does not disable the workspace indicator, but simply makes it looks like default gnome `Activities` button._
 
