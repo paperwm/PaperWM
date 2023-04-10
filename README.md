@@ -18,7 +18,7 @@ Clone the repo and check out the branch supporting the Gnome Shell version you'r
 - 43 (experimental, please report bugs): https://github.com/paperwm/PaperWM/tree/develop
 - 42: https://github.com/paperwm/PaperWM/tree/gnome-42
 - 40: https://github.com/paperwm/PaperWM/tree/gnome-40
-- 3.28-3.38: https://github.com/paperwm/PaperWM/releases/tag/38.2
+- 3.28-3.38: https://github.com/paperwm/PaperWM/tree/gnome-3.38
 
 
 Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script
@@ -194,7 +194,7 @@ Below is a list of user-configurable settings that are not exposed in the PaperW
 
 _Note: experimental, incomplete or deprecated settings may not be listed below._
 
-<details><summary> <h4>Expand to see user-configurable properties</h3> </summary><blockquote>
+<details><summary> <h4>Click to expand and see user-configurable properties</h3> </summary>
 
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
@@ -247,7 +247,7 @@ Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
 <code>workspace&#8209;colors</code>  | Sets the workspace background color palette. | _String array of colors_ | `['#314E6C', '#565248', '#445632', '#663822', '#494066',   '#826647', '#4B6983', '#807D74', '#5D7555', '#884631', '#625B81', '#B39169', '#7590AE', '#BAB5AB', '#83A67F', '#C1665A', '#887FA3', '#E0C39E']`
 
-</blockquote></details>
+</details>
 
 ### Setting window specific properities
 
