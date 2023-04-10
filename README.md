@@ -196,7 +196,7 @@ _Note: experimental, incomplete or deprecated settings may not be listed below._
 
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
-<nobr>`animation-time`</nobr> | Changes animation speed for PaperWM animations.  Lower values means faster animations. | _number_ (should be strictly greater than 0) | 0.25 
+<code>animation&#8209;time</code> | Changes animation speed for PaperWM animations.  Lower values means faster animations. | _number_ (should be strictly greater than 0) | 0.25 
 
 __Example:__ speeding up animations
 ```
@@ -205,7 +205,7 @@ dconf write /org/gnome/shell/extensions/paperwm/animation-time 0.15
 
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
-<nobr>`default-background`</nobr> | Sets the (default) background used for PaperWM workspaces.  If set PaperWM will use this background instead of colors defined in `workspace-colors`. | _absolute path_ of image | _empty_
+<code>default&#8209;background</code> | Sets the (default) background used for PaperWM workspaces.  If set PaperWM will use this background instead of colors defined in `workspace-colors`. | _absolute path_ of image | _empty_
 
 _Note: you can override this for individual workspaces in the settings UI._
 
@@ -216,23 +216,23 @@ dconf write /org/gnome/shell/extensions/paperwm/default-background '"/home/user/
 
 Setting | Description | Reference
 --------|-------------|----------
-<nobr>`default-focus-mode`</nobr> | Sets the default focus mode that will be used in workspaces. | See [Setting the default focus mode](#setting-the-default-focus-mode).
+<code>default&#8209;focus&#8209;mode</code> | Sets the default focus mode that will be used in workspaces. | See [Setting the default focus mode](#setting-the-default-focus-mode).
 
 Setting | Description | Reference
 --------|-------------|----------
-<nobr>`disable-topbar-styling`</nobr> | Disables PaperWM's ability to style the Gnome TopBar. | See [Gnome TopBar opacity / styling](#gnome-topbar-opacity--styling).
+<code>disable&#8209;topbar&#8209;styling</code> | Disables PaperWM's ability to style the Gnome TopBar. | See [Gnome TopBar opacity / styling](#gnome-topbar-opacity--styling).
 
 Setting | Description | Reference
 --------|-------------|----------
-<nobr>`show-focus-mode-icon`</nobr> | Shows (or hides) the focus mode icon in the TopBar. | See [Hiding the focus mode icon](#hiding-the-focus-mode-icon).
+<code>show&#8209;focus&#8209;mode&#8209;icon</code> | Shows (or hides) the focus mode icon in the TopBar. | See [Hiding the focus mode icon](#hiding-the-focus-mode-icon).
 
 Setting | Description | Reference
 --------|-------------|----------
-<nobr>`show-window-position-bar`</nobr> | Shows (or disables/hides) the window position indicator bar in the Topbar. | See [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar).
+<code>show&#8209;window&#8209;position&#8209;bar</code>| Shows (or disables/hides) the window position indicator bar in the Topbar. | See [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar).
 
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
-<nobr>`use-workspace-name`</nobr> | Use PaperWM workspace name in workspace indicator in the TopBar.  Setting to false uses the gnome default name (i.e. `Activities). | _Boolean_ (`true` or `false`) | `true`
+<code>use&#8209;workspace&#8209;name</code> | Use PaperWM workspace name in workspace indicator in the TopBar.  Setting to false uses the gnome default name (i.e. `Activities). | _Boolean_ (`true` or `false`) | `true`
 
 _Note: this does not disable the workspace indicator, but simply makes it looks like default gnome `Activities` button._
 
@@ -243,7 +243,7 @@ dconf write /org/gnome/shell/extensions/paperwm/use-workspace-name false
 
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
-<nobr>`workspace-colors`</nobr>  | Sets the workspace background color palette. | _String array of colors_ | `['#314E6C', '#565248', '#445632', '#663822', '#494066',   '#826647', '#4B6983', '#807D74', '#5D7555', '#884631', '#625B81', '#B39169', '#7590AE', '#BAB5AB', '#83A67F', '#C1665A', '#887FA3', '#E0C39E']`
+<code>workspace&#8209;colors</code>  | Sets the workspace background color palette. | _String array of colors_ | `['#314E6C', '#565248', '#445632', '#663822', '#494066',   '#826647', '#4B6983', '#807D74', '#5D7555', '#884631', '#625B81', '#B39169', '#7590AE', '#BAB5AB', '#83A67F', '#C1665A', '#887FA3', '#E0C39E']`
 
 ### Setting window specific properities
 
