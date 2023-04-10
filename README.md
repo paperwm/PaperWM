@@ -32,7 +32,7 @@ Settings](#recommended-gnome-shell-settings)) and lastly it will ask to enable P
 
 To uninstall simply run `./uninstall.sh`.
 
-Running the extension will automatically install a user config file as described in [Development & user configuration](#development--user-configuration).
+Running the extension will automatically install a user config file as described in [User configuration & development](#user-configuration--development).
 
 ### Note for Ubuntu users ###
 
@@ -166,7 +166,7 @@ When the tiling is active <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> selects
 | <kbd>Super</kbd><kbd>Tab</kbd>                    | Cycle through the most recently used scratch windows             |
 | <kbd>Super</kbd><kbd>H</kbd>                      | Minimize the current window                                      |
 
-## Development & user configuration ##
+## User configuration & development ##
 
 A default user configuration, `user.js`, is created in `~/.config/paperwm/` with three functions `init`, `enable` and `disable`. `init` will run only once on startup, `enable` and `disable` will be run whenever extensions are being told to disable and enable themselves. Eg. when locking the screen with <kbd>Super</kbd><kbd>L</kbd>.
 
@@ -176,11 +176,82 @@ We also made an emacs package, [gnome-shell-mode](https://github.com/paperwm/gno
 
 Pressing <kbd>Super</kbd><kbd>Insert</kbd> will assign the active window to a global variable `metaWindow`, its [window actor](https://developer.gnome.org/meta/stable/MetaWindowActor.html) to `actor`, its [workspace](https://developer.gnome.org/meta/stable/MetaWorkspace.html) to `workspace` and its PaperWM style workspace to `space`. This makes it easy to inspect state and test things out.
 
-#### Using dconf-editor to modify settings
+### Using PaperWM extension settings (UI) to modify settings
+PaperWM provides an extension settings UI to modify many of PaperWM's more prevalent settings.  This is available in the `gnome-extensions` application.
+
+_Note: not all PaperWM user-configurable settings are available in the settings UI._
+
+### Using dconf-editor to modify settings
+You can use `dconf-editor` to view and modify all PaperWM user settings.  You can view all settings by executing the following command from a terminal:
 
 ```shell
 GSETTINGS_SCHEMA_DIR=$HOME/.local/share/gnome-shell/extensions/paperwm@hedning:matrix.org/schemas dconf-editor /org/gnome/shell/extensions/paperwm/
 ```
+
+### PaperWM user-configurable settings _not_ available in settings UI
+
+Below is a list of user-configurable settings that are not exposed in the PaperWM settings UI.  These can be modified via [`dconf-editor`](#using-dconf-editor-to-modify-settings).
+
+_Note: experimental, incomplete or deprecated settings may not be listed below._
+
+#### `animation-time`
+Changes the animation speed for PaperWM animations (e.g. animations shown for switching windows or workspaces etc.).
+
+__Input type:__ _number_ (should be strictly greater than 0)
+
+__Default value__: 0.25
+
+__Example:__ speeding up animations
+```
+dconf write /org/gnome/shell/extensions/paperwm/animation-time 0.15
+```
+
+#### `default-background`
+Sets the (default) background used for PaperWM workspaces.  If set PaperWM will use this background instead of the colors defined in `workspace-colors`.
+
+_Note, you can override this for individual workspaces in the settings UI._
+
+__Input type:__ _absolute path_ of image
+
+__Default value__: _empty_
+
+__Example:__
+```
+dconf write /org/gnome/shell/extensions/paperwm/default-background '"/home/user/Wallpaper/mars-sunset-2k.jpg"'
+```
+
+#### `default-focus-mode`
+Sets the default focus mode that will be used in workspaces.  See [Setting the default focus mode](#setting-the-default-focus-mode).
+
+#### `disable-topbar-styling`
+Disables PaperWM's ability to style the Gnome TopBar.  See [Gnome TopBar opacity / styling](#gnome-topbar-opacity--styling).
+
+#### `show-focus-model-icon`
+Shows (or hides) the focus mode icon in the TopBar.  See [Hiding the focus mode icon](#hiding-the-focus-mode-icon).
+
+#### `show-window-position-bar`
+Shows (or disables/hides) the window position indicator bar in the Topbar.  See [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar).
+
+#### `use-workspace-name`
+Uses the PaperWM workspace name in the in the workspace indicator in the TopBar.  Setting to false uses the gnome default name (i.e. `Activities).
+
+_Note: this does not disable the workspace indicator, but simply makes it looks like default gnome `Activities` button._
+
+__Input type:__ _boolean_ (`true` or `false`)
+
+__Default value__: `true`
+
+__Example:__
+```
+dconf write /org/gnome/shell/extensions/paperwm/use-workspace-name false
+```
+
+#### `workspace-colors`
+Sets the workspace background color palette.
+
+__Input type:__ _String array of colors_
+
+__Default value__: `['#314E6C', '#565248', '#445632', '#663822', '#494066',   '#826647', '#4B6983', '#807D74', '#5D7555', '#884631', '#625B81', '#B39169', '#7590AE', '#BAB5AB', '#83A67F', '#C1665A', '#887FA3', '#E0C39E']`
 
 ### Setting window specific properities
 
@@ -274,7 +345,7 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
 
 See `examples/keybindings.js` for more examples.
 
-## Window Position Bar (colored bar segment in Top Bar)
+## Window Position Bar (colored bar segment in Top Bar) ##
 
 [#476](https://github.com/paperwm/PaperWM/pull/476) added a coloured window position bar to the Gnome Top Bar.  This allows users to visually identify the current selected window position of the scrollable viewport in the current workspace.  This is demonstrated in the following video:
 
@@ -286,11 +357,11 @@ The the window position bar can be _disabled_ from `PaperWM extension settings` 
 dconf write /org/gnome/shell/extensions/paperwm/show-window-position-bar false
 ```
 
-You can style both the coloured position bar and the dimmed "position bar backdrop" by overriding the `paperwm-window-position-bar` and `paperwm-window-position-bar-backdrop` CSS classes respectively (see `user.css` in [Development & user configuration](#development--user-configuration) section for more information). The `paperwm-window-position-bar` will also inherit the selection color (same as window borders) from `tile-preview`.
+You can style both the coloured position bar and the dimmed "position bar backdrop" by overriding the `paperwm-window-position-bar` and `paperwm-window-position-bar-backdrop` CSS classes respectively (see `user.css` in [User configuration & development](#user-configuration--development) section for more information). The `paperwm-window-position-bar` will also inherit the selection color (same as window borders) from `tile-preview`.
 
 _Note: PaperWM overrides the default Gnome Top Bar style to be completely transparent so that the dimmed `window-position-bar-backdrop` and`window-position-bar` elements are visible._
 
-## Window Focus Mode
+## Window Focus Mode ##
 
 [#482](https://github.com/paperwm/PaperWM/pull/482) added the concept of `window focus modes` to PaperWM.  A `focus mode` controls how windows are "focused".  For example, the `CENTER` focus mode causes all windows to be centered horizontally on selection, whereas the `DEFAULT` focus mode is the traditional PaperWM behaviour.
 
@@ -323,7 +394,7 @@ Users may also prefer to hide the focus mode icon.  You can do so by executing t
 dconf write /org/gnome/shell/extensions/paperwm/show-focus-mode-icon false
 ```
 
-## Gnome TopBar opacity / styling
+## Gnome TopBar opacity / styling ##
 
 PaperWM by default changes the opacity of the Gnome TopBar.  This styling is used for certain PaperWM features.  However, this styling may conflict with the TopBar styling of other extensions (that you may prefer have style the TopBar instead).
 
@@ -362,6 +433,7 @@ To use the recommended settings run
 
 These extensions are good complements to PaperWM:
 
+- [Vertical Overview](https://github.com/RensAlthuis/vertical-overview) - brings back vertically stacked workspaces
 - [Switcher](https://github.com/daniellandau/switcher) - combined window switcher and launcher
 - [Dash to Dock](https://micheleg.github.io/dash-to-dock/) - a great dock
 
