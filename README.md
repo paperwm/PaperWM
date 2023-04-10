@@ -194,6 +194,8 @@ Below is a list of user-configurable settings that are not exposed in the PaperW
 
 _Note: experimental, incomplete or deprecated settings may not be listed below._
 
+<details><summary> <h4>Expand to see user-configurable properties</h3> </summary><blockquote>
+
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
 <code>animation&#8209;time</code> | Changes PaperWM animation speed.  Lower values means faster animations. | _number_ (should be >= 0) | 0.25 
@@ -244,6 +246,8 @@ dconf write /org/gnome/shell/extensions/paperwm/use-workspace-name false
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
 <code>workspace&#8209;colors</code>  | Sets the workspace background color palette. | _String array of colors_ | `['#314E6C', '#565248', '#445632', '#663822', '#494066',   '#826647', '#4B6983', '#807D74', '#5D7555', '#884631', '#625B81', '#B39169', '#7590AE', '#BAB5AB', '#83A67F', '#C1665A', '#887FA3', '#E0C39E']`
+
+</blockquote></details>
 
 ### Setting window specific properities
 
