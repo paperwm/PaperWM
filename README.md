@@ -240,7 +240,7 @@ Setting | Description | Reference
 
 Setting | Description | Reference
 --------|-------------|----------
-<code>show&#8209;workspace&#8209;indidcator</code>| Shows/hides the workspace indicator element in Topbar. | See [The workspace stack & monitors](#the-workspace-stack--monitors).
+<code>show&#8209;workspace&#8209;indicator</code>| Shows/hides the workspace indicator element in Topbar. | See [The workspace stack & monitors](#the-workspace-stack--monitors).
 
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
