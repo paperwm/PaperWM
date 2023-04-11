@@ -122,11 +122,11 @@ The workspace name is shown in the top left corner replacing the `Activities` bu
 
 ![The workspace menu](https://github.com/paperwm/media/blob/master/menu.png)
 
-If you prefer to use another workspace indicator (or prefer none at all), you can hide this workspace name element from Gnome topbar by executing the following command from a terminal:
-
-```
-dconf write /org/gnome/shell/extensions/paperwm/show-workspace-indicator false
-```
+> If you prefer to use another workspace indicator (or prefer none at all), you can hide this workspace name element from Gnome topbar by executing the following command from a terminal:
+> 
+> ```
+> dconf write /org/gnome/shell/extensions/paperwm/show-workspace-indicator false
+> ``` 
 
 Swiping the trackpad vertically with three fingers lets you navigate the workspace stack (only available in Wayland).
 
@@ -238,11 +238,15 @@ Setting | Description | Reference
 --------|-------------|----------
 <code>show&#8209;window&#8209;position&#8209;bar</code>| Shows/hides the window position indicator bar in Topbar. | See [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar).
 
+Setting | Description | Reference
+--------|-------------|----------
+<code>show&#8209;workspace&#8209;indidcator</code>| Shows/hides the workspace indicator element in Topbar. | See [The workspace stack & monitors](#the-workspace-stack--monitors).
+
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
 <code>use&#8209;workspace&#8209;name</code> | Use PaperWM workspace name in workspace indicator in the TopBar.  Setting to false uses the gnome default name (i.e. `Activities`). | _Boolean_ | `true`
 
-_Note: this does not disable the workspace indicator, but simply makes it looks like default gnome `Activities` button._
+_Note: this does not disable the workspace indicator, but simply makes it looks like default gnome `Activities` button.  To show/hide the workspace indicator element use setting_ `show-workspace-indicator`.
 
 __Example:__
 ```
