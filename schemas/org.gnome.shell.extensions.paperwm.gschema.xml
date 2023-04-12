@@ -383,6 +383,11 @@
         <summary>Disables all topbar styling by PaperWM</summary>
     </key>
 
+    <key type="b" name="show-workspace-indicator">
+        <default>true</default>
+        <summary>Show the workspace indicator/name in the topbar</summary>
+    </key>
+
     <key type="b" name="show-window-position-bar">
         <default>true</default>
         <summary>Show the window position bar in the topbar</summary>
