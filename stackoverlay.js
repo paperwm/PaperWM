@@ -448,7 +448,7 @@ var StackOverlay = class StackOverlay {
         });
 
         const overlay = this.overlay;
-        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
+        let workArea = this.getWorkArea();
         let monitor = this.monitor;
         let x1, directions;
         if (this._direction === Meta.MotionDirection.LEFT) {
@@ -538,5 +538,13 @@ var StackOverlay = class StackOverlay {
         this.updateBarrier();
 
         return true;
+    }
+
+    /**
+     * Convenience method to return WorkArea for current monitor.
+     * @returns WorkArea
+     */
+    getWorkArea() {
+        return Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
     }
 };
