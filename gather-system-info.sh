@@ -67,20 +67,17 @@ show_gnome_extensions() {
         # compare enabled extensions to installed extensions
         # because some uninstalled extensions could still be enabled because of
         # stale gsettings
-        local enabled=$(_enabled_extensions)
-        local installed=$(_installed_extensions)
-
-        for ext in $enabled; do
-            if [[ "${installed}" =~ "${ext}" ]]; then
+        for ext in $(_enabled_extensions); do
+            if is_extension_installed "$ext"; then
                 echo "- $ext"
             fi
         done
     fi
 }
 
-_installed_extensions() {
-    ls ~/.local/share/gnome-shell/extensions/
-    ls /usr/share/gnome-shell/extensions/
+is_extension_installed() {
+    local ext=$1
+    [[ -d "$HOME/.local/share/gnome-shell/extensions/$ext" ]] || [[ -d "/usr/share/gnome-shell/extensions/$ext" ]]
 }
 
 _enabled_extensions() {
@@ -89,7 +86,7 @@ _enabled_extensions() {
     # $matches contains lines with the extension uuid and lines with ", "
     mapfile -t matches < <(_global_rematch "$s" "'([^']*)'")
     for match in "${matches[@]}"; do
-        if [[ "$match" =~ "^," ]]; then
+        if [[ "$match" =~ ^,\s* ]]; then
             continue
         fi
         echo "$match"
