@@ -87,7 +87,6 @@ function getModLock(mods) {
         grab = Main.pushModal(this.actor)
         // We expect at least a keyboard grab here
         if ((grab.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
-            Main.popModal(grabHandle);
             log("Failed to grab modal");
             throw new Error('Could not grab modal')
         }
