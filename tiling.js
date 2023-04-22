@@ -3318,8 +3318,10 @@ function showWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
     if (!actor)
         return false;
-    metaWindow.clone.cloneActor.hide();
-    metaWindow.clone.cloneActor.source = null;
+    if (metaWindow.clone?.cloneActor) {
+        metaWindow.clone.cloneActor.hide();
+        metaWindow.clone.cloneActor.source = null;
+    }
     actor.show();
     return true;
 }
@@ -3328,8 +3330,10 @@ function animateWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
     if (!actor)
         return false;
-    metaWindow.clone.cloneActor.show();
-    metaWindow.clone.cloneActor.source = actor;
+    if (metaWindow.clone?.cloneActor) {
+        metaWindow.clone.cloneActor.show();
+        metaWindow.clone.cloneActor.source = actor;
+    }
     actor.hide();
     return true;
 }
