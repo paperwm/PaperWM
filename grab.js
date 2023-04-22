@@ -50,8 +50,11 @@ var MoveGrab = class MoveGrab {
         this.center = center;
         if (this.grabbed)
             return;
+
         this.grabbed = true
-        global.display?.end_grab_op(global.get_current_time());
+        
+        global.display.end_grab_op?.(global.get_current_time());
+        
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
         this.dispatcher = new Navigator.getActionDispatcher(Clutter.GrabState.POINTER)
         this.actor = this.dispatcher.actor
