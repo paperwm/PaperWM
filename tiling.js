@@ -32,13 +32,6 @@ var Gdk = imports.gi.Gdk;
 var workspaceManager = global.workspace_manager;
 var display = global.display;
 
-// Polyfill for Gnome 44
-if (!Meta.later_add) {
-    Meta.later_add = function(...args) {
-        global.compositor.get_laters().add(...args);
-    }
-}
-
 /** @type {Spaces} */
 var spaces;
 
