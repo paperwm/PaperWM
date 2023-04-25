@@ -476,6 +476,17 @@ var MoveGrab = class MoveGrab {
         }
 
         global.display.set_cursor(Meta.Cursor.DEFAULT);
+
+        /**
+         * Gnome 44 removed the ability to manually end_grab_op.
+         * Previously we would end the grab_op before doing
+         * PaperWM grabs.  In 44, we can't do this so the grab op
+         * may still be in progress, which is okay, but won't be ended
+         * until we "click out".  We do this here if needed.
+         */
+        if (!global.display.end_grab_op) {
+            imports.gi.Atspi.generate_mouse_event(0,0,'b1c');
+        }
     }
 
     activateDndTarget(zone, first) {
