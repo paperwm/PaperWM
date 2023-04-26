@@ -3145,6 +3145,7 @@ function grabBegin(metaWindow, type) {
             })
             break;
         case Meta.GrabOp.MOVING:
+        case Meta.GrabOp.MOVING_UNCONSTRAINED: // introduced in Gnome 44
             inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
 
             if (utils.getModiferState() & Clutter.ModifierType.CONTROL_MASK) {
