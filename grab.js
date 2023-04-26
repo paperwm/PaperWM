@@ -18,12 +18,12 @@ var Utils = Extension.imports.utils;
 var Tweener = Utils.tweener;
 var Navigator = Extension.imports.navigator;
 
+var virtualPointer;
 
 function isInRect(x, y, r) {
     return r.x <= x && x < r.x + r.width &&
         r.y <= y && y < r.y + r.height;
 }
-
 
 function monitorAtPoint(gx, gy) {
     for (let monitor of Main.layoutManager.monitors) {
@@ -31,6 +31,22 @@ function monitorAtPoint(gx, gy) {
             return monitor;
     }
     return null;
+}
+
+/**
+ * Returns a virtual pointer (i.e. mouse) device that can be used to
+ * "clickout" of a drag operation when `grab_end_op` is unavailable
+ * (i.e. as of Gnome 44 where `grab_end_op` was removed).
+ * @returns Clutter.VirtualInputDevice
+ */
+function getVirtualPointer() {
+    if (!virtualPointer) {
+        virtualPointer = Clutter.get_default_backend()
+            .get_default_seat()
+            .create_virtual_device(Clutter.InputDeviceType.POINTER_DEVICE);
+    }
+
+    return virtualPointer;
 }
 
 var MoveGrab = class MoveGrab {
@@ -476,6 +492,20 @@ var MoveGrab = class MoveGrab {
         }
 
         global.display.set_cursor(Meta.Cursor.DEFAULT);
+
+        /**
+         * Gnome 44 removed the ability to manually end_grab_op.
+         * Previously we would end the grab_op before doing
+         * PaperWM grabs.  In 44, we can't do this so the grab op
+         * may still be in progress, which is okay, but won't be ended
+         * until we "click out".  We do this here if needed.
+         */
+        if (!global.display.end_grab_op) {
+            getVirtualPointer().notify_button(Clutter.get_current_event_time(),
+                Clutter.BUTTON_PRIMARY, Clutter.ButtonState.PRESSED);
+            getVirtualPointer().notify_button(Clutter.get_current_event_time(),
+                Clutter.BUTTON_PRIMARY, Clutter.ButtonState.RELEASED);
+        }
     }
 
     activateDndTarget(zone, first) {
