@@ -475,30 +475,10 @@ var MoveGrab = class MoveGrab {
         // and layout will work correctly etc.
         this.window = null;
 
-
         this.initialSpace.layout();
         // ensure window is properly activated after layout/ensureViewport tweens
-        Mainloop.timeout_add(0, () => {
+        Meta.later_add(Meta.LaterType.IDLE, () => {
             Main.activateWindow(metaWindow);
-
-            // if floating or scratch, then exit (no need to click-out)
-            if (this.initialSpace.isFloating(metaWindow) ||
-                Scratch.isScratchWindow(metaWindow)) {
-                return;
-            }
-            /**
-             * Gnome 44 removed the ability to manually end_grab_op.
-             * Previously we would end the grab_op before doing
-             * PaperWM grabs.  In 44, we can't do this so the grab op
-             * may still be in progress, which is okay, but won't be ended
-             * until we "click out".  We do this here if needed.
-             */
-            if (!global.display.end_grab_op) {
-                getVirtualPointer().notify_button(Clutter.get_current_event_time(),
-                    Clutter.BUTTON_PRIMARY, Clutter.ButtonState.PRESSED);
-                getVirtualPointer().notify_button(Clutter.get_current_event_time(),
-                    Clutter.BUTTON_PRIMARY, Clutter.ButtonState.RELEASED);
-            }
         });
 
         // // Make sure the window is on the correct workspace.
@@ -511,6 +491,28 @@ var MoveGrab = class MoveGrab {
         }
 
         global.display.set_cursor(Meta.Cursor.DEFAULT);
+
+        /**
+         * Gnome 44 removed the ability to manually end_grab_op.
+         * Previously we would end the grab_op before doing
+         * PaperWM grabs.  In 44, we can't do this so the grab op
+         * may still be in progress, which is okay, but won't be ended
+         * until we "click out".  We do this here if needed.
+         */
+        Meta.later_add(Meta.LaterType.BEFORE_REDRAW, () => {
+            if (!global.display.end_grab_op) {
+                // move to current cursort position
+                let [x, y, _mods] = global.get_pointer();
+                getVirtualPointer().notify_absolute_motion(
+                    Clutter.get_current_event_time(),
+                    x, y);
+
+                getVirtualPointer().notify_button(Clutter.get_current_event_time(),
+                    Clutter.BUTTON_PRIMARY, Clutter.ButtonState.PRESSED);
+                getVirtualPointer().notify_button(Clutter.get_current_event_time(),
+                    Clutter.BUTTON_PRIMARY, Clutter.ButtonState.RELEASED);
+            }
+        });
     }
 
     activateDndTarget(zone, first) {
