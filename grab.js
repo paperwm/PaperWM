@@ -58,6 +58,10 @@ var MoveGrab = class MoveGrab {
 
         this.initialSpace = space || Tiling.spaces.spaceOfWindow(metaWindow);
         this.zoneActors = new Set();
+
+        // save whether this was tiled window at start of grab
+        this.wasTiled = !(this.initialSpace.isFloating(metaWindow) ||
+            Scratch.isScratchWindow(metaWindow));
     }
 
     begin({center} = {}) {
@@ -500,7 +504,7 @@ var MoveGrab = class MoveGrab {
          * until we "click out".  We do this here if needed.
          */
         Meta.later_add(Meta.LaterType.BEFORE_REDRAW, () => {
-            if (!global.display.end_grab_op) {
+            if (!global.display.end_grab_op && this.wasTiled) {
                 // move to current cursort position
                 let [x, y, _mods] = global.get_pointer();
                 getVirtualPointer().notify_absolute_motion(
