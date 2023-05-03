@@ -432,6 +432,8 @@ There's a few Gnome Shell settings which works poorly with PaperWM. Namely
   spanning all monitors
 - `edge-tiling`: We don't support the native half tiled windows
 - `attach-modal-dialogs`: Attached modal dialogs can cause visual glitching
+- `toggle-tiled-left`: Default GNOME keyboard shortcut `super+left` collides with a default PaperWM shortcut. We disable the GNOME shortcut
+- `toggle-tiled-right`: Default GNOME keyboard shortcut `super+right` collides with a default PaperWM shortcut. We disable the GNOME shortcut
 
 To use the recommended settings run
 [`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
