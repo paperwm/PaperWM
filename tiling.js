@@ -3376,6 +3376,7 @@ function toggleMaximizeHorizontally(metaWindow) {
 }
 
 function resizeHInc(metaWindow) {
+    metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
@@ -3396,6 +3397,7 @@ function resizeHInc(metaWindow) {
 }
 
 function resizeHDec(metaWindow) {
+    metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
@@ -3417,6 +3419,7 @@ function resizeHDec(metaWindow) {
 }
 
 function resizeWInc(metaWindow) {
+    metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
@@ -3437,6 +3440,7 @@ function resizeWInc(metaWindow) {
 }
 
 function resizeWDec(metaWindow) {
+    metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
