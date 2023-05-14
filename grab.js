@@ -503,7 +503,7 @@ var MoveGrab = class MoveGrab {
          * may still be in progress, which is okay, but won't be ended
          * until we "click out".  We do this here if needed.
          */
-        Meta.later_add(Meta.LaterType.BEFORE_REDRAW, () => {
+        Meta.later_add(Meta.LaterType.IDLE, () => {
             if (!global.display.end_grab_op && this.wasTiled) {
                 // move to current cursort position
                 let [x, y, _mods] = global.get_pointer();
