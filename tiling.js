@@ -1387,28 +1387,24 @@ border-radius: ${borderWidth}px;
 
         this.actor.insert_child_below(this.background, null);
 
-        this.signals.connect(
-            this.background, 'button-press-event',
+        this.signals.connect(this.background, 'button-press-event',
             (actor, event) => {
                 if (inGrab) {
                     return;
                 }
+
+                /**
+                 * if user clicks on window, then ensureViewport on that window before exiting
+                 */
                 let [gx, gy, $] = global.get_pointer();
                 let [ok, x, y] = this.actor.transform_stage_point(gx, gy);
                 let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
                 if (windowAtPoint) {
                     ensureViewport(windowAtPoint, this);
-                    spaces.selectedSpace = this
-                    /**
-                     * disabled to address gnome-44 grab issues. Simple selection of window
-                     * should not execute a MoveGrab (avoid getting stuck in grab state).
-                     */
-                    //inGrab = new Extension.imports.grab.MoveGrab(windowAtPoint, Meta.GrabOp.MOVING, this);
-                    //inGrab.begin();
-                } else if (inPreview) {
-                    spaces.selectedSpace = this;
-                    Navigator.getNavigator().finish();
                 }
+
+                spaces.selectedSpace = this;
+                Navigator.getNavigator().finish();
             });
 
         this.signals.connect(
@@ -1502,7 +1498,6 @@ border-radius: ${borderWidth}px;
        layout of oldSpace if present.
     */
     addAll(oldSpace) {
-
         // On gnome-shell-restarts the windows are moved into the viewport, but
         // they're moved minimally and the stacking is not changed, so the tiling
         // order is preserved (sans full-width windows..)
@@ -2159,7 +2154,6 @@ var Spaces = class Spaces extends Map {
         const padding_percentage = 4;
         let last = monitorSpaces.length - 1;
         monitorSpaces.forEach((space, i) => {
-
             let padding = (space.height * scale / 100) * padding_percentage;
             let center = (space.height - (space.height * scale)) / 2;
             let space_y;
