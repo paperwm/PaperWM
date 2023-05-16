@@ -393,7 +393,7 @@ var MoveGrab = class MoveGrab {
             time: prefs.animation_time,
             scale_x: 1,
             scale_y: 1,
-            opacity: clone.__oldOpacity || 255
+            opacity: clone?.__oldOpacity ?? 255,
         };
 
         if (this.dnd) {
