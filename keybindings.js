@@ -10,6 +10,7 @@ var Gdk = imports.gi.Gdk;
 var Gtk = imports.gi.Gtk;
 var Gio = imports.gi.Gio;
 var Meta = imports.gi.Meta;
+var GLib = imports.gi.GLib;
 
 var Utils = Extension.imports.utils;
 var Main = imports.ui.main;
@@ -568,14 +569,38 @@ function getActionId(mutterName) {
 function overrideAction(mutterName, action) {
     let id = getActionId(mutterName);
     Main.wm.setCustomKeybindingHandler(mutterName, Shell.ActionMode.NORMAL,
-                                       action.keyHandler);
+        action.keyHandler);
     if (id === Meta.KeyBindingAction.NONE)
         return;
     actionIdMap[id] = action;
 }
 
+/**
+ * Disables known keybind clashes with default gnome operations.
+ */
+function disableKnownClashes() {
+    // disable specific actions known to cause issues
+    const mutterbinds = convenience.getSettings('org.gnome.mutter.keybindings');
+    [
+        'toggle-tiled-left', 'toggle-tiled-right'
+    ].forEach(key => {
+        try {
+            mutterbinds.set_value(key, new GLib.Variant('as', []));
+        } catch (e) {}
+    });
+
+    const wmbinds = convenience.getSettings('org.gnome.desktop.wm.keybindings');
+    [
+        'switch-group', 'switch-group-backward',
+        'switch-to-workspace-left', 'switch-to-workspace-right',
+    ].forEach(key => {
+        try {
+            wmbinds.set_value(key, new GLib.Variant('as', []));
+        } catch (e) {}
+    });
+}
+
 function resolveConflicts() {
-    resetConflicts();
     for (let conflict of Settings.findConflicts()) {
         let {name, conflicts} = conflict;
         let action = byMutterName(name);
@@ -600,8 +625,7 @@ function resetConflicts() {
            ) {
             Main.wm.setCustomKeybindingHandler(
                 name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
+                Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
                 Main.wm._showWorkspaceSwitcher.bind(Main.wm));
             continue;
         }
@@ -663,7 +687,7 @@ function resetConflicts() {
             break;
         case  'toggle-application-view':
             // overview._controls: Backward compatibility for 3.34 and below:
-                const viewSelector = (Main.overview._overview._controls || Main.overview.viewSelector || Main.overview._controls.viewSelector);
+            const viewSelector = (Main.overview._overview._controls || Main.overview.viewSelector || Main.overview._controls.viewSelector);
 
             Main.wm.setCustomKeybindingHandler(
                 name,
@@ -710,6 +734,7 @@ function resetConflicts() {
 }
 
 function enable() {
+    disableKnownClashes();
     let schemas = [...Settings.conflictSettings,
                    convenience.getSettings(KEYBINDINGS_KEY)];
     schemas.forEach(schema => {
