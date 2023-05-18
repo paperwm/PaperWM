@@ -51,9 +51,13 @@ set-with-backup org.gnome.shell.overrides edge-tiling false
 # Attached modal dialogs isn't handled very well
 set-with-backup org.gnome.shell.overrides attach-modal-dialogs false
 
-# Gnome 44 tiling left/right shortcuts collide with PaperWM shortcuts (super + left/right)
+# Disable conflicting default keybindings
 set-with-backup org.gnome.mutter.keybindings toggle-tiled-left "[]"
 set-with-backup org.gnome.mutter.keybindings toggle-tiled-right "[]"
+set-with-backup org.gnome.desktop.wm.keybindings switch-group "[]"
+set-with-backup org.gnome.desktop.wm.keybindings switch-group-backward "[]"
+set-with-backup org.gnome.desktop.wm.keybindings switch-to-workspace-left "[]"
+set-with-backup org.gnome.desktop.wm.keybindings switch-to-workspace-right "[]"
 
 echo
 echo "Run $RESTORE_SETTINGS_SCRIPT to revert changes"
