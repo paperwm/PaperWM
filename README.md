@@ -2,8 +2,6 @@
 
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://paperwm.zulipchat.com)
 
-> ### _`Gnome 44 users`: we're getting closer to adding Gnome 44 support to the `develop` branch.  In the meantime, if you're on Gnome 44, please use the [fixes-gnome-44-support](https://github.com/paperwm/PaperWM/tree/fixes-gnome-44-support) branch (see PR [#515](https://github.com/paperwm/PaperWM/pull/515) for more information)._
-
 PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension providing scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
 Supports Gnome Shell from 3.28 to 44 on X11 and wayland.
