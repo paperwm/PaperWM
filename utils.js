@@ -270,7 +270,6 @@ function toggleCloneMarks() {
     }
 }
 
-
 function sum(array) {
     return array.reduce((a, b) => a + b, 0);
 }
@@ -285,18 +284,9 @@ function zip(...as) {
 }
 
 function warpPointer(x, y) {
-    // 3.36 added support for warping in wayland
-    if (Meta.is_wayland_compositor() && Clutter.Backend.prototype.get_default_seat) {
-        let backend = Clutter.get_default_backend();
-        let seat = backend.get_default_seat();
-        seat.warp_pointer(x, y);
-        return;
-    } else {
-        let display = Gdk.Display.get_default();
-        let deviceManager = display.get_device_manager();
-        let pointer = deviceManager.get_client_pointer();
-        pointer.warp(Gdk.Screen.get_default(), x, y)
-    }
+    let backend = Clutter.get_default_backend();
+    let seat = backend.get_default_seat();
+    seat.warp_pointer(x, y);
 }
 
 /**

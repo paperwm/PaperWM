@@ -1387,24 +1387,24 @@ border-radius: ${borderWidth}px;
 
         this.actor.insert_child_below(this.background, null);
 
-        this.signals.connect(
-            this.background, 'button-press-event',
+        this.signals.connect(this.background, 'button-press-event',
             (actor, event) => {
                 if (inGrab) {
                     return;
                 }
+
+                /**
+                 * if user clicks on window, then ensureViewport on that window before exiting
+                 */
                 let [gx, gy, $] = global.get_pointer();
                 let [ok, x, y] = this.actor.transform_stage_point(gx, gy);
                 let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
                 if (windowAtPoint) {
                     ensureViewport(windowAtPoint, this);
-                    spaces.selectedSpace = this
-                    inGrab = new Extension.imports.grab.MoveGrab(windowAtPoint, Meta.GrabOp.MOVING, this);
-                    inGrab.begin();
-                } else if (inPreview) {
-                    spaces.selectedSpace = this;
-                    Navigator.getNavigator().finish();
                 }
+
+                spaces.selectedSpace = this;
+                Navigator.getNavigator().finish();
             });
 
         this.signals.connect(
@@ -1498,7 +1498,6 @@ border-radius: ${borderWidth}px;
        layout of oldSpace if present.
     */
     addAll(oldSpace) {
-
         // On gnome-shell-restarts the windows are moved into the viewport, but
         // they're moved minimally and the stacking is not changed, so the tiling
         // order is preserved (sans full-width windows..)
@@ -1666,11 +1665,12 @@ var Spaces = class Spaces extends Map {
 
         this.signals.connect(display, 'window-created',
                         this.window_created.bind(this));
+        
         this.signals.connect(display, 'grab-op-begin',
                         (display, mw, type) => grabBegin(mw, type));
         this.signals.connect(display, 'grab-op-end',
                         (display, mw, type) => grabEnd(mw, type));
-
+        
         this.signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChanged.bind(this));
 
         this.signals.connect(global.window_manager, 'switch-workspace',
@@ -2154,7 +2154,6 @@ var Spaces = class Spaces extends Map {
         const padding_percentage = 4;
         let last = monitorSpaces.length - 1;
         monitorSpaces.forEach((space, i) => {
-
             let padding = (space.height * scale / 100) * padding_percentage;
             let center = (space.height - (space.height * scale)) / 2;
             let space_y;
@@ -3145,6 +3144,7 @@ function grabBegin(metaWindow, type) {
             })
             break;
         case Meta.GrabOp.MOVING:
+        case Meta.GrabOp.MOVING_UNCONSTRAINED: // introduced in Gnome 44
             inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
 
             if (utils.getModiferState() & Clutter.ModifierType.CONTROL_MASK) {
@@ -3311,8 +3311,10 @@ function showWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
     if (!actor)
         return false;
-    metaWindow.clone.cloneActor.hide();
-    metaWindow.clone.cloneActor.source = null;
+    if (metaWindow.clone?.cloneActor) {
+        metaWindow.clone.cloneActor.hide();
+        metaWindow.clone.cloneActor.source = null;
+    }
     actor.show();
     return true;
 }
@@ -3321,8 +3323,10 @@ function animateWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
     if (!actor)
         return false;
-    metaWindow.clone.cloneActor.show();
-    metaWindow.clone.cloneActor.source = actor;
+    if (metaWindow.clone?.cloneActor) {
+        metaWindow.clone.cloneActor.show();
+        metaWindow.clone.cloneActor.source = actor;
+    }
     actor.hide();
     return true;
 }
@@ -3366,6 +3370,7 @@ function toggleMaximizeHorizontally(metaWindow) {
 }
 
 function resizeHInc(metaWindow) {
+    metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
@@ -3386,6 +3391,7 @@ function resizeHInc(metaWindow) {
 }
 
 function resizeHDec(metaWindow) {
+    metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
@@ -3407,6 +3413,7 @@ function resizeHDec(metaWindow) {
 }
 
 function resizeWInc(metaWindow) {
+    metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
@@ -3427,6 +3434,7 @@ function resizeWInc(metaWindow) {
 }
 
 function resizeWDec(metaWindow) {
+    metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);

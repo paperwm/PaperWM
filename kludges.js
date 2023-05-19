@@ -43,20 +43,16 @@ function overrideHotCorners() {
     }
 }
 
+// polyfill for 3.28 (`get_monitor_scale` first appeared in 3.31.92). 
 if (!global.display.get_monitor_scale) {
-    // `get_monitor_scale` first appeared in 3.31.92. Polyfill a fallback for 3.28
     global.display.constructor.prototype.get_monitor_scale = () => 1.0;
 }
 
+// polyfill for 3.28 (`get_monitor_neighbor_index`)
 if (!global.display.get_monitor_neighbor_index) {
-    // `get_monitor_neighbor_index` polyfill a fallback for 3.28
     global.display.constructor.prototype.get_monitor_neighbor_index = function(...args) {
         return global.screen.get_monitor_neighbor_index(...args);
     }
-}
-
-if (!global.display.set_cursor) {
-    global.display.constructor.prototype.set_cursor = global.screen.set_cursor.bind(global.screen);
 }
 
 // polyfill for 3.28
@@ -64,8 +60,8 @@ if (!Meta.DisplayDirection && Meta.ScreenDirection) {
     Meta.DisplayDirection = Meta.ScreenDirection;
 }
 
+// polyfill for 3.28
 if (!St.Settings) {
-    // `St.Settings` doesn't exist in 3.28 - polyfill:
     let Gtk = imports.gi.Gtk;
     let gtkSettings = Gtk.Settings.get_default();
     let polyfillSettings = new (class PolyfillStSettings {
@@ -82,14 +78,14 @@ if (!St.Settings) {
     };
 }
 
+// polyfill for 3.28
 if (!Clutter.Actor.prototype.set) {
-    // `set` doesn't exist in 3.28 - polyfill:
     Clutter.Actor.prototype.set = function(params) {
         Object.assign(this, params);
     }
 }
 
-// Polyfill gnome-3.34 transition API, taken from gnome-shell/js/ui/environment.js
+// polyfill 3.34 transition API, taken from gnome-shell/js/ui/environment.js
 if (version[0] >= 3 && version[1] < 34) {
     function _makeEaseCallback(params, cleanup) {
         let onComplete = params.onComplete;
@@ -179,7 +175,12 @@ if (version[0] >= 3 && version[1] < 34) {
     };
 }
 
-// Polyfill
+// polyfill
+if (!global.display.set_cursor) {
+    global.display.constructor.prototype.set_cursor = global.screen.set_cursor.bind(global.screen);
+}
+
+// polyfill
 if (!Clutter.Actor.prototype.raise) {
     Clutter.Actor.prototype.raise = function raise(above) {
         const parent = this.get_parent();
@@ -189,12 +190,14 @@ if (!Clutter.Actor.prototype.raise) {
     }
 }
 
+// polyfill
 if (!Clutter.Actor.prototype.raise_top) {
   Clutter.Actor.prototype.raise_top = function raise_top() {
         this.raise(null);
     }
 }
 
+// polyfill
 if (!Clutter.Actor.prototype.reparent) {
     Clutter.Actor.prototype.reparent = function reparent(newParent) {
         const parent = this.get_parent();
@@ -205,9 +208,17 @@ if (!Clutter.Actor.prototype.reparent) {
     }
 }
 
-if (! Clutter.Vertex) {
+// polyfill
+if (!Clutter.Vertex) {
     const {Graphene} = imports.gi;
     Clutter.Vertex = Graphene.Point3D;
+}
+
+// polyfill for 44
+if (!Meta.later_add && global.compositor?.get_laters()) {
+    Meta.later_add = function(...args) {
+        global.compositor.get_laters().add(...args);
+    }
 }
 
 // Workspace.Workspace._realRecalculateWindowPositions

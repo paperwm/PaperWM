@@ -6,7 +6,9 @@
 
 PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension providing scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
-Supports Gnome Shell from 3.28 to 43 on X11 and wayland.
+Supports Gnome Shell from 3.28 to 44 on X11 and wayland.
+
+>**Note:** while PaperWM can be installed on a wide range of Gnome versions, new features aren't generally backported to prevous Gnome Shell versions.  Fixes may be backported on request (please submit a [new issue](https://github.com/paperwm/PaperWM/issues/new/choose) if you've identified a recent fix that should be backported and you can help with testing).
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
@@ -16,8 +18,8 @@ We hang out on [zulip](https://paperwm.zulipchat.com).
 
 Clone the repo and check out the branch supporting the Gnome Shell version you're running.
 
-- 44 (experimental, not officially supported yet, please report bugs): https://github.com/paperwm/PaperWM/tree/develop
-- 43 (experimental, please report bugs): https://github.com/paperwm/PaperWM/tree/develop
+- 44 (targeted for current support): https://github.com/paperwm/PaperWM/tree/develop
+- 43: https://github.com/paperwm/PaperWM/tree/gnome-43
 - 42: https://github.com/paperwm/PaperWM/tree/gnome-42
 - 40: https://github.com/paperwm/PaperWM/tree/gnome-40
 - 3.28-3.38: https://github.com/paperwm/PaperWM/tree/gnome-3.38
@@ -432,6 +434,8 @@ There's a few Gnome Shell settings which works poorly with PaperWM. Namely
   spanning all monitors
 - `edge-tiling`: We don't support the native half tiled windows
 - `attach-modal-dialogs`: Attached modal dialogs can cause visual glitching
+- `toggle-tiled-left`: Default GNOME keyboard shortcut `super+left` collides with a default PaperWM shortcut. We disable the GNOME shortcut
+- `toggle-tiled-right`: Default GNOME keyboard shortcut `super+right` collides with a default PaperWM shortcut. We disable the GNOME shortcut
 
 To use the recommended settings run
 [`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
