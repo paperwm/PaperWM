@@ -575,32 +575,8 @@ function overrideAction(mutterName, action) {
     actionIdMap[id] = action;
 }
 
-/**
- * Disables known keybind clashes with default gnome operations.
- */
-function disableKnownClashes() {
-    // disable specific actions known to cause issues
-    const mutterbinds = convenience.getSettings('org.gnome.mutter.keybindings');
-    [
-        'toggle-tiled-left', 'toggle-tiled-right'
-    ].forEach(key => {
-        try {
-            mutterbinds.set_value(key, new GLib.Variant('as', []));
-        } catch (e) {}
-    });
-
-    const wmbinds = convenience.getSettings('org.gnome.desktop.wm.keybindings');
-    [
-        'switch-group', 'switch-group-backward',
-        'switch-to-workspace-left', 'switch-to-workspace-right',
-    ].forEach(key => {
-        try {
-            wmbinds.set_value(key, new GLib.Variant('as', []));
-        } catch (e) {}
-    });
-}
-
 function resolveConflicts() {
+    resetConflicts();
     for (let conflict of Settings.findConflicts()) {
         let {name, conflicts} = conflict;
         let action = byMutterName(name);
@@ -734,7 +710,6 @@ function resetConflicts() {
 }
 
 function enable() {
-    disableKnownClashes();
     let schemas = [...Settings.conflictSettings,
                    convenience.getSettings(KEYBINDINGS_KEY)];
     schemas.forEach(schema => {

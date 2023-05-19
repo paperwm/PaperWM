@@ -242,7 +242,7 @@ function keystrToKeycombo(keystr) {
         keystr = keystr.replace('Above_Tab', 'A');
         aboveTab = true;
     }
-    let [key, mask] = Gtk.accelerator_parse(keystr);
+    let [accel, key, mask] = Gtk.accelerator_parse(keystr);
 
     if (aboveTab)
         key = META_KEY_ABOVE_TAB;
