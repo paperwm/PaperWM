@@ -6,7 +6,7 @@ PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeSh
 
 Supports Gnome Shell from 3.28 to 44 on X11 and wayland.
 
->**Note:** while PaperWM can be installed on a wide range of Gnome versions, fixes and new features, in general, aren't backported to prevous Gnome Shell versions.
+>**Note:** while PaperWM can be installed on a wide range of Gnome versions, new features aren't generally backported to prevous Gnome Shell versions.  Fixes may be backported on request (please submit a [new issue](https://github.com/paperwm/PaperWM/issues/new/choose) if you've identified a recent fix that should be backported and you can help with testing).
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
