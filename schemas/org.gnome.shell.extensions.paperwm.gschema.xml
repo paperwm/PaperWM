@@ -108,7 +108,7 @@
         <default><![CDATA[['<Super>t']]]></default>
         <summary>Take the window, dropping it when finished navigating</summary>
     </key>
-    
+
     <key type="as" name="switch-focus-mode">
       <default><![CDATA[['<Super><Shift>c']]]></default>
       <summary>Switch between Window Focus Modes (e.g. default, center)</summary>
@@ -124,19 +124,19 @@
     </key>
 
     <key type="as" name="switch-right">
-        <default><![CDATA[['<Super>Right']]]></default>
+        <default><![CDATA[['<Super>Right', '<Super>D']]]></default>
         <summary>Switch to the right window</summary>
     </key>
     <key type="as" name="switch-left">
-        <default><![CDATA[['<Super>Left']]]></default>
+        <default><![CDATA[['<Super>Left', '<Super>A']]]></default>
         <summary>Switch to the left window</summary>
     </key>
     <key type="as" name="switch-up">
-        <default><![CDATA[['<Super>Up']]]></default>
+        <default><![CDATA[['<Super>Up', '<Super>W']]]></default>
         <summary>Switch to the above window</summary>
     </key>
     <key type="as" name="switch-down">
-        <default><![CDATA[['<Super>Down']]]></default>
+        <default><![CDATA[['<Super>Down', '<Super>S']]]></default>
         <summary>Switch to the below window</summary>
     </key>
 
@@ -150,19 +150,19 @@
     </key>
 
     <key type="as" name="move-right">
-      <default><![CDATA[['<Super><Ctrl>period', '<Super><Shift>period', '<Super><Ctrl>Right']]]></default>
+      <default><![CDATA[['<Super><Ctrl>period', '<Super><Shift>period', '<Super><Ctrl>Right', '<Super><Ctrl>D', '<Super><Alt>D']]]></default>
       <summary>Move the active window to the right</summary>
     </key>
     <key type="as" name="move-left">
-      <default><![CDATA[['<Super><Ctrl>comma', '<Super><Shift>comma', '<Super><Ctrl>Left']]]></default>
+      <default><![CDATA[['<Super><Ctrl>comma', '<Super><Shift>comma', '<Super><Ctrl>Left', '<Super><Ctrl>A', '<Super><Alt>A']]]></default>
       <summary>Move the active window to the left</summary>
     </key>
     <key type="as" name="move-up">
-        <default><![CDATA[['<Super><Ctrl>Up']]]></default>
+        <default><![CDATA[['<Super><Ctrl>Up', '<Super><Ctrl>W', '<Super><Alt>W']]]></default>
         <summary>Move the active window up</summary>
     </key>
     <key type="as" name="move-down">
-        <default><![CDATA[['<Super><Ctrl>Down']]]></default>
+        <default><![CDATA[['<Super><Ctrl>Down', '<Super><Ctrl>S', '<Super><Alt>S']]]></default>
         <summary>Move the active window down</summary>
     </key>
 
@@ -228,7 +228,7 @@
     </key>
 
     <key type="as" name="close-window">
-      <default><![CDATA[['<Super>BackSpace']]]></default>
+      <default><![CDATA[['<Super>BackSpace', '<Super>Q']]]></default>
       <summary>Close the active window</summary>
     </key>
   </schema>
