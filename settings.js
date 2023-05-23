@@ -237,9 +237,9 @@ function printWorkspaceSettings() {
 function keystrToKeycombo(keystr) {
     // Above_Tab is a fake keysymbol provided by mutter
     let aboveTab = false;
-    if (keystr.match(/Above_Tab/)) {
+    if (keystr.match(/Above_Tab/) || keystr.match(/grave/)) {
         // Gtk bails out if provided with an unknown keysymbol
-        keystr = keystr.replace('Above_Tab', 'A');
+        keystr = keystr.replace('Above_Tab', 'a');
         aboveTab = true;
     }
     let [ok, key, mask] = Gtk.accelerator_parse(keystr);
