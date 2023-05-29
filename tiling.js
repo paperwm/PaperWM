@@ -2125,8 +2125,8 @@ var Spaces = class Spaces extends Map {
 
         if (move && this.selectedSpace.selectedWindow) {
             const navigator = Navigator.getNavigator();
-
-            if (navigator._moving == null || (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
+            if (navigator._moving == null || 
+                (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
                     { navigator });
@@ -2431,7 +2431,6 @@ var Spaces = class Spaces extends Map {
             }
             above = above.get_next_sibling();
         }
-
     }
 
     _updateMonitor() {
@@ -3828,6 +3827,7 @@ function moveUpSpace(mw, space) {
 /**
    Detach the @metaWindow, storing it at the bottom right corner while
    navigating. When done, insert all the detached windows again.
+   Activates last taken window when navigator operation complete.
  */
 function takeWindow(metaWindow, space, {navigator}) {
     space = space || spaces.selectedSpace;
@@ -3838,14 +3838,18 @@ function takeWindow(metaWindow, space, {navigator}) {
 
     if (!navigator._moving) {
         navigator._moving = [];
-        let id = navigator.connect('destroy', () => {
-            navigator.disconnect(id);
+        signals.connectOneShot(navigator, 'destroy', () => {
             let space = spaces.selectedSpace;
             navigator._moving.reverse().forEach(w => {
                 w.change_workspace(space.workspace);
                 if (w.get_workspace() === space.workspace) {
                     insertWindow(w, {existing: true});
                 }
+            });
+
+            // activate last metaWindow after taken windows inserted
+            Meta.later_add(Meta.LaterType.IDLE, () => {
+                ensureViewport(metaWindow);
             });
         });
     }
