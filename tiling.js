@@ -3850,6 +3850,7 @@ function takeWindow(metaWindow, space, {navigator}) {
             // activate last metaWindow after taken windows inserted
             Meta.later_add(Meta.LaterType.IDLE, () => {
                 ensureViewport(metaWindow);
+                Main.activateWindow(metaWindow);
             });
         });
     }
