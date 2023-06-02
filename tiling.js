@@ -2009,20 +2009,14 @@ var Spaces = class Spaces extends Map {
      * @param {boolean} visible 
      */
     setSpaceTopbarElementsVisible(visible=true, changeTopBarStyle=true) {
-        // set visibility on space elements (like workspace name)
-        this.forEach(s => {
-            s.setSpaceTopbarElementsVisible(visible, changeTopBarStyle);
-        });
-    }
+        // get position of topbar focus icon to replicate in spaces
+        const pos = TopBar.focusButton.apply_relative_transform_to_point(Main.panel, 
+            new Clutter.Vertex({ x: 0, y: 0 }));
 
-    /**
-     * Sets the focusIconPosition for all spaces.
-     * @param {int} x 
-     * @param {int} y 
-     */
-    setFocusIconPosition(x=0, y=0) {
+        // for each space, set/update focusModeIcon positon and set visibilities
         this.forEach(s => {
-            s.focusModeIcon.set_position(x, y);
+            s.focusModeIcon.set_position(pos.x, pos.y);
+            s.setSpaceTopbarElementsVisible(visible, changeTopBarStyle);
         });
     }
 
