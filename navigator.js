@@ -159,6 +159,7 @@ function getModLock(mods) {
         // https://github.com/paperwm/PaperWM/issues/70
         if (keysym == Clutter.KEY_Escape) {
             this._destroy = true;
+            getNavigator().accept();
             getNavigator().destroy();
             return Clutter.EVENT_STOP;
         }
@@ -171,7 +172,7 @@ function getModLock(mods) {
     _keyReleaseEvent(actor, event) {
         let keysym = event.get_key_symbol();
         if (this._destroy) {
-            // dismissDispatcher(Clutter.GrabState.KEYBOARD)
+            dismissDispatcher(Clutter.GrabState.KEYBOARD)
         }
 
         if (this._modifierMask) {
@@ -221,7 +222,7 @@ function getModLock(mods) {
 
     _finish(timestamp) {
         let nav = getNavigator();
-        getNavigator().accept();
+        nav.accept();
         !this._destroy && nav.destroy();
         dismissDispatcher(Clutter.GrabState.KEYBOARD)
     }
