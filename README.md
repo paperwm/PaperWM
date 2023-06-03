@@ -21,7 +21,7 @@ Clone the repo and check out the branch supporting the Gnome Shell version you'r
 - 3.28-3.38: https://github.com/paperwm/PaperWM/tree/gnome-3.38
 
 
-Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script
+Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/develop/install.sh) script
 from the repository. The installer will create a link to the repo in
 `$XDG_DATA_HOME/gnome-shell/extensions/`. It will then ask if you want to apply
 the recommended settings (see [Recommended
@@ -432,7 +432,7 @@ There's a few Gnome Shell settings which works poorly with PaperWM. Namely
 - `attach-modal-dialogs`: Attached modal dialogs can cause visual glitching
 
 To use the recommended settings run
-[`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
+[`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/develop/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
 
 
 ## Recommended extensions ##
