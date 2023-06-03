@@ -6,7 +6,7 @@ PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeSh
 
 Supports Gnome Shell from 3.28 to 44 on X11 and wayland.
 
->**Note:** while PaperWM can be installed on a wide range of Gnome versions, new features aren't generally backported to prevous Gnome Shell versions.  Fixes may be backported on request (please submit a [new issue](https://github.com/paperwm/PaperWM/issues/new/choose) if you've identified a recent fix that should be backported and you can help with testing).
+>**Note:** while PaperWM can be installed on a wide range of Gnome versions, new features aren't generally backported to versions NOT targeted for current support (see [Installation](#installation) section).  Fixes may be backported on request (please submit a [new issue](https://github.com/paperwm/PaperWM/issues/new/choose) if you've identified a recent fix that should be backported and you can help with testing).
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
@@ -16,10 +16,8 @@ We hang out on [zulip](https://paperwm.zulipchat.com).
 
 Clone the repo and check out the branch supporting the Gnome Shell version you're running.
 
-- 44 (targeted for current support): https://github.com/paperwm/PaperWM/tree/develop
-- 43: https://github.com/paperwm/PaperWM/tree/gnome-43
-- 42: https://github.com/paperwm/PaperWM/tree/gnome-42
-- 40: https://github.com/paperwm/PaperWM/tree/gnome-40
+- 42-44 (targeted for current support): https://github.com/paperwm/PaperWM/tree/develop
+- 40-41: https://github.com/paperwm/PaperWM/tree/gnome-40
 - 3.28-3.38: https://github.com/paperwm/PaperWM/tree/gnome-3.38
 
 
