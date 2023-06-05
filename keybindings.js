@@ -113,12 +113,10 @@ function init() {
     }, {settings});
 
     registerNavigatorAction('previous-workspace', Tiling.selectPreviousSpace);
-    registerNavigatorAction('previous-workspace-backward',
-                            Tiling.selectPreviousSpaceBackwards);
+    registerNavigatorAction('previous-workspace-backward', Tiling.selectPreviousSpaceBackwards);
 
     registerNavigatorAction('move-previous-workspace', Tiling.movePreviousSpace);
-    registerNavigatorAction('move-previous-workspace-backward',
-                            Tiling.movePreviousSpaceBackwards);
+    registerNavigatorAction('move-previous-workspace-backward', Tiling.movePreviousSpaceBackwards);
 
     registerNavigatorAction('switch-down-workspace', Tiling.selectDownSpace);
     registerNavigatorAction('switch-up-workspace', Tiling.selectUpSpace);
