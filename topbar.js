@@ -670,7 +670,12 @@ function enable () {
     // setup focusButton and space focusModeIcons
     focusButton = new FocusButton();
     Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');
+    // on allocation update spaces focusIcon position (e.g. initial position)
+    signals.connectOneShot(focusButton, 'notify::allocation', () => {
+        Tiling.spaces.updateSpaceIconPositions();
+    });
     fixFocusModeIcon();
+
     fixStyle();
 
     screenSignals.push(
