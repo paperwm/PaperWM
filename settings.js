@@ -34,8 +34,8 @@ var prefs = {};
 ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
  'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
  'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
- 'cycle-width-steps', 'cycle-height-steps', 'topbar-follow-focus', 'minimap-scale', 
- 'winprops', 'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon', 
+ 'cycle-width-steps', 'cycle-height-steps', 'minimap-scale', 'winprops', 
+ 'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon', 
  'disable-topbar-styling', 'default-focus-mode']
     .forEach((k) => setState(null, k));
 

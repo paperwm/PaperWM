@@ -481,9 +481,7 @@ var Space = class Space extends Array {
         // compensate to keep window position bar on all monitors
         if (prefs.show_window_position_bar) {
             const panelBoxHeight = TopBar.panelBox.height;
-            const monitor = prefs.topbar_follow_focus ?
-                Main.layoutManager.focusMonitor :
-                Main.layoutManager.primaryMonitor;
+            const monitor = Main.layoutManager.primaryMonitor;
             if (monitor !== this.monitor) {
                 workArea.y += panelBoxHeight;
                 workArea.height -= panelBoxHeight;
@@ -1749,12 +1747,11 @@ var Spaces = class Spaces extends Map {
         let monitors = Main.layoutManager.monitors;
 
         let finish = () => {
+            TopBar.updateMonitor();
             let activeSpace = this.get(workspaceManager.get_active_workspace());
-            let visible = monitors.map(m => this.monitors.get(m));
             let mru = this.mru();
             this.selectedSpace = mru[0];
             this.monitors.set(activeSpace.monitor, activeSpace);
-            TopBar.setMonitor(activeSpace.monitor);
             for (let [monitor, space] of this.monitors) {
                 space.show();
                 space.clip.raise_top();
@@ -1983,7 +1980,6 @@ var Spaces = class Spaces extends Map {
 
         this.animateToSpace(toSpace, fromSpace, () => this.setSpaceTopbarElementsVisible(false));
 
-        TopBar.setMonitor(toSpace.monitor);
         toSpace.monitor.clickOverlay.deactivate();
 
         let [x, y, _mods] = global.get_pointer();
