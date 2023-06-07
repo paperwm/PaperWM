@@ -825,6 +825,18 @@ function setWorkspaceName (name) {
 }
 
 function updateMonitor() {
-    panelMonitor = Main.layoutManager.primaryMonitor;
-    return panelMonitor;
+    let primaryMonitor = Main.layoutManager.primaryMonitor;
+    // if panelMonitor has changed, then update layouts on workspaces
+    if (panelMonitor !== primaryMonitor) {
+        Meta.later_add(Meta.LaterType.IDLE, () => {
+            Tiling.spaces?.forEach(s => s.layout());
+
+            // if to show window positon bar, then update across workspaces
+            if (prefs.show_window_position_bar) {
+                Tiling.spaces?.setSpaceTopbarElementsVisible();
+            }
+            fixStyle();
+        });
+    }
+    panelMonitor = primaryMonitor;
 }
