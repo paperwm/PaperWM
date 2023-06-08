@@ -189,7 +189,6 @@ function getModLock(mods) {
     }
 
     _doAction(mutterActionId) {
-
         let action = Keybindings.byId(mutterActionId);
         let space = Tiling.spaces.selectedSpace;
         let metaWindow = space.selectedWindow;
@@ -225,6 +224,13 @@ function getModLock(mods) {
         nav.accept();
         !this._destroy && nav.destroy();
         dismissDispatcher(Clutter.GrabState.KEYBOARD)
+        let space = Tiling.spaces.selectedSpace;
+        let metaWindow = space.selectedWindow;
+        if (metaWindow) {
+            if (!metaWindow.appears_focused) {
+                space.setSelectionInactive();
+            }
+        }
     }
 
     destroy() {
