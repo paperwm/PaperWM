@@ -35,8 +35,8 @@ var prefs = {};
  'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
  'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
  'cycle-width-steps', 'cycle-height-steps', 'topbar-follow-focus', 'minimap-scale', 
- 'winprops', 'show-window-position-bar', 'show-focus-mode-icon', 'disable-topbar-styling',
- 'default-focus-mode', 'allow-all-actions-in-navigator']
+ 'winprops', 'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon', 
+ 'disable-topbar-styling', 'default-focus-mode', 'allow-all-actions-in-navigator']
     .forEach((k) => setState(null, k));
 
 prefs.__defineGetter__("minimum_margin", function() { return Math.min(15, this.horizontal_margin) });
@@ -237,12 +237,20 @@ function printWorkspaceSettings() {
 function keystrToKeycombo(keystr) {
     // Above_Tab is a fake keysymbol provided by mutter
     let aboveTab = false;
-    if (keystr.match(/Above_Tab/)) {
+    if (keystr.match(/Above_Tab/) || keystr.match(/grave/)) {
         // Gtk bails out if provided with an unknown keysymbol
-        keystr = keystr.replace('Above_Tab', 'A');
+        keystr = keystr.replace('Above_Tab', 'a');
         aboveTab = true;
     }
-    let [key, mask] = Gtk.accelerator_parse(keystr);
+    
+    let ok, key, mask;
+    let result = Gtk.accelerator_parse(keystr);
+    if (result.length === 3) {
+        [ok, key, mask] = result;
+    }
+    else {
+        [key, mask] = result;
+    }
 
     if (aboveTab)
         key = META_KEY_ABOVE_TAB;

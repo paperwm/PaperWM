@@ -4,7 +4,9 @@
 
 PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension providing scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
-Supports Gnome Shell from 3.28 to 43 on X11 and wayland.
+Supports Gnome Shell from 3.28 to 44 on X11 and wayland.
+
+>**Note:** while PaperWM can be installed on a wide range of Gnome versions, new features aren't generally backported to versions NOT targeted for current support (see [Installation](#installation) section).  Fixes may be backported on request (please submit a [new issue](https://github.com/paperwm/PaperWM/issues/new/choose) if you've identified a recent fix that should be backported and you can help with testing).
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
@@ -14,14 +16,12 @@ We hang out on [zulip](https://paperwm.zulipchat.com).
 
 Clone the repo and check out the branch supporting the Gnome Shell version you're running.
 
-- 44 (experimental, not officially supported yet, please report bugs): https://github.com/paperwm/PaperWM/tree/develop
-- 43 (experimental, please report bugs): https://github.com/paperwm/PaperWM/tree/develop
-- 42: https://github.com/paperwm/PaperWM/tree/gnome-42
-- 40: https://github.com/paperwm/PaperWM/tree/gnome-40
-- 3.28-3.38: https://github.com/paperwm/PaperWM/releases/tag/38.2
+- 42-44 (targeted for current support): https://github.com/paperwm/PaperWM/tree/develop
+- 40-41: https://github.com/paperwm/PaperWM/tree/gnome-40
+- 3.28-3.38: https://github.com/paperwm/PaperWM/tree/gnome-3.38
 
 
-Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/master/install.sh) script
+Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/develop/install.sh) script
 from the repository. The installer will create a link to the repo in
 `$XDG_DATA_HOME/gnome-shell/extensions/`. It will then ask if you want to apply
 the recommended settings (see [Recommended
@@ -32,7 +32,7 @@ Settings](#recommended-gnome-shell-settings)) and lastly it will ask to enable P
 
 To uninstall simply run `./uninstall.sh`.
 
-Running the extension will automatically install a user config file as described in [Development & user configuration](#development--user-configuration).
+Running the extension will automatically install a user config file as described in [User configuration & development](#user-configuration--development).
 
 ### Note for Ubuntu users ###
 
@@ -118,9 +118,15 @@ Pressing <kbd>Super</kbd><kbd>Page_Down</kbd> and <kbd>Super</kbd><kbd>Page_Up</
 
 ![Sequential workspace navigation](https://github.com/paperwm/media/blob/master/sequence.png)
 
-The workspace name is shown in the top left corner replacing the `Activities` button adding a few enhancements. Scrolling on the name will let you browse the workspace stack just like <kbd>Super</kbd><kbd>Above_Tab</kbd>. Right clicking the name lets you access and change the workspace name and the background color:
+The workspace name is shown in the top left corner replacing the `Activities` button adding a few enhancements. Scrolling on the name will let you browse the workspace stack just like <kbd>Super</kbd><kbd>Above_Tab</kbd>. Left clicking on the name opens Gnome overview, while right clicking the name lets you access and change the workspace name and the background color:
 
 ![The workspace menu](https://github.com/paperwm/media/blob/master/menu.png)
+
+> If you prefer to use another workspace indicator (or prefer none at all), you can hide this workspace name element from Gnome topbar by executing the following command from a terminal:
+> 
+> ```
+> dconf write /org/gnome/shell/extensions/paperwm/show-workspace-indicator false
+> ``` 
 
 Swiping the trackpad vertically with three fingers lets you navigate the workspace stack (only available in Wayland).
 
@@ -166,7 +172,7 @@ When the tiling is active <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> selects
 | <kbd>Super</kbd><kbd>Tab</kbd>                    | Cycle through the most recently used scratch windows             |
 | <kbd>Super</kbd><kbd>H</kbd>                      | Minimize the current window                                      |
 
-## Development & user configuration ##
+## User configuration & development ##
 
 A default user configuration, `user.js`, is created in `~/.config/paperwm/` with three functions `init`, `enable` and `disable`. `init` will run only once on startup, `enable` and `disable` will be run whenever extensions are being told to disable and enable themselves. Eg. when locking the screen with <kbd>Super</kbd><kbd>L</kbd>.
 
@@ -176,11 +182,82 @@ We also made an emacs package, [gnome-shell-mode](https://github.com/paperwm/gno
 
 Pressing <kbd>Super</kbd><kbd>Insert</kbd> will assign the active window to a global variable `metaWindow`, its [window actor](https://developer.gnome.org/meta/stable/MetaWindowActor.html) to `actor`, its [workspace](https://developer.gnome.org/meta/stable/MetaWorkspace.html) to `workspace` and its PaperWM style workspace to `space`. This makes it easy to inspect state and test things out.
 
-#### Using dconf-editor to modify settings
+### Using PaperWM extension settings (UI) to modify settings
+PaperWM provides an extension settings UI to modify many of PaperWM's more prevalent settings.  This is available in the `gnome-extensions` application.
+
+_Note: not all PaperWM user-configurable settings are available in the settings UI._
+
+### Using dconf-editor to modify settings
+You can use `dconf-editor` to view and modify all PaperWM user settings.  You can view all settings by executing the following command from a terminal:
 
 ```shell
 GSETTINGS_SCHEMA_DIR=$HOME/.local/share/gnome-shell/extensions/paperwm@hedning:matrix.org/schemas dconf-editor /org/gnome/shell/extensions/paperwm/
 ```
+
+### PaperWM user-configurable settings _not_ available in settings UI
+
+Below is a list of user-configurable settings that are not exposed in the PaperWM settings UI.  These can be modified via [`dconf-editor`](#using-dconf-editor-to-modify-settings).
+
+_Note: experimental, incomplete or deprecated settings may not be listed below._
+
+<details><summary> <h4>Click to expand and see user-configurable properties</h3> </summary>
+
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>animation&#8209;time</code> | Changes PaperWM animation speed.  Lower values means faster animations. | _number_ (should be >= 0) | 0.25 
+
+__Example:__ speeding up animations
+```
+dconf write /org/gnome/shell/extensions/paperwm/animation-time 0.15
+```
+
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>default&#8209;background</code>| Sets the (default) background used for PaperWM workspaces.  If set will use this background instead of colors defined in `workspace-colors`. | _absolute path_ | _empty_
+
+_Note: you can override this for individual workspaces in the settings UI._
+
+__Example:__
+```
+dconf write /org/gnome/shell/extensions/paperwm/default-background '"/home/user/Wallpaper/mars-sunset-2k.jpg"'
+```
+
+Setting | Description | Reference
+--------|-------------|----------
+<code>default&#8209;focus&#8209;mode</code> | Sets default focus mode used in workspaces. | See [Setting the default focus mode](#setting-the-default-focus-mode).
+
+Setting | Description | Reference
+--------|-------------|----------
+<code>disable&#8209;topbar&#8209;styling</code> | Disables PaperWM's ability to style the Gnome TopBar. | See [Gnome TopBar opacity / styling](#gnome-topbar-opacity--styling).
+
+Setting | Description | Reference
+--------|-------------|----------
+<code>show&#8209;focus&#8209;mode&#8209;icon</code> | Shows/hides the focus mode icon in TopBar. | See [Hiding the focus mode icon](#hiding-the-focus-mode-icon).
+
+Setting | Description | Reference
+--------|-------------|----------
+<code>show&#8209;window&#8209;position&#8209;bar</code>| Shows/hides the window position indicator bar in Topbar. | See [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar).
+
+Setting | Description | Reference
+--------|-------------|----------
+<code>show&#8209;workspace&#8209;indicator</code>| Shows/hides the workspace indicator element in Topbar. | See [The workspace stack & monitors](#the-workspace-stack--monitors).
+
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>use&#8209;workspace&#8209;name</code> | Use PaperWM workspace name in workspace indicator in the TopBar.  Setting to false uses the gnome default name (i.e. `Activities`). | _Boolean_ | `true`
+
+_Note: this does not disable the workspace indicator, but simply makes it looks like default gnome `Activities` button.  To show/hide the workspace indicator element use setting_ `show-workspace-indicator`.
+
+__Example:__
+```
+dconf write /org/gnome/shell/extensions/paperwm/use-workspace-name false
+```
+
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>workspace&#8209;colors</code>  | Sets the workspace background color palette. | _String array of colors_ | `['#314E6C', '#565248', '#445632', '#663822', '#494066',   '#826647', '#4B6983', '#807D74', '#5D7555', '#884631', '#625B81', '#B39169', '#7590AE', '#BAB5AB', '#83A67F', '#C1665A', '#887FA3', '#E0C39E']`
+
+</details>
 
 ### Setting window specific properities
 
@@ -274,7 +351,7 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
 
 See `examples/keybindings.js` for more examples.
 
-## Window Position Bar (colored bar segment in Top Bar)
+## Window Position Bar (colored bar segment in Top Bar) ##
 
 [#476](https://github.com/paperwm/PaperWM/pull/476) added a coloured window position bar to the Gnome Top Bar.  This allows users to visually identify the current selected window position of the scrollable viewport in the current workspace.  This is demonstrated in the following video:
 
@@ -286,11 +363,11 @@ The the window position bar can be _disabled_ from `PaperWM extension settings` 
 dconf write /org/gnome/shell/extensions/paperwm/show-window-position-bar false
 ```
 
-You can style both the coloured position bar and the dimmed "position bar backdrop" by overriding the `paperwm-window-position-bar` and `paperwm-window-position-bar-backdrop` CSS classes respectively (see `user.css` in [Development & user configuration](#development--user-configuration) section for more information). The `paperwm-window-position-bar` will also inherit the selection color (same as window borders) from `tile-preview`.
+You can style both the coloured position bar and the dimmed "position bar backdrop" by overriding the `paperwm-window-position-bar` and `paperwm-window-position-bar-backdrop` CSS classes respectively (see `user.css` in [User configuration & development](#user-configuration--development) section for more information). The `paperwm-window-position-bar` will also inherit the selection color (same as window borders) from `tile-preview`.
 
 _Note: PaperWM overrides the default Gnome Top Bar style to be completely transparent so that the dimmed `window-position-bar-backdrop` and`window-position-bar` elements are visible._
 
-## Window Focus Mode
+## Window Focus Mode ##
 
 [#482](https://github.com/paperwm/PaperWM/pull/482) added the concept of `window focus modes` to PaperWM.  A `focus mode` controls how windows are "focused".  For example, the `CENTER` focus mode causes all windows to be centered horizontally on selection, whereas the `DEFAULT` focus mode is the traditional PaperWM behaviour.
 
@@ -323,7 +400,7 @@ Users may also prefer to hide the focus mode icon.  You can do so by executing t
 dconf write /org/gnome/shell/extensions/paperwm/show-focus-mode-icon false
 ```
 
-## Gnome TopBar opacity / styling
+## Gnome TopBar opacity / styling ##
 
 PaperWM by default changes the opacity of the Gnome TopBar.  This styling is used for certain PaperWM features.  However, this styling may conflict with the TopBar styling of other extensions (that you may prefer have style the TopBar instead).
 
@@ -365,13 +442,14 @@ There's a few Gnome Shell settings which works poorly with PaperWM. Namely
 - `attach-modal-dialogs`: Attached modal dialogs can cause visual glitching
 
 To use the recommended settings run
-[`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/master/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
+[`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/develop/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
 
 
 ## Recommended extensions ##
 
 These extensions are good complements to PaperWM:
 
+- [Vertical Overview](https://github.com/RensAlthuis/vertical-overview) - brings back vertically stacked workspaces
 - [Switcher](https://github.com/daniellandau/switcher) - combined window switcher and launcher
 - [Dash to Dock](https://micheleg.github.io/dash-to-dock/) - a great dock
 

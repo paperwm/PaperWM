@@ -48,13 +48,14 @@ var colors = [
 ];
 
 function createButton(icon_name, accessible_name) {
-    return new St.Button({reactive: true,
-                          can_focus: true,
-                          track_hover: true,
-                          accessible_name,
-                          style_class: 'button workspace-icon-button',
-                          child: new St.Icon({icon_name})
-                         });
+    return new St.Button({
+        reactive: true,
+        can_focus: true,
+        track_hover: true,
+        accessible_name,
+        style_class: 'button workspace-icon-button',
+        child: new St.Icon({ icon_name })
+    });
 }
 
 var PopupMenuEntryHelper = function constructor(text) {
@@ -649,6 +650,7 @@ function enable () {
     Main.panel.statusArea.activities.hide();
 
     menu = new WorkspaceMenu();
+
     // Work around 'actor' warnings
     let panel = Main.panel;
     function fixLabel(label) {
@@ -656,20 +658,21 @@ function enable () {
         let r = label.apply_relative_transform_to_point(panel, point);
 
         for (let [workspace, space] of Tiling.spaces) {
-            space.label.set_position(panel.x + Math.round(r.x), panel.y + Math.round(r.y));
+            space.workspaceLabel.set_position(panel.x + Math.round(r.x), panel.y + Math.round(r.y));
             let fontDescription = label.clutter_text.font_description;
-            space.label.clutter_text.set_font_description(fontDescription);
+            space.workspaceLabel.clutter_text.set_font_description(fontDescription);
         }
     }
-    Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
-    menu.show();
 
+    Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
+    fixWorkspaceIndicator();
+
+    // setup focusButton and space focusModeIcons
     focusButton = new FocusButton();
     Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');
-    signals.connect(focusButton, 'notify::allocation', () => {
-        const pos = focusButton.apply_relative_transform_to_point(panel, 
-            new Clutter.Vertex({ x: 0, y: 0 }));
-        Tiling.spaces.setFocusIconPosition(pos.x, pos.y);
+    // on allocation update spaces focusIcon position (e.g. initial position)
+    signals.connectOneShot(focusButton, 'notify::allocation', () => {
+        Tiling.spaces.updateSpaceIconPositions();
     });
     fixFocusModeIcon();
 
@@ -677,9 +680,7 @@ function enable () {
 
     screenSignals.push(
         workspaceManager.connect_after('workspace-switched',
-                                    (workspaceManager, from, to) => {
-                                        updateWorkspaceIndicator(to);
-                                    }));
+            (workspaceManager, from, to) => updateWorkspaceIndicator(to)));
 
     signals.connect(Main.overview, 'showing', fixTopBar);
     signals.connect(Main.overview, 'hidden', () => {
@@ -711,6 +712,10 @@ function enable () {
         spaces.setSpaceTopbarElementsVisible(false);
         spaces.forEach(s => s.layout(false));
         spaces.showWindowPositionBarChanged();
+    });
+
+    signals.connect(Settings.settings, 'changed::show-workspace-indicator', (settings, key) => {
+        fixWorkspaceIndicator();
     });
 
     signals.connect(Settings.settings, 'changed::show-focus-mode-icon', (settings, key) => {
@@ -799,6 +804,11 @@ function fixTopBar() {
     }
 }
 
+function fixWorkspaceIndicator() {
+    prefs.show_workspace_indicator ? menu.show() : menu.hide();
+    Tiling.spaces.forEach(s => s.showWorkspaceIndicator());
+}
+
 function fixFocusModeIcon() {
     prefs.show_focus_mode_icon ? focusButton.show() : focusButton.hide();
     Tiling.spaces.forEach(s => s.showFocusModeIcon());
@@ -808,7 +818,7 @@ function fixFocusModeIcon() {
    Override the activities label with the workspace name.
    let workspaceIndex = 0
 */
-function updateWorkspaceIndicator (index) {
+function updateWorkspaceIndicator(index) {
     let spaces = Tiling.spaces;
     let space = spaces && spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
     let onMonitor = space && space.monitor === panelMonitor;

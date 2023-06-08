@@ -10,6 +10,7 @@ var Gdk = imports.gi.Gdk;
 var Gtk = imports.gi.Gtk;
 var Gio = imports.gi.Gio;
 var Meta = imports.gi.Meta;
+var GLib = imports.gi.GLib;
 
 var Utils = Extension.imports.utils;
 var Main = imports.ui.main;
@@ -112,12 +113,10 @@ function init() {
     }, {settings});
 
     registerNavigatorAction('previous-workspace', Tiling.selectPreviousSpace);
-    registerNavigatorAction('previous-workspace-backward',
-                            Tiling.selectPreviousSpaceBackwards);
+    registerNavigatorAction('previous-workspace-backward', Tiling.selectPreviousSpaceBackwards);
 
     registerNavigatorAction('move-previous-workspace', Tiling.movePreviousSpace);
-    registerNavigatorAction('move-previous-workspace-backward',
-                            Tiling.movePreviousSpaceBackwards);
+    registerNavigatorAction('move-previous-workspace-backward', Tiling.movePreviousSpaceBackwards);
 
     registerNavigatorAction('switch-down-workspace', Tiling.selectDownSpace);
     registerNavigatorAction('switch-up-workspace', Tiling.selectUpSpace);
@@ -568,7 +567,7 @@ function getActionId(mutterName) {
 function overrideAction(mutterName, action) {
     let id = getActionId(mutterName);
     Main.wm.setCustomKeybindingHandler(mutterName, Shell.ActionMode.NORMAL,
-                                       action.keyHandler);
+        action.keyHandler);
     if (id === Meta.KeyBindingAction.NONE)
         return;
     actionIdMap[id] = action;
@@ -600,8 +599,7 @@ function resetConflicts() {
            ) {
             Main.wm.setCustomKeybindingHandler(
                 name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
+                Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
                 Main.wm._showWorkspaceSwitcher.bind(Main.wm));
             continue;
         }
@@ -663,7 +661,7 @@ function resetConflicts() {
             break;
         case  'toggle-application-view':
             // overview._controls: Backward compatibility for 3.34 and below:
-                const viewSelector = (Main.overview._overview._controls || Main.overview.viewSelector || Main.overview._controls.viewSelector);
+            const viewSelector = (Main.overview._overview._controls || Main.overview.viewSelector || Main.overview._controls.viewSelector);
 
             Main.wm.setCustomKeybindingHandler(
                 name,

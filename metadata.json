@@ -5,6 +5,6 @@
   "url": "https://github.com/paperwm/PaperWM",
   "settings-schema": "org.gnome.Shell.Extensions.PaperWM",
   "shell-version": [ "42", "43", "44" ],
-  "version": "43.0",
+  "version": "44.0",
   "session-modes":  [ "unlock-dialog", "user" ]
 }

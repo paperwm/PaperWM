@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-RESTORE_SETTINGS_SCRIPT="restore-gnome-shell-settings-$(date +%F).sh"
+RESTORE_SETTINGS_SCRIPT="restore-gnome-shell-settings-$(date --iso-8601=s).sh"
 
-if [[ -e $RESTORE_SETTINGS_SCRIPT ]]; then
-    echo "$RESTORE_SETTINGS_SCRIPT exists"
+if [[ -e "${RESTORE_SETTINGS_SCRIPT}" ]]; then
+    echo "$RESTORE_SETTINGS_SCRIPT exists. Please wait at least one second."
     exit 1
 fi
 
@@ -13,8 +13,8 @@ if [[ $GNOME_SHELL_VERSION > "GNOME Shell 3.3" ]]; then
    USE_OVERRIDE_SCHEMA=true
 fi
 
-echo -e "#!/usr/bin/env bash\n\n" > $RESTORE_SETTINGS_SCRIPT
-chmod +x $RESTORE_SETTINGS_SCRIPT
+echo -e "#!/usr/bin/env bash\n\n" > "${RESTORE_SETTINGS_SCRIPT}"
+chmod +x "${RESTORE_SETTINGS_SCRIPT}"
 
 function set-with-backup {
     SCHEMA=$1
@@ -33,7 +33,7 @@ function set-with-backup {
         return
     fi
 
-    echo "gsettings set $SCHEMA $KEY $CURRENT_VAL" >> $RESTORE_SETTINGS_SCRIPT
+    echo "gsettings set $SCHEMA $KEY $CURRENT_VAL" >> "${RESTORE_SETTINGS_SCRIPT}"
 
     gsettings set $SCHEMA $KEY $TARGET_VAL
     echo "Changed $SCHEMA $KEY from '$CURRENT_VAL' to '$TARGET_VAL'"
@@ -51,7 +51,5 @@ set-with-backup org.gnome.shell.overrides edge-tiling false
 # Attached modal dialogs isn't handled very well
 set-with-backup org.gnome.shell.overrides attach-modal-dialogs false
 
-
-
 echo
-echo "Run $RESTORE_SETTINGS_SCRIPT to revert changes"
+echo "Run ${RESTORE_SETTINGS_SCRIPT} to revert changes"

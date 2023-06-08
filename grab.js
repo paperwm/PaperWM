@@ -18,12 +18,12 @@ var Utils = Extension.imports.utils;
 var Tweener = Utils.tweener;
 var Navigator = Extension.imports.navigator;
 
+var virtualPointer;
 
 function isInRect(x, y, r) {
     return r.x <= x && x < r.x + r.width &&
         r.y <= y && y < r.y + r.height;
 }
-
 
 function monitorAtPoint(gx, gy) {
     for (let monitor of Main.layoutManager.monitors) {
@@ -31,6 +31,22 @@ function monitorAtPoint(gx, gy) {
             return monitor;
     }
     return null;
+}
+
+/**
+ * Returns a virtual pointer (i.e. mouse) device that can be used to
+ * "clickout" of a drag operation when `grab_end_op` is unavailable
+ * (i.e. as of Gnome 44 where `grab_end_op` was removed).
+ * @returns Clutter.VirtualInputDevice
+ */
+function getVirtualPointer() {
+    if (!virtualPointer) {
+        virtualPointer = Clutter.get_default_backend()
+            .get_default_seat()
+            .create_virtual_device(Clutter.InputDeviceType.POINTER_DEVICE);
+    }
+
+    return virtualPointer;
 }
 
 var MoveGrab = class MoveGrab {
@@ -42,6 +58,10 @@ var MoveGrab = class MoveGrab {
 
         this.initialSpace = space || Tiling.spaces.spaceOfWindow(metaWindow);
         this.zoneActors = new Set();
+
+        // save whether this was tiled window at start of grab
+        this.wasTiled = !(this.initialSpace.isFloating(metaWindow) ||
+            Scratch.isScratchWindow(metaWindow));
     }
 
     begin({center} = {}) {
@@ -50,8 +70,11 @@ var MoveGrab = class MoveGrab {
         this.center = center;
         if (this.grabbed)
             return;
+
         this.grabbed = true
-        global.display?.end_grab_op(global.get_current_time());
+        
+        global.display.end_grab_op?.(global.get_current_time());
+        
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
         this.dispatcher = new Navigator.getActionDispatcher(Clutter.GrabState.POINTER)
         this.actor = this.dispatcher.actor
@@ -370,7 +393,7 @@ var MoveGrab = class MoveGrab {
             time: prefs.animation_time,
             scale_x: 1,
             scale_y: 1,
-            opacity: clone.__oldOpacity || 255
+            opacity: clone?.__oldOpacity ?? 255,
         };
 
         if (this.dnd) {
@@ -456,10 +479,9 @@ var MoveGrab = class MoveGrab {
         // and layout will work correctly etc.
         this.window = null;
 
-
         this.initialSpace.layout();
         // ensure window is properly activated after layout/ensureViewport tweens
-        Mainloop.timeout_add(0, () => {
+        Meta.later_add(Meta.LaterType.IDLE, () => {
             Main.activateWindow(metaWindow);
         });
 
@@ -473,6 +495,28 @@ var MoveGrab = class MoveGrab {
         }
 
         global.display.set_cursor(Meta.Cursor.DEFAULT);
+
+        /**
+         * Gnome 44 removed the ability to manually end_grab_op.
+         * Previously we would end the grab_op before doing
+         * PaperWM grabs.  In 44, we can't do this so the grab op
+         * may still be in progress, which is okay, but won't be ended
+         * until we "click out".  We do this here if needed.
+         */
+        Meta.later_add(Meta.LaterType.IDLE, () => {
+            if (!global.display.end_grab_op && this.wasTiled) {
+                // move to current cursort position
+                let [x, y, _mods] = global.get_pointer();
+                getVirtualPointer().notify_absolute_motion(
+                    Clutter.get_current_event_time(),
+                    x, y);
+
+                getVirtualPointer().notify_button(Clutter.get_current_event_time(),
+                    Clutter.BUTTON_PRIMARY, Clutter.ButtonState.PRESSED);
+                getVirtualPointer().notify_button(Clutter.get_current_event_time(),
+                    Clutter.BUTTON_PRIMARY, Clutter.ButtonState.RELEASED);
+            }
+        });
     }
 
     activateDndTarget(zone, first) {
