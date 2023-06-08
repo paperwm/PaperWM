@@ -413,16 +413,6 @@ _Note<sup>1</sup>: you will need to restart Gnome shell after changing this sett
 
 _Note<sup>2</sup>: several PaperWM specific features are dependent on changing the Gnome TopBar to function correctly.  If you choose to disable PaperWM's ability to change the TopBar styles (with the setting above), you may also want to disable the [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar))_.
 
-## Allow all keybindings when the navigator/minimap is open
-
-Normally, when the navigator/minimap is open, paperwm ignores all keybindings that are not specifically allowed in the navigator (see also [User defined keybindings](#user-defined-keybindings)). Using the following command you can allow all keybinding while the navigator is open:
-
-```
-dconf write /org/gnome/shell/extensions/paperwm/allow-all-actions-in-navigator true
-```
-
-With this setting, when executing a keybinding that would normally be ignored while the navigator is open, it will instead close the navigator and execute the keybinding normally.
-
 ## Fixed Window Size ##
 
 See the [Winprops](#setting-window-specific-properities) section for a way to set the default _width_ of windows identified by their `wm_class` window property.
