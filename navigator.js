@@ -213,7 +213,7 @@ function getModLock(mods) {
             if (Tiling.inGrab && !Tiling.inGrab.dnd && Tiling.inGrab.window) {
                 Tiling.inGrab.beginDnD();
             }
-        } else if (action && prefs.allow_all_actions_in_navigator) {
+        } else if (action) {
             // closes navigator and action is performed afterwards
             // (e.g. switch-monitor-left)
             this._resetNoModsTimeout();
