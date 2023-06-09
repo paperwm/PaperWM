@@ -3286,7 +3286,6 @@ function setAllWorkspacesInactive() {
 // `MetaWindow::focus` handling
 function focus_handler(metaWindow, user_data) {
     debug("focus:", metaWindow.title, utils.framestr(metaWindow.get_frame_rect()));
-    log(metaWindow.title);
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
         Scratch.makeScratch(metaWindow);
