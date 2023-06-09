@@ -2619,7 +2619,7 @@ function isTransient(metaWindow) {
 }
 
 /**
- * Returns true iff a metaWindows has at least one transient window.
+ * Returns true if a metaWindow has at least one transient window.
  * @param metaWindow 
  * @returns 
  */
@@ -2630,7 +2630,6 @@ function hasTransient(metaWindow) {
     let hasTransient = false;
     metaWindow.foreach_transient(t => {
         hasTransient = true;
-        return;
     });
 
     return hasTransient;
