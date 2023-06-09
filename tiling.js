@@ -3158,10 +3158,10 @@ function updateSelection(space, metaWindow) {
     // if metawindow has transient window(s) and it's NOT focused,
     // don't update visual selection (since transient is actually focused)
     if (hasTransient(metaWindow) && metaWindow !== display.focus_window) {
-        // then set the new selection active
         space.setSelectionInactive();
     }
     else {
+        // then set the new selection active
         space.setSelectionActive();
     }
 
