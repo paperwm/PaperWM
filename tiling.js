@@ -2655,6 +2655,11 @@ function destroyHandler(actor) {
 }
 
 function resizeHandler(metaWindow) {
+    // if navigator is showing, reset/refresh it after a window has resized
+    if (Navigator.navigating) {
+        Navigator.getNavigator().minimaps.forEach(m => m.reset());
+    }
+
     if (inGrab && inGrab.window === metaWindow)
         return;
 
