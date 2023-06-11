@@ -745,6 +745,7 @@ var Space = class Space extends Array {
         if (this.selectedWindow) {
             ensureViewport(this.selectedWindow, this);
         } else {
+            // can also be undefined here, will set to null explicitly
             this.selectedWindow = null;
         }
 
