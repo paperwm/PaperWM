@@ -2042,27 +2042,6 @@ var Spaces = class Spaces extends Map {
         return out;
     }
 
-    _initWorkspaceSequence() {
-        if (inPreview) {
-            return;
-        }
-        inPreview = PreviewMode.SEQUENTIAL;
-
-        if (Main.panel.statusArea.appMenu) {
-            Main.panel.statusArea.appMenu.container.hide();
-        }
-
-        this._animateToSpaceOrdered(this.selectedSpace, false);
-
-        let selected = this.selectedSpace.selectedWindow;
-        if (selected && selected.fullscreen) {
-            Tweener.addTween(selected.clone, {
-                y: Main.panel.actor.height + prefs.vertical_margin,
-                time: prefs.animation_time,
-            });
-        }
-    }
-
     _animateToSpaceOrdered(toSpace, animate = true) {
         // Always show the topbar when using the workspace stack
         TopBar.fixTopBar();
@@ -2110,6 +2089,28 @@ var Spaces = class Spaces extends Map {
         });
     }
 
+    _initWorkspaceSequence() {
+        if (inPreview) {
+            return;
+        }
+        inPreview = PreviewMode.SEQUENTIAL;
+        this.setSpaceTopbarElementsVisible();
+
+        if (Main.panel.statusArea.appMenu) {
+            Main.panel.statusArea.appMenu.container.hide();
+        }
+
+        this._animateToSpaceOrdered(this.selectedSpace, false);
+
+        let selected = this.selectedSpace.selectedWindow;
+        if (selected && selected.fullscreen) {
+            Tweener.addTween(selected.clone, {
+                y: Main.panel.actor.height + prefs.vertical_margin,
+                time: prefs.animation_time,
+            });
+        }
+    }
+
     selectSequenceSpace(direction, move) {
         // if in stack preview do not run sequence preview
         if (inPreview === PreviewMode.STACK) {
@@ -2151,7 +2152,6 @@ var Spaces = class Spaces extends Map {
         newSpace = monitorSpaces[to];
         this.selectedSpace = newSpace;
 
-        this.setSpaceTopbarElementsVisible();
         TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
         const scale = 0.825;
@@ -2179,7 +2179,7 @@ var Spaces = class Spaces extends Map {
         });
     }
 
-    _initWorkspaceStack() {
+    initWorkspaceStack() {
         if (inPreview) {
             return;
         }
@@ -2188,6 +2188,7 @@ var Spaces = class Spaces extends Map {
 
         // Always show the topbar when using the workspace stack
         TopBar.fixTopBar();
+        this.setSpaceTopbarElementsVisible();
         const scale = 0.9;
         let space = this.getActiveSpace();
         let mru = [...this.stack];
@@ -2276,7 +2277,7 @@ var Spaces = class Spaces extends Map {
         mru = [space, ...mru];
 
         if (!inPreview) {
-            this._initWorkspaceStack();
+            this.initWorkspaceStack();
         }
 
         let from = mru.indexOf(this.selectedSpace);
@@ -2307,7 +2308,6 @@ var Spaces = class Spaces extends Map {
         newSpace = mru[to];
         this.selectedSpace = newSpace;
 
-        this.setSpaceTopbarElementsVisible();
         TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
         mru.forEach((space, i) => {

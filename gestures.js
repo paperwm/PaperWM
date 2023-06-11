@@ -313,7 +313,7 @@ function findTargetWindow(space, direction) {
 var transition = 'easeOutQuad';
 function updateVertical(dy, t) {
     if (!Tiling.inPreview) {
-        Tiling.spaces._initWorkspaceStack();
+        Tiling.spaces.initWorkspaceStack();
     }
     let selected = Tiling.spaces.selectedSpace;
     let monitor = navigator.monitor;
