@@ -715,14 +715,13 @@ var Space = class Space extends Array {
 
         this.signals.disconnect(metaWindow);
 
-        let selected = this.selectedWindow;
-        if (selected === metaWindow) {
+        if (this.selectedWindow === metaWindow) {
             // Select a new window using the stack ordering;
             let windows = this.getWindows();
             let i = windows.indexOf(metaWindow);
             let neighbours = [windows[i - 1], windows[i + 1]].filter(w => w);
             let stack = sortWindows(this, neighbours);
-            selected = stack[stack.length - 1];
+            this.selectedWindow = stack[stack.length - 1];
         }
 
         let column = this[index];
@@ -743,8 +742,8 @@ var Space = class Space extends Array {
             actor.remove_clip();
 
         this.layout();
-        if (selected) {
-            ensureViewport(selected, this);
+        if (this.selectedWindow) {
+            ensureViewport(this.selectedWindow, this);
         } else {
             this.selectedWindow = null;
         }
