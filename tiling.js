@@ -715,14 +715,13 @@ var Space = class Space extends Array {
 
         this.signals.disconnect(metaWindow);
 
-        let selected = this.selectedWindow;
-        if (selected === metaWindow) {
+        if (this.selectedWindow === metaWindow) {
             // Select a new window using the stack ordering;
             let windows = this.getWindows();
             let i = windows.indexOf(metaWindow);
             let neighbours = [windows[i - 1], windows[i + 1]].filter(w => w);
             let stack = sortWindows(this, neighbours);
-            selected = stack[stack.length - 1];
+            this.selectedWindow = stack[stack.length - 1];
         }
 
         let column = this[index];
@@ -743,9 +742,10 @@ var Space = class Space extends Array {
             actor.remove_clip();
 
         this.layout();
-        if (selected) {
-            ensureViewport(selected, this);
+        if (this.selectedWindow) {
+            ensureViewport(this.selectedWindow, this);
         } else {
+            // can also be undefined here, will set to null explicitly
             this.selectedWindow = null;
         }
 
@@ -2730,6 +2730,11 @@ function destroyHandler(actor) {
 }
 
 function resizeHandler(metaWindow) {
+    // if navigator is showing, reset/refresh it after a window has resized
+    if (Navigator.navigating) {
+        Navigator.getNavigator().minimaps.forEach(m => m.reset());
+    }
+
     if (inGrab && inGrab.window === metaWindow)
         return;
 
