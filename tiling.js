@@ -2583,6 +2583,81 @@ var Spaces = class Spaces extends Map {
 
 Signals.addSignalMethods(Spaces.prototype);
 
+/**
+ * Return true if a window is tiled (e.g. not floating, not scratch, not transient).
+ * @param metaWindow 
+ */
+function isTiled(metaWindow) {
+    if (!metaWindow) {
+        return false;
+    }
+
+    if (!isFloating(metaWindow) && 
+        !isScratch(metaWindow) && 
+        !isTransient(metaWindow)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+/**
+ * Transient windows are connected to a parent window and take focus.
+ * On Wayland it takes entire focus (can't focus parent window while it's open).
+ * @param metaWindow 
+ * @returns 
+ */
+function isTransient(metaWindow) {
+    if (!metaWindow) {
+        return false;
+    }
+    if (metaWindow.get_transient_for()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+/**
+ * Returns true if a metaWindow has at least one transient window.
+ * @param metaWindow 
+ * @returns 
+ */
+function hasTransient(metaWindow) {
+    if (!metaWindow) {
+        return false;
+    }
+    let hasTransient = false;
+    metaWindow.foreach_transient(t => {
+        hasTransient = true;
+    });
+
+    return hasTransient;
+}
+
+/**
+ * Conveniece method for checking if a window is floating.
+ * Will determine what space this window is on.
+ * @param metaWindow 
+ * @returns 
+ */
+function isFloating(metaWindow) {
+    if (!metaWindow) {
+        return false;
+    }
+    let space = spaces.spaceOfWindow(metaWindow);
+    return space.isFloating?.(metaWindow) ?? false;
+}
+
+function isScratch(metaWindow) {
+    if (!metaWindow) {
+        return false;
+    }
+    return Scratch.isScratchWindow(metaWindow);
+}
+
 function is_override_redirect(metaWindow) {
     // Note: is_overrride_redirect() seem to be false for all wayland windows
     const windowType = metaWindow.windowType;
@@ -2752,7 +2827,7 @@ function disable () {
    Types of windows which never should be tiled.
  */
 function add_filter(meta_window) {
-    if (meta_window.get_transient_for()) {
+    if (isTransient(meta_window)) {
         // Never add transient windows
         return false;
     }
@@ -3086,9 +3161,18 @@ function updateSelection(space, metaWindow) {
     // this means not active workspaces are shown as inactive
     setAllWorkspacesInactive();
 
-    // then set the new selection active
-    space.setSelectionActive();
+    // if metawindow has transient window(s) and it's NOT focused,
+    // don't update visual selection (since transient is actually focused)
+    if (hasTransient(metaWindow) && metaWindow !== display.focus_window) {
+        space.setSelectionInactive();
+    }
+    else {
+        // then set the new selection active
+        space.setSelectionActive();
+    }
+
     space.updateWindowPositionBar();
+    
     if (space.selection.get_parent() === clone)
         return;
     space.selection.reparent(clone);
@@ -3139,9 +3223,9 @@ function grabBegin(metaWindow, type) {
             break;
         case Meta.GrabOp.KEYBOARD_MOVING:
             inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
-
-            if (inGrab.initialSpace.isFloating(metaWindow))
+            if (!isTiled(metaWindow)) {
                 return;
+            }
 
             // NOTE: Keyboard grab moves the cursor, but it happens after grab
             // signals have run. Simply delay the dnd so it will get the correct
@@ -3153,6 +3237,10 @@ function grabBegin(metaWindow, type) {
             break;
         case Meta.GrabOp.MOVING:
         case Meta.GrabOp.MOVING_UNCONSTRAINED: // introduced in Gnome 44
+            if (!isTiled(metaWindow)) {
+                return;
+            }
+
             inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
 
             if (utils.getModiferState() & Clutter.ModifierType.CONTROL_MASK) {
@@ -3198,18 +3286,12 @@ function grabEnd(metaWindow, type) {
  * Particularly noticable with multi-monitor setups.
  */
 function setAllWorkspacesInactive() {
-    for (let i = 0; i < workspaceManager.get_n_workspaces(); i++) {
-        let ws = workspaceManager.get_workspace_by_index(i);
-        if (ws) {
-            spaces.get(ws).setSelectionInactive();
-        }
-    }
+    spaces.forEach(s => s.setSelectionInactive());
 }
 
 // `MetaWindow::focus` handling
 function focus_handler(metaWindow, user_data) {
     debug("focus:", metaWindow.title, utils.framestr(metaWindow.get_frame_rect()));
-
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
         Scratch.makeScratch(metaWindow);
@@ -3217,14 +3299,14 @@ function focus_handler(metaWindow, user_data) {
         return;
     }
 
-    // If metaWindow is a transient window ensure the parent window instead
-    let transientFor = metaWindow.get_transient_for();
-    if (transientFor !== null) {
-        metaWindow = transientFor;
-    }
-
     let space = spaces.spaceOfWindow(metaWindow);
     space.monitor.clickOverlay.show();
+
+    // If metaWindow is a transient window ensure the parent window instead
+    let transient = metaWindow.get_transient_for();
+    if (transient) {
+        metaWindow = transient;
+    }
 
     /**
        Find the closest neighbours. Remove any dead windows in the process to

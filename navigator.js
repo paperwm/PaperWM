@@ -226,6 +226,13 @@ function getModLock(mods) {
         nav.accept();
         !this._destroy && nav.destroy();
         dismissDispatcher(Clutter.GrabState.KEYBOARD)
+        let space = Tiling.spaces.selectedSpace;
+        let metaWindow = space.selectedWindow;
+        if (metaWindow) {
+            if (!metaWindow.appears_focused) {
+                space.setSelectionInactive();
+            }
+        }
     }
 
     destroy() {
