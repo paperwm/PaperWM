@@ -2019,12 +2019,14 @@ var Spaces = class Spaces extends Map {
      * Updates workspace topbar icon positions.
      */
     updateSpaceIconPositions() {
-         // get position of topbar focus icon to replicate in spaces
-         const pos = TopBar.focusButton.apply_relative_transform_to_point(Main.panel, 
-            new Clutter.Vertex({ x: 0, y: 0 }));
+        // get positions of topbar elements to replicate positions in spaces
+        const vertex = new Clutter.Vertex({ x: 0, y: 0 });
+        const labelPosition = TopBar.menu.label.apply_relative_transform_to_point(Main.panel, vertex);
+        const focusPosition = TopBar.focusButton.apply_relative_transform_to_point(Main.panel, vertex);
 
         this.forEach(s => {
-            s.focusModeIcon.set_position(pos.x, pos.y);
+            s.workspaceLabel.set_position(labelPosition.x, labelPosition.y);
+            s.focusModeIcon.set_position(focusPosition.x, focusPosition.y);
         });
     }
 

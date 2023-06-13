@@ -355,7 +355,7 @@ class WorkspaceMenu extends PanelMenu.Button {
         this.name = 'workspace-button';
 
         let scale = display.get_monitor_scale(Main.layoutManager.primaryIndex);
-        this._label = new St.Label({
+        this.label = new St.Label({
             y_align: Clutter.ActorAlign.CENTER,
             // Avoid moving the menu on short names
             // TODO: update on scale changes
@@ -364,7 +364,7 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         this.setName(Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()));
 
-        this.add_actor(this._label);
+        this.add_actor(this.label);
 
         this.signals = new Utils.Signals();
         this.signals.connect(global.window_manager,
@@ -373,7 +373,7 @@ class WorkspaceMenu extends PanelMenu.Button {
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem(_('Workspace Settings')));
 
-        this.entry = new PopupMenuEntry(this._label.text);
+        this.entry = new PopupMenuEntry(this.label.text);
         this.menu.addMenuItem(this.entry);
         let changed = () => {
             let name = this.entry.label.text;
@@ -628,9 +628,9 @@ class WorkspaceMenu extends PanelMenu.Button {
 
     setName(name) {
         if (prefs.use_workspace_name)
-            this._label.text = name;
+            this.label.text = name;
         else
-            this._label.text = orginalActivitiesText;
+            this.label.text = orginalActivitiesText;
     }
 });
 
@@ -650,32 +650,22 @@ function enable () {
     Main.panel.statusArea.activities.hide();
 
     menu = new WorkspaceMenu();
-
-    // Work around 'actor' warnings
-    let panel = Main.panel;
-    function fixLabel(label) {
-        let point = new Clutter.Vertex({x: 0, y: 0});
-        let r = label.apply_relative_transform_to_point(panel, point);
-
-        for (let [workspace, space] of Tiling.spaces) {
-            space.workspaceLabel.set_position(panel.x + Math.round(r.x), panel.y + Math.round(r.y));
-            let fontDescription = label.clutter_text.font_description;
-            space.workspaceLabel.clutter_text.set_font_description(fontDescription);
-        }
-    }
+    focusButton = new FocusButton();
 
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
-    fixWorkspaceIndicator();
-
-    // setup focusButton and space focusModeIcons
-    focusButton = new FocusButton();
     Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');
-    // on allocation update spaces focusIcon position (e.g. initial position)
-    signals.connectOneShot(focusButton, 'notify::allocation', () => {
-        Tiling.spaces.updateSpaceIconPositions();
-    });
-    fixFocusModeIcon();
 
+    // on allocation propagate position information
+    signals.connectOneShot(menu.label, 'notify::allocation', () => {
+        setMonitor(Main.layoutManager.primaryMonitor);
+        Tiling.spaces.updateSpaceIconPositions();
+    })
+    
+    Tiling.spaces.forEach(s => {
+        s.workspaceLabel.clutter_text.set_font_description(menu.label.clutter_text.font_description);
+    });
+    fixWorkspaceIndicator();
+    fixFocusModeIcon();
     fixStyle();
 
     screenSignals.push(
@@ -733,12 +723,6 @@ function enable () {
      */
     signals.connect(Main.overview, 'hiding', () => {
         fixStyle();
-    })
-
-    fixLabel(menu._label);
-    signals.connect(menu._label, 'notify::allocation', fixLabel);
-    signals.connectOneShot(menu._label, 'notify::allocation', () => {
-        setMonitor(Main.layoutManager.primaryMonitor);
     })
 }
 
