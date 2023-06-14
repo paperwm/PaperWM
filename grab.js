@@ -65,7 +65,7 @@ var MoveGrab = class MoveGrab {
     }
 
     begin({center} = {}) {
-        Utils.debug("#grab", "begin")
+        Utils.debug("#grab", "begin");
 
         this.center = center;
         if (this.grabbed)
