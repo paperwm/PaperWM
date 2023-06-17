@@ -3299,7 +3299,7 @@ function focus_handler(metaWindow, user_data) {
         return;
     }
 
-    // If metaWindow is a transient window, deselect visual focus indicators and return
+    // If metaWindow is a transient window, return (after deselecting tiled focus indicators)
     if (isTransient(metaWindow)) {
         setAllWorkspacesInactive();
         return;
