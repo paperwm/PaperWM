@@ -300,7 +300,7 @@ _Note<sup>1</sup>: `Winprops` defined in the PaperWM extension settings take pre
 
 _Note<sup>2</sup>: if you use the `user.js` method you will need to restart Gnome shell to have them take effect._
 
-### Setting a default window property (to be applied to all windows)
+### Setting a default window property rule
 
 You can use the functionality defined in the [setting window specific properities](#setting-window-specific-properties) section to define a `default` window property rule that will be applied to all windows NOT matched by a more specific window property rule.
 
