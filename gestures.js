@@ -21,6 +21,7 @@ var Utils = Extension.imports.utils;
 var Tiling = Extension.imports.tiling;
 var Navigator = Extension.imports.navigator;
 var prefs = Extension.imports.settings.prefs;
+var Kludges = Extension.imports.kludges;
 
 const stage = global.stage;
 
@@ -81,7 +82,21 @@ function enable() {
                 }
             }
             if (direction === DIRECTIONS.Vertical) {
-                updateVertical(-dy*natural*prefs.swipe_sensitivity[1], event.get_time());
+                // if in overview => propagate event to overview
+                if (Main.overview.visible) {
+                    return Clutter.EVENT_PROPAGATE;
+                }
+
+                let dir_y = -dy*natural*prefs.swipe_sensitivity[1];
+                // if not Tiling.inPreview and swipe is UP => propagate event to overview
+                if (!Tiling.inPreview && dir_y > 0) {
+                    swipeTrackersEnable();
+                    return Clutter.EVENT_PROPAGATE;
+                }
+
+                // do PaperWM vertical swipe actions
+                swipeTrackersEnable(false);
+                updateVertical(dir_y, event.get_time());
                 return Clutter.EVENT_STOP;
             }
             return Clutter.EVENT_PROPAGATE;
@@ -312,9 +327,11 @@ function findTargetWindow(space, direction) {
 
 var transition = 'easeOutQuad';
 function updateVertical(dy, t) {
+    // if here then initiate workspace stack (for tiling inPreview show)
     if (!Tiling.inPreview) {
         Tiling.spaces._initWorkspaceStack();
     }
+
     let selected = Tiling.spaces.selectedSpace;
     let monitor = navigator.monitor;
     let v = dy/(t - time);
@@ -390,4 +407,14 @@ function endVertical() {
     };
 
     imports.mainloop.timeout_add(16, glide, 0);
+}
+
+/**
+ * Enables (or disables) gnome swipe trackers which take care of the
+ * default 3 finger swipe actions.
+ * @param {Boolean} option 
+ */
+function swipeTrackersEnable(option) {
+    let enable = option ?? true;
+    Kludges.swipeTrackers.forEach(t => t.enabled = enable);
 }
