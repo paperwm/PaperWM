@@ -373,11 +373,6 @@
         <summary>Set the default focus mode. 0:DEFAULT 1:CENTER</summary>
     </key>
 
-    <key type="b" name="topbar-follow-focus">
-        <default>true</default>
-        <summary>Make the top bar follow the focused monitor</summary>
-    </key>
-
     <key type="b" name="disable-topbar-styling">
         <default>false</default>
         <summary>Disables all topbar styling by PaperWM</summary>

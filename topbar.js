@@ -679,17 +679,6 @@ function enable () {
         fixTopBar();
     });
 
-    signals.connect(Settings.settings, 'changed::topbar-follow-focus', (settings, key) => {
-        let monitors = Tiling.spaces.monitors;
-        let to = prefs.topbar_follow_focus ?
-            Main.layoutManager.focusMonitor :
-            Main.layoutManager.primaryMonitor;
-        moveTopBarTo(to);
-        setMonitor(to);
-        let space = monitors.get(to);
-        updateWorkspaceIndicator(space.workspace.index());
-    });
-
     signals.connect(Settings.settings, 'changed::disable-topbar-styling', (settings, key) => {
         const status = prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
         Extension.imports.extension.notify(
@@ -819,21 +808,19 @@ function setWorkspaceName (name) {
     menu && menu.setName(name);
 }
 
-function setMonitor(monitor) {
-    if (prefs.topbar_follow_focus) {
-        moveTopBarTo(monitor);
-    } else {
-        monitor = Main.layoutManager.primaryMonitor
-    }
-    panelMonitor = monitor;
-    return monitor;
-}
+function updateMonitor() {
+    let primaryMonitor = Main.layoutManager.primaryMonitor;
+    // if panelMonitor has changed, then update layouts on workspaces
+    if (panelMonitor !== primaryMonitor) {
+        Meta.later_add(Meta.LaterType.IDLE, () => {
+            Tiling.spaces?.forEach(s => s.layout());
 
-function moveTopBarTo(monitor) {
-    let panelBox = Main.layoutManager.panelBox;
-    panelMonitor = monitor;
-    panelBox.set_position(monitor.x, monitor.y);
-    panelBox.width = monitor.width;
-    fixTopBar();
-    return monitor;
+            // if to show window positon bar, then update across workspaces
+            if (prefs.show_window_position_bar) {
+                Tiling.spaces?.setSpaceTopbarElementsVisible();
+            }
+            fixStyle();
+        });
+    }
+    panelMonitor = primaryMonitor;
 }
