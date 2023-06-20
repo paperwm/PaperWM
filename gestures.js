@@ -160,7 +160,6 @@ function horizontalScroll(actor, event) {
 }
 
 function update(space, dx, t) {
-
     dxs.push(dx);
     dts.push(t);
 
@@ -268,7 +267,11 @@ function done(space) {
 
 
 function findTargetWindow(space, direction) {
-    let selected = space.selectedWindow.clone;
+    let selected = space.selectedWindow?.clone;
+    if (!selected) {
+        return;
+    }
+
     if (selected.x + space.targetX >= 0 &&
           selected.x + selected.width + space.targetX <= space.width) {
         return selected.meta_window;
