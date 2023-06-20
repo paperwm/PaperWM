@@ -464,7 +464,7 @@ class WorkspaceMenu extends PanelMenu.Button {
             if (!this._navigator) {
                 this.state = 'SCROLL';
                 this._navigator = Navigator.getNavigator();
-                Tiling.spaces._initWorkspaceStack();
+                Tiling.spaces.initWorkspaceStack();
                 this._enterbox =  new Clutter.Actor({reactive: true});
                 Main.uiGroup.add_actor(this._enterbox);
                 this._enterbox.set_position(panelBox.x, panelBox.y + panelBox.height + 20);
