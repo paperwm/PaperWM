@@ -3150,6 +3150,9 @@ function ensureViewport(meta_window, space, options={}) {
 }
 
 function updateSelection(space, metaWindow) {
+    if (!metaWindow) {
+        return;
+    }
     let clone = metaWindow.clone;
     let cloneActor = clone.cloneActor;
 

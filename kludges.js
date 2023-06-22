@@ -394,6 +394,7 @@ var swipeTrackers = [
     Main?.wm?._workspaceAnimation?._swipeTracker, // gnome 40+
     Main?.wm?._swipeTracker // gnome 38 (and below)
 ].filter(t => typeof t !== 'undefined');
+
 var signals;
 function init() {
     registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
