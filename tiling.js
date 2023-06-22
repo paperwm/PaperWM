@@ -3295,14 +3295,14 @@ function focus_handler(metaWindow, user_data) {
         return;
     }
 
+    // If metaWindow is a transient window, return (after deselecting tiled focus indicators)
+    if (isTransient(metaWindow)) {
+        setAllWorkspacesInactive();
+        return;
+    }
+
     let space = spaces.spaceOfWindow(metaWindow);
     space.monitor.clickOverlay.show();
-
-    // If metaWindow is a transient window ensure the parent window instead
-    let transient = metaWindow.get_transient_for();
-    if (transient) {
-        metaWindow = transient;
-    }
 
     /**
        Find the closest neighbours. Remove any dead windows in the process to
