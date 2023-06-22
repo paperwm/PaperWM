@@ -481,9 +481,7 @@ var Space = class Space extends Array {
         // compensate to keep window position bar on all monitors
         if (prefs.show_window_position_bar) {
             const panelBoxHeight = TopBar.panelBox.height;
-            const monitor = prefs.topbar_follow_focus ?
-                Main.layoutManager.focusMonitor :
-                Main.layoutManager.primaryMonitor;
+            const monitor = Main.layoutManager.primaryMonitor;
             if (monitor !== this.monitor) {
                 workArea.y += panelBoxHeight;
                 workArea.height -= panelBoxHeight;
@@ -1749,12 +1747,11 @@ var Spaces = class Spaces extends Map {
         let monitors = Main.layoutManager.monitors;
 
         let finish = () => {
+            TopBar.updateMonitor();
             let activeSpace = this.get(workspaceManager.get_active_workspace());
-            let visible = monitors.map(m => this.monitors.get(m));
             let mru = this.mru();
             this.selectedSpace = mru[0];
             this.monitors.set(activeSpace.monitor, activeSpace);
-            TopBar.setMonitor(activeSpace.monitor);
             for (let [monitor, space] of this.monitors) {
                 space.show();
                 space.clip.raise_top();
@@ -1983,7 +1980,6 @@ var Spaces = class Spaces extends Map {
 
         this.animateToSpace(toSpace, fromSpace, () => this.setSpaceTopbarElementsVisible(false));
 
-        TopBar.setMonitor(toSpace.monitor);
         toSpace.monitor.clickOverlay.deactivate();
 
         let [x, y, _mods] = global.get_pointer();
@@ -2042,27 +2038,6 @@ var Spaces = class Spaces extends Map {
         return out;
     }
 
-    _initWorkspaceSequence() {
-        if (inPreview) {
-            return;
-        }
-        inPreview = PreviewMode.SEQUENTIAL;
-
-        if (Main.panel.statusArea.appMenu) {
-            Main.panel.statusArea.appMenu.container.hide();
-        }
-
-        this._animateToSpaceOrdered(this.selectedSpace, false);
-
-        let selected = this.selectedSpace.selectedWindow;
-        if (selected && selected.fullscreen) {
-            Tweener.addTween(selected.clone, {
-                y: Main.panel.actor.height + prefs.vertical_margin,
-                time: prefs.animation_time,
-            });
-        }
-    }
-
     _animateToSpaceOrdered(toSpace, animate = true) {
         // Always show the topbar when using the workspace stack
         TopBar.fixTopBar();
@@ -2110,6 +2085,28 @@ var Spaces = class Spaces extends Map {
         });
     }
 
+    _initWorkspaceSequence() {
+        if (inPreview) {
+            return;
+        }
+        inPreview = PreviewMode.SEQUENTIAL;
+        this.setSpaceTopbarElementsVisible();
+
+        if (Main.panel.statusArea.appMenu) {
+            Main.panel.statusArea.appMenu.container.hide();
+        }
+
+        this._animateToSpaceOrdered(this.selectedSpace, false);
+
+        let selected = this.selectedSpace.selectedWindow;
+        if (selected && selected.fullscreen) {
+            Tweener.addTween(selected.clone, {
+                y: Main.panel.actor.height + prefs.vertical_margin,
+                time: prefs.animation_time,
+            });
+        }
+    }
+
     selectSequenceSpace(direction, move) {
         // if in stack preview do not run sequence preview
         if (inPreview === PreviewMode.STACK) {
@@ -2151,7 +2148,6 @@ var Spaces = class Spaces extends Map {
         newSpace = monitorSpaces[to];
         this.selectedSpace = newSpace;
 
-        this.setSpaceTopbarElementsVisible();
         TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
         const scale = 0.825;
@@ -2179,7 +2175,7 @@ var Spaces = class Spaces extends Map {
         });
     }
 
-    _initWorkspaceStack() {
+    initWorkspaceStack() {
         if (inPreview) {
             return;
         }
@@ -2188,6 +2184,7 @@ var Spaces = class Spaces extends Map {
 
         // Always show the topbar when using the workspace stack
         TopBar.fixTopBar();
+        this.setSpaceTopbarElementsVisible();
         const scale = 0.9;
         let space = this.getActiveSpace();
         let mru = [...this.stack];
@@ -2276,7 +2273,7 @@ var Spaces = class Spaces extends Map {
         mru = [space, ...mru];
 
         if (!inPreview) {
-            this._initWorkspaceStack();
+            this.initWorkspaceStack();
         }
 
         let from = mru.indexOf(this.selectedSpace);
@@ -2307,7 +2304,6 @@ var Spaces = class Spaces extends Map {
         newSpace = mru[to];
         this.selectedSpace = newSpace;
 
-        this.setSpaceTopbarElementsVisible();
         TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
         mru.forEach((space, i) => {
@@ -3154,6 +3150,9 @@ function ensureViewport(meta_window, space, options={}) {
 }
 
 function updateSelection(space, metaWindow) {
+    if (!metaWindow) {
+        return;
+    }
     let clone = metaWindow.clone;
     let cloneActor = clone.cloneActor;
 
@@ -3299,14 +3298,14 @@ function focus_handler(metaWindow, user_data) {
         return;
     }
 
+    // If metaWindow is a transient window, return (after deselecting tiled focus indicators)
+    if (isTransient(metaWindow)) {
+        setAllWorkspacesInactive();
+        return;
+    }
+
     let space = spaces.spaceOfWindow(metaWindow);
     space.monitor.clickOverlay.show();
-
-    // If metaWindow is a transient window ensure the parent window instead
-    let transient = metaWindow.get_transient_for();
-    if (transient) {
-        metaWindow = transient;
-    }
 
     /**
        Find the closest neighbours. Remove any dead windows in the process to
