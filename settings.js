@@ -359,6 +359,9 @@ function winprop_match_p(meta_window, prop) {
 }
 
 function find_winprop(meta_window)  {
+    // sort by title first (prioritise title over wm_class)
+
+
     let props = winprops.filter(winprop_match_p.bind(null, meta_window));
 
     // if matching props found, return first one
@@ -395,17 +398,26 @@ function defwinprop(spec) {
     // add winprop
     winprops.push(spec);
 
-    // now order winprops with gsettings first
+    // now order winprops with gsettings first, then title over wm_class
     winprops.sort((a,b) => {
+        let firstresult = 0;
         if (a.gsetting && !b.gsetting) {
-            return -1;
+            firstresult = -1;
         }
         else if (!a.gsetting && b.gsetting) {
-            return 1;
+            firstresult = 1;
         }
-        else {
-            return 0;
+
+        // second compare, prioritise title
+        let secondresult = 0;
+        if (a.title && !b.title) {
+            secondresult = -1;
         }
+        else if (!a.title && b.title) {
+            secondresult = 1;
+        }
+
+        return firstresult || secondresult;
     });
 }
 
