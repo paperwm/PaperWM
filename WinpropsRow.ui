@@ -70,7 +70,7 @@
                         <property name="margin_top">6</property>
                         <property name="margin_bottom">6</property>
                         <property name="column_spacing">32</property>
-                        <property name="tooltip_markup" translatable="yes">Window class value used to identify windows to have these winprops applied.  Can be a &lt;i&gt;string&lt;/i&gt; or &lt;i&gt;javascript regex expression literal&lt;/i&gt;.</property>
+                        <property name="tooltip_markup" translatable="yes">Window class value used to identify windows to have this winprop applied.  Can be a &lt;b&gt;string&lt;/b&gt; or &lt;b&gt;javascript regex expression literal&lt;/b&gt;, e.g. &lt;b&gt;/.*terminal.*/i&lt;/b&gt; would match on any value that contains the word &lt;b&gt;terminal&lt;/b&gt; (case-insensitive).</property>
                         <child>
                           <object class="GtkLabel">
                             <property name="focusable">False</property>
@@ -103,7 +103,7 @@
                         <property name="margin_top">6</property>
                         <property name="margin_bottom">6</property>
                         <property name="column_spacing">32</property>
-                        <property name="tooltip_markup" translatable="yes">Window title value used to identify windows to have these winprops applied.  Can be a &lt;i&gt;string&lt;/i&gt; or &lt;i&gt;javascript regex expression literal&lt;/i&gt;.</property>
+                        <property name="tooltip_markup" translatable="yes">Window title value used to identify windows to have this winprop applied.  Can be a &lt;b&gt;string&lt;/b&gt; or &lt;b&gt;javascript regex expression literal&lt;/b&gt;, e.g. &lt;b&gt;/.*terminal.*/i&lt;/b&gt; would match on any value that contains the word &lt;b&gt;terminal&lt;/b&gt; (case-insensitive).</property>
                         <child>
                           <object class="GtkLabel">
                             <property name="focusable">False</property>
@@ -172,7 +172,7 @@
                             <property name="focusable">False</property>
                             <property name="hexpand">1</property>
                             <property name="use_markup">True</property>
-                            <property name="label" translatable="yes">Preferred width (with &lt;b&gt;%&lt;/b&gt; or &lt;b&gt;px&lt;/b&gt; unit)</property>
+                            <property name="label" translatable="yes">Preferred width &lt;i&gt;(with &lt;b&gt;%&lt;/b&gt; or &lt;b&gt;px&lt;/b&gt; unit)&lt;/i&gt;</property>
                             <property name="xalign">0</property>
                             <layout>
                               <property name="column">0</property>

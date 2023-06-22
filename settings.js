@@ -337,11 +337,13 @@ var winprops = [];
 function winprop_match_p(meta_window, prop) {
     let wm_class = meta_window.wm_class || "";
     let title = meta_window.title;
-    if (prop.wm_class instanceof RegExp) {
-        if (!wm_class.match(prop.wm_class))
+    if (prop.wm_class) {
+        if (prop.wm_class instanceof RegExp) {
+            if (!wm_class.match(prop.wm_class))
+                return false;
+        } else if (prop.wm_class !== wm_class) {
             return false;
-    } else if (prop.wm_class !== wm_class) {
-        return false;
+        }
     }
     if (prop.title) {
         if (prop.title instanceof RegExp) {
@@ -357,10 +359,23 @@ function winprop_match_p(meta_window, prop) {
 }
 
 function find_winprop(meta_window)  {
-    let props = winprops.filter(
-        winprop_match_p.bind(null, meta_window));
+    // sort by title first (prioritise title over wm_class)
 
-    return props[0];
+
+    let props = winprops.filter(winprop_match_p.bind(null, meta_window));
+
+    // if matching props found, return first one
+    if (props.length > 0) {
+        return props[0];
+    }
+
+    // fall back, if star (catch-all) winprop exists, return the first one
+    let starProps = winprops.filter(w => w.wm_class === "*" || w.title === "*");
+    if (starProps.length > 0) {
+        return starProps[0];
+    }
+    
+    return null;
 }
 
 function defwinprop(spec) {
@@ -383,17 +398,26 @@ function defwinprop(spec) {
     // add winprop
     winprops.push(spec);
 
-    // now order winprops with gsettings first
+    // now order winprops with gsettings first, then title over wm_class
     winprops.sort((a,b) => {
+        let firstresult = 0;
         if (a.gsetting && !b.gsetting) {
-            return -1;
+            firstresult = -1;
         }
         else if (!a.gsetting && b.gsetting) {
-            return 1;
+            firstresult = 1;
         }
-        else {
-            return 0;
+
+        // second compare, prioritise title
+        let secondresult = 0;
+        if (a.title && !b.title) {
+            secondresult = -1;
         }
+        else if (!a.title && b.title) {
+            secondresult = 1;
+        }
+
+        return firstresult || secondresult;
     });
 }
 

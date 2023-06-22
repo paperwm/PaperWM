@@ -259,7 +259,7 @@ Setting | Description | Input Type | Default value
 
 </details>
 
-### Setting window specific properities
+### Setting window specific properties
 
 It's possible to set window properties using simple rules that will be applied when placing new windows. Properties can applied to windows identified by their `wm_class` or `title`.  The following properties are currently supported:
 
@@ -271,6 +271,10 @@ Property              | Input type                          | Input example | De
 Window properties can be added using the `Winprops` tab of the PaperWM extension settings:
 
 https://user-images.githubusercontent.com/30424662/211422647-79e64d56-5dbb-4054-b9a6-32bf3194b636.mp4
+
+The `wm_class` or `title` of a window can be found by using looking glass: <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd> Go to the "Windows" section at the top right and find the window. X11 users can also use the `xprop` command line tool (`title` is referred as `WM_NAME` in `xprop`). The match of `wm_class` and `title` are with an OR condition; and in addition to a plain string matching, a constructed [`RegExp()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/RegExp) can be used to utilise regex matching.  For example, e.g. `/.*terminal.*/i` would match on any value that contains the word "terminal" (case-insensitive).
+
+
 
 Alternatively, you can also define winprops in the `user.js` configuration file.  Below is a few examples of setting window properties for _Spotify_ and _Alacritty_.  The below examples are best placed in the `init` part of `user.js`:
 
@@ -292,11 +296,19 @@ Alternatively, you can also define winprops in the `user.js` configuration file.
     });
 ```
 
-The `wm_class` or `title` of a window can be found by using looking glass: <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd> Go to the "Windows" section at the top right and find the window. X11 users can also use the `xprop` command line tool (`title` is referred as `WM_NAME` in `xprop`). The match of `wm_class` and `title` are with an OR condition; and in addition to a plain string matching, a constructed [`RegExp()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/RegExp) can be used to utilise regex matching.
-
 _Note<sup>1</sup>: `Winprops` defined in the PaperWM extension settings take precedence over `Winprops` defined using the `user.js` method._
 
 _Note<sup>2</sup>: if you use the `user.js` method you will need to restart Gnome shell to have them take effect._
+
+### Setting a default window property rule
+
+You can use the functionality defined in the [setting window specific properities](#setting-window-specific-properties) section to define a `default` window property rule that will be applied to all windows NOT matched by a more specific window property rule.
+
+You do this by using the special "match all" operator `*` as an input for `wm_class` or `title`.  The below image shows setting a default `Preferred width` value of `50%`.
+
+<img alt="Setting default window property rule" src="media/default-star-winprop.png" width="560px">
+
+This special operator is at a lower precedence, so more specific properties that match a window will always take precedence and be applied.
 
 ### New Window Handlers
 
@@ -374,7 +386,6 @@ _Note: PaperWM overrides the default Gnome Top Bar style to be completely transp
 Focus modes can be toggled by user-settable keybinding (default is `Super`+`Shift`+`c`), or by clicking the new focus-mode button in the topbar:
 
 ![Focus mode button](media/focus-mode-button.png)
-
 
 ### Setting the default focus mode
 

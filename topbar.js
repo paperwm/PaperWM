@@ -657,8 +657,7 @@ function enable () {
 
     // on allocation propagate position information
     signals.connectOneShot(menu.label, 'notify::allocation', () => {
-        setMonitor(Main.layoutManager.primaryMonitor);
-        Tiling.spaces.updateSpaceIconPositions();
+        updateMonitor();
     })
     
     Tiling.spaces.forEach(s => {
