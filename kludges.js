@@ -553,10 +553,10 @@ function enable() {
                     this.emit('queue-changed');
 
                 let hasNotifications = Main.sessionMode.hasNotifications;
-
                 if (this._notificationState == State.HIDDEN) {
+                    let selectedFullscreen = global.display.focus_window?.fullscreen ?? false;
                     let nextNotification = this._notificationQueue[0] || null;
-                    if (hasNotifications && nextNotification) {
+                    if (!selectedFullscreen && hasNotifications && nextNotification) {
                         // Monkeypatch here
                         let limited = this._busy;
                         let showNextNotification = (!limited || nextNotification.forFeedback || nextNotification.urgency == Urgency.CRITICAL);
