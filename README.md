@@ -2,11 +2,13 @@
 
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://paperwm.zulipchat.com)
 
-PaperWM is an experimental [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension providing scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
+> #### ⚠️ **ATTENTION:** we recently set [`release`](https://github.com/paperwm/PaperWM/tree/release) branch as default.  This change aims to provide a more tested and stable experience for most users.  You can continue to use [`develop`](https://github.com/paperwm/PaperWM/tree/develop) branch if you want the latest features and fixes as soon as they're available.  Changes will be merged into `release` branch after a week or so of testing in `develop` branch.
+
+PaperWM is a [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension which provides scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
 Supports Gnome Shell from 3.28 to 44 on X11 and wayland.
 
->**Note:** while PaperWM can be installed on a wide range of Gnome versions, new features aren't generally backported to versions NOT targeted for current support (see [Installation](#installation) section).  Fixes may be backported on request (please submit a [new issue](https://github.com/paperwm/PaperWM/issues/new/choose) if you've identified a recent fix that should be backported and you can help with testing).
+_While PaperWM can be installed on a wide range of Gnome versions, new features aren't generally backported to versions NOT targeted for current support (see [Installation](#installation) section).  Fixes may be backported on request (please submit a [new issue](https://github.com/paperwm/PaperWM/issues/new/choose) if you've identified a recent fix that should be backported and you can help with testing)._
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
@@ -16,12 +18,12 @@ We hang out on [zulip](https://paperwm.zulipchat.com).
 
 Clone the repo and check out the branch supporting the Gnome Shell version you're running.
 
-- 42-44 (targeted for current support): https://github.com/paperwm/PaperWM/tree/develop
+- 42-44 (targeted for current support): https://github.com/paperwm/PaperWM/tree/release
 - 40-41: https://github.com/paperwm/PaperWM/tree/gnome-40
 - 3.28-3.38: https://github.com/paperwm/PaperWM/tree/gnome-3.38
 
 
-Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/develop/install.sh) script
+Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/release/install.sh) script
 from the repository. The installer will create a link to the repo in
 `$XDG_DATA_HOME/gnome-shell/extensions/`. It will then ask if you want to apply
 the recommended settings (see [Recommended
@@ -29,33 +31,24 @@ Settings](#recommended-gnome-shell-settings)) and lastly it will ask to enable P
 ```bash
 ./install.sh # install, load and enable paperwm
 ```
-
+> ⚠️ You will likely need to restart Gnome shell after installing PaperWM, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only).
+>
+> After logging back in, you will can then enable PaperWM via the `Extensions` application, or by running the following command from the command-line:
+>
+> ```bash
+> /usr/bin/gnome-extensions enable paperwm@hedning:matrix.org
+> ```
+### Uninstall PaperWM
 To uninstall simply run `./uninstall.sh`.
 
 Running the extension will automatically install a user config file as described in [User configuration & development](#user-configuration--development).
 
-### Note for Ubuntu users ###
+## Contributing
+Users are enouraged to submit [issues](https://github.com/paperwm/PaperWM/issues/new/choose) and [Pull Requests](https://github.com/paperwm/PaperWM/pulls)!
 
-There's three different gnome-desktop variants in Ubuntu:
-- [`ubuntu-desktop`](https://packages.ubuntu.com/focal/ubuntu-desktop): the default
-- [`ubuntu-gnome-desktop`](https://packages.ubuntu.com/focal/ubuntu-gnome-desktop):
-  adds plain gnome sessions to the default
-- [`vanilla-gnome-desktop`](https://packages.ubuntu.com/focal/vanilla-gnome-desktop):
-  a «plain» variant
-
-The default `ubuntu-desktop` ships with `desktop-icons` which doesn't work
-correctly with PaperWM ([#145](https://github.com/paperwm/PaperWM/issues/145),
-[#218](https://github.com/paperwm/PaperWM/issues/218)). Turning the extension
-off in gnome-tweaks [should work in
-19.10](https://github.com/paperwm/PaperWM/issues/218#issuecomment-572250654),
-but there's [reports of this not
-working](https://github.com/paperwm/PaperWM/issues/145#issuecomment-508620154)
-in 19.04, so your milage my vary.
-
-For the easiest out of the box experience we reccommend `ubuntu-gnome-desktop`.
-`vanilla-gnome-desktop` adds some keybindings which plays badly with PaperWM
-([#233](https://github.com/paperwm/PaperWM/issues/233)), making it unsuitable at
-the moment.
+> ⚠️ Please ensure pull requests are based off, and submitted to, [develop](https://github.com/paperwm/PaperWM/tree/develop) branch.
+> 
+> Pull requests submitted to the `release` branch will not be accepted (but don't worry, if you accidentally submit a PR to the `release` branch we won't be mad, and will just remind you and ask you to change it).
 
 ## Usage ##
 
@@ -443,7 +436,7 @@ There's a few Gnome Shell settings which works poorly with PaperWM. Namely
 - `attach-modal-dialogs`: Attached modal dialogs can cause visual glitching
 
 To use the recommended settings run
-[`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/develop/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
+[`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/release/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
 
 
 ## Recommended extensions ##
