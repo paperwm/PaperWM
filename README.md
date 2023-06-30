@@ -32,33 +32,17 @@ Settings](#recommended-gnome-shell-settings)) and lastly it will ask to enable P
 ```bash
 ./install.sh # install, load and enable paperwm
 ```
+⚠️ you will likely need to restart Gnome shell after installing PaperWM, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only).
 
+After logging back in, you will can then enable PaperWM via the `Extensions` application, or by running the following command from the command-line:
+
+```bash
+/usr/bin/gnome-extensions enable paperwm@hedning:matrix.org
+```
+### Uninstall PaperWM
 To uninstall simply run `./uninstall.sh`.
 
 Running the extension will automatically install a user config file as described in [User configuration & development](#user-configuration--development).
-
-### Note for Ubuntu users ###
-
-There's three different gnome-desktop variants in Ubuntu:
-- [`ubuntu-desktop`](https://packages.ubuntu.com/focal/ubuntu-desktop): the default
-- [`ubuntu-gnome-desktop`](https://packages.ubuntu.com/focal/ubuntu-gnome-desktop):
-  adds plain gnome sessions to the default
-- [`vanilla-gnome-desktop`](https://packages.ubuntu.com/focal/vanilla-gnome-desktop):
-  a «plain» variant
-
-The default `ubuntu-desktop` ships with `desktop-icons` which doesn't work
-correctly with PaperWM ([#145](https://github.com/paperwm/PaperWM/issues/145),
-[#218](https://github.com/paperwm/PaperWM/issues/218)). Turning the extension
-off in gnome-tweaks [should work in
-19.10](https://github.com/paperwm/PaperWM/issues/218#issuecomment-572250654),
-but there's [reports of this not
-working](https://github.com/paperwm/PaperWM/issues/145#issuecomment-508620154)
-in 19.04, so your milage my vary.
-
-For the easiest out of the box experience we reccommend `ubuntu-gnome-desktop`.
-`vanilla-gnome-desktop` adds some keybindings which plays badly with PaperWM
-([#233](https://github.com/paperwm/PaperWM/issues/233)), making it unsuitable at
-the moment.
 
 ## Usage ##
 
