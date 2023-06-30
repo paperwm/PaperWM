@@ -2,7 +2,7 @@
 
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://paperwm.zulipchat.com)
 
-> #### ⚠️ **ATTENTION:** we recently set `release` branch as default.  This change aims to provide a more tested and stable experience for most users.  You can continue to use `develop` branch if you want the latest features and fixes as soon as they're available.  Changes will be merged into `release` branch after a week or so of testing in `develop` branch.
+> #### ⚠️ **ATTENTION:** we recently set [`release`](https://github.com/paperwm/PaperWM/tree/release) branch as default.  This change aims to provide a more tested and stable experience for most users.  You can continue to use [`develop`](https://github.com/paperwm/PaperWM/tree/develop) branch if you want the latest features and fixes as soon as they're available.  Changes will be merged into `release` branch after a week or so of testing in `develop` branch.
 
 PaperWM is a [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension which provides scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
@@ -46,7 +46,7 @@ Running the extension will automatically install a user config file as described
 ## Contributing
 Users are enouraged to submit [issues](https://github.com/paperwm/PaperWM/issues/new/choose) and [Pull Requests](https://github.com/paperwm/PaperWM/pulls)!
 
-> ⚠️ Please ensure pull requests are based off, and submitted to, the [develop](https://github.com/paperwm/PaperWM/tree/develop) branch.
+> ⚠️ Please ensure pull requests are based off, and submitted to, [develop](https://github.com/paperwm/PaperWM/tree/develop) branch.
 > 
 > Pull requests submitted to the `release` branch will not be accepted (but don't worry, if you accidentally submit a PR to the `release` branch we won't be mad, and will just remind you and ask you to change it).
 
