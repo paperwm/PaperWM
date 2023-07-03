@@ -2745,15 +2745,15 @@ function resizeHandler(metaWindow) {
     }
 }
 
-var signals, oldSpaces, backgroundGroup, oldMonitors, WindowCloneLayout, grabSignals;
+var signals, backgroundGroup, WindowCloneLayout, grabSignals;
+var oldSpaces = new Map();
+var oldMonitors = new Map();
 function enable(errorNotification) {
     debug('#enable');
 
     // Symbol to retrieve the focus handler id
     signals = new utils.Signals();
     grabSignals = new utils.Signals();
-    oldSpaces = new Map();
-    oldMonitors = new Map();
 
     backgroundGroup = Main.layoutManager._backgroundGroup;
 
@@ -2818,8 +2818,6 @@ function disable () {
         }
     });
 
-    oldSpaces = null;
-    oldMonitors = null;
     backgroundGroup = null;
 }
 
