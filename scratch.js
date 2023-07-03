@@ -227,12 +227,9 @@ var PopupMenu = imports.ui.popupMenu;
 var WindowMenu = imports.ui.windowMenu;
 var originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
 
-function init() {
+function enable() {
     float = Symbol();
     scratchFrame = Symbol();
-}
-
-function enable() {
     WindowMenu.WindowMenu.prototype._buildMenu =
         function (window) {
             let item;
@@ -248,4 +245,6 @@ function enable() {
 
 function disable() {
     WindowMenu.WindowMenu.prototype._buildMenu = originalBuildMenu;
+    float = null;
+    scratchFrame = null;
 }

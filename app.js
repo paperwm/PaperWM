@@ -21,7 +21,7 @@ var CouldNotLaunch = Symbol();
 
 // Lookup table for custom handlers, keys being the app id
 var customHandlers, customSpawnHandlers;
-function init() {
+function enable() {
     customHandlers = { 'org.gnome.Terminal.desktop': newGnomeTerminal };
     customSpawnHandlers = {
         'com.gexperts.Tilix.desktop': mkCommandLineSpawner('tilix --working-directory %d')
@@ -73,6 +73,11 @@ function init() {
 
         }
     );
+}
+
+function disable() {
+    customHandlers = null;
+    customSpawnHandlers = null;
 }
 
 function launchFromWorkspaceDir(app, workspace=null) {

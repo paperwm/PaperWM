@@ -388,15 +388,17 @@ function restoreMethod(obj, name) {
  * move from gnome version to gnome version.  Next to the swipe tracker locations
  * below are the gnome versions when they were first (or last) seen.
  */
-var swipeTrackers = [
-    Main?.overview?._swipeTracker, // gnome 40+
-    Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker, // gnome 40+
-    Main?.wm?._workspaceAnimation?._swipeTracker, // gnome 40+
-    Main?.wm?._swipeTracker // gnome 38 (and below)
-].filter(t => typeof t !== 'undefined');
-
+var swipeTrackers;
 var signals;
-function init() {
+function startup() {
+
+    swipeTrackers = [
+        Main?.overview?._swipeTracker, // gnome 40+
+        Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker, // gnome 40+
+        Main?.wm?._workspaceAnimation?._swipeTracker, // gnome 40+
+        Main?.wm?._swipeTracker // gnome 38 (and below)
+    ].filter(t => typeof t !== 'undefined');
+
     registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
     registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch', animateSwitch);
@@ -460,6 +462,7 @@ function init() {
 
 var actions;
 function enable() {
+    startup();
     enableOverrides();
 
     /*
@@ -596,6 +599,8 @@ function disable() {
 
     signals.destroy();
     Main.layoutManager._updateHotCorners();
+    swipeTrackers = null;
+    actions = null;
 }
 
 // 3.32 overview layout

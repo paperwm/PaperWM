@@ -87,7 +87,7 @@ function setSchemas() {
 }
 
 setSchemas(); // Initialize imediately so prefs.js can import properly
-function init() {
+function enable() {
     settings.connect('changed', setState);
     settings.connect('changed::vertical-margin', onWindowGapChanged);
     settings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
@@ -108,10 +108,6 @@ function init() {
     });
 
     addWinpropsFromGSettings();
-}
-
-var id;
-function enable() {
     setSchemas();
 }
 

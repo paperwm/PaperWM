@@ -66,22 +66,6 @@ var inPreview = PreviewMode.NONE;
 // DEFAULT mode is normal/original PaperWM window focus behaviour
 var FocusModes = {DEFAULT: 0, CENTER: 1};
 
-var signals, oldSpaces, backgroundGroup, oldMonitors, WindowCloneLayout, grabSignals;
-function init() {
-    // Symbol to retrieve the focus handler id
-    signals = new utils.Signals();
-    grabSignals = new utils.Signals();
-    oldSpaces = new Map();
-    oldMonitors = new Map();
-
-    backgroundGroup = Main.layoutManager._backgroundGroup;
-
-    // connect to settings and update winprops array when it's updated
-    Settings.settings.connect('changed::winprops', () => {
-        Settings.reloadWinpropsFromGSettings();
-    });
-}
-
 /**
    Scrolled and tiled per monitor workspace.
 
@@ -2761,8 +2745,23 @@ function resizeHandler(metaWindow) {
     }
 }
 
+var signals, oldSpaces, backgroundGroup, oldMonitors, WindowCloneLayout, grabSignals;
 function enable(errorNotification) {
     debug('#enable');
+
+    // Symbol to retrieve the focus handler id
+    signals = new utils.Signals();
+    grabSignals = new utils.Signals();
+    oldSpaces = new Map();
+    oldMonitors = new Map();
+
+    backgroundGroup = Main.layoutManager._backgroundGroup;
+
+    // connect to settings and update winprops array when it's updated
+    Settings.settings.connect('changed::winprops', () => {
+        Settings.reloadWinpropsFromGSettings();
+    });
+
     spaces = new Spaces();
 
     function initWorkspaces() {
@@ -2802,6 +2801,7 @@ function enable(errorNotification) {
 
 function disable () {
     signals.destroy();
+    grabSignals.destroy();
     spaces.destroy();
 
     oldSpaces.forEach(space => {
@@ -2817,6 +2817,10 @@ function disable () {
             windows[i].lower();
         }
     });
+
+    oldSpaces = null;
+    oldMonitors = null;
+    backgroundGroup = null;
 }
 
 /**

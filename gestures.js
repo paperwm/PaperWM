@@ -25,11 +25,6 @@ var Kludges = Extension.imports.kludges;
 
 const stage = global.stage;
 
-var signals;
-function init() {
-    signals = new Utils.Signals();
-}
-
 const DIRECTIONS = {
     Horizontal: true,
     Vertical: false,
@@ -40,9 +35,11 @@ var time;
 var vState;
 var navigator;
 var direction = undefined;
+var signals;
 // 1 is natural scrolling, -1 is unnatural
 var natural = 1;
 function enable() {
+    signals = new Utils.Signals();
     // Touchpad swipes only works in Wayland
     if (!Meta.is_wayland_compositor())
         return;
@@ -51,7 +48,6 @@ function enable() {
         schema_id: 'org.gnome.desktop.peripherals.touchpad'
     });
 
-    signals.destroy();
     /**
        In order for the space.background actors to get any input we need to hide
        all the window actors from the stage.
@@ -123,6 +119,7 @@ function enable() {
 
 function disable() {
     signals.destroy();
+    touchpadSettings = null;
 }
 
 /**

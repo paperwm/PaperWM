@@ -60,7 +60,7 @@ function registerMinimapAction(name, handler) {
 
 
 var signals, actions, nameMap, actionIdMap, keycomboMap, overrides, conflictSettings;
-function init() {
+function startup() {
     signals = new Utils.Signals();
     actions = [];
     nameMap = {};     // mutter keybinding action name -> action
@@ -708,6 +708,7 @@ function resetConflicts() {
 }
 
 function enable() {
+    startup();
     let schemas = [...Settings.conflictSettings,
                    convenience.getSettings(KEYBINDINGS_KEY)];
     schemas.forEach(schema => {
@@ -727,4 +728,10 @@ function disable() {
     signals.destroy();
     actions.forEach(disableAction);
     resetConflicts();
+
+    actions = null;
+    nameMap = null;
+    actionIdMap = null;
+    keycomboMap = null;
+    overrides = null;
 }

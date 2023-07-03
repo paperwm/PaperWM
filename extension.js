@@ -82,7 +82,7 @@ var enabled = false;
 let lastDisabledTime = 0; // init (epoch ms)
 
 var Extension, convenience;
-function init() {
+function startup() {
     SESSIONID += "#";
     log(`#paperwm init: ${SESSIONID}`);
 
@@ -111,8 +111,10 @@ function enable() {
         return;
     }
 
-    if (run('enable'))
+    startup();
+    if (run('enable')) {
         enabled = true;
+    }
 }
 
 function disable() {
@@ -136,8 +138,12 @@ function disable() {
 
     if (run('disable')) {
         enabled = false;
+        initRun = false;
         lastDisabledTime = Date.now();
     }
+
+    Extension = null;
+    convenience = null;
 }
 
 

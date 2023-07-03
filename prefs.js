@@ -826,7 +826,7 @@ function syncStringSetting(settings, key, callback) {
     callback(settings.get_string(key));
 }
 
-function init() {
+function enable() {
     const provider = new Gtk.CssProvider();
     provider.load_from_path(Extension.dir.get_path() + '/resources/prefs.css');
     Gtk.StyleContext.add_provider_for_display(
