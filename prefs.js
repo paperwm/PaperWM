@@ -318,7 +318,7 @@ var SettingsWidget = class SettingsWidget {
 
         // About
         let versionLabel = this.builder.get_object('extension_version');
-        let version = Extension.metadata.version.toString();
+        let version = Extension.metadata.version?.toString() ?? '?';
         versionLabel.set_text(version);
     }
 
