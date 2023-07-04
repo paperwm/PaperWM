@@ -1,8 +1,8 @@
 var Extension;
 if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
+    Extension = imports.misc.extensionUtils.extensions["paperwm@paperwm.github.com"];
 } else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
+    Extension = imports.ui.main.extensionManager.lookup("paperwm@paperwm.github.com");
 }
 
 var Tiling = Extension.imports.tiling;

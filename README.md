@@ -36,7 +36,7 @@ Settings](#recommended-gnome-shell-settings)) and lastly it will ask to enable P
 > After logging back in, you will can then enable PaperWM via the `Extensions` application, or by running the following command from the command-line:
 >
 > ```bash
-> /usr/bin/gnome-extensions enable paperwm@hedning:matrix.org
+> /usr/bin/gnome-extensions enable paperwm@paperwm.github.com
 > ```
 ### Uninstall PaperWM
 To uninstall simply run `./uninstall.sh`.
@@ -169,7 +169,7 @@ When the tiling is active <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> selects
 
 A default user configuration, `user.js`, is created in `~/.config/paperwm/` with three functions `init`, `enable` and `disable`. `init` will run only once on startup, `enable` and `disable` will be run whenever extensions are being told to disable and enable themselves. Eg. when locking the screen with <kbd>Super</kbd><kbd>L</kbd>.
 
-You can also supply a custom `user.css` in `~/.config/paperwm/`. This user stylesheet can override the default styles of paperwm (e.g. from `~/.local/share/gnome-shell/extensions/paperwm@hedning:matrix.org/user.css` or `/usr/share/gnome-shell/extensions/paperwm@hedning:matrix.org/user.css`), gnome or even other extensions. The same rules as for CSS in the browser apply (i.e. CSS rules are additive). To reload the `user.css` (and all other loaded CSS files) you can run `Main.loadTheme()` in looking glass (i.e. <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd>). Note that `user.css` needs to already be loaded for this to work. So after initially creating the file you might need to restart gnome once.
+You can also supply a custom `user.css` in `~/.config/paperwm/`. This user stylesheet can override the default styles of paperwm (e.g. from `~/.local/share/gnome-shell/extensions/paperwm@paperwm.github.com/user.css` or `/usr/share/gnome-shell/extensions/paperwm@paperwm.github.com/user.css`), gnome or even other extensions. The same rules as for CSS in the browser apply (i.e. CSS rules are additive). To reload the `user.css` (and all other loaded CSS files) you can run `Main.loadTheme()` in looking glass (i.e. <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd>). Note that `user.css` needs to already be loaded for this to work. So after initially creating the file you might need to restart gnome once.
 
 We also made an emacs package, [gnome-shell-mode](https://github.com/paperwm/gnome-shell-mode), to make hacking on the config and writing extensions a more pleasant experience. To support this out of the box we also install a `metadata.json` so gnome-shell-mode will pick up the correct file context, giving you completion and interactive evaluation ala. looking glass straight in emacs.
 
@@ -184,7 +184,7 @@ _Note: not all PaperWM user-configurable settings are available in the settings 
 You can use `dconf-editor` to view and modify all PaperWM user settings.  You can view all settings by executing the following command from a terminal:
 
 ```shell
-GSETTINGS_SCHEMA_DIR=$HOME/.local/share/gnome-shell/extensions/paperwm@hedning:matrix.org/schemas dconf-editor /org/gnome/shell/extensions/paperwm/
+GSETTINGS_SCHEMA_DIR=$HOME/.local/share/gnome-shell/extensions/paperwm@paperwm.github.com/schemas dconf-editor /org/gnome/shell/extensions/paperwm/
 ```
 
 ### PaperWM user-configurable settings _not_ available in settings UI
