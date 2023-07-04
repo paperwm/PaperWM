@@ -15,8 +15,7 @@ const { WinpropsPane } = Extension.imports.winpropsPane;
 const WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
 const KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
 
-const wmSettings = new Gio.Settings({ schema_id:
-                                    'org.gnome.desktop.wm.preferences'});
+const wmSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.wm.preferences'});
 
 let _ = s => s;
 
@@ -826,7 +825,11 @@ function syncStringSetting(settings, key, callback) {
     callback(settings.get_string(key));
 }
 
-function enable() {
+/**
+ * This init() is called when opening PaperWM settings/pref panes
+ * (not when initialising the extension on login).
+ */
+function init() {
     const provider = new Gtk.CssProvider();
     provider.load_from_path(Extension.dir.get_path() + '/resources/prefs.css');
     Gtk.StyleContext.add_provider_for_display(
