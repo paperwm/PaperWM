@@ -3,18 +3,8 @@
    Settings utility shared between the running extension and the preference UI.
 
  */
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@paperwm.github.com"];
-} else {
-    // Cannot relaiably test for imports.ui in the preference ui
-    try {
-        Extension = imports.ui.main.extensionManager.lookup("paperwm@paperwm.github.com");
-    } catch(e) {
-        Extension = imports.misc.extensionUtils.getCurrentExtension();
-    }
-}
 
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
 var Gtk = imports.gi.Gtk;

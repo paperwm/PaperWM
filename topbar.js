@@ -2,13 +2,7 @@
   Functionality related to the top bar, often called the statusbar.
  */
 
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@paperwm.github.com"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@paperwm.github.com");
-}
-
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Meta = imports.gi.Meta;
 var St = imports.gi.St;
 var Gio = imports.gi.Gio;

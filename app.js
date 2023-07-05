@@ -2,13 +2,7 @@
   Application functionality, like global new window actions etc.
  */
 
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@paperwm.github.com"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@paperwm.github.com");
-}
-
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var GLib = imports.gi.GLib
 var Gio = imports.gi.Gio;
 var Tiling = Extension.imports.tiling
