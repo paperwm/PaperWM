@@ -607,15 +607,13 @@ var menu;
 var focusButton;
 var orginalActivitiesText;
 var screenSignals, signals;
-function init () {
+var panelBoxShowId, panelBoxHideId;
+function enable () {
     let label = Main.panel.statusArea.activities.first_child;
     orginalActivitiesText = label.text;
     screenSignals = [];
     signals = new Utils.Signals();
-}
 
-var panelBoxShowId, panelBoxHideId;
-function enable () {
     Main.panel.statusArea.activities.hide();
 
     menu = new WorkspaceMenu();
