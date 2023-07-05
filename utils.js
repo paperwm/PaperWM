@@ -10,18 +10,7 @@ var workspaceManager = global.workspace_manager;
 var display = global.display;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
-if (version[0] !== 3) {
-    version = [3, ...version]
-}
-
-var registerClass;
-{
-    if (version[0] >= 3 && version[1] > 30) {
-        registerClass = GObject.registerClass;
-    } else {
-        registerClass = (x, y) => y ? y : x;
-    }
-}
+var registerClass = GObject.registerClass;
 
 var debug_all = false; // Turn off by default
 var debug_filter = {'#paperwm': true, '#stacktrace': true};

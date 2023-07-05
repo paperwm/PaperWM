@@ -94,53 +94,28 @@ var PopupMenuEntryHelper = function constructor(text) {
     this.label.clutter_text.connect('activate', this.emit.bind(this, 'activate'));
 }
 
-var PopupMenuEntry;
-// 3.32 uses `class` to define `PopupBaseMenuItem`, but doesn't use
 // registerClass, breaking our somewhat lame registerClass polyfill.
-if (Utils.version[1] === 32) {
-    PopupMenuEntry = class PopupMenuEntry extends PopupMenu.PopupBaseMenuItem {
-        constructor(text) {
-            super({
-                activate: false,
-                reactive: true,
-                hover: false,
-                can_focus: false
-            });
+var PopupMenuEntry = Utils.registerClass(
+class PopupMenuEntry extends PopupMenu.PopupBaseMenuItem {
+    _init(text) {
+        super._init({
+            activate: false,
+            reactive: true,
+            hover: false,
+            can_focus: false
+        });
 
-            PopupMenuEntryHelper.call(this, text);
-        }
+        PopupMenuEntryHelper.call(this, text);
+    }
 
-        activate(event) {
-            this.label.grab_key_focus();
-        }
+    activate(event) {
+        this.label.grab_key_focus();
+    }
 
-        _onKeyFocusIn(actor) {
-            this.activate();
-        }
-    };
-} else {
-    PopupMenuEntry = Utils.registerClass(
-    class PopupMenuEntry extends PopupMenu.PopupBaseMenuItem {
-        _init(text) {
-            super._init({
-                activate: false,
-                reactive: true,
-                hover: false,
-                can_focus: false
-            });
-
-            PopupMenuEntryHelper.call(this, text);
-        }
-
-        activate(event) {
-            this.label.grab_key_focus();
-        }
-
-        _onKeyFocusIn(actor) {
-            this.activate();
-        }
-    });
-}
+    _onKeyFocusIn(actor) {
+        this.activate();
+    }
+});
 
 class Color {
     constructor(color, container) {
@@ -596,12 +571,6 @@ class WorkspaceMenu extends PanelMenu.Button {
     }
 
     vfunc_event(event) {
-        // Ugly hack to work on 3.34 at the same time as 3.36> vfunc_event is
-        // active on 3.34, but upstream still connects _onEvent resulting in
-        // double events.
-        if (Utils.version[1] < 35) {
-            return;
-        }
         this._onEvent(null, event)
     }
 
@@ -638,15 +607,13 @@ var menu;
 var focusButton;
 var orginalActivitiesText;
 var screenSignals, signals;
-function init () {
+var panelBoxShowId, panelBoxHideId;
+function enable () {
     let label = Main.panel.statusArea.activities.first_child;
     orginalActivitiesText = label.text;
     screenSignals = [];
     signals = new Utils.Signals();
-}
 
-var panelBoxShowId, panelBoxHideId;
-function enable () {
     Main.panel.statusArea.activities.hide();
 
     menu = new WorkspaceMenu();

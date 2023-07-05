@@ -78,101 +78,11 @@ if (!St.Settings) {
     };
 }
 
-// polyfill for 3.28
+// polyfill
 if (!Clutter.Actor.prototype.set) {
     Clutter.Actor.prototype.set = function(params) {
         Object.assign(this, params);
     }
-}
-
-// polyfill 3.34 transition API, taken from gnome-shell/js/ui/environment.js
-if (version[0] >= 3 && version[1] < 34) {
-    function _makeEaseCallback(params, cleanup) {
-        let onComplete = params.onComplete;
-        delete params.onComplete;
-
-        let onStopped = params.onStopped;
-        delete params.onStopped;
-
-        return isFinished => {
-            cleanup();
-
-            if (onStopped)
-                onStopped(isFinished);
-            if (onComplete && isFinished)
-                onComplete();
-        };
-    }
-
-    let enable_unredirect = () => Meta.enable_unredirect_for_display(global.display);
-    let disable_unredirect = () => Meta.disable_unredirect_for_display(global.display);;
-    // This is different in 3.28
-    if (version[0] >= 3 && version[1] < 30) {
-        enable_unredirect = () => Meta.enable_unredirect_for_screen(global.screen);
-        disable_unredirect = () => Meta.disable_unredirect_for_screen(global.screen);;
-    }
-
-    function _easeActor(actor, params) {
-        actor.save_easing_state();
-
-        if (params.duration != undefined)
-            actor.set_easing_duration(params.duration);
-        delete params.duration;
-
-        if (params.delay != undefined)
-            actor.set_easing_delay(params.delay);
-        delete params.delay;
-
-        if (params.mode != undefined)
-            actor.set_easing_mode(params.mode);
-        delete params.mode;
-
-        disable_unredirect();
-
-        let callback = _makeEaseCallback(params, enable_unredirect);
-
-        // cancel overwritten transitions
-        let animatedProps = Object.keys(params).map(p => p.replace('_', '-', 'g'));
-        animatedProps.forEach(p => actor.remove_transition(p));
-
-        actor.set(params);
-        actor.restore_easing_state();
-
-        let transition = animatedProps.map(p => actor.get_transition(p))
-            .find(t => t !== null);
-
-        if (transition)
-            transition.connect('stopped', (t, finished) => callback(finished));
-        else
-            callback(true);
-    }
-
-    // adjustAnimationTime:
-    // @msecs: time in milliseconds
-    //
-    // Adjust @msecs to account for St's enable-animations
-    // and slow-down-factor settings
-    function adjustAnimationTime(msecs) {
-        let settings = St.Settings.get();
-
-        if (!settings.enable_animations)
-            return 1;
-        // settings.slow_down_factor is new in 3.34
-        return St.get_slow_down_factor() * msecs;
-    }
-
-    let origSetEasingDuration = Clutter.Actor.prototype.set_easing_duration;
-    Clutter.Actor.prototype.set_easing_duration = function(msecs) {
-        origSetEasingDuration.call(this, adjustAnimationTime(msecs));
-    };
-    let origSetEasingDelay = Clutter.Actor.prototype.set_easing_delay;
-    Clutter.Actor.prototype.set_easing_delay = function(msecs) {
-        origSetEasingDelay.call(this, adjustAnimationTime(msecs));
-    };
-
-    Clutter.Actor.prototype.ease = function(props, easingParams) {
-        _easeActor(this, props, easingParams);
-    };
 }
 
 // polyfill
@@ -424,25 +334,8 @@ function startup() {
                                   });
     }
 
-    let layout = computeLayout
-    if (version[1] > 37) {
-        layout = computeLayout338
-        registerOverridePrototype(Workspace.WorkspaceLayout, 'addWindow', addWindow)
-    }
-
-
-    if (version[1] > 32)
-        registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
-
-    if (version[1] >= 40) {
-        layout = computeLayout40
-        registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout)
-    }
-
-    // Kill pinch gestures as they work pretty bad (especially when 3-finger swipin
-    if (version[1] < 40) {
-        registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0)
-    }
+    let layout = computeLayout40;
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout)
 
     // disable swipe gesture trackers
     swipeTrackers.forEach(t => {
@@ -603,59 +496,6 @@ function disable() {
     actions = null;
 }
 
-// 3.32 overview layout
-function computeLayout(windows, layout) {
-    let numRows = layout.numRows;
-
-    let rows = [];
-    let totalWidth = 0;
-    for (let i = 0; i < windows.length; i++) {
-        let window = windows[i];
-        let s = this._computeWindowScale(window);
-        totalWidth += window.width * s;
-    }
-
-    let idealRowWidth = totalWidth / numRows;
-    let windowIdx = 0;
-    for (let i = 0; i < numRows; i++) {
-        let col = 0;
-        let row = this._newRow();
-        rows.push(row);
-
-        for (; windowIdx < windows.length; windowIdx++) {
-            let window = windows[windowIdx];
-            let s = this._computeWindowScale(window);
-            let width = window.width * s;
-            let height = window.height * s;
-            row.fullHeight = Math.max(row.fullHeight, height);
-
-            // either new width is < idealWidth or new width is nearer from idealWidth then oldWidth
-            if (this._keepSameRow(row, window, width, idealRowWidth) || (i == numRows - 1)) {
-                row.windows.push(window);
-                row.fullWidth += width;
-            } else {
-                break;
-            }
-        }
-    }
-
-    let gridHeight = 0;
-    let maxRow;
-    for (let i = 0; i < numRows; i++) {
-        let row = rows[i];
-        this._sortRow(row);
-
-        if (!maxRow || row.fullWidth > maxRow.fullWidth)
-            maxRow = row;
-        gridHeight += row.fullHeight;
-    }
-
-    layout.rows = rows;
-    layout.maxColumns = maxRow.windows.length;
-    layout.gridWidth = maxRow.fullWidth;
-    layout.gridHeight = gridHeight;
-}
-
 function sortWindows(a, b) {
     let aw = a.metaWindow;
     let bw = b.metaWindow;
@@ -739,62 +579,6 @@ function computeLayout40(windows, layoutParams) {
         gridWidth: maxRow.fullWidth,
         gridHeight
     };
-}
-
-function computeLayout338(windows, layout) {
-    let numRows = layout.numRows;
-
-    let rows = [];
-    let totalWidth = 0;
-    for (let i = 0; i < windows.length; i++) {
-        let window = windows[i];
-        let s = this._computeWindowScale(window);
-        totalWidth += window.boundingBox.width * s;
-    }
-
-    let idealRowWidth = totalWidth / numRows;
-
-    let sortedWindows = windows.slice();
-    // addWindow should have made sure we're already sorted.
-    // sortedWindows.sort(sortWindows);
-
-    let windowIdx = 0;
-    for (let i = 0; i < numRows; i++) {
-        let row = this._newRow();
-        rows.push(row);
-
-        for (; windowIdx < sortedWindows.length; windowIdx++) {
-            let window = sortedWindows[windowIdx];
-            let s = this._computeWindowScale(window);
-            let width = window.boundingBox.width * s;
-            let height = window.boundingBox.height * s;
-            row.fullHeight = Math.max(row.fullHeight, height);
-
-            // either new width is < idealWidth or new width is nearer from idealWidth then oldWidth
-            if (this._keepSameRow(row, window, width, idealRowWidth) || (i == numRows - 1)) {
-                row.windows.push(window);
-                row.fullWidth += width;
-            } else {
-                break;
-            }
-        }
-    }
-
-    let gridHeight = 0;
-    let maxRow;
-    for (let i = 0; i < numRows; i++) {
-        let row = rows[i];
-        this._sortRow(row);
-
-        if (!maxRow || row.fullWidth > maxRow.fullWidth)
-            maxRow = row;
-        gridHeight += row.fullHeight;
-    }
-
-    layout.rows = rows;
-    layout.maxColumns = maxRow.windows.length;
-    layout.gridWidth = maxRow.fullWidth;
-    layout.gridHeight = gridHeight;
 }
 
 const wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
