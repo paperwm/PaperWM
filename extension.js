@@ -1,10 +1,5 @@
 const { St } = imports.gi;
 
-// polyfill workspace_manager that was introduced in 3.30 (must happen before modules are imported)
-if (!global.workspace_manager) {
-    global.workspace_manager = global.screen;
-}
-
 /**
    The currently used modules
      - tiling is the main module, responsible for tiling and workspaces
