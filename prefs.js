@@ -7,7 +7,6 @@ const Gdk = imports.gi.Gdk;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
-const Convenience = Extension.imports.convenience;
 const { KeybindingsPane } = Extension.imports.prefsKeybinding;
 const { WinpropsPane } = Extension.imports.winpropsPane;
 
@@ -62,11 +61,9 @@ var SettingsWidget = class SettingsWidget {
        selectedTab: index of initially shown tab
      */
     constructor(prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
-
         log(`settingsWidget: ${prefsWindow} ${selectedPage}`)
 
-        this._settings = Convenience.getSettings();
-
+        this._settings = ExtensionUtils.getSettings();
         this.builder = Gtk.Builder.new_from_file(Extension.path + '/Settings.ui');
         this.window = prefsWindow;
 

@@ -8,7 +8,6 @@ const Gdk = imports.gi.Gdk;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
-const Convenience = Extension.imports.convenience;
 const Settings = Extension.imports.settings;
 
 var WinpropsPane = GObject.registerClass({

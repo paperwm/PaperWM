@@ -4,13 +4,13 @@
 
  */
 
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
+var ExtensionUtils = imports.misc.extensionUtils;
+var Extension = ExtensionUtils.getCurrentExtension();
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
 var Gtk = imports.gi.Gtk;
 
-var Convenience = Extension.imports.convenience;
-var settings = Convenience.getSettings();
+var settings = ExtensionUtils.getSettings();
 var workspaceSettingsCache = {};
 
 var WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
@@ -289,7 +289,7 @@ function findConflicts(schemas) {
     schemas = schemas || conflictSettings;
     let conflicts = [];
     const paperMap =
-          generateKeycomboMap(Convenience.getSettings(KEYBINDINGS_KEY));
+          generateKeycomboMap(ExtensionUtils.getSettings(KEYBINDINGS_KEY));
 
     for (let settings of schemas) {
         const against = generateKeycomboMap(settings);

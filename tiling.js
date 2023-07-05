@@ -1,4 +1,5 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
+var ExtensionUtils = imports.misc.extensionUtils;
+var Extension = ExtensionUtils.getCurrentExtension();
 var GLib = imports.gi.GLib;
 var Tweener = Extension.imports.utils.tweener;
 /** @type {import("@gi-types/meta")} */
@@ -262,8 +263,7 @@ var Space = class Space extends Array {
             setFocusMode(Settings.getDefaultFocusMode(), this);
         });
         
-        const Convenience = Extension.imports.convenience;
-        const settings = Convenience.getSettings();
+        const settings = ExtensionUtils.getSettings();
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
 
         this.signals.connect(settings, 'changed::default-background', this.updateBackground.bind(this));

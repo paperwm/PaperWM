@@ -1,4 +1,5 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
+var ExtensionUtils = imports.misc.extensionUtils;
+var Extension = ExtensionUtils.getCurrentExtension();
 var Me = Extension.imports.keybindings;
 var Gdk = imports.gi.Gdk;
 var Gtk = imports.gi.Gtk;
@@ -10,7 +11,6 @@ var Utils = Extension.imports.utils;
 var Main = imports.ui.main;
 var Shell = imports.gi.Shell;
 
-var convenience = Extension.imports.convenience;
 var Settings = Extension.imports.settings;
 var keystrToKeycombo = Settings.keystrToKeycombo;
 
@@ -23,7 +23,7 @@ var KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
 
 
 function registerPaperAction(actionName, handler, flags) {
-    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    let settings = ExtensionUtils.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
     registerAction(
         actionName,
         handler,
@@ -31,7 +31,7 @@ function registerPaperAction(actionName, handler, flags) {
 }
 
 function registerNavigatorAction(name, handler) {
-    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    let settings = ExtensionUtils.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
     registerAction(
         name,
         handler,
@@ -39,7 +39,7 @@ function registerNavigatorAction(name, handler) {
 }
 
 function registerMinimapAction(name, handler) {
-    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    let settings = ExtensionUtils.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
     registerAction(
         name,
         handler,
@@ -73,7 +73,7 @@ function startup() {
     let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
     let previewNavigate = dynamic_function_ref("preview_navigate", Navigator);
 
-    let settings = convenience.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    let settings = ExtensionUtils.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
     registerAction('live-alt-tab',
                    liveAltTab, {settings});
     registerAction('live-alt-tab-backward',
@@ -704,7 +704,7 @@ function resetConflicts() {
 function enable() {
     startup();
     let schemas = [...Settings.conflictSettings,
-                   convenience.getSettings(KEYBINDINGS_KEY)];
+    ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
     schemas.forEach(schema => {
         signals.connect(schema, 'changed', resolveConflicts);
     });

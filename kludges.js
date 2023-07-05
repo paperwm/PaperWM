@@ -5,7 +5,8 @@
   around these problems and facilitates new features.
  */
 
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
+var ExtensionUtils = imports.misc.extensionUtils;
+var Extension = ExtensionUtils.getCurrentExtension();
 var Meta = imports.gi.Meta;
 var Gio = imports.gi.Gio;
 var Main = imports.ui.main;
@@ -17,10 +18,9 @@ var Shell = imports.gi.Shell;
 var utils = Extension.imports.utils;
 var Params = imports.misc.params;
 
-var Convenience = Extension.imports.convenience;
 var Scratch = Extension.imports.scratch;
 var Tiling = Extension.imports.tiling;
-var settings = Convenience.getSettings();
+var settings = ExtensionUtils.getSettings();
 var Clutter = imports.gi.Clutter;
 let St = imports.gi.St;
 

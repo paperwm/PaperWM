@@ -8,7 +8,6 @@ const Gdk = imports.gi.Gdk;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
-const Convenience = Extension.imports.convenience;
 const Settings = Extension.imports.settings;
 
 // TODO gettext translations
@@ -292,9 +291,7 @@ const Keybinding = GObject.registerClass({
 }, class Keybinding extends GObject.Object {
     _init(params = {}) {
         super._init(params);
-
-        this._settings = Convenience.getSettings(KEYBINDINGS_KEY);
-
+        this._settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
         this._description = _(this._settings.settings_schema.get_key(this.action).get_summary());
 
         this._combos = new Gio.ListStore();
@@ -471,9 +468,7 @@ var KeybindingsModel = GObject.registerClass({
         });
 
         this._actionToBinding = new Map();
-
-        this._settings = Convenience.getSettings(KEYBINDINGS_KEY);
-
+        this._settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
         GLib.idle_add(0, () => { this.load(); });
     }
 

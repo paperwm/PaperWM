@@ -1,4 +1,5 @@
 const { St } = imports.gi;
+var ExtensionUtils = imports.misc.extensionUtils;
 
 /**
    The currently used modules
@@ -85,7 +86,6 @@ function startup() {
     // var Gio = imports.gi.Gio;
     // let extfile = Gio.file_new_for_path( Extension.imports.extension.__file__);
     Extension = imports.misc.extensionUtils.getCurrentExtension();
-    convenience = Extension.imports.convenience;
 
     warnAboutGnomeShellVersionCompatibility();
 
@@ -197,12 +197,12 @@ function installConfig() {
     const user = Extension.dir.get_child("examples/user.js");
     user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
 
-    const settings = convenience.getSettings();
+    const settings = ExtensionUtils.getSettings();
     settings.set_boolean("has-installed-config-template", true);
 }
 
 function initUserConfig() {
-    const paperSettings = convenience.getSettings();
+    const paperSettings = ExtensionUtils.getSettings();
 
     if (!paperSettings.get_boolean("has-installed-config-template")
         && !hasUserConfigFile())
