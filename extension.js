@@ -56,8 +56,10 @@ function run(method) {
 
 function safeCall(name, method) {
     try {
-        print("#paperwm", `${method} ${name}`);
         let module = Extension.imports[name];
+        if (module && module[method]) {
+            print("#paperwm", `${method} ${name}`);
+        }
         module && module[method] && module[method].call(module, errorNotification);
         return true;
     } catch(e) {
@@ -84,7 +86,6 @@ let lastDisabledTime = 0; // init (epoch ms)
 var Extension, convenience;
 function startup() {
     SESSIONID += "#";
-    log(`#paperwm init: ${SESSIONID}`);
 
     // var Gio = imports.gi.Gio;
     // let extfile = Gio.file_new_for_path( Extension.imports.extension.__file__);
@@ -94,7 +95,7 @@ function startup() {
     warnAboutGnomeShellVersionCompatibility();
 
     if(initRun) {
-        log(`#startup Reinitialized against our will! Skip adding bindings again to not cause trouble.`);
+        log(`#startup reinitialized against our will! Skip adding bindings again to not cause trouble.`);
         return;
     }
 
