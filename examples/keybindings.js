@@ -4,6 +4,8 @@ var Main = imports.ui.main;
 var Tiling = Extension.imports.tiling;
 var Scratch = Extension.imports.scratch;
 
+var Meta = imports.gi.Meta;
+
 /**
    To use an example as-is ("gotoByIndex" for instance) add the following to the
    `init` function in "user.js":
@@ -34,7 +36,6 @@ function gotoByIndex() {
 }
 
 function windowMarks() {
-    const Meta = imports.gi.Meta;
     var marks = {}
 
     function setMark(k) {
@@ -164,7 +165,6 @@ function listFreeBindings(modifierString) {
 }
 
 function moveSpaceToMonitor(basebinding = '<super><alt>') {
-    let Meta = imports.gi.Meta;
     let display = global.display;
 
     function moveTo(direction) {
@@ -235,8 +235,6 @@ function tileInto(leftBinding="<Super><Shift>less", rightBinding="<Super><Shift>
 
 function stackUnstack(basebinding = '<Super><Alt><Ctrl>') {
     // less: '<'
-    let Tiling = Extension.imports.tiling;
-
     const stackUnstackDirection = (dir=-1) => (metaWindow) => {
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
         let column_idx = space.indexOf(metaWindow);

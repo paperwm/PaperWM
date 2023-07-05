@@ -1,8 +1,16 @@
 var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var { Gdk, GLib, Clutter, Meta, GObject } = imports.gi;
+var Clutter = imports.gi.Clutter;
+var St = imports.gi.St;
+var GdkPixbuf = imports.gi.GdkPixbuf;
+var Cogl = imports.gi.Cogl;
+var Main = imports.ui.main;
 
 var workspaceManager = global.workspace_manager;
 var display = global.display;
+var WindowTracker = imports.gi.Shell.WindowTracker;
+
+var Tiling = Extension.imports.tiling;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
 var registerClass = GObject.registerClass;
@@ -69,7 +77,7 @@ function ppEnumValue(value, genum) {
 
 function ppModiferState(state) {
     let mods = [];
-    for (let [mod, mask] of Object.entries(imports.gi.Clutter.ModifierType)) {
+    for (let [mod, mask] of Object.entries(Clutter.ModifierType)) {
         if (mask & state) {
             mods.push(mod);
         }
@@ -145,10 +153,6 @@ function isPointInsideActor(actor, x, y) {
 
 function setBackgroundImage(actor, resource_path) {
     // resource://{resource_path}
-    const Clutter = imports.gi.Clutter;
-    const GdkPixbuf = imports.gi.GdkPixbuf;
-    const Cogl = imports.gi.Cogl;
-
     let image = new Clutter.Image();
 
     let pixbuf = GdkPixbuf.Pixbuf.new_from_resource(resource_path)
@@ -166,8 +170,6 @@ function setBackgroundImage(actor, resource_path) {
 
 //// Debug and development utils
 
-const Tiling = Extension.imports.tiling;
-
 function setDevGlobals() {
     // Accept the risk of this interfering with existing code for now
     metaWindow = display.focus_window;
@@ -175,7 +177,7 @@ function setDevGlobals() {
     workspace = workspaceManager.get_active_workspace();
     actor = metaWindow.get_compositor_private();
     space = Tiling.spaces.spaceOfWindow(metaWindow);
-    app = imports.gi.Shell.WindowTracker.get_default().get_window_app(metaWindow);
+    app = WindowTracker.get_default().get_window_app(metaWindow);
 }
 
 /**
@@ -197,7 +199,7 @@ function toggleWindowBoxes(metaWindow) {
     let actor = metaWindow.get_compositor_private();
 
     makeFrameBox = function({x, y, width, height}, color) {
-        let frameBox = new imports.gi.St.Widget();
+        let frameBox = new St.Widget();
         frameBox.set_position(x, y)
         frameBox.set_size(width, height)
         frameBox.set_style("border: 2px" + color + " solid");
@@ -229,7 +231,7 @@ function toggleCloneMarks() {
             metaWindow.clone.opacity = 190;
             metaWindow.clone.__oldOpacity = 190;
 
-            metaWindow.clone.background_color = imports.gi.Clutter.color_from_string("red")[1];
+            metaWindow.clone.background_color = Clutter.color_from_string("red")[1];
         }
     }
     function unmarkCloneOf(metaWindow) {
@@ -283,7 +285,6 @@ function getModiferState() {
 
 function monitorOfPoint(x, y) {
     // get_monitor_index_for_rect "helpfully" returns the primary monitor index for out of bounds rects..
-    const Main = imports.ui.main;
     for (let monitor of Main.layoutManager.monitors) {
         if ((monitor.x <= x && x <= monitor.x+monitor.width) &&
             (monitor.y <= y && y <= monitor.y+monitor.height))
@@ -441,7 +442,7 @@ var tweener = {
             delete params.time;
         }
         if (!params.mode)
-            params.mode = imports.gi.Clutter.AnimationMode.EASE_IN_OUT_QUAD;
+            params.mode = Clutter.AnimationMode.EASE_IN_OUT_QUAD;
         actor.ease(params);
     },
 

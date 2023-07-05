@@ -1,6 +1,8 @@
 var ExtensionUtils = imports.misc.extensionUtils;
 var Extension = ExtensionUtils.getCurrentExtension();
+var ExtensionModule = Extension.imports.extension;
 var Me = Extension.imports.keybindings;
+
 var Gdk = imports.gi.Gdk;
 var Gtk = imports.gi.Gtk;
 var Gio = imports.gi.Gio;
@@ -16,6 +18,9 @@ var keystrToKeycombo = Settings.keystrToKeycombo;
 
 var Navigator = Extension.imports.navigator;
 var Tiling = Extension.imports.tiling;
+var LiveAltTab = Extension.imports.liveAltTab;
+var Scratch = Extension.imports.scratch;
+var App = Extension.imports.app;
 
 var display = global.display;
 
@@ -63,11 +68,6 @@ function startup() {
     overrides = [];   // action names that have been given a custom handler
 
     /* Initialize keybindings */
-    let Tiling = Extension.imports.tiling;
-    let LiveAltTab = Extension.imports.liveAltTab;
-    let Scratch = Extension.imports.scratch;
-    let App = Extension.imports.app;
-
     let dynamic_function_ref = Utils.dynamic_function_ref;
 
     let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
@@ -374,7 +374,7 @@ function bindkey(keystr, actionName=null, handler=null, options={}) {
             message = "Usually caused by the binding already being taken, but could not identify which action";
         }
 
-        Extension.imports.extension.errorNotification(
+        ExtensionModule.errorNotification(
             "PaperWM (user.js): Could not enable keybinding",
             `Tried to bind ${keystr} to ${actionName}\n${message}`);
     }

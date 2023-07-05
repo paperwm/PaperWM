@@ -8,6 +8,7 @@ var Clutter = imports.gi.Clutter;
 var Main = imports.ui.main;
 var Shell = imports.gi.Shell;
 var Tweener = Extension.imports.utils.tweener;
+var Mainloop = imports.mainloop;
 
 var Utils = Extension.imports.utils;
 var Tiling = Extension.imports.tiling;
@@ -399,7 +400,7 @@ function endVertical() {
         return true; // repeat
     };
 
-    imports.mainloop.timeout_add(16, glide, 0);
+    Mainloop.timeout_add(16, glide, 0);
 }
 
 /**

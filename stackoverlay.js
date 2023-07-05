@@ -9,6 +9,8 @@ var Meta = imports.gi.Meta;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
 var Minimap = Extension.imports.minimap;
+var Layout = imports.ui.layout;
+
 
 var Settings = Extension.imports.settings;
 var prefs = Settings.prefs;
@@ -364,7 +366,6 @@ var StackOverlay = class StackOverlay {
         if (this.barrier || !prefs.pressure_barrier)
             return;
 
-        const Layout = imports.ui.layout;
         this.pressureBarrier = new Layout.PressureBarrier(100, 0.25*1000, Shell.ActionMode.NORMAL);
         // Show the overlay on fullscreen windows when applying pressure to the edge
         // The above leave-event handler will take care of hiding the overlay

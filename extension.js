@@ -1,5 +1,7 @@
-const { St } = imports.gi;
+var { St } = imports.gi;
 var ExtensionUtils = imports.misc.extensionUtils;
+var Util = imports.misc.util;
+var MessageTray = imports.ui.messageTray;
 
 /**
    The currently used modules
@@ -82,9 +84,6 @@ let lastDisabledTime = 0; // init (epoch ms)
 var Extension, convenience;
 function startup() {
     SESSIONID += "#";
-
-    // var Gio = imports.gi.Gio;
-    // let extfile = Gio.file_new_for_path( Extension.imports.extension.__file__);
     Extension = imports.misc.extensionUtils.getCurrentExtension();
 
     warnAboutGnomeShellVersionCompatibility();
@@ -168,7 +167,7 @@ Click for more information.`;
 
     const notification = notify("PaperWM Warning", msg);
     notification.connect('activated', () => {
-        imports.misc.util.spawn(["xdg-open", "https://github.com/paperwm/PaperWM/wiki/Warning:-Running-on-unsupported-version-of-gnome-shell"]);
+        Util.spawn(["xdg-open", "https://github.com/paperwm/PaperWM/wiki/Warning:-Running-on-unsupported-version-of-gnome-shell"]);
         notification.destroy();
     });
 }
@@ -213,7 +212,7 @@ function initUserConfig() {
             const configDir = getConfigDir().get_path();
             const notification = notify("PaperWM", `Installed user configuration in ${configDir}`);
             notification.connect('activated', () => {
-                imports.misc.util.spawn(["nautilus", configDir]);
+                Util.spawn(["nautilus", configDir]);
                 notification.destroy();
             });
         } catch(e) {
@@ -240,7 +239,6 @@ function initUserConfig() {
  * notification
  */
 function notify(msg, details, params) {
-    const MessageTray = imports.ui.messageTray;
     let source = new MessageTray.SystemNotificationSource();
     // note-to-self: the source is automatically destroyed when all its
     // notifications are removed.
@@ -253,7 +251,7 @@ function notify(msg, details, params) {
 
 function spawnPager(content) {
     const quoted = GLib.shell_quote(content);
-    imports.misc.util.spawn(["sh", "-c", `echo -En ${quoted} | gedit --new-window -`]);
+    Util.spawn(["sh", "-c", `echo -En ${quoted} | gedit --new-window -`]);
 }
 
 /**

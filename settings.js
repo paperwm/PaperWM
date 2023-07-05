@@ -9,6 +9,7 @@ var Extension = ExtensionUtils.getCurrentExtension();
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
 var Gtk = imports.gi.Gtk;
+var Mainloop = imports.mainloop;
 
 var settings = ExtensionUtils.getSettings();
 var workspaceSettingsCache = {};
@@ -40,8 +41,8 @@ let timerId;
 function onWindowGapChanged() {
     setVerticalMargin();
     if (timerId)
-        imports.mainloop.source_remove(timerId);
-    timerId = imports.mainloop.timeout_add(500, () => {
+        Mainloop.source_remove(timerId);
+    timerId = Mainloop.timeout_add(500, () => {
         Extension.imports.tiling.spaces.mru().forEach(space => {
             space.layout();
         });

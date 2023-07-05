@@ -21,7 +21,9 @@ var debug = utils.debug;
 /** @type {import('@gi-types/meta').Stage} */
 const stage = global.stage
 
+var GDesktopEnums = imports.gi.GDesktopEnums;
 var Gdk = imports.gi.Gdk;
+
 
 /**@type {import('@gi-types/meta').WorkspaceManager} */
 var workspaceManager = global.workspace_manager;
@@ -1164,7 +1166,7 @@ border-radius: ${borderWidth}px;
     updateBackground() {
         let path = this.settings.get_string('background') || prefs.default_background;
         let useDefault = Settings.settings.get_boolean('use-default-background');
-        const BackgroundStyle = imports.gi.GDesktopEnums.BackgroundStyle;
+        const BackgroundStyle = GDesktopEnums.BackgroundStyle;
         let style = BackgroundStyle.ZOOM;
         if (!path && useDefault) {
             if (interfaceSettings.get_string("color-scheme") === "default") {
@@ -1336,7 +1338,6 @@ border-radius: ${borderWidth}px;
         }
 
         let monitor = this.monitor;
-        const GDesktopEnums = imports.gi.GDesktopEnums;
         let backgroundParams = global.screen ?
             { meta_screen: global.screen } :
             { meta_display: display };
