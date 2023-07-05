@@ -2510,23 +2510,7 @@ var Spaces = class Spaces extends Map {
 
         debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
-
-        if (utils.version[1] < 34 || utils.version[1] >= 40) {
-            animateWindow(metaWindow);
-        } else {
-            /* HACK 3.34: Hidden actors aren't allocated if hidden, use opacity
-               instead to fix new window animations.
-
-               The first draw will reset the opacity it seems (but not visible).
-               So even if we set it again in `first-frame` that is too late
-               since that happens _after_ mutter have drawn the frame.
-
-               So we kill visibily on the first `queue-redraw`.
-            */
-            signals.connectOneShot(actor, 'queue-redraw', () =>  {
-                actor.opacity = 0;
-            });
-        }
+        animateWindow(metaWindow);
 
         /*
           We need reliable `window_type`, `wm_class` et. all to handle window insertion correctly.
@@ -3381,10 +3365,7 @@ function showHandler(actor) {
 
     // HACK: use opacity instead of hidden on new windows
     if (metaWindow.unmapped) {
-        if (utils.version[1] < 34)
-            animateWindow(metaWindow);
-        else
-            actor.opacity = 0;
+        actor.opacity = 0;
         return;
     }
 
