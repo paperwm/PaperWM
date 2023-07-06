@@ -10,7 +10,6 @@ const Extension = ExtensionUtils.getCurrentExtension();
 const { KeybindingsPane } = Extension.imports.prefsKeybinding;
 const { WinpropsPane } = Extension.imports.winpropsPane;
 
-
 const WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
 const KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
 
