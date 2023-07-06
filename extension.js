@@ -56,13 +56,13 @@ function safeCall(name, method) {
     try {
         let module = Extension.imports[name];
         if (module && module[method]) {
-            print("#paperwm", `${method} ${name}`);
+            log("#paperwm", `${method} ${name}`);
         }
         module && module[method] && module[method].call(module, errorNotification);
         return true;
     } catch(e) {
-        print("#paperwm", `${name} failed ${method}`);
-        print(`JS ERROR: ${e}\n${e.stack}`);
+        log("#paperwm", `${name} failed ${method}`);
+        log(`JS ERROR: ${e}\n${e.stack}`);
         errorNotification(
             "PaperWM",
             `Error occured in ${name} @${method}:\n\n${e.message}`,
@@ -159,8 +159,8 @@ function warnAboutGnomeShellVersionCompatibility() {
     }
 
     // did not find a supported version
-    print("#paperwm", `WARNING: Running on unsupported version of gnome shell (${gnomeShellVersion})`);
-    print("#paperwm", `Supported versions: ${supportedVersions}`);
+    log("#paperwm", `WARNING: Running on unsupported version of gnome shell (${gnomeShellVersion})`);
+    log("#paperwm", `Supported versions: ${supportedVersions}`);
     const msg = `Running on unsupported version of gnome shell (${gnomeShellVersion}).
 Supported versions: ${supportedVersions}.
 Click for more information.`;
@@ -181,7 +181,7 @@ function hasUserConfigFile() {
 }
 
 function installConfig() {
-    print("#rc", "Installing config");
+    log("#rc", "Installing config");
     const configDir = getConfigDir();
     configDir.make_directory_with_parents(null);
 
@@ -218,7 +218,7 @@ function initUserConfig() {
         } catch(e) {
             errorNotification("PaperWM",
                               `Failed to install user config: ${e.message}`, e.stack);
-            print("#rc", "Install failed", e.message);
+            log("#rc", "Install failed", e.message);
         }
 
     }

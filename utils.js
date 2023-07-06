@@ -23,11 +23,11 @@ function debug() {
     if (filter === false)
         return;
     if (debug_all || filter === true)
-        print(Array.prototype.join.call(arguments, " | "));
+        log(Array.prototype.join.call(arguments, " | "));
 }
 
 function warn(...args) {
-    print("WARNING:", ...args);
+    log("WARNING:", ...args);
 }
 
 function assert(condition, message, ...dump) {
@@ -357,13 +357,10 @@ function printActorTree(node, fmt=mkFmt(), options={}, state=null) {
           a.b.t 
           a.b.c ...
             u
-            
-            
         */
         if (node.get_children().length > 0) {
             if (node.x === 0 && node.y === 0) {
                 state.actorPrefix += (node.name ? node.name : "#") + "."
-                // print("#### ", state.actorPrefix)
                 collapse = true
             } else {
                 collapse = false
@@ -373,7 +370,7 @@ function printActorTree(node, fmt=mkFmt(), options={}, state=null) {
         }
     }
     if (!collapse) {
-        print(indent(state.level, fmt(node, state.actorPrefix)));
+        log(indent(state.level, fmt(node, state.actorPrefix)));
         state.actorPrefix = "";
         state.level += 1;
     }

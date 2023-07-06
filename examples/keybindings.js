@@ -322,7 +322,7 @@ function cycleEdgeSnap(binding = "<Super>u") {
 
 function reorderWorkspace(bindingUp = "<Alt><Super>Page_Up", bindingDown = "<Alt><Super>Page_Down") {
     if (!global.workspace_manager.reorder_workspace) {
-        print("Reorder workspaces not supported by this gnome-shell version");
+        log("Reorder workspaces not supported by this gnome-shell version");
         return;
     }
     function moveWorkspace(dir, metaWindow, space) {

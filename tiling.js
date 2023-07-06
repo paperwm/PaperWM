@@ -1392,11 +1392,6 @@ border-radius: ${borderWidth}px;
                 let dir = event.get_scroll_direction();
                 if (dir === Clutter.ScrollDirection.SMOOTH)
                     return;
-                // print(dir, Clutter.ScrollDirection.SMOOTH, Clutter.ScrollDirection.UP, Clutter.ScrollDirection.DOWN)
-                let dx
-                // log(utils.ppEnumValue(dir, Clutter.ScrollDirection))
-                // let dx = dir === Clutter.ScrollDirection.DOWN ? -1 : 1
-                // let [dx, dy] = event.get_scroll_delta()
 
                 let [gx, gy] = event.get_coords();
                 if (!gx) {
@@ -1413,8 +1408,6 @@ border-radius: ${borderWidth}px;
                         this.switchRight();
                         break;
                 }
-                // spaces.selectedSpace = this;
-                // nav.finish();
             });
 
         this.signals.connect(

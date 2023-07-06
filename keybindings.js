@@ -338,7 +338,7 @@ function bindkey(keystr, actionName=null, handler=null, options={}) {
     } else {
         let boundAction = keycomboMap[keycombo];
         if (boundAction && boundAction != action) {
-            print("Rebinding", keystr, "to", actionName, "from", boundAction.name);
+            log("Rebinding", keystr, "to", actionName, "from", boundAction.name);
             disableAction(boundAction)
         }
 
@@ -430,7 +430,7 @@ function getActionIdByActionName(actionName) {
         try {
             return parseInt(e.message.split(" ")[0]);
         } catch(e2) {
-            print("Could not find actionId for", actionName);
+            log("Could not find actionId for", actionName);
             return Meta.KeyBindingAction.NONE;
         }
     }

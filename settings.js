@@ -173,7 +173,7 @@ function findWorkspaceSettingsByName(regex) {
 /** Only used for debugging/development atm. */
 function deleteWorkspaceSettingsByName(regex, dryrun=true) {
     let out = ""
-    function rprint(...args) { print(...args); out += args.join(" ") + "\n"; }
+    function rprint(...args) { log(...args); out += args.join(" ") + "\n"; }
     let n = global.workspace_manager.get_n_workspaces();
     for (let [uuid, s, name] of findWorkspaceSettingsByName(regex)) {
         let index = s.get_int('index');
@@ -212,7 +212,7 @@ function printWorkspaceSettings() {
     const key = s => s[1].get_int('index');
     zipped.sort((a,b) => key(a) - key(b));
     for (let [uuid, s] of zipped) {
-        print('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
+        log('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
     }
 }
 
