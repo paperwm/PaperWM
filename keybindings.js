@@ -1,7 +1,6 @@
 var ExtensionUtils = imports.misc.extensionUtils;
 var Extension = ExtensionUtils.getCurrentExtension();
 var ExtensionModule = Extension.imports.extension;
-var Me = Extension.imports.keybindings;
 
 var Clutter = imports.gi.Clutter;
 var Seat = Clutter.get_default_backend().get_default_seat();
@@ -709,11 +708,11 @@ function enable() {
     schemas.forEach(schema => {
         signals.connect(schema, 'changed', resolveConflicts);
     });
-
+    
     signals.connect(
         display,
         'accelerator-activated',
-        Utils.dynamic_function_ref(handleAccelerator.name, Me)
+        Utils.dynamic_function_ref(handleAccelerator.name, this)
     );
     actions.forEach(enableAction);
     resolveConflicts(schemas);
