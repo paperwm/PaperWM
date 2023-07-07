@@ -22,8 +22,6 @@ var debug = utils.debug;
 const stage = global.stage
 
 var GDesktopEnums = imports.gi.GDesktopEnums;
-var Gdk = imports.gi.Gdk;
-
 
 /**@type {import('@gi-types/meta').WorkspaceManager} */
 var workspaceManager = global.workspace_manager;

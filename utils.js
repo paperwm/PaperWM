@@ -1,6 +1,5 @@
 var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var { Gdk, GLib, Clutter, Meta, GObject } = imports.gi;
-var Clutter = imports.gi.Clutter;
+var { GLib, Clutter, Meta, GObject } = imports.gi;
 var St = imports.gi.St;
 var GdkPixbuf = imports.gi.GdkPixbuf;
 var Cogl = imports.gi.Cogl;

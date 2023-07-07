@@ -7,6 +7,7 @@
 
 var ExtensionUtils = imports.misc.extensionUtils;
 var Extension = ExtensionUtils.getCurrentExtension();
+var Gtk = imports.gi.Gtk;
 var Meta = imports.gi.Meta;
 var Gio = imports.gi.Gio;
 var Main = imports.ui.main;

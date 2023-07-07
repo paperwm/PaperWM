@@ -60,8 +60,6 @@ var SettingsWidget = class SettingsWidget {
        selectedTab: index of initially shown tab
      */
     constructor(prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
-        log(`settingsWidget: ${prefsWindow} ${selectedPage}`)
-
         this._settings = ExtensionUtils.getSettings();
         this.builder = Gtk.Builder.new_from_file(Extension.path + '/Settings.ui');
         this.window = prefsWindow;
@@ -677,9 +675,7 @@ function parseAccelerator(accelerator) {
     if (accelerator.match(/Above_Tab/)) {
         accelerator = accelerator.replace('Above_Tab', 'grave');
     }
-
-    [ok, key, mods] = Gtk.accelerator_parse(accelerator);
-
+    [ok, key, mods] = Settings.accelerator_parse(accelerator);
     log(`PaperWM: parseAccelerator(${accelerator}) -> [${key}, ${mods}]`);
 
     return [key, mods];

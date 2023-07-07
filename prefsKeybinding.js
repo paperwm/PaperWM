@@ -196,10 +196,10 @@ const Combo = GObject.registerClass({
         if (this.disabled) {
             return 0;
         } else if (!this._keycode) {
-            const keymap = Gdk.Keymap.get_for_display(Gdk.Display.get_default());
-            const [ok, keys] = keymap.get_entries_for_keyval();
-            if (ok && keys.length) {
-                return keys[0].keycode;
+            let [ok, key, mask] = Settings.accelerator_parse(this.keystr);
+
+            if (ok && key.length) {
+                return key;
             } else {
                 return 0;
             }
@@ -407,7 +407,7 @@ const Keybinding = GObject.registerClass({
             .map(this._translateAboveTab)
             .map(keystr => {
                 if (keystr != '')
-                    return Gtk.accelerator_parse(keystr);
+                    return Settings.accelerator_parse(keystr);
                 else
                     return [true, 0, 0];
             })
@@ -669,7 +669,8 @@ const ComboRow = GObject.registerClass({
     }
 
     _ungrabKeyboard() {
-        this.get_root().get_surface().restore_system_shortcuts();
+        // using optionals here since may have already been ungrabbed
+        this.get_root()?.get_surface()?.restore_system_shortcuts();
     }
 
     _onDeleteButtonClicked() {

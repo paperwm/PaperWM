@@ -219,6 +219,26 @@ function printWorkspaceSettings() {
 /// Keybindings
 
 /**
+ * Depending on your gnome version, Gtk.accelerator_parse() can return a 2 value arrary
+ * or a 3 value array.  This method handles both return results.
+ */
+function accelerator_parse(keystr) {
+    let ok, key, mask;
+    let result = Gtk.accelerator_parse(keystr);
+    if (result.length === 3) {
+        [ok, key, mask] = result;
+    }
+    else {
+        [key, mask] = result;
+        if (key) {
+            ok = true;
+        }
+    }
+
+    return [ok, key, mask];
+}
+
+/**
  * Two keystrings can represent the same key combination
  */
 function keystrToKeycombo(keystr) {
@@ -230,14 +250,7 @@ function keystrToKeycombo(keystr) {
         aboveTab = true;
     }
     
-    let ok, key, mask;
-    let result = Gtk.accelerator_parse(keystr);
-    if (result.length === 3) {
-        [ok, key, mask] = result;
-    }
-    else {
-        [key, mask] = result;
-    }
+    let [ok, key, mask] = accelerator_parse(keystr);
 
     if (aboveTab)
         key = META_KEY_ABOVE_TAB;

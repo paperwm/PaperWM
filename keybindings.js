@@ -3,7 +3,8 @@ var Extension = ExtensionUtils.getCurrentExtension();
 var ExtensionModule = Extension.imports.extension;
 var Me = Extension.imports.keybindings;
 
-var Gdk = imports.gi.Gdk;
+var Clutter = imports.gi.Clutter;
+var Seat = Clutter.get_default_backend().get_default_seat();
 var Gtk = imports.gi.Gtk;
 var Gio = imports.gi.Gio;
 var Meta = imports.gi.Meta;
@@ -395,7 +396,7 @@ function unbindkey(actionIdOrKeystr) {
 }
 
 function devirtualizeMask(gdkVirtualMask) {
-    const keymap = Gdk.Keymap.get_default();
+    const keymap = Seat.get_keymap();
     let [success, rawMask] = keymap.map_virtual_modifiers(gdkVirtualMask);
     if (!success)
         throw new Error("Couldn't devirtualize mask " + gdkVirtualMask);
