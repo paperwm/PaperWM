@@ -10,16 +10,11 @@ var Clutter = imports.gi.Clutter;
 var St = imports.gi.St;
 /** @type {import("@gi-types/st")} */
 var Main = imports.ui.main;
-/** @type {import("@gi-types/shell")} */
-var Shell = imports.gi.Shell;
 var Gio = imports.gi.Gio;
 var Mainloop = imports.mainloop;
 var Signals = imports.signals;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
-
-/** @type {import('@gi-types/meta').Stage} */
-const stage = global.stage
 
 var GDesktopEnums = imports.gi.GDesktopEnums;
 
@@ -30,7 +25,6 @@ var display = global.display;
 /** @type {Spaces} */
 var spaces;
 
-var Minimap = Extension.imports.minimap;
 var Scratch = Extension.imports.scratch;
 var Gestures = Extension.imports.gestures;
 var TopBar = Extension.imports.topbar;
@@ -39,13 +33,6 @@ var ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
 var Settings = Extension.imports.settings;
 
 var prefs = Settings.prefs;
-
-var backgroundSettings = new Gio.Settings({
-    schema_id: 'org.gnome.desktop.background'
-})
-var interfaceSettings = new Gio.Settings({
-    schema_id: "org.gnome.desktop.interface",
-});
 
 var borderWidth = 8;
 // Mutter prevints windows from being placed further off the screen than 75 pixels.
@@ -2714,13 +2701,20 @@ function resizeHandler(metaWindow) {
     }
 }
 
-var signals, backgroundGroup, WindowCloneLayout, grabSignals;
+var backgroundSettings, interfaceSettings;
+var signals, backgroundGroup, grabSignals;
 var oldSpaces = new Map();
 var oldMonitors = new Map();
 function enable(errorNotification) {
     debug('#enable');
 
-    // Symbol to retrieve the focus handler id
+    backgroundSettings = new Gio.Settings({
+        schema_id: 'org.gnome.desktop.background',
+    });
+    interfaceSettings = new Gio.Settings({
+        schema_id: "org.gnome.desktop.interface",
+    });
+
     signals = new utils.Signals();
     grabSignals = new utils.Signals();
 
@@ -2788,6 +2782,8 @@ function disable () {
     });
 
     backgroundGroup = null;
+    backgroundSettings = null;
+    interfaceSettings = null;
 }
 
 /**
