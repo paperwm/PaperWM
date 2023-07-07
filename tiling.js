@@ -1,10 +1,5 @@
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@paperwm.github.com"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@paperwm.github.com");
-}
-
+var ExtensionUtils = imports.misc.extensionUtils;
+var Extension = ExtensionUtils.getCurrentExtension();
 var GLib = imports.gi.GLib;
 var Tweener = Extension.imports.utils.tweener;
 /** @type {import("@gi-types/meta")} */
@@ -26,7 +21,7 @@ var debug = utils.debug;
 /** @type {import('@gi-types/meta').Stage} */
 const stage = global.stage
 
-var Gdk = imports.gi.Gdk;
+var GDesktopEnums = imports.gi.GDesktopEnums;
 
 /**@type {import('@gi-types/meta').WorkspaceManager} */
 var workspaceManager = global.workspace_manager;
@@ -42,7 +37,6 @@ var TopBar = Extension.imports.topbar;
 var Navigator = Extension.imports.navigator;
 var ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
 var Settings = Extension.imports.settings;
-var Me = Extension.imports.tiling;
 
 var prefs = Settings.prefs;
 
@@ -256,8 +250,8 @@ var Space = class Space extends Array {
             ensureViewport(selected, this, { force:true });
         }
 
-        this.signals.connect(workspace, "window-added", utils.dynamic_function_ref("add_handler", Me));
-        this.signals.connect(workspace, "window-removed", utils.dynamic_function_ref("remove_handler", Me));
+        this.signals.connect(workspace, "window-added", utils.dynamic_function_ref("add_handler", Extension.imports.tiling));
+        this.signals.connect(workspace, "window-removed", utils.dynamic_function_ref("remove_handler", Extension.imports.tiling));
         this.signals.connect(Main.overview, 'showing', this.startAnimate.bind(this));
         this.signals.connect(Main.overview, 'hidden', this.moveDone.bind(this, (window) => {
             // after moveDone, ensureViewport on display.focus_window (see moveDone function)
@@ -268,8 +262,7 @@ var Space = class Space extends Array {
             setFocusMode(Settings.getDefaultFocusMode(), this);
         });
         
-        const Convenience = Extension.imports.convenience;
-        const settings = Convenience.getSettings();
+        const settings = ExtensionUtils.getSettings();
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
 
         this.signals.connect(settings, 'changed::default-background', this.updateBackground.bind(this));
@@ -1170,7 +1163,7 @@ border-radius: ${borderWidth}px;
     updateBackground() {
         let path = this.settings.get_string('background') || prefs.default_background;
         let useDefault = Settings.settings.get_boolean('use-default-background');
-        const BackgroundStyle = imports.gi.GDesktopEnums.BackgroundStyle;
+        const BackgroundStyle = GDesktopEnums.BackgroundStyle;
         let style = BackgroundStyle.ZOOM;
         if (!path && useDefault) {
             if (interfaceSettings.get_string("color-scheme") === "default") {
@@ -1342,7 +1335,6 @@ border-radius: ${borderWidth}px;
         }
 
         let monitor = this.monitor;
-        const GDesktopEnums = imports.gi.GDesktopEnums;
         let backgroundParams = global.screen ?
             { meta_screen: global.screen } :
             { meta_display: display };
@@ -1397,11 +1389,6 @@ border-radius: ${borderWidth}px;
                 let dir = event.get_scroll_direction();
                 if (dir === Clutter.ScrollDirection.SMOOTH)
                     return;
-                // print(dir, Clutter.ScrollDirection.SMOOTH, Clutter.ScrollDirection.UP, Clutter.ScrollDirection.DOWN)
-                let dx
-                // log(utils.ppEnumValue(dir, Clutter.ScrollDirection))
-                // let dx = dir === Clutter.ScrollDirection.DOWN ? -1 : 1
-                // let [dx, dy] = event.get_scroll_delta()
 
                 let [gx, gy] = event.get_coords();
                 if (!gx) {
@@ -1418,8 +1405,6 @@ border-radius: ${borderWidth}px;
                         this.switchRight();
                         break;
                 }
-                // spaces.selectedSpace = this;
-                // nav.finish();
             });
 
         this.signals.connect(
@@ -3338,7 +3323,7 @@ function focus_handler(metaWindow, user_data) {
     
     TopBar.fixTopBar();
 }
-var focus_wrapper = utils.dynamic_function_ref('focus_handler', Me);
+var focus_wrapper = utils.dynamic_function_ref('focus_handler', this);
 
 /**
    Push all minimized windows to the scratch layer
@@ -3349,7 +3334,7 @@ function minimizeHandler(metaWindow) {
         Scratch.makeScratch(metaWindow);
     }
 }
-var minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', Me);
+var minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', this);
 
 /**
   `WindowActor::show` handling
@@ -3377,7 +3362,7 @@ function showHandler(actor) {
         animateWindow(metaWindow);
     }
 }
-var showWrapper = utils.dynamic_function_ref('showHandler', Me);
+var showWrapper = utils.dynamic_function_ref('showHandler', this);
 
 function showWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();

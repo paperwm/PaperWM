@@ -5,13 +5,7 @@
   `SwitcherPopup.SwitcherPopup` when we really should just take full control.
  */
 
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@paperwm.github.com"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@paperwm.github.com");
-}
-
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;

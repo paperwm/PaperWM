@@ -1,12 +1,4 @@
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@paperwm.github.com"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@paperwm.github.com");
-}
-
-var gliding = false;
-
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Meta = imports.gi.Meta;
 var St = imports.gi.St;
 var Gio = imports.gi.Gio;
@@ -16,6 +8,7 @@ var Clutter = imports.gi.Clutter;
 var Main = imports.ui.main;
 var Shell = imports.gi.Shell;
 var Tweener = Extension.imports.utils.tweener;
+var Mainloop = imports.mainloop;
 
 var Utils = Extension.imports.utils;
 var Tiling = Extension.imports.tiling;
@@ -30,6 +23,7 @@ const DIRECTIONS = {
     Vertical: false,
 }
 
+var gliding = false;
 var vy;
 var time;
 var vState;
@@ -406,7 +400,7 @@ function endVertical() {
         return true; // repeat
     };
 
-    imports.mainloop.timeout_add(16, glide, 0);
+    Mainloop.timeout_add(16, glide, 0);
 }
 
 /**

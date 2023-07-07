@@ -5,13 +5,9 @@
   around these problems and facilitates new features.
  */
 
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@paperwm.github.com"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@paperwm.github.com");
-}
-
+var ExtensionUtils = imports.misc.extensionUtils;
+var Extension = ExtensionUtils.getCurrentExtension();
+var Gtk = imports.gi.Gtk;
 var Meta = imports.gi.Meta;
 var Gio = imports.gi.Gio;
 var Main = imports.ui.main;
@@ -22,13 +18,13 @@ var WorkspaceAnimation = imports.ui.workspaceAnimation;
 var Shell = imports.gi.Shell;
 var utils = Extension.imports.utils;
 var Params = imports.misc.params;
+var MessageTray = imports.ui.messageTray;
 
-var Convenience = Extension.imports.convenience;
 var Scratch = Extension.imports.scratch;
 var Tiling = Extension.imports.tiling;
-var settings = Convenience.getSettings();
+var settings = ExtensionUtils.getSettings();
 var Clutter = imports.gi.Clutter;
-let St = imports.gi.St;
+var St = imports.gi.St;
 
 var version = Extension.imports.utils.version
 
@@ -309,7 +305,7 @@ function startup() {
         Main?.wm?._swipeTracker // gnome 38 (and below)
     ].filter(t => typeof t !== 'undefined');
 
-    registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
+    registerOverridePrototype(MessageTray.MessageTray, '_updateState');
     registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch', animateSwitch);
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
@@ -423,7 +419,7 @@ function enable() {
     // Don't hide notifications when there's fullscreen windows in the workspace.
     // Fullscreen windows aren't special in paperWM and might not even be
     // visible, so hiding notifications makes no sense.
-    with (imports.ui.messageTray) {
+    with (MessageTray) {
         MessageTray.prototype._updateState
             = function () {
                 let hasMonitor = Main.layoutManager.primaryMonitor != null;

@@ -3,24 +3,15 @@
    Settings utility shared between the running extension and the preference UI.
 
  */
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@paperwm.github.com"];
-} else {
-    // Cannot relaiably test for imports.ui in the preference ui
-    try {
-        Extension = imports.ui.main.extensionManager.lookup("paperwm@paperwm.github.com");
-    } catch(e) {
-        Extension = imports.misc.extensionUtils.getCurrentExtension();
-    }
-}
 
+var ExtensionUtils = imports.misc.extensionUtils;
+var Extension = ExtensionUtils.getCurrentExtension();
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
 var Gtk = imports.gi.Gtk;
+var Mainloop = imports.mainloop;
 
-var Convenience = Extension.imports.convenience;
-var settings = Convenience.getSettings();
+var settings = ExtensionUtils.getSettings();
 var workspaceSettingsCache = {};
 
 var WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
@@ -50,8 +41,8 @@ let timerId;
 function onWindowGapChanged() {
     setVerticalMargin();
     if (timerId)
-        imports.mainloop.source_remove(timerId);
-    timerId = imports.mainloop.timeout_add(500, () => {
+        Mainloop.source_remove(timerId);
+    timerId = Mainloop.timeout_add(500, () => {
         Extension.imports.tiling.spaces.mru().forEach(space => {
             space.layout();
         });
@@ -182,7 +173,7 @@ function findWorkspaceSettingsByName(regex) {
 /** Only used for debugging/development atm. */
 function deleteWorkspaceSettingsByName(regex, dryrun=true) {
     let out = ""
-    function rprint(...args) { print(...args); out += args.join(" ") + "\n"; }
+    function rprint(...args) { log(...args); out += args.join(" ") + "\n"; }
     let n = global.workspace_manager.get_n_workspaces();
     for (let [uuid, s, name] of findWorkspaceSettingsByName(regex)) {
         let index = s.get_int('index');
@@ -221,11 +212,31 @@ function printWorkspaceSettings() {
     const key = s => s[1].get_int('index');
     zipped.sort((a,b) => key(a) - key(b));
     for (let [uuid, s] of zipped) {
-        print('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
+        log('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
     }
 }
 
 /// Keybindings
+
+/**
+ * Depending on your gnome version, Gtk.accelerator_parse() can return a 2 value arrary
+ * or a 3 value array.  This method handles both return results.
+ */
+function accelerator_parse(keystr) {
+    let ok, key, mask;
+    let result = Gtk.accelerator_parse(keystr);
+    if (result.length === 3) {
+        [ok, key, mask] = result;
+    }
+    else {
+        [key, mask] = result;
+        if (key) {
+            ok = true;
+        }
+    }
+
+    return [ok, key, mask];
+}
 
 /**
  * Two keystrings can represent the same key combination
@@ -239,14 +250,7 @@ function keystrToKeycombo(keystr) {
         aboveTab = true;
     }
     
-    let ok, key, mask;
-    let result = Gtk.accelerator_parse(keystr);
-    if (result.length === 3) {
-        [ok, key, mask] = result;
-    }
-    else {
-        [key, mask] = result;
-    }
+    let [ok, key, mask] = accelerator_parse(keystr);
 
     if (aboveTab)
         key = META_KEY_ABOVE_TAB;
@@ -299,7 +303,7 @@ function findConflicts(schemas) {
     schemas = schemas || conflictSettings;
     let conflicts = [];
     const paperMap =
-          generateKeycomboMap(Convenience.getSettings(KEYBINDINGS_KEY));
+          generateKeycomboMap(ExtensionUtils.getSettings(KEYBINDINGS_KEY));
 
     for (let settings of schemas) {
         const against = generateKeycomboMap(settings);

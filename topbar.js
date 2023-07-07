@@ -2,13 +2,8 @@
   Functionality related to the top bar, often called the statusbar.
  */
 
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@paperwm.github.com"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@paperwm.github.com");
-}
-
+var ExtentionUtils = imports.misc.extensionUtils;
+var Extension = ExtentionUtils.getCurrentExtension();
 var Meta = imports.gi.Meta;
 var St = imports.gi.St;
 var Gio = imports.gi.Gio;
@@ -18,7 +13,7 @@ var PopupMenu = imports.ui.popupMenu;
 var Clutter = imports.gi.Clutter;
 var Main = imports.ui.main;
 var Tweener = Extension.imports.utils.tweener;
-var Path = imports.misc.extensionUtils.getCurrentExtension().dir.get_path();
+var Path = ExtentionUtils.getCurrentExtension().dir.get_path();
 
 var Tiling = Extension.imports.tiling;
 var Navigator = Extension.imports.navigator;
@@ -379,7 +374,7 @@ class WorkspaceMenu extends PanelMenu.Button {
             let wi = workspaceManager.get_active_workspace_index();
             let temp_file = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace')
             temp_file.replace_contents(wi.toString(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null)
-            imports.misc.extensionUtils.openPrefs()
+            ExtentionUtils.openPrefs()
         });
 
         // this.iconBox = new St.BoxLayout();
@@ -647,7 +642,7 @@ function enable () {
 
     signals.connect(Settings.settings, 'changed::disable-topbar-styling', (settings, key) => {
         const status = prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
-        Extension.imports.extension.notify(
+        ExtensionModule.notify(
             `PaperWM: TopBar styling has been ${status}`, 
             `A restart of Gnome is required! (e.g. logout then login again)`)
     });
