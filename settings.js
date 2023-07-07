@@ -1,7 +1,5 @@
 /**
-
    Settings utility shared between the running extension and the preference UI.
-
  */
 
 var ExtensionUtils = imports.misc.extensionUtils;
@@ -171,8 +169,8 @@ function findWorkspaceSettingsByName(regex) {
 }
 
 /** Only used for debugging/development atm. */
-function deleteWorkspaceSettingsByName(regex, dryrun=true) {
-    let out = ""
+function deleteWorkspaceSettingsByName(regex, dryrun = true) {
+    let out = "";
     function rprint(...args) { log(...args); out += args.join(" ") + "\n"; }
     let n = global.workspace_manager.get_n_workspaces();
     for (let [uuid, s, name] of findWorkspaceSettingsByName(regex)) {

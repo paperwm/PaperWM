@@ -1,52 +1,52 @@
 var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Clutter = imports.gi.Clutter
-var St = imports.gi.St
+var St = imports.gi.S;
 
 var Tiling = Extension.imports.tiling;
 var Utils = Extension.imports.utils;
-let fitProportionally = Tiling.fitProportionally
+let fitProportionally = Tiling.fitProportionally;
 
 let prefs = {
     window_gap: 5,
     minimum_margin: 3,
-}
+};
 
-var virtStage = null
+var virtStage = null;
 
 function repl() {
-    if (virtStage)
-        virtStage.destroy()
+    if (virtStage) {
+        virtStage.destroy();
+    }
 
-    let realMonitor = space.monitor
-    let scale = 0.10
-    let padding = 10
-    const monitorWidth = realMonitor.width * scale
-    const monitorHeight = realMonitor.height * scale
-    let stageStyle = `background-color: white;`
+    let realMonitor = space.monitor;
+    let scale = 0.10;
+    let padding = 10;
+    const monitorWidth = realMonitor.width * scale;
+    const monitorHeight = realMonitor.height * scale;
+    let stageStyle = 'background-color: white;';
     virtStage = new St.Widget({
-        name: "stage",
+        name: 'stage',
         style: stageStyle,
-        height: monitorHeight + padding*2,
-        width: monitorWidth*3
-    })
+        height: monitorHeight + padding * 2,
+        width: monitorWidth * 3,
+    });
 
     let monitorStyle = `background-color: blue;`
     let monitor = new St.Widget({
-        name: "monitor0", 
+        name: "monitor0",
         style: monitorStyle,
-        x: virtStage.width/2 - monitorWidth/2, y: padding,
+        x: virtStage.width / 2 - monitorWidth / 2, y: padding,
         width: monitorWidth,
-        height: virtStage.height - padding*2
-    })
+        height: virtStage.height - padding * 2,
+    });
 
     let panel = new St.Widget({
         name: "panel",
         style: `background-color: gray`,
         x: 0, y: 0,
         width: monitor.width,
-        height: 10
+        height: 10,
 
-    })
+    });
     let workArea = {
         x: monitor.x,
         y: panel.height,
@@ -55,17 +55,17 @@ function repl() {
     }
 
     let tilingStyle = `background-color: rgba(190, 190, 0, 0.3);`
-    let tilingContainer = new St.Widget({name: "tiling", style: tilingStyle})
+    let tilingContainer = new St.Widget({name: "tiling", style: tilingStyle});
 
-    global.stage.add_actor(virtStage)
-    virtStage.x = 3000
-    virtStage.y = 300
+    global.stage.add_actor(virtStage);
+    virtStage.x = 3000;
+    virtStage.y = 300;
 
-    virtStage.add_actor(monitor)
-    monitor.add_actor(panel)
-    monitor.add_actor(tilingContainer)
+    virtStage.add_actor(monitor);
+    monitor.add_actor(panel);
+    monitor.add_actor(tilingContainer);
 
-    function sync(space_=space) {
+    function sync(space_ = space) {
         let columns = layout(
             fromSpace(space_, scale),
             workArea,
@@ -80,13 +80,13 @@ function repl() {
 
     sync()
 
-    Utils.printActorTree(virtStage, Utils.mkFmt({nameOnly: true}))
+    Utils.printActorTree(virtStage, Utils.mkFmt({nameOnly: true}));
 
-    movecolumntoviewportposition(tilingContainer, monitor, columns[1][0], 30)
+    movecolumntoviewportposition(tilingContainer, monitor, columns[1][0], 30);
 
-    virtStage.hide()
-    virtStage.show()
-    virtStage.y = 400
+    virtStage.hide();
+    virtStage.show();
+    virtStage.y = 400;
 }
 
 /** tiling position given:
@@ -95,7 +95,7 @@ function repl() {
     w_t: window position (relative to tiling)
  */
 function t_s(m_s, w_m, w_t) {
-    return w_m - w_t + m_s
+    return w_m - w_t + m_s;
 }
 
 /**
@@ -114,7 +114,7 @@ function renderAndView(container, columns) {
     render(columns, container);
 }
 
-function fromSpace(space, scale=1) {
+function fromSpace(space, scale = 1) {
     return space.map(
         col => col.map(
             metaWindow => {
@@ -138,7 +138,7 @@ function render(columns, tiling) {
             width: window.width,
             height: window.height,
             x: window.x,
-            y: window.y
+            y: window.y,
         });
     }
 
@@ -159,21 +159,23 @@ function allocateDefault(column, availableHeight, preAllocatedWindow) {
         const minHeight = 15;
 
         function heightOf(window) {
-            return window.height
+            return window.height;
         }
 
         const k = preAllocatedWindow && column.indexOf(preAllocatedWindow);
         const selectedHeight = preAllocatedWindow && heightOf(preAllocatedWindow);
 
         let nonSelected = column.slice();
-        if (preAllocatedWindow) nonSelected.splice(k, 1)
+        if (preAllocatedWindow) {
+            nonSelected.splice(k, 1);
+        }
 
         const nonSelectedHeights = nonSelected.map(heightOf);
         let availableForNonSelected = Math.max(
             0,
-            availableHeight
-                - (column.length-1) * gap
-                - (preAllocatedWindow ? selectedHeight : 0)
+            availableHeight -
+                (column.length - 1) * gap -
+                (preAllocatedWindow ? selectedHeight : 0)
         );
 
         const deficit = Math.max(
@@ -184,21 +186,20 @@ function allocateDefault(column, availableHeight, preAllocatedWindow) {
             availableForNonSelected + deficit
         );
 
-        if (preAllocatedWindow)
+        if (preAllocatedWindow) {
             heights.splice(k, 0, selectedHeight - deficit);
+        }
 
-        return heights
+        return heights;
     }
 }
 
 function allocateEqualHeight(column, available) {
-    available = available - (column.length-1)*prefs.window_gap;
+    available -= (column.length - 1) * prefs.window_gap;
     return column.map(_ => Math.floor(available / column.length));
 }
 
 function layoutGrabColumn(column, x, y0, targetWidth, availableHeight, grabWindow) {
-    let needRelayout = false;
-
     function mosh(windows, height, y0) {
         let targetHeights = fitProportionally(
             windows.map(mw => mw.rect.height),
@@ -218,11 +219,11 @@ function layoutGrabColumn(column, x, y0, targetWidth, availableHeight, grabWindo
     let yGrabRel = f.y - this.monitor.y;
     targetWidth = f.width;
 
-    const H1 = (yGrabRel - y0) - gap - (k-1)*gap;
-    const H2 = availableHeight - (yGrabRel + f.height - y0) - gap - (column.length-k-2)*gap;
+    const H1 = (yGrabRel - y0) - gap - (k - 1) * gap;
+    const H2 = availableHeight - (yGrabRel + f.height - y0) - gap - (column.length - k - 2) * gap;
     k > 0 && mosh(column.slice(0, k), H1, y0);
-    let y = mosh(column.slice(k, k+1), f.height, yGrabRel);
-    k+1 < column.length && mosh(column.slice(k+1), H2, y);
+    let y = mosh(column.slice(k, k + 1), f.height, yGrabRel);
+    k+1 < column.length && mosh(column.slice(k + 1), H2, y);
 
     return targetWidth;
 }
@@ -235,29 +236,29 @@ function layoutColumnSimple(windows, x, y0, targetWidth, targetHeights, time) {
         let virtWindow = windows[i];
         let targetHeight = targetHeights[i];
 
-        virtWindow.x = x
-        virtWindow.y = y
-        virtWindow.width = targetWidth
-        virtWindow.height = targetHeight
+        virtWindow.x = x;
+        virtWindow.y = y;
+        virtWindow.width = targetWidth;
+        virtWindow.height = targetHeight;
 
         y += targetHeight + prefs.window_gap;
     }
-    return targetWidth, y
+    return targetWidth, y;
 }
 
 
 /**
    Mutates columns
  */
-function layout(columns, workArea, prefs, options={}) {
+function layout(columns, workArea, prefs, options = {}) {
     let gap = prefs.window_gap;
-    let availableHeight = workArea.height
+    let availableHeight = workArea.height;
 
-    let {inGrab, selectedWindow} = options
-    let selectedIndex = -1
+    let {inGrab, selectedWindow} = options;
+    let selectedIndex = -1;
 
     if (selectedWindow) {
-        selectedIndex = columns.findIndex(col => col.includes(selectedWindow))
+        selectedIndex = columns.findIndex(col => col.includes(selectedWindow));
     }
 
     let y0 = workArea.y
@@ -274,9 +275,8 @@ function layout(columns, workArea, prefs, options={}) {
         } else {
             targetWidth = Math.max(...column.map(w => w.width));
         }
-        targetWidth = Math.min(targetWidth, workArea.width - 2*prefs.minimum_margin)
+        targetWidth = Math.min(targetWidth, workArea.width - 2 * prefs.minimum_margin);
 
-        let resultingWidth, relayout;
         if (inGrab && i === selectedIndex) {
             layoutGrabColumn(column, x, y0, targetWidth, availableHeight, selectedInColumn);
         } else {
@@ -290,5 +290,5 @@ function layout(columns, workArea, prefs, options={}) {
         x += targetWidth + gap;
     }
 
-    return columns
+    return columns;
 }

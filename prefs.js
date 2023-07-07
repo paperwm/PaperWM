@@ -671,11 +671,10 @@ function createKeybindingWidget(settings, searchEntry) {
 }
 
 function parseAccelerator(accelerator) {
-    let key, mods;
     if (accelerator.match(/Above_Tab/)) {
         accelerator = accelerator.replace('Above_Tab', 'grave');
     }
-    [ok, key, mods] = Settings.accelerator_parse(accelerator);
+    let [ok, key, mods] = Settings.accelerator_parse(accelerator);
     log(`PaperWM: parseAccelerator(${accelerator}) -> [${key}, ${mods}]`);
 
     return [key, mods];
@@ -684,7 +683,8 @@ function parseAccelerator(accelerator) {
 function transpose(colValPairs) {
     let colKeys = [], values = [];
     colValPairs.forEach(([k, v]) => {
-        colKeys.push(k); values.push(v);
+        colKeys.push(k);
+        values.push(v);
     });
     return [colKeys, values];
 }
