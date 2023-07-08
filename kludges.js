@@ -34,59 +34,6 @@ function overrideHotCorners() {
     }
 }
 
-// polyfill
-if (!Clutter.Actor.prototype.set) {
-    Clutter.Actor.prototype.set = function(params) {
-        Object.assign(this, params);
-    };
-}
-
-// polyfill
-if (!global.display.set_cursor) {
-    global.display.constructor.prototype.set_cursor = global.screen.set_cursor.bind(global.screen);
-}
-
-// polyfill
-if (!Clutter.Actor.prototype.raise) {
-    Clutter.Actor.prototype.raise = function raise(above) {
-        const parent = this.get_parent();
-        if (!parent)
-            return;
-        parent.set_child_above_sibling(this, above);
-    };
-}
-
-// polyfill
-if (!Clutter.Actor.prototype.raise_top) {
-  Clutter.Actor.prototype.raise_top = function raise_top() {
-        this.raise(null);
-    };
-}
-
-// polyfill
-if (!Clutter.Actor.prototype.reparent) {
-    Clutter.Actor.prototype.reparent = function reparent(newParent) {
-        const parent = this.get_parent();
-        if (parent) {
-            parent.remove_child(this);
-        }
-        newParent.add_child(this);
-    };
-}
-
-// polyfill
-if (!Clutter.Vertex) {
-    const {Graphene} = imports.gi;
-    Clutter.Vertex = Graphene.Point3D;
-}
-
-// polyfill for 44
-if (!Meta.later_add && global.compositor?.get_laters()) {
-    Meta.later_add = function(...args) {
-        global.compositor.get_laters().add(...args);
-    };
-}
-
 // Workspace.Workspace._realRecalculateWindowPositions
 // Sort tiled windows in the correct order
 function _realRecalculateWindowPositions(flags) {
@@ -147,15 +94,15 @@ function getOriginalPosition() {
 // Disable the workspace switching animation in Gnome 40+
 function animateSwitch(_from, _to, _direction, onComplete) {
     onComplete();
-};
+}
 
 function disableHotcorners() {
     let override = settings.get_boolean("override-hot-corner");
     if (override) {
         overrideHotCorners();
         signals.connect(Main.layoutManager,
-                        'hot-corners-changed',
-                        overrideHotCorners);
+            'hot-corners-changed',
+            overrideHotCorners);
     } else {
         signals.disconnect(Main.layoutManager);
         Main.layoutManager._updateHotCorners();
@@ -167,7 +114,7 @@ savedProps = savedProps || new Map();
 
 function registerOverrideProp(obj, name, override) {
     if (!obj)
-        return
+        return;
 
     let saved = getSavedProp(obj, name) || obj[name];
     let props = savedProps.get(obj);
@@ -177,13 +124,13 @@ function registerOverrideProp(obj, name, override) {
     }
     props[name] = {
         saved,
-        override
+        override,
     };
 }
 
 function registerOverridePrototype(obj, name, override) {
     if (!obj)
-        return
+        return;
 
     registerOverrideProp(obj.prototype, name, override);
 }

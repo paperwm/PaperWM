@@ -1,7 +1,6 @@
 var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Meta = imports.gi.Meta;
-var Clutter = imports.gi.Clutter;
-var St = imports.gi.St;
+var {Clutter, St, Graphene} = imports.gi;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 
@@ -140,7 +139,7 @@ var MoveGrab = class MoveGrab {
         let point = {};
         if (center) {
             point = space.cloneContainer.apply_relative_transform_to_point(
-                global.stage, new Clutter.Vertex({x: Math.round(clone.x), y: Math.round(clone.y)}));
+                global.stage, new Graphene.Point3D({x: Math.round(clone.x), y: Math.round(clone.y)}));
         } else {
             // For some reason the above isn't smooth when DnD is triggered from dragging
             let [dx, dy] = this.pointerOffset;
@@ -151,21 +150,21 @@ var MoveGrab = class MoveGrab {
         let i = space.indexOf(metaWindow);
         let single = i !== -1 && space[i].length === 1;
         space.removeWindow(metaWindow);
-        clone.reparent(Main.uiGroup);
+        Utils.actor_reparent(clone, Main.uiGroup);
         clone.x = Math.round(point.x);
         clone.y = Math.round(point.y);
-        let newScale = clone.scale_x*space.actor.scale_x;
+        let newScale = clone.scale_x * space.actor.scale_x;
         clone.set_scale(newScale, newScale);
 
         let params = {time: prefs.animation_time, scale_x: 0.5, scale_y: 0.5, opacity: 240}
         if (center) {
             this.pointerOffset = [0, 0];
-            clone.set_pivot_point(0, 0)
-            params.x = gx
-            params.y = gy
+            clone.set_pivot_point(0, 0);
+            params.x = gx;
+            params.y = gy;
         }
 
-        clone.__oldOpacity = clone.opacity
+        clone.__oldOpacity = clone.opacity;
         Tweener.addTween(clone, params);
 
         this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
@@ -176,10 +175,9 @@ var MoveGrab = class MoveGrab {
 
         let [x, y] = space.globalToViewport(gx, gy);
         if (!this.center && onSame && single && space[i]) {
-            Tiling.move_to(space, space[i][0], { x: x + prefs.window_gap/2 });
-        } else if (!this.center && onSame && single && space[i-1]) {
-            Tiling.move_to(space, space[i-1][0], {
-                x: x - space[i-1][0].clone.width - prefs.window_gap/2 });
+            Tiling.move_to(space, space[i][0], {x: x + prefs.window_gap / 2});
+        } else if (!this.center && onSame && single && space[i - 1]) {
+            Tiling.move_to(space, space[i - 1][0], {x: x - space[i - 1][0].clone.width - prefs.window_gap / 2});
         } else if (!this.center && onSame && space.length === 0) {
             space.targetX = x;
             space.cloneContainer.x = x;
@@ -432,7 +430,7 @@ var MoveGrab = class MoveGrab {
                 Tiling.move_to(space, metaWindow, {x: x - space.monitor.x})
                 Tiling.ensureViewport(metaWindow, space);
 
-                clone.raise_top()
+                Utils.actor_raise(clone);
             } else {
                 metaWindow.move_frame(true, clone.x, clone.y);
                 Scratch.makeScratch(metaWindow);
@@ -450,7 +448,7 @@ var MoveGrab = class MoveGrab {
             }
 
             Navigator.getNavigator().accept()
-        } else if (this.initialSpace.indexOf(metaWindow) !== -1){
+        } else if (this.initialSpace.indexOf(metaWindow) !== -1) {
             let space = this.initialSpace;
             destSpace = space;
             space.targetX = space.cloneContainer.x;
@@ -475,7 +473,7 @@ var MoveGrab = class MoveGrab {
 
         this.initialSpace.layout();
         // ensure window is properly activated after layout/ensureViewport tweens
-        Meta.later_add(Meta.LaterType.IDLE, () => {
+        Utils.later_add(Meta.LaterType.IDLE, () => {
             Main.activateWindow(metaWindow);
         });
 
@@ -497,7 +495,7 @@ var MoveGrab = class MoveGrab {
          * may still be in progress, which is okay, but won't be ended
          * until we "click out".  We do this here if needed.
          */
-        Meta.later_add(Meta.LaterType.IDLE, () => {
+        Utils.later_add(Meta.LaterType.IDLE, () => {
             if (!global.display.end_grab_op && this.wasTiled) {
                 // move to current cursort position
                 let [x, y, _mods] = global.get_pointer();
@@ -551,7 +549,7 @@ var MoveGrab = class MoveGrab {
         zone.space.cloneContainer.add_child(zone.actor);
         zone.space.selection.hide();
         zone.actor.show();
-        zone.actor.raise_top();
+        Utils.actor_raise(zone.actor);
         Tweener.addTween(zone.actor, params);
     }
 

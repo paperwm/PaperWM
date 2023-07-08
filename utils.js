@@ -513,10 +513,39 @@ function shortTrace(skip=0) {
             ln = "?"
 
         return [words[0], ln]
-    })
-    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : f+":"+ln);
-    return trace.slice(skip+1, skip+5);
+    });
+    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : f + ":" + ln);
+    return trace.slice(skip + 1, skip + 5);
 }
 
+function actor_raise(actor, above) {
+    const parent = actor.get_parent();
+    if (!parent) {
+        return;
+    }
+    // needs to be null (not undefined) for valid second argument
+    above = above ?? null;
+    parent.set_child_above_sibling(actor, above);
+}
 
-// Meta.remove_verbose_topic(Meta.DebugTopic.FOCUS)
+function actor_reparent(actor, newParent) {
+    const parent = actor.get_parent();
+    if (parent) {
+        parent.remove_child(actor);
+    }
+    newParent.add_child(actor);
+}
+
+/**
+ * Backwards compatible later_add function.
+ */
+function later_add(...args) {
+    // Gnome 44+ uses global.compositor.get_laters()
+    if (global.compositor.get_laters) {
+        global.compositor.get_laters().add(...args);
+    }
+    // Gnome 42, 43 used Meta.later_add
+    else if (Meta.later_add) {
+        Meta.later_add(...args);
+    }
+}

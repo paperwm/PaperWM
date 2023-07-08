@@ -203,8 +203,8 @@ function installConfig() {
 function initUserConfig() {
     const paperSettings = ExtensionUtils.getSettings();
 
-    if (!paperSettings.get_boolean("has-installed-config-template")
-        && !hasUserConfigFile())
+    if (!paperSettings.get_boolean("has-installed-config-template") &&
+        !hasUserConfigFile())
     {
         try {
             installConfig();
@@ -215,12 +215,11 @@ function initUserConfig() {
                 Util.spawn(["nautilus", configDir]);
                 notification.destroy();
             });
-        } catch(e) {
+        } catch (e) {
             errorNotification("PaperWM",
-                              `Failed to install user config: ${e.message}`, e.stack);
+                `Failed to install user config: ${e.message}`, e.stack);
             log("#rc", "Install failed", e.message);
         }
-
     }
 
     if (hasUserConfigFile()) {

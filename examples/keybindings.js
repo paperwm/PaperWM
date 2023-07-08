@@ -3,6 +3,7 @@ var Keybindings = Extension.imports.keybindings;
 var Main = imports.ui.main;
 var Tiling = Extension.imports.tiling;
 var Scratch = Extension.imports.scratch;
+var Utils = Extension.imports.utils;
 
 var Meta = imports.gi.Meta;
 
@@ -78,15 +79,12 @@ function windowMarks() {
 }
 
 function swapNeighbours(binding = "<Super>y") {
-    var Tiling = Extension.imports.tiling;
-    var Meta = imports.gi.Meta;
-
     Keybindings.bindkey(binding, "swap-neighbours", (mw) => {
-        let space = Tiling.spaces.spaceOfWindow(mw)
+        let space = Tiling.spaces.spaceOfWindow(mw);
         let i = space.indexOf(mw);
-        if (space[i+1]) {
-            space.swap(Meta.MotionDirection.RIGHT, space[i+1][0]);
-            space[i+1].map(mw => mw.clone.raise_top());
+        if (space[i + 1]) {
+            space.swap(Meta.MotionDirection.RIGHT, space[i + 1][0]);
+            space[i + 1].map(mw =>  Utils.actor_raise(mw.clone));
         }
     }, {activeInNavigator: true});
 }
@@ -96,26 +94,20 @@ function swapNeighbours(binding = "<Super>y") {
    After:  |[ A ][ *C* ]|[  B  ]
 */
 function swapWithRight(binding = "<Super><Shift>d") {
-    var Tiling = Extension.imports.tiling;
-    var Utils = Extension.imports.utils;
-
     Keybindings.bindkey(binding, "swap-with-right", mw => {
         let space = Tiling.spaces.spaceOfWindow(mw);
         let i = space.indexOf(mw);
         if (i === space.length - 1)
             return;
 
-        Utils.swap(space, i, i+1);
+        Utils.swap(space, i, i + 1);
         space.layout(false);
         space.emit("full-layout");
         Main.activateWindow(space[i][0]);
-    }, { opensMinimap: true });
+    }, {opensMinimap: true});
 }
 
 function cycleMonitor(binding = "<Super>d") {
-    var Tiling = Extension.imports.tiling;
-    var Main = imports.ui.main;
-
     Keybindings.bindkey(binding, "cycle-monitor", () => {
         let curMonitor = Tiling.spaces.selectedSpace.monitor
         let monitors = Main.layoutManager.monitors;
@@ -134,10 +126,6 @@ function cycleMonitor(binding = "<Super>d") {
    NB: Only relevant when using dynamic workspaces.
  */
 function cycleWorkspaceSettings(binding = "<Super>q") {
-    var Tiling = Extension.imports.tiling;
-    var Settings = Extension.imports.settings;
-    var Utils = Extension.imports.utils;
-
     Keybindings.bindkey(
         binding, "next-space-setting",
         mw => Tiling.cycleWorkspaceSettings(-1), { activeInNavigator: true }
@@ -148,11 +136,9 @@ function cycleWorkspaceSettings(binding = "<Super>q") {
     );
 }
 
-
 function showNavigator(binding = "<Super>j") {
     Keybindings.bindkey(binding, "show-minimap", () => null, { opensMinimap: true })
 }
-
 
 // listFreeBindings("<super>").join("\n")
 function listFreeBindings(modifierString) {
@@ -168,7 +154,6 @@ function moveSpaceToMonitor(basebinding = '<super><alt>') {
     let display = global.display;
 
     function moveTo(direction) {
-        let Navigator = Extension.imports.navigator;
         let spaces = Tiling.spaces;
 
         let currentSpace = spaces.selectedSpace;
@@ -207,9 +192,9 @@ function moveSpaceToMonitor(basebinding = '<super><alt>') {
 
     for (let arrow of ['Down', 'Left', 'Up', 'Right']) {
         Keybindings.bindkey(`${basebinding}${arrow}`, `move-space-monitor-${arrow}`,
-                            () => {
-                                moveTo(Meta.DisplayDirection[arrow.toUpperCase()]);
-                            });
+            () => {
+                moveTo(Meta.DisplayDirection[arrow.toUpperCase()]);
+            });
     }
 }
 
@@ -222,7 +207,7 @@ function adjustWidth(incBinding="<Super>plus", decBinding="<Super>minus", increm
             if (!mw) return;
             const f = mw.get_frame_rect();
             mw.move_resize_frame(true, f.x, f.y, f.width + delta, f.height);
-        }
+        };
     }
 
     Keybindings.bindkey(incBinding, "inc-width", adjuster(increment));
@@ -235,7 +220,7 @@ function tileInto(leftBinding="<Super><Shift>less", rightBinding="<Super><Shift>
 
 function stackUnstack(basebinding = '<Super><Alt><Ctrl>') {
     // less: '<'
-    const stackUnstackDirection = (dir=-1) => (metaWindow) => {
+    const stackUnstackDirection = (dir = -1) => metaWindow => {
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
         let column_idx = space.indexOf(metaWindow);
         if (column_idx < 0)
@@ -287,9 +272,6 @@ function stackUnstack(basebinding = '<Super><Alt><Ctrl>') {
 }
 
 function cycleEdgeSnap(binding = "<Super>u") {
-    var Tiling = Extension.imports.tiling;
-    var Meta = imports.gi.Meta;
-
     Keybindings.bindkey(binding, "cycle-edge-snap", (mw) => {
         // Snaps window to the left/right monitor edge
         // Note: mostly the same as quickly switching left+right / right+left

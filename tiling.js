@@ -1,16 +1,8 @@
 var ExtensionUtils = imports.misc.extensionUtils;
 var Extension = ExtensionUtils.getCurrentExtension();
-var GLib = imports.gi.GLib;
+var {Clutter, St, Graphene, GLib, Meta, Gio} = imports.gi;
 var Tweener = Extension.imports.utils.tweener;
-/** @type {import("@gi-types/meta")} */
-var Meta = imports.gi.Meta;
-/** @type {import("@gi-types/clutter10")} */
-var Clutter = imports.gi.Clutter;
-/** @type {import("@gi-types/st")} */
-var St = imports.gi.St;
-/** @type {import("@gi-types/st")} */
 var Main = imports.ui.main;
-var Gio = imports.gi.Gio;
 var Mainloop = imports.mainloop;
 var Signals = imports.signals;
 var utils = Extension.imports.utils;
@@ -195,7 +187,7 @@ var Space = class Space extends Array {
             style_class: 'paperwm-window-position-bar tile-preview'
         });
         this.windowPositionBar.hide(); // default on empty space
-        this.windowPositionBar.raise_top();
+        utils.actor_raise(this.windowPositionBar);
         if (prefs.show_window_position_bar) {
             this.enableWindowPositionBar();
         }
@@ -537,7 +529,7 @@ var Space = class Space extends Array {
             return;
 
         this._layoutQueued = true;
-        Meta.later_add(Meta.LaterType.RESIZE, () => {
+        utils.later_add(Meta.LaterType.RESIZE, () => {
             this._layoutQueued = false;
             this.layout();
         });
@@ -647,7 +639,7 @@ var Space = class Space extends Array {
          */
         this.signals.connect(metaWindow, 'position-changed', (w) => {
             if (inGrab)
-                return
+                return;
             let f = w.get_frame_rect();
             let clone = w.clone;
             let x = this.visibleX(w);
@@ -659,7 +651,7 @@ var Space = class Space extends Array {
             }
         });
 
-        metaWindow.clone.reparent(this.cloneContainer);
+        utils.actor_reparent(metaWindow.clone, this.cloneContainer);
 
         // Make sure the cloneContainer is in a clean state (centered) before layout
         if (this.length === 1) {
@@ -725,7 +717,7 @@ var Space = class Space extends Array {
             return false;
         this._floating.push(metaWindow);
         let clone = metaWindow.clone;
-        clone.reparent(this.actor);
+        utils.actor_reparent(clone, this.actor);
         return true;
     }
 
@@ -1223,7 +1215,7 @@ border-radius: ${borderWidth}px;
         if (!prefs.show_window_position_bar) {
             return;
         }
-        
+
         // space has a fullscreen window, hide window position bar
         if (this.hasFullScreenWindow()) {
             this.showWindowPositionBar(false);
@@ -1236,7 +1228,7 @@ border-radius: ${borderWidth}px;
 
         // show space duplicate elements if not primary monitor
         if (!this.hasTopBar()) {
-            this.workspaceIndicator.raise_top();
+            utils.actor_raise(this.workspaceIndicator);
             this.workspaceLabel.show();
         }
 
@@ -1248,7 +1240,7 @@ border-radius: ${borderWidth}px;
         } else {
             this.windowPositionBar.show();
         }
-        
+
         let width = this.monitor.width;
         this.windowPositionBarBackdrop.width = width;
         let segments = width / cols;
@@ -1291,11 +1283,11 @@ border-radius: ${borderWidth}px;
 
     /**
      * Shows the workspace indicator space element.
-     * @param {boolean} show 
+     * @param {boolean} show
      */
-    showWorkspaceIndicator(show=true) {
+    showWorkspaceIndicator(show = true) {
         if (show && prefs.show_workspace_indicator) {
-            this.workspaceIndicator.raise_top();
+            utils.actor_raise(this.workspaceIndicator);
             this.workspaceIndicator.show();
         } else {
             this.workspaceIndicator.hide();
@@ -1304,11 +1296,11 @@ border-radius: ${borderWidth}px;
 
     /**
      * Shows the focusModeIcon space element.
-     * @param {boolean} show 
+     * @param {boolean} show
      */
-    showFocusModeIcon(show=true) {
+    showFocusModeIcon(show = true) {
         if (show && prefs.show_focus_mode_icon) {
-            this.focusModeIcon.raise_top();
+            utils.actor_raise(this.focusModeIcon);
             this.focusModeIcon.show();
         } else {
             this.focusModeIcon.hide();
@@ -1322,20 +1314,20 @@ border-radius: ${borderWidth}px;
         }
 
         let monitor = this.monitor;
-        let backgroundParams = global.screen ?
-            { meta_screen: global.screen } :
-            { meta_display: display };
+        let backgroundParams = global.screen
+            ? {meta_screen: global.screen}
+            : {meta_display: display};
 
         let metaBackground = new Meta.Background(backgroundParams);
         // gnome-shell 3.38
         if (Meta.BackgroundActor.prototype.set_background) {
-            backgroundParams.background = metaBackground
+            backgroundParams.background = metaBackground;
         }
         this.background = new Meta.BackgroundActor(
             Object.assign({
                 name: "background",
                 monitor: monitor.index,
-                reactive: true // Disable the background menu
+                reactive: true, // Disable the background menu
             }, backgroundParams)
         );
 
@@ -1710,13 +1702,13 @@ var Spaces = class Spaces extends Map {
             this.monitors.set(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
                 space.show();
-                space.clip.raise_top();
+                utils.actor_raise(space.clip);
             }
             this.forEach(space => {
                 space.layout(false);
                 let selected = space.selectedWindow;
                 if (selected) {
-                    ensureViewport(selected, space, { force:true });
+                    ensureViewport(selected, space, {force: true});
                 }
             });
             this.spaceContainer.show();
@@ -1972,7 +1964,7 @@ var Spaces = class Spaces extends Map {
      */
     updateSpaceIconPositions() {
         // get positions of topbar elements to replicate positions in spaces
-        const vertex = new Clutter.Vertex({ x: 0, y: 0 });
+        const vertex = new Graphene.Point3D({ x: 0, y: 0 });
         const labelPosition = TopBar.menu.label.apply_relative_transform_to_point(Main.panel, vertex);
         const focusPosition = TopBar.focusButton.apply_relative_transform_to_point(Main.panel, vertex);
 
@@ -2333,7 +2325,7 @@ var Spaces = class Spaces extends Map {
                     to.border.opacity = 255;
                 }
             });
-            to.clip.raise_top();
+            utils.actor_raise(to.clip);
 
             // Fixes a weird bug where mouse input stops
             // working after mousing to another monitor on
@@ -2950,7 +2942,7 @@ function insertWindow(metaWindow, {existing}) {
     let ok, x, y;
     // Figure out the matching coordinates before the clone is reparented.
     if (isWindowAnimating(metaWindow)) {
-        let point = clone.apply_transform_to_point(new Clutter.Vertex({x: 0, y: 0}));
+        let point = clone.apply_transform_to_point(new Graphene.Point3D({x: 0, y: 0}));
         [ok, x, y] = space.cloneContainer.transform_stage_point(point.x, point.y);
     } else {
         let frame = metaWindow.get_frame_rect();
@@ -3111,7 +3103,7 @@ function ensureViewport(meta_window, space, options={}) {
     }
 
     selected.raise();
-    selected.clone.raise_top();
+    utils.actor_raise(selected.clone);
     updateSelection(space, meta_window);
     space.emit('select');
 }
@@ -3141,7 +3133,7 @@ function updateSelection(space, metaWindow) {
     
     if (space.selection.get_parent() === clone)
         return;
-    space.selection.reparent(clone);
+    utils.actor_reparent(space.selection, clone);
     clone.set_child_below_sibling(space.selection, cloneActor);
     allocateClone(metaWindow);
 }
@@ -3196,7 +3188,7 @@ function grabBegin(metaWindow, type) {
             // NOTE: Keyboard grab moves the cursor, but it happens after grab
             // signals have run. Simply delay the dnd so it will get the correct
             // pointer coordinates.
-            Meta.later_add(Meta.LaterType.IDLE, () => {
+            utils.later_add(Meta.LaterType.IDLE, () => {
                 inGrab.begin();
                 inGrab.beginDnD();
             })
@@ -3902,7 +3894,7 @@ function takeWindow(metaWindow, space, {navigator}) {
             });
 
             // activate last metaWindow after taken windows inserted
-            Meta.later_add(Meta.LaterType.IDLE, () => {
+            utils.later_add(Meta.LaterType.IDLE, () => {
                 Main.activateWindow(metaWindow);
             });
         });
@@ -3915,8 +3907,10 @@ function takeWindow(metaWindow, space, {navigator}) {
     let lowest = navigator._moving[navigator._moving.length - 2];
     lowest && parent.set_child_below_sibling(metaWindow.clone, lowest.clone);
     let point = space.cloneContainer.apply_relative_transform_to_point(
-        parent, new Clutter.Vertex({x: metaWindow.clone.x,
-                                             y: metaWindow.clone.y}));
+        parent, new Graphene.Point3D({
+            x: metaWindow.clone.x,
+            y: metaWindow.clone.y
+        }));
     metaWindow.clone.set_position(point.x, point.y);
     let x = Math.round(space.monitor.x +
                        space.monitor.width -
