@@ -88,6 +88,7 @@ var ClickOverlay = class ClickOverlay {
                 this._lastPointer = [x, y];
                 Mainloop.timeout_add(500, () => {
                     this._lastPointer = [];
+                    return false; // on return false destroys timeout
                 });
                 if (lX === undefined ||
                     Math.sqrt((lX - x)**2 + (lY - y)**2) < 10)
@@ -122,8 +123,8 @@ var ClickOverlay = class ClickOverlay {
         let display = global.display;
         let mi = space.monitor.index;
         let mru = display.get_tab_list(Meta.TabList.NORMAL,
-                                       space.workspace)
-                         .filter(w => !w.minimized && w.get_monitor() === mi);
+            space.workspace)
+            .filter(w => !w.minimized && w.get_monitor() === mi);
 
         let stack = display.sort_windows_by_stacking(mru);
         // Select the highest stacked window on the monitor
@@ -229,8 +230,8 @@ var StackOverlay = class StackOverlay {
                 if (x <= 2 || x >= this.monitor.width - 2) {
                     this.triggerPreview.bind(this)();
                 }
+                return false; // on return false destroys timeout
             });
-            return true;
         });
 
         this.signals.connect(overlay, 'enter-event', this.triggerPreview.bind(this));
@@ -259,6 +260,7 @@ var StackOverlay = class StackOverlay {
             }
 
             this.showPreview();
+            return false;
         });
 
         // uncomment to remove the preview after a timeout
@@ -354,6 +356,7 @@ var StackOverlay = class StackOverlay {
             this.barrier = null;
         }
         this._removeBarrierTimeoutId = 0;
+        return false;
     }
 
     updateBarrier(force) {

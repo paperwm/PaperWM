@@ -1546,16 +1546,16 @@ border-radius: ${borderWidth}px;
         this.cloneContainer = null;
         let workspace = this.workspace;
     }
-}
-Signals.addSignalMethods(Space.prototype);
+};
 
+Signals.addSignalMethods(Space.prototype);
 
 var StackPositions = {
     top: 0.01,
     up: 0.035,
     selected: 0.1,
     down: 0.95,
-    bottom: 1.1
+    bottom: 1.1,
 };
 
 /**
@@ -1653,6 +1653,7 @@ var Spaces = class Spaces extends Map {
                 space.layout(false);
                 Main.activateWindow(space.selectedWindow);
             }
+            return false; // on return false destroys timeout
         });
 
         this.stack = this.mru();
@@ -1714,7 +1715,10 @@ var Spaces = class Spaces extends Map {
             this.spaceContainer.show();
 
             Mainloop.timeout_add(
-                20, () => { this._monitorsChanging = false; });
+                20, () => {
+                    this._monitorsChanging = false;
+                    return false; // on return false destroys timeout
+                });
 
             activeSpace.monitor.clickOverlay.deactivate();
         };
@@ -2736,10 +2740,13 @@ function enable(errorNotification) {
             s.selectedWindow && ensureViewport(s.selectedWindow, s, { force:true });
             s.monitor.clickOverlay.show();
         });
-        TopBar.fixTopBar()
+        TopBar.fixTopBar();
 
         // run a final layout for multi-monitor topbar and window position indicator init
-        Mainloop.timeout_add(200, () => spaces.forEach(s => s.layout(false)));
+        Mainloop.timeout_add(200, () => {
+            spaces.forEach(s => s.layout(false));
+            return false; // on return false destroys timeout
+        });
     }
 
     if (Main.layoutManager._startingUp) {
@@ -2750,7 +2757,10 @@ function enable(errorNotification) {
     } else {
         // NOTE: this needs to happen after kludges.enable() have run, so we do
         // it in a timeout
-        Mainloop.timeout_add(0, initWorkspaces);
+        Mainloop.timeout_add(0, () => {
+            initWorkspaces();
+            return false; // on return false destroys timeout
+        });
     }
 }
 

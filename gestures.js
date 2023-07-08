@@ -400,13 +400,18 @@ function endVertical() {
         return true; // repeat
     };
 
+    /**
+     * The below timeout_add will be destroyed by the glide
+     * function - which returns false (thus destroying this timeout)
+     * when user gesture fininshes, a space is selected, etc.
+     */
     Mainloop.timeout_add(16, glide, 0);
 }
 
 /**
  * Enables (or disables) gnome swipe trackers which take care of the
  * default 3 finger swipe actions.
- * @param {Boolean} option 
+ * @param {Boolean} option
  */
 function swipeTrackersEnable(option) {
     let enable = option ?? true;

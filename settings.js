@@ -38,13 +38,15 @@ function setVerticalMargin() {
 let timerId;
 function onWindowGapChanged() {
     setVerticalMargin();
-    if (timerId)
+    if (timerId) {
         Mainloop.source_remove(timerId);
+    }
     timerId = Mainloop.timeout_add(500, () => {
         Extension.imports.tiling.spaces.mru().forEach(space => {
             space.layout();
         });
         timerId = null;
+        return false; // on return false destroys timeout
     });
 }
 
