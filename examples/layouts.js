@@ -15,7 +15,7 @@ function useNeigbour(dir, action) {
             return action(undefined);
 
         return action(space[i + dir][0]);
-    }
+    };
 }
 
 /** Find the index of the first not fully visible column in the given direction */
@@ -110,11 +110,10 @@ function fitAvailable(metaWindow) {
 
 
 function cycleLayoutDirection(dir) {
-
     const splits = [
         [0.5, 0.5],
         [0.7, 0.3],
-        [0.3, 0.7]
+        [0.3, 0.7],
     ];
 
     return (metaWindow, space, {navigator}={}) => {
@@ -126,7 +125,7 @@ function cycleLayoutDirection(dir) {
 
         let neighbour = neighbourCol[0];
 
-        let tiling = mkVirtTiling(space)
+        let tiling = mkVirtTiling(space);
 
         let available = space.width - Tiling.prefs.horizontal_margin*2 - Tiling.prefs.window_gap;
 

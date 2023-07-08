@@ -1,5 +1,5 @@
 var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var St = imports.gi.S;
+var St = imports.gi.St;
 
 var Tiling = Extension.imports.tiling;
 var Utils = Extension.imports.utils;
