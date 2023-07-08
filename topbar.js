@@ -8,7 +8,7 @@ var {Clutter, St, Graphene, GLib, Meta, Gio} = imports.gi;
 var PanelMenu = imports.ui.panelMenu;
 var PopupMenu = imports.ui.popupMenu;
 var Main = imports.ui.main;
-var Tweener = Extension.imports.utils.tweener;
+var Easer = Extension.imports.utils.easer;
 var Path = ExtentionUtils.getCurrentExtension().dir.get_path();
 
 var Tiling = Extension.imports.tiling;
@@ -491,8 +491,8 @@ var WorkspaceMenu = Utils.registerClass(
                     v = 0.1;
                     spaces.selectStackSpace(Meta.MotionDirection.UP, false, mode);
                     this.selected = spaces.selectedSpace;
-                    Tweener.removeTweens(this.selected.actor);
-                    Tweener.addTween(this.selected.actor,
+                    Easer.removeEase(this.selected.actor);
+                    Easer.addEase(this.selected.actor,
                         { scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode });
                 } else if (dy < 0
                     && ((this.selected.actor.y < downEdge &&
@@ -504,8 +504,8 @@ var WorkspaceMenu = Utils.registerClass(
                     v = 0.1;
                     spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, mode);
                     this.selected = spaces.selectedSpace;
-                    Tweener.removeTweens(this.selected.actor);
-                    Tweener.addTween(this.selected.actor,
+                    Easer.removeEase(this.selected.actor);
+                    Easer.addEase(this.selected.actor,
                         { scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode });
                 }
 
@@ -514,7 +514,7 @@ var WorkspaceMenu = Utils.registerClass(
                     let scale = 0.90;
                     let s = 1 - (1 - scale) * (this.selected.actor.y / (0.1 * this.selected.height));
                     s = Math.max(s, scale);
-                    Tweener.removeTweens(this.selected.actor);
+                    Easer.removeEase(this.selected.actor);
                     this.selected.actor.set_scale(s, s);
                 }
 

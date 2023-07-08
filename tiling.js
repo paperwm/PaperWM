@@ -1,7 +1,7 @@
 var ExtensionUtils = imports.misc.extensionUtils;
 var Extension = ExtensionUtils.getCurrentExtension();
 var {Clutter, St, Graphene, GLib, Meta, Gio} = imports.gi;
-var Tweener = Extension.imports.utils.tweener;
+var Easer = Extension.imports.utils.easer;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var Signals = imports.signals;
@@ -389,7 +389,6 @@ var Space = class Space extends Array {
             let c = mw.clone;
             if (c.x !== x || c.targetX !== x ||
                 c.y !== y || c.targetY !== y) {
-
                 // log("  Position window", mw.title, `y: ${c.targetY} -> ${y} x: ${c.targetX} -> ${x}`);
                 c.targetX = x;
                 c.targetY = y;
@@ -397,7 +396,7 @@ var Space = class Space extends Array {
                     c.x = x;
                     c.y = y;
                 } else {
-                    Tweener.addTween(c, {
+                    Easer.addEase(c, {
                         x, y,
                         time,
                         onComplete: this.moveDone.bind(this)
@@ -509,7 +508,7 @@ var Space = class Space extends Array {
             } else if (this.targetX > workArea.min ) {
                 this.targetX = workArea.x;
             }
-            Tweener.addTween(this.cloneContainer,
+            Easer.addEase(this.cloneContainer,
                              { x: this.targetX,
                                time,
                                onComplete: this.moveDone.bind(this)
@@ -918,7 +917,7 @@ var Space = class Space extends Array {
 
             // Guard against races between move_to and layout
             // eg. moving can kill ongoing resize on wayland
-            if (Tweener.isTweening(w.clone))
+            if (Easer.isEasing(w.clone))
                 return;
 
             let unMovable = w.fullscreen ||
@@ -939,7 +938,7 @@ var Space = class Space extends Array {
         });
 
         this.visible.forEach(w => {
-            if (Tweener.isTweening(w.clone))
+            if (Easer.isEasing(w.clone))
                 return;
             let actor = w.get_compositor_private();
 
@@ -1410,10 +1409,10 @@ border-radius: ${borderWidth}px;
 
         let time = animate ? prefs.animation_time : 0;
 
-        Tweener.addTween(this.actor,
+        Easer.addEase(this.actor,
                         {x: 0, y: 0, scale_x: 1, scale_y: 1,
                          time});
-        Tweener.addTween(clip,
+        Easer.addEase(clip,
                          {scale_x: 1, scale_y: 1, time});
 
         clip.set_position(monitor.x, monitor.y);
@@ -2008,7 +2007,7 @@ var Spaces = class Spaces extends Map {
             space.setMonitor(currentMonitor, false);
             space.startAnimate();
 
-            Tweener.removeTweens(space.border);
+            Easer.removeEase(space.border);
             space.border.opacity = 255;
             space.border.show();
 
@@ -2017,13 +2016,13 @@ var Spaces = class Spaces extends Map {
             let padding = (space.height * scale / 100) * padding_percentage;
             let y = ((space.height + padding) * (i - to)) * scale;
             if (animate) {
-                Tweener.addTween(space.actor, {
+                Easer.addEase(space.actor, {
                     time: prefs.animation_time,
                     y, scale_y: scale, scale_x: scale,
                 });
             } else {
                 // Remove any lingering onComplete handlers from animateToSpace
-                Tweener.removeTweens(space.actor);
+                Easer.removeEase(space.actor);
 
                 space.actor.y = y;
                 space.actor.scale_y = scale;
@@ -2052,7 +2051,7 @@ var Spaces = class Spaces extends Map {
 
         let selected = this.selectedSpace.selectedWindow;
         if (selected && selected.fullscreen) {
-            Tweener.addTween(selected.clone, {
+            Easer.addEase(selected.clone, {
                 y: Main.panel.actor.height + prefs.vertical_margin,
                 time: prefs.animation_time,
             });
@@ -2094,7 +2093,7 @@ var Spaces = class Spaces extends Map {
         if (to < 0 || to >= monitorSpaces.length)
             return;
 
-        if (to === from && Tweener.isTweening(newSpace.actor))
+        if (to === from && Easer.isEasing(newSpace.actor))
             return;
 
         newSpace = monitorSpaces[to];
@@ -2118,7 +2117,7 @@ var Spaces = class Spaces extends Map {
             }
 
             space.show();
-            Tweener.addTween(space.actor, {
+            Easer.addEase(space.actor, {
                 y: space_y,
                 time: prefs.animation_time,
                 scale_x: scale,
@@ -2161,7 +2160,7 @@ var Spaces = class Spaces extends Map {
                 space.setMonitor(monitor);
             }
 
-            Tweener.removeTweens(space.border);
+            Easer.removeEase(space.border);
             space.border.opacity = 255;
             space.border.show();
 
@@ -2186,7 +2185,7 @@ var Spaces = class Spaces extends Map {
             space.actor.scale_x = scale - i*0.01;
 
             // Remove any lingering onComplete handlers from animateToSpace
-            Tweener.removeTweens(space.actor);
+            Easer.removeEase(space.actor);
 
             if (mru[i - 1] === undefined)
                 return;
@@ -2204,7 +2203,7 @@ var Spaces = class Spaces extends Map {
 
         let selected = space.selectedWindow;
         if (selected && selected.fullscreen) {
-            Tweener.addTween(selected.clone, {
+            Easer.addEase(selected.clone, {
                 y: Main.panel.actor.height + prefs.vertical_margin,
                 time: prefs.animation_time,
             });
@@ -2250,7 +2249,7 @@ var Spaces = class Spaces extends Map {
             to = 0;
         }
 
-        if (to === from && Tweener.isTweening(newSpace.actor))
+        if (to === from && Easer.isEasing(newSpace.actor))
             return;
 
         newSpace = mru[to];
@@ -2278,7 +2277,7 @@ var Spaces = class Spaces extends Map {
                 space.show();
             }
 
-            Tweener.addTween(actor,
+            Easer.addEase(actor,
                              {y: h*space.height,
                               time: prefs.animation_time,
                               scale_x: scale + (to - i)*0.01,
@@ -2321,7 +2320,7 @@ var Spaces = class Spaces extends Map {
                 }
             }
 
-            Tweener.addTween(to.border, {
+            Easer.addEase(to.border, {
                 opacity: 0,
                 time: prefs.animation_time,
                 onComplete: () => {
@@ -2358,7 +2357,7 @@ var Spaces = class Spaces extends Map {
 
         this._updateMonitor();
 
-        Tweener.addTween(to.actor,
+        Easer.addEase(to.actor,
                          { x: 0,
                            y: 0,
                            scale_x: 1,
@@ -2375,7 +2374,7 @@ var Spaces = class Spaces extends Map {
         while (above) {
             let space = above.space;
             if (!visible.get(space)) {
-                Tweener.addTween(space.actor,
+                Easer.addEase(space.actor,
                     {
                         x: 0, y: space.height + 20,
                         time: prefs.animation_time,
@@ -2982,7 +2981,7 @@ function insertWindow(metaWindow, {existing}) {
         clone.y = clone.targetY;
         clone.set_scale(0, 1);
         space.hideSelection();
-        Tweener.addTween(clone, {
+        Easer.addEase(clone, {
             scale_x: 1,
             scale_y: 1,
             time: prefs.animation_time,
@@ -3011,7 +3010,7 @@ function animateDown(metaWindow) {
     let frame = metaWindow.get_frame_rect();
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
-    Tweener.addTween(metaWindow.clone, {
+    Easer.addEase(metaWindow.clone, {
         y:  workArea.y,
         time: prefs.animation_time,
     });
@@ -3098,7 +3097,7 @@ function ensureViewport(meta_window, space, options={}) {
         if (!space.isVisible(selected)) {
             selected.clone.y = y;
         } else if (!ty || ty.get_interval().final !== y) {
-            Tweener.addTween(selected.clone,
+            Easer.addEase(selected.clone,
                              { y: y,
                                time: prefs.animation_time,
                                onComplete: space.moveDone.bind(space)
@@ -3173,7 +3172,7 @@ function move_to(space, metaWindow, { x, y, force, instant }) {
     }
 
     space.startAnimate();
-    Tweener.addTween(space.cloneContainer,
+    Easer.addEase(space.cloneContainer,
                      { x: target,
                        time: prefs.animation_time,
                        onComplete: space.moveDone.bind(space)
@@ -3928,7 +3927,7 @@ function takeWindow(metaWindow, space, {navigator}) {
     let y = Math.round(space.monitor.y + space.monitor.height*2/3)
         + 20*navigator._moving.length;
     animateWindow(metaWindow);
-    Tweener.addTween(metaWindow.clone,
+    Easer.addEase(metaWindow.clone,
                      {x, y,
                       time: prefs.animation_time,
                      });

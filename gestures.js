@@ -1,13 +1,10 @@
 var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Meta = imports.gi.Meta;
-var St = imports.gi.St;
 var Gio = imports.gi.Gio;
-var PanelMenu = imports.ui.panelMenu;
-var PopupMenu = imports.ui.popupMenu;
 var Clutter = imports.gi.Clutter;
 var Main = imports.ui.main;
 var Shell = imports.gi.Shell;
-var Tweener = Extension.imports.utils.tweener;
+var Easer = Extension.imports.utils.easer;
 var Mainloop = imports.mainloop;
 
 var Utils = Extension.imports.utils;
@@ -21,7 +18,7 @@ const stage = global.stage;
 const DIRECTIONS = {
     Horizontal: true,
     Vertical: false,
-}
+};
 
 var gliding = false;
 var vy;
@@ -136,7 +133,7 @@ function horizontalScroll(actor, event) {
             dts = [];
             this.hState = phase;
             start = this.targetX;
-            Tweener.removeTweens(this.cloneContainer);
+            Easer.removeEase(this.cloneContainer);
             direction = DIRECTIONS.Horizontal;
         }
         return update(this, -dx*natural*prefs.swipe_sensitivity[0], event.get_time());
@@ -242,7 +239,7 @@ function done(space) {
     space.selectedWindow = selected;
     space.emit('select');
     gliding = true;
-    Tweener.addTween(space.cloneContainer, {
+    Easer.addEase(space.cloneContainer, {
         x: space.targetX,
         duration: t,
         mode,
@@ -340,8 +337,8 @@ function updateVertical(dy, t) {
         selected.actor.y = StackPositions.up*selected.height;
         Tiling.spaces.selectStackSpace(Meta.MotionDirection.UP, false, transition);
         selected = Tiling.spaces.selectedSpace;
-        Tweener.removeTweens(selected.actor);
-        Tweener.addTween(selected.actor, {scale_x: 0.9, scale_y: 0.9, time:
+        Easer.removeEase(selected.actor);
+        Easer.addEase(selected.actor, {scale_x: 0.9, scale_y: 0.9, time:
                                           prefs.animation_time, transition});
     } else if (dy < 0
                && (selected.actor.y - dy > StackPositions.down*monitor.height)) {
@@ -350,8 +347,8 @@ function updateVertical(dy, t) {
         selected.actor.y = StackPositions.down*selected.height;
         Tiling.spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, transition);
         selected = Tiling.spaces.selectedSpace;
-        Tweener.removeTweens(selected.actor);
-        Tweener.addTween(selected.actor, {scale_x: 0.9, scale_y: 0.9, time:
+        Easer.removeEase(selected.actor);
+        Easer.addEase(selected.actor, {scale_x: 0.9, scale_y: 0.9, time:
                                           prefs.animation_time, transition});
     } else if (Number.isFinite(v)) {
         vy = v;
@@ -362,7 +359,7 @@ function updateVertical(dy, t) {
         let scale = 0.90;
         let s = 1 - (1 - scale)*(selected.actor.y/(0.1*monitor.height));
         s = Math.max(s, scale);
-        Tweener.removeTweens(selected.actor);
+        Easer.removeEase(selected.actor);
         selected.actor.set_scale(s, s);
     }
 }
