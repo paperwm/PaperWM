@@ -9,10 +9,8 @@ var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
-var GLib = imports.gi.GLib;
 /** @type {import('@gi-types/clutter10')} */
 var Clutter = imports.gi.Clutter;
-var Tweener = Extension.imports.utils.tweener;
 var Signals = imports.signals;
 
 var TopBar = Extension.imports.topbar;
@@ -23,12 +21,10 @@ var Keybindings = Extension.imports.keybindings;
 var utils = Extension.imports.utils;
 var debug = utils.debug;
 
-var prefs = Extension.imports.settings.prefs;
-
 var workspaceManager = global.workspace_manager;
 var display = global.display;
 
-const stage = global.stage
+const stage = global.stage;
 
 var scale = 0.9;
 var navigating = false;
@@ -38,7 +34,7 @@ var grab = null;
 /** @type {ActionDispatcher} */
 var dispatcher = null
 
-function dec2bin(dec){
+function dec2bin(dec) {
     return (dec >>> 0).toString(2);
 }
 
@@ -61,9 +57,9 @@ function getModLock(mods) {
 
    Adapted from SwitcherPopup, without any visual handling.
  */
- class ActionDispatcher {
+class ActionDispatcher {
     /**@type {import('@gi-types/clutter10').GrabState} */
-    mode
+    mode;
 
     constructor() {
         debug("#dispatch", "created")
@@ -74,7 +70,7 @@ function getModLock(mods) {
 
         if (grab) {
             debug("#dispatch", "already in grab")
-            return
+            return;
         }
 
         // grab = stage.grab(this.actor)
@@ -96,7 +92,7 @@ function getModLock(mods) {
         this.navigator = getNavigator();
         TopBar.fixTopBar();
         let actionId = Keybindings.idOf(binding);
-        if(actionId === Meta.KeyBindingAction.NONE) {
+        if (actionId === Meta.KeyBindingAction.NONE) {
             try {
                 // Check for built-in actions
                 actionId = Meta.prefs_get_keybinding_action(binding);
@@ -134,7 +130,7 @@ function getModLock(mods) {
             () => {
                 this._finish(global.get_current_time());
                 this._noModsTimeoutId = 0;
-                return GLib.SOURCE_REMOVE;
+                return false; // stops timeout recurrence
             });
     }
 
@@ -143,7 +139,6 @@ function getModLock(mods) {
             this._modifierMask = getModLock(event.get_state())
         }
         let keysym = event.get_key_symbol();
-
         let action = global.display.get_keybinding_action(event.get_key_code(), event.get_state());
 
         // Popping the modal on keypress doesn't work properly, as the release
@@ -164,9 +159,8 @@ function getModLock(mods) {
     }
 
     _keyReleaseEvent(actor, event) {
-        let keysym = event.get_key_symbol();
         if (this._destroy) {
-            dismissDispatcher(Clutter.GrabState.KEYBOARD)
+            dismissDispatcher(Clutter.GrabState.KEYBOARD);
         }
 
         if (this._modifierMask) {
@@ -201,8 +195,8 @@ function getModLock(mods) {
             }
             action.handler(metaWindow, space, {navigator: this.navigator});
             if (space !== Tiling.spaces.selectedSpace) {
-                this.navigator.minimaps.forEach(m => typeof(m) === 'number' ?
-                                                Mainloop.source_remove(m) : m.hide());
+                this.navigator.minimaps.forEach(m => typeof m === 'number'
+                    ? Mainloop.source_remove(m) : m.hide());
             }
             if (Tiling.inGrab && !Tiling.inGrab.dnd && Tiling.inGrab.window) {
                 Tiling.inGrab.beginDnD();
@@ -211,7 +205,10 @@ function getModLock(mods) {
             // closes navigator and action is performed afterwards
             // (e.g. switch-monitor-left)
             this._resetNoModsTimeout();
-            Mainloop.timeout_add(0, () => action.handler(metaWindow, space));
+            Mainloop.timeout_add(0, () => {
+                action.handler(metaWindow, space);
+                return false; // on return false destroys timeout
+            });
         }
     }
 
@@ -219,7 +216,7 @@ function getModLock(mods) {
         let nav = getNavigator();
         nav.accept();
         !this._destroy && nav.destroy();
-        dismissDispatcher(Clutter.GrabState.KEYBOARD)
+        dismissDispatcher(Clutter.GrabState.KEYBOARD);
         let space = Tiling.spaces.selectedSpace;
         let metaWindow = space.selectedWindow;
         if (metaWindow) {
@@ -235,31 +232,31 @@ function getModLock(mods) {
 
         try {
             if (grab) {
-                Main.popModal(grab)
+                Main.popModal(grab);
                 grab = null;
             }
-        } catch(e) {
-            utils.debug("Failed to release grab: ", e)
+        } catch (e) {
+            utils.debug("Failed to release grab: ", e);
         }
 
         this.actor.unset_flags(Clutter.ActorFlags.REACTIVE);
-        this.signals.destroy()
+        this.signals.destroy();
         // We have already destroyed the navigator
         getNavigator().destroy();
-        dispatcher = null
+        dispatcher = null;
     }
 }
 
-var index = 0
+var index = 0;
 var navigator;
 class NavigatorClass {
     constructor() {
-        debug("#navigator", "nav created")
+        debug("#navigator", "nav created");
         navigating = true;
 
         this.was_accepted = false;
-        this.index = index++
-        
+        this.index = index++;
+
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
         // Meta.disable_unredirect_for_screen(screen);
@@ -285,6 +282,7 @@ class NavigatorClass {
                 space.startAnimate();
                 minimap.show(false);
                 this.minimaps.set(space, minimap);
+                return false; // on return false destroys timeout
             });
             this.minimaps.set(space, minimapId);
         } else {
@@ -329,7 +327,7 @@ class NavigatorClass {
 
         let from = this.from;
         let selected = this.space.selectedWindow;
-        if(!this.was_accepted) {
+        if (!this.was_accepted) {
             // Abort the navigation
             this.space = from;
             if (this.startWindow && this._startWindow.get_compositor_private())
@@ -340,7 +338,7 @@ class NavigatorClass {
 
         let visible = [];
         for (let monitor of Main.layoutManager.monitors) {
-            visible.push( Tiling.spaces.monitors.get(monitor));
+            visible.push(Tiling.spaces.monitors.get(monitor));
             if (monitor === this.monitor)
                 continue;
             monitor.clickOverlay.activate();
@@ -368,7 +366,7 @@ class NavigatorClass {
         }
 
         selected = this.space.indexOf(selected) !== -1 ? selected :
-                   this.space.selectedWindow;
+            this.space.selectedWindow;
 
         let curFocus = display.focus_window;
         if (force && curFocus && curFocus.is_on_all_workspaces())
@@ -381,13 +379,13 @@ class NavigatorClass {
             let hasFocus = selected && selected.has_focus();
             selected.foreach_transient(mw => hasFocus = mw.has_focus() || hasFocus);
             if (hasFocus) {
-                Tiling.focus_handler(selected)
+                Tiling.focus_handler(selected);
             } else {
                 Main.activateWindow(selected);
             }
         }
         if (selected && Tiling.inGrab && !this.was_accepted) {
-            Tiling.focus_handler(selected)
+            Tiling.focus_handler(selected);
         }
 
         if (!Tiling.inGrab)
@@ -402,7 +400,7 @@ class NavigatorClass {
         navigator = false;
     }
 }
-var Navigator = NavigatorClass
+var Navigator = NavigatorClass;
 Signals.addSignalMethods(Navigator.prototype);
 
 function getNavigator() {
@@ -415,7 +413,7 @@ function getNavigator() {
 
 
 /**
- * 
+ *
  * @param {import('@gi-types/clutter10').GrabState} mode 
  * @returns {ActionDispatcher}
  */
@@ -429,17 +427,17 @@ function getActionDispatcher(mode) {
 }
 
 /**
- * 
+ *
  * @param {import('@gi-types/clutter10').GrabState} mode 
  */
 function dismissDispatcher(mode) {
     if (!dispatcher) {
-        return
+        return;
     }
 
-    dispatcher.mode ^= mode
+    dispatcher.mode ^= mode;
     if (dispatcher.mode === Clutter.GrabState.NONE) {
-        dispatcher.destroy()
+        dispatcher.destroy();
     }
 }
 

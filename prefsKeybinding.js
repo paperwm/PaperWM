@@ -283,11 +283,11 @@ const Keybinding = GObject.registerClass({
             'True if this keybinding has any shortcuts',
             GObject.ParamFlags.READABLE,
             false
-        )
+        ),
     },
     Signals: {
-        changed: {}
-    }
+        changed: {},
+    },
 }, class Keybinding extends GObject.Object {
     _init(params = {}) {
         super._init(params);
@@ -301,7 +301,6 @@ const Keybinding = GObject.registerClass({
         });
 
         this._settings.connect(`changed::${this.action}`, () => this._load());
-
         GLib.idle_add(0, () => this._load());
     }
 
