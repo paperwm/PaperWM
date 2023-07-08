@@ -4,13 +4,9 @@
 
 var ExtentionUtils = imports.misc.extensionUtils;
 var Extension = ExtentionUtils.getCurrentExtension();
-var Meta = imports.gi.Meta;
-var St = imports.gi.St;
-var Gio = imports.gi.Gio;
-var GLib = imports.gi.GLib;
+var {Clutter, St, Graphene, GLib, Meta, Gio} = imports.gi;
 var PanelMenu = imports.ui.panelMenu;
 var PopupMenu = imports.ui.popupMenu;
-var Clutter = imports.gi.Clutter;
 var Main = imports.ui.main;
 var Tweener = Extension.imports.utils.tweener;
 var Path = ExtentionUtils.getCurrentExtension().dir.get_path();
@@ -57,7 +53,7 @@ var PopupMenuEntryHelper = function constructor(text) {
     this.label = new St.Entry({
         text,
         // While not a search entry, this looks much better
-        style_class:'search-entry',
+        style_class: 'search-entry',
         name: 'workspace-name-entry',
         track_hover: true,
         reactive: true,
@@ -91,26 +87,26 @@ var PopupMenuEntryHelper = function constructor(text) {
 
 // registerClass, breaking our somewhat lame registerClass polyfill.
 var PopupMenuEntry = Utils.registerClass(
-class PopupMenuEntry extends PopupMenu.PopupBaseMenuItem {
-    _init(text) {
-        super._init({
-            activate: false,
-            reactive: true,
-            hover: false,
-            can_focus: false
-        });
+    class PopupMenuEntry extends PopupMenu.PopupBaseMenuItem {
+        _init(text) {
+            super._init({
+                activate: false,
+                reactive: true,
+                hover: false,
+                can_focus: false
+            });
 
-        PopupMenuEntryHelper.call(this, text);
-    }
+            PopupMenuEntryHelper.call(this, text);
+        }
 
-    activate(event) {
-        this.label.grab_key_focus();
-    }
+        activate(event) {
+            this.label.grab_key_focus();
+        }
 
-    _onKeyFocusIn(actor) {
-        this.activate();
-    }
-});
+        _onKeyFocusIn(actor) {
+            this.activate();
+        }
+    });
 
 class Color {
     constructor(color, container) {
@@ -171,432 +167,429 @@ class ColorEntry {
  * FocusMode icon class.
  */
 var FocusIcon = Utils.registerClass(
-class FocusIcon extends St.Icon {
-    _init(properties = {}, tooltip_parent, tooltip_x_point=0) {
-        super._init(properties);
-        this.reactive = true;
+    class FocusIcon extends St.Icon {
+        _init(properties = {}, tooltip_parent, tooltip_x_point = 0) {
+            super._init(properties);
+            this.reactive = true;
 
-        // allow custom x position for tooltip
-        this.tooltip_parent = tooltip_parent ?? this;
-        this.tooltip_x_point = tooltip_x_point;
+            // allow custom x position for tooltip
+            this.tooltip_parent = tooltip_parent ?? this;
+            this.tooltip_x_point = tooltip_x_point;
 
-        // read in focus icons from resources folder
-        this.gIconDefault = Gio.icon_new_for_string(`${Path}/resources/focus-mode-default-symbolic.svg`);
-        this.gIconCenter = Gio.icon_new_for_string(`${Path}/resources/focus-mode-center-symbolic.svg`);
+            // read in focus icons from resources folder
+            this.gIconDefault = Gio.icon_new_for_string(`${Path}/resources/focus-mode-default-symbolic.svg`);
+            this.gIconCenter = Gio.icon_new_for_string(`${Path}/resources/focus-mode-center-symbolic.svg`);
 
-        this._initToolTip();
-        this.setMode();
+            this._initToolTip();
+            this.setMode();
 
-        this.connect('button-press-event', () => {
-            if (this.clickFunction) {
-                this.clickFunction();
-            }
-        });
-    }
+            this.connect('button-press-event', () => {
+                if (this.clickFunction) {
+                    this.clickFunction();
+                }
+            });
+        }
 
-    /**
-     * Sets a function to be executed on click.
-     * @param {Function} clickFunction 
-     * @returns 
-     */
-    setClickFunction(clickFunction) {
-        this.clickFunction = clickFunction;
-        return this;
-    }
+        /**
+         * Sets a function to be executed on click.
+         * @param {Function} clickFunction 
+         * @returns 
+         */
+        setClickFunction(clickFunction) {
+            this.clickFunction = clickFunction;
+            return this;
+        }
 
-    _initToolTip() {
-        const tt = new St.Label({style_class: 'focus-button-tooltip'});
-        tt.hide();
-        global.stage.add_child(tt);
-        this.tooltip_parent.connect('enter-event', icon => {
-            this._updateTooltipPosition(this.tooltip_x_point);
-            this._updateTooltipText();
-            tt.show();
-        });
-        this.tooltip_parent.connect('leave-event', (icon, event) => {
-            if (!this.has_pointer) {
-                tt.hide();
-            }
-        });
-        this.tooltip = tt;
-    }
+        _initToolTip() {
+            const tt = new St.Label({ style_class: 'focus-button-tooltip' });
+            tt.hide();
+            global.stage.add_child(tt);
+            this.tooltip_parent.connect('enter-event', icon => {
+                this._updateTooltipPosition(this.tooltip_x_point);
+                this._updateTooltipText();
+                tt.show();
+            });
+            this.tooltip_parent.connect('leave-event', (icon, event) => {
+                if (!this.has_pointer) {
+                    tt.hide();
+                }
+            });
+            this.tooltip = tt;
+        }
 
-    /**
-     * Updates tooltip position relative to this button.
-     */
-    _updateTooltipPosition(xpoint=0) {
-        //const offset = Tiling.spaces.getActiveSpace().width;
-        let point = this.apply_transform_to_point(
-            new Clutter.Vertex({x: xpoint, y: 0}));
-        this.tooltip.set_position(Math.max(0, point.x - 62), point.y + 34);
-    }
+        /**
+         * Updates tooltip position relative to this button.
+         */
+        _updateTooltipPosition(xpoint = 0) {
+            //const offset = Tiling.spaces.getActiveSpace().width;
+            let point = this.apply_transform_to_point(
+                new Graphene.Point3D({ x: xpoint, y: 0 }));
+            this.tooltip.set_position(Math.max(0, point.x - 62), point.y + 34);
+        }
 
-    _updateTooltipText() {
-        const markup = (color, mode) => {
-            this.tooltip.clutter_text
-                .set_markup(
-`    <i>Window focus mode</i>
+        _updateTooltipText() {
+            const markup = (color, mode) => {
+                this.tooltip.clutter_text
+                    .set_markup(
+                        `    <i>Window focus mode</i>
 Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
-        };
-        if (this.mode === Tiling.FocusModes.DEFAULT) {
-            markup('#6be67b', 'DEFAULT');
+            };
+            if (this.mode === Tiling.FocusModes.DEFAULT) {
+                markup('#6be67b', 'DEFAULT');
+            }
+            else if (this.mode === Tiling.FocusModes.CENTER) {
+                markup('#6be6cb', 'CENTER');
+            } else {
+                this.tooltip.set_text('');
+            }
         }
-        else if (this.mode === Tiling.FocusModes.CENTER) {
-            markup('#6be6cb', 'CENTER');
-        } else {
-            this.tooltip.set_text('');
-        }
-    }
-    
-    /**
-     * Set the mode that this icon will display.
-     * @param {Tiling.FocusModes} mode
-     */
-    setMode(mode) {
-        mode = mode ?? Tiling.FocusModes.DEFAULT;
-        this.mode = mode;
-        if (mode === Tiling.FocusModes.DEFAULT) {
-            this.gicon = this.gIconDefault;
-        }
-        else if (mode === Tiling.FocusModes.CENTER) {
-            this.gicon = this.gIconCenter;
-        }
-        this._updateTooltipText()
-        return this;
-    }
 
-    /**
-     * Sets visibility of icon.
-     * @param {boolean} visible 
-     */
-    setVisible(visible = true) {
-        this.visible = visible;
-        return this;
+        /**
+         * Set the mode that this icon will display.
+         * @param {Tiling.FocusModes} mode
+         */
+        setMode(mode) {
+            mode = mode ?? Tiling.FocusModes.DEFAULT;
+            this.mode = mode;
+            if (mode === Tiling.FocusModes.DEFAULT) {
+                this.gicon = this.gIconDefault;
+            }
+            else if (mode === Tiling.FocusModes.CENTER) {
+                this.gicon = this.gIconCenter;
+            }
+            this._updateTooltipText()
+            return this;
+        }
+
+        /**
+         * Sets visibility of icon.
+         * @param {boolean} visible 
+         */
+        setVisible(visible = true) {
+            this.visible = visible;
+            return this;
+        }
     }
-}
 );
 
 var FocusButton = Utils.registerClass(
-class FocusButton extends PanelMenu.Button {
-    _init() {
-        super._init(0.0, 'FocusMode');
-        
-        this._icon = new FocusIcon({
-            style_class: 'system-status-icon focus-mode-button'
-        }, this, -10);
-        
-        this.setFocusMode();
-        this.add_child(this._icon);
-        this.connect('event', this._onClicked.bind(this));
-    }
+    class FocusButton extends PanelMenu.Button {
+        _init() {
+            super._init(0.0, 'FocusMode');
 
-    /**
-     * Sets the focus mode with this button.
-     * @param {*} mode 
-     */
-    setFocusMode(mode) {
-        mode = mode ?? Tiling.FocusModes.DEFAULT;
-        this.focusMode = mode;
-        this._icon.setMode(mode);
-        return this;
-    }
+            this._icon = new FocusIcon({
+                style_class: 'system-status-icon focus-mode-button'
+            }, this, -10);
 
-    _onClicked(actor, event) {
-        if (Tiling.inPreview != Tiling.PreviewMode.NONE || Main.overview.visible) {
-            return Clutter.EVENT_PROPAGATE;
+            this.setFocusMode();
+            this.add_child(this._icon);
+            this.connect('event', this._onClicked.bind(this));
         }
 
-        if (event.type() !== Clutter.EventType.TOUCH_BEGIN && 
-            event.type() !== Clutter.EventType.BUTTON_PRESS) {
-            return Clutter.EVENT_PROPAGATE;
+        /**
+         * Sets the focus mode with this button.
+         * @param {*} mode 
+         */
+        setFocusMode(mode) {
+            mode = mode ?? Tiling.FocusModes.DEFAULT;
+            this.focusMode = mode;
+            this._icon.setMode(mode);
+            return this;
         }
 
-        Tiling.switchToNextFocusMode();
-        return Clutter.EVENT_PROPAGATE;
+        _onClicked(actor, event) {
+            if (Tiling.inPreview != Tiling.PreviewMode.NONE || Main.overview.visible) {
+                return Clutter.EVENT_PROPAGATE;
+            }
+
+            if (event.type() !== Clutter.EventType.TOUCH_BEGIN &&
+                event.type() !== Clutter.EventType.BUTTON_PRESS) {
+                return Clutter.EVENT_PROPAGATE;
+            }
+
+            Tiling.switchToNextFocusMode();
+            return Clutter.EVENT_PROPAGATE;
+        }
     }
-}
 );
 
 var WorkspaceMenu = Utils.registerClass(
-class WorkspaceMenu extends PanelMenu.Button {
-    _init() {
-        super._init(0.5, 'Workspace', false);
+    class WorkspaceMenu extends PanelMenu.Button {
+        _init() {
+            super._init(0.5, 'Workspace', false);
 
-        this.name = 'workspace-button';
+            this.name = 'workspace-button';
 
-        let scale = display.get_monitor_scale(Main.layoutManager.primaryIndex);
-        this.label = new St.Label({
-            y_align: Clutter.ActorAlign.CENTER,
-            // Avoid moving the menu on short names
-            // TODO: update on scale changes
-            min_width: 60*scale
-        });
+            let scale = display.get_monitor_scale(Main.layoutManager.primaryIndex);
+            this.label = new St.Label({
+                y_align: Clutter.ActorAlign.CENTER,
+                // Avoid moving the menu on short names
+                // TODO: update on scale changes
+                min_width: 60 * scale
+            });
 
-        this.setName(Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()));
+            this.setName(Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()));
 
-        this.add_actor(this.label);
+            this.add_actor(this.label);
 
-        this.signals = new Utils.Signals();
-        this.signals.connect(global.window_manager,
-                             'switch-workspace',
-                             this.workspaceSwitched.bind(this));
+            this.signals = new Utils.Signals();
+            this.signals.connect(global.window_manager,
+                'switch-workspace',
+                this.workspaceSwitched.bind(this));
 
-        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem(_('Workspace Settings')));
+            this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem(_('Workspace Settings')));
 
-        this.entry = new PopupMenuEntry(this.label.text);
-        this.menu.addMenuItem(this.entry);
-        let changed = () => {
-            let name = this.entry.label.text;
-            let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
-            space.settings.set_string('name', name);
-            this.setName(name);
-        };
-        this.signals.connect(this.entry.label.clutter_text, 'text-changed',
-                             changed);
+            this.entry = new PopupMenuEntry(this.label.text);
+            this.menu.addMenuItem(this.entry);
+            let changed = () => {
+                let name = this.entry.label.text;
+                let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
+                space.settings.set_string('name', name);
+                this.setName(name);
+            };
+            this.signals.connect(this.entry.label.clutter_text, 'text-changed',
+                changed);
 
-        // this._zenItem = new PopupMenu.PopupSwitchMenuItem('Hide top bar', false);
-        // this.menu.addMenuItem(this._zenItem);
-        // this._zenItem.connect('toggled', item => {
-        //     Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', !item.state);
-        // });
+            // this._zenItem = new PopupMenu.PopupSwitchMenuItem('Hide top bar', false);
+            // this.menu.addMenuItem(this._zenItem);
+            // this._zenItem.connect('toggled', item => {
+            //     Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', !item.state);
+            // });
 
-        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+            this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        this._prefItem = new PopupMenu.PopupImageMenuItem('Workspace preference', 'preferences-system-symbolic');
-        this.menu.addMenuItem(this._prefItem);
+            this._prefItem = new PopupMenu.PopupImageMenuItem('Workspace preference', 'preferences-system-symbolic');
+            this.menu.addMenuItem(this._prefItem);
 
-        // this.prefsIcon = createButton('preferences-system-symbolic', 'workspace preference');
-        // this.prevIcon = createButton('go-previous-symbolic', 'previous workspace setting');
-        // this.nextIcon = createButton('go-next-symbolic', 'next workspace setting');
+            // this.prefsIcon = createButton('preferences-system-symbolic', 'workspace preference');
+            // this.prevIcon = createButton('go-previous-symbolic', 'previous workspace setting');
+            // this.nextIcon = createButton('go-next-symbolic', 'next workspace setting');
 
-        this._prefItem.connect('activate', () => {
-            this.menu.close(true);
-            let wi = workspaceManager.get_active_workspace_index();
-            let temp_file = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace')
-            temp_file.replace_contents(wi.toString(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null)
-            ExtentionUtils.openPrefs()
-        });
+            this._prefItem.connect('activate', () => {
+                this.menu.close(true);
+                let wi = workspaceManager.get_active_workspace_index();
+                let temp_file = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace')
+                temp_file.replace_contents(wi.toString(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null)
+                ExtentionUtils.openPrefs()
+            });
 
-        // this.iconBox = new St.BoxLayout();
-        // this.menu.box.add(this.iconBox);
+            // this.iconBox = new St.BoxLayout();
+            // this.menu.box.add(this.iconBox);
 
-        // this.iconBox.add(this.prefsIcon, { expand: true, x_fill: false });
+            // this.iconBox.add(this.prefsIcon, { expand: true, x_fill: false });
 
-        // this.entry.actor.width = this.colors.actor.width;
-        // this.colors.entry.actor.width = this.colors.actor.width;
-        this.state = "NORMAL";
-    }
-
-    _finishWorkspaceSelect() {
-        this.state = "NORMAL";
-        this._enterbox.destroy();
-        delete this.selected;
-        delete this._enterbox;
-        delete this._navigator;
-    }
-
-    _onEvent(actor, event) {
-        if (!this.menu) {
-            log("?? no menu ??");
-            Utils.print_stacktrace();
-            return Clutter.EVENT_PROPAGATE;
-        }
-
-        if (this.state === "MENU" && !this.menu.isOpen) {
+            // this.entry.actor.width = this.colors.actor.width;
+            // this.colors.entry.actor.width = this.colors.actor.width;
             this.state = "NORMAL";
         }
 
-        let type = event.type();
+        _finishWorkspaceSelect() {
+            this.state = "NORMAL";
+            this._enterbox.destroy();
+            delete this.selected;
+            delete this._enterbox;
+            delete this._navigator;
+        }
 
-        if ((type == Clutter.EventType.TOUCH_END ||
-             type == Clutter.EventType.BUTTON_RELEASE)) {
-            if (Navigator.navigating) {
-                Navigator.getNavigator().finish();
-            } else {
-                if (this.menu.isOpen) {
-                    this.menu.toggle();
-                } else if (event.get_button() === Clutter.BUTTON_SECONDARY) {
-                    this.menu.toggle();
+        _onEvent(actor, event) {
+            if (!this.menu) {
+                log("?? no menu ??");
+                Utils.print_stacktrace();
+                return Clutter.EVENT_PROPAGATE;
+            }
+
+            if (this.state === "MENU" && !this.menu.isOpen) {
+                this.state = "NORMAL";
+            }
+
+            let type = event.type();
+
+            if ((type == Clutter.EventType.TOUCH_END ||
+                type == Clutter.EventType.BUTTON_RELEASE)) {
+                if (Navigator.navigating) {
+                    Navigator.getNavigator().finish();
                 } else {
-                    Main.overview.toggle();
+                    if (this.menu.isOpen) {
+                        this.menu.toggle();
+                    } else if (event.get_button() === Clutter.BUTTON_SECONDARY) {
+                        this.menu.toggle();
+                    } else {
+                        Main.overview.toggle();
+                    }
+                    this.state = this.menu.isOpen ? "MENU" : "NORMAL";
                 }
-                this.state = this.menu.isOpen ? "MENU" : "NORMAL";
-            }
-            return Clutter.EVENT_PROPAGATE;
-        }
-
-        if (Main.overview.visible) {
-            return Clutter.EVENT_PROPAGATE;
-        }
-
-        if (["NORMAL", "SCROLL"].includes(this.state) &&
-            type === Clutter.EventType.SCROLL) {
-            if (!this._navigator) {
-                this.state = 'SCROLL';
-                this._navigator = Navigator.getNavigator();
-                Tiling.spaces.initWorkspaceStack();
-                this._enterbox =  new Clutter.Actor({reactive: true});
-                Main.uiGroup.add_actor(this._enterbox);
-                this._enterbox.set_position(panelBox.x, panelBox.y + panelBox.height + 20);
-                this._enterbox.set_size(global.screen_width, global.screen_height);
-                Main.layoutManager.trackChrome(this._enterbox);
-
-                this._navigator.connect('destroy', this._finishWorkspaceSelect.bind(this));
-
-                let id = this._enterbox.connect('enter-event', () => {
-                    this._navigator.finish();
-                });
+                return Clutter.EVENT_PROPAGATE;
             }
 
-            let device = event.get_source_device();
-            // log(`source: ${device.get_device_type()}`);
-            let direction = event.get_scroll_direction();
-            if (direction === Clutter.ScrollDirection.SMOOTH
-                && device.get_device_type() !== Clutter.InputDeviceType.POINTER_DEVICE) {
-                this.state = 'SMOOTH';
+            if (Main.overview.visible) {
+                return Clutter.EVENT_PROPAGATE;
             }
 
-            if (direction === Clutter.ScrollDirection.DOWN) {
-                Tiling.spaces.selectStackSpace(Meta.MotionDirection.DOWN);
-            }
-            if (direction === Clutter.ScrollDirection.UP) {
-                Tiling.spaces.selectStackSpace(Meta.MotionDirection.UP);
-            }
-        }
+            if (["NORMAL", "SCROLL"].includes(this.state) &&
+                type === Clutter.EventType.SCROLL) {
+                if (!this._navigator) {
+                    this.state = 'SCROLL';
+                    this._navigator = Navigator.getNavigator();
+                    Tiling.spaces.initWorkspaceStack();
+                    this._enterbox = new Clutter.Actor({ reactive: true });
+                    Main.uiGroup.add_actor(this._enterbox);
+                    this._enterbox.set_position(panelBox.x, panelBox.y + panelBox.height + 20);
+                    this._enterbox.set_size(global.screen_width, global.screen_height);
+                    Main.layoutManager.trackChrome(this._enterbox);
 
-        if (this.state === 'SMOOTH' && type === Clutter.EventType.SCROLL
-            && event.get_scroll_direction() === Clutter.ScrollDirection.SMOOTH) {
+                    this._navigator.connect('destroy', this._finishWorkspaceSelect.bind(this));
 
-            let spaces = Tiling.spaces;
-            let active = spaces.getActiveSpace();
-
-            let [dx, dy] = event.get_scroll_delta();
-            dy *= active.height*0.05;
-            let t = event.get_time();
-            let v = -dy/(this.time - t);
-            // log(`v ${v}, dy: ${dy}`);
-
-            let firstEvent = false;
-            if (!this.selected) {
-                firstEvent = true;
-                this.selected = spaces.selectedSpace;
-            }
-            let mode = Clutter.AnimationMode.EASE_IN_OUT_QUAD;
-            const StackPositions = Tiling.StackPositions;
-            const upEdge = 0.385*active.height;
-            const downEdge = 0.60*active.height;
-            if (dy > 0
-                && this.selected !== active
-                && ((this.selected.actor.y > upEdge &&
-                     this.selected.actor.y - dy < upEdge)
-                    ||
-                    (this.selected.actor.y - dy < StackPositions.up*active.height))
-               ) {
-                dy = 0;
-                v = 0.1;
-                spaces.selectStackSpace(Meta.MotionDirection.UP, false, mode);
-                this.selected = spaces.selectedSpace;
-                Tweener.removeTweens(this.selected.actor);
-                Tweener.addTween(this.selected.actor,
-                                 {scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode});
-            } else if (dy < 0
-                       && ((this.selected.actor.y < downEdge &&
-                            this.selected.actor.y - dy > downEdge)
-                           ||
-                           (this.selected.actor.y - dy > StackPositions.down*active.height))
-                      ) {
-                dy = 0;
-                v = 0.1;
-                spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, mode);
-                this.selected = spaces.selectedSpace;
-                Tweener.removeTweens(this.selected.actor);
-                Tweener.addTween(this.selected.actor,
-                                 {scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode});
-            }
-
-            this.selected.actor.y -= dy;
-            if (this.selected === active) {
-                let scale = 0.90;
-                let s = 1 - (1 - scale)*(this.selected.actor.y/(0.1*this.selected.height));
-                s = Math.max(s, scale);
-                Tweener.removeTweens(this.selected.actor);
-                this.selected.actor.set_scale(s, s);
-            }
-
-            if (v === 0 && !firstEvent) {
-                // log(`finish: ${this.velocity}`);
-                let test;
-                if (this.velocity > 0)
-                    test = () => this.velocity > 0;
-                else
-                    test = () => this.velocity < 0;
-
-                let y = this.selected.actor.y;
-                let friction = 0.5;
-                while (test()) {
-
-                    let dy = this.velocity*16;
-                    y -= dy;
-                    // log(`calc target: ${dy} ${y} ${this.velocity}`);
-                    if (this.velocity > 0)
-                        this.velocity -= friction;
-                    else
-                        this.velocity += friction;
+                    let id = this._enterbox.connect('enter-event', () => {
+                        this._navigator.finish();
+                    });
                 }
-                // log(`zero: ${y/this.selected.height}`);
 
-                if (this.selected === active && y <= 0.1*this.selected.height) {
-                    this._navigator.finish();
-                    return;
-                } else if (y > downEdge) {
+                let device = event.get_source_device();
+                // log(`source: ${device.get_device_type()}`);
+                let direction = event.get_scroll_direction();
+                if (direction === Clutter.ScrollDirection.SMOOTH
+                    && device.get_device_type() !== Clutter.InputDeviceType.POINTER_DEVICE) {
+                    this.state = 'SMOOTH';
+                }
+
+                if (direction === Clutter.ScrollDirection.DOWN) {
+                    Tiling.spaces.selectStackSpace(Meta.MotionDirection.DOWN);
+                }
+                if (direction === Clutter.ScrollDirection.UP) {
+                    Tiling.spaces.selectStackSpace(Meta.MotionDirection.UP);
+                }
+            }
+
+            if (this.state === 'SMOOTH' && type === Clutter.EventType.SCROLL
+                && event.get_scroll_direction() === Clutter.ScrollDirection.SMOOTH) {
+                let spaces = Tiling.spaces;
+                let active = spaces.getActiveSpace();
+
+                let [dx, dy] = event.get_scroll_delta();
+                dy *= active.height * 0.05;
+                let t = event.get_time();
+                let v = -dy / (this.time - t);
+                // log(`v ${v}, dy: ${dy}`);
+
+                let firstEvent = false;
+                if (!this.selected) {
+                    firstEvent = true;
+                    this.selected = spaces.selectedSpace;
+                }
+                let mode = Clutter.AnimationMode.EASE_IN_OUT_QUAD;
+                const StackPositions = Tiling.StackPositions;
+                const upEdge = 0.385 * active.height;
+                const downEdge = 0.60 * active.height;
+                if (dy > 0
+                    && this.selected !== active
+                    && ((this.selected.actor.y > upEdge &&
+                        this.selected.actor.y - dy < upEdge)
+                        ||
+                        (this.selected.actor.y - dy < StackPositions.up * active.height))
+                ) {
+                    dy = 0;
+                    v = 0.1;
+                    spaces.selectStackSpace(Meta.MotionDirection.UP, false, mode);
+                    this.selected = spaces.selectedSpace;
+                    Tweener.removeTweens(this.selected.actor);
+                    Tweener.addTween(this.selected.actor,
+                        { scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode });
+                } else if (dy < 0
+                    && ((this.selected.actor.y < downEdge &&
+                        this.selected.actor.y - dy > downEdge)
+                        ||
+                        (this.selected.actor.y - dy > StackPositions.down * active.height))
+                ) {
+                    dy = 0;
+                    v = 0.1;
                     spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, mode);
                     this.selected = spaces.selectedSpace;
-                } else {
-                    spaces.selectStackSpace(Meta.MotionDirection.DOWN);
-                    spaces.selectStackSpace(Meta.MotionDirection.UP);
+                    Tweener.removeTweens(this.selected.actor);
+                    Tweener.addTween(this.selected.actor,
+                        { scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode });
                 }
-            } else {
-                this.time = t;
-                this.velocity = v;
+
+                this.selected.actor.y -= dy;
+                if (this.selected === active) {
+                    let scale = 0.90;
+                    let s = 1 - (1 - scale) * (this.selected.actor.y / (0.1 * this.selected.height));
+                    s = Math.max(s, scale);
+                    Tweener.removeTweens(this.selected.actor);
+                    this.selected.actor.set_scale(s, s);
+                }
+
+                if (v === 0 && !firstEvent) {
+                    // log(`finish: ${this.velocity}`);
+                    let test;
+                    if (this.velocity > 0)
+                        test = () => this.velocity > 0;
+                    else
+                        test = () => this.velocity < 0;
+
+                    let y = this.selected.actor.y;
+                    let friction = 0.5;
+                    while (test()) {
+                        let dy = this.velocity * 16;
+                        y -= dy;
+                        // log(`calc target: ${dy} ${y} ${this.velocity}`);
+                        if (this.velocity > 0)
+                            this.velocity -= friction;
+                        else
+                            this.velocity += friction;
+                    }
+                    // log(`zero: ${y/this.selected.height}`);
+
+                    if (this.selected === active && y <= 0.1 * this.selected.height) {
+                        this._navigator.finish();
+                        return;
+                    } else if (y > downEdge) {
+                        spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, mode);
+                        this.selected = spaces.selectedSpace;
+                    } else {
+                        spaces.selectStackSpace(Meta.MotionDirection.DOWN);
+                        spaces.selectStackSpace(Meta.MotionDirection.UP);
+                    }
+                } else {
+                    this.time = t;
+                    this.velocity = v;
+                }
             }
 
+            return Clutter.EVENT_PROPAGATE;
         }
 
-        return Clutter.EVENT_PROPAGATE;
-    }
+        vfunc_event(event) {
+            this._onEvent(null, event)
+        }
 
-    vfunc_event(event) {
-        this._onEvent(null, event)
-    }
+        // WorkspaceMenu.prototype._onOpenStateChanged = function
+        _onOpenStateChanged(menu, open) {
+            if (!open)
+                return;
 
-    // WorkspaceMenu.prototype._onOpenStateChanged = function
-    _onOpenStateChanged(menu, open) {
-        if (!open)
-            return;
+            let space = Tiling.spaces.getActiveSpace();
+            this.entry.label.text = space.name;
+            GLib.idle_add(GLib.PRIORITY_DEFAULT, this.entry.activate.bind(this.entry));
 
-        let space = Tiling.spaces.getActiveSpace();
-        this.entry.label.text = space.name;
-        GLib.idle_add(GLib.PRIORITY_DEFAULT, this.entry.activate.bind(this.entry));
+            // this._zenItem._switch.setToggleState(!space.showTopBar);
+        }
 
-        // this._zenItem._switch.setToggleState(!space.showTopBar);
-    }
+        workspaceSwitched(wm, fromIndex, toIndex) {
+            updateWorkspaceIndicator(toIndex);
+        }
 
-    workspaceSwitched(wm, fromIndex, toIndex) {
-        updateWorkspaceIndicator(toIndex);
-    }
+        destroy() {
+            this.signals.destroy();
+            super.destroy();
+        }
 
-    destroy() {
-        this.signals.destroy();
-        super.destroy();
-    }
-
-    setName(name) {
-        if (prefs.use_workspace_name)
-            this.label.text = name;
-        else
-            this.label.text = orginalActivitiesText;
-    }
-});
+        setName(name) {
+            if (prefs.use_workspace_name)
+                this.label.text = name;
+            else
+                this.label.text = orginalActivitiesText;
+        }
+    });
 
 var menu;
 var focusButton;
@@ -773,7 +766,7 @@ function updateMonitor() {
     let primaryMonitor = Main.layoutManager.primaryMonitor;
     // if panelMonitor has changed, then update layouts on workspaces
     if (panelMonitor !== primaryMonitor) {
-        Meta.later_add(Meta.LaterType.IDLE, () => {
+        Utils.later_add(Meta.LaterType.IDLE, () => {
             Tiling.spaces?.forEach(s => s.layout());
 
             // if to show window positon bar, then update across workspaces

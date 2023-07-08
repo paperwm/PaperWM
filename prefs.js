@@ -13,8 +13,6 @@ const { WinpropsPane } = Extension.imports.winpropsPane;
 const WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
 const KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
 
-const wmSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.wm.preferences'});
-
 let _ = s => s;
 
 // TreeStore model
@@ -60,20 +58,20 @@ var SettingsWidget = class SettingsWidget {
        selectedTab: index of initially shown tab
      */
     constructor(prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
+        let wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
         this._settings = ExtensionUtils.getSettings();
         this.builder = Gtk.Builder.new_from_file(Extension.path + '/Settings.ui');
         this.window = prefsWindow;
 
         const pages = [
-          this.builder.get_object('general_page'),
-          this.builder.get_object('workspaces_page'),
-          this.builder.get_object('keybindings_page'),
-          this.builder.get_object('winprops_page')
-
+            this.builder.get_object('general_page'),
+            this.builder.get_object('workspaces_page'),
+            this.builder.get_object('keybindings_page'),
+            this.builder.get_object('winprops_page'),
         ];
-    
-        pages.forEach(page => prefsWindow.add(page))
-        prefsWindow.set_visible_page(pages[selectedPage])
+
+        pages.forEach(page => prefsWindow.add(page));
+        prefsWindow.set_visible_page(pages[selectedPage]);
 
         this.aboutButton = this.builder.get_object('about_button');
         this._backgroundFilter = new Gtk.FileFilter();
@@ -111,13 +109,13 @@ var SettingsWidget = class SettingsWidget {
             let element = this.builder.get_object(elementName);
             let steps = this._settings.get_value(settingName).deep_unpack();
 
-             // need to check if current values are ratio or pixel ==> assume if all <=1 is ratio
+            // need to check if current values are ratio or pixel ==> assume if all <=1 is ratio
             let isRatio = steps.every(v => v <= 1);
             let value;
             if (isRatio) {
-                value = steps.map(v => (v*100.0).toString() + "%").toString();
+                value = steps.map(v => `${(v * 100.0).toString()}%`).toString();
             } else {
-                value = steps.map(v => v.toString() + "px").toString();
+                value = steps.map(v => `${v.toString()}px`).toString();
             }
             element.set_text(value.replaceAll(',', '; '));
 
@@ -137,7 +135,7 @@ var SettingsWidget = class SettingsWidget {
                     element.add_css_class('error');
                     return;
                 }
-    
+
                 // now process element value into internal array
                 let varr = value
                     .split(';')
@@ -155,7 +153,7 @@ var SettingsWidget = class SettingsWidget {
                     return;
                 }
                 element.remove_css_class('error');
-                
+
                 this._settings.set_value(settingName, new GLib.Variant('ad', varr));
             });
             this.builder.get_object(resetElementName).connect('clicked', () => {
@@ -189,7 +187,7 @@ var SettingsWidget = class SettingsWidget {
         hFric.connect('value-changed', fricChanged);
 
         let minimapScale = this.builder.get_object('minimap_scale_spin');
-        minimapScale.set_value(this._settings.get_double('minimap-scale')*100.0);
+        minimapScale.set_value(this._settings.get_double('minimap-scale') * 100.0);
         minimapScale.connect('value-changed', () => {
             this._settings.set_double('minimap-scale', minimapScale.get_value()/100.0);
         });
@@ -202,11 +200,11 @@ var SettingsWidget = class SettingsWidget {
         else
             scratchOverview.set_active_id('always');
 
-        scratchOverview.connect('changed', (obj) => {
-            if (obj.get_active_id() == 'only') {
+        scratchOverview.connect('changed', obj => {
+            if (obj.get_active_id() === 'only') {
                 this._settings.set_boolean('only-scratch-in-overview', true);
                 this._settings.set_boolean('disable-scratch-in-overview', false);
-            } else if (obj.get_active_id() == 'never') {
+            } else if (obj.get_active_id() === 'never') {
                 this._settings.set_boolean('only-scratch-in-overview', false);
                 this._settings.set_boolean('disable-scratch-in-overview', true);
             } else {
@@ -242,8 +240,6 @@ var SettingsWidget = class SettingsWidget {
                 GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
                 null);
         });
-
-        let useDefault = this._settings.get_boolean('use-default-background');
 
         const workspaceCombo = this.builder.get_object('workspace_combo_text');
         const workspaceStack = this.builder.get_object('workspace_stack');
@@ -285,7 +281,7 @@ var SettingsWidget = class SettingsWidget {
         let winprops = this._settings.get_value('winprops').deep_unpack()
             .map(p => JSON.parse(p));
         // sort a little nicer
-        let valueFn = (wp) =>  {
+        let valueFn = wp =>  {
             if (wp.wm_class) {
                 return wp.wm_class;
             }
@@ -293,8 +289,8 @@ var SettingsWidget = class SettingsWidget {
                 return wp.title;
             }
             return '';
-        }
-        winprops.sort((a,b) => {
+        };
+        winprops.sort((a, b) => {
             let aa = valueFn(a).replaceAll(/[/]/g, '');
             let bb = valueFn(b).replaceAll(/[/]/g, '');
             return aa.localeCompare(bb);
@@ -317,7 +313,6 @@ var SettingsWidget = class SettingsWidget {
     }
 
     createWorkspacePage(settings, index) {
-
         let list = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
             focusable: false,
@@ -345,7 +340,7 @@ var SettingsWidget = class SettingsWidget {
         let clearBackground = new Gtk.Button({
             icon_name: 'edit-clear-symbolic',
             tooltip_text: 'Clear workspace background',
-            sensitive: settings.get_string('background') != ''
+            sensitive: settings.get_string('background') !== '',
         });
         backgroundBox.append(background);
         backgroundBox.append(clearBackground);
@@ -445,8 +440,7 @@ var SettingsWidget = class SettingsWidget {
             name = `Workspace ${index + 1}`;
         return name;
     }
-
-}
+};
 
 function createRow(text, widget, signal, handler) {
     let margin = 12;
@@ -488,17 +482,17 @@ function createKeybindingWidget(settings, searchEntry) {
     );
 
     model.set_column_types(
-            [
-                // GObject.TYPE_BOOLEAN, // COLUMN_VISIBLE
-                GObject.TYPE_STRING, // COLUMN_ID
-                GObject.TYPE_INT,    // COLUMN_INDEX
-                GObject.TYPE_STRING, // COLUMN_DESCRIPTION
-                GObject.TYPE_INT,    // COLUMN_KEY
-                GObject.TYPE_INT,    // COLUMN_MODS
-                GObject.TYPE_BOOLEAN,// COLUMN_WARNING
-                GObject.TYPE_BOOLEAN,// COLUMN_RESET
-                GObject.TYPE_STRING, // COLUMN_TOOLTIP
-            ]);
+        [
+            // GObject.TYPE_BOOLEAN, // COLUMN_VISIBLE
+            GObject.TYPE_STRING,  // COLUMN_ID
+            GObject.TYPE_INT,     // COLUMN_INDEX
+            GObject.TYPE_STRING,  // COLUMN_DESCRIPTION
+            GObject.TYPE_INT,     // COLUMN_KEY
+            GObject.TYPE_INT,     // COLUMN_MODS
+            GObject.TYPE_BOOLEAN, // COLUMN_WARNING
+            GObject.TYPE_BOOLEAN, // COLUMN_RESET
+            GObject.TYPE_STRING,  // COLUMN_TOOLTIP
+        ]);
 
     let treeView = new Gtk.TreeView();
     treeView.set_enable_search(false);
@@ -531,99 +525,99 @@ function createKeybindingWidget(settings, searchEntry) {
     accelRenderer.editable = true;
 
     accelRenderer.connect("accel-edited",
-            (accelRenderer, path, key, mods, hwCode) => {
-                let iter = getOk(filteredModel.get_iter_from_string(path));
-                if(!iter)
-                    return;
+        (accelRenderer, path, key, mods, hwCode) => {
+            let iter = getOk(filteredModel.get_iter_from_string(path));
+            if (!iter)
+                return;
 
-                iter = filteredModel.convert_iter_to_child_iter(iter);
+            iter = filteredModel.convert_iter_to_child_iter(iter);
 
-                // Update the UI.
-                model.set(iter, [COLUMN_KEY, COLUMN_MODS], [key, mods]);
+            // Update the UI.
+            model.set(iter, [COLUMN_KEY, COLUMN_MODS], [key, mods]);
 
-                // Update the stored setting.
-                let id = model.get_value(iter, COLUMN_ID);
-                let index = model.get_value(iter, COLUMN_INDEX);
-                let accelString = Gtk.accelerator_name(key, mods);
+            // Update the stored setting.
+            let id = model.get_value(iter, COLUMN_ID);
+            let index = model.get_value(iter, COLUMN_INDEX);
+            let accelString = Gtk.accelerator_name(key, mods);
 
-                let accels = settings.get_strv(id);
+            let accels = settings.get_strv(id);
 
-                if (index === -1) {
-                    accels.push(accelString);
-                } else {
-                    accels[index] = accelString;
-                }
-                settings.set_strv(id, accels);
+            if (index === -1) {
+                accels.push(accelString);
+            } else {
+                accels[index] = accelString;
+            }
+            settings.set_strv(id, accels);
 
-                let newEmptyRow = null, parent;
-                if (index === -1) {
-                    model.set_value(iter, COLUMN_INDEX, accels.length-1);
-                    model.set_value(iter, COLUMN_DESCRIPTION, "...");
+            let newEmptyRow = null, parent;
+            if (index === -1) {
+                model.set_value(iter, COLUMN_INDEX, accels.length - 1);
+                model.set_value(iter, COLUMN_DESCRIPTION, "...");
 
-                    let parent = getOk(model.iter_parent(iter));
-                    newEmptyRow = model.insert_after(parent, iter);
-                } else if (index === 0 && !model.iter_has_child(iter)) {
-                    newEmptyRow = model.insert(iter, -1);
-                }
+                let parent = getOk(model.iter_parent(iter));
+                newEmptyRow = model.insert_after(parent, iter);
+            } else if (index === 0 && !model.iter_has_child(iter)) {
+                newEmptyRow = model.insert(iter, -1);
+            }
 
-                if (newEmptyRow) {
-                    model.set(newEmptyRow, ...transpose([
-                        [COLUMN_ID, id],
-                        [COLUMN_INDEX, -1],
-                        [COLUMN_DESCRIPTION, "New binding"],
-                        [COLUMN_KEY, 0],
-                        [COLUMN_MODS, 0],
-                    ]));
-                }
+            if (newEmptyRow) {
+                model.set(newEmptyRow, ...transpose([
+                    [COLUMN_ID, id],
+                    [COLUMN_INDEX, -1],
+                    [COLUMN_DESCRIPTION, "New binding"],
+                    [COLUMN_KEY, 0],
+                    [COLUMN_MODS, 0],
+                ]));
+            }
 
-                annotateKeybindings(model, settings);
-            });
+            annotateKeybindings(model, settings);
+        });
 
     accelRenderer.connect("accel-cleared",
-            (accelRenderer, path) => {
-                let iter = getOk(filteredModel.get_iter_from_string(path));
-                if(!iter)
-                    return;
+        (accelRenderer, path) => {
+            let iter = getOk(filteredModel.get_iter_from_string(path));
+            if (!iter)
+                return;
 
-                iter = filteredModel.convert_iter_to_child_iter(iter);
+            iter = filteredModel.convert_iter_to_child_iter(iter);
 
-                let index = model.get_value(iter, COLUMN_INDEX);
+            let index = model.get_value(iter, COLUMN_INDEX);
 
-                // Update the UI.
-                model.set(iter, [COLUMN_KEY, COLUMN_MODS], [0, 0]);
+            // Update the UI.
+            model.set(iter, [COLUMN_KEY, COLUMN_MODS], [0, 0]);
 
-                if (index === -1) {
-                    // Clearing the empty row
-                    return;
-                }
+            if (index === -1) {
+                // Clearing the empty row
+                return;
+            }
 
-                let id = model.get_value(iter, COLUMN_ID);
-                let accels = settings.get_strv(id);
-                accels.splice(index, 1);
+            let id = model.get_value(iter, COLUMN_ID);
+            let accels = settings.get_strv(id);
+            accels.splice(index, 1);
 
-                let parent, nextSibling;
-                // Simply rebuild the model for this action
-                if (index === 0) {
-                    parent = iter.copy();
-                } else {
-                    parent = getOk(model.iter_parent(iter));
-                }
-                nextSibling = parent.copy();
+            let parent, nextSibling;
+            // Simply rebuild the model for this action
+            if (index === 0) {
+                parent = iter.copy();
+            } else {
+                parent = getOk(model.iter_parent(iter));
+            }
+            nextSibling = parent.copy();
 
-                if(!model.iter_next(nextSibling))
-                    nextSibling = null;
+            if (!model.iter_next(nextSibling))
+                nextSibling = null;
 
-                model.remove(parent);
+            model.remove(parent);
 
-                // Update the stored setting.
-                settings.set_strv(id, accels);
+            // Update the stored setting.
+            settings.set_strv(id, accels);
 
-                let recreated = addKeybinding(model, settings, id, nextSibling);
-                let selection = treeView.get_selection();
-                selection.select_iter(recreated);
+            let recreated = addKeybinding(model, settings, id, nextSibling);
+            let selection = treeView.get_selection();
+            selection.select_iter(recreated);
 
-                annotateKeybindings(model, settings);
-            });
+            annotateKeybindings(model, settings);
+        });
 
     let accelColumn = new Gtk.TreeViewColumn();
     accelColumn.pack_end(accelRenderer, false);
@@ -641,7 +635,7 @@ function createKeybindingWidget(settings, searchEntry) {
 
     resetRenderer.connect('toggled', (renderer, path) => {
         let iter = getOk(filteredModel.get_iter_from_string(path));
-        if(!iter)
+        if (!iter)
             return;
         iter = filteredModel.convert_iter_to_child_iter(iter);
 
@@ -653,7 +647,7 @@ function createKeybindingWidget(settings, searchEntry) {
 
         let parent = getOk(model.iter_parent(iter)) || iter.copy();
         let nextSibling = parent.copy();
-        if(!model.iter_next(nextSibling))
+        if (!model.iter_next(nextSibling))
             nextSibling = null;
 
         model.remove(parent);
@@ -671,11 +665,10 @@ function createKeybindingWidget(settings, searchEntry) {
 }
 
 function parseAccelerator(accelerator) {
-    let key, mods;
     if (accelerator.match(/Above_Tab/)) {
         accelerator = accelerator.replace('Above_Tab', 'grave');
     }
-    [ok, key, mods] = Settings.accelerator_parse(accelerator);
+    let [ok, key, mods] = Settings.accelerator_parse(accelerator);
     log(`PaperWM: parseAccelerator(${accelerator}) -> [${key}, ${mods}]`);
 
     return [key, mods];
@@ -684,7 +677,8 @@ function parseAccelerator(accelerator) {
 function transpose(colValPairs) {
     let colKeys = [], values = [];
     colValPairs.forEach(([k, v]) => {
-        colKeys.push(k); values.push(v);
+        colKeys.push(k);
+        values.push(v);
     });
     return [colKeys, values];
 }
@@ -763,7 +757,7 @@ function annotateKeybindings(model, settings) {
             let keystr = Settings.keycomboToKeylab(combo);
             tooltip = `${keystr} overrides ${conflict[0].conflicts} in ${conflict[0].settings.path}`;
             model.set_value(iter, COLUMN_TOOLTIP,
-                            GLib.markup_escape_text(tooltip, -1));
+                GLib.markup_escape_text(tooltip, -1));
             model.set_value(iter, COLUMN_WARNING, true);
         } else {
             model.set_value(iter, COLUMN_WARNING, false);
@@ -778,7 +772,7 @@ function createFileChooserButton(settings, key, iconName, symbolicIconName, prop
     const buttonLabel = new Gtk.Label();
     const buttonBox = new Gtk.Box({
         orientation: Gtk.Orientation.HORIZONTAL,
-        spacing: 8
+        spacing: 8,
     });
 
     buttonBox.append(buttonIcon);
@@ -790,13 +784,13 @@ function createFileChooserButton(settings, key, iconName, symbolicIconName, prop
     const button = new Gtk.Button({child: buttonBox});
 
     syncStringSetting(settings, key, path => {
-        buttonIcon.visible = path != '';
-        buttonLabel.label = path == '' ? '(None)' : GLib.filename_display_basename(path);
+        buttonIcon.visible = path !== '';
+        buttonLabel.label = path === '' ? '(None)' : GLib.filename_display_basename(path);
     });
     button.connect('clicked', () => {
         const chooser = new Gtk.FileChooserDialog(properties);
         let path = settings.get_string(key);
-        if (path != '') chooser.set_file(Gio.File.new_for_path(path));
+        if (path !== '') chooser.set_file(Gio.File.new_for_path(path));
         chooser.add_button('Open', Gtk.ResponseType.OK);
         chooser.add_button('Cancel', Gtk.ResponseType.CANCEL);
         chooser.connect('response', (dialog, response) => {

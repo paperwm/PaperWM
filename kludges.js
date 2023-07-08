@@ -7,7 +7,6 @@
 
 var ExtensionUtils = imports.misc.extensionUtils;
 var Extension = ExtensionUtils.getCurrentExtension();
-var Gtk = imports.gi.Gtk;
 var Meta = imports.gi.Meta;
 var Gio = imports.gi.Gio;
 var Main = imports.ui.main;
@@ -22,11 +21,7 @@ var MessageTray = imports.ui.messageTray;
 
 var Scratch = Extension.imports.scratch;
 var Tiling = Extension.imports.tiling;
-var settings = ExtensionUtils.getSettings();
 var Clutter = imports.gi.Clutter;
-var St = imports.gi.St;
-
-var version = Extension.imports.utils.version
 
 function overrideHotCorners() {
     for (let corner of Main.layoutManager.hotCorners) {
@@ -39,94 +34,6 @@ function overrideHotCorners() {
     }
 }
 
-// polyfill for 3.28 (`get_monitor_scale` first appeared in 3.31.92). 
-if (!global.display.get_monitor_scale) {
-    global.display.constructor.prototype.get_monitor_scale = () => 1.0;
-}
-
-// polyfill for 3.28 (`get_monitor_neighbor_index`)
-if (!global.display.get_monitor_neighbor_index) {
-    global.display.constructor.prototype.get_monitor_neighbor_index = function(...args) {
-        return global.screen.get_monitor_neighbor_index(...args);
-    }
-}
-
-// polyfill for 3.28
-if (!Meta.DisplayDirection && Meta.ScreenDirection) {
-    Meta.DisplayDirection = Meta.ScreenDirection;
-}
-
-// polyfill for 3.28
-if (!St.Settings) {
-    let Gtk = imports.gi.Gtk;
-    let gtkSettings = Gtk.Settings.get_default();
-    let polyfillSettings = new (class PolyfillStSettings {
-        get enable_animations() {
-            return gtkSettings.gtk_enable_animations;
-        }
-        set enable_animations(value) {
-            gtkSettings.gtk_enable_animations = value;
-        }
-    })();
-
-    St.Settings = {
-        get: function() { return polyfillSettings; } // ASSUMTION: no need to call get_default each time
-    };
-}
-
-// polyfill
-if (!Clutter.Actor.prototype.set) {
-    Clutter.Actor.prototype.set = function(params) {
-        Object.assign(this, params);
-    }
-}
-
-// polyfill
-if (!global.display.set_cursor) {
-    global.display.constructor.prototype.set_cursor = global.screen.set_cursor.bind(global.screen);
-}
-
-// polyfill
-if (!Clutter.Actor.prototype.raise) {
-    Clutter.Actor.prototype.raise = function raise(above) {
-        const parent = this.get_parent();
-        if (!parent)
-            return;
-        parent.set_child_above_sibling(this, above);
-    }
-}
-
-// polyfill
-if (!Clutter.Actor.prototype.raise_top) {
-  Clutter.Actor.prototype.raise_top = function raise_top() {
-        this.raise(null);
-    }
-}
-
-// polyfill
-if (!Clutter.Actor.prototype.reparent) {
-    Clutter.Actor.prototype.reparent = function reparent(newParent) {
-        const parent = this.get_parent();
-        if (parent) {
-            parent.remove_child(this);
-        }
-        newParent.add_child(this);
-    }
-}
-
-// polyfill
-if (!Clutter.Vertex) {
-    const {Graphene} = imports.gi;
-    Clutter.Vertex = Graphene.Point3D;
-}
-
-// polyfill for 44
-if (!Meta.later_add && global.compositor?.get_laters()) {
-    Meta.later_add = function(...args) {
-        global.compositor.get_laters().add(...args);
-    }
-}
-
 // Workspace.Workspace._realRecalculateWindowPositions
 // Sort tiled windows in the correct order
 function _realRecalculateWindowPositions(flags) {
@@ -136,8 +43,9 @@ function _realRecalculateWindowPositions(flags) {
     }
 
     let clones = this._windows.slice();
-    if (clones.length == 0)
+    if (clones.length === 0) {
         return;
+    }
 
     let space = Tiling.spaces.spaceOf(this.metaWorkspace);
     if (space) {
@@ -186,15 +94,15 @@ function getOriginalPosition() {
 // Disable the workspace switching animation in Gnome 40+
 function animateSwitch(_from, _to, _direction, onComplete) {
     onComplete();
-};
+}
 
 function disableHotcorners() {
     let override = settings.get_boolean("override-hot-corner");
     if (override) {
         overrideHotCorners();
         signals.connect(Main.layoutManager,
-                        'hot-corners-changed',
-                        overrideHotCorners);
+            'hot-corners-changed',
+            overrideHotCorners);
     } else {
         signals.disconnect(Main.layoutManager);
         Main.layoutManager._updateHotCorners();
@@ -206,7 +114,7 @@ savedProps = savedProps || new Map();
 
 function registerOverrideProp(obj, name, override) {
     if (!obj)
-        return
+        return;
 
     let saved = getSavedProp(obj, name) || obj[name];
     let props = savedProps.get(obj);
@@ -216,13 +124,13 @@ function registerOverrideProp(obj, name, override) {
     }
     props[name] = {
         saved,
-        override
+        override,
     };
 }
 
 function registerOverridePrototype(obj, name, override) {
     if (!obj)
-        return
+        return;
 
     registerOverrideProp(obj.prototype, name, override);
 }
@@ -294,9 +202,13 @@ function restoreMethod(obj, name) {
  * move from gnome version to gnome version.  Next to the swipe tracker locations
  * below are the gnome versions when they were first (or last) seen.
  */
-var swipeTrackers;
 var signals;
+var swipeTrackers;
+var settings;
+var wmSettings;
 function startup() {
+    settings = ExtensionUtils.getSettings();
+    wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
 
     swipeTrackers = [
         Main?.overview?._swipeTracker, // gnome 40+
@@ -487,8 +399,11 @@ function disable() {
     actions.forEach(a => global.stage.add_action(a))
 
     signals.destroy();
+    signals = null;
     Main.layoutManager._updateHotCorners();
     swipeTrackers = null;
+    settings = null;
+    wmSettings = null;
     actions = null;
 }
 
@@ -577,7 +492,6 @@ function computeLayout40(windows, layoutParams) {
     };
 }
 
-const wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
 function _checkWorkspaces() {
     let workspaceManager = global.workspace_manager;
     let i;

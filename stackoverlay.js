@@ -1,14 +1,11 @@
 var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Tiling = Extension.imports.tiling;
 var Clutter = imports.gi.Clutter;
-var Tweener = Extension.imports.utils.tweener;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 var Shell = imports.gi.Shell;
 var Meta = imports.gi.Meta;
 var utils = Extension.imports.utils;
-var debug = utils.debug;
-var Minimap = Extension.imports.minimap;
 var Layout = imports.ui.layout;
 
 
@@ -415,7 +412,7 @@ var StackOverlay = class StackOverlay {
         }
 
         let mru = global.display.get_tab_list(Meta.TabList.NORMAL_ALL,
-                                              space.workspace);
+            space.workspace);
         let column = space[index];
         this.target = mru.filter(w => column.includes(w))[0];
         let metaWindow = this.target;
@@ -443,7 +440,7 @@ var StackOverlay = class StackOverlay {
                 width = Math.min(width, 1);
             overlay.x = this.monitor.x;
             overlay.width = Math.max(width, 1);
-            overlay.raise(neighbour.get_compositor_private());
+            utils.actor_raise(overlay, neighbour.get_compositor_private());
         } else {
             let column = space[space.indexOf(metaWindow) - 1];
             let neighbour = column &&
@@ -459,7 +456,7 @@ var StackOverlay = class StackOverlay {
             width = Math.max(width, 1);
             overlay.x = this.monitor.x + this.monitor.width - width;
             overlay.width = width;
-            overlay.raise(neighbour.get_compositor_private());
+            utils.actor_raise(overlay, neighbour.get_compositor_private());
         }
 
         if (space.selectedWindow.fullscreen || space.selectedWindow.maximized_vertically)

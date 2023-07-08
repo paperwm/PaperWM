@@ -248,23 +248,10 @@ function byId(mutterId) {
     return actionIdMap[mutterId];
 }
 
-/**
- * Adapts an paperwm action handler to mutter's keybinding handler signature
- *
- * Works for 3.28 and 3.30
- */
-var asKeyHandler;
-if (global.screen) {
-    asKeyHandler = (actionHandler) =>
-        (display, screen, mw, binding) => {
-            return actionHandler(mw, Tiling.spaces.selectedSpace, {display, screen, binding});
-        };
-} else {
-    asKeyHandler = (actionHandler) =>
-        (display, mw, binding) => {
-            return actionHandler(mw, Tiling.spaces.selectedSpace, {display, binding});
-        };
-}
+var asKeyHandler = (actionHandler) =>
+    (display, mw, binding) => {
+        return actionHandler(mw, Tiling.spaces.selectedSpace, { display, binding });
+    };
 
 function impliedOptions(options) {
     options = options = Object.assign({mutterFlags: Meta.KeyBindingFlags.NONE}, options);
