@@ -429,12 +429,17 @@ var Signals = class Signals extends Map {
             this.delete(object);
         }
     }
-}
+};
 
-var tweener = {
-    addTween(actor, params) {
+/**
+ * Note the name `Tweener` used previously was just a legacy name, we're actually using
+ * Widget.ease here.  This was renamed to avoid confusion with the deprecated `Tweener`
+ * moddule.
+ */
+var easer = {
+    addEase(actor, params) {
         if (params.time) {
-            params.duration = params.time*1000;
+            params.duration = params.time * 1000;
             delete params.time;
         }
         if (!params.mode)
@@ -442,13 +447,13 @@ var tweener = {
         actor.ease(params);
     },
 
-    removeTweens(actor) {
+    removeEase(actor) {
         actor.remove_all_transitions();
     },
 
-    isTweening(actor) {
+    isEasing(actor) {
         return actor.get_transition('x') || actor.get_transition('y') || actor.get_transition('scale-x') || actor.get_transition('scale-x');
-    }
+    },
 };
 
 function isMetaWindow(obj) {

@@ -1,23 +1,20 @@
 var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Keybindings = Extension.imports.keybindings;
-var Main = imports.ui.main;
 var Tiling = Extension.imports.tiling;
-var Scratch = Extension.imports.scratch;
 var Virt = Extension.imports.virtTiling;
-var Tweener = Extension.imports.utils.tweener;
+var Easer = Extension.imports.utils.easer;
 var Utils = Extension.imports.utils;
 var prefs = Tiling.prefs;
-
 
 /** Adapts an action handler to operate on the neighbour in the given direction */
 function useNeigbour(dir, action) {
     return (metaWindow) => {
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
         let i = space.indexOf(metaWindow);
-        if (!space[i+dir])
+        if (!space[i + dir])
             return action(undefined);
 
-        return action(space[i+dir][0]);
+        return action(space[i + dir][0]);
     }
 }
 
@@ -27,17 +24,18 @@ function findNonVisibleIndex(space, metaWindow, dir=1, margin=1) {
     while (0 <= k && k < space.length && space.isFullyVisible(space[k][0], margin)) {
         k += dir;
     }
-    return k
+    return k;
 }
 
 function moveTo(space, metaWindow, target) {
     space.startAnimate();
     space.targetX = target;
-    Tweener.addTween(space.cloneContainer,
-                     { x: space.targetX,
-                       time: prefs.animation_time,
-                       onComplete: space.moveDone.bind(space)
-                     });
+    Easer.addEase(space.cloneContainer,
+        {
+            x: space.targetX,
+            time: prefs.animation_time,
+            onComplete: space.moveDone.bind(space)
+        });
 
     space.fixOverlays();
 }

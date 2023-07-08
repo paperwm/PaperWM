@@ -5,7 +5,6 @@ var Main = imports.ui.main;
 var TopBar = Extension.imports.topbar;
 var Tiling = Extension.imports.tiling;
 var utils = Extension.imports.utils;
-var debug = utils.debug;
 var float, scratchFrame; // symbols used for expando properties on metawindow
 
 
@@ -27,14 +26,14 @@ function focusMonitor() {
    other windows/clones (clones if the space animates)
  */
 function tweenScratch(metaWindow, targetX, targetY, tweenParams={}) {
-    let Tweener = Extension.imports.utils.tweener;
+    let Easer = Extension.imports.utils.easer;
     let Settings = Extension.imports.settings;
     let f = metaWindow.get_frame_rect();
     let b = metaWindow.get_buffer_rect();
     let dx = f.x - b.x;
     let dy = f.y - b.y;
 
-    Tweener.addTween(metaWindow.get_compositor_private(), Object.assign(
+    Easer.addEase(metaWindow.get_compositor_private(), Object.assign(
         {
             time: Settings.prefs.animation_time,
             x: targetX - dx,
@@ -42,8 +41,8 @@ function tweenScratch(metaWindow, targetX, targetY, tweenParams={}) {
         },
         tweenParams,
         {
-            onComplete: function(...args) {
-                metaWindow.move_frame(true, targetX , targetY);
+            onComplete: function (...args) {
+                metaWindow.move_frame(true, targetX, targetY);
                 tweenParams.onComplete && tweenParams.onComplete.apply(this, args);
             }
         }));

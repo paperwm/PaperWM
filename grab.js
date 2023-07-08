@@ -8,7 +8,7 @@ var Tiling = Extension.imports.tiling;
 var Scratch = Extension.imports.scratch;
 var prefs = Extension.imports.settings.prefs;
 var Utils = Extension.imports.utils;
-var Tweener = Utils.tweener;
+var Easer = Utils.easer;
 var Navigator = Extension.imports.navigator;
 
 var virtualPointer;
@@ -83,7 +83,7 @@ var MoveGrab = class MoveGrab {
         let frame = metaWindow.get_frame_rect();
 
         this.initialY = clone.targetY;
-        Tweener.removeTweens(clone);
+        Easer.removeEase(clone);
         let [gx, gy, $] = global.get_pointer();
 
         let px = (gx - actor.x) / actor.width;
@@ -117,7 +117,7 @@ var MoveGrab = class MoveGrab {
         // Make sure the window actor is visible
         Navigator.getNavigator();
         Tiling.animateWindow(metaWindow);
-        Tweener.removeTweens(space.cloneContainer);
+        Easer.removeEase(space.cloneContainer);
     }
 
     beginDnD({center} = {}) {
@@ -163,7 +163,7 @@ var MoveGrab = class MoveGrab {
         }
 
         clone.__oldOpacity = clone.opacity;
-        Tweener.addTween(clone, params);
+        Easer.addEase(clone, params);
 
         this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
 
@@ -416,7 +416,7 @@ var MoveGrab = class MoveGrab {
                     space.moveDone()
                     clone.set_pivot_point(0, 0)
                 }
-                Tweener.addTween(clone, params);
+                Easer.addEase(clone, params);
 
                 space.targetX = space.cloneContainer.x;
                 space.selectedWindow = metaWindow;
@@ -442,7 +442,7 @@ var MoveGrab = class MoveGrab {
                 clone.set_pivot_point(0, 0);
 
                 params.onStopped = () => { actor.set_pivot_point(0, 0) };
-                Tweener.addTween(actor, params);
+                Easer.addEase(actor, params);
             }
 
             Navigator.getNavigator().accept()
@@ -459,7 +459,7 @@ var MoveGrab = class MoveGrab {
                 space.moveDone()
                 clone.set_pivot_point(0, 0)
             }
-            Tweener.addTween(clone, params);
+            Easer.addEase(clone, params);
 
             Tiling.ensureViewport(metaWindow, space);
             Navigator.getNavigator().accept()
@@ -548,13 +548,13 @@ var MoveGrab = class MoveGrab {
         zone.space.selection.hide();
         zone.actor.show();
         Utils.actor_raise(zone.actor);
-        Tweener.addTween(zone.actor, params);
+        Easer.addEase(zone.actor, params);
     }
 
     deactivateDndTarget(zone) {
         if (zone) {
             zone.space.selection.show();
-            Tweener.addTween(zone.actor, {
+            Easer.addEase(zone.actor, {
                 time: prefs.animation_time,
                 [zone.originProp]: zone.center,
                 [zone.sizeProp]: 0,

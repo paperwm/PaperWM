@@ -3,7 +3,7 @@ var Clutter = imports.gi.Clutter;
 var Meta = imports.gi.Meta;
 var AltTab = imports.ui.altTab;
 var Main = imports.ui.main;
-var Tweener = Extension.imports.utils.tweener;
+var Easer = Extension.imports.utils.easer;
 var Gio = imports.gi.Gio;
 
 var Scratch = Extension.imports.scratch;
@@ -55,7 +55,7 @@ var LiveAltTab = utils.registerClass(
             this.space.setSelectionInactive();
 
             Main.uiGroup.insert_child_above(fog, global.window_group);
-            Tweener.addTween(fog, {
+            Easer.addEase(fog, {
                 time: prefs.animation_time,
                 opacity: 100,
             });
@@ -137,7 +137,7 @@ var LiveAltTab = utils.registerClass(
         _onDestroy() {
             super._onDestroy();
             debug('#preview', 'onDestroy', this.was_accepted);
-            Tweener.addTween(this.fog, {
+            Easer.addEase(this.fog, {
                 time: prefs.animation_time,
                 opacity: 0,
                 onStopped: () => {
