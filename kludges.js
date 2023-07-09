@@ -17,7 +17,6 @@ var WorkspaceAnimation = imports.ui.workspaceAnimation;
 var Shell = imports.gi.Shell;
 var utils = Extension.imports.utils;
 var Params = imports.misc.params;
-var MessageTray = imports.ui.messageTray;
 
 var Scratch = Extension.imports.scratch;
 var Tiling = Extension.imports.tiling;
@@ -32,50 +31,6 @@ function overrideHotCorners() {
 
         corner._pressureBarrier._trigger = function() {};
     }
-}
-
-// Workspace.Workspace._realRecalculateWindowPositions
-// Sort tiled windows in the correct order
-function _realRecalculateWindowPositions(flags) {
-    if (this._repositionWindowsId > 0) {
-        Mainloop.source_remove(this._repositionWindowsId);
-        this._repositionWindowsId = 0;
-    }
-
-    let clones = this._windows.slice();
-    if (clones.length === 0) {
-        return;
-    }
-
-    let space = Tiling.spaces.spaceOf(this.metaWorkspace);
-    if (space) {
-        clones.sort((a, b) => {
-            let aw = a.metaWindow;
-            let bw = b.metaWindow;
-            let ia = space.indexOf(aw);
-            let ib = space.indexOf(bw);
-            if (ia === -1 && ib === -1) {
-                return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
-            }
-            if (ia === -1) {
-                return -1;
-            }
-            if (ib === -1) {
-                return 1;
-            }
-            return ia - ib;
-        });
-    } else {
-        clones.sort((a, b) => {
-            return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
-        });
-    }
-
-    if (this._reservedSlot)
-        clones.push(this._reservedSlot);
-
-    this._currentLayout = this._computeLayout(clones);
-    this._updateWindowPositions(flags);
 }
 
 // Workspace.WindowClone.getOriginalPosition
@@ -175,6 +130,115 @@ function enableOverride(obj, name) {
     }
 }
 
+/**
+ * Sets up PaperWM overrides (needed for operations).  These overrides are registered and restored
+ * on PaperWM disable.
+ */
+function setupOverrides() {
+    // prepare for PaperWM workspace switching
+    registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch', function (from, to, direction) {
+        if (this._switchData)
+            return;
+
+        let switchData = {};
+        this._switchData = switchData;
+        switchData.movingWindowBin = new Clutter.Actor();
+        switchData.windows = [];
+        switchData.surroundings = {};
+        switchData.gestureActivated = false;
+        switchData.inProgress = false;
+
+        switchData.container = new Clutter.Actor();
+    });
+
+    registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch', animateSwitch);
+    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
+    if (Workspace.WindowClone)
+        registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
+
+    // Workspace.Workspace._realRecalculateWindowPositions
+    // Sort tiled windows in the correct order
+    registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions',
+
+        function (flags) {
+            if (this._repositionWindowsId > 0) {
+                Mainloop.source_remove(this._repositionWindowsId);
+                this._repositionWindowsId = 0;
+            }
+
+            let clones = this._windows.slice();
+            if (clones.length === 0) {
+                return;
+            }
+
+            let space = Tiling.spaces.spaceOf(this.metaWorkspace);
+            if (space) {
+                clones.sort((a, b) => {
+                    let aw = a.metaWindow;
+                    let bw = b.metaWindow;
+                    let ia = space.indexOf(aw);
+                    let ib = space.indexOf(bw);
+                    if (ia === -1 && ib === -1) {
+                        return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
+                    }
+                    if (ia === -1) {
+                        return -1;
+                    }
+                    if (ib === -1) {
+                        return 1;
+                    }
+                    return ia - ib;
+                });
+            } else {
+                clones.sort((a, b) => {
+                    return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
+                });
+            }
+
+            if (this._reservedSlot)
+                clones.push(this._reservedSlot);
+
+            this._currentLayout = this._computeLayout(clones);
+            this._updateWindowPositions(flags);
+        });
+
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
+
+    registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
+
+    if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
+        registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
+
+    // Work around https://gitlab.gnome.org/GNOME/gnome-shell/issues/1884
+    if (!WindowManager.WindowManager.prototype._removeEffect) {
+        registerOverridePrototype(WindowManager.WindowManager, '_mapWindowOverwrite',
+            function (shellwm, actor) {
+                if (this._mapping.delete(actor)) {
+                    shellwm.completed_map(actor);
+                }
+            });
+    }
+
+    let layout = computeLayout40;
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout)
+
+    // disable swipe gesture trackers
+    swipeTrackers.forEach(t => {
+        registerOverrideProp(t, "enabled", false);
+    });
+
+    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
+        let metaWindow = win.meta_window || win;
+        if (settings.get_boolean('only-scratch-in-overview'))
+            return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+        if (settings.get_boolean('disable-scratch-in-overview'))
+            return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+    });
+}
+
+/**
+ * Enables any registered overrides.
+ */
 function enableOverrides() {
     for (let [obj, props] of savedProps) {
         for (let name in props) {
@@ -202,83 +266,19 @@ function restoreMethod(obj, name) {
  * move from gnome version to gnome version.  Next to the swipe tracker locations
  * below are the gnome versions when they were first (or last) seen.
  */
-var signals;
 var swipeTrackers;
-var settings;
-var wmSettings;
-function startup() {
-    settings = ExtensionUtils.getSettings();
-    wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
-
+function setupSwipeTrackers() {
     swipeTrackers = [
         Main?.overview?._swipeTracker, // gnome 40+
         Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker, // gnome 40+
         Main?.wm?._workspaceAnimation?._swipeTracker, // gnome 40+
-        Main?.wm?._swipeTracker // gnome 38 (and below)
+        Main?.wm?._swipeTracker, // gnome 38 (and below)
     ].filter(t => typeof t !== 'undefined');
-
-    registerOverridePrototype(MessageTray.MessageTray, '_updateState');
-    registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
-    registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch', animateSwitch);
-    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
-    if (Workspace.WindowClone)
-        registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
-
-    registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions', _realRecalculateWindowPositions);
-
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
-
-    registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
-    if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
-        registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
-
-    // Work around https://gitlab.gnome.org/GNOME/gnome-shell/issues/1884
-    if (!WindowManager.WindowManager.prototype._removeEffect) {
-        registerOverridePrototype(WindowManager.WindowManager, '_mapWindowOverwrite',
-                                  function (shellwm, actor) {
-                                      if (this._mapping.delete(actor)) {
-                                          shellwm.completed_map(actor);
-                                      }
-                                  });
-    }
-
-    let layout = computeLayout40;
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout)
-
-    // disable swipe gesture trackers
-    swipeTrackers.forEach(t => {
-        registerOverrideProp(t, "enabled", false);
-    });
-
-    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', (win) => {
-        let metaWindow = win.meta_window || win;
-        if (settings.get_boolean('only-scratch-in-overview'))
-            return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
-        if (settings.get_boolean('disable-scratch-in-overview'))
-            return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
-    });
-
-    signals = new utils.Signals();
 }
 
-var actions;
-function enable() {
-    startup();
-    enableOverrides();
-
-    /*
-     * Some actions work rather poorly.
-     * In particular the 3-finger hold + tap can randomly activate a minimized
-     * window when tapping after a 3-finger swipe
-     */
-    actions = global.stage.get_actions().filter(a => {
-        switch (a.constructor) {
-        case WindowManager.AppSwitchAction:
-            return true;
-        }
-    });
-    actions.forEach(a => global.stage.remove_action(a))
-
+var signals;
+function setupSignals() {
+    signals = new utils.Signals();
     signals.connect(settings, 'changed::override-hot-corner', disableHotcorners);
     disableHotcorners();
 
@@ -287,7 +287,9 @@ function enable() {
      * ensure swipe trackers are reset.
      */
     signals.connect(Main.overview, 'hidden', () => {
-        swipeTrackers.forEach(t => t.enabled = false);
+        swipeTrackers.forEach(t => {
+            t.enabled = false;
+        });
     });
 
     function scratchInOverview() {
@@ -302,36 +304,39 @@ function enable() {
     signals.connect(settings, 'changed::only-scratch-in-overview', scratchInOverview);
     signals.connect(settings, 'changed::disable-scratch-in-overview', scratchInOverview);
     scratchInOverview();
+}
 
-
-    /* The «native» workspace animation can be now (3.30) be disabled as it
-       calls out of the function bound to the `switch-workspace` signal.
+var actions;
+function setupActions() {
+    /*
+     * Some actions work rather poorly.
+     * In particular the 3-finger hold + tap can randomly activate a minimized
+     * window when tapping after a 3-finger swipe
      */
-    WindowManager.WindowManager.prototype._prepareWorkspaceSwitch =
-        function (from, to, direction) {
-            if (this._switchData)
-                return;
+    actions = global.stage.get_actions().filter(a => {
+        switch (a.constructor) {
+        case WindowManager.AppSwitchAction:
+            return true;
+        }
+    });
+    actions.forEach(a => global.stage.remove_action(a));
+}
 
-            let wgroup = global.window_group;
-            let windows = global.get_window_actors();
-            let switchData = {};
-
-            this._switchData = switchData;
-            switchData.movingWindowBin = new Clutter.Actor();
-            switchData.windows = [];
-            switchData.surroundings = {};
-            switchData.gestureActivated = false;
-            switchData.inProgress = false;
-
-            switchData.container = new Clutter.Actor();
-        };
-
-    Workspace.Workspace.prototype._realRecalculateWindowPositions = _realRecalculateWindowPositions;
+var settings;
+var wmSettings;
+function enable() {
+    settings = ExtensionUtils.getSettings();
+    wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
+    setupSwipeTrackers();
+    setupOverrides();
+    enableOverrides();
+    setupSignals();
+    setupActions();
 }
 
 function disable() {
     disableOverrides();
-    actions.forEach(a => global.stage.add_action(a))
+    actions.forEach(a => global.stage.add_action(a));
 
     signals.destroy();
     signals = null;
@@ -345,11 +350,11 @@ function disable() {
 function sortWindows(a, b) {
     let aw = a.metaWindow;
     let bw = b.metaWindow;
-    let spaceA = Tiling.spaces.spaceOfWindow(aw)
-    let spaceB = Tiling.spaces.spaceOfWindow(bw)
+    let spaceA = Tiling.spaces.spaceOfWindow(aw);
+    let spaceB = Tiling.spaces.spaceOfWindow(bw);
     let ia = spaceA.indexOf(aw);
     let ib = spaceB.indexOf(bw);
-    if ((ia === -1 && ib === -1)) {
+    if (ia === -1 && ib === -1) {
         return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
     }
     if (ia === -1) {
@@ -423,7 +428,7 @@ function computeLayout40(windows, layoutParams) {
         rows,
         maxColumns: maxRow.windows.length,
         gridWidth: maxRow.fullWidth,
-        gridHeight
+        gridHeight,
     };
 }
 
