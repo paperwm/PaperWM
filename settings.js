@@ -33,7 +33,7 @@ prefs.__defineGetter__("minimum_margin", function() { return Math.min(15, this.h
 function setVerticalMargin() {
     let vMargin = settings.get_int('vertical-margin');
     let gap = settings.get_int('window-gap');
-    prefs.vertical_margin = Math.max(Math.round(gap/2), vMargin);
+    prefs.vertical_margin = Math.max(Math.round(gap / 2), vMargin);
 }
 let timerId;
 function onWindowGapChanged() {
@@ -77,7 +77,6 @@ function setSchemas() {
     });
 }
 
-setSchemas(); // Initialize imediately so prefs.js can import properly
 function enable() {
     settings.connect('changed', setState);
     settings.connect('changed::vertical-margin', onWindowGapChanged);

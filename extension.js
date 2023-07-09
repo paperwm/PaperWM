@@ -31,8 +31,8 @@ var MessageTray = imports.ui.messageTray;
      - gestures is responsible for 3-finger swiping (only works in wayland).
  */
 var modules = [
-    'tiling', 'navigator', 'keybindings', 'scratch', 'liveAltTab', 'utils',
-    'stackoverlay', 'app', 'kludges', 'topbar', 'settings', 'gestures',
+    'settings', 'tiling', 'navigator', 'keybindings', 'scratch', 'liveAltTab', 'utils',
+    'stackoverlay', 'app', 'kludges', 'topbar', 'gestures',
 ];
 
 /**

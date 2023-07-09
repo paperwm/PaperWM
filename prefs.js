@@ -1,17 +1,9 @@
-
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
-const Gtk = imports.gi.Gtk;
-const Gdk = imports.gi.Gdk;
-
+const {Gio, GLib, GObject, Gtk, Gdk} = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
-const { KeybindingsPane } = Extension.imports.prefsKeybinding;
-const { WinpropsPane } = Extension.imports.winpropsPane;
-
-const WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
-const KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
+const Settings = Extension.imports.settings;
+const {KeybindingsPane} = Extension.imports.prefsKeybinding;
+const {WinpropsPane} = Extension.imports.winpropsPane;
 
 let _ = s => s;
 
@@ -25,10 +17,6 @@ const COLUMN_WARNING     = 5;
 const COLUMN_RESET       = 6;
 const COLUMN_TOOLTIP     = 7;
 
-const Settings = Extension.imports.settings;
-let getWorkspaceSettings = Settings.getWorkspaceSettings;
-let getNewWorkspaceSettings = Settings.getNewWorkspaceSettings;
-let getWorkspaceSettingsByUUID = Settings.getWorkspaceSettingsByUUID;
 
 function range(n) {
     let r = [];
@@ -245,6 +233,8 @@ var SettingsWidget = class SettingsWidget {
         const workspaceStack = this.builder.get_object('workspace_stack');
 
         this.workspaceNames = wmSettings.get_strv('workspace-names');
+
+        Settings.setSchemas();
         const nWorkspaces = Settings.workspaceList.get_strv('list').length;
 
         // Note: For some reason we can't set the visible child of the workspace
@@ -252,7 +242,7 @@ var SettingsWidget = class SettingsWidget {
         //       Ensure the initially selected workspace is added to the stack
         //       first as a workaround.
         let wsIndices = range(nWorkspaces);
-        let wsSettingsByIndex = wsIndices.map(i => getWorkspaceSettings(i)[1]);
+        let wsSettingsByIndex = wsIndices.map(i => Settings.getWorkspaceSettings(i)[1]);
         let wsIndicesSelectedFirst =
             swapArrayElements(wsIndices.slice(), 0, selectedWorkspace);
 
