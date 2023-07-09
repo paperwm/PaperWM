@@ -103,6 +103,9 @@ function enable() {
 
 function disable() {
     workspaceSettingsCache = {};
+    schemaSource = null;
+    workspaceList = null;
+    conflictSettings = null;
 }
 
 /**

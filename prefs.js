@@ -659,7 +659,7 @@ function parseAccelerator(accelerator) {
         accelerator = accelerator.replace('Above_Tab', 'grave');
     }
     let [ok, key, mods] = Settings.accelerator_parse(accelerator);
-    log(`PaperWM: parseAccelerator(${accelerator}) -> [${key}, ${mods}]`);
+    // log(`PaperWM: parseAccelerator(${accelerator}) -> [${key}, ${mods}]`);
 
     return [key, mods];
 }
@@ -816,7 +816,6 @@ function init() {
 }
 
 function fillPreferencesWindow(window) {
-    log(`fill ${window}`)
     let selectedWorkspace = null;
     try {
         const tempFile = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace');

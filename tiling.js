@@ -469,7 +469,7 @@ var Space = class Space extends Array {
             if (inGrab && column.includes(inGrab.window) && !allocator) {
                 [resultingWidth, relayout] =
                     this.layoutGrabColumn(column, x, y0, targetWidth, availableHeight, time,
-                                          selectedInColumn);
+                        selectedInColumn);
             } else {
                 allocator = allocator || allocateDefault;
                 let targetHeights = allocator(column, availableHeight, selectedInColumn);
@@ -483,7 +483,7 @@ var Space = class Space extends Array {
                     fixPointAttempCount++;
                     continue;
                 } else {
-                    log("Bail at fixpoint, max tries reached")
+                    log("Bail at fixpoint, max tries reached");
                 }
             }
 
@@ -509,10 +509,11 @@ var Space = class Space extends Array {
                 this.targetX = workArea.x;
             }
             Easer.addEase(this.cloneContainer,
-                             { x: this.targetX,
-                               time,
-                               onComplete: this.moveDone.bind(this)
-                             });
+                {
+                    x: this.targetX,
+                    time,
+                    onComplete: this.moveDone.bind(this)
+                });
         }
         if (animate) {
             ensureViewport(this.selectedWindow, this);
@@ -2725,7 +2726,7 @@ function enable(errorNotification) {
     function initWorkspaces() {
         try {
             spaces.init();
-        } catch(e) {
+        } catch (e) {
             log('#paperwm startup failed');
             log(`JS ERROR: ${e}\n${e.stack}`);
             errorNotification(
