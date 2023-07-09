@@ -88,7 +88,7 @@ function startup() {
 
     warnAboutGnomeShellVersionCompatibility();
 
-    if(initRun) {
+    if (initRun) {
         log(`#startup reinitialized against our will! Skip adding bindings again to not cause trouble.`);
         return;
     }
@@ -181,7 +181,6 @@ function hasUserConfigFile() {
 }
 
 function installConfig() {
-    log("#rc", "Installing config");
     const configDir = getConfigDir();
     configDir.make_directory_with_parents(null);
 

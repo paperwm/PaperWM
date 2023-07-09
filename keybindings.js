@@ -314,8 +314,8 @@ function registerAction(actionName, handler, options) {
  */
 function bindkey(keystr, actionName=null, handler=null, options={}) {
     Utils.assert(!options.settings,
-                 "Can only bind schemaless actions - change action's settings instead",
-                 actionName);
+        "Can only bind schemaless actions - change action's settings instead",
+        actionName);
 
     let action = actionName && actions.find(a => a.name === actionName);
     let keycombo = keystrToKeycombo(keystr);
@@ -326,7 +326,7 @@ function bindkey(keystr, actionName=null, handler=null, options={}) {
         let boundAction = keycomboMap[keycombo];
         if (boundAction && boundAction != action) {
             log("Rebinding", keystr, "to", actionName, "from", boundAction.name);
-            disableAction(boundAction)
+            disableAction(boundAction);
         }
 
         disableAction(action);
@@ -437,7 +437,7 @@ function handleAccelerator(display, actionId, deviceId, timestamp) {
     const action = actionIdMap[actionId];
     if (action) {
         Utils.debug("#keybindings", "Schemaless keybinding activated",
-                    actionId, action.name);
+            actionId, action.name);
         if (global.screen) {
             action.keyHandler(display, null, display.focus_window);
         } else {
