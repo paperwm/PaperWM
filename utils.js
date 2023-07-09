@@ -360,12 +360,12 @@ function printActorTree(node, fmt=mkFmt(), options={}, state=null) {
         if (node.get_children().length > 0) {
             if (node.x === 0 && node.y === 0) {
                 state.actorPrefix += (node.name ? node.name : "#") + "."
-                collapse = true
+                collapse = true;
             } else {
-                collapse = false
+                collapse = false;
             }
         } else {
-            collapse = false
+            collapse = false;
         }
     }
     if (!collapse) {
