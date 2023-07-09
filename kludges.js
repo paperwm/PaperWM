@@ -28,7 +28,6 @@ function overrideHotCorners() {
             continue;
 
         corner._toggleOverview = function() {};
-
         corner._pressureBarrier._trigger = function() {};
     }
 }
@@ -43,12 +42,6 @@ function getOriginalPosition() {
     }
     let [x, y] = [ space.monitor.x + space.targetX + c.targetX, space.monitor.y + c.y];
     return [x, y];
-}
-
-// WorkspaceAnimation.WorkspaceAnimationController.animateSwitch
-// Disable the workspace switching animation in Gnome 40+
-function animateSwitch(_from, _to, _direction, onComplete) {
-    onComplete();
 }
 
 function disableHotcorners() {
@@ -151,7 +144,13 @@ function setupOverrides() {
         switchData.container = new Clutter.Actor();
     });
 
-    registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch', animateSwitch);
+    registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch',
+        // WorkspaceAnimation.WorkspaceAnimationController.animateSwitch
+        // Disable the workspace switching animation in Gnome 40+
+        function (_from, _to, _direction, onComplete) {
+            onComplete();
+        });
+
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
     if (Workspace.WindowClone)
         registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
