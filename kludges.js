@@ -130,48 +130,11 @@ function enableOverride(obj, name) {
     }
 }
 
-function enableOverrides() {
-    for (let [obj, props] of savedProps) {
-        for (let name in props) {
-            enableOverride(obj, name);
-        }
-    }
-}
-
-function disableOverrides() {
-    for (let [obj, props] of savedProps) {
-        for (let name in props) {
-            obj[name] = props[name].saved;
-        }
-    }
-}
-
-function restoreMethod(obj, name) {
-    let method = getMethod(obj, name);
-    if (method)
-        obj[name] = method;
-}
-
 /**
- * Swipetrackers that should be disabled.  Locations of swipetrackers may
- * move from gnome version to gnome version.  Next to the swipe tracker locations
- * below are the gnome versions when they were first (or last) seen.
+ * Sets up PaperWM overrides (needed for operations).  These overrides are registered and restored
+ * on PaperWM disable.
  */
-var signals;
-var swipeTrackers;
-var settings;
-var wmSettings;
-function startup() {
-    settings = ExtensionUtils.getSettings();
-    wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
-
-    swipeTrackers = [
-        Main?.overview?._swipeTracker, // gnome 40+
-        Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker, // gnome 40+
-        Main?.wm?._workspaceAnimation?._swipeTracker, // gnome 40+
-        Main?.wm?._swipeTracker, // gnome 38 (and below)
-    ].filter(t => typeof t !== 'undefined');
-
+function setupOverrides() {
     // prepare for PaperWM workspace switching
     registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch', function (from, to, direction) {
         if (this._switchData)
@@ -271,28 +234,51 @@ function startup() {
         if (settings.get_boolean('disable-scratch-in-overview'))
             return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
     });
-
-    signals = new utils.Signals();
 }
 
-var actions;
-function enable() {
-    startup();
-    enableOverrides();
-
-    /*
-     * Some actions work rather poorly.
-     * In particular the 3-finger hold + tap can randomly activate a minimized
-     * window when tapping after a 3-finger swipe
-     */
-    actions = global.stage.get_actions().filter(a => {
-        switch (a.constructor) {
-        case WindowManager.AppSwitchAction:
-            return true;
+/**
+ * Enables any registered overrides.
+ */
+function enableOverrides() {
+    for (let [obj, props] of savedProps) {
+        for (let name in props) {
+            enableOverride(obj, name);
         }
-    });
-    actions.forEach(a => global.stage.remove_action(a));
+    }
+}
 
+function disableOverrides() {
+    for (let [obj, props] of savedProps) {
+        for (let name in props) {
+            obj[name] = props[name].saved;
+        }
+    }
+}
+
+function restoreMethod(obj, name) {
+    let method = getMethod(obj, name);
+    if (method)
+        obj[name] = method;
+}
+
+/**
+ * Swipetrackers that should be disabled.  Locations of swipetrackers may
+ * move from gnome version to gnome version.  Next to the swipe tracker locations
+ * below are the gnome versions when they were first (or last) seen.
+ */
+var swipeTrackers;
+function setupSwipeTrackers() {
+    swipeTrackers = [
+        Main?.overview?._swipeTracker, // gnome 40+
+        Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker, // gnome 40+
+        Main?.wm?._workspaceAnimation?._swipeTracker, // gnome 40+
+        Main?.wm?._swipeTracker, // gnome 38 (and below)
+    ].filter(t => typeof t !== 'undefined');
+}
+
+var signals;
+function setupSignals() {
+    signals = new utils.Signals();
     signals.connect(settings, 'changed::override-hot-corner', disableHotcorners);
     disableHotcorners();
 
@@ -318,6 +304,34 @@ function enable() {
     signals.connect(settings, 'changed::only-scratch-in-overview', scratchInOverview);
     signals.connect(settings, 'changed::disable-scratch-in-overview', scratchInOverview);
     scratchInOverview();
+}
+
+var actions;
+function setupActions() {
+    /*
+     * Some actions work rather poorly.
+     * In particular the 3-finger hold + tap can randomly activate a minimized
+     * window when tapping after a 3-finger swipe
+     */
+    actions = global.stage.get_actions().filter(a => {
+        switch (a.constructor) {
+        case WindowManager.AppSwitchAction:
+            return true;
+        }
+    });
+    actions.forEach(a => global.stage.remove_action(a));
+}
+
+var settings;
+var wmSettings;
+function enable() {
+    settings = ExtensionUtils.getSettings();
+    wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
+    setupSwipeTrackers();
+    setupOverrides();
+    enableOverrides();
+    setupSignals();
+    setupActions();
 }
 
 function disable() {
