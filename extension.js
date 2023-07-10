@@ -1,4 +1,4 @@
-var { St } = imports.gi;
+var {St} = imports.gi;
 var ExtensionUtils = imports.misc.extensionUtils;
 var Util = imports.misc.util;
 var MessageTray = imports.ui.messageTray;

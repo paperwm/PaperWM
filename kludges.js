@@ -22,16 +22,6 @@ var Scratch = Extension.imports.scratch;
 var Tiling = Extension.imports.tiling;
 var Clutter = imports.gi.Clutter;
 
-function overrideHotCorners() {
-    for (let corner of Main.layoutManager.hotCorners) {
-        if (!corner)
-            continue;
-
-        corner._toggleOverview = function() {};
-        corner._pressureBarrier._trigger = function() {};
-    }
-}
-
 // Workspace.WindowClone.getOriginalPosition
 // Get the correct positions of tiled windows when animating to/from the overview
 function getOriginalPosition() {
@@ -40,21 +30,8 @@ function getOriginalPosition() {
     if (!space || space.indexOf(this.metaWindow) === -1) {
         return [this._boundingBox.x, this._boundingBox.y];
     }
-    let [x, y] = [ space.monitor.x + space.targetX + c.targetX, space.monitor.y + c.y];
+    let [x, y] = [space.monitor.x + space.targetX + c.targetX, space.monitor.y + c.y];
     return [x, y];
-}
-
-function disableHotcorners() {
-    let override = settings.get_boolean("override-hot-corner");
-    if (override) {
-        overrideHotCorners();
-        signals.connect(Main.layoutManager,
-            'hot-corners-changed',
-            overrideHotCorners);
-    } else {
-        signals.disconnect(Main.layoutManager);
-        Main.layoutManager._updateHotCorners();
-    }
 }
 
 var savedProps;
@@ -261,6 +238,51 @@ function restoreMethod(obj, name) {
 }
 
 /**
+ * PaperWM disables certain behaviours while running.
+ * These behaviours are then restored on PaperWM disable().
+ * These generally require overriding behaviour and then
+ * a signal connection (to monitor changes during PaperWM runtime).
+ */
+function setupRuntimeDisables() {
+    /**
+     * PaperWM disables hotcorner (if set in PaperWM options) by
+     * disconnecting the hot corner logic.
+     */
+    let setupHotCornersDisable = () => {
+        if (settings.get_boolean("override-hot-corner")) {
+            let overrideHotCorners = () => {
+                for (let corner of Main.layoutManager.hotCorners) {
+                    if (!corner)
+                        continue;
+
+                    corner._toggleOverview = function () { };
+                    corner._pressureBarrier._trigger = function () { };
+                }
+            };
+            overrideHotCorners();
+            signals.connect(Main.layoutManager, 'hot-corners-changed',
+                overrideHotCorners);
+        } else {
+            signals.disconnect(Main.layoutManager);
+            Main.layoutManager._updateHotCorners();
+        }
+    };
+    setupHotCornersDisable();
+    signals.connect(settings, 'changed::override-hot-corner', setupHotCornersDisable);
+}
+
+/**
+ * Restores gnome hot corner(s) user preference.
+ */
+function restoreRuntimeDisables() {
+    /**
+     * Calling `Main.layoutManager._updateHotCorners();` causes
+     * gnome to restore the original user hot corner preference.
+     */
+    Main.layoutManager._updateHotCorners();
+}
+
+/**
  * Swipetrackers that should be disabled.  Locations of swipetrackers may
  * move from gnome version to gnome version.  Next to the swipe tracker locations
  * below are the gnome versions when they were first (or last) seen.
@@ -278,8 +300,6 @@ function setupSwipeTrackers() {
 var signals;
 function setupSignals() {
     signals = new utils.Signals();
-    signals.connect(settings, 'changed::override-hot-corner', disableHotcorners);
-    disableHotcorners();
 
     /**
      * Swipetrackers are reset by gnome during overview, once exits overview
@@ -330,6 +350,7 @@ function enable() {
     setupOverrides();
     enableOverrides();
     setupSignals();
+    setupRuntimeDisables();
     setupActions();
 }
 
@@ -339,7 +360,12 @@ function disable() {
 
     signals.destroy();
     signals = null;
-    Main.layoutManager._updateHotCorners();
+
+    /**
+     * Call restore runtime disables AFTER signal disconnect, otherwise
+     * change might execute a re-enable of behaviour.
+     */
+    restoreRuntimeDisables();
     swipeTrackers = null;
     settings = null;
     wmSettings = null;
@@ -518,7 +544,7 @@ function _checkWorkspaces() {
 
     this._checkWorkspacesId = 0;
     return false;
-};
+}
 
 function addWindow(window, metaWindow) {
     if (this._windows.has(window))
