@@ -142,7 +142,7 @@ var Space = class Space extends Array {
 
         let selection = new St.Widget({
             name: 'selection',
-            style_class: 'paperwm-selection tile-preview'
+            style_class: 'paperwm-selection tile-preview',
         });
         this.selection = selection;
 
@@ -1006,13 +1006,12 @@ var Space = class Space extends Array {
     }
 
     fixOverlays(metaWindow) {
-
         metaWindow = metaWindow || this.selectedWindow;
         let index = this.indexOf(metaWindow);
         let target = this.targetX;
         this.monitor.clickOverlay.reset();
         for (let overlay = this.monitor.clickOverlay.right,
-                 n=index+1 ; n < this.length; n++) {
+            n = index + 1; n < this.length; n++) {
             let metaWindow = this[n][0];
             let clone = metaWindow.clone;
             let x = clone.targetX + target;
@@ -1023,7 +1022,7 @@ var Space = class Space extends Array {
         }
 
         for (let overlay = this.monitor.clickOverlay.left,
-                 n=index-1; n >= 0; n--) {
+            n = index - 1; n >= 0; n--) {
             let metaWindow = this[n][0];
             let clone = metaWindow.clone;
             let x = clone.targetX + target;
@@ -1035,11 +1034,11 @@ var Space = class Space extends Array {
     }
 
     hideSelection() {
-        this.selection.style_class = 'background-clear';
+        this.selection.set_style_class_name('background-clear');
     }
 
     showSelection() {
-        this.selection.style_class = 'paperwm-selection tile-preview';
+        this.selection.set_style_class_name('paperwm-selection tile-preview');
     }
 
     setSelectionActive() {

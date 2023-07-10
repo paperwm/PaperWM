@@ -35,7 +35,7 @@ var colors = [
     '#ADA7C8', '#887FA3', '#625B81', '#494066',
     '#EFE0CD', '#E0C39E', '#B39169', '#826647',
     '#DF421E', '#990000', '#EED680', '#D1940C',
-    '#46A046', '#267726', '#ffffff', '#000000'
+    '#46A046', '#267726', '#ffffff', '#000000',
 ];
 
 function createButton(icon_name, accessible_name) {
@@ -257,13 +257,13 @@ Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
             else if (mode === Tiling.FocusModes.CENTER) {
                 this.gicon = this.gIconCenter;
             }
-            this._updateTooltipText()
+            this._updateTooltipText();
             return this;
         }
 
         /**
          * Sets visibility of icon.
-         * @param {boolean} visible 
+         * @param {boolean} visible
          */
         setVisible(visible = true) {
             this.visible = visible;
@@ -613,8 +613,8 @@ function enable () {
     // on allocation propagate position information
     signals.connectOneShot(menu.label, 'notify::allocation', () => {
         updateMonitor();
-    })
-    
+    });
+
     Tiling.spaces.forEach(s => {
         s.workspaceLabel.clutter_text.set_font_description(menu.label.clutter_text.font_description);
     });
@@ -676,7 +676,8 @@ function disable() {
     menu.destroy();
     menu = null;
     Main.panel.statusArea.activities.show();
-    Main.panel.set_style("");
+    // remove PaperWM style classes names for Main.panel
+    removeStyles();
 
     screenSignals.forEach(id => workspaceManager.disconnect(id));
     screenSignals = [];
@@ -688,14 +689,22 @@ function setClearStyle() {
     if (prefs.disable_topbar_styling) {
         return;
     }
-    Main.panel.style_class = 'background-clear';
+    removeStyles();
+    Main.panel.add_style_class_name('background-clear');
 }
 
 function setTransparentStyle() {
     if (prefs.disable_topbar_styling) {
         return;
     }
-    Main.panel.style_class = 'topbar-transparent';
+    removeStyles();
+    Main.panel.add_style_class_name('topbar-transparent');
+}
+
+function removeStyles() {
+    ['background-clear', 'topbar-transparent'].forEach(s => {
+        Main.panel.remove_style_class_name(s);
+    });
 }
 
 /**
@@ -709,7 +718,7 @@ function fixTopBar() {
     let space = Tiling.spaces?.monitors.get(panelMonitor) ?? false;
     if (!space)
         return;
-    
+
     let normal = !Main.overview.visible && !Tiling.inPreview;
     // selected is current (tiled) selected window (can be different to focused window)
     let selected = space.selectedWindow;
@@ -717,7 +726,7 @@ function fixTopBar() {
     let focusIsFloatOrScratch = focused && (space.isFloating(focused) || Scratch.isScratchWindow(focused));
     // check if is currently fullscreened (check focused-floating, focused-scratch, and selected/tiled window)
     let fullscreen = focusIsFloatOrScratch ? focused.fullscreen : selected && selected.fullscreen;
-    
+
     if (normal && !space.showTopBar) {
         panelBox.scale_y = 0; // Update the workarea to support hide top bar
         panelBox.hide();
@@ -749,14 +758,14 @@ function updateWorkspaceIndicator(index) {
     let spaces = Tiling.spaces;
     let space = spaces && spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
     let onMonitor = space && space.monitor === panelMonitor;
-    let nav = Navigator.navigator
+    let nav = Navigator.navigator;
     if (onMonitor || (Tiling.inPreview && nav && nav.from.monitor === panelMonitor)) {
         setWorkspaceName(space.name);
 
         // also update focus mode
         focusButton.setFocusMode(space.focusMode);
     }
-};
+}
 
 function setWorkspaceName (name) {
     menu && menu.setName(name);

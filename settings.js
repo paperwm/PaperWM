@@ -12,9 +12,9 @@ var Mainloop = imports.mainloop;
 var settings = ExtensionUtils.getSettings();
 var workspaceSettingsCache = {};
 
-var WORKSPACE_KEY = 'org.gnome.Shell.Extensions.PaperWM.Workspace';
-var WORKSPACE_LIST_KEY = 'org.gnome.Shell.Extensions.PaperWM.WorkspaceList';
-var KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
+var WORKSPACE_KEY = 'org.gnome.shell.extensions.paperwm.workspace';
+var WORKSPACE_LIST_KEY = 'org.gnome.shell.extensions.paperwm.workspacelist';
+var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
 // This is the value mutter uses for the keyvalue of above_tab
 var META_KEY_ABOVE_TAB = 0x2f7259c9;
@@ -23,10 +23,10 @@ var prefs = {};
 ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
  'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
  'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
- 'cycle-width-steps', 'cycle-height-steps', 'minimap-scale', 'winprops', 
- 'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon', 
+ 'cycle-width-steps', 'cycle-height-steps', 'minimap-scale', 'winprops',
+ 'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon',
  'disable-topbar-styling', 'default-focus-mode']
-    .forEach((k) => setState(null, k));
+    .forEach(k => setState(null, k));
 
 prefs.__defineGetter__("minimum_margin", function() { return Math.min(15, this.horizontal_margin) });
 
@@ -212,7 +212,7 @@ function printWorkspaceSettings() {
     let settings = list.map(getWorkspaceSettingsByUUID);
     let zipped = Extension.imports.utils.zip(list, settings);
     const key = s => s[1].get_int('index');
-    zipped.sort((a,b) => key(a) - key(b));
+    zipped.sort((a, b) => key(a) - key(b));
     for (let [uuid, s] of zipped) {
         log('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
     }
@@ -251,7 +251,7 @@ function keystrToKeycombo(keystr) {
         keystr = keystr.replace('Above_Tab', 'a');
         aboveTab = true;
     }
-    
+
     let [ok, key, mask] = accelerator_parse(keystr);
 
     if (aboveTab)
