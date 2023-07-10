@@ -21,11 +21,11 @@ var App = Extension.imports.app;
 
 var display = global.display;
 
-var KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
+var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
 
 function registerPaperAction(actionName, handler, flags) {
-    let settings = ExtensionUtils.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    let settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.paperwm.keybindings');
     registerAction(
         actionName,
         handler,
@@ -33,7 +33,7 @@ function registerPaperAction(actionName, handler, flags) {
 }
 
 function registerNavigatorAction(name, handler) {
-    let settings = ExtensionUtils.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    let settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.paperwm.keybindings');
     registerAction(
         name,
         handler,
@@ -41,7 +41,7 @@ function registerNavigatorAction(name, handler) {
 }
 
 function registerMinimapAction(name, handler) {
-    let settings = ExtensionUtils.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    let settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.paperwm.keybindings');
     registerAction(
         name,
         handler,
@@ -68,7 +68,7 @@ function startup() {
     let dynamic_function_ref = Utils.dynamic_function_ref;
     let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
 
-    let settings = ExtensionUtils.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
+    let settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.paperwm.keybindings');
     registerAction('live-alt-tab',
         liveAltTab, { settings });
     registerAction('live-alt-tab-backward',

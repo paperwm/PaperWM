@@ -13,7 +13,7 @@ const Settings = Extension.imports.settings;
 // TODO gettext translations
 const _ = s => s;
 
-const KEYBINDINGS_KEY = 'org.gnome.Shell.Extensions.PaperWM.Keybindings';
+const KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
 const sections = {
     windows: 'Windows',
