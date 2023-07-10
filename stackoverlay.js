@@ -252,11 +252,16 @@ var StackOverlay = class StackOverlay {
             delete this._previewId;
             this.removePreview();
             this.showPreview();
-            return false;
+            return false; // on return false destroys timeout
         });
 
         // uncomment to remove the preview after a timeout
-        //this._removeId = Mainloop.timeout_add_seconds(2, this.removePreview.bind(this));
+        /*
+        this._removeId = Mainloop.timeout_add_seconds(2, () => {
+            this.removePreview();
+            return false; // on return false destroys timeout
+        });
+        */
     }
 
     removePreview() {
@@ -272,15 +277,6 @@ var StackOverlay = class StackOverlay {
         if (this.clone) {
             this.clone.destroy();
             this.clone = null;
-        }
-        else {
-            return;
-        }
-
-        if (this.target) {
-            // Show the WindowActors again and re-apply clipping
-            let space = Tiling.spaces.spaceOfWindow(this.target);
-            space.moveDone();
         }
     }
 
@@ -334,7 +330,6 @@ var StackOverlay = class StackOverlay {
             this.barrier = null;
         }
         this._removeBarrierTimeoutId = 0;
-        return false;
     }
 
     updateBarrier(force) {
@@ -353,7 +348,10 @@ var StackOverlay = class StackOverlay {
             if (this._removeBarrierTimeoutId > 0) {
                 Mainloop.source_remove(this._removeBarrierTimeoutId);
             }
-            this._removeBarrierTimeoutId = Mainloop.timeout_add(100, this.removeBarrier.bind(this));
+            this._removeBarrierTimeoutId = Mainloop.timeout_add(100, () => {
+                this.removeBarrier();
+                return false;
+            });
             overlay.show();
         });
 
@@ -449,7 +447,6 @@ var StackOverlay = class StackOverlay {
     }
 
     destroy() {
-        log('destoyed StackOverlay');
         this.signals.destroy();
         this.removePreview();
         this.removeBarrier();
