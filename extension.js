@@ -77,28 +77,10 @@ var SESSIONID = ""+(new Date().getTime());
  * The extension sometimes go through multiple init -> enable -> disable
  * cycles. So we need to keep track of whether we're initialized..
  */
-var initRun = false;
 var enabled = false;
 let lastDisabledTime = 0; // init (epoch ms)
 
 var Extension, convenience;
-function startup() {
-    SESSIONID += "#";
-    Extension = imports.misc.extensionUtils.getCurrentExtension();
-
-    warnAboutGnomeShellVersionCompatibility();
-
-    if (initRun) {
-        log(`#startup reinitialized against our will! Skip adding bindings again to not cause trouble.`);
-        return;
-    }
-
-    initUserConfig();
-
-    if (run('init'))
-        initRun = true;
-}
-
 function enable() {
     log(`#paperwm enable ${SESSIONID}`);
     if (enabled) {
@@ -106,7 +88,12 @@ function enable() {
         return;
     }
 
-    startup();
+    SESSIONID += "#";
+    Extension = imports.misc.extensionUtils.getCurrentExtension();
+    warnAboutGnomeShellVersionCompatibility();
+
+    enableUserConfig();
+
     if (run('enable')) {
         enabled = true;
     }
@@ -133,10 +120,10 @@ function disable() {
 
     if (run('disable')) {
         enabled = false;
-        initRun = false;
         lastDisabledTime = Date.now();
     }
 
+    disableUserConfig();
     Extension = null;
     convenience = null;
 }
@@ -194,17 +181,11 @@ function installConfig() {
     // Copy the user.js template to the config directory
     const user = Extension.dir.get_child("examples/user.js");
     user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
-
-    const settings = ExtensionUtils.getSettings();
-    settings.set_boolean("has-installed-config-template", true);
 }
 
-function initUserConfig() {
-    const paperSettings = ExtensionUtils.getSettings();
-
-    if (!paperSettings.get_boolean("has-installed-config-template") &&
-        !hasUserConfigFile())
-    {
+var userStylesheet;
+function enableUserConfig() {
+    if (!hasUserConfigFile()) {
         try {
             installConfig();
 
@@ -225,11 +206,16 @@ function initUserConfig() {
         Extension.imports.searchPath.push(getConfigDir().get_path());
     }
 
-    let userStylesheet = getConfigDir().get_child("user.css");
+    userStylesheet = getConfigDir().get_child("user.css");
     if (userStylesheet.query_exists(null)) {
         let themeContext = St.ThemeContext.get_for_stage(global.stage);
         themeContext.get_theme().load_stylesheet(userStylesheet);
     }
+}
+
+function disableUserConfig() {
+    let themeContext = St.ThemeContext.get_for_stage(global.stage);
+    themeContext.get_theme().unload_stylesheet(userStylesheet);
 }
 
 /**
