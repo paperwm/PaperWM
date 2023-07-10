@@ -4,10 +4,7 @@ var ExtensionModule = Extension.imports.extension;
 
 var Clutter = imports.gi.Clutter;
 var Seat = Clutter.get_default_backend().get_default_seat();
-var Gtk = imports.gi.Gtk;
-var Gio = imports.gi.Gio;
 var Meta = imports.gi.Meta;
-var GLib = imports.gi.GLib;
 
 var Utils = Extension.imports.utils;
 var Main = imports.ui.main;
@@ -69,16 +66,14 @@ function startup() {
 
     /* Initialize keybindings */
     let dynamic_function_ref = Utils.dynamic_function_ref;
-
     let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
-    let previewNavigate = dynamic_function_ref("preview_navigate", Navigator);
 
     let settings = ExtensionUtils.getSettings('org.gnome.Shell.Extensions.PaperWM.Keybindings');
     registerAction('live-alt-tab',
-                   liveAltTab, {settings});
+        liveAltTab, { settings });
     registerAction('live-alt-tab-backward',
-                   liveAltTab,
-                   {settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED});
+        liveAltTab,
+        {settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED});
 
     registerAction('switch-monitor-right', () => {
         Tiling.spaces.switchMonitor(Meta.DisplayDirection.RIGHT, false);
@@ -132,103 +127,102 @@ function startup() {
     registerMinimapAction("switch-down", (mw, space) => space.switchDown());
 
     registerMinimapAction("move-left",
-                        (mw, space) => space.swap(Meta.MotionDirection.LEFT));
+        (mw, space) => space.swap(Meta.MotionDirection.LEFT));
     registerMinimapAction("move-right",
-                        (mw, space) => space.swap(Meta.MotionDirection.RIGHT));
+        (mw, space) => space.swap(Meta.MotionDirection.RIGHT));
     registerMinimapAction("move-up",
-                        (mw, space) => space.swap(Meta.MotionDirection.UP));
+        (mw, space) => space.swap(Meta.MotionDirection.UP));
     registerMinimapAction("move-down",
-                        (mw, space) => space.swap(Meta.MotionDirection.DOWN));
+        (mw, space) => space.swap(Meta.MotionDirection.DOWN));
 
     registerPaperAction("toggle-scratch-window",
-                        dynamic_function_ref("toggleScratchWindow",
-                                             Scratch));
+        dynamic_function_ref("toggleScratchWindow",
+            Scratch));
 
     registerPaperAction("toggle-scratch-layer",
-                        dynamic_function_ref("toggleScratch",
-                                             Scratch));
+        dynamic_function_ref("toggleScratch",
+            Scratch));
 
     registerPaperAction("toggle-scratch",
-                        dynamic_function_ref("toggle",
-                                             Scratch),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref("toggle",
+            Scratch),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("switch-focus-mode",
-                        dynamic_function_ref("switchToNextFocusMode",
-                                             Tiling));
+        dynamic_function_ref("switchToNextFocusMode",
+            Tiling));
 
     registerPaperAction("develop-set-globals",
-                        dynamic_function_ref("setDevGlobals",
-                                             Utils));
+        dynamic_function_ref("setDevGlobals",
+            Utils));
 
     registerPaperAction("resize-h-inc",
-                        dynamic_function_ref("resizeHInc",
-                                       Tiling),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref("resizeHInc",
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-h-dec",
-                        dynamic_function_ref("resizeHDec",
-                                       Tiling),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref("resizeHDec",
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-w-inc",
-                        dynamic_function_ref("resizeWInc",
-                                       Tiling),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref("resizeWInc",
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-w-dec",
-                        dynamic_function_ref("resizeWDec",
-                                       Tiling),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref("resizeWDec",
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-width",
-                        dynamic_function_ref("cycleWindowWidth",
-                                       Tiling),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref("cycleWindowWidth",
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-height",
-                        dynamic_function_ref("cycleWindowHeight",
-                                             Tiling),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref("cycleWindowHeight",
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("center-horizontally",
-                        dynamic_function_ref("centerWindowHorizontally",
-                                       Tiling),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref("centerWindowHorizontally",
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('new-window',
-                        dynamic_function_ref('duplicateWindow',
-                                       App),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref('duplicateWindow',
+            App),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('close-window',
-                        (metaWindow) =>
-                        metaWindow.delete(global.get_current_time()),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        (metaWindow) =>
+            metaWindow.delete(global.get_current_time()),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('slurp-in',
-                        dynamic_function_ref('slurp',
-                                             Tiling),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref('slurp',
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('barf-out',
-                        dynamic_function_ref('barf',
-                                             Tiling),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref('barf',
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('toggle-maximize-width',
-                        dynamic_function_ref("toggleMaximizeHorizontally",
-                                             Tiling),
-                        Meta.KeyBindingFlags.PER_WINDOW);
+        dynamic_function_ref("toggleMaximizeHorizontally",
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('paper-toggle-fullscreen',
-                            (metaWindow) => {
-                                if (metaWindow.fullscreen)
-                                    metaWindow.unmake_fullscreen();
-                                else
-                                    metaWindow.make_fullscreen();
-                            }, Meta.KeyBindingFlags.PER_WINDOW);
-
+        (metaWindow) => {
+            if (metaWindow.fullscreen)
+                metaWindow.unmake_fullscreen();
+            else
+                metaWindow.make_fullscreen();
+        }, Meta.KeyBindingFlags.PER_WINDOW);
 }
 
 function idOf(mutterName) {
@@ -373,7 +367,7 @@ function unbindkey(actionIdOrKeystr) {
     let actionId;
     if (typeof(actionIdOrKeystr) === "string") {
         const action = keycomboMap[keystrToKeycombo(actionIdOrKeystr)];
-        actionId = action && action.id
+        actionId = action && action.id;
     } else {
         actionId = actionIdOrKeystr;
     }
@@ -390,8 +384,7 @@ function devirtualizeMask(gdkVirtualMask) {
 }
 
 function rawMaskOfKeystr(keystr) {
-    let [dontcare, keycodes, mask] =
-        Gtk.accelerator_parse_with_keycode(keystr);
+    let [dontcare, keycodes, mask] = Settings.accelerator_parse(keystr);
     return devirtualizeMask(mask);
 }
 
@@ -424,9 +417,8 @@ function getActionIdByActionName(actionName) {
 }
 
 function getBoundActionId(keystr) {
-    let [dontcare, keycodes, mask] =
-        Gtk.accelerator_parse_with_keycode(keystr);
-    if(keycodes.length > 1) {
+    let [dontcare, keycodes, mask] = Settings.accelerator_parse(keystr);
+    if (keycodes.length > 1) {
         throw new Error("Multiple keycodes " + keycodes + " " + keystr);
     }
     const rawMask = devirtualizeMask(mask);
@@ -486,7 +478,6 @@ function enableAction(action) {
         } else {
             Utils.warn("Could not enable action", action.name);
         }
-
     } else {
         if (keycomboMap[action.keycombo]) {
             Utils.warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name);
@@ -576,8 +567,7 @@ function resetConflicts() {
         // null. However gnome-shell often sets a custom handler of its own,
         // which means we most often can't rely on that
         if (name.startsWith('switch-to-workspace-') ||
-            name.startsWith('move-to-workspace-')
-           ) {
+            name.startsWith('move-to-workspace-')) {
             Main.wm.setCustomKeybindingHandler(
                 name,
                 Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
@@ -691,11 +681,11 @@ function resetConflicts() {
 function enable() {
     startup();
     let schemas = [...Settings.conflictSettings,
-    ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
+        ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
     schemas.forEach(schema => {
         signals.connect(schema, 'changed', resolveConflicts);
     });
-    
+
     signals.connect(
         display,
         'accelerator-activated',

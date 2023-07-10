@@ -212,7 +212,7 @@ function printWorkspaceSettings() {
     let settings = list.map(getWorkspaceSettingsByUUID);
     let zipped = Extension.imports.utils.zip(list, settings);
     const key = s => s[1].get_int('index');
-    zipped.sort((a,b) => key(a) - key(b));
+    zipped.sort((a, b) => key(a) - key(b));
     for (let [uuid, s] of zipped) {
         log('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
     }
@@ -251,7 +251,7 @@ function keystrToKeycombo(keystr) {
         keystr = keystr.replace('Above_Tab', 'a');
         aboveTab = true;
     }
-    
+
     let [ok, key, mask] = accelerator_parse(keystr);
 
     if (aboveTab)
