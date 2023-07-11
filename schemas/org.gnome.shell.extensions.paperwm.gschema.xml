@@ -269,6 +269,22 @@
 
   <schema id="org.gnome.shell.extensions.paperwm" path="/org/gnome/shell/extensions/paperwm/">
 
+    <!-- backup settings (used for restore) -->
+    <key type="s" name="restore-attach-modal-dialogs">
+        <default>''</default>
+        <summary>Original setting value (used for restore)</summary>
+    </key>
+
+    <key type="s" name="restore-workspaces-only-on-primary">
+        <default>''</default>
+        <summary>Original setting value (used for restore)</summary>
+    </key>
+
+    <key type="s" name="restore-edge-tiling">
+        <default>''</default>
+        <summary>Original setting value (used for restore)</summary>
+    </key>
+
     <!-- Settings -->
     <key type="i" name="horizontal-margin">
       <default>20</default>
@@ -293,11 +309,6 @@
     <key type="d" name="minimap-scale">
       <default>0.15</default>
       <summary>Scale of mini mini-map tiles compared to their actual window size.</summary>
-    </key>
-
-    <key type="b" name="override-hot-corner">
-        <default>true</default>
-        <summary>Disable the upper left hot corner</summary>
     </key>
 
     <key type="b" name="only-scratch-in-overview">

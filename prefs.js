@@ -207,12 +207,6 @@ var SettingsWidget = class SettingsWidget {
             this._settings.set_boolean('show-window-position-bar', state);
         });
 
-        let disableCorner = this.builder.get_object('override-hot-corner');
-        disableCorner.active = this._settings.get_boolean('override-hot-corner');
-        disableCorner.connect('state-set', (obj, state) => {
-            this._settings.set_boolean('override-hot-corner', state);
-        });
-
         // Workspaces
 
         const defaultBackgroundSwitch = this.builder.get_object('use-default-background');
