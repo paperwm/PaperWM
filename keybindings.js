@@ -56,7 +56,7 @@ function registerMinimapAction(name, handler) {
 
 
 var signals, actions, nameMap, actionIdMap, keycomboMap, overrides, conflictSettings;
-function startup() {
+function setupActions() {
     signals = new Utils.Signals();
     actions = [];
     nameMap = {};     // mutter keybinding action name -> action
@@ -256,7 +256,7 @@ function impliedOptions(options) {
     if (options.opensNavigator)
         options.activeInNavigator = true;
 
-    return options
+    return options;
 }
 
 /**
@@ -679,7 +679,7 @@ function resetConflicts() {
 }
 
 function enable() {
-    startup();
+    setupActions();
     let schemas = [...Settings.conflictSettings,
         ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
     schemas.forEach(schema => {
