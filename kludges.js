@@ -230,12 +230,6 @@ function disableOverrides() {
     }
 }
 
-function restoreMethod(obj, name) {
-    let method = getMethod(obj, name);
-    if (method)
-        obj[name] = method;
-}
-
 /**
  * Saves the original setting value (boolean) to restore
  * on disable.
@@ -260,44 +254,13 @@ function setupRuntimeDisables() {
     saveRuntimeDisable(mutterSettings, 'attach-modal-dialogs', false);
     saveRuntimeDisable(mutterSettings, 'workspaces-only-on-primary', false);
     saveRuntimeDisable(mutterSettings, 'edge-tiling', false);
-
-    /**
-     * PaperWM disables hotcorner (if set in PaperWM options) by
-     * disconnecting the hot corner logic.
-     */
-    let setupHotCornersDisable = () => {
-        if (settings.get_boolean("override-hot-corner")) {
-            let overrideHotCorners = () => {
-                for (let corner of Main.layoutManager.hotCorners) {
-                    if (!corner)
-                        continue;
-
-                    corner._toggleOverview = function () { };
-                    corner._pressureBarrier._trigger = function () { };
-                }
-            };
-            overrideHotCorners();
-            signals.connect(Main.layoutManager, 'hot-corners-changed',
-                overrideHotCorners);
-        } else {
-            signals.disconnect(Main.layoutManager);
-            Main.layoutManager._updateHotCorners();
-        }
-    };
-    setupHotCornersDisable();
-    signals.connect(settings, 'changed::override-hot-corner', setupHotCornersDisable);
 }
 
 /**
- * Restores gnome hot corner(s) user preference.
+ * Restores the runtime settings that were disabled when
+ * PaperWM was enabled.
  */
 function restoreRuntimeDisables() {
-    /**
-     * Calling `Main.layoutManager._updateHotCorners();` causes
-     * gnome to restore the original user hot corner preference.
-     */
-    Main.layoutManager._updateHotCorners();
-
     runtimeDisables.forEach(d => {
         try {
             d();

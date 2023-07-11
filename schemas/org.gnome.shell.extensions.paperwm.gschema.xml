@@ -295,11 +295,6 @@
       <summary>Scale of mini mini-map tiles compared to their actual window size.</summary>
     </key>
 
-    <key type="b" name="override-hot-corner">
-        <default>true</default>
-        <summary>Disable the upper left hot corner</summary>
-    </key>
-
     <key type="b" name="only-scratch-in-overview">
         <default>false</default>
         <summary>Limit window previews in the overview to scratch windows</summary>
