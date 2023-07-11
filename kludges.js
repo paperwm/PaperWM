@@ -135,7 +135,6 @@ function setupOverrides() {
     // Workspace.Workspace._realRecalculateWindowPositions
     // Sort tiled windows in the correct order
     registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions',
-
         function (flags) {
             if (this._repositionWindowsId > 0) {
                 Mainloop.source_remove(this._repositionWindowsId);
@@ -238,12 +237,30 @@ function restoreMethod(obj, name) {
 }
 
 /**
+ * Saves the original setting value (boolean) to restore
+ * on disable.
+ * @param key
+ */
+let runtimeDisables = [];
+function saveRuntimeDisable(settings, key, disableValue) {
+    try {
+        let origValue = settings.get_boolean(key);
+        settings.set_boolean(key, disableValue);
+        runtimeDisables.push(() => settings.set_boolean(key, origValue));
+    } catch (e) {
+        log(e);
+    }
+}
+
+/**
  * PaperWM disables certain behaviours while running.
  * These behaviours are then restored on PaperWM disable().
- * These generally require overriding behaviour and then
- * a signal connection (to monitor changes during PaperWM runtime).
  */
 function setupRuntimeDisables() {
+    saveRuntimeDisable(mutterSettings, 'attach-modal-dialogs', false);
+    saveRuntimeDisable(mutterSettings, 'workspaces-only-on-primary', false);
+    saveRuntimeDisable(mutterSettings, 'edge-tiling', false);
+
     /**
      * PaperWM disables hotcorner (if set in PaperWM options) by
      * disconnecting the hot corner logic.
@@ -280,6 +297,14 @@ function restoreRuntimeDisables() {
      * gnome to restore the original user hot corner preference.
      */
     Main.layoutManager._updateHotCorners();
+
+    runtimeDisables.forEach(d => {
+        try {
+            d();
+        } catch (e) {
+            log(e);
+        }
+    });
 }
 
 /**
@@ -341,11 +366,11 @@ function setupActions() {
     actions.forEach(a => global.stage.remove_action(a));
 }
 
-var settings;
-var wmSettings;
+var settings, wmSettings, mutterSettings;
 function enable() {
     settings = ExtensionUtils.getSettings();
     wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
+    mutterSettings = new Gio.Settings({schema_id: 'org.gnome.mutter'});
     setupSwipeTrackers();
     setupOverrides();
     enableOverrides();
@@ -369,6 +394,7 @@ function disable() {
     swipeTrackers = null;
     settings = null;
     wmSettings = null;
+    mutterSettings = null;
     actions = null;
 }
 
