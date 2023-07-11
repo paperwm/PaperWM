@@ -28,13 +28,11 @@ Clone the repo and check out the branch supporting the Gnome Shell version you'r
 
 Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/release/install.sh) script
 from the repository. The installer will create a link to the repo in
-`$XDG_DATA_HOME/gnome-shell/extensions/`. It will then ask if you want to apply
-the recommended settings (see [Recommended
-Settings](#recommended-gnome-shell-settings)) and lastly it will ask to enable PaperWM.
+`$XDG_DATA_HOME/gnome-shell/extensions/`. It will then ask if you want to enable PaperWM.
 ```bash
 ./install.sh # install, load and enable paperwm
 ```
-> #### ➡️ You will likely need to restart Gnome shell after installing PaperWM, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only).
+> #### ➡️ You may need to restart Gnome shell after installing PaperWM, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only).
 >
 > After logging back in, you will can then enable PaperWM via the `Extensions` application, or by running the following command from the command-line:
 >
@@ -51,7 +49,7 @@ Users are enouraged to submit [issues](https://github.com/paperwm/PaperWM/issues
 
 > #### ➡️ Please ensure pull requests are based off, and submitted to, [develop](https://github.com/paperwm/PaperWM/tree/develop) branch.
 > 
-> Pull requests submitted to the `release` branch will not be accepted (but don't worry, if you accidentally submit a PR to the `release` branch we won't be mad, and will just remind you and ask you to change it).
+> Pull requests submitted to the `release` branch will not be accepted (but don't worry, if you accidentally submit a PR to the `release` branch we won't be mad, and will just ask you to change it).
 
 ## Usage ##
 
@@ -438,9 +436,7 @@ There's a few Gnome Shell settings which works poorly with PaperWM. Namely
 - `edge-tiling`: We don't support the native half tiled windows
 - `attach-modal-dialogs`: Attached modal dialogs can cause visual glitching
 
-To use the recommended settings run
-[`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/release/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
-
+PaperWM manages these settings (disables them) during runtime.  It will then restore these settings to their prior values (before PaperWM was enabled).
 
 ## Recommended extensions ##
 
