@@ -269,6 +269,22 @@
 
   <schema id="org.gnome.shell.extensions.paperwm" path="/org/gnome/shell/extensions/paperwm/">
 
+    <!-- backup settings (used for restore) -->
+    <key type="s" name="restore-attach-modal-dialogs">
+        <default>''</default>
+        <summary>Original setting value (used for restore)</summary>
+    </key>
+
+    <key type="s" name="restore-workspaces-only-on-primary">
+        <default>''</default>
+        <summary>Original setting value (used for restore)</summary>
+    </key>
+
+    <key type="s" name="restore-edge-tiling">
+        <default>''</default>
+        <summary>Original setting value (used for restore)</summary>
+    </key>
+
     <!-- Settings -->
     <key type="i" name="horizontal-margin">
       <default>20</default>

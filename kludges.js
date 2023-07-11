@@ -231,24 +231,56 @@ function disableOverrides() {
 }
 
 /**
- * Saves the original setting value (boolean) to restore
- * on disable.
+ * Saves the original setting value (boolean) to restore on disable.
+ * We save a backup of the user's setting to PaperWM settings (schema)
+ * for safety (in case gnome terminates etc.).  This ensures original
+ * user settings will be restored on next PaperWM disable.
  * @param key
  */
 let runtimeDisables = [];
-function saveRuntimeDisable(settings, key, disableValue) {
+function saveRuntimeDisable(schemaSettings, key, disableValue) {
     try {
-        let origValue = settings.get_boolean(key);
-        settings.set_boolean(key, disableValue);
-        runtimeDisables.push(() => settings.set_boolean(key, origValue));
+        let origValue = schemaSettings.get_boolean(key);
+        schemaSettings.set_boolean(key, disableValue);
+
+        // save a backup copy to PaperWM settings (for restore)
+        let pkey = 'restore-' + key;
+
+        /**
+         * Now if paperwm settings has restore values, it means
+         * that they weren't previously restore properly (since on
+         * successful restore we clear the values).
+         */
+        if (settings.get_string(pkey) === '') {
+            settings.set_string(pkey, origValue.toString());
+        }
+
+        // we want to restore from PaperWM back settings (safer)
+        let restore = () => {
+            let value = settings.get_string(pkey);
+            // if value is empty, do nothing
+            if (value === '') {
+                return;
+            }
+
+            let bvalue = value === 'true';
+            schemaSettings.set_boolean(key, bvalue);
+
+            // after restore, empty papermw saved value
+            settings.set_string(pkey, '');
+        };
+
+        runtimeDisables.push(restore);
     } catch (e) {
         log(e);
     }
 }
 
 /**
- * PaperWM disables certain behaviours while running.
- * These behaviours are then restored on PaperWM disable().
+ * PaperWM disables certain behaviours during runtime.
+ * The user original settings are saved to PaperWM's settings (schema) for restoring
+ * purposes (we save to PaperWM's setting just in gnome terminates before PaperWM can
+ * restore the original user settings).  These settings are then restored on disable().
  */
 function setupRuntimeDisables() {
     saveRuntimeDisable(mutterSettings, 'attach-modal-dialogs', false);
@@ -261,9 +293,9 @@ function setupRuntimeDisables() {
  * PaperWM was enabled.
  */
 function restoreRuntimeDisables() {
-    runtimeDisables.forEach(d => {
+    runtimeDisables.forEach(restore => {
         try {
-            d();
+            restore();
         } catch (e) {
             log(e);
         }
@@ -337,23 +369,19 @@ function enable() {
     setupSwipeTrackers();
     setupOverrides();
     enableOverrides();
-    setupSignals();
     setupRuntimeDisables();
+    setupSignals();
     setupActions();
 }
 
 function disable() {
     disableOverrides();
+    restoreRuntimeDisables();
     actions.forEach(a => global.stage.add_action(a));
 
     signals.destroy();
     signals = null;
 
-    /**
-     * Call restore runtime disables AFTER signal disconnect, otherwise
-     * change might execute a re-enable of behaviour.
-     */
-    restoreRuntimeDisables();
     swipeTrackers = null;
     settings = null;
     wmSettings = null;
