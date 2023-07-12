@@ -506,7 +506,7 @@ var WorkspaceMenu = Utils.registerClass(
                     this.selected = spaces.selectedSpace;
                     Easer.removeEase(this.selected.actor);
                     Easer.addEase(this.selected.actor,
-                        { scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode });
+                        {scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode});
                 }
 
                 this.selected.actor.y -= dy;
@@ -595,7 +595,6 @@ var menu;
 var focusButton;
 var orginalActivitiesText;
 var screenSignals, signals;
-var panelBoxShowId, panelBoxHideId;
 function enable () {
     let label = Main.panel.statusArea.activities.first_child;
     orginalActivitiesText = label.text;
