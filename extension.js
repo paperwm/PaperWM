@@ -1,5 +1,6 @@
-var {St} = imports.gi;
 var ExtensionUtils = imports.misc.extensionUtils;
+var Extension = ExtensionUtils.getCurrentExtension();
+var {St} = imports.gi;
 var Util = imports.misc.util;
 var MessageTray = imports.ui.messageTray;
 
@@ -80,7 +81,16 @@ var SESSIONID = ""+(new Date().getTime());
 var enabled = false;
 let lastDisabledTime = 0; // init (epoch ms)
 
-var Extension, convenience;
+/**
+ * Runs once on extension init().
+ * Not run on PaperWM modules, but if a user as a `user.js` module defined
+ * in `~/.config/paperwm/` then this will run it's `user.js` init().
+ */
+function init() {
+    initUserConfig();
+    run('init');
+}
+
 function enable() {
     log(`#paperwm enable ${SESSIONID}`);
     if (enabled) {
@@ -92,7 +102,7 @@ function enable() {
     Extension = imports.misc.extensionUtils.getCurrentExtension();
     warnAboutGnomeShellVersionCompatibility();
 
-    enableUserConfig();
+    enableUserStylesheet();
 
     if (run('enable')) {
         enabled = true;
@@ -123,11 +133,9 @@ function disable() {
         lastDisabledTime = Date.now();
     }
 
-    disableUserConfig();
+    disableUserStylesheet();
     Extension = null;
-    convenience = null;
 }
-
 
 var Gio = imports.gi.Gio;
 var GLib = imports.gi.GLib;
@@ -183,8 +191,7 @@ function installConfig() {
     user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
 }
 
-var userStylesheet;
-function enableUserConfig() {
+function initUserConfig() {
     if (!hasUserConfigFile()) {
         try {
             installConfig();
@@ -205,7 +212,13 @@ function enableUserConfig() {
     if (hasUserConfigFile()) {
         Extension.imports.searchPath.push(getConfigDir().get_path());
     }
+}
 
+/**
+ * Reloads user.css styles (if user.css present in ~/.config/paperwm).
+ */
+var userStylesheet;
+function enableUserStylesheet() {
     userStylesheet = getConfigDir().get_child("user.css");
     if (userStylesheet.query_exists(null)) {
         let themeContext = St.ThemeContext.get_for_stage(global.stage);
@@ -213,7 +226,10 @@ function enableUserConfig() {
     }
 }
 
-function disableUserConfig() {
+/**
+ * Unloads user.css styles (if user.css present in ~/.config/paperwm).
+ */
+function disableUserStylesheet() {
     let themeContext = St.ThemeContext.get_for_stage(global.stage);
     themeContext.get_theme().unload_stylesheet(userStylesheet);
 }
