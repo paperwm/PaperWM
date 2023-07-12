@@ -194,7 +194,7 @@ function installConfig() {
     metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.NONE, null, null);
 
     // Copy the user.js template to the config directory
-    const user = Extension.dir.get_child("examples/user.js");
+    const user = Extension.dir.get_child("config/user.js");
     user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
 }
 
