@@ -171,16 +171,23 @@ function getConfigDir() {
     return Gio.file_new_for_path(GLib.get_user_config_dir() + '/paperwm');
 }
 
+function configDirExists() {
+    return getConfigDir().query_exists(null);
+}
+
 function hasUserConfigFile() {
     return getConfigDir().get_child("user.js").query_exists(null);
 }
 
 function installConfig() {
     const configDir = getConfigDir();
-    configDir.make_directory_with_parents(null);
+    // if user config folder doesn't exist, create it
+    if (!configDirExists()) {
+        configDir.make_directory_with_parents(null);
+    }
 
     // We copy metadata.json to the config directory so gnome-shell-mode
-    // know which extension the files belong to (ideally we'd symlink, but
+    // knows which extension the files belong to (ideally we'd symlink, but
     // that trips up the importer: Extension.imports.<complete> in
     // gnome-shell-mode crashes gnome-shell..)
     const metadata = Extension.dir.get_child("metadata.json");
@@ -192,7 +199,7 @@ function installConfig() {
 }
 
 function initUserConfig() {
-    if (!hasUserConfigFile()) {
+    if (!configDirExists()) {
         try {
             installConfig();
 
@@ -203,9 +210,8 @@ function initUserConfig() {
                 notification.destroy();
             });
         } catch (e) {
-            errorNotification("PaperWM",
-                `Failed to install user config: ${e.message}`, e.stack);
-            log("#rc", "Install failed", e.message);
+            errorNotification("PaperWM", `Failed to install user config: ${e.message}`, e.stack);
+            log("PaperWM", "User config install failed", e.message);
         }
     }
 

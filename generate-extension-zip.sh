@@ -6,6 +6,7 @@
 	metadata.json \
 	stylesheet.css \
 	*.js \
+	examples/user.js \
 	*.ui \
 	LICENSE \
 	schemas/gschemas.compiled \
