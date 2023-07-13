@@ -665,7 +665,7 @@ function enable () {
      */
     signals.connect(Main.overview, 'hiding', () => {
         fixStyle();
-    })
+    });
 }
 
 function disable() {

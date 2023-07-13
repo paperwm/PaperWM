@@ -1,6 +1,6 @@
 var ExtensionUtils = imports.misc.extensionUtils;
 var Extension = ExtensionUtils.getCurrentExtension();
-var {Clutter, St, Graphene, GLib, Meta, Gio} = imports.gi;
+var {Clutter, St, Graphene, Meta, Gio} = imports.gi;
 var Easer = Extension.imports.utils.easer;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
@@ -87,11 +87,11 @@ var FocusModes = {DEFAULT: 0, CENTER: 1};
  */
 var Space = class Space extends Array {
     /** @type {import('@gi-types/clutter10').Actor} */
-    actor
+    actor;
 
     /** @type {import('@gi-types/meta').BackgroundActor} */
-    background
-    
+    background;
+
     constructor (workspace, container, doInit) {
         super(0);
         this.workspace = workspace;
@@ -107,7 +107,7 @@ var Space = class Space extends Array {
         this.focusModeIcon = new TopBar.FocusIcon({
             name: 'panel',
             style_class: 'space-focus-mode-icon',
-        })  
+        })
             .setClickFunction(() => {
                 switchToNextFocusMode(this);
             })
@@ -226,7 +226,7 @@ var Space = class Space extends Array {
 
         let selected = this.selectedWindow;
         if (selected) {
-            ensureViewport(selected, this, { force:true });
+            ensureViewport(selected, this, {force: true});
         }
 
         this.signals.connect(workspace, "window-added", utils.dynamic_function_ref("add_handler", Extension.imports.tiling));
@@ -234,13 +234,13 @@ var Space = class Space extends Array {
         this.signals.connect(Main.overview, 'showing', this.startAnimate.bind(this));
         this.signals.connect(Main.overview, 'hidden', this.moveDone.bind(this, (window) => {
             // after moveDone, ensureViewport on display.focus_window (see moveDone function)
-            ensureViewport(window, this, { force: true })
+            ensureViewport(window, this, {force: true});
         }));
 
         this.signals.connect(Settings.settings, 'changed::default-focus-mode', () => {
             setFocusMode(Settings.getDefaultFocusMode(), this);
         });
-        
+
         const settings = ExtensionUtils.getSettings();
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
 
@@ -1179,7 +1179,7 @@ border-radius: ${borderWidth}px;
 
     /**
      * Enables or disables this space's window position bar.
-     * @param {boolean} enable 
+     * @param {boolean} enable
      */
     enableWindowPositionBar(enable=true) {
         if (enable) {
@@ -1255,9 +1255,9 @@ border-radius: ${borderWidth}px;
      * A space contains several elements that are duplicated (in the topbar) so that
      * they can be seen in the space "topbar" when switching workspaces. This function
      * sets these elements' visibility when not needed.
-     * @param {boolean} visible 
+     * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible=true, changeTopBarStyle=true) {
+    setSpaceTopbarElementsVisible(visible = true, changeTopBarStyle = true) {
         // if windowPositionBar shown, we want the topbar style to be transparent if visible
         if (prefs.show_window_position_bar) {
             if (changeTopBarStyle) {
@@ -1308,7 +1308,7 @@ border-radius: ${borderWidth}px;
 
     createBackground() {
         if (this.background) {
-            this.signals.disconnect(this.background)
+            this.signals.disconnect(this.background);
             this.background.destroy();
         }
 
@@ -1580,17 +1580,17 @@ var Spaces = class Spaces extends Map {
         backgroundGroup.add_child(this.spaceContainer);
 
         // Hook up existing workspaces
-        for (let i=0; i < workspaceManager.n_workspaces; i++) {
+        for (let i = 0; i < workspaceManager.n_workspaces; i++) {
             let workspace = workspaceManager.get_workspace_by_index(i);
             this.addSpace(workspace);
         }
         this.signals.connect(workspaceManager, 'notify::n-workspaces',
-                             utils.dynamic_function_ref('workspacesChanged', this).bind(this));
+            utils.dynamic_function_ref('workspacesChanged', this).bind(this));
 
         if (workspaceManager.reorder_workspace) {
             // Compatibility: only in recent gnome-shell versions
             this.signals.connect(workspaceManager, 'workspaces-reordered',
-                                 utils.dynamic_function_ref('workspacesChanged', this).bind(this));
+                utils.dynamic_function_ref('workspacesChanged', this).bind(this));
         }
 
         let OVERRIDE_SCHEMA;
@@ -1606,23 +1606,23 @@ var Spaces = class Spaces extends Map {
 
     init() {
         // Create extra workspaces if required
-        Main.wm._workspaceTracker._checkWorkspaces()
+        Main.wm._workspaceTracker._checkWorkspaces();
 
         this.signals.connect(display, 'window-created',
-                        this.window_created.bind(this));
-        
+            this.window_created.bind(this));
+
         this.signals.connect(display, 'grab-op-begin',
-                        (display, mw, type) => grabBegin(mw, type));
+            (display, mw, type) => grabBegin(mw, type));
         this.signals.connect(display, 'grab-op-end',
-                        (display, mw, type) => grabEnd(mw, type));
-        
+            (display, mw, type) => grabEnd(mw, type));
+
         this.signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChanged.bind(this));
 
         this.signals.connect(global.window_manager, 'switch-workspace',
-                        this.switchWorkspace.bind(this));
+            this.switchWorkspace.bind(this));
 
         this.signals.connect(this.overrideSettings, 'changed::workspaces-only-on-primary',
-                             this.monitorsChanged.bind(this));               
+            this.monitorsChanged.bind(this));
 
         // Clone and hook up existing windows
         display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
@@ -1643,10 +1643,10 @@ var Spaces = class Spaces extends Map {
 
         /**
          * After spaces have init, do a final layout on active space and activate selected window.
-         * Ensures correct window layout with multi-monitors, and if windows already exist on init, 
+         * Ensures correct window layout with multi-monitors, and if windows already exist on init,
          * (e.g. resetting gnome-shell) then will ensure selectedWindow is activated.
          */
-        Mainloop.timeout_add(200, () => {
+        utils.later_add(Meta.LaterType.IDLE, () => {
             const space = spaces.getActiveSpace();
             if (space.selectedWindow) {
                 space.layout(false);
@@ -1856,7 +1856,7 @@ var Spaces = class Spaces extends Map {
             space.settings.set_int('index', workspace.index());
             Meta.prefs_change_workspace_name(workspace.index(), space.name);
         }
-    };
+    }
 
     switchMonitor(direction, move) {
         let focus = display.focus_window;
@@ -1938,8 +1938,8 @@ var Spaces = class Spaces extends Map {
         y -= monitor.y;
         if (x < 0 || x > monitor.width ||
             y < 0 || y > monitor.height) {
-            utils.warpPointer(monitor.x + Math.floor(monitor.width/2),
-                              monitor.y + Math.floor(monitor.height/2));
+            utils.warpPointer(monitor.x + Math.floor(monitor.width / 2),
+                monitor.y + Math.floor(monitor.height / 2));
         }
 
         for (let monitor of Main.layoutManager.monitors) {
@@ -1953,9 +1953,9 @@ var Spaces = class Spaces extends Map {
 
     /**
      * See Space.setSpaceTopbarElementsVisible function for what this does.
-     * @param {boolean} visible 
+     * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible=true, changeTopBarStyle=true) {
+    setSpaceTopbarElementsVisible(visible = true, changeTopBarStyle = true) {
         this.updateSpaceIconPositions();
         this.forEach(s => {
             s.setSpaceTopbarElementsVisible(visible, changeTopBarStyle);
@@ -1967,7 +1967,7 @@ var Spaces = class Spaces extends Map {
      */
     updateSpaceIconPositions() {
         // get positions of topbar elements to replicate positions in spaces
-        const vertex = new Graphene.Point3D({ x: 0, y: 0 });
+        const vertex = new Graphene.Point3D({x: 0, y: 0});
         const labelPosition = TopBar.menu.label.apply_relative_transform_to_point(Main.panel, vertex);
         const focusPosition = TopBar.focusButton.apply_relative_transform_to_point(Main.panel, vertex);
 
@@ -1980,7 +1980,7 @@ var Spaces = class Spaces extends Map {
     _getOrderedSpaces(monitor) {
         let nWorkspaces = workspaceManager.n_workspaces;
         let out = [];
-        for (let i=0; i<nWorkspaces; i++) {
+        for (let i = 0; i < nWorkspaces; i++) {
             let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
             if (space.monitor === monitor ||
                 (space.length === 0 && this.monitors.get(space.monitor) !== space))
@@ -2003,7 +2003,6 @@ var Spaces = class Spaces extends Map {
         const padding_percentage = 4;
         const to = monitorSpaces.indexOf(toSpace);
         monitorSpaces.forEach((space, i) => {
-
             space.setMonitor(currentMonitor, false);
             space.startAnimate();
 
@@ -2232,8 +2231,8 @@ var Spaces = class Spaces extends Map {
         let to = from;
         if (move && this.selectedSpace.selectedWindow) {
             takeWindow(this.selectedSpace.selectedWindow,
-                       this.selectedSpace,
-                       {navigator: Navigator.getNavigator()});
+                this.selectedSpace,
+                {navigator: Navigator.getNavigator()});
         }
 
         if (direction === Meta.MotionDirection.DOWN)
@@ -2278,13 +2277,13 @@ var Spaces = class Spaces extends Map {
             }
 
             Easer.addEase(actor,
-                             {y: h*space.height,
-                              time: prefs.animation_time,
-                              scale_x: scale + (to - i)*0.01,
-                              scale_y: scale + (to - i)*0.01,
-                              onComplete
-                             });
-
+                {
+                    y: h * space.height,
+                    time: prefs.animation_time,
+                    scale_x: scale + (to - i) * 0.01,
+                    scale_y: scale + (to - i) * 0.01,
+                    onComplete,
+                });
         });
     }
 
@@ -2326,7 +2325,7 @@ var Spaces = class Spaces extends Map {
                 onComplete: () => {
                     to.border.hide();
                     to.border.opacity = 255;
-                }
+                },
             });
             utils.actor_raise(to.clip);
 
@@ -2342,7 +2341,6 @@ var Spaces = class Spaces extends Map {
         if (currentPreviewMode === PreviewMode.SEQUENTIAL) {
             this._animateToSpaceOrdered(to, true);
             let t = to.actor.get_transition('y');
-            let time = GLib.get_monotonic_time();
             if (t) {
                 t && t.connect('stopped', (t, finished) => {
                     finished && onComplete();
@@ -2358,13 +2356,14 @@ var Spaces = class Spaces extends Map {
         this._updateMonitor();
 
         Easer.addEase(to.actor,
-                         { x: 0,
-                           y: 0,
-                           scale_x: 1,
-                           scale_y: 1,
-                           time: prefs.animation_time,
-                           onComplete
-                         });
+            {
+                x: 0,
+                y: 0,
+                scale_x: 1,
+                scale_y: 1,
+                time: prefs.animation_time,
+                onComplete,
+            });
 
 
         // Animate all the spaces above `to` down below the monitor. We get
@@ -2457,7 +2456,7 @@ var Spaces = class Spaces extends Map {
             if (!seen.get(workspace)) {
                 out.push(this.get(workspace));
                 seen.set(workspace, true);
-           }
+            }
         }
 
         return out;
@@ -2689,7 +2688,8 @@ function resizeHandler(metaWindow) {
         // Restore window position when eg. exiting fullscreen
         !Navigator.navigating && selected
             && move_to(space, metaWindow, {
-                x: metaWindow.get_frame_rect().x - space.monitor.x});
+                x: metaWindow.get_frame_rect().x - space.monitor.x
+            });
 
         // Resizing from within a size-changed signal is troube (#73). Queue instead.
         space.queueLayout();
@@ -2914,7 +2914,7 @@ function insertWindow(metaWindow, {existing}) {
             connectSizeChanged();
             Scratch.makeScratch(metaWindow);
             if (scratchIsFocused) {
-               activateWindowAfterRendered(actor, metaWindow);
+                activateWindowAfterRendered(actor, metaWindow);
             }
             return;
         }
@@ -2926,7 +2926,7 @@ function insertWindow(metaWindow, {existing}) {
         connectSizeChanged();
         showWindow(metaWindow);
         return;
-    } else if (Scratch.isScratchWindow(metaWindow)){
+    } else if (Scratch.isScratchWindow(metaWindow)) {
         // And make sure scratch windows are stuck
         Scratch.makeScratch(metaWindow);
         return;
@@ -2940,7 +2940,7 @@ function insertWindow(metaWindow, {existing}) {
         metaWindow.move_to_monitor(space.monitor.index);
         showWindow(metaWindow);
         // Make sure the window isn't hidden behind the space (eg. dialogs)
-        !existing && metaWindow.make_above()
+        !existing && metaWindow.make_above();
         return;
     }
 
@@ -3139,7 +3139,7 @@ function updateSelection(space, metaWindow) {
     }
 
     space.updateWindowPositionBar();
-    
+
     if (space.selection.get_parent() === clone)
         return;
     utils.actor_reparent(space.selection, clone);
@@ -3173,70 +3173,71 @@ function move_to(space, metaWindow, { x, y, force, instant }) {
 
     space.startAnimate();
     Easer.addEase(space.cloneContainer,
-                     { x: target,
-                       time: prefs.animation_time,
-                       onComplete: space.moveDone.bind(space)
-                     });
+        {
+            x: target,
+            time: prefs.animation_time,
+            onComplete: space.moveDone.bind(space),
+        });
 
     space.fixOverlays(metaWindow);
 }
 
 var inGrab = false;
 function grabBegin(metaWindow, type) {
-    switch(type) {
-        case Meta.GrabOp.COMPOSITOR:
-        case Meta.GrabOp.FRAME_BUTTON:
-            // Don't handle pushModal grabs and SCD button (close/minimize/etc.) grabs
-            break;
-        case Meta.GrabOp.KEYBOARD_MOVING:
-            inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
-            if (!isTiled(metaWindow)) {
-                return;
-            }
+    switch (type) {
+    case Meta.GrabOp.COMPOSITOR:
+    case Meta.GrabOp.FRAME_BUTTON:
+        // Don't handle pushModal grabs and SCD button (close/minimize/etc.) grabs
+        break;
+    case Meta.GrabOp.KEYBOARD_MOVING:
+        inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
+        if (!isTiled(metaWindow)) {
+            return;
+        }
 
-            // NOTE: Keyboard grab moves the cursor, but it happens after grab
-            // signals have run. Simply delay the dnd so it will get the correct
-            // pointer coordinates.
-            utils.later_add(Meta.LaterType.IDLE, () => {
-                inGrab.begin();
-                inGrab.beginDnD();
-            })
-            break;
-        case Meta.GrabOp.MOVING:
-        case Meta.GrabOp.MOVING_UNCONSTRAINED: // introduced in Gnome 44
-            if (!isTiled(metaWindow)) {
-                return;
-            }
+        // NOTE: Keyboard grab moves the cursor, but it happens after grab
+        // signals have run. Simply delay the dnd so it will get the correct
+        // pointer coordinates.
+        utils.later_add(Meta.LaterType.IDLE, () => {
+            inGrab.begin();
+            inGrab.beginDnD();
+        });
+        break;
+    case Meta.GrabOp.MOVING:
+    case Meta.GrabOp.MOVING_UNCONSTRAINED: // introduced in Gnome 44
+        if (!isTiled(metaWindow)) {
+            return;
+        }
 
-            inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
+        inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
 
-            if (utils.getModiferState() & Clutter.ModifierType.CONTROL_MASK) {
-                inGrab.begin();
-                inGrab.beginDnD();
-            } else if (inGrab.initialSpace && inGrab.initialSpace.indexOf(metaWindow) > -1) {
-                inGrab.begin();
-            }
+        if (utils.getModiferState() & Clutter.ModifierType.CONTROL_MASK) {
+            inGrab.begin();
+            inGrab.beginDnD();
+        } else if (inGrab.initialSpace && inGrab.initialSpace.indexOf(metaWindow) > -1) {
+            inGrab.begin();
+        }
 
-            break;
-        case Meta.GrabOp.RESIZING_NW:
-        case Meta.GrabOp.RESIZING_N:
-        case Meta.GrabOp.RESIZING_NE:
-        case Meta.GrabOp.RESIZING_E:
-        case Meta.GrabOp.RESIZING_SW:
-        case Meta.GrabOp.RESIZING_S:
-        case Meta.GrabOp.RESIZING_SE:
-        case Meta.GrabOp.RESIZING_W:
-        case Meta.GrabOp.KEYBOARD_RESIZING_UNKNOWN:
-        case Meta.GrabOp.KEYBOARD_RESIZING_NW:
-        case Meta.GrabOp.KEYBOARD_RESIZING_N:
-        case Meta.GrabOp.KEYBOARD_RESIZING_NE:
-        case Meta.GrabOp.KEYBOARD_RESIZING_E:
-        case Meta.GrabOp.KEYBOARD_RESIZING_SW:
-        case Meta.GrabOp.KEYBOARD_RESIZING_S:
-        case Meta.GrabOp.KEYBOARD_RESIZING_SE:
-        case Meta.GrabOp.KEYBOARD_RESIZING_W:
-            inGrab = new Extension.imports.grab.ResizeGrab(metaWindow, type);
-            break;
+        break;
+    case Meta.GrabOp.RESIZING_NW:
+    case Meta.GrabOp.RESIZING_N:
+    case Meta.GrabOp.RESIZING_NE:
+    case Meta.GrabOp.RESIZING_E:
+    case Meta.GrabOp.RESIZING_SW:
+    case Meta.GrabOp.RESIZING_S:
+    case Meta.GrabOp.RESIZING_SE:
+    case Meta.GrabOp.RESIZING_W:
+    case Meta.GrabOp.KEYBOARD_RESIZING_UNKNOWN:
+    case Meta.GrabOp.KEYBOARD_RESIZING_NW:
+    case Meta.GrabOp.KEYBOARD_RESIZING_N:
+    case Meta.GrabOp.KEYBOARD_RESIZING_NE:
+    case Meta.GrabOp.KEYBOARD_RESIZING_E:
+    case Meta.GrabOp.KEYBOARD_RESIZING_SW:
+    case Meta.GrabOp.KEYBOARD_RESIZING_S:
+    case Meta.GrabOp.KEYBOARD_RESIZING_SE:
+    case Meta.GrabOp.KEYBOARD_RESIZING_W:
+        inGrab = new Extension.imports.grab.ResizeGrab(metaWindow, type);
+        break;
     }
 }
 
@@ -3310,14 +3311,14 @@ function focus_handler(metaWindow, user_data) {
     let stack = sortWindows(space, neighbours);
     stack.forEach(w => w.raise());
     metaWindow.raise();
-    
+
     /**
      * Call to move viewport to metaWindow, except if in overview - if in
      * overview, we'll ensure viewport on focused window AFTER overview is
      * hidden.
      */
-    ensureViewport(metaWindow, space, { moveto:!Main.overview.visible });
-    
+    ensureViewport(metaWindow, space, {moveto: !Main.overview.visible});
+
     TopBar.fixTopBar();
 }
 var focus_wrapper = utils.dynamic_function_ref('focus_handler', this);
@@ -3578,7 +3579,7 @@ function cycleWindowHeight(metaWindow) {
                 if (mw === metaWindow) {
                     return targetHeight;
                 } else {
-                    return Math.floor((available - targetHeight) / (column.length-1));
+                    return Math.floor((available - targetHeight) / (column.length - 1));
                 }
             });
         }
@@ -3614,8 +3615,8 @@ function activateLastWindow(mw, space) {
 /**
  * Calls `activateWindow` only after an actor is visible and rendered on the stage.
  * The standard `Main.activateWindow(mw)` should be used in general, but this method
- * may be requried under certain use cases (such as activating a floating window 
- * programmatically before it's rendered, see 
+ * may be requried under certain use cases (such as activating a floating window
+ * programmatically before it's rendered, see
  * https://github.com/paperwm/PaperWM/issues/448 for details).
  */
 function activateWindowAfterRendered(actor, mw) {
@@ -3630,7 +3631,6 @@ function activateWindowAfterRendered(actor, mw) {
 function centerWindowHorizontally(metaWindow) {
     const frame = metaWindow.get_frame_rect();
     const space = spaces.spaceOfWindow(metaWindow);
-    const index = space.indexOf(metaWindow);
     const monitor = space.monitor;
     const workArea = space.workArea();
 
@@ -3646,8 +3646,10 @@ function centerWindowHorizontally(metaWindow) {
     if (space.indexOf(metaWindow) === -1) {
         metaWindow.move_frame(true, targetX + monitor.x, frame.y);
     } else {
-        move_to(space, metaWindow, { x: targetX,
-                                     onComplete: () => space.moveDone()});
+        move_to(space, metaWindow, {
+            x: targetX,
+            onComplete: () => space.moveDone()
+        });
     }
 }
 
@@ -3697,15 +3699,15 @@ function setFocusMode(mode, space) {
             position = space.unfocusXPosition;
         }
         // do the move
-        move_to(space, space.selectedWindow, {x:position});
-        ensureViewport(space.selectedWindow, space, { force:true });
+        move_to(space, space.selectedWindow, {x: position});
+        ensureViewport(space.selectedWindow, space, {force: true});
         space.unfocusXPosition = null;
     }
 }
 
 /**
  * Switches to the next focus mode for a space.
- * @param {Space} space 
+ * @param {Space} space
  */
 function switchToNextFocusMode(space) {
     space = space ?? spaces.getActiveSpace();
@@ -3725,7 +3727,7 @@ function fitProportionally(values, targetSum) {
 
     let fitted = utils.zip(values, weights).map(
         ([h, w]) => Math.round(targetSum * w)
-    )
+    );
     let r = targetSum - utils.sum(fitted);
     fitted[0] += r;
     return fitted;
@@ -3768,7 +3770,7 @@ function allocateDefault(column, availableHeight, selectedWindow) {
         if (selectedWindow)
             heights.splice(k, 0, selectedHeight - deficit);
 
-        return heights
+        return heights;
     }
 }
 
@@ -3795,19 +3797,20 @@ function slurp(metaWindow) {
         to = index;
         from = to + 1;
         metaWindowToSlurp = space[from][0];
-    } else if (index + 1 === space.length){
-        if(space[index].length > 1) return;
+    } else if (index + 1 === space.length) {
+        if (space[index].length > 1)
+            return;
         metaWindowToSlurp = metaWindow;
         metaWindowToEnsure = metaWindowToSlurp;
         to = index - 1;
         from = index;
     }
 
-    if(!metaWindowToSlurp || space.length < 2) {
+    if (!metaWindowToSlurp || space.length < 2) {
         return;
     }
 
-    space[to].push(metaWindowToSlurp)
+    space[to].push(metaWindowToSlurp);
 
     { // Remove the slurped window
         let column = space[from];
@@ -3911,7 +3914,6 @@ function takeWindow(metaWindow, space, {navigator}) {
 
     navigator._moving.push(metaWindow);
     let parent = backgroundGroup;
-    let actor = metaWindow.get_compositor_private();
     parent.add_actor(metaWindow.clone);
     let lowest = navigator._moving[navigator._moving.length - 2];
     lowest && parent.set_child_below_sibling(metaWindow.clone, lowest.clone);
@@ -3922,15 +3924,16 @@ function takeWindow(metaWindow, space, {navigator}) {
         }));
     metaWindow.clone.set_position(point.x, point.y);
     let x = Math.round(space.monitor.x +
-                       space.monitor.width -
-                       (0.1*space.monitor.width*(1 +navigator._moving.length)));
-    let y = Math.round(space.monitor.y + space.monitor.height*2/3)
-        + 20*navigator._moving.length;
+        space.monitor.width -
+        (0.1 * space.monitor.width * (1 + navigator._moving.length)));
+    let y = Math.round(space.monitor.y + space.monitor.height * 2 / 3)
+        + 20 * navigator._moving.length;
     animateWindow(metaWindow);
     Easer.addEase(metaWindow.clone,
-                     {x, y,
-                      time: prefs.animation_time,
-                     });
+        {
+            x, y,
+            time: prefs.animation_time,
+        });
 }
 
 /**
