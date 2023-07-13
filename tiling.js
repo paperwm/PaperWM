@@ -180,11 +180,11 @@ var Space = class Space extends Array {
 
         this.windowPositionBarBackdrop = new St.Widget({
             name: 'windowPositionBarBackdrop',
-            style_class: 'paperwm-window-position-bar-backdrop'
+            style_class: 'paperwm-window-position-bar-backdrop',
         });
         this.windowPositionBar = new St.Widget({
             name: 'windowPositionBar',
-            style_class: 'paperwm-window-position-bar tile-preview'
+            style_class: 'paperwm-window-position-bar tile-preview',
         });
         this.windowPositionBar.hide(); // default on empty space
         utils.actor_raise(this.windowPositionBar);
@@ -1196,7 +1196,7 @@ border-radius: ${borderWidth}px;
     /**
      * Shows or hides this space's window position bar. Useful for temporarily
      * hiding the position bar (e.g. for fullscreen mode).
-     * @param {boolean} show 
+     * @param {boolean} show
      */
     showWindowPositionBar(show=true) {
         if (show) {
@@ -1271,6 +1271,7 @@ border-radius: ${borderWidth}px;
         }
 
         if (visible) {
+            this.updateSpaceIconPositions();
             this.showWorkspaceIndicator(true);
             this.showFocusModeIcon(true);
         }
@@ -1278,6 +1279,19 @@ border-radius: ${borderWidth}px;
             this.showWorkspaceIndicator(false);
             this.showFocusModeIcon(false);
         }
+    }
+
+    /**
+ * Updates workspace topbar icon positions.
+ */
+    updateSpaceIconPositions() {
+        // get positions of topbar elements to replicate positions in spaces
+        const vertex = new Graphene.Point3D({x: 0, y: 0});
+        const labelPosition = TopBar.menu.label.apply_relative_transform_to_point(Main.panel, vertex);
+        const focusPosition = TopBar.focusButton.apply_relative_transform_to_point(Main.panel, vertex);
+
+        this.workspaceLabel.set_position(labelPosition.x, labelPosition.y);
+        this.focusModeIcon.set_position(focusPosition.x, focusPosition.y);
     }
 
     /**
@@ -1651,6 +1665,7 @@ var Spaces = class Spaces extends Map {
             if (space.selectedWindow) {
                 space.layout(false);
                 Main.activateWindow(space.selectedWindow);
+                spaces.setSpaceTopbarElementsVisible(true);
             }
             return false; // on return false destroys timeout
         });
@@ -1828,7 +1843,7 @@ var Spaces = class Spaces extends Map {
 
         // Gather all indexed workspaces for easy comparison
         let workspaces = {};
-        for (let i=0; i < nWorkspaces; i++) {
+        for (let i = 0; i < nWorkspaces; i++) {
             let workspace = workspaceManager.get_workspace_by_index(i);
             workspaces[workspace] = true;
             if (this.spaceOf(workspace) === undefined) {
@@ -1956,24 +1971,8 @@ var Spaces = class Spaces extends Map {
      * @param {boolean} visible
      */
     setSpaceTopbarElementsVisible(visible = true, changeTopBarStyle = true) {
-        this.updateSpaceIconPositions();
         this.forEach(s => {
             s.setSpaceTopbarElementsVisible(visible, changeTopBarStyle);
-        });
-    }
-
-    /**
-     * Updates workspace topbar icon positions.
-     */
-    updateSpaceIconPositions() {
-        // get positions of topbar elements to replicate positions in spaces
-        const vertex = new Graphene.Point3D({x: 0, y: 0});
-        const labelPosition = TopBar.menu.label.apply_relative_transform_to_point(Main.panel, vertex);
-        const focusPosition = TopBar.focusButton.apply_relative_transform_to_point(Main.panel, vertex);
-
-        this.forEach(s => {
-            s.workspaceLabel.set_position(labelPosition.x, labelPosition.y);
-            s.focusModeIcon.set_position(focusPosition.x, focusPosition.y);
         });
     }
 
