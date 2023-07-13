@@ -546,7 +546,7 @@ function actor_reparent(actor, newParent) {
  */
 function later_add(...args) {
     // Gnome 44+ uses global.compositor.get_laters()
-    if (global.compositor.get_laters) {
+    if (global.compositor?.get_laters) {
         global.compositor.get_laters().add(...args);
     }
     // Gnome 42, 43 used Meta.later_add
