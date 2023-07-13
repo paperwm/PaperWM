@@ -5,6 +5,7 @@ var {Clutter, Shell, Meta, St} = imports.gi;
 var Main = imports.ui.main;
 var utils = Extension.imports.utils;
 var Layout = imports.ui.layout;
+var Grab = Extension.imports.grab;
 
 var Settings = Extension.imports.settings;
 var prefs = Settings.prefs;
@@ -113,6 +114,18 @@ var ClickOverlay = class ClickOverlay {
         this.signals.connect(Main.overview, 'hidden', () => {
             this.activate();
             this.show();
+        });
+
+        /**
+         * Handle grabbed (drag & drop) windows in ClickOverlay.  If a window is
+         * grabbed-dragged-and-dropped on a monitor, then select() on this ClickOverlay
+         * (which deactivates ClickOverlay and immediately activates/selects the dropped window.
+         */
+        this.signals.connect(global.display, 'grab-op-end', (display, mw, type) => {
+            let [gx, gy, $] = global.get_pointer();
+            if (this.monitor === Grab.monitorAtPoint(gx, gy)) {
+                this.select();
+            }
         });
     }
 
@@ -360,11 +373,11 @@ var StackOverlay = class StackOverlay {
         let monitor = this.monitor;
         let x1, directions;
         if (this._direction === Meta.MotionDirection.LEFT) {
-            x1 = monitor.x,
-                directions = Meta.BarrierDirection.POSITIVE_X;
+            x1 = monitor.x;
+            directions = Meta.BarrierDirection.POSITIVE_X;
         } else {
-            x1 = monitor.x + monitor.width - 1,
-                directions = Meta.BarrierDirection.NEGATIVE_X;
+            x1 = monitor.x + monitor.width - 1;
+            directions = Meta.BarrierDirection.NEGATIVE_X;
         }
         this.barrier = new Meta.Barrier({
             display: global.display,
