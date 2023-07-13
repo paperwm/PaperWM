@@ -14,4 +14,3 @@ function enable() {
 function disable() {
     // Runs when extension is disabled
 }
-

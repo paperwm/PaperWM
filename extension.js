@@ -103,6 +103,7 @@ function enable() {
     warnAboutGnomeShellVersionCompatibility();
 
     enableUserStylesheet();
+    updateUserConfigMetadata();
 
     if (run('enable')) {
         enabled = true;
@@ -179,6 +180,27 @@ function hasUserConfigFile() {
     return getConfigDir().get_child("user.js").query_exists(null);
 }
 
+/**
+ * Update the metadata.json in user config dir to always keep it up to date.
+ * We copy metadata.json to the config directory so gnome-shell-mode
+ * knows which extension the files belong to (ideally we'd symlink, but
+ * that trips up the importer: Extension.imports.<complete> in
+ * gnome-shell-mode crashes gnome-shell..)
+ */
+function updateUserConfigMetadata() {
+    if (!configDirExists()) {
+        return;
+    }
+
+    try {
+        const configDir = getConfigDir();
+        const metadata = Extension.dir.get_child("metadata.json");
+        metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.OVERWRITE, null, null);
+    } catch (error) {
+        log('PaperWM', `could not update user config metadata.json: ${error}`);
+    }
+}
+
 function installConfig() {
     const configDir = getConfigDir();
     // if user config folder doesn't exist, create it
@@ -186,12 +208,7 @@ function installConfig() {
         configDir.make_directory_with_parents(null);
     }
 
-    // We copy metadata.json to the config directory so gnome-shell-mode
-    // knows which extension the files belong to (ideally we'd symlink, but
-    // that trips up the importer: Extension.imports.<complete> in
-    // gnome-shell-mode crashes gnome-shell..)
-    const metadata = Extension.dir.get_child("metadata.json");
-    metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.NONE, null, null);
+    updateUserConfigMetadata();
 
     // Copy the user.js template to the config directory
     const user = Extension.dir.get_child("config/user.js");
@@ -238,6 +255,7 @@ function enableUserStylesheet() {
 function disableUserStylesheet() {
     let themeContext = St.ThemeContext.get_for_stage(global.stage);
     themeContext.get_theme().unload_stylesheet(userStylesheet);
+    userStylesheet = null;
 }
 
 /**
