@@ -678,8 +678,16 @@ const ComboRow = GObject.registerClass({
 
     _onKeyPressed(controller, keyval, keycode, state) {
         // Adapted from Control Center, cc-keyboard-shortcut-editor.c
-
         if (!this.editing) return Gdk.EVENT_PROPAGATE;
+
+        /**
+         * Replace KEY_less ("<") with comma, see
+         * https://github.com/paperwm/PaperWM/issues/545
+         */
+        if (keyval === Gdk.KEY_less) {
+            keycode = Gdk.KEY_comma;
+            keyval = Gdk.KEY_comma;
+        }
 
         let modmask = state & Gtk.accelerator_get_default_mod_mask();
         let keyvalLower = Gdk.keyval_to_lower(keyval);
