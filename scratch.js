@@ -1,6 +1,8 @@
 var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Meta = imports.gi.Meta;
 var Main = imports.ui.main;
+var PopupMenu = imports.ui.popupMenu;
+var WindowMenu = imports.ui.windowMenu;
 
 var TopBar = Extension.imports.topbar;
 var Tiling = Extension.imports.tiling;
@@ -215,11 +217,7 @@ function showWindows() {
     ws.forEach(Tiling.showWindow)
 }
 
-// Monkey patch the alt-space menu
-var PopupMenu = imports.ui.popupMenu;
-var WindowMenu = imports.ui.windowMenu;
 var originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
-
 function enable() {
     float = Symbol();
     scratchFrame = Symbol();

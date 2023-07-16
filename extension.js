@@ -1,8 +1,10 @@
 var ExtensionUtils = imports.misc.extensionUtils;
 var Extension = ExtensionUtils.getCurrentExtension();
-var {St} = imports.gi;
+var {Gio, GLib, St} = imports.gi;
 var Util = imports.misc.util;
 var MessageTray = imports.ui.messageTray;
+var Main = imports.ui.main;
+var Config = imports.misc.config;
 
 /**
    The currently used modules
@@ -137,11 +139,6 @@ function disable() {
     disableUserStylesheet();
     Extension = null;
 }
-
-var Gio = imports.gi.Gio;
-var GLib = imports.gi.GLib;
-var Main = imports.ui.main;
-var Config = imports.misc.config;
 
 // Checks gnome shell version compatibility and warns the user when running on
 // and unsupported version.
