@@ -10,6 +10,7 @@ var Gtk = imports.gi.Gtk;
 var Mainloop = imports.mainloop;
 
 var settings = ExtensionUtils.getSettings();
+var utils = Extension.imports.utils;
 var workspaceSettingsCache = {};
 
 var WORKSPACE_KEY = 'org.gnome.shell.extensions.paperwm.workspace';
@@ -102,6 +103,9 @@ function enable() {
 }
 
 function disable() {
+    utils.timeout_remove(timerId);
+    timerId = null;
+
     workspaceSettingsCache = {};
     schemaSource = null;
     workspaceList = null;
@@ -168,7 +172,7 @@ function getWorkspaceSettingsByUUID(uuid) {
 function findWorkspaceSettingsByName(regex) {
     let list = workspaceList.get_strv('list');
     let settingss = list.map(getWorkspaceSettingsByUUID);
-    return Extension.imports.utils.zip(list, settingss, settingss.map(s => s.get_string('name')))
+    return utils.zip(list, settingss, settingss.map(s => s.get_string('name')))
         .filter(([uuid, s, name]) => name.match(regex));
 }
 
@@ -210,7 +214,7 @@ function deleteWorkspaceSettings(uuid) {
 function printWorkspaceSettings() {
     let list = workspaceList.get_strv('list');
     let settings = list.map(getWorkspaceSettingsByUUID);
-    let zipped = Extension.imports.utils.zip(list, settings);
+    let zipped = utils.zip(list, settings);
     const key = s => s[1].get_int('index');
     zipped.sort((a, b) => key(a) - key(b));
     for (let [uuid, s] of zipped) {

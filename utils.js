@@ -4,6 +4,7 @@ var St = imports.gi.St;
 var GdkPixbuf = imports.gi.GdkPixbuf;
 var Cogl = imports.gi.Cogl;
 var Main = imports.ui.main;
+var Mainloop = imports.mainloop;
 
 var workspaceManager = global.workspace_manager;
 var display = global.display;
@@ -304,7 +305,6 @@ function indent(level, str) {
     return blank + str
 }
 
-
 function mkFmt({nameOnly}={nameOnly: false}) {
     function defaultFmt(actor, prefix="") {
         const fmtNum = num => num.toFixed(0);
@@ -552,5 +552,14 @@ function later_add(...args) {
     // Gnome 42, 43 used Meta.later_add
     else if (Meta.later_add) {
         Meta.later_add(...args);
+    }
+}
+
+/**
+ * Convenience method for removing a timeout source from Mainloop.
+ */
+function timeout_remove(timeoutId) {
+    if (timeoutId) {
+        Mainloop.source_remove(timeoutId);
     }
 }

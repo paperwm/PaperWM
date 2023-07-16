@@ -77,6 +77,7 @@ var ClickOverlay = class ClickOverlay {
         this.signals = new utils.Signals();
 
         this._lastPointer = [];
+        this._lastPointerTimeout = null;
         this.signals.connect(
             enterMonitor, 'motion-event',
             (actor, event) => {
@@ -86,7 +87,7 @@ var ClickOverlay = class ClickOverlay {
                 let [x, y, z] = global.get_pointer();
                 let [lX, lY] = this._lastPointer;
                 this._lastPointer = [x, y];
-                Mainloop.timeout_add(500, () => {
+                this._lastPointerTimeout = Mainloop.timeout_add(500, () => {
                     this._lastPointer = [];
                     return false; // on return false destroys timeout
                 });
@@ -192,6 +193,8 @@ var ClickOverlay = class ClickOverlay {
     }
 
     destroy() {
+        utils.timeout_remove(this._lastPointerTimeout);
+        this._lastPointerTimeout = null;
         this.signals.destroy();
         for (let overlay of [this.left, this.right]) {
             let actor = overlay.overlay;
@@ -228,11 +231,13 @@ var StackOverlay = class StackOverlay {
         overlay.width = Tiling.stack_margin;
 
         this.signals = new utils.Signals();
+
+        this.triggerPreviewTimeout = null;
         this.signals.connect(overlay, 'button-press-event', () => {
             Main.activateWindow(this.target);
             // remove/cleanup the previous preview
             this.removePreview();
-            Mainloop.timeout_add(200, () => {
+            this.triggerPreviewTimeout = Mainloop.timeout_add(200, () => {
                 // if pointer is still at edge (within 2px), trigger preview
                 let [x, y, mask] = global.get_pointer();
                 if (x <= 2 || x >= this.monitor.width - 2) {
@@ -460,6 +465,9 @@ var StackOverlay = class StackOverlay {
     }
 
     destroy() {
+        utils.timeout_remove(this.triggerPreviewTimeout);
+        this.triggerPreviewTimeout = null;
+
         this.signals.destroy();
         this.removePreview();
         this.removeBarrier();

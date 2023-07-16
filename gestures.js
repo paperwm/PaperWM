@@ -36,7 +36,7 @@ function enable() {
         return;
 
     var touchpadSettings = new Gio.Settings({
-        schema_id: 'org.gnome.desktop.peripherals.touchpad'
+        schema_id: 'org.gnome.desktop.peripherals.touchpad',
     });
 
     /**
@@ -110,6 +110,8 @@ function enable() {
 
 function disable() {
     signals.destroy();
+    Utils.timeout_remove(endVerticalTimeout);
+    endVerticalTimeout = null;
     touchpadSettings = null;
 }
 
@@ -330,26 +332,30 @@ function updateVertical(dy, t) {
     const StackPositions = Tiling.StackPositions;
     if (dy > 0
         && selected !== navigator.from
-        && (selected.actor.y - dy < StackPositions.up*monitor.height)
-       ) {
+        && (selected.actor.y - dy < StackPositions.up * monitor.height)
+    ) {
         dy = 0;
         vy = 1;
-        selected.actor.y = StackPositions.up*selected.height;
+        selected.actor.y = StackPositions.up * selected.height;
         Tiling.spaces.selectStackSpace(Meta.MotionDirection.UP, false, transition);
         selected = Tiling.spaces.selectedSpace;
         Easer.removeEase(selected.actor);
-        Easer.addEase(selected.actor, {scale_x: 0.9, scale_y: 0.9, time:
-                                          prefs.animation_time, transition});
+        Easer.addEase(selected.actor, {
+            scale_x: 0.9, scale_y: 0.9, time:
+                prefs.animation_time, transition
+        });
     } else if (dy < 0
-               && (selected.actor.y - dy > StackPositions.down*monitor.height)) {
+        && (selected.actor.y - dy > StackPositions.down * monitor.height)) {
         dy = 0;
         vy = -1;
-        selected.actor.y = StackPositions.down*selected.height;
+        selected.actor.y = StackPositions.down * selected.height;
         Tiling.spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, transition);
         selected = Tiling.spaces.selectedSpace;
         Easer.removeEase(selected.actor);
-        Easer.addEase(selected.actor, {scale_x: 0.9, scale_y: 0.9, time:
-                                          prefs.animation_time, transition});
+        Easer.addEase(selected.actor, {
+            scale_x: 0.9, scale_y: 0.9, time:
+                prefs.animation_time, transition
+        });
     } else if (Number.isFinite(v)) {
         vy = v;
     }
@@ -364,6 +370,7 @@ function updateVertical(dy, t) {
     }
 }
 
+var endVerticalTimeout;
 function endVertical() {
     let test = vy > 0 ?
         () => vy < 0 :
@@ -402,7 +409,7 @@ function endVertical() {
      * function - which returns false (thus destroying this timeout)
      * when user gesture fininshes, a space is selected, etc.
      */
-    Mainloop.timeout_add(16, glide, 0);
+    endVerticalTimeout = Mainloop.timeout_add(16, glide, 0);
 }
 
 /**

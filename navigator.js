@@ -84,7 +84,8 @@ class ActionDispatcher {
         this.signals.connect(this.actor, 'key-press-event', this._keyPressEvent.bind(this))
         this.signals.connect(this.actor, 'key-release-event', this._keyReleaseEvent.bind(this))
 
-        this._noModsTimeoutId = 0;
+        this._noModsTimeoutId = null;
+        this._doActionTimeout = null;
     }
 
     show(backward, binding, mask) {
@@ -122,14 +123,11 @@ class ActionDispatcher {
     }
 
     _resetNoModsTimeout() {
-        if (this._noModsTimeoutId != 0)
-            Mainloop.source_remove(this._noModsTimeoutId);
-
+        utils.timeout_remove(this._noModsTimeoutId);
         this._noModsTimeoutId = Mainloop.timeout_add(
-            0,
-            () => {
+            0, () => {
                 this._finish(global.get_current_time());
-                this._noModsTimeoutId = 0;
+                this._noModsTimeoutId = null;
                 return false; // stops timeout recurrence
             });
     }
@@ -205,7 +203,7 @@ class ActionDispatcher {
             // closes navigator and action is performed afterwards
             // (e.g. switch-monitor-left)
             this._resetNoModsTimeout();
-            Mainloop.timeout_add(0, () => {
+            this._doActionTimeout = Mainloop.timeout_add(0, () => {
                 action.handler(metaWindow, space);
                 return false; // on return false destroys timeout
             });
@@ -227,8 +225,10 @@ class ActionDispatcher {
     }
 
     destroy() {
-        if (this._noModsTimeoutId != 0)
-            Mainloop.source_remove(this._noModsTimeoutId);
+        utils.timeout_remove(this._noModsTimeoutId);
+        utils.timeout_remove(this._doActionTimeout);
+        this._noModsTimeoutId = null;
+        this._doActionTimeout = null;
 
         try {
             if (grab) {
@@ -410,7 +410,6 @@ function getNavigator() {
     navigator = new Navigator();
     return navigator;
 }
-
 
 /**
  *
