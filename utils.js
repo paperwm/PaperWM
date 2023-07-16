@@ -10,8 +10,6 @@ var workspaceManager = global.workspace_manager;
 var display = global.display;
 var WindowTracker = imports.gi.Shell.WindowTracker;
 
-var Tiling = Extension.imports.tiling;
-
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
 var registerClass = GObject.registerClass;
 
@@ -176,7 +174,7 @@ function setDevGlobals() {
     meta_window = display.focus_window;
     workspace = workspaceManager.get_active_workspace();
     actor = metaWindow.get_compositor_private();
-    space = Tiling.spaces.spaceOfWindow(metaWindow);
+    space = Extension.imports.Tiling.spaces.spaceOfWindow(metaWindow);
     app = WindowTracker.get_default().get_window_app(metaWindow);
 }
 

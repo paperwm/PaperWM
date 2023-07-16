@@ -34,7 +34,7 @@ var Config = imports.misc.config;
      - gestures is responsible for 3-finger swiping (only works in wayland).
  */
 var modules = [
-    'settings', 'tiling', 'navigator', 'keybindings', 'scratch', 'liveAltTab', 'utils',
+    'settings', 'utils', 'tiling', 'navigator', 'keybindings', 'scratch', 'liveAltTab',
     'stackoverlay', 'app', 'kludges', 'topbar', 'gestures',
 ];
 
