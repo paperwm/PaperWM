@@ -31,6 +31,6 @@ If this is the first time installing PaperWM, then please logout/login
 and enable the PaperWM extension, either with the Gnome Extensions application, 
 or manually by executing the following command from a terminal:
 
-/usr/bin/gnome-extensions enable ${UUID}
+gnome-extensions enable ${UUID}
 
 EOF

@@ -23,9 +23,8 @@ var display = global.display;
 
 var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
-
 function registerPaperAction(actionName, handler, flags) {
-    let settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.paperwm.keybindings');
+    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
     registerAction(
         actionName,
         handler,
@@ -33,7 +32,7 @@ function registerPaperAction(actionName, handler, flags) {
 }
 
 function registerNavigatorAction(name, handler) {
-    let settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.paperwm.keybindings');
+    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
     registerAction(
         name,
         handler,
@@ -41,7 +40,7 @@ function registerNavigatorAction(name, handler) {
 }
 
 function registerMinimapAction(name, handler) {
-    let settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.paperwm.keybindings');
+    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
     registerAction(
         name,
         handler,
@@ -68,7 +67,7 @@ function setupActions() {
     let dynamic_function_ref = Utils.dynamic_function_ref;
     let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
 
-    let settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.paperwm.keybindings');
+    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
     registerAction('live-alt-tab',
         liveAltTab, { settings });
     registerAction('live-alt-tab-backward',
@@ -242,10 +241,9 @@ function byId(mutterId) {
     return actionIdMap[mutterId];
 }
 
-var asKeyHandler = (actionHandler) =>
-    (display, mw, binding) => {
-        return actionHandler(mw, Tiling.spaces.selectedSpace, { display, binding });
-    };
+function asKeyHandler(actionHandler) {
+    return (display, mw, binding) => actionHandler(mw, Tiling.spaces.selectedSpace, {display, binding});
+}
 
 function impliedOptions(options) {
     options = options = Object.assign({mutterFlags: Meta.KeyBindingFlags.NONE}, options);

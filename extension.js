@@ -83,7 +83,7 @@ let lastDisabledTime = 0; // init (epoch ms)
 
 /**
  * Runs once on extension init().
- * Not run on PaperWM modules, but if a user as a `user.js` module defined
+ * Not run on PaperWM modules, but if a user has a `user.js` module defined
  * in `~/.config/paperwm/` then this will run it's `user.js` init().
  */
 function init() {

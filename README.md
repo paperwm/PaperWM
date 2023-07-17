@@ -28,11 +28,11 @@ Clone the repo and check out the branch supporting the Gnome Shell version you'r
 
 Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/release/install.sh) script
 from the repository. The installer will create a link to the repo in
-`$XDG_DATA_HOME/gnome-shell/extensions/`. It will then ask if you want to enable PaperWM.
+`~/.local/share/gnome-shell/extensions`. It will then ask if you want to enable PaperWM.
 ```bash
 ./install.sh # install, load and enable paperwm
 ```
-> #### ➡️ You may need to restart Gnome shell after installing PaperWM, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only).
+> #### ➡️ You will need to restart Gnome shell after installing PaperWM, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only).
 >
 > After logging back in, you will can then enable PaperWM via the `Extensions` application, or by running the following command from the command-line:
 >
