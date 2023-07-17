@@ -63,7 +63,7 @@ class ActionDispatcher {
 
     constructor() {
         debug("#dispatch", "created")
-        this.signals = new utils.Signals()
+        this.signals = Module.Signals()
         this.actor = Tiling.spaces.spaceContainer
         this.actor.set_flags(Clutter.ActorFlags.REACTIVE);
         this.navigator = getNavigator();

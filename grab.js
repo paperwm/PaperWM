@@ -1,15 +1,12 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Meta = imports.gi.Meta;
-var {Clutter, St, Graphene} = imports.gi;
-var Main = imports.ui.main;
-var Mainloop = imports.mainloop;
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const Meta = imports.gi.Meta;
+const {Clutter, St, Graphene} = imports.gi;
+const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
 
-var Tiling = Extension.imports.tiling;
-var Scratch = Extension.imports.scratch;
-var prefs = Extension.imports.settings.prefs;
-var Utils = Extension.imports.utils;
-var Easer = Utils.easer;
-var Navigator = Extension.imports.navigator;
+const prefs = Module.Extension.imports.settings.prefs;
+const Easer = Module.Extension.imports.utils.easer;
+const Navigator = Module.Extension.imports.navigator;
 
 var virtualPointer;
 
@@ -46,19 +43,19 @@ var MoveGrab = class MoveGrab {
     constructor(metaWindow, type, space) {
         this.window = metaWindow;
         this.type = type;
-        this.signals = new Utils.Signals();
+        this.signals = new Module.Extension.imports.signal.Signals();
         this.grabbed = false;
 
-        this.initialSpace = space || Tiling.spaces.spaceOfWindow(metaWindow);
+        this.initialSpace = space || Module.Tiling().spaces.spaceOfWindow(metaWindow);
         this.zoneActors = new Set();
 
         // save whether this was tiled window at start of grab
         this.wasTiled = !(this.initialSpace.isFloating(metaWindow) ||
-            Scratch.isScratchWindow(metaWindow));
+            Module.Scratch().isScratchWindow(metaWindow));
     }
 
     begin({center} = {}) {
-        Utils.debug("#grab", "begin");
+        Module.Utils().debug("#grab", "begin");
 
         this.center = center;
         if (this.grabbed)
@@ -72,7 +69,7 @@ var MoveGrab = class MoveGrab {
         this.dispatcher = new Navigator.getActionDispatcher(Clutter.GrabState.POINTER)
         this.actor = this.dispatcher.actor
 
-        for (let [monitor, $] of Tiling.spaces.monitors) {
+        for (let [monitor, $] of Module.Tiling().spaces.monitors) {
             monitor.clickOverlay.deactivate();
         }
 
@@ -116,7 +113,7 @@ var MoveGrab = class MoveGrab {
         space.startAnimate();
         // Make sure the window actor is visible
         Navigator.getNavigator();
-        Tiling.animateWindow(metaWindow);
+        Module.Tiling().animateWindow(metaWindow);
         Easer.removeEase(space.cloneContainer);
     }
 
@@ -125,7 +122,7 @@ var MoveGrab = class MoveGrab {
             return;
         this.center = center;
         this.dnd = true;
-        Utils.debug("#grab", "begin DnD");
+        Module.Utils().debug("#grab", "begin DnD");
         Navigator.getNavigator().minimaps.forEach(m => typeof m === 'number'
             ? Mainloop.source_remove(m) : m.hide());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
@@ -148,7 +145,7 @@ var MoveGrab = class MoveGrab {
         let i = space.indexOf(metaWindow);
         let single = i !== -1 && space[i].length === 1;
         space.removeWindow(metaWindow);
-        Utils.actor_reparent(clone, Main.uiGroup);
+        Module.Utils().actor_reparent(clone, Main.uiGroup);
         clone.x = Math.round(point.x);
         clone.y = Math.round(point.y);
         let newScale = clone.scale_x * space.actor.scale_x;
@@ -173,9 +170,9 @@ var MoveGrab = class MoveGrab {
 
         let [x, y] = space.globalToViewport(gx, gy);
         if (!this.center && onSame && single && space[i]) {
-            Tiling.move_to(space, space[i][0], {x: x + prefs.window_gap / 2});
+            Module.Tiling().move_to(space, space[i][0], {x: x + prefs.window_gap / 2});
         } else if (!this.center && onSame && single && space[i - 1]) {
-            Tiling.move_to(space, space[i - 1][0], {x: x - space[i - 1][0].clone.width - prefs.window_gap / 2});
+            Module.Tiling().move_to(space, space[i - 1][0], {x: x - space[i - 1][0].clone.width - prefs.window_gap / 2});
         } else if (!this.center && onSame && space.length === 0) {
             space.targetX = x;
             space.cloneContainer.x = x;
@@ -183,7 +180,7 @@ var MoveGrab = class MoveGrab {
 
         let [sx, sy] = space.globalToScroll(gx, gy, {useTarget: true});
 
-        for (let [workspace, space] of Tiling.spaces) {
+        for (let [workspace, space] of Module.Tiling().spaces) {
             this.signals.connect(space.background, "motion-event", this.spaceMotion.bind(this, space));
         }
         this.selectDndZone(space, sx, sy, single && onSame);
@@ -368,7 +365,7 @@ var MoveGrab = class MoveGrab {
     }
 
     end() {
-        Utils.debug("#grab", "end")
+        Module.Utils().debug("#grab", "end")
         this.signals.destroy();
 
         let metaWindow = this.window;
@@ -394,8 +391,8 @@ var MoveGrab = class MoveGrab {
                 destSpace = space;
                 space.selection.show()
 
-                if (Scratch.isScratchWindow(metaWindow))
-                    Scratch.unmakeScratch(metaWindow);
+                if (Module.Scratch().isScratchWindow(metaWindow))
+                    Module.Scratch().unmakeScratch(metaWindow);
 
                 // Remember the global coordinates of the clone
                 let [x, y] = clone.get_position();
@@ -421,17 +418,17 @@ var MoveGrab = class MoveGrab {
                 space.targetX = space.cloneContainer.x;
                 space.selectedWindow = metaWindow;
                 if (dndTarget.position) {
-                    space.layout(true, {customAllocators: {[dndTarget.position[0]]: Tiling.allocateEqualHeight}});
+                    space.layout(true, {customAllocators: {[dndTarget.position[0]]: Module.Tiling().allocateEqualHeight}});
                 } else {
                     space.layout();
                 }
-                Tiling.move_to(space, metaWindow, {x: x - space.monitor.x})
-                Tiling.ensureViewport(metaWindow, space);
+                Module.Tiling().move_to(space, metaWindow, {x: x - space.monitor.x})
+                Module.Tiling().ensureViewport(metaWindow, space);
 
-                Utils.actor_raise(clone);
+                Module.Utils().actor_raise(clone);
             } else {
                 metaWindow.move_frame(true, clone.x, clone.y);
-                Scratch.makeScratch(metaWindow);
+                Module.Scratch().makeScratch(metaWindow);
                 this.initialSpace.moveDone();
 
                 actor.set_scale(clone.scale_x, clone.scale_y);
@@ -454,14 +451,14 @@ var MoveGrab = class MoveGrab {
             actor.set_scale(1, 1);
             actor.set_pivot_point(0, 0);
 
-            Tiling.animateWindow(metaWindow);
+            Module.Tiling().animateWindow(metaWindow);
             params.onStopped = () => {
                 space.moveDone()
                 clone.set_pivot_point(0, 0)
             }
             Easer.addEase(clone, params);
 
-            Tiling.ensureViewport(metaWindow, space);
+            Module.Tiling().ensureViewport(metaWindow, space);
             Navigator.getNavigator().accept()
         }
 
@@ -471,7 +468,7 @@ var MoveGrab = class MoveGrab {
 
         this.initialSpace.layout();
         // ensure window is properly activated after layout/ensureViewport tweens
-        Utils.later_add(Meta.LaterType.IDLE, () => {
+        Module.Utils().later_add(Meta.LaterType.IDLE, () => {
             Main.activateWindow(metaWindow);
         });
 
@@ -479,7 +476,7 @@ var MoveGrab = class MoveGrab {
         // // If the window is transient this will take care of its parent too.
         // metaWindow.change_workspace(space.workspace)
         // space.workspace.activate(global.get_current_time());
-        Tiling.inGrab = false;
+        Module.Tiling().inGrab = false;
         if (this.dispatcher) {
             Navigator.dismissDispatcher(Clutter.GrabState.POINTER)
         }
@@ -493,7 +490,7 @@ var MoveGrab = class MoveGrab {
          * may still be in progress, which is okay, but won't be ended
          * until we "click out".  We do this here if needed.
          */
-        Utils.later_add(Meta.LaterType.IDLE, () => {
+        Module.Utils().later_add(Meta.LaterType.IDLE, () => {
             if (!global.display.end_grab_op && this.wasTiled) {
                 // move to current cursort position
                 let [x, y, _mods] = global.get_pointer();
@@ -547,7 +544,7 @@ var MoveGrab = class MoveGrab {
         zone.space.cloneContainer.add_child(zone.actor);
         zone.space.selection.hide();
         zone.actor.show();
-        Utils.actor_raise(zone.actor);
+        Module.Utils().actor_raise(zone.actor);
         Easer.addEase(zone.actor, params);
     }
 
@@ -564,14 +561,14 @@ var MoveGrab = class MoveGrab {
 
         this.dndTarget = null;
     }
-}
+};
 
 var ResizeGrab = class ResizeGrab {
     constructor(metaWindow, type) {
         this.window = metaWindow;
-        this.signals = new Utils.Signals();
+        this.signals = Module.Signals();
 
-        this.space = Tiling.spaces.spaceOfWindow(metaWindow);
+        this.space = Module.Tiling().spaces.spaceOfWindow(metaWindow);
         if (this.space.indexOf(metaWindow) === -1)
             return;
 
@@ -593,4 +590,4 @@ var ResizeGrab = class ResizeGrab {
         this.window = null;
         this.space.layout();
     }
-}
+};

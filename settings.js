@@ -2,15 +2,15 @@
    Settings utility shared between the running extension and the preference UI.
  */
 
-var ExtensionUtils = imports.misc.extensionUtils;
-var Extension = ExtensionUtils.getCurrentExtension();
-var Gio = imports.gi.Gio;
-var GLib = imports.gi.GLib;
-var Gtk = imports.gi.Gtk;
-var Mainloop = imports.mainloop;
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
 
-var settings = ExtensionUtils.getSettings();
-var utils = Extension.imports.utils;
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
+const Gtk = imports.gi.Gtk;
+const Mainloop = imports.mainloop;
+
+var settings = Module.ExtensionUtils.getSettings();
+
 var workspaceSettingsCache = {};
 
 var WORKSPACE_KEY = 'org.gnome.shell.extensions.paperwm.workspace';
@@ -43,7 +43,7 @@ function onWindowGapChanged() {
         Mainloop.source_remove(timerId);
     }
     timerId = Mainloop.timeout_add(500, () => {
-        Extension.imports.tiling.spaces.mru().forEach(space => {
+        Module.Extension.imports.tiling.spaces.mru().forEach(space => {
             space.layout();
         });
         timerId = null;
@@ -68,7 +68,7 @@ function setSchemas() {
         new Gio.Settings({schema_id: "org.gnome.shell.keybindings"})
     ];
     schemaSource = Gio.SettingsSchemaSource.new_from_directory(
-        GLib.build_filenamev([Extension.path, "schemas"]),
+        GLib.build_filenamev([Module.Extension.path, "schemas"]),
         Gio.SettingsSchemaSource.get_default(),
         false
     );
@@ -103,7 +103,7 @@ function enable() {
 }
 
 function disable() {
-    utils.timeout_remove(timerId);
+    Module.Utils().timeout_remove(timerId);
     timerId = null;
 
     workspaceSettingsCache = {};
@@ -118,7 +118,7 @@ function disable() {
 function getDefaultFocusMode() {
     // find matching focus mode
     const mode = prefs.default_focus_mode;
-    const modes = Extension.imports.tiling.FocusModes;
+    const modes = Module.Extension.imports.tiling.FocusModes;
     let result = null;
     Object.entries(modes).forEach(([k,v]) => {
         if (v === mode) {
@@ -172,7 +172,7 @@ function getWorkspaceSettingsByUUID(uuid) {
 function findWorkspaceSettingsByName(regex) {
     let list = workspaceList.get_strv('list');
     let settingss = list.map(getWorkspaceSettingsByUUID);
-    return utils.zip(list, settingss, settingss.map(s => s.get_string('name')))
+    return Module.Utils().zip(list, settingss, settingss.map(s => s.get_string('name')))
         .filter(([uuid, s, name]) => name.match(regex));
 }
 
@@ -214,7 +214,7 @@ function deleteWorkspaceSettings(uuid) {
 function printWorkspaceSettings() {
     let list = workspaceList.get_strv('list');
     let settings = list.map(getWorkspaceSettingsByUUID);
-    let zipped = utils.zip(list, settings);
+    let zipped = Module.Utils().zip(list, settings);
     const key = s => s[1].get_int('index');
     zipped.sort((a, b) => key(a) - key(b));
     for (let [uuid, s] of zipped) {
@@ -309,7 +309,7 @@ function findConflicts(schemas) {
     schemas = schemas || conflictSettings;
     let conflicts = [];
     const paperMap =
-          generateKeycomboMap(ExtensionUtils.getSettings(KEYBINDINGS_KEY));
+          generateKeycomboMap(Module.ExtensionUtils.getSettings(KEYBINDINGS_KEY));
 
     for (let settings of schemas) {
         const against = generateKeycomboMap(settings);

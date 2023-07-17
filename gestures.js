@@ -1,19 +1,14 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Meta = imports.gi.Meta;
-var Gio = imports.gi.Gio;
-var Clutter = imports.gi.Clutter;
-var Main = imports.ui.main;
-var Shell = imports.gi.Shell;
-var Easer = Extension.imports.utils.easer;
-var Mainloop = imports.mainloop;
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const Meta = imports.gi.Meta;
+const Gio = imports.gi.Gio;
+const Clutter = imports.gi.Clutter;
+const Main = imports.ui.main;
+const Shell = imports.gi.Shell;
+const Mainloop = imports.mainloop;
 
-var Utils = Extension.imports.utils;
-var Tiling = Extension.imports.tiling;
-var Navigator = Extension.imports.navigator;
-var prefs = Extension.imports.settings.prefs;
-var Kludges = Extension.imports.kludges;
-
-const stage = global.stage;
+const Easer = Module.Extension.imports.utils.easer;
+const Navigator = Module.Extension.imports.navigator;
+const prefs = Module.Extension.imports.settings.prefs;
 
 const DIRECTIONS = {
     Horizontal: true,
@@ -30,7 +25,7 @@ var signals;
 // 1 is natural scrolling, -1 is unnatural
 var natural = 1;
 function enable() {
-    signals = new Utils.Signals();
+    signals = Module.Signals();
     // Touchpad swipes only works in Wayland
     if (!Meta.is_wayland_compositor())
         return;
@@ -48,7 +43,7 @@ function enable() {
        scrolling works anywhere, while horizontal scrolling is done on the space
        under the mouse cursor.
      */
-    signals.connect(stage, 'captured-event', (actor, event) => {
+    signals.connect(global.stage, 'captured-event', (actor, event) => {
         if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
             event.get_touchpad_gesture_finger_count() < 3 ||
             (Main.actionMode & Shell.ActionMode.OVERVIEW) > 0) {
@@ -76,7 +71,7 @@ function enable() {
 
                 let dir_y = -dy*natural*prefs.swipe_sensitivity[1];
                 // if not Tiling.inPreview and swipe is UP => propagate event to overview
-                if (!Tiling.inPreview && dir_y > 0) {
+                if (!Module.Tiling().inPreview && dir_y > 0) {
                     swipeTrackersEnable();
                     return Clutter.EVENT_PROPAGATE;
                 }
@@ -110,7 +105,7 @@ function enable() {
 
 function disable() {
     signals.destroy();
-    Utils.timeout_remove(endVerticalTimeout);
+    Module.Utils().timeout_remove(endVerticalTimeout);
     endVerticalTimeout = null;
     touchpadSettings = null;
 }
@@ -158,7 +153,7 @@ function update(space, dx, t) {
 
     // Check which target windew will be selected if we releas the swipe at this
     // moment
-    dx = Utils.sum(dxs.slice(-3));
+    dx = Module.Utils().sum(dxs.slice(-3));
     let v = dx/(t - dts.slice(-3)[0]);
     if (Number.isFinite(v)) {
         space.vx = v;
@@ -173,7 +168,7 @@ function update(space, dx, t) {
     space.targetX = target;
     let selected = findTargetWindow(space, direction, start - space.targetX > 0);
     space.targetX = space.cloneContainer.x;
-    Tiling.updateSelection(space, selected);
+    Module.Tiling().updateSelection(space, selected);
     space.selectedWindow = selected;
     space.emit('select');
 
@@ -223,7 +218,7 @@ function done(space) {
     space.targetX = Math.round(target);
     selected = last || first || findTargetWindow(space, start - target > 0 );
     delete selected.lastFrame; // Invalidate frame information
-    let x = Tiling.ensuredX(selected, space);
+    let x = Module.Tiling().ensuredX(selected, space);
     target = x - selected.clone.targetX;
 
     // Scale down travel time if we've cut down the discance to travel
@@ -237,7 +232,7 @@ function done(space) {
     }
     space.targetX = target;
 
-    Tiling.updateSelection(space, selected);
+    Module.Tiling().updateSelection(space, selected);
     space.selectedWindow = selected;
     space.emit('select');
     gliding = true;
@@ -249,7 +244,7 @@ function done(space) {
             gliding = false;
         },
         onComplete: () => {
-            if (!Tiling.inPreview)
+            if (!Module.Tiling().inPreview)
                 Navigator.getNavigator().finish();
         }
     });
@@ -321,15 +316,15 @@ function findTargetWindow(space, direction) {
 var transition = 'easeOutQuad';
 function updateVertical(dy, t) {
     // if here then initiate workspace stack (for tiling inPreview show)
-    if (!Tiling.inPreview) {
-        Tiling.spaces.initWorkspaceStack();
+    if (!Module.Tiling().inPreview) {
+        Module.Tiling().spaces.initWorkspaceStack();
     }
 
-    let selected = Tiling.spaces.selectedSpace;
+    let selected = Module.Tiling().spaces.selectedSpace;
     let monitor = navigator.monitor;
     let v = dy/(t - time);
     time = t;
-    const StackPositions = Tiling.StackPositions;
+    const StackPositions = Module.Tiling().StackPositions;
     if (dy > 0
         && selected !== navigator.from
         && (selected.actor.y - dy < StackPositions.up * monitor.height)
@@ -337,8 +332,8 @@ function updateVertical(dy, t) {
         dy = 0;
         vy = 1;
         selected.actor.y = StackPositions.up * selected.height;
-        Tiling.spaces.selectStackSpace(Meta.MotionDirection.UP, false, transition);
-        selected = Tiling.spaces.selectedSpace;
+        Module.Tiling().spaces.selectStackSpace(Meta.MotionDirection.UP, false, transition);
+        selected = Module.Tiling().spaces.selectedSpace;
         Easer.removeEase(selected.actor);
         Easer.addEase(selected.actor, {
             scale_x: 0.9, scale_y: 0.9, time:
@@ -349,8 +344,8 @@ function updateVertical(dy, t) {
         dy = 0;
         vy = -1;
         selected.actor.y = StackPositions.down * selected.height;
-        Tiling.spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, transition);
-        selected = Tiling.spaces.selectedSpace;
+        Module.Tiling().spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, transition);
+        selected = Module.Tiling().spaces.selectedSpace;
         Easer.removeEase(selected.actor);
         Easer.addEase(selected.actor, {
             scale_x: 0.9, scale_y: 0.9, time:
@@ -384,7 +379,7 @@ function endVertical() {
             return false;
         }
 
-        let selected = Tiling.spaces.selectedSpace;
+        let selected = Module.Tiling().spaces.selectedSpace;
         let y = selected.actor.y;
         if (selected === navigator.from && y <= 0.1*selected.height) {
             navigator.finish();
@@ -419,5 +414,5 @@ function endVertical() {
  */
 function swipeTrackersEnable(option) {
     let enable = option ?? true;
-    Kludges.swipeTrackers.forEach(t => t.enabled = enable);
+    Module.Kludges().swipeTrackers.forEach(t => t.enabled = enable);
 }

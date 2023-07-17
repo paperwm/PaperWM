@@ -1,4 +1,4 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
 var {GLib, Clutter, Meta, GObject} = imports.gi;
 var St = imports.gi.St;
 var GdkPixbuf = imports.gi.GdkPixbuf;
@@ -9,8 +9,6 @@ var Mainloop = imports.mainloop;
 var workspaceManager = global.workspace_manager;
 var display = global.display;
 var WindowTracker = imports.gi.Shell.WindowTracker;
-
-var Tiling = Extension.imports.tiling;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
 var registerClass = GObject.registerClass;
@@ -176,7 +174,7 @@ function setDevGlobals() {
     meta_window = display.focus_window;
     workspace = workspaceManager.get_active_workspace();
     actor = metaWindow.get_compositor_private();
-    space = Tiling.spaces.spaceOfWindow(metaWindow);
+    space = Module.Tiling().spaces.spaceOfWindow(metaWindow);
     app = WindowTracker.get_default().get_window_app(metaWindow);
 }
 
@@ -503,7 +501,7 @@ function infoMetaWindow(metaWindow) {
     if (metaWindow.above) {
         info.push(`- above`);
     }
-    if (Extension.imports.scratch.isScratchWindow(metaWindow)) {
+    if (Module.Scratch().isScratchWindow(metaWindow)) {
         info.push(`- scratch`);
     }
     return info;
