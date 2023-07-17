@@ -24,13 +24,15 @@ var direction = undefined;
 var signals;
 // 1 is natural scrolling, -1 is unnatural
 var natural = 1;
+
+var touchpadSettings;
 function enable() {
     signals = Module.Signals();
     // Touchpad swipes only works in Wayland
     if (!Meta.is_wayland_compositor())
         return;
 
-    var touchpadSettings = new Gio.Settings({
+    touchpadSettings = new Gio.Settings({
         schema_id: 'org.gnome.desktop.peripherals.touchpad',
     });
 
