@@ -1,14 +1,13 @@
-const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-var {GLib, Clutter, Meta, GObject} = imports.gi;
-var St = imports.gi.St;
-var GdkPixbuf = imports.gi.GdkPixbuf;
-var Cogl = imports.gi.Cogl;
-var Main = imports.ui.main;
-var Mainloop = imports.mainloop;
+const {GLib, Clutter, Meta, GObject} = imports.gi;
+const St = imports.gi.St;
+const GdkPixbuf = imports.gi.GdkPixbuf;
+const Cogl = imports.gi.Cogl;
+const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
 
-var workspaceManager = global.workspace_manager;
-var display = global.display;
-var WindowTracker = imports.gi.Shell.WindowTracker;
+const workspaceManager = global.workspace_manager;
+const display = global.display;
+const WindowTracker = imports.gi.Shell.WindowTracker;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
 var registerClass = GObject.registerClass;
