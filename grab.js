@@ -1,12 +1,10 @@
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const Meta = imports.gi.Meta;
-const {Clutter, St, Graphene} = imports.gi;
+const {Meta, Clutter, St, Graphene} = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 
 const prefs = Module.Extension.imports.settings.prefs;
 const Easer = Module.Extension.imports.utils.easer;
-const Navigator = Module.Extension.imports.navigator;
 
 var virtualPointer;
 
@@ -43,7 +41,7 @@ var MoveGrab = class MoveGrab {
     constructor(metaWindow, type, space) {
         this.window = metaWindow;
         this.type = type;
-        this.signals = new Module.Extension.imports.signal.Signals();
+        this.signals = Module.Signals();
         this.grabbed = false;
 
         this.initialSpace = space || Module.Tiling().spaces.spaceOfWindow(metaWindow);
@@ -61,13 +59,11 @@ var MoveGrab = class MoveGrab {
         if (this.grabbed)
             return;
 
-        this.grabbed = true
-        
+        this.grabbed = true;
         global.display.end_grab_op?.(global.get_current_time());
-        
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
-        this.dispatcher = new Navigator.getActionDispatcher(Clutter.GrabState.POINTER)
-        this.actor = this.dispatcher.actor
+        this.dispatcher = new Module.Extension.imports.navigator.getActionDispatcher(Clutter.GrabState.POINTER);
+        this.actor = this.dispatcher.actor;
 
         for (let [monitor, $] of Module.Tiling().spaces.monitors) {
             monitor.clickOverlay.deactivate();
@@ -112,7 +108,7 @@ var MoveGrab = class MoveGrab {
         this.scrollAnchor = x;
         space.startAnimate();
         // Make sure the window actor is visible
-        Navigator.getNavigator();
+        Module.Navigator().getNavigator();
         Module.Tiling().animateWindow(metaWindow);
         Easer.removeEase(space.cloneContainer);
     }
@@ -123,7 +119,7 @@ var MoveGrab = class MoveGrab {
         this.center = center;
         this.dnd = true;
         Module.Utils().debug("#grab", "begin DnD");
-        Navigator.getNavigator().minimaps.forEach(m => typeof m === 'number'
+        Module.Navigator().getNavigator().minimaps.forEach(m => typeof m === 'number'
             ? Mainloop.source_remove(m) : m.hide());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
         let metaWindow = this.window;
@@ -365,7 +361,7 @@ var MoveGrab = class MoveGrab {
     }
 
     end() {
-        Module.Utils().debug("#grab", "end")
+        Module.Utils().debug("#grab", "end");
         this.signals.destroy();
 
         let metaWindow = this.window;
@@ -389,7 +385,7 @@ var MoveGrab = class MoveGrab {
             if (dndTarget) {
                 let space = dndTarget.space;
                 destSpace = space;
-                space.selection.show()
+                space.selection.show();
 
                 if (Module.Scratch().isScratchWindow(metaWindow))
                     Module.Scratch().unmakeScratch(metaWindow);
@@ -442,7 +438,7 @@ var MoveGrab = class MoveGrab {
                 Easer.addEase(actor, params);
             }
 
-            Navigator.getNavigator().accept()
+            Module.Navigator().getNavigator().accept();
         } else if (this.initialSpace.indexOf(metaWindow) !== -1) {
             let space = this.initialSpace;
             destSpace = space;
@@ -453,13 +449,13 @@ var MoveGrab = class MoveGrab {
 
             Module.Tiling().animateWindow(metaWindow);
             params.onStopped = () => {
-                space.moveDone()
-                clone.set_pivot_point(0, 0)
+                space.moveDone();
+                clone.set_pivot_point(0, 0);
             }
             Easer.addEase(clone, params);
 
             Module.Tiling().ensureViewport(metaWindow, space);
-            Navigator.getNavigator().accept()
+            Module.Navigator().getNavigator().accept();
         }
 
         // NOTE: we reset window here so `window-added` will handle the window,
@@ -478,7 +474,7 @@ var MoveGrab = class MoveGrab {
         // space.workspace.activate(global.get_current_time());
         Module.Tiling().inGrab = false;
         if (this.dispatcher) {
-            Navigator.dismissDispatcher(Clutter.GrabState.POINTER)
+            Module.Navigator().dismissDispatcher(Clutter.GrabState.POINTER)
         }
 
         global.display.set_cursor(Meta.Cursor.DEFAULT);

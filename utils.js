@@ -152,16 +152,16 @@ function setBackgroundImage(actor, resource_path) {
     // resource://{resource_path}
     let image = new Clutter.Image();
 
-    let pixbuf = GdkPixbuf.Pixbuf.new_from_resource(resource_path)
+    let pixbuf = GdkPixbuf.Pixbuf.new_from_resource(resource_path);
 
-    image.set_data(pixbuf.get_pixels() ,
-                   pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
-                   : Cogl.PixelFormat.RGB_888,
-                   pixbuf.get_width() ,
-                   pixbuf.get_height() ,
-                   pixbuf.get_rowstride());
+    image.set_data(pixbuf.get_pixels(),
+        pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
+            : Cogl.PixelFormat.RGB_888,
+        pixbuf.get_width(),
+        pixbuf.get_height(),
+        pixbuf.get_rowstride());
     actor.set_content(image);
-    actor.content_repeat = Clutter.ContentRepeat.BOTH
+    actor.content_repeat = Clutter.ContentRepeat.BOTH;
 }
 
 
@@ -227,7 +227,6 @@ function toggleCloneMarks() {
         if (metaWindow.clone) {
             metaWindow.clone.opacity = 190;
             metaWindow.clone.__oldOpacity = 190;
-
             metaWindow.clone.background_color = Clutter.color_from_string("red")[1];
         }
     }

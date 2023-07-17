@@ -1,9 +1,7 @@
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
 const {Gio, GLib, GObject, Gtk, Gdk} = imports.gi;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Module = Extension.imports.module;
-const {KeybindingsPane} = Extension.imports.prefsKeybinding;
-const {WinpropsPane} = Extension.imports.winpropsPane;
+const {KeybindingsPane} = Module.Extension.imports.prefsKeybinding;
+const {WinpropsPane} = Module.Extension.imports.winpropsPane;
 
 let _ = s => s;
 
@@ -47,8 +45,8 @@ var SettingsWidget = class SettingsWidget {
      */
     constructor(prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
         let wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
-        this._settings = ExtensionUtils.getSettings();
-        this.builder = Gtk.Builder.new_from_file(Extension.path + '/Settings.ui');
+        this._settings = Module.ExtensionUtils.getSettings();
+        this.builder = Gtk.Builder.new_from_file(Module.Extension.path + '/Settings.ui');
         this.window = prefsWindow;
 
         const pages = [
@@ -131,8 +129,8 @@ var SettingsWidget = class SettingsWidget {
                     .map(v => v.replaceAll(/[^\d.]/g, '')) // strip everything but digits and period
                     .filter(v => v.length > 0) // needed to remove invalid inputs
                     .map(Number) // only accept valid numbers
-                    .map(v => isPercent ? v/100.0 : v)
-                    .sort((a,b) => a - b); // sort values to ensure monotonicity
+                    .map(v => isPercent ? v / 100.0 : v)
+                    .sort((a, b) => a - b); // sort values to ensure monotonicity
 
                 // check to make sure if percent than input cannot be > 100%
                 if (isPercent && varr.some(v => v > 1)) {
@@ -292,7 +290,7 @@ var SettingsWidget = class SettingsWidget {
 
         // About
         let versionLabel = this.builder.get_object('extension_version');
-        let version = Extension.metadata.version?.toString() ?? '?';
+        let version = Module.Extension.metadata.version?.toString() ?? '?';
         versionLabel.set_text(version);
     }
 
@@ -348,7 +346,7 @@ var SettingsWidget = class SettingsWidget {
         let clearDirectory = new Gtk.Button({
             icon_name: 'edit-clear-symbolic',
             tooltip_text: 'Clear workspace directory',
-            sensitive: settings.get_string('directory') != ''
+            sensitive: settings.get_string('directory') != '',
         });
         directoryBox.append(directoryChooser);
         directoryBox.append(clearDirectory);
@@ -801,7 +799,7 @@ function syncStringSetting(settings, key, callback) {
  */
 function init() {
     const provider = new Gtk.CssProvider();
-    provider.load_from_path(Extension.dir.get_path() + '/resources/prefs.css');
+    provider.load_from_path(Module.Extension.dir.get_path() + '/resources/prefs.css');
     Gtk.StyleContext.add_provider_for_display(
         Gdk.Display.get_default(),
         provider,

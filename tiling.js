@@ -893,7 +893,7 @@ var Space = class Space extends Array {
             Main.overview.visible ||
             // Block when we're carrying a window in dnd
             (inGrab && inGrab.window)
-           ) {
+        ) {
             return;
         }
 
