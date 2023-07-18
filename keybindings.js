@@ -229,10 +229,9 @@ function byId(mutterId) {
     return actionIdMap[mutterId];
 }
 
-var asKeyHandler = (actionHandler) =>
-    (display, mw, binding) => {
-        return actionHandler(mw, Module.Tiling().spaces.selectedSpace, { display, binding });
-    };
+function asKeyHandler(actionHandler) {
+    return (display, mw, binding) => actionHandler(mw, Tiling.spaces.selectedSpace, {display, binding});
+}
 
 function impliedOptions(options) {
     options = options = Object.assign({mutterFlags: Meta.KeyBindingFlags.NONE}, options);

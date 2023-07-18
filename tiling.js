@@ -1274,8 +1274,8 @@ border-radius: ${borderWidth}px;
     }
 
     /**
- * Updates workspace topbar icon positions.
- */
+    * Updates workspace topbar icon positions.
+    */
     updateSpaceIconPositions() {
         // get positions of topbar elements to replicate positions in spaces
         const vertex = new Graphene.Point3D({x: 0, y: 0});

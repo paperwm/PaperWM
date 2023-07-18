@@ -428,9 +428,9 @@ var Signals = class Signals extends Map {
 };
 
 /**
- * Note the name `Tweener` used previously was just a legacy name, we're actually using
+ * Note the name 'Tweener' used previously was just a legacy name, we're actually using
  * Widget.ease here.  This was renamed to avoid confusion with the deprecated `Tweener`
- * moddule.
+ * module.
  */
 var easer = {
     addEase(actor, params) {

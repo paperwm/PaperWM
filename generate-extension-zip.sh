@@ -2,7 +2,7 @@
 
 # Creates a zip of (only) the necessary files required by Gnome for the PaperWM extension.
 # Designed for submitting a zip to extensions.gnome.org.
-/usr/bin/zip -r paperwm@paperwm.github.com.zip \
+zip -r paperwm@paperwm.github.com.zip \
 	metadata.json \
 	stylesheet.css \
 	*.js \
