@@ -467,6 +467,8 @@ var StackOverlay = class StackOverlay {
         this.signals.destroy();
         this.removePreview();
         this.removeBarrier();
+        Main.layoutManager.untrackChrome(this.overlay);
+        this.overlay.destroy();
     }
 
     /**
