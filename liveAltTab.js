@@ -1,20 +1,13 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Clutter = imports.gi.Clutter;
-var Meta = imports.gi.Meta;
-var AltTab = imports.ui.altTab;
-var Main = imports.ui.main;
-var Easer = Extension.imports.utils.easer;
-var Gio = imports.gi.Gio;
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const Easer = Module.Extension.imports.utils.easer;
+const prefs = Module.Extension.imports.settings.prefs;
 
-var Scratch = Extension.imports.scratch;
-var Tiling = Extension.imports.tiling;
-var Keybindings = Extension.imports.keybindings;
-var utils = Extension.imports.utils;
-var debug = utils.debug;
+const {Clutter, Meta, Gio} = imports.gi;
+const Main = imports.ui.main;
+const AltTab = imports.ui.altTab;
 
-var prefs = Extension.imports.settings.prefs;
 
-var LiveAltTab = utils.registerClass(
+var LiveAltTab = Module.Utils().registerClass(
     class LiveAltTab extends AltTab.WindowSwitcherPopup {
         _init(reverse) {
             this.reverse = reverse;
@@ -26,11 +19,11 @@ var LiveAltTab = utils.registerClass(
                 Meta.TabList.NORMAL_ALL,
                 switcherSettings.get_boolean('current-workspace-only') ?
                     global.workspace_manager.get_active_workspace() : null)
-                .filter(w => !Scratch.isScratchWindow(w));
+                .filter(w => !Module.Scratch().isScratchWindow(w));
 
-            let scratch = Scratch.getScratchWindows();
+            let scratch = Module.Scratch().getScratchWindows();
 
-            if (Scratch.isScratchWindow(global.display.focus_window)) {
+            if (Module.Scratch().isScratchWindow(global.display.focus_window)) {
                 // Access scratch windows in mru order with shift-super-tab
                 return scratch.concat(this.reverse ? tabList.reverse() : tabList);
             } else {
@@ -39,10 +32,10 @@ var LiveAltTab = utils.registerClass(
         }
 
         _initialSelection(backward, actionName) {
-            this.space = Tiling.spaces.selectedSpace;
+            this.space = Module.Tiling().spaces.selectedSpace;
             this.space.startAnimate();
 
-            let monitor = Tiling.spaces.selectedSpace.monitor;
+            let monitor = Module.Tiling().spaces.selectedSpace.monitor;
             let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
             let fog = new Clutter.Actor({
                 x: workArea.x, y: workArea.y,
@@ -70,23 +63,22 @@ var LiveAltTab = utils.registerClass(
             // After the first super-tab the mutterActionId we get is apparently
             // SWITCH_APPLICATIONS so we need to case on those too.
             switch (mutterActionId) {
-                case Meta.KeyBindingAction.SWITCH_APPLICATIONS:
-                    mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
-                    break;
-                case Meta.KeyBindingAction.SWITCH_APPLICATIONS_BACKWARD:
-                    mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
-                    break;
-                case Keybindings.idOf('live-alt-tab'):
-                    mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
-                    break;
-                    ;;
-                case Keybindings.idOf('live-alt-tab-backward'):
-                    mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
-                    break;
+            case Meta.KeyBindingAction.SWITCH_APPLICATIONS:
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
+                break;
+            case Meta.KeyBindingAction.SWITCH_APPLICATIONS_BACKWARD:
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
+                break;
+            case Module.Keybindings().idOf('live-alt-tab'):
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
+                break;
+            case Module.Keybindings().idOf('live-alt-tab-backward'):
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
+                break;
             }
-            // let action = Keybindings.byId(mutterActionId);
+            // let action = Module.Keybindings().byId(mutterActionId);
             // if (action && action.options.activeInNavigator) {
-            //     let space = Tiling.spaces.selectedSpace;
+            //     let space = Module.Tiling().spaces.selectedSpace;
             //     let metaWindow = space.selectedWindow;
             //     action.handler(metaWindow, space);
             //     return true;
@@ -106,16 +98,16 @@ var LiveAltTab = utils.registerClass(
             let clone = new Clutter.Clone({ source: actor });
             clone.position = actor.position;
 
-            let space = Tiling.spaces.spaceOfWindow(to);
+            let space = Module.Tiling().spaces.spaceOfWindow(to);
             if (space.indexOf(to) !== -1) {
-                clone.x = Tiling.ensuredX(to, space) + space.monitor.x;
+                clone.x = Module.Tiling().ensuredX(to, space) + space.monitor.x;
                 clone.x -= frame.x - actor.x;
             }
 
             this.clone = clone;
             Main.uiGroup.insert_child_above(clone, this.fog);
 
-            // Tiling.ensureViewport(to, space);
+            // Module.Tiling().ensureViewport(to, space);
             this._selectedIndex = num;
             this._switcherList.highlight(num);
         }
@@ -136,7 +128,7 @@ var LiveAltTab = utils.registerClass(
 
         _onDestroy() {
             super._onDestroy();
-            debug('#preview', 'onDestroy', this.was_accepted);
+            Module.Utils().debug('#preview', 'onDestroy', this.was_accepted);
             Easer.addEase(this.fog, {
                 time: prefs.animation_time,
                 opacity: 0,
@@ -151,7 +143,7 @@ var LiveAltTab = utils.registerClass(
             });
             let index = this.was_accepted ? this._selectedIndex : 0
             let to = this._switcherList.windows[index];
-            Tiling.focus_handler(to);
+            Module.Tiling().focus_handler(to);
             let actor = to.get_compositor_private();
             if (this.was_accepted) {
                 actor.x = this.clone.x;

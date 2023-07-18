@@ -1,14 +1,13 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var {GLib, Clutter, Meta, GObject} = imports.gi;
-var St = imports.gi.St;
-var GdkPixbuf = imports.gi.GdkPixbuf;
-var Cogl = imports.gi.Cogl;
-var Main = imports.ui.main;
-var Mainloop = imports.mainloop;
+const {GLib, Clutter, Meta, GObject} = imports.gi;
+const St = imports.gi.St;
+const GdkPixbuf = imports.gi.GdkPixbuf;
+const Cogl = imports.gi.Cogl;
+const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
 
-var workspaceManager = global.workspace_manager;
-var display = global.display;
-var WindowTracker = imports.gi.Shell.WindowTracker;
+const workspaceManager = global.workspace_manager;
+const display = global.display;
+const WindowTracker = imports.gi.Shell.WindowTracker;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
 var registerClass = GObject.registerClass;
@@ -153,16 +152,16 @@ function setBackgroundImage(actor, resource_path) {
     // resource://{resource_path}
     let image = new Clutter.Image();
 
-    let pixbuf = GdkPixbuf.Pixbuf.new_from_resource(resource_path)
+    let pixbuf = GdkPixbuf.Pixbuf.new_from_resource(resource_path);
 
-    image.set_data(pixbuf.get_pixels() ,
-                   pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
-                   : Cogl.PixelFormat.RGB_888,
-                   pixbuf.get_width() ,
-                   pixbuf.get_height() ,
-                   pixbuf.get_rowstride());
+    image.set_data(pixbuf.get_pixels(),
+        pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
+            : Cogl.PixelFormat.RGB_888,
+        pixbuf.get_width(),
+        pixbuf.get_height(),
+        pixbuf.get_rowstride());
     actor.set_content(image);
-    actor.content_repeat = Clutter.ContentRepeat.BOTH
+    actor.content_repeat = Clutter.ContentRepeat.BOTH;
 }
 
 
@@ -174,7 +173,7 @@ function setDevGlobals() {
     meta_window = display.focus_window;
     workspace = workspaceManager.get_active_workspace();
     actor = metaWindow.get_compositor_private();
-    space = Extension.imports.Tiling.spaces.spaceOfWindow(metaWindow);
+    space = Module.Tiling().spaces.spaceOfWindow(metaWindow);
     app = WindowTracker.get_default().get_window_app(metaWindow);
 }
 
@@ -228,7 +227,6 @@ function toggleCloneMarks() {
         if (metaWindow.clone) {
             metaWindow.clone.opacity = 190;
             metaWindow.clone.__oldOpacity = 190;
-
             metaWindow.clone.background_color = Clutter.color_from_string("red")[1];
         }
     }
@@ -501,7 +499,7 @@ function infoMetaWindow(metaWindow) {
     if (metaWindow.above) {
         info.push(`- above`);
     }
-    if (Extension.imports.scratch.isScratchWindow(metaWindow)) {
+    if (Module.Scratch().isScratchWindow(metaWindow)) {
         info.push(`- scratch`);
     }
     return info;

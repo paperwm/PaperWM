@@ -5,28 +5,21 @@
   around these problems and facilitates new features.
  */
 
-var ExtensionUtils = imports.misc.extensionUtils;
-var Extension = ExtensionUtils.getCurrentExtension();
-var Meta = imports.gi.Meta;
-var Gio = imports.gi.Gio;
-var Main = imports.ui.main;
-var Mainloop = imports.mainloop;
-var Workspace = imports.ui.workspace;
-var WindowManager = imports.ui.windowManager;
-var WorkspaceAnimation = imports.ui.workspaceAnimation;
-var Shell = imports.gi.Shell;
-var utils = Extension.imports.utils;
-var Params = imports.misc.params;
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const {Meta, Gio, Clutter, Shell} = imports.gi;
 
-var Scratch = Extension.imports.scratch;
-var Tiling = Extension.imports.tiling;
-var Clutter = imports.gi.Clutter;
+const Main = imports.ui.main;
+const Workspace = imports.ui.workspace;
+const WindowManager = imports.ui.windowManager;
+const WorkspaceAnimation = imports.ui.workspaceAnimation;
+const Mainloop = imports.mainloop;
+const Params = imports.misc.params;
 
 // Workspace.WindowClone.getOriginalPosition
 // Get the correct positions of tiled windows when animating to/from the overview
 function getOriginalPosition() {
     let c = this.metaWindow.clone;
-    let space = Tiling.spaces.spaceOfWindow(this.metaWindow);
+    let space = Module.Tiling().spaces.spaceOfWindow(this.metaWindow);
     if (!space || space.indexOf(this.metaWindow) === -1) {
         return [this._boundingBox.x, this._boundingBox.y];
     }
@@ -146,7 +139,7 @@ function setupOverrides() {
                 return;
             }
 
-            let space = Tiling.spaces.spaceOf(this.metaWorkspace);
+            let space = Module.Tiling().spaces.spaceOf(this.metaWorkspace);
             if (space) {
                 clones.sort((a, b) => {
                     let aw = a.metaWindow;
@@ -205,9 +198,9 @@ function setupOverrides() {
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
         let metaWindow = win.meta_window || win;
         if (settings.get_boolean('only-scratch-in-overview'))
-            return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+            return Module.Scratch().isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
         if (settings.get_boolean('disable-scratch-in-overview'))
-            return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+            return !Module.Scratch().isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
     });
 }
 
@@ -319,7 +312,7 @@ function setupSwipeTrackers() {
 
 var signals;
 function setupSignals() {
-    signals = new utils.Signals();
+    signals = Module.Signals();
 
     /**
      * Swipetrackers are reset by gnome during overview, once exits overview
@@ -363,7 +356,7 @@ function setupActions() {
 
 var settings, wmSettings, mutterSettings;
 function enable() {
-    settings = ExtensionUtils.getSettings();
+    settings = Module.ExtensionUtils.getSettings();
     wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
     mutterSettings = new Gio.Settings({schema_id: 'org.gnome.mutter'});
     setupSwipeTrackers();
@@ -392,8 +385,8 @@ function disable() {
 function sortWindows(a, b) {
     let aw = a.metaWindow;
     let bw = b.metaWindow;
-    let spaceA = Tiling.spaces.spaceOfWindow(aw);
-    let spaceB = Tiling.spaces.spaceOfWindow(bw);
+    let spaceA = Module.Tiling().spaces.spaceOfWindow(aw);
+    let spaceB = Module.Tiling().spaces.spaceOfWindow(bw);
     let ia = spaceA.indexOf(aw);
     let ib = spaceB.indexOf(bw);
     if (ia === -1 && ib === -1) {
@@ -485,7 +478,7 @@ function _checkWorkspaces() {
     }
 
     // Update workspaces only if Dynamic Workspace Management has not been paused by some other function
-    if (this._pauseWorkspaceCheck || Tiling.inPreview)
+    if (this._pauseWorkspaceCheck || Module.Tiling().inPreview)
         return true;
 
     for (i = 0; i < this._workspaces.length; i++) {
@@ -547,7 +540,7 @@ function _checkWorkspaces() {
     }
 
     // Keep visible spaces
-    for (let [monitor, space] of Tiling.spaces.monitors) {
+    for (let [monitor, space] of Module.Tiling().spaces.monitors) {
         emptyWorkspaces[space.workspace.index()] = false;
     }
 

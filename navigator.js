@@ -5,31 +5,24 @@
   `SwitcherPopup.SwitcherPopup` when we really should just take full control.
  */
 
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Meta = imports.gi.Meta;
-var Main = imports.ui.main;
-var Mainloop = imports.mainloop;
-/** @type {import('@gi-types/clutter10')} */
-var Clutter = imports.gi.Clutter;
-var Signals = imports.signals;
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const Minimap = Module.Extension.imports.minimap;
 
-var TopBar = Extension.imports.topbar;
-var Scratch = Extension.imports.scratch;
-var Minimap = Extension.imports.minimap;
-var Tiling = Extension.imports.tiling;
-var Keybindings = Extension.imports.keybindings;
-var utils = Extension.imports.utils;
-var debug = utils.debug;
+const Meta = imports.gi.Meta;
+const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
+/** @type {import('@gi-types/clutter10')} */
+const Clutter = imports.gi.Clutter;
+const Signals = imports.signals;
+
+const display = global.display;
+const stage = global.stage;
 
 var workspaceManager = global.workspace_manager;
-var display = global.display;
-
-const stage = global.stage;
 
 var scale = 0.9;
 var navigating = false;
 var grab = null;
-
 
 /** @type {ActionDispatcher} */
 var dispatcher = null
@@ -62,14 +55,14 @@ class ActionDispatcher {
     mode;
 
     constructor() {
-        debug("#dispatch", "created")
-        this.signals = new utils.Signals()
-        this.actor = Tiling.spaces.spaceContainer
+        Module.Utils().debug("#dispatch", "created")
+        this.signals = Module.Signals();
+        this.actor = Module.Tiling().spaces.spaceContainer;
         this.actor.set_flags(Clutter.ActorFlags.REACTIVE);
         this.navigator = getNavigator();
 
         if (grab) {
-            debug("#dispatch", "already in grab")
+            Module.Utils().debug("#dispatch", "already in grab")
             return;
         }
 
@@ -91,14 +84,14 @@ class ActionDispatcher {
     show(backward, binding, mask) {
         this._modifierMask = getModLock(mask);
         this.navigator = getNavigator();
-        TopBar.fixTopBar();
-        let actionId = Keybindings.idOf(binding);
+        Module.TopBar().fixTopBar();
+        let actionId = Module.Keybindings().idOf(binding);
         if (actionId === Meta.KeyBindingAction.NONE) {
             try {
                 // Check for built-in actions
                 actionId = Meta.prefs_get_keybinding_action(binding);
             } catch(e) {
-                debug("Couldn't resolve action name");
+                Module.Utils().debug("Couldn't resolve action name");
                 return false;
             }
         }
@@ -123,7 +116,7 @@ class ActionDispatcher {
     }
 
     _resetNoModsTimeout() {
-        utils.timeout_remove(this._noModsTimeoutId);
+        Module.Utils().timeout_remove(this._noModsTimeoutId);
         this._noModsTimeoutId = Mainloop.timeout_add(
             0, () => {
                 this._finish(global.get_current_time());
@@ -175,8 +168,8 @@ class ActionDispatcher {
     }
 
     _doAction(mutterActionId) {
-        let action = Keybindings.byId(mutterActionId);
-        let space = Tiling.spaces.selectedSpace;
+        let action = Module.Keybindings().byId(mutterActionId);
+        let space = Module.Tiling().spaces.selectedSpace;
         let metaWindow = space.selectedWindow;
         const nav = getNavigator();
 
@@ -188,16 +181,16 @@ class ActionDispatcher {
                 return;
             }
 
-            if (!Tiling.inGrab && action.options.opensMinimap) {
+            if (!Module.Tiling().inGrab && action.options.opensMinimap) {
                 nav._showMinimap(space);
             }
             action.handler(metaWindow, space, {navigator: this.navigator});
-            if (space !== Tiling.spaces.selectedSpace) {
+            if (space !== Module.Tiling().spaces.selectedSpace) {
                 this.navigator.minimaps.forEach(m => typeof m === 'number'
                     ? Mainloop.source_remove(m) : m.hide());
             }
-            if (Tiling.inGrab && !Tiling.inGrab.dnd && Tiling.inGrab.window) {
-                Tiling.inGrab.beginDnD();
+            if (Module.Tiling().inGrab && !Module.Tiling().inGrab.dnd && Module.Tiling().inGrab.window) {
+                Module.Tiling().inGrab.beginDnD();
             }
         } else if (action) {
             // closes navigator and action is performed afterwards
@@ -215,7 +208,7 @@ class ActionDispatcher {
         nav.accept();
         !this._destroy && nav.destroy();
         dismissDispatcher(Clutter.GrabState.KEYBOARD);
-        let space = Tiling.spaces.selectedSpace;
+        let space = Module.Tiling().spaces.selectedSpace;
         let metaWindow = space.selectedWindow;
         if (metaWindow) {
             if (!metaWindow.appears_focused) {
@@ -225,8 +218,8 @@ class ActionDispatcher {
     }
 
     destroy() {
-        utils.timeout_remove(this._noModsTimeoutId);
-        utils.timeout_remove(this._doActionTimeout);
+        Module.Utils().timeout_remove(this._noModsTimeoutId);
+        Module.Utils().timeout_remove(this._doActionTimeout);
         this._noModsTimeoutId = null;
         this._doActionTimeout = null;
 
@@ -236,7 +229,7 @@ class ActionDispatcher {
                 grab = null;
             }
         } catch (e) {
-            utils.debug("Failed to release grab: ", e);
+            Module.Utils().debug("Failed to release grab: ", e);
         }
 
         this.actor.unset_flags(Clutter.ActorFlags.REACTIVE);
@@ -251,7 +244,7 @@ var index = 0;
 var navigator;
 class NavigatorClass {
     constructor() {
-        debug("#navigator", "nav created");
+        Module.Utils().debug("#navigator", "nav created");
         navigating = true;
 
         this.was_accepted = false;
@@ -260,7 +253,7 @@ class NavigatorClass {
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
         // Meta.disable_unredirect_for_screen(screen);
-        this.space = Tiling.spaces.getActiveSpace();
+        this.space = Module.Tiling().spaces.getActiveSpace();
 
         this._startWindow = this.space.selectedWindow;
         this.from = this.space;
@@ -268,9 +261,9 @@ class NavigatorClass {
         this.monitor.clickOverlay.hide();
         this.minimaps = new Map();
 
-        TopBar.fixTopBar();
+        Module.TopBar().fixTopBar();
 
-        Scratch.animateWindows();
+        Module.Scratch().animateWindows();
         this.space.startAnimate();
     }
 
@@ -309,21 +302,21 @@ class NavigatorClass {
                 m.destroy();
         });
 
-        if (Tiling.inGrab && !Tiling.inGrab.dnd) {
-            Tiling.inGrab.beginDnD()
+        if (Module.Tiling().inGrab && !Module.Tiling().inGrab.dnd) {
+            Module.Tiling().inGrab.beginDnD()
         }
 
         if (Main.panel.statusArea.appMenu)
             Main.panel.statusArea.appMenu.container.show();
 
-        let force = Tiling.inPreview;
+        let force = Module.Tiling().inPreview;
         navigating = false;
 
         if (force) {
             this.space.monitor.clickOverlay.hide();
         }
 
-        this.space = space || Tiling.spaces.selectedSpace;
+        this.space = space || Module.Tiling().spaces.selectedSpace;
 
         let from = this.from;
         let selected = this.space.selectedWindow;
@@ -338,7 +331,7 @@ class NavigatorClass {
 
         let visible = [];
         for (let monitor of Main.layoutManager.monitors) {
-            visible.push(Tiling.spaces.monitors.get(monitor));
+            visible.push(Module.Tiling().spaces.monitors.get(monitor));
             if (monitor === this.monitor)
                 continue;
             monitor.clickOverlay.activate();
@@ -355,11 +348,11 @@ class NavigatorClass {
             // happens on workspace switch, but activating the same workspace
             // again doesn't trigger a switch signal
             if (force) {
-                Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId);
+                Module.Tiling().spaces.switchWorkspace(null, workspaceId, workspaceId);
             }
         } else {
-            if (Tiling.inGrab && Tiling.inGrab.window) {
-                this.space.workspace.activate_with_focus(Tiling.inGrab.window, global.get_current_time());
+            if (Module.Tiling().inGrab && Module.Tiling().inGrab.window) {
+                this.space.workspace.activate_with_focus(Module.Tiling().inGrab.window, global.get_current_time());
             } else {
                 this.space.workspace.activate(global.get_current_time());
             }
@@ -375,23 +368,23 @@ class NavigatorClass {
         if (focus)
             selected = focus;
 
-        if (selected && !Tiling.inGrab) {
+        if (selected && !Module.Tiling().inGrab) {
             let hasFocus = selected && selected.has_focus();
             selected.foreach_transient(mw => hasFocus = mw.has_focus() || hasFocus);
             if (hasFocus) {
-                Tiling.focus_handler(selected);
+                Module.Tiling().focus_handler(selected);
             } else {
                 Main.activateWindow(selected);
             }
         }
-        if (selected && Tiling.inGrab && !this.was_accepted) {
-            Tiling.focus_handler(selected);
+        if (selected && Module.Tiling().inGrab && !this.was_accepted) {
+            Module.Tiling().focus_handler(selected);
         }
 
-        if (!Tiling.inGrab)
-            Scratch.showWindows();
+        if (!Module.Tiling().inGrab)
+            Module.Scratch().showWindows();
 
-        TopBar.fixTopBar();
+        Module.TopBar().fixTopBar();
 
         Main.wm._blockAnimations = this._block;
         this.space.moveDone();

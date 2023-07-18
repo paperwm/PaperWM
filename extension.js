@@ -1,10 +1,9 @@
-var ExtensionUtils = imports.misc.extensionUtils;
-var Extension = ExtensionUtils.getCurrentExtension();
-var {Gio, GLib, St} = imports.gi;
-var Util = imports.misc.util;
-var MessageTray = imports.ui.messageTray;
-var Main = imports.ui.main;
-var Config = imports.misc.config;
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const {Gio, GLib, St} = imports.gi;
+const Util = imports.misc.util;
+const MessageTray = imports.ui.messageTray;
+const Main = imports.ui.main;
+const Config = imports.misc.config;
 
 /**
    The currently used modules
@@ -57,7 +56,7 @@ function run(method) {
 
 function safeCall(name, method) {
     try {
-        let module = Extension.imports[name];
+        let module = Module.Extension.imports[name];
         if (module && module[method]) {
             log("#paperwm", `${method} ${name}`);
         }
@@ -101,7 +100,6 @@ function enable() {
     }
 
     SESSIONID += "#";
-    Extension = imports.misc.extensionUtils.getCurrentExtension();
     warnAboutGnomeShellVersionCompatibility();
 
     enableUserStylesheet();
@@ -137,14 +135,13 @@ function disable() {
     }
 
     disableUserStylesheet();
-    Extension = null;
 }
 
 // Checks gnome shell version compatibility and warns the user when running on
 // and unsupported version.
 function warnAboutGnomeShellVersionCompatibility() {
     const gnomeShellVersion = Config.PACKAGE_VERSION;
-    const supportedVersions = Extension.metadata["shell-version"];
+    const supportedVersions = Module.Extension.metadata["shell-version"];
     for (const version of supportedVersions) {
         if (gnomeShellVersion.startsWith(version)) {
             return;
@@ -191,7 +188,7 @@ function updateUserConfigMetadata() {
 
     try {
         const configDir = getConfigDir();
-        const metadata = Extension.dir.get_child("metadata.json");
+        const metadata = Module.Extension.dir.get_child("metadata.json");
         metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.OVERWRITE, null, null);
     } catch (error) {
         log('PaperWM', `could not update user config metadata.json: ${error}`);
@@ -208,7 +205,7 @@ function installConfig() {
     updateUserConfigMetadata();
 
     // Copy the user.js template to the config directory
-    const user = Extension.dir.get_child("config/user.js");
+    const user = Module.Extension.dir.get_child("config/user.js");
     user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
 }
 
@@ -230,7 +227,7 @@ function initUserConfig() {
     }
 
     if (hasUserConfigFile()) {
-        Extension.imports.searchPath.push(getConfigDir().get_path());
+        Module.Extension.imports.searchPath.push(getConfigDir().get_path());
     }
 }
 

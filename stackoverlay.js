@@ -1,14 +1,10 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Tiling = Extension.imports.tiling;
-var Mainloop = imports.mainloop;
-var {Clutter, Shell, Meta, St} = imports.gi;
-var Main = imports.ui.main;
-var utils = Extension.imports.utils;
-var Layout = imports.ui.layout;
-var Grab = Extension.imports.grab;
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const prefs = Module.Extension.imports.settings.prefs;
 
-var Settings = Extension.imports.settings;
-var prefs = Settings.prefs;
+const {Clutter, Shell, Meta, St} = imports.gi;
+const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
+const Layout = imports.ui.layout;
 
 /*
   The stack overlay decorates the top stacked window with its icon and
@@ -74,7 +70,7 @@ var ClickOverlay = class ClickOverlay {
         Main.uiGroup.add_actor(enterMonitor);
         Main.layoutManager.trackChrome(enterMonitor);
 
-        this.signals = new utils.Signals();
+        this.signals = Module.Signals();
 
         this._lastPointer = [];
         this._lastPointerTimeout = null;
@@ -82,7 +78,7 @@ var ClickOverlay = class ClickOverlay {
             enterMonitor, 'motion-event',
             (actor, event) => {
                 // Changing monitors while in workspace preview doesn't work
-                if (Tiling.inPreview)
+                if (Module.Tiling().inPreview)
                     return;
                 let [x, y, z] = global.get_pointer();
                 let [lX, lY] = this._lastPointer;
@@ -101,7 +97,7 @@ var ClickOverlay = class ClickOverlay {
 
         this.signals.connect(
             enterMonitor, 'button-press-event', () => {
-                if (Tiling.inPreview)
+                if (Module.Tiling().inPreview)
                     return;
                 this.select();
                 return Clutter.EVENT_STOP;
@@ -124,7 +120,7 @@ var ClickOverlay = class ClickOverlay {
          */
         this.signals.connect(global.display, 'grab-op-end', (display, mw, type) => {
             let [gx, gy, $] = global.get_pointer();
-            if (this.monitor === Grab.monitorAtPoint(gx, gy)) {
+            if (this.monitor === Module.Grab().monitorAtPoint(gx, gy)) {
                 this.select();
             }
         });
@@ -132,7 +128,7 @@ var ClickOverlay = class ClickOverlay {
 
     select() {
         this.deactivate();
-        let space = Tiling.spaces.monitors.get(this.monitor);
+        let space = Module.Tiling().spaces.monitors.get(this.monitor);
         let display = global.display;
         let mi = space.monitor.index;
         let mru = display.get_tab_list(Meta.TabList.NORMAL,
@@ -160,7 +156,7 @@ var ClickOverlay = class ClickOverlay {
         if (this.onlyOnPrimary || Main.overview.visible)
             return;
 
-        let spaces = Tiling.spaces;
+        let spaces = Module.Tiling().spaces;
         let active = global.workspace_manager.get_active_workspace();
         let monitor = this.monitor;
         // Never activate the clickoverlay of the active monitor
@@ -193,7 +189,7 @@ var ClickOverlay = class ClickOverlay {
     }
 
     destroy() {
-        utils.timeout_remove(this._lastPointerTimeout);
+        Module.Utils().timeout_remove(this._lastPointerTimeout);
         this._lastPointerTimeout = null;
         this.signals.destroy();
         for (let overlay of [this.left, this.right]) {
@@ -228,9 +224,9 @@ var StackOverlay = class StackOverlay {
         let panelBox = Main.layoutManager.panelBox;
         overlay.y = monitor.y + panelBox.height + prefs.vertical_margin;
         overlay.height = this.monitor.height - panelBox.height - prefs.vertical_margin;
-        overlay.width = Tiling.stack_margin;
+        overlay.width = Module.Tiling().stack_margin;
 
-        this.signals = new utils.Signals();
+        this.signals = Module.Signals();
 
         this.triggerPreviewTimeout = null;
         this.signals.connect(overlay, 'button-press-event', () => {
@@ -249,7 +245,7 @@ var StackOverlay = class StackOverlay {
 
         this.signals.connect(overlay, 'enter-event', this.triggerPreview.bind(this));
         this.signals.connect(overlay, 'leave-event', this.removePreview.bind(this));
-        this.signals.connect(Settings.settings, 'changed::pressure-barrier',
+        this.signals.connect(Module.Settings().settings, 'changed::pressure-barrier',
             this.updateBarrier.bind(this, true));
 
         this.updateBarrier();
@@ -309,7 +305,7 @@ var StackOverlay = class StackOverlay {
 
         // Remove any window clips, and show the metaWindow.clone's
         actor.remove_clip();
-        Tiling.animateWindow(this.target);
+        Module.Tiling().animateWindow(this.target);
 
         // set clone parameters
         let scale = prefs.minimap_scale;
@@ -404,7 +400,7 @@ var StackOverlay = class StackOverlay {
             return false;
         };
 
-        if (space === null || Tiling.inPreview) {
+        if (space === null || Module.Tiling().inPreview) {
             // No target. Eg. if we're at the left- or right-most window
             return bail();
         }
@@ -436,7 +432,7 @@ var StackOverlay = class StackOverlay {
                 width = Math.min(width, 1);
             overlay.x = this.monitor.x;
             overlay.width = Math.max(width, 1);
-            utils.actor_raise(overlay, neighbour.get_compositor_private());
+            Module.Utils().actor_raise(overlay, neighbour.get_compositor_private());
         } else {
             let column = space[space.indexOf(metaWindow) - 1];
             let neighbour = column &&
@@ -452,7 +448,7 @@ var StackOverlay = class StackOverlay {
             width = Math.max(width, 1);
             overlay.x = this.monitor.x + this.monitor.width - width;
             overlay.width = width;
-            utils.actor_raise(overlay, neighbour.get_compositor_private());
+            Module.Utils().actor_raise(overlay, neighbour.get_compositor_private());
         }
 
         if (space.selectedWindow.fullscreen || space.selectedWindow.maximized_vertically)
@@ -465,7 +461,7 @@ var StackOverlay = class StackOverlay {
     }
 
     destroy() {
-        utils.timeout_remove(this.triggerPreviewTimeout);
+        Module.Utils().timeout_remove(this.triggerPreviewTimeout);
         this.triggerPreviewTimeout = null;
 
         this.signals.destroy();

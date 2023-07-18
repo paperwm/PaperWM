@@ -1,12 +1,11 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Clutter = imports.gi.Clutter;
-var Easer = Extension.imports.utils.easer;
-var Main = imports.ui.main;
-var St = imports.gi.St;
-var Pango = imports.gi.Pango;
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const Easer = Module.Extension.imports.utils.easer;
+const prefs = Module.Extension.imports.settings.prefs;
 
-var utils = Extension.imports.utils;
-var prefs = Extension.imports.settings.prefs;
+const Clutter = imports.gi.Clutter;
+const Main = imports.ui.main;
+const St = imports.gi.St;
+const Pango = imports.gi.Pango;
 
 function calcOffset(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
@@ -54,7 +53,7 @@ var Minimap = class Minimap extends Array {
         this.actor.opacity = 0;
         this.createClones();
 
-        this.signals = new utils.Signals();
+        this.signals = Module.Signals();
         this.signals.connect(space, 'select', this.select.bind(this));
         this.signals.connect(space, 'window-added', this.addWindow.bind(this));
         this.signals.connect(space, 'window-removed', this.removeWindow.bind(this));
@@ -97,8 +96,8 @@ var Minimap = class Minimap extends Array {
 
     swapped(space, index, targetIndex, row, targetRow) {
         let column = this[index];
-        utils.swap(this, index, targetIndex);
-        utils.swap(column, row, targetRow);
+        Module.Utils().swap(this, index, targetIndex);
+        Module.Utils().swap(column, row, targetRow);
         this.layout();
     }
 
