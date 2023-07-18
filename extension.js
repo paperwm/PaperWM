@@ -221,13 +221,21 @@ function enableUserConfig() {
 
     updateUserConfigMetadata();
 
-    if (firstEnable && hasUserConfigFile()) {
-        Extension.imports.searchPath.push(getConfigDir().get_path());
-        safeCall('user', 'init');
-    }
+    // add to searchpath if user has config file and action user.js
+    if (hasUserConfigFile()) {
+        let SearchPath = Extension.imports.searchPath;
+        let path = getConfigDir().get_path();
+        if (!SearchPath.includes(path)) {
+            SearchPath.push(path);
+        }
 
-    // run user.js enable
-    safeCall('user', 'enable');
+        // run user.js routines
+        if (firstEnable) {
+            safeCall('user', 'init');
+        }
+
+        safeCall('user', 'enable');
+    }
 }
 
 /**
