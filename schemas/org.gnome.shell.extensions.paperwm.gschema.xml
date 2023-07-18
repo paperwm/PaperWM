@@ -1,7 +1,7 @@
 <schemalist>
 
   <!-- Keybindings -->
-  <schema id="org.gnome.Shell.Extensions.PaperWM.Keybindings"
+  <schema id="org.gnome.shell.extensions.paperwm.keybindings"
           path="/org/gnome/shell/extensions/paperwm/keybindings/">
 
     <key type="as" name="new-window">
@@ -233,7 +233,7 @@
     </key>
   </schema>
 
-  <schema id="org.gnome.Shell.Extensions.PaperWM.Workspace">
+  <schema id="org.gnome.shell.extensions.paperwm.workspace">
       <key type="i" name="index">
           <default>-1</default>
           <summary>The workspace index</summary>
@@ -260,18 +260,29 @@
       </key>
   </schema>
 
-  <schema id="org.gnome.Shell.Extensions.PaperWM.WorkspaceList"
+  <schema id="org.gnome.shell.extensions.paperwm.workspacelist"
           path="/org/gnome/shell/extensions/paperwm/workspaces/">
       <key name="list" type="as">
           <default>[]</default>
       </key>
   </schema>
 
-  <schema id="org.gnome.Shell.Extensions.PaperWM" path="/org/gnome/shell/extensions/paperwm/">
+  <schema id="org.gnome.shell.extensions.paperwm" path="/org/gnome/shell/extensions/paperwm/">
 
-    <key type="b" name="has-installed-config-template">
-      <default>false</default>
-      <summary>Have we installed the user.js template in ~/.config/paperwm ?</summary>
+    <!-- backup settings (used for restore) -->
+    <key type="s" name="restore-attach-modal-dialogs">
+        <default>''</default>
+        <summary>Original setting value (used for restore)</summary>
+    </key>
+
+    <key type="s" name="restore-workspaces-only-on-primary">
+        <default>''</default>
+        <summary>Original setting value (used for restore)</summary>
+    </key>
+
+    <key type="s" name="restore-edge-tiling">
+        <default>''</default>
+        <summary>Original setting value (used for restore)</summary>
     </key>
 
     <!-- Settings -->
@@ -298,11 +309,6 @@
     <key type="d" name="minimap-scale">
       <default>0.15</default>
       <summary>Scale of mini mini-map tiles compared to their actual window size.</summary>
-    </key>
-
-    <key type="b" name="override-hot-corner">
-        <default>true</default>
-        <summary>Disable the upper left hot corner</summary>
     </key>
 
     <key type="b" name="only-scratch-in-overview">
@@ -403,8 +409,8 @@
         <summary>Array of winprops as (JSON) string objects</summary>
     </key>
 
-    <child name="keybindings" schema="org.gnome.Shell.Extensions.PaperWM.Keybindings"/>
-    <child name="workspaces" schema="org.gnome.Shell.Extensions.PaperWM.WorkspaceList"/>
+    <child name="keybindings" schema="org.gnome.shell.extensions.paperwm.keybindings"/>
+    <child name="workspaces" schema="org.gnome.shell.extensions.paperwm.workspacelist"/>
 
   </schema>
 

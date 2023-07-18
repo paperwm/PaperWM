@@ -6,7 +6,7 @@ REPO="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 if [[ -L "$REPO" ]]; then
    REPO=`readlink --canonicalize "$REPO"`
 fi
-UUID=paperwm@hedning:matrix.org
+UUID=paperwm@paperwm.github.com
 if type gnome-extensions > /dev/null; then
     gnome-extensions disable "$UUID"
 else

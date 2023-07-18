@@ -2,13 +2,8 @@
   Application functionality, like global new window actions etc.
  */
 
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
-}
-
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
+var ExtensionModule = Extension.imports.extension;
 var GLib = imports.gi.GLib
 var Gio = imports.gi.Gio;
 var Tiling = Extension.imports.tiling
@@ -21,7 +16,7 @@ var CouldNotLaunch = Symbol();
 
 // Lookup table for custom handlers, keys being the app id
 var customHandlers, customSpawnHandlers;
-function init() {
+function enable() {
     customHandlers = { 'org.gnome.Terminal.desktop': newGnomeTerminal };
     customSpawnHandlers = {
         'com.gexperts.Tilix.desktop': mkCommandLineSpawner('tilix --working-directory %d')
@@ -75,6 +70,11 @@ function init() {
     );
 }
 
+function disable() {
+    customHandlers = null;
+    customSpawnHandlers = null;
+}
+
 function launchFromWorkspaceDir(app, workspace=null) {
     if (typeof(app) === 'string') {
         app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
@@ -107,7 +107,7 @@ function newGnomeTerminal(metaWindow, app) {
        If the new window doesn't start in the same directory it's probably
        because 'vte.sh' haven't been sourced by the shell in this terminal */
     app.action_group.activate_action(
-        "win.new-terminal", new imports.gi.GLib.Variant("(ss)", ["window", "current"]));
+        "win.new-terminal", new GLib.Variant("(ss)", ["window", "current"]));
 }
 
 function duplicateWindow(metaWindow) {
@@ -180,7 +180,7 @@ function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir=false) {
             success = GLib.spawn_async(workingDir, cmdArgs, GLib.get_environ(), GLib.SpawnFlags.SEARCH_PATH, null);
         }
         if (!success) {
-            Extension.imports.extension.notify(
+            ExtensionModule.notify(
                 `Failed to run custom spawn handler for ${app.id}`,
                 `Attempted to run '${commandline}'`);
         }
