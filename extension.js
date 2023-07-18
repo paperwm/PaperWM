@@ -31,7 +31,7 @@ var MessageTray = imports.ui.messageTray;
 
      - gestures is responsible for 3-finger swiping (only works in wayland).
  */
-var modules = [
+const modules = [
     'settings', 'tiling', 'navigator', 'keybindings', 'scratch', 'liveAltTab', 'utils',
     'stackoverlay', 'app', 'kludges', 'topbar', 'gestures',
 ];
@@ -44,10 +44,6 @@ function run(method) {
         // Bail if there's an error in our own modules
         if (!safeCall(name, method))
             return false;
-    }
-
-    if (hasUserConfigFile()) {
-        safeCall('user', method);
     }
 
     return true;
@@ -72,7 +68,7 @@ function safeCall(name, method) {
     }
 }
 
-var SESSIONID = ""+(new Date().getTime());
+var SESSIONID = "" + (new Date().getTime());
 
 /**
  * The extension sometimes go through multiple init -> enable -> disable
@@ -81,16 +77,7 @@ var SESSIONID = ""+(new Date().getTime());
 var enabled = false;
 let lastDisabledTime = 0; // init (epoch ms)
 
-/**
- * Runs once on extension init().
- * Not run on PaperWM modules, but if a user has a `user.js` module defined
- * in `~/.config/paperwm/` then this will run it's `user.js` init().
- */
-function init() {
-    initUserConfig();
-    run('init');
-}
-
+let firstEnable = true;
 function enable() {
     log(`#paperwm enable ${SESSIONID}`);
     if (enabled) {
@@ -99,14 +86,13 @@ function enable() {
     }
 
     SESSIONID += "#";
-    Extension = imports.misc.extensionUtils.getCurrentExtension();
     warnAboutGnomeShellVersionCompatibility();
-
+    enableUserConfig();
     enableUserStylesheet();
-    updateUserConfigMetadata();
 
     if (run('enable')) {
         enabled = true;
+        firstEnable = false;
     }
 }
 
@@ -135,7 +121,7 @@ function disable() {
     }
 
     disableUserStylesheet();
-    Extension = null;
+    safeCall('user', 'disable');
 }
 
 var Gio = imports.gi.Gio;
@@ -146,6 +132,9 @@ var Config = imports.misc.config;
 // Checks gnome shell version compatibility and warns the user when running on
 // and unsupported version.
 function warnAboutGnomeShellVersionCompatibility() {
+    if (!firstEnable) {
+        return;
+    }
     const gnomeShellVersion = Config.PACKAGE_VERSION;
     const supportedVersions = Extension.metadata["shell-version"];
     for (const version of supportedVersions) {
@@ -208,14 +197,12 @@ function installConfig() {
         configDir.make_directory_with_parents(null);
     }
 
-    updateUserConfigMetadata();
-
     // Copy the user.js template to the config directory
     const user = Extension.dir.get_child("config/user.js");
     user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
 }
 
-function initUserConfig() {
+function enableUserConfig() {
     if (!configDirExists()) {
         try {
             installConfig();
@@ -232,9 +219,15 @@ function initUserConfig() {
         }
     }
 
-    if (hasUserConfigFile()) {
+    updateUserConfigMetadata();
+
+    if (firstEnable && hasUserConfigFile()) {
         Extension.imports.searchPath.push(getConfigDir().get_path());
+        safeCall('user', 'init');
     }
+
+    // run user.js enable
+    safeCall('user', 'enable');
 }
 
 /**
