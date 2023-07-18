@@ -70,54 +70,23 @@ function safeCall(name, method) {
 
 var SESSIONID = "" + (new Date().getTime());
 
-/**
- * The extension sometimes go through multiple init -> enable -> disable
- * cycles. So we need to keep track of whether we're initialized..
- */
-var enabled = false;
-let lastDisabledTime = 0; // init (epoch ms)
-
 let firstEnable = true;
 function enable() {
     log(`#paperwm enable ${SESSIONID}`);
-    if (enabled) {
-        log('enable called without calling disable');
-        return;
-    }
 
     SESSIONID += "#";
     enableUserConfig();
     enableUserStylesheet();
 
     if (run('enable')) {
-        enabled = true;
         firstEnable = false;
     }
 }
 
 function disable() {
     log(`#paperwm disable ${SESSIONID}`);
-    /**
-     * The below acts as a guard against multiple disable -> enable -> disable
-     * calls that can caused by gnome during unlocking.  This rapid enable/disable
-     * cycle can cause mutter (and other) issues since paperwm hasn't had sufficient 
-     * time to destroy/clean-up signals, actors, etc. before the next enable/disable 
-     * cycle begins.  The below guard forces at least 500 milliseconds before a 
-     * subsequent disable can be called.
-     */
-    if (Math.abs(Date.now() - lastDisabledTime) <= 500) {
-        log('disable has just been called');
-        return;
-    }
-    if (!enabled) {
-        log('disable called without calling enable');
-        return;
-    }
 
-    if (run('disable')) {
-        enabled = false;
-        lastDisabledTime = Date.now();
-    }
+    run('disable');
 
     disableUserStylesheet();
     safeCall('user', 'disable');

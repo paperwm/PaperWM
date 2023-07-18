@@ -1,15 +1,9 @@
 /**
    Settings utility shared between the running extension and the preference UI.
  */
-
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const Gtk = imports.gi.Gtk;
+const {Gio, GLib, Gtk} = imports.gi;
 const Mainloop = imports.mainloop;
-
-var settings = Module.ExtensionUtils.getSettings();
 
 var workspaceSettingsCache = {};
 
@@ -78,7 +72,9 @@ function setSchemas() {
     });
 }
 
+var settings;
 function enable() {
+    settings = Module.ExtensionUtils.getSettings();
     settings.connect('changed', setState);
     settings.connect('changed::vertical-margin', onWindowGapChanged);
     settings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
@@ -107,6 +103,7 @@ function disable() {
     timerId = null;
 
     workspaceSettingsCache = {};
+    settings = null;
     schemaSource = null;
     workspaceList = null;
     conflictSettings = null;
