@@ -1,13 +1,6 @@
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
-}
-
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Meta = imports.gi.Meta;
-var Clutter = imports.gi.Clutter;
-var St = imports.gi.St;
+var {Clutter, St, Graphene} = imports.gi;
 var Main = imports.ui.main;
 var Mainloop = imports.mainloop;
 
@@ -15,7 +8,7 @@ var Tiling = Extension.imports.tiling;
 var Scratch = Extension.imports.scratch;
 var prefs = Extension.imports.settings.prefs;
 var Utils = Extension.imports.utils;
-var Tweener = Utils.tweener;
+var Easer = Utils.easer;
 var Navigator = Extension.imports.navigator;
 
 var virtualPointer;
@@ -90,7 +83,7 @@ var MoveGrab = class MoveGrab {
         let frame = metaWindow.get_frame_rect();
 
         this.initialY = clone.targetY;
-        Tweener.removeTweens(clone);
+        Easer.removeEase(clone);
         let [gx, gy, $] = global.get_pointer();
 
         let px = (gx - actor.x) / actor.width;
@@ -124,7 +117,7 @@ var MoveGrab = class MoveGrab {
         // Make sure the window actor is visible
         Navigator.getNavigator();
         Tiling.animateWindow(metaWindow);
-        Tweener.removeTweens(space.cloneContainer);
+        Easer.removeEase(space.cloneContainer);
     }
 
     beginDnD({center} = {}) {
@@ -132,13 +125,11 @@ var MoveGrab = class MoveGrab {
             return;
         this.center = center;
         this.dnd = true;
-        Utils.debug("#grab", "begin DnD")
-        Navigator.getNavigator()
-            .minimaps.forEach(m => typeof (m) === 'number' ?
-                Mainloop.source_remove(m) : m.hide());
+        Utils.debug("#grab", "begin DnD");
+        Navigator.getNavigator().minimaps.forEach(m => typeof m === 'number'
+            ? Mainloop.source_remove(m) : m.hide());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
         let metaWindow = this.window;
-        let actor = metaWindow.get_compositor_private();
         let clone = metaWindow.clone;
         let space = this.initialSpace;
 
@@ -146,7 +137,7 @@ var MoveGrab = class MoveGrab {
         let point = {};
         if (center) {
             point = space.cloneContainer.apply_relative_transform_to_point(
-                global.stage, new Clutter.Vertex({x: Math.round(clone.x), y: Math.round(clone.y)}));
+                global.stage, new Graphene.Point3D({x: Math.round(clone.x), y: Math.round(clone.y)}));
         } else {
             // For some reason the above isn't smooth when DnD is triggered from dragging
             let [dx, dy] = this.pointerOffset;
@@ -157,22 +148,22 @@ var MoveGrab = class MoveGrab {
         let i = space.indexOf(metaWindow);
         let single = i !== -1 && space[i].length === 1;
         space.removeWindow(metaWindow);
-        clone.reparent(Main.uiGroup);
+        Utils.actor_reparent(clone, Main.uiGroup);
         clone.x = Math.round(point.x);
         clone.y = Math.round(point.y);
-        let newScale = clone.scale_x*space.actor.scale_x;
+        let newScale = clone.scale_x * space.actor.scale_x;
         clone.set_scale(newScale, newScale);
 
         let params = {time: prefs.animation_time, scale_x: 0.5, scale_y: 0.5, opacity: 240}
         if (center) {
             this.pointerOffset = [0, 0];
-            clone.set_pivot_point(0, 0)
-            params.x = gx
-            params.y = gy
+            clone.set_pivot_point(0, 0);
+            params.x = gx;
+            params.y = gy;
         }
 
-        clone.__oldOpacity = clone.opacity
-        Tweener.addTween(clone, params);
+        clone.__oldOpacity = clone.opacity;
+        Easer.addEase(clone, params);
 
         this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
 
@@ -182,10 +173,9 @@ var MoveGrab = class MoveGrab {
 
         let [x, y] = space.globalToViewport(gx, gy);
         if (!this.center && onSame && single && space[i]) {
-            Tiling.move_to(space, space[i][0], { x: x + prefs.window_gap/2 });
-        } else if (!this.center && onSame && single && space[i-1]) {
-            Tiling.move_to(space, space[i-1][0], {
-                x: x - space[i-1][0].clone.width - prefs.window_gap/2 });
+            Tiling.move_to(space, space[i][0], {x: x + prefs.window_gap / 2});
+        } else if (!this.center && onSame && single && space[i - 1]) {
+            Tiling.move_to(space, space[i - 1][0], {x: x - space[i - 1][0].clone.width - prefs.window_gap / 2});
         } else if (!this.center && onSame && space.length === 0) {
             space.targetX = x;
             space.cloneContainer.x = x;
@@ -426,7 +416,7 @@ var MoveGrab = class MoveGrab {
                     space.moveDone()
                     clone.set_pivot_point(0, 0)
                 }
-                Tweener.addTween(clone, params);
+                Easer.addEase(clone, params);
 
                 space.targetX = space.cloneContainer.x;
                 space.selectedWindow = metaWindow;
@@ -438,7 +428,7 @@ var MoveGrab = class MoveGrab {
                 Tiling.move_to(space, metaWindow, {x: x - space.monitor.x})
                 Tiling.ensureViewport(metaWindow, space);
 
-                clone.raise_top()
+                Utils.actor_raise(clone);
             } else {
                 metaWindow.move_frame(true, clone.x, clone.y);
                 Scratch.makeScratch(metaWindow);
@@ -452,11 +442,11 @@ var MoveGrab = class MoveGrab {
                 clone.set_pivot_point(0, 0);
 
                 params.onStopped = () => { actor.set_pivot_point(0, 0) };
-                Tweener.addTween(actor, params);
+                Easer.addEase(actor, params);
             }
 
             Navigator.getNavigator().accept()
-        } else if (this.initialSpace.indexOf(metaWindow) !== -1){
+        } else if (this.initialSpace.indexOf(metaWindow) !== -1) {
             let space = this.initialSpace;
             destSpace = space;
             space.targetX = space.cloneContainer.x;
@@ -469,7 +459,7 @@ var MoveGrab = class MoveGrab {
                 space.moveDone()
                 clone.set_pivot_point(0, 0)
             }
-            Tweener.addTween(clone, params);
+            Easer.addEase(clone, params);
 
             Tiling.ensureViewport(metaWindow, space);
             Navigator.getNavigator().accept()
@@ -481,7 +471,7 @@ var MoveGrab = class MoveGrab {
 
         this.initialSpace.layout();
         // ensure window is properly activated after layout/ensureViewport tweens
-        Meta.later_add(Meta.LaterType.IDLE, () => {
+        Utils.later_add(Meta.LaterType.IDLE, () => {
             Main.activateWindow(metaWindow);
         });
 
@@ -503,7 +493,7 @@ var MoveGrab = class MoveGrab {
          * may still be in progress, which is okay, but won't be ended
          * until we "click out".  We do this here if needed.
          */
-        Meta.later_add(Meta.LaterType.IDLE, () => {
+        Utils.later_add(Meta.LaterType.IDLE, () => {
             if (!global.display.end_grab_op && this.wasTiled) {
                 // move to current cursort position
                 let [x, y, _mods] = global.get_pointer();
@@ -557,14 +547,14 @@ var MoveGrab = class MoveGrab {
         zone.space.cloneContainer.add_child(zone.actor);
         zone.space.selection.hide();
         zone.actor.show();
-        zone.actor.raise_top();
-        Tweener.addTween(zone.actor, params);
+        Utils.actor_raise(zone.actor);
+        Easer.addEase(zone.actor, params);
     }
 
     deactivateDndTarget(zone) {
         if (zone) {
             zone.space.selection.show();
-            Tweener.addTween(zone.actor, {
+            Easer.addEase(zone.actor, {
                 time: prefs.animation_time,
                 [zone.originProp]: zone.center,
                 [zone.sizeProp]: 0,

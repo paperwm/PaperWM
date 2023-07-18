@@ -1,10 +1,9 @@
 {
-  "uuid": "paperwm@hedning:matrix.org",
+  "uuid": "paperwm@paperwm.github.com",
   "name": "PaperWM",
   "description": "Tiling window manager with a twist",
   "url": "https://github.com/paperwm/PaperWM",
-  "settings-schema": "org.gnome.Shell.Extensions.PaperWM",
-  "shell-version": [ "42", "43", "44" ],
-  "version": "44.0",
-  "session-modes":  [ "unlock-dialog", "user" ]
+  "settings-schema": "org.gnome.shell.extensions.paperwm",
+  "session-modes": ["unlock-dialog", "user"],
+  "shell-version": [ "42", "43", "44" ]
 }

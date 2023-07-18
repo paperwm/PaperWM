@@ -1,21 +1,11 @@
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
-}
-
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Clutter = imports.gi.Clutter;
-var Tweener = Extension.imports.utils.tweener;
+var Easer = Extension.imports.utils.easer;
 var Main = imports.ui.main;
-var Lang = imports.lang;
 var St = imports.gi.St;
 var Pango = imports.gi.Pango;
 
-var Tiling = Extension.imports.tiling;
 var utils = Extension.imports.utils;
-var debug = utils.debug;
-
 var prefs = Extension.imports.settings.prefs;
 
 function calcOffset(metaWindow) {
@@ -124,7 +114,7 @@ var Minimap = class Minimap extends Array {
         this.layout();
         let time = animate ? prefs.animation_time : 0;
         this.actor.show();
-        Tweener.addTween(this.actor,
+        Easer.addEase(this.actor,
                          {opacity: 255, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO});
     }
 
@@ -132,7 +122,7 @@ var Minimap = class Minimap extends Array {
         if (this.destroyed)
             return;
         let time = animate ? prefs.animation_time : 0;
-        Tweener.addTween(this.actor,
+        Easer.addEase(this.actor,
                          {opacity: 0, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO,
                           onComplete: () => this.actor.hide() });
     }

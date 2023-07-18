@@ -1,29 +1,21 @@
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
-}
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
 var Keybindings = Extension.imports.keybindings;
-var Main = imports.ui.main;
 var Tiling = Extension.imports.tiling;
-var Scratch = Extension.imports.scratch;
 var Virt = Extension.imports.virtTiling;
-var Tweener = Extension.imports.utils.tweener;
+var Easer = Extension.imports.utils.easer;
 var Utils = Extension.imports.utils;
 var prefs = Tiling.prefs;
-
 
 /** Adapts an action handler to operate on the neighbour in the given direction */
 function useNeigbour(dir, action) {
     return (metaWindow) => {
         let space = Tiling.spaces.spaceOfWindow(metaWindow);
         let i = space.indexOf(metaWindow);
-        if (!space[i+dir])
+        if (!space[i + dir])
             return action(undefined);
 
-        return action(space[i+dir][0]);
-    }
+        return action(space[i + dir][0]);
+    };
 }
 
 /** Find the index of the first not fully visible column in the given direction */
@@ -32,17 +24,18 @@ function findNonVisibleIndex(space, metaWindow, dir=1, margin=1) {
     while (0 <= k && k < space.length && space.isFullyVisible(space[k][0], margin)) {
         k += dir;
     }
-    return k
+    return k;
 }
 
 function moveTo(space, metaWindow, target) {
     space.startAnimate();
     space.targetX = target;
-    Tweener.addTween(space.cloneContainer,
-                     { x: space.targetX,
-                       time: prefs.animation_time,
-                       onComplete: space.moveDone.bind(space)
-                     });
+    Easer.addEase(space.cloneContainer,
+        {
+            x: space.targetX,
+            time: prefs.animation_time,
+            onComplete: space.moveDone.bind(space)
+        });
 
     space.fixOverlays();
 }
@@ -117,11 +110,10 @@ function fitAvailable(metaWindow) {
 
 
 function cycleLayoutDirection(dir) {
-
     const splits = [
         [0.5, 0.5],
         [0.7, 0.3],
-        [0.3, 0.7]
+        [0.3, 0.7],
     ];
 
     return (metaWindow, space, {navigator}={}) => {
@@ -133,7 +125,7 @@ function cycleLayoutDirection(dir) {
 
         let neighbour = neighbourCol[0];
 
-        let tiling = mkVirtTiling(space)
+        let tiling = mkVirtTiling(space);
 
         let available = space.width - Tiling.prefs.horizontal_margin*2 - Tiling.prefs.window_gap;
 

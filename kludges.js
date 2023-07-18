@@ -5,13 +5,8 @@
   around these problems and facilitates new features.
  */
 
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
-}
-
+var ExtensionUtils = imports.misc.extensionUtils;
+var Extension = ExtensionUtils.getCurrentExtension();
 var Meta = imports.gi.Meta;
 var Gio = imports.gi.Gio;
 var Main = imports.ui.main;
@@ -23,246 +18,9 @@ var Shell = imports.gi.Shell;
 var utils = Extension.imports.utils;
 var Params = imports.misc.params;
 
-var Convenience = Extension.imports.convenience;
 var Scratch = Extension.imports.scratch;
 var Tiling = Extension.imports.tiling;
-var settings = Convenience.getSettings();
 var Clutter = imports.gi.Clutter;
-let St = imports.gi.St;
-
-var version = Extension.imports.utils.version
-
-function overrideHotCorners() {
-    for (let corner of Main.layoutManager.hotCorners) {
-        if (!corner)
-            continue;
-
-        corner._toggleOverview = function() {};
-
-        corner._pressureBarrier._trigger = function() {};
-    }
-}
-
-// polyfill for 3.28 (`get_monitor_scale` first appeared in 3.31.92). 
-if (!global.display.get_monitor_scale) {
-    global.display.constructor.prototype.get_monitor_scale = () => 1.0;
-}
-
-// polyfill for 3.28 (`get_monitor_neighbor_index`)
-if (!global.display.get_monitor_neighbor_index) {
-    global.display.constructor.prototype.get_monitor_neighbor_index = function(...args) {
-        return global.screen.get_monitor_neighbor_index(...args);
-    }
-}
-
-// polyfill for 3.28
-if (!Meta.DisplayDirection && Meta.ScreenDirection) {
-    Meta.DisplayDirection = Meta.ScreenDirection;
-}
-
-// polyfill for 3.28
-if (!St.Settings) {
-    let Gtk = imports.gi.Gtk;
-    let gtkSettings = Gtk.Settings.get_default();
-    let polyfillSettings = new (class PolyfillStSettings {
-        get enable_animations() {
-            return gtkSettings.gtk_enable_animations;
-        }
-        set enable_animations(value) {
-            gtkSettings.gtk_enable_animations = value;
-        }
-    })();
-
-    St.Settings = {
-        get: function() { return polyfillSettings; } // ASSUMTION: no need to call get_default each time
-    };
-}
-
-// polyfill for 3.28
-if (!Clutter.Actor.prototype.set) {
-    Clutter.Actor.prototype.set = function(params) {
-        Object.assign(this, params);
-    }
-}
-
-// polyfill 3.34 transition API, taken from gnome-shell/js/ui/environment.js
-if (version[0] >= 3 && version[1] < 34) {
-    function _makeEaseCallback(params, cleanup) {
-        let onComplete = params.onComplete;
-        delete params.onComplete;
-
-        let onStopped = params.onStopped;
-        delete params.onStopped;
-
-        return isFinished => {
-            cleanup();
-
-            if (onStopped)
-                onStopped(isFinished);
-            if (onComplete && isFinished)
-                onComplete();
-        };
-    }
-
-    let enable_unredirect = () => Meta.enable_unredirect_for_display(global.display);
-    let disable_unredirect = () => Meta.disable_unredirect_for_display(global.display);;
-    // This is different in 3.28
-    if (version[0] >= 3 && version[1] < 30) {
-        enable_unredirect = () => Meta.enable_unredirect_for_screen(global.screen);
-        disable_unredirect = () => Meta.disable_unredirect_for_screen(global.screen);;
-    }
-
-    function _easeActor(actor, params) {
-        actor.save_easing_state();
-
-        if (params.duration != undefined)
-            actor.set_easing_duration(params.duration);
-        delete params.duration;
-
-        if (params.delay != undefined)
-            actor.set_easing_delay(params.delay);
-        delete params.delay;
-
-        if (params.mode != undefined)
-            actor.set_easing_mode(params.mode);
-        delete params.mode;
-
-        disable_unredirect();
-
-        let callback = _makeEaseCallback(params, enable_unredirect);
-
-        // cancel overwritten transitions
-        let animatedProps = Object.keys(params).map(p => p.replace('_', '-', 'g'));
-        animatedProps.forEach(p => actor.remove_transition(p));
-
-        actor.set(params);
-        actor.restore_easing_state();
-
-        let transition = animatedProps.map(p => actor.get_transition(p))
-            .find(t => t !== null);
-
-        if (transition)
-            transition.connect('stopped', (t, finished) => callback(finished));
-        else
-            callback(true);
-    }
-
-    // adjustAnimationTime:
-    // @msecs: time in milliseconds
-    //
-    // Adjust @msecs to account for St's enable-animations
-    // and slow-down-factor settings
-    function adjustAnimationTime(msecs) {
-        let settings = St.Settings.get();
-
-        if (!settings.enable_animations)
-            return 1;
-        // settings.slow_down_factor is new in 3.34
-        return St.get_slow_down_factor() * msecs;
-    }
-
-    let origSetEasingDuration = Clutter.Actor.prototype.set_easing_duration;
-    Clutter.Actor.prototype.set_easing_duration = function(msecs) {
-        origSetEasingDuration.call(this, adjustAnimationTime(msecs));
-    };
-    let origSetEasingDelay = Clutter.Actor.prototype.set_easing_delay;
-    Clutter.Actor.prototype.set_easing_delay = function(msecs) {
-        origSetEasingDelay.call(this, adjustAnimationTime(msecs));
-    };
-
-    Clutter.Actor.prototype.ease = function(props, easingParams) {
-        _easeActor(this, props, easingParams);
-    };
-}
-
-// polyfill
-if (!global.display.set_cursor) {
-    global.display.constructor.prototype.set_cursor = global.screen.set_cursor.bind(global.screen);
-}
-
-// polyfill
-if (!Clutter.Actor.prototype.raise) {
-    Clutter.Actor.prototype.raise = function raise(above) {
-        const parent = this.get_parent();
-        if (!parent)
-            return;
-        parent.set_child_above_sibling(this, above);
-    }
-}
-
-// polyfill
-if (!Clutter.Actor.prototype.raise_top) {
-  Clutter.Actor.prototype.raise_top = function raise_top() {
-        this.raise(null);
-    }
-}
-
-// polyfill
-if (!Clutter.Actor.prototype.reparent) {
-    Clutter.Actor.prototype.reparent = function reparent(newParent) {
-        const parent = this.get_parent();
-        if (parent) {
-            parent.remove_child(this);
-        }
-        newParent.add_child(this);
-    }
-}
-
-// polyfill
-if (!Clutter.Vertex) {
-    const {Graphene} = imports.gi;
-    Clutter.Vertex = Graphene.Point3D;
-}
-
-// polyfill for 44
-if (!Meta.later_add && global.compositor?.get_laters()) {
-    Meta.later_add = function(...args) {
-        global.compositor.get_laters().add(...args);
-    }
-}
-
-// Workspace.Workspace._realRecalculateWindowPositions
-// Sort tiled windows in the correct order
-function _realRecalculateWindowPositions(flags) {
-    if (this._repositionWindowsId > 0) {
-        Mainloop.source_remove(this._repositionWindowsId);
-        this._repositionWindowsId = 0;
-    }
-
-    let clones = this._windows.slice();
-    if (clones.length == 0)
-        return;
-
-    let space = Tiling.spaces.spaceOf(this.metaWorkspace);
-    if (space) {
-        clones.sort((a, b) => {
-            let aw = a.metaWindow;
-            let bw = b.metaWindow;
-            let ia = space.indexOf(aw);
-            let ib = space.indexOf(bw);
-            if (ia === -1 && ib === -1) {
-                return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
-            }
-            if (ia === -1) {
-                return -1;
-            }
-            if (ib === -1) {
-                return 1;
-            }
-            return ia - ib;
-        });
-    } else {
-        clones.sort((a, b) => {
-            return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
-        });
-    }
-
-    if (this._reservedSlot)
-        clones.push(this._reservedSlot);
-
-    this._currentLayout = this._computeLayout(clones);
-    this._updateWindowPositions(flags);
-}
 
 // Workspace.WindowClone.getOriginalPosition
 // Get the correct positions of tiled windows when animating to/from the overview
@@ -272,27 +30,8 @@ function getOriginalPosition() {
     if (!space || space.indexOf(this.metaWindow) === -1) {
         return [this._boundingBox.x, this._boundingBox.y];
     }
-    let [x, y] = [ space.monitor.x + space.targetX + c.targetX, space.monitor.y + c.y];
+    let [x, y] = [space.monitor.x + space.targetX + c.targetX, space.monitor.y + c.y];
     return [x, y];
-}
-
-// WorkspaceAnimation.WorkspaceAnimationController.animateSwitch
-// Disable the workspace switching animation in Gnome 40+
-function animateSwitch(_from, _to, _direction, onComplete) {
-    onComplete();
-};
-
-function disableHotcorners() {
-    let override = settings.get_boolean("override-hot-corner");
-    if (override) {
-        overrideHotCorners();
-        signals.connect(Main.layoutManager,
-                        'hot-corners-changed',
-                        overrideHotCorners);
-    } else {
-        signals.disconnect(Main.layoutManager);
-        Main.layoutManager._updateHotCorners();
-    }
 }
 
 var savedProps;
@@ -300,7 +39,7 @@ savedProps = savedProps || new Map();
 
 function registerOverrideProp(obj, name, override) {
     if (!obj)
-        return
+        return;
 
     let saved = getSavedProp(obj, name) || obj[name];
     let props = savedProps.get(obj);
@@ -310,13 +49,13 @@ function registerOverrideProp(obj, name, override) {
     }
     props[name] = {
         saved,
-        override
+        override,
     };
 }
 
 function registerOverridePrototype(obj, name, override) {
     if (!obj)
-        return
+        return;
 
     registerOverrideProp(obj.prototype, name, override);
 }
@@ -361,6 +100,120 @@ function enableOverride(obj, name) {
     }
 }
 
+/**
+ * Sets up PaperWM overrides (needed for operations).  These overrides are registered and restored
+ * on PaperWM disable.
+ */
+function setupOverrides() {
+    // prepare for PaperWM workspace switching
+    registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch', function (from, to, direction) {
+        if (this._switchData)
+            return;
+
+        let switchData = {};
+        this._switchData = switchData;
+        switchData.movingWindowBin = new Clutter.Actor();
+        switchData.windows = [];
+        switchData.surroundings = {};
+        switchData.gestureActivated = false;
+        switchData.inProgress = false;
+
+        switchData.container = new Clutter.Actor();
+    });
+
+    registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch',
+        // WorkspaceAnimation.WorkspaceAnimationController.animateSwitch
+        // Disable the workspace switching animation in Gnome 40+
+        function (_from, _to, _direction, onComplete) {
+            onComplete();
+        });
+
+    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
+    if (Workspace.WindowClone)
+        registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
+
+    // Workspace.Workspace._realRecalculateWindowPositions
+    // Sort tiled windows in the correct order
+    registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions',
+        function (flags) {
+            if (this._repositionWindowsId > 0) {
+                Mainloop.source_remove(this._repositionWindowsId);
+                this._repositionWindowsId = 0;
+            }
+
+            let clones = this._windows.slice();
+            if (clones.length === 0) {
+                return;
+            }
+
+            let space = Tiling.spaces.spaceOf(this.metaWorkspace);
+            if (space) {
+                clones.sort((a, b) => {
+                    let aw = a.metaWindow;
+                    let bw = b.metaWindow;
+                    let ia = space.indexOf(aw);
+                    let ib = space.indexOf(bw);
+                    if (ia === -1 && ib === -1) {
+                        return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
+                    }
+                    if (ia === -1) {
+                        return -1;
+                    }
+                    if (ib === -1) {
+                        return 1;
+                    }
+                    return ia - ib;
+                });
+            } else {
+                clones.sort((a, b) => {
+                    return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
+                });
+            }
+
+            if (this._reservedSlot)
+                clones.push(this._reservedSlot);
+
+            this._currentLayout = this._computeLayout(clones);
+            this._updateWindowPositions(flags);
+        });
+
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
+
+    registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
+
+    if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
+        registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
+
+    // Work around https://gitlab.gnome.org/GNOME/gnome-shell/issues/1884
+    if (!WindowManager.WindowManager.prototype._removeEffect) {
+        registerOverridePrototype(WindowManager.WindowManager, '_mapWindowOverwrite',
+            function (shellwm, actor) {
+                if (this._mapping.delete(actor)) {
+                    shellwm.completed_map(actor);
+                }
+            });
+    }
+
+    let layout = computeLayout40;
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout)
+
+    // disable swipe gesture trackers
+    swipeTrackers.forEach(t => {
+        registerOverrideProp(t, "enabled", false);
+    });
+
+    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
+        let metaWindow = win.meta_window || win;
+        if (settings.get_boolean('only-scratch-in-overview'))
+            return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+        if (settings.get_boolean('disable-scratch-in-overview'))
+            return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+    });
+}
+
+/**
+ * Enables any registered overrides.
+ */
 function enableOverrides() {
     for (let [obj, props] of savedProps) {
         for (let name in props) {
@@ -377,10 +230,76 @@ function disableOverrides() {
     }
 }
 
-function restoreMethod(obj, name) {
-    let method = getMethod(obj, name);
-    if (method)
-        obj[name] = method;
+/**
+ * Saves the original setting value (boolean) to restore on disable.
+ * We save a backup of the user's setting to PaperWM settings (schema)
+ * for safety (in case gnome terminates etc.).  This ensures original
+ * user settings will be restored on next PaperWM disable.
+ * @param key
+ */
+let runtimeDisables = [];
+function saveRuntimeDisable(schemaSettings, key, disableValue) {
+    try {
+        let origValue = schemaSettings.get_boolean(key);
+        schemaSettings.set_boolean(key, disableValue);
+
+        // save a backup copy to PaperWM settings (for restore)
+        let pkey = 'restore-' + key;
+
+        /**
+         * Now if paperwm settings has restore values, it means
+         * that they weren't previously restore properly (since on
+         * successful restore we clear the values).
+         */
+        if (settings.get_string(pkey) === '') {
+            settings.set_string(pkey, origValue.toString());
+        }
+
+        // we want to restore from PaperWM back settings (safer)
+        let restore = () => {
+            let value = settings.get_string(pkey);
+            // if value is empty, do nothing
+            if (value === '') {
+                return;
+            }
+
+            let bvalue = value === 'true';
+            schemaSettings.set_boolean(key, bvalue);
+
+            // after restore, empty papermw saved value
+            settings.set_string(pkey, '');
+        };
+
+        runtimeDisables.push(restore);
+    } catch (e) {
+        log(e);
+    }
+}
+
+/**
+ * PaperWM disables certain behaviours during runtime.
+ * The user original settings are saved to PaperWM's settings (schema) for restoring
+ * purposes (we save to PaperWM's setting just in gnome terminates before PaperWM can
+ * restore the original user settings).  These settings are then restored on disable().
+ */
+function setupRuntimeDisables() {
+    saveRuntimeDisable(mutterSettings, 'attach-modal-dialogs', false);
+    saveRuntimeDisable(mutterSettings, 'workspaces-only-on-primary', false);
+    saveRuntimeDisable(mutterSettings, 'edge-tiling', false);
+}
+
+/**
+ * Restores the runtime settings that were disabled when
+ * PaperWM was enabled.
+ */
+function restoreRuntimeDisables() {
+    runtimeDisables.forEach(restore => {
+        try {
+            restore();
+        } catch (e) {
+            log(e);
+        }
+    });
 }
 
 /**
@@ -388,102 +307,28 @@ function restoreMethod(obj, name) {
  * move from gnome version to gnome version.  Next to the swipe tracker locations
  * below are the gnome versions when they were first (or last) seen.
  */
-var swipeTrackers = [
-    Main?.overview?._swipeTracker, // gnome 40+
-    Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker, // gnome 40+
-    Main?.wm?._workspaceAnimation?._swipeTracker, // gnome 40+
-    Main?.wm?._swipeTracker // gnome 38 (and below)
-].filter(t => typeof t !== 'undefined');
-
-var signals;
-function init() {
-    registerOverridePrototype(imports.ui.messageTray.MessageTray, '_updateState');
-    registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch');
-    registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch', animateSwitch);
-    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
-    if (Workspace.WindowClone)
-        registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
-
-    registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions', _realRecalculateWindowPositions);
-
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
-
-    registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
-    if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
-        registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
-
-    // Work around https://gitlab.gnome.org/GNOME/gnome-shell/issues/1884
-    if (!WindowManager.WindowManager.prototype._removeEffect) {
-        registerOverridePrototype(WindowManager.WindowManager, '_mapWindowOverwrite',
-                                  function (shellwm, actor) {
-                                      if (this._mapping.delete(actor)) {
-                                          shellwm.completed_map(actor);
-                                      }
-                                  });
-    }
-
-    let layout = computeLayout
-    if (version[1] > 37) {
-        layout = computeLayout338
-        registerOverridePrototype(Workspace.WorkspaceLayout, 'addWindow', addWindow)
-    }
-
-
-    if (version[1] > 32)
-        registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
-
-    if (version[1] >= 40) {
-        layout = computeLayout40
-        registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout)
-    }
-
-    // Kill pinch gestures as they work pretty bad (especially when 3-finger swipin
-    if (version[1] < 40) {
-        registerOverrideProp(imports.ui.viewSelector, "PINCH_GESTURE_THRESHOLD", 0)
-    }
-
-    // disable swipe gesture trackers
-    swipeTrackers.forEach(t => {
-        registerOverrideProp(t, "enabled", false);
-    });
-
-    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', (win) => {
-        let metaWindow = win.meta_window || win;
-        if (settings.get_boolean('only-scratch-in-overview'))
-            return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
-        if (settings.get_boolean('disable-scratch-in-overview'))
-            return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
-    });
-
-    signals = new utils.Signals();
+var swipeTrackers;
+function setupSwipeTrackers() {
+    swipeTrackers = [
+        Main?.overview?._swipeTracker, // gnome 40+
+        Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker, // gnome 40+
+        Main?.wm?._workspaceAnimation?._swipeTracker, // gnome 40+
+        Main?.wm?._swipeTracker, // gnome 38 (and below)
+    ].filter(t => typeof t !== 'undefined');
 }
 
-var actions;
-function enable() {
-    enableOverrides();
-
-    /*
-     * Some actions work rather poorly.
-     * In particular the 3-finger hold + tap can randomly activate a minimized
-     * window when tapping after a 3-finger swipe
-     */
-    actions = global.stage.get_actions().filter(a => {
-        switch (a.constructor) {
-        case WindowManager.AppSwitchAction:
-            return true;
-        }
-    });
-    actions.forEach(a => global.stage.remove_action(a))
-
-    signals.connect(settings, 'changed::override-hot-corner', disableHotcorners);
-    disableHotcorners();
+var signals;
+function setupSignals() {
+    signals = new utils.Signals();
 
     /**
      * Swipetrackers are reset by gnome during overview, once exits overview
      * ensure swipe trackers are reset.
      */
     signals.connect(Main.overview, 'hidden', () => {
-        swipeTrackers.forEach(t => t.enabled = false);
+        swipeTrackers.forEach(t => {
+            t.enabled = false;
+        });
     });
 
     function scratchInOverview() {
@@ -498,167 +343,60 @@ function enable() {
     signals.connect(settings, 'changed::only-scratch-in-overview', scratchInOverview);
     signals.connect(settings, 'changed::disable-scratch-in-overview', scratchInOverview);
     scratchInOverview();
+}
 
-
-    /* The «native» workspace animation can be now (3.30) be disabled as it
-       calls out of the function bound to the `switch-workspace` signal.
+var actions;
+function setupActions() {
+    /*
+     * Some actions work rather poorly.
+     * In particular the 3-finger hold + tap can randomly activate a minimized
+     * window when tapping after a 3-finger swipe
      */
-    WindowManager.WindowManager.prototype._prepareWorkspaceSwitch =
-        function (from, to, direction) {
-            if (this._switchData)
-                return;
+    actions = global.stage.get_actions().filter(a => {
+        switch (a.constructor) {
+        case WindowManager.AppSwitchAction:
+            return true;
+        }
+    });
+    actions.forEach(a => global.stage.remove_action(a));
+}
 
-            let wgroup = global.window_group;
-            let windows = global.get_window_actors();
-            let switchData = {};
-
-            this._switchData = switchData;
-            switchData.movingWindowBin = new Clutter.Actor();
-            switchData.windows = [];
-            switchData.surroundings = {};
-            switchData.gestureActivated = false;
-            switchData.inProgress = false;
-
-            switchData.container = new Clutter.Actor();
-        };
-
-    Workspace.Workspace.prototype._realRecalculateWindowPositions = _realRecalculateWindowPositions;
-
-    // Don't hide notifications when there's fullscreen windows in the workspace.
-    // Fullscreen windows aren't special in paperWM and might not even be
-    // visible, so hiding notifications makes no sense.
-    with (imports.ui.messageTray) {
-        MessageTray.prototype._updateState
-            = function () {
-                let hasMonitor = Main.layoutManager.primaryMonitor != null;
-                this.visible = !this._bannerBlocked && hasMonitor && this._banner != null;
-                if (this._bannerBlocked || !hasMonitor)
-                    return;
-
-                // If our state changes caused _updateState to be called,
-                // just exit now to prevent reentrancy issues.
-                if (this._updatingState)
-                    return;
-
-                this._updatingState = true;
-
-                // Filter out acknowledged notifications.
-                let changed = false;
-                this._notificationQueue = this._notificationQueue.filter(function(n) {
-                    changed = changed || n.acknowledged;
-                    return !n.acknowledged;
-                });
-
-                if (changed)
-                    this.emit('queue-changed');
-
-                let hasNotifications = Main.sessionMode.hasNotifications;
-                if (this._notificationState == State.HIDDEN) {
-                    let selectedFullscreen = global.display.focus_window?.fullscreen ?? false;
-                    let nextNotification = this._notificationQueue[0] || null;
-                    if (!selectedFullscreen && hasNotifications && nextNotification) {
-                        // Monkeypatch here
-                        let limited = this._busy;
-                        let showNextNotification = (!limited || nextNotification.forFeedback || nextNotification.urgency == Urgency.CRITICAL);
-                        if (showNextNotification)
-                            this._showNotification();
-                    }
-                } else if (this._notificationState == State.SHOWN) {
-                    let expired = (this._userActiveWhileNotificationShown &&
-                                   this._notificationTimeoutId == 0 &&
-                                   this._notification.urgency != Urgency.CRITICAL &&
-                                   !this._banner.focused &&
-                                   !this._pointerInNotification) || this._notificationExpired;
-                    let mustClose = (this._notificationRemoved || !hasNotifications || expired);
-
-                    if (mustClose) {
-                        let animate = hasNotifications && !this._notificationRemoved;
-                        this._hideNotification(animate);
-                    } else if (this._pointerInNotification && !this._banner.expanded) {
-                        this._expandBanner(false);
-                    } else if (this._pointerInNotification) {
-                        this._ensureBannerFocused();
-                    }
-                }
-
-                this._updatingState = false;
-
-                // Clean transient variables that are used to communicate actions
-                // to updateState()
-                this._notificationExpired = false;
-            };
-    }
+var settings, wmSettings, mutterSettings;
+function enable() {
+    settings = ExtensionUtils.getSettings();
+    wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
+    mutterSettings = new Gio.Settings({schema_id: 'org.gnome.mutter'});
+    setupSwipeTrackers();
+    setupOverrides();
+    enableOverrides();
+    setupRuntimeDisables();
+    setupSignals();
+    setupActions();
 }
 
 function disable() {
     disableOverrides();
-    actions.forEach(a => global.stage.add_action(a))
+    restoreRuntimeDisables();
+    actions.forEach(a => global.stage.add_action(a));
 
     signals.destroy();
-    Main.layoutManager._updateHotCorners();
-}
+    signals = null;
 
-// 3.32 overview layout
-function computeLayout(windows, layout) {
-    let numRows = layout.numRows;
-
-    let rows = [];
-    let totalWidth = 0;
-    for (let i = 0; i < windows.length; i++) {
-        let window = windows[i];
-        let s = this._computeWindowScale(window);
-        totalWidth += window.width * s;
-    }
-
-    let idealRowWidth = totalWidth / numRows;
-    let windowIdx = 0;
-    for (let i = 0; i < numRows; i++) {
-        let col = 0;
-        let row = this._newRow();
-        rows.push(row);
-
-        for (; windowIdx < windows.length; windowIdx++) {
-            let window = windows[windowIdx];
-            let s = this._computeWindowScale(window);
-            let width = window.width * s;
-            let height = window.height * s;
-            row.fullHeight = Math.max(row.fullHeight, height);
-
-            // either new width is < idealWidth or new width is nearer from idealWidth then oldWidth
-            if (this._keepSameRow(row, window, width, idealRowWidth) || (i == numRows - 1)) {
-                row.windows.push(window);
-                row.fullWidth += width;
-            } else {
-                break;
-            }
-        }
-    }
-
-    let gridHeight = 0;
-    let maxRow;
-    for (let i = 0; i < numRows; i++) {
-        let row = rows[i];
-        this._sortRow(row);
-
-        if (!maxRow || row.fullWidth > maxRow.fullWidth)
-            maxRow = row;
-        gridHeight += row.fullHeight;
-    }
-
-    layout.rows = rows;
-    layout.maxColumns = maxRow.windows.length;
-    layout.gridWidth = maxRow.fullWidth;
-    layout.gridHeight = gridHeight;
+    swipeTrackers = null;
+    settings = null;
+    wmSettings = null;
+    mutterSettings = null;
+    actions = null;
 }
 
 function sortWindows(a, b) {
     let aw = a.metaWindow;
     let bw = b.metaWindow;
-    let spaceA = Tiling.spaces.spaceOfWindow(aw)
-    let spaceB = Tiling.spaces.spaceOfWindow(bw)
+    let spaceA = Tiling.spaces.spaceOfWindow(aw);
+    let spaceB = Tiling.spaces.spaceOfWindow(bw);
     let ia = spaceA.indexOf(aw);
     let ib = spaceB.indexOf(bw);
-    if ((ia === -1 && ib === -1)) {
+    if (ia === -1 && ib === -1) {
         return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
     }
     if (ia === -1) {
@@ -732,67 +470,10 @@ function computeLayout40(windows, layoutParams) {
         rows,
         maxColumns: maxRow.windows.length,
         gridWidth: maxRow.fullWidth,
-        gridHeight
+        gridHeight,
     };
 }
 
-function computeLayout338(windows, layout) {
-    let numRows = layout.numRows;
-
-    let rows = [];
-    let totalWidth = 0;
-    for (let i = 0; i < windows.length; i++) {
-        let window = windows[i];
-        let s = this._computeWindowScale(window);
-        totalWidth += window.boundingBox.width * s;
-    }
-
-    let idealRowWidth = totalWidth / numRows;
-
-    let sortedWindows = windows.slice();
-    // addWindow should have made sure we're already sorted.
-    // sortedWindows.sort(sortWindows);
-
-    let windowIdx = 0;
-    for (let i = 0; i < numRows; i++) {
-        let row = this._newRow();
-        rows.push(row);
-
-        for (; windowIdx < sortedWindows.length; windowIdx++) {
-            let window = sortedWindows[windowIdx];
-            let s = this._computeWindowScale(window);
-            let width = window.boundingBox.width * s;
-            let height = window.boundingBox.height * s;
-            row.fullHeight = Math.max(row.fullHeight, height);
-
-            // either new width is < idealWidth or new width is nearer from idealWidth then oldWidth
-            if (this._keepSameRow(row, window, width, idealRowWidth) || (i == numRows - 1)) {
-                row.windows.push(window);
-                row.fullWidth += width;
-            } else {
-                break;
-            }
-        }
-    }
-
-    let gridHeight = 0;
-    let maxRow;
-    for (let i = 0; i < numRows; i++) {
-        let row = rows[i];
-        this._sortRow(row);
-
-        if (!maxRow || row.fullWidth > maxRow.fullWidth)
-            maxRow = row;
-        gridHeight += row.fullHeight;
-    }
-
-    layout.rows = rows;
-    layout.maxColumns = maxRow.windows.length;
-    layout.gridWidth = maxRow.fullWidth;
-    layout.gridHeight = gridHeight;
-}
-
-const wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
 function _checkWorkspaces() {
     let workspaceManager = global.workspace_manager;
     let i;
@@ -880,7 +561,7 @@ function _checkWorkspaces() {
 
     this._checkWorkspacesId = 0;
     return false;
-};
+}
 
 function addWindow(window, metaWindow) {
     if (this._windows.has(window))

@@ -2,7 +2,10 @@
 
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://paperwm.zulipchat.com)
 
-> #### ⚠️ **ATTENTION:** we recently set [`release`](https://github.com/paperwm/PaperWM/tree/release) branch as default.  This change aims to provide a more tested and stable experience for most users.  You can continue to use [`develop`](https://github.com/paperwm/PaperWM/tree/develop) branch if you want the latest features and fixes as soon as they're available.  Changes will be merged into `release` branch after a week or so of testing in `develop` branch.
+> #### ⚠️ **BREAKING CHANGE:** we're working towards simplifying the install process for PaperWM, and having it installable from [extensions.gnome.org](https://extensions.gnome.org).  This requires changing the extension UUID for PaperWM to `paperwm@paperwm.github.com`.  Because of this change, users will likely need to re-run the `install.sh` and logout/login.
+> _Note: if you have run into issues, delete any older `paperwm@...` symlinks from `~/.local/share/gnome-shell/extensions` and re-run the `install.sh` script._
+
+> #### ➡️ **ATTENTION:** we recently set [`release`](https://github.com/paperwm/PaperWM/tree/release) branch as default.  This change aims to provide a more tested and stable experience for most users.  You can continue to use [`develop`](https://github.com/paperwm/PaperWM/tree/develop) branch if you want the latest features and fixes as soon as they're available.  Changes will be merged into `release` branch after a week or so of testing in `develop` branch.
 
 PaperWM is a [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension which provides scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
@@ -25,18 +28,16 @@ Clone the repo and check out the branch supporting the Gnome Shell version you'r
 
 Then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/release/install.sh) script
 from the repository. The installer will create a link to the repo in
-`$XDG_DATA_HOME/gnome-shell/extensions/`. It will then ask if you want to apply
-the recommended settings (see [Recommended
-Settings](#recommended-gnome-shell-settings)) and lastly it will ask to enable PaperWM.
+`~/.local/share/gnome-shell/extensions`. It will then ask if you want to enable PaperWM.
 ```bash
 ./install.sh # install, load and enable paperwm
 ```
-> ⚠️ You will likely need to restart Gnome shell after installing PaperWM, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only).
+> #### ➡️ You will need to restart Gnome shell after installing PaperWM, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only).
 >
 > After logging back in, you will can then enable PaperWM via the `Extensions` application, or by running the following command from the command-line:
 >
 > ```bash
-> /usr/bin/gnome-extensions enable paperwm@hedning:matrix.org
+> /usr/bin/gnome-extensions enable paperwm@paperwm.github.com
 > ```
 ### Uninstall PaperWM
 To uninstall simply run `./uninstall.sh`.
@@ -46,9 +47,9 @@ Running the extension will automatically install a user config file as described
 ## Contributing
 Users are enouraged to submit [issues](https://github.com/paperwm/PaperWM/issues/new/choose) and [Pull Requests](https://github.com/paperwm/PaperWM/pulls)!
 
-> ⚠️ Please ensure pull requests are based off, and submitted to, [develop](https://github.com/paperwm/PaperWM/tree/develop) branch.
+> #### ➡️ Please ensure pull requests are based off, and submitted to, [develop](https://github.com/paperwm/PaperWM/tree/develop) branch.
 > 
-> Pull requests submitted to the `release` branch will not be accepted (but don't worry, if you accidentally submit a PR to the `release` branch we won't be mad, and will just remind you and ask you to change it).
+> Pull requests submitted to the `release` branch will not be accepted (but don't worry, if you accidentally submit a PR to the `release` branch we won't be mad, and will just ask you to change it).
 
 ## Usage ##
 
@@ -167,9 +168,11 @@ When the tiling is active <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> selects
 
 ## User configuration & development ##
 
-A default user configuration, `user.js`, is created in `~/.config/paperwm/` with three functions `init`, `enable` and `disable`. `init` will run only once on startup, `enable` and `disable` will be run whenever extensions are being told to disable and enable themselves. Eg. when locking the screen with <kbd>Super</kbd><kbd>L</kbd>.
+A default user configuration, `user.js`, is created in `~/.config/paperwm/` with three functions `init`, `enable` and `disable`. `init` will run only once on startup, `enable` and `disable` will be run whenever extensions are being told to disable and enable themselves.
 
-You can also supply a custom `user.css` in `~/.config/paperwm/`. This user stylesheet can override the default styles of paperwm (e.g. from `~/.local/share/gnome-shell/extensions/paperwm@hedning:matrix.org/user.css` or `/usr/share/gnome-shell/extensions/paperwm@hedning:matrix.org/user.css`), gnome or even other extensions. The same rules as for CSS in the browser apply (i.e. CSS rules are additive). To reload the `user.css` (and all other loaded CSS files) you can run `Main.loadTheme()` in looking glass (i.e. <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd>). Note that `user.css` needs to already be loaded for this to work. So after initially creating the file you might need to restart gnome once.
+You can also supply a custom `user.css` in `~/.config/paperwm/`. This user stylesheet can override the default styles of paperwm (e.g. from `~/.local/share/gnome-shell/extensions/paperwm@paperwm-redux.github.com/user.css` or `/usr/share/gnome-shell/extensions/paperwm@paperwm-redux.github.com/user.css`), gnome or even other extensions. The same rules as for CSS in the browser apply (i.e. CSS rules are additive). 
+
+You can reload the `user.css` by disabling (turning off) PaperWM and then re-enabling PaperWM (turning on), e.g via `Extensions` app, or by running `Main.loadTheme()` in looking glass (i.e. <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd>). Note that the latter approach will reload all other .css files (e.g. from other extensions) and `user.css` needs to already be loaded for this to work. So after initially creating the file you'll need to disable then enable PaperWM (or restart Gnome).
 
 We also made an emacs package, [gnome-shell-mode](https://github.com/paperwm/gnome-shell-mode), to make hacking on the config and writing extensions a more pleasant experience. To support this out of the box we also install a `metadata.json` so gnome-shell-mode will pick up the correct file context, giving you completion and interactive evaluation ala. looking glass straight in emacs.
 
@@ -184,7 +187,7 @@ _Note: not all PaperWM user-configurable settings are available in the settings 
 You can use `dconf-editor` to view and modify all PaperWM user settings.  You can view all settings by executing the following command from a terminal:
 
 ```shell
-GSETTINGS_SCHEMA_DIR=$HOME/.local/share/gnome-shell/extensions/paperwm@hedning:matrix.org/schemas dconf-editor /org/gnome/shell/extensions/paperwm/
+GSETTINGS_SCHEMA_DIR=$HOME/.local/share/gnome-shell/extensions/paperwm@paperwm.github.com/schemas dconf-editor /org/gnome/shell/extensions/paperwm/
 ```
 
 ### PaperWM user-configurable settings _not_ available in settings UI
@@ -435,9 +438,7 @@ There's a few Gnome Shell settings which works poorly with PaperWM. Namely
 - `edge-tiling`: We don't support the native half tiled windows
 - `attach-modal-dialogs`: Attached modal dialogs can cause visual glitching
 
-To use the recommended settings run
-[`set-recommended-gnome-shell-settings.sh`](https://github.com/paperwm/PaperWM/blob/release/set-recommended-gnome-shell-settings.sh). A "restore previous settings" script is generated so the original settings is not lost.
-
+PaperWM manages these settings (disables them) during runtime.  It will then restore these settings to their prior values (before PaperWM was enabled).
 
 ## Recommended extensions ##
 

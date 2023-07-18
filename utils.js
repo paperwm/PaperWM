@@ -1,27 +1,18 @@
-var Extension;
-if (imports.misc.extensionUtils.extensions) {
-    Extension = imports.misc.extensionUtils.extensions["paperwm@hedning:matrix.org"];
-} else {
-    Extension = imports.ui.main.extensionManager.lookup("paperwm@hedning:matrix.org");
-}
-var { Gdk, GLib, Clutter, Meta, GObject } = imports.gi;
+var Extension = imports.misc.extensionUtils.getCurrentExtension();
+var {GLib, Clutter, Meta, GObject} = imports.gi;
+var St = imports.gi.St;
+var GdkPixbuf = imports.gi.GdkPixbuf;
+var Cogl = imports.gi.Cogl;
+var Main = imports.ui.main;
 
 var workspaceManager = global.workspace_manager;
 var display = global.display;
+var WindowTracker = imports.gi.Shell.WindowTracker;
+
+var Tiling = Extension.imports.tiling;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
-if (version[0] !== 3) {
-    version = [3, ...version]
-}
-
-var registerClass;
-{
-    if (version[0] >= 3 && version[1] > 30) {
-        registerClass = GObject.registerClass;
-    } else {
-        registerClass = (x, y) => y ? y : x;
-    }
-}
+var registerClass = GObject.registerClass;
 
 var debug_all = false; // Turn off by default
 var debug_filter = {'#paperwm': true, '#stacktrace': true};
@@ -31,11 +22,11 @@ function debug() {
     if (filter === false)
         return;
     if (debug_all || filter === true)
-        print(Array.prototype.join.call(arguments, " | "));
+        log(Array.prototype.join.call(arguments, " | "));
 }
 
 function warn(...args) {
-    print("WARNING:", ...args);
+    log("WARNING:", ...args);
 }
 
 function assert(condition, message, ...dump) {
@@ -85,7 +76,7 @@ function ppEnumValue(value, genum) {
 
 function ppModiferState(state) {
     let mods = [];
-    for (let [mod, mask] of Object.entries(imports.gi.Clutter.ModifierType)) {
+    for (let [mod, mask] of Object.entries(Clutter.ModifierType)) {
         if (mask & state) {
             mods.push(mod);
         }
@@ -161,10 +152,6 @@ function isPointInsideActor(actor, x, y) {
 
 function setBackgroundImage(actor, resource_path) {
     // resource://{resource_path}
-    const Clutter = imports.gi.Clutter;
-    const GdkPixbuf = imports.gi.GdkPixbuf;
-    const Cogl = imports.gi.Cogl;
-
     let image = new Clutter.Image();
 
     let pixbuf = GdkPixbuf.Pixbuf.new_from_resource(resource_path)
@@ -182,8 +169,6 @@ function setBackgroundImage(actor, resource_path) {
 
 //// Debug and development utils
 
-const Tiling = Extension.imports.tiling;
-
 function setDevGlobals() {
     // Accept the risk of this interfering with existing code for now
     metaWindow = display.focus_window;
@@ -191,7 +176,7 @@ function setDevGlobals() {
     workspace = workspaceManager.get_active_workspace();
     actor = metaWindow.get_compositor_private();
     space = Tiling.spaces.spaceOfWindow(metaWindow);
-    app = imports.gi.Shell.WindowTracker.get_default().get_window_app(metaWindow);
+    app = WindowTracker.get_default().get_window_app(metaWindow);
 }
 
 /**
@@ -213,7 +198,7 @@ function toggleWindowBoxes(metaWindow) {
     let actor = metaWindow.get_compositor_private();
 
     makeFrameBox = function({x, y, width, height}, color) {
-        let frameBox = new imports.gi.St.Widget();
+        let frameBox = new St.Widget();
         frameBox.set_position(x, y)
         frameBox.set_size(width, height)
         frameBox.set_style("border: 2px" + color + " solid");
@@ -245,7 +230,7 @@ function toggleCloneMarks() {
             metaWindow.clone.opacity = 190;
             metaWindow.clone.__oldOpacity = 190;
 
-            metaWindow.clone.background_color = imports.gi.Clutter.color_from_string("red")[1];
+            metaWindow.clone.background_color = Clutter.color_from_string("red")[1];
         }
     }
     function unmarkCloneOf(metaWindow) {
@@ -299,7 +284,6 @@ function getModiferState() {
 
 function monitorOfPoint(x, y) {
     // get_monitor_index_for_rect "helpfully" returns the primary monitor index for out of bounds rects..
-    const Main = imports.ui.main;
     for (let monitor of Main.layoutManager.monitors) {
         if ((monitor.x <= x && x <= monitor.x+monitor.width) &&
             (monitor.y <= y && y <= monitor.y+monitor.height))
@@ -372,23 +356,20 @@ function printActorTree(node, fmt=mkFmt(), options={}, state=null) {
           a.b.t 
           a.b.c ...
             u
-            
-            
         */
         if (node.get_children().length > 0) {
             if (node.x === 0 && node.y === 0) {
-                state.actorPrefix += (node.name ? node.name : "#") + "."
-                // print("#### ", state.actorPrefix)
-                collapse = true
+                state.actorPrefix += (node.name ? node.name : "#") + ".";
+                collapse = true;
             } else {
-                collapse = false
+                collapse = false;
             }
         } else {
-            collapse = false
+            collapse = false;
         }
     }
     if (!collapse) {
-        print(indent(state.level, fmt(node, state.actorPrefix)));
+        log(indent(state.level, fmt(node, state.actorPrefix)));
         state.actorPrefix = "";
         state.level += 1;
     }
@@ -448,26 +429,31 @@ var Signals = class Signals extends Map {
             this.delete(object);
         }
     }
-}
+};
 
-var tweener = {
-    addTween(actor, params) {
+/**
+ * Note the name 'Tweener' used previously was just a legacy name, we're actually using
+ * Widget.ease here.  This was renamed to avoid confusion with the deprecated `Tweener`
+ * module.
+ */
+var easer = {
+    addEase(actor, params) {
         if (params.time) {
-            params.duration = params.time*1000;
+            params.duration = params.time * 1000;
             delete params.time;
         }
         if (!params.mode)
-            params.mode = imports.gi.Clutter.AnimationMode.EASE_IN_OUT_QUAD;
+            params.mode = Clutter.AnimationMode.EASE_IN_OUT_QUAD;
         actor.ease(params);
     },
 
-    removeTweens(actor) {
+    removeEase(actor) {
         actor.remove_all_transitions();
     },
 
-    isTweening(actor) {
+    isEasing(actor) {
         return actor.get_transition('x') || actor.get_transition('y') || actor.get_transition('scale-x') || actor.get_transition('scale-x');
-    }
+    },
 };
 
 function isMetaWindow(obj) {
@@ -532,10 +518,39 @@ function shortTrace(skip=0) {
             ln = "?"
 
         return [words[0], ln]
-    })
-    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : f+":"+ln);
-    return trace.slice(skip+1, skip+5);
+    });
+    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : f + ":" + ln);
+    return trace.slice(skip + 1, skip + 5);
 }
 
+function actor_raise(actor, above) {
+    const parent = actor.get_parent();
+    if (!parent) {
+        return;
+    }
+    // needs to be null (not undefined) for valid second argument
+    above = above ?? null;
+    parent.set_child_above_sibling(actor, above);
+}
 
-// Meta.remove_verbose_topic(Meta.DebugTopic.FOCUS)
+function actor_reparent(actor, newParent) {
+    const parent = actor.get_parent();
+    if (parent) {
+        parent.remove_child(actor);
+    }
+    newParent.add_child(actor);
+}
+
+/**
+ * Backwards compatible later_add function.
+ */
+function later_add(...args) {
+    // Gnome 44+ uses global.compositor.get_laters()
+    if (global.compositor?.get_laters) {
+        global.compositor.get_laters().add(...args);
+    }
+    // Gnome 42, 43 used Meta.later_add
+    else if (Meta.later_add) {
+        Meta.later_add(...args);
+    }
+}

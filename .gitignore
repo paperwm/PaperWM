@@ -1,2 +1,11 @@
 .config
 TAGS
+
+# any generated extension zip
+paperwm@paperwm.github.com.zip
+
+# eslint files
+.eslintrc.*
+node_modules/
+package.json
+package-lock.json
