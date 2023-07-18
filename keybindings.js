@@ -36,7 +36,7 @@ function registerMinimapAction(name, handler) {
             settings: settings,
             opensNavigator: true,
             opensMinimap: true,
-            mutterFlags: Meta.KeyBindingFlags.PER_WINDOW
+            mutterFlags: Meta.KeyBindingFlags.PER_WINDOW,
         }
     );
 }
@@ -230,7 +230,7 @@ function byId(mutterId) {
 }
 
 function asKeyHandler(actionHandler) {
-    return (display, mw, binding) => actionHandler(mw, Tiling.spaces.selectedSpace, {display, binding});
+    return (display, mw, binding) => actionHandler(mw, Module.Tiling().spaces.selectedSpace, {display, binding});
 }
 
 function impliedOptions(options) {

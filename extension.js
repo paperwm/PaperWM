@@ -3,7 +3,6 @@ const {Gio, GLib, St} = imports.gi;
 const Util = imports.misc.util;
 const MessageTray = imports.ui.messageTray;
 const Main = imports.ui.main;
-const Config = imports.misc.config;
 
 /**
    The currently used modules
@@ -190,7 +189,7 @@ function enableUserConfig() {
 
     // add to searchpath if user has config file and action user.js
     if (hasUserConfigFile()) {
-        let SearchPath = Extension.imports.searchPath;
+        let SearchPath = Module.Extension.imports.searchPath;
         let path = getConfigDir().get_path();
         if (!SearchPath.includes(path)) {
             SearchPath.push(path);
