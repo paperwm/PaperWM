@@ -326,7 +326,7 @@ var Space = class Space extends Array {
             if (mw.preferredWidth) {
                 let prop = mw.preferredWidth;
                 if (prop.value <= 0) {
-                    Module.Utils().console.warn("invalid preferredWidth value");
+                    console.warn("invalid preferredWidth value");
                 }
                 else if (prop.unit == 'px') {
                     targetWidth = prop.value;
@@ -336,7 +336,7 @@ var Space = class Space extends Array {
                     targetWidth = Math.floor(availableWidth * Math.min(prop.value/100.0, 1.0));
                 }
                 else {
-                    Module.Utils().console.warn("invalid preferredWidth unit:", "'" + prop.unit + "'", "(should be 'px' or '%')");
+                    console.warn("invalid preferredWidth unit:", "'" + prop.unit + "'", "(should be 'px' or '%')");
                 }
 
                 delete mw.preferredWidth;
@@ -2594,7 +2594,7 @@ function registerWindow(metaWindow) {
     if (metaWindow.clone) {
         // Can now happen when setting session-modes to "unlock-dialog" or
         // resetting gnome-shell in-place (e.g. on X11)
-        Module.Utils().console.warn("window already registered", metaWindow.title);
+        console.warn("window already registered", metaWindow.title);
         return false
     }
 

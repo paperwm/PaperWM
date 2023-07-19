@@ -462,11 +462,11 @@ function enableAction(action) {
             action.id = actionId;
             actionIdMap[actionId] = action;
         } else {
-            Module.Utils().console.warn("Could not enable action", action.name);
+            console.warn("Could not enable action", action.name);
         }
     } else {
         if (keycomboMap[action.keycombo]) {
-            Module.Utils().console.warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name);
+            console.warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name);
             return Meta.KeyBindingAction.NONE;
         }
 
@@ -479,7 +479,7 @@ function enableAction(action) {
         }
 
         if (actionId === Meta.KeyBindingAction.NONE) {
-            Module.Utils().console.warn("Failed to grab. Binding probably already taken");
+            console.warn("Failed to grab. Binding probably already taken");
             return Meta.KeyBindingAction.NONE;
         }
 
