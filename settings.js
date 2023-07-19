@@ -152,7 +152,7 @@ function getNewWorkspaceSettings(index) {
     let list = workspaceList.get_strv('list');
     list.push(uuid);
     workspaceList.set_strv('list', list);
-    Module.GSettings().set_int('index', index);
+    settings.set_int('index', index);
     return [uuid, settings];
 }
 
