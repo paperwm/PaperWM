@@ -89,7 +89,7 @@ function launchFromWorkspaceDir(app, workspace=null) {
     cmd = cmd.replace(/%./g, "");
     let [success, cmdArgs] = GLib.shell_parse_argv(cmd);
     if (!success) {
-        log("launchFromWorkspaceDir:", "Could not parse command line", cmd);
+        console.error("launchFromWorkspaceDir:", "Could not parse command line", cmd);
         throw CouldNotLaunch;
     }
     GLib.spawn_async(dir, cmdArgs, GLib.get_environ(), GLib.SpawnFlags.SEARCH_PATH, null);

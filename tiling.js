@@ -229,7 +229,7 @@ var Space = class Space extends Array {
             ensureViewport(window, this, {force: true});
         }));
 
-        this.signals.connect(Module.Settings().settings, 'changed::default-focus-mode', () => {
+        this.signals.connect(Module.GSettings(), 'changed::default-focus-mode', () => {
             setFocusMode(Module.Settings().getDefaultFocusMode(), this);
         });
 
@@ -314,7 +314,6 @@ var Space = class Space extends Array {
         let widthChanged = false;
         let heightChanged = false;
 
-        // log("Layout column simple")
         for (let i = 0; i < windows.length; i++) {
             let mw = windows[i];
             let targetHeight = targetHeights[i];
@@ -327,7 +326,7 @@ var Space = class Space extends Array {
             if (mw.preferredWidth) {
                 let prop = mw.preferredWidth;
                 if (prop.value <= 0) {
-                    Module.Utils().warn("invalid preferredWidth value");
+                    Module.Utils().console.warn("invalid preferredWidth value");
                 }
                 else if (prop.unit == 'px') {
                     targetWidth = prop.value;
@@ -337,7 +336,7 @@ var Space = class Space extends Array {
                     targetWidth = Math.floor(availableWidth * Math.min(prop.value/100.0, 1.0));
                 }
                 else {
-                    Module.Utils().warn("invalid preferredWidth unit:", "'" + prop.unit + "'", "(should be 'px' or '%')");
+                    Module.Utils().console.warn("invalid preferredWidth unit:", "'" + prop.unit + "'", "(should be 'px' or '%')");
                 }
 
                 delete mw.preferredWidth;
@@ -369,11 +368,11 @@ var Space = class Space extends Array {
             // When resize is synchronous, ie. for X11 windows
             let nf = mw.get_frame_rect();
             if (nf.width !== targetWidth && nf.width !== f.width) {
-                // log("  Width did not obey", "new", nf.width, "old", f.width, "target", targetWidth, mw.title)
+                // console.debug("  Width did not obey", "new", nf.width, "old", f.width, "target", targetWidth, mw.title)
                 widthChanged = true;
             }
             if (nf.height !== targetHeight && nf.height !== f.height) {
-                // log("  Height did not obey", "new", nf.height, "old", f.height, "target", targetHeight, mw.title);
+                // console.debug("  Height did not obey", "new", nf.height, "old", f.height, "target", targetHeight, mw.title);
                 heightChanged = true;
                 targetHeight = nf.height; // Use actually height for layout
             }
@@ -381,7 +380,7 @@ var Space = class Space extends Array {
             let c = mw.clone;
             if (c.x !== x || c.targetX !== x ||
                 c.y !== y || c.targetY !== y) {
-                // log("  Position window", mw.title, `y: ${c.targetY} -> ${y} x: ${c.targetX} -> ${x}`);
+                // console.debug("  Position window", mw.title, `y: ${c.targetY} -> ${y} x: ${c.targetX} -> ${x}`);
                 c.targetX = x;
                 c.targetY = y;
                 if (time === 0) {
@@ -475,7 +474,7 @@ var Space = class Space extends Array {
                     fixPointAttempCount++;
                     continue;
                 } else {
-                    log("Bail at fixpoint, max tries reached");
+                    console.warn("Bail at fixpoint, max tries reached");
                 }
             }
 
@@ -1054,13 +1053,13 @@ var Space = class Space extends Array {
         this.updateShowTopBar();
         this.signals.connect(this.settings, 'changed::name',
                              this.updateName.bind(this));
-        this.signals.connect(Module.Settings().settings, 'changed::use-workspace-name',
+        this.signals.connect(Module.GSettings(), 'changed::use-workspace-name',
                              this.updateName.bind(this));
         this.signals.connect(this.settings, 'changed::color',
                              this.updateColor.bind(this));
         this.signals.connect(this.settings, 'changed::background',
                              this.updateBackground.bind(this));
-        this.signals.connect(Module.Settings().settings, 'changed::default-show-top-bar',
+        this.signals.connect(Module.GSettings(), 'changed::default-show-top-bar',
                              this.showTopBarChanged.bind(this));
         this.signals.connect(this.settings, 'changed::show-top-bar',
                              this.showTopBarChanged.bind(this));
@@ -1132,7 +1131,7 @@ border-radius: ${borderWidth}px;
 
     updateBackground() {
         let path = this.settings.get_string('background') || prefs.default_background;
-        let useDefault = Module.Settings().settings.get_boolean('use-default-background');
+        let useDefault = Module.GSettings().get_boolean('use-default-background');
         const BackgroundStyle = GDesktopEnums.BackgroundStyle;
         let style = BackgroundStyle.ZOOM;
         if (!path && useDefault) {
@@ -2595,7 +2594,7 @@ function registerWindow(metaWindow) {
     if (metaWindow.clone) {
         // Can now happen when setting session-modes to "unlock-dialog" or
         // resetting gnome-shell in-place (e.g. on X11)
-        Module.Utils().warn("window already registered", metaWindow.title);
+        Module.Utils().console.warn("window already registered", metaWindow.title);
         return false
     }
 
@@ -2705,7 +2704,7 @@ function enable(errorNotification) {
     backgroundGroup = Main.layoutManager._backgroundGroup;
 
     // connect to settings and update winprops array when it's updated
-    Module.Settings().settings.connect('changed::winprops', () => {
+    Module.GSettings().connect('changed::winprops', () => {
         Module.Settings().reloadWinpropsFromGSettings();
     });
 
@@ -2715,8 +2714,8 @@ function enable(errorNotification) {
         try {
             spaces.init();
         } catch (e) {
-            log('#paperwm startup failed');
-            log(`JS ERROR: ${e}\n${e.stack}`);
+            console.error('#paperwm startup failed');
+            console.error(`JS ERROR: ${e}\n${e.stack}`);
             errorNotification(
                 "PaperWM",
                 `Error occured in paperwm startup:\n\n${e.message}`,

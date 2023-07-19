@@ -305,7 +305,7 @@ function bindkey(keystr, actionName=null, handler=null, options={}) {
     } else {
         let boundAction = keycomboMap[keycombo];
         if (boundAction && boundAction != action) {
-            log("Rebinding", keystr, "to", actionName, "from", boundAction.name);
+            console.debug("Rebinding", keystr, "to", actionName, "from", boundAction.name);
             disableAction(boundAction);
         }
 
@@ -396,7 +396,7 @@ function getActionIdByActionName(actionName) {
         try {
             return parseInt(e.message.split(" ")[0]);
         } catch(e2) {
-            log("Could not find actionId for", actionName);
+            console.error("Could not find actionId for", actionName);
             return Meta.KeyBindingAction.NONE;
         }
     }
@@ -462,11 +462,11 @@ function enableAction(action) {
             action.id = actionId;
             actionIdMap[actionId] = action;
         } else {
-            Module.Utils().warn("Could not enable action", action.name);
+            Module.Utils().console.warn("Could not enable action", action.name);
         }
     } else {
         if (keycomboMap[action.keycombo]) {
-            Module.Utils().warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name);
+            Module.Utils().console.warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name);
             return Meta.KeyBindingAction.NONE;
         }
 
@@ -479,7 +479,7 @@ function enableAction(action) {
         }
 
         if (actionId === Meta.KeyBindingAction.NONE) {
-            Module.Utils().warn("Failed to grab. Binding probably already taken");
+            Module.Utils().console.warn("Failed to grab. Binding probably already taken");
             return Meta.KeyBindingAction.NONE;
         }
 

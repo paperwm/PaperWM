@@ -245,7 +245,7 @@ var StackOverlay = class StackOverlay {
 
         this.signals.connect(overlay, 'enter-event', this.triggerPreview.bind(this));
         this.signals.connect(overlay, 'leave-event', this.removePreview.bind(this));
-        this.signals.connect(Module.Settings().settings, 'changed::pressure-barrier',
+        this.signals.connect(Module.GSettings(), 'changed::pressure-barrier',
             this.updateBarrier.bind(this, true));
 
         this.updateBarrier();

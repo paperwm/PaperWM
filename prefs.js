@@ -112,12 +112,12 @@ var SettingsWidget = class SettingsWidget {
                 let isPercent = value.split(';').map(v => v.trim()).every(v => /^.*%$/.test(v));
                 let isPixels = value.split(';').map(v => v.trim()).every(v => /^.*px$/.test(v));
                 if (isPercent && isPixels) {
-                    log("cycle width/height values cannot mix percentage and pixel values");
+                    console.error("cycle width/height values cannot mix percentage and pixel values");
                     element.add_css_class('error');
                     return;
                 }
                 if (!isPercent && !isPixels) {
-                    log("no cycle width/height value units present");
+                    console.error("no cycle width/height value units present");
                     element.add_css_class('error');
                     return;
                 }
@@ -134,7 +134,7 @@ var SettingsWidget = class SettingsWidget {
 
                 // check to make sure if percent than input cannot be > 100%
                 if (isPercent && varr.some(v => v > 1)) {
-                    log("cycle width/height percent inputs cannot be greater than 100%");
+                    console.error("cycle width/height percent inputs cannot be greater than 100%");
                     element.add_css_class('error');
                     return;
                 }

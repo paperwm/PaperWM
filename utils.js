@@ -1,3 +1,4 @@
+const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
 const {GLib, Clutter, Meta, GObject} = imports.gi;
 const St = imports.gi.St;
 const GdkPixbuf = imports.gi.GdkPixbuf;
@@ -20,11 +21,7 @@ function debug() {
     if (filter === false)
         return;
     if (debug_all || filter === true)
-        log(Array.prototype.join.call(arguments, " | "));
-}
-
-function warn(...args) {
-    log("WARNING:", ...args);
+        console.debug(Array.prototype.join.call(arguments, " | "));
 }
 
 function assert(condition, message, ...dump) {
@@ -37,7 +34,7 @@ function withTimer(message, fn) {
     let start = GLib.get_monotonic_time();
     let ret = fn();
     let stop = GLib.get_monotonic_time();
-    log(`${message} ${((stop - start)/1000).toFixed(1)}ms`);
+    console.debug(`${message} ${((stop - start)/1000).toFixed(1)}ms`);
 }
 
 function print_stacktrace(error) {
@@ -53,7 +50,7 @@ function print_stacktrace(error) {
     let filtered = trace.filter((frame) => {
         return frame !== "wrapper@resource:///org/gnome/gjs/modules/lang.js:178";
     });
-    log(`JS ERROR: ${error}\n ${trace.join('\n')}`);
+    console.error(`JS ERROR: ${error}\n ${trace.join('\n')}`);
 }
 
 function framestr(rect) {
@@ -365,7 +362,7 @@ function printActorTree(node, fmt=mkFmt(), options={}, state=null) {
         }
     }
     if (!collapse) {
-        log(indent(state.level, fmt(node, state.actorPrefix)));
+        console.log(indent(state.level, fmt(node, state.actorPrefix)));
         state.actorPrefix = "";
         state.level += 1;
     }
@@ -466,7 +463,7 @@ function trace(topic, ...args) {
     } else {
         let trace = shortTrace(1).join(" < ");
         let extraInfo = args.length > 0 ? "\n\t" + args.map(x => x.toString()).join("\n\t") : ""
-        log(topic, trace, extraInfo);
+        console.log(topic, trace, extraInfo);
     }
 }
 
@@ -477,7 +474,7 @@ function windowTrace(topic, metaWindow, ...rest) {
         return;
     }
 
-    log(topic, infoMetaWindow(metaWindow).join("\n"), ...rest.join("\n"));
+    console.log(topic, infoMetaWindow(metaWindow).join("\n"), ...rest.join("\n"));
 }
 
 function infoMetaWindow(metaWindow) {

@@ -17,8 +17,8 @@ var META_KEY_ABOVE_TAB = 0x2f7259c9;
 var prefs = {};
 
 function setVerticalMargin() {
-    let vMargin = settings.get_int('vertical-margin');
-    let gap = settings.get_int('window-gap');
+    let vMargin = Module.GSettings().get_int('vertical-margin');
+    let gap = Module.GSettings().get_int('window-gap');
     prefs.vertical_margin = Math.max(Math.round(gap / 2), vMargin);
 }
 let timerId;
@@ -37,7 +37,7 @@ function onWindowGapChanged() {
 }
 
 function setState($, key) {
-    let value = settings.get_value(key);
+    let value = Module.GSettings().get_value(key);
     let name = key.replace(/-/g, '_');
     prefs[name] = value.deep_unpack();
 }
@@ -63,10 +63,7 @@ function setSchemas() {
     });
 }
 
-var settings;
 function enable() {
-    settings = Module.ExtensionUtils.getSettings();
-
     // generate preferences
     ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
         'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
@@ -80,10 +77,10 @@ function enable() {
     });
 
 
-    settings.connect('changed', setState);
-    settings.connect('changed::vertical-margin', onWindowGapChanged);
-    settings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
-    settings.connect('changed::window-gap', onWindowGapChanged);
+    Module.GSettings().connect('changed', setState);
+    Module.GSettings().connect('changed::vertical-margin', onWindowGapChanged);
+    Module.GSettings().connect('changed::vertical-margin-bottom', onWindowGapChanged);
+    Module.GSettings().connect('changed::window-gap', onWindowGapChanged);
     setVerticalMargin();
 
     // A intermediate window is created before the prefs dialog is created.
@@ -109,7 +106,6 @@ function disable() {
 
     prefs = {};
     workspaceSettingsCache = {};
-    settings = null;
     schemaSource = null;
     workspaceList = null;
     conflictSettings = null;
@@ -156,7 +152,7 @@ function getNewWorkspaceSettings(index) {
     let list = workspaceList.get_strv('list');
     list.push(uuid);
     workspaceList.set_strv('list', list);
-    settings.set_int('index', index);
+    Module.GSettings().set_int('index', index);
     return [uuid, settings];
 }
 
@@ -182,7 +178,7 @@ function findWorkspaceSettingsByName(regex) {
 /** Only used for debugging/development atm. */
 function deleteWorkspaceSettingsByName(regex, dryrun = true) {
     let out = "";
-    function rprint(...args) { log(...args); out += args.join(" ") + "\n"; }
+    function rprint(...args) { console.debug(...args); out += args.join(" ") + "\n"; }
     let n = global.workspace_manager.get_n_workspaces();
     for (let [uuid, s, name] of findWorkspaceSettingsByName(regex)) {
         let index = s.get_int('index');
@@ -204,9 +200,9 @@ function deleteWorkspaceSettings(uuid) {
     let list = workspaceList.get_strv('list');
     let i = list.indexOf(uuid);
     let settings = getWorkspaceSettingsByUUID(list[i]);
-    for (let key of settings.list_keys()) {
+    for (let key of Module.GSettings().list_keys()) {
         // Hopefully resetting all keys will delete the relocatable settings from dconf?
-        settings.reset(key);
+        Module.GSettings().reset(key);
     }
 
     list.splice(i, 1);
@@ -221,7 +217,7 @@ function printWorkspaceSettings() {
     const key = s => s[1].get_int('index');
     zipped.sort((a, b) => key(a) - key(b));
     for (let [uuid, s] of zipped) {
-        log('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
+        console.debug('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
     }
 }
 
@@ -290,8 +286,8 @@ function keycomboToKeylab(combo) {
 
 function generateKeycomboMap(settings) {
     let map = {};
-    for (let name of settings.list_keys()) {
-        let value = settings.get_value(name);
+    for (let name of Module.GSettings().list_keys()) {
+        let value = Module.GSettings().get_value(name);
         if (value.get_type_string() !== 'as')
             continue;
 
@@ -436,7 +432,7 @@ function defwinprop(spec) {
  */
 function addWinpropsFromGSettings() {
     // add gsetting (user config) winprops
-    settings.get_value('winprops').deep_unpack()
+    Module.GSettings().get_value('winprops').deep_unpack()
         .map(value => JSON.parse(value))
         .forEach(prop => {
             // test if wm_class or title is a regex expression

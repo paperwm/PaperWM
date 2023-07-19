@@ -17,6 +17,10 @@ function Settings() {
     return Extension.imports.settings;
 }
 
+function GSettings() {
+    return ExtensionUtils.getSettings();
+}
+
 function Tiling() {
     return Extension.imports.tiling;
 }

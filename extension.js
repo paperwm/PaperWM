@@ -53,13 +53,13 @@ function safeCall(name, method) {
     try {
         let module = Module.Extension.imports[name];
         if (module && module[method]) {
-            log("#paperwm", `${method} ${name}`);
+            console.debug("#paperwm", `${method} ${name}`);
         }
         module && module[method] && module[method].call(module, errorNotification);
         return true;
     } catch(e) {
-        log("#paperwm", `${name} failed ${method}`);
-        log(`JS ERROR: ${e}\n${e.stack}`);
+        console.error("#paperwm", `${name} failed ${method}`);
+        console.error(`JS ERROR: ${e}\n${e.stack}`);
         errorNotification(
             "PaperWM",
             `Error occured in ${name} @${method}:\n\n${e.message}`,
@@ -68,13 +68,10 @@ function safeCall(name, method) {
     }
 }
 
-var SESSIONID = "" + (new Date().getTime());
-
 let firstEnable = true;
 function enable() {
-    log(`#paperwm enable ${SESSIONID}`);
+    console.log(`#PaperWM enabled`);
 
-    SESSIONID += "#";
     enableUserConfig();
     enableUserStylesheet();
 
@@ -84,7 +81,7 @@ function enable() {
 }
 
 function disable() {
-    log(`#paperwm disable ${SESSIONID}`);
+    console.log('#PaperWM disable');
 
     run('disable');
 
@@ -121,7 +118,7 @@ function updateUserConfigMetadata() {
         const metadata = Module.Extension.dir.get_child("metadata.json");
         metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.OVERWRITE, null, null);
     } catch (error) {
-        log('PaperWM', `could not update user config metadata.json: ${error}`);
+        console.error('PaperWM', `could not update user config metadata.json: ${error}`);
     }
 }
 
@@ -150,7 +147,7 @@ function enableUserConfig() {
             });
         } catch (e) {
             errorNotification("PaperWM", `Failed to install user config: ${e.message}`, e.stack);
-            log("PaperWM", "User config install failed", e.message);
+            console.error("PaperWM", "User config install failed", e.message);
         }
     }
 

@@ -385,7 +385,7 @@ var WorkspaceMenu = Module.Utils().registerClass(
 
         _onEvent(actor, event) {
             if (!this.menu) {
-                log("?? no menu ??");
+                console.warn("?? no menu ??");
                 Module.Utils().print_stacktrace();
                 return Clutter.EVENT_PROPAGATE;
             }
@@ -437,7 +437,7 @@ var WorkspaceMenu = Module.Utils().registerClass(
                 }
 
                 let device = event.get_source_device();
-                // log(`source: ${device.get_device_type()}`);
+                // console.debug(`source: ${device.get_device_type()}`);
                 let direction = event.get_scroll_direction();
                 if (direction === Clutter.ScrollDirection.SMOOTH
                     && device.get_device_type() !== Clutter.InputDeviceType.POINTER_DEVICE) {
@@ -461,7 +461,7 @@ var WorkspaceMenu = Module.Utils().registerClass(
                 dy *= active.height * 0.05;
                 let t = event.get_time();
                 let v = -dy / (this.time - t);
-                // log(`v ${v}, dy: ${dy}`);
+                // console.debug(`v ${v}, dy: ${dy}`);
 
                 let firstEvent = false;
                 if (!this.selected) {
@@ -511,7 +511,7 @@ var WorkspaceMenu = Module.Utils().registerClass(
                 }
 
                 if (v === 0 && !firstEvent) {
-                    // log(`finish: ${this.velocity}`);
+                    // console.debug(`finish: ${this.velocity}`);
                     let test;
                     if (this.velocity > 0)
                         test = () => this.velocity > 0;
@@ -523,13 +523,13 @@ var WorkspaceMenu = Module.Utils().registerClass(
                     while (test()) {
                         let dy = this.velocity * 16;
                         y -= dy;
-                        // log(`calc target: ${dy} ${y} ${this.velocity}`);
+                        // console.debug(`calc target: ${dy} ${y} ${this.velocity}`);
                         if (this.velocity > 0)
                             this.velocity -= friction;
                         else
                             this.velocity += friction;
                     }
-                    // log(`zero: ${y/this.selected.height}`);
+                    // console.debug(`zero: ${y/this.selected.height}`);
 
                     if (this.selected === active && y <= 0.1 * this.selected.height) {
                         this._navigator.finish();
@@ -624,25 +624,25 @@ function enable () {
         fixTopBar();
     });
 
-    signals.connect(Module.Settings().settings, 'changed::disable-topbar-styling', (settings, key) => {
+    signals.connect(Module.GSettings(), 'changed::disable-topbar-styling', (settings, key) => {
         const status = prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
         ExtensionModule.notify(
             `PaperWM: TopBar styling has been ${status}`, 
             `A restart of Gnome is required! (e.g. logout then login again)`)
     });
 
-    signals.connect(Module.Settings().settings, 'changed::show-window-position-bar', (settings, key) => {
+    signals.connect(Module.GSettings(), 'changed::show-window-position-bar', (settings, key) => {
         const spaces = Module.Tiling().spaces;
         spaces.setSpaceTopbarElementsVisible(false);
         spaces.forEach(s => s.layout(false));
         spaces.showWindowPositionBarChanged();
     });
 
-    signals.connect(Module.Settings().settings, 'changed::show-workspace-indicator', (settings, key) => {
+    signals.connect(Module.GSettings(), 'changed::show-workspace-indicator', (settings, key) => {
         fixWorkspaceIndicator();
     });
 
-    signals.connect(Module.Settings().settings, 'changed::show-focus-mode-icon', (settings, key) => {
+    signals.connect(Module.GSettings(), 'changed::show-focus-mode-icon', (settings, key) => {
         fixFocusModeIcon();
     });
 

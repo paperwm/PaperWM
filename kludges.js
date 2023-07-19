@@ -265,7 +265,7 @@ function saveRuntimeDisable(schemaSettings, key, disableValue) {
 
         runtimeDisables.push(restore);
     } catch (e) {
-        log(e);
+        console.error(e);
     }
 }
 
@@ -290,7 +290,7 @@ function restoreRuntimeDisables() {
         try {
             restore();
         } catch (e) {
-            log(e);
+            console.error(e);
         }
     });
 }
