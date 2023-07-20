@@ -271,7 +271,7 @@ var FocusButton = Module.Utils().registerClass(
             super._init(0.0, 'FocusMode');
 
             this._icon = new FocusIcon({
-                style_class: 'system-status-icon focus-mode-button'
+                style_class: 'system-status-icon focus-mode-button',
             }, this, -10);
 
             this.setFocusMode();
@@ -281,7 +281,7 @@ var FocusButton = Module.Utils().registerClass(
 
         /**
          * Sets the focus mode with this button.
-         * @param {*} mode 
+         * @param {*} mode
          */
         setFocusMode(mode) {
             mode = mode ?? Module.Tiling().FocusModes.DEFAULT;
@@ -397,8 +397,8 @@ var WorkspaceMenu = Module.Utils().registerClass(
 
             let type = event.type();
 
-            if ((type == Clutter.EventType.TOUCH_END ||
-                type == Clutter.EventType.BUTTON_RELEASE)) {
+            if (type == Clutter.EventType.TOUCH_END ||
+                type == Clutter.EventType.BUTTON_RELEASE) {
                 if (Module.Navigator().navigating) {
                     Module.Navigator().getNavigator().finish();
                 } else {

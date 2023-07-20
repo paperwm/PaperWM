@@ -1648,7 +1648,6 @@ var Spaces = class Spaces extends Map {
             if (space.selectedWindow) {
                 space.layout(false);
                 Main.activateWindow(space.selectedWindow);
-                spaces.setSpaceTopbarElementsVisible(true);
 
                 // ensure viewport on selected window
                 ensureViewport(space.selectedWindow, space);
@@ -2494,7 +2493,7 @@ var Spaces = class Spaces extends Map {
 
         Module.TopBar().fixStyle();
     }
-}
+};
 
 Signals.addSignalMethods(Spaces.prototype);
 
