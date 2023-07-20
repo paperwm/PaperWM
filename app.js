@@ -12,7 +12,7 @@ var CouldNotLaunch = Symbol();
 // Lookup table for custom handlers, keys being the app id
 var customHandlers, customSpawnHandlers;
 function enable() {
-    customHandlers = { 'org.gnome.Terminal.desktop': newGnomeTerminal };
+    customHandlers = {'org.gnome.Terminal.desktop': newGnomeTerminal};
     customSpawnHandlers = {
         'com.gexperts.Tilix.desktop': mkCommandLineSpawner('tilix --working-directory %d')
     };
@@ -42,9 +42,9 @@ function enable() {
             else {
                 return fallback();
             }
-
         }
     );
+
     overrideWithFallback(
         Gio.DesktopAppInfo, "launch",
         (fallback, appInfo) => {
@@ -60,7 +60,6 @@ function enable() {
             else {
                 return fallback();
             }
-
         }
     );
 }
