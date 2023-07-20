@@ -305,8 +305,8 @@ function keycomboToKeylab(combo) {
 
 function generateKeycomboMap(settings) {
     let map = {};
-    for (let name of Module.GSettings().list_keys()) {
-        let value = Module.GSettings().get_value(name);
+    for (let name of settings.list_keys()) {
+        let value = settings.get_value(name);
         if (value.get_type_string() !== 'as')
             continue;
 

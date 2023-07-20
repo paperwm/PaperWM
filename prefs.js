@@ -682,8 +682,6 @@ function addKeybinding(model, settings, id, position=null) {
         [COLUMN_MODS, mods],
     ]));
 
-
-
     // Add one subrow for each additional keybinding
     accels.slice(1).forEach((accelerator, i) => {
         let [key, mods] = parseAccelerator(accelerator);
