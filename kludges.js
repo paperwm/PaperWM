@@ -422,8 +422,8 @@ function computeLayout40(windows, layoutParams) {
     let idealRowWidth = totalWidth / numRows;
 
     let sortedWindows = windows.slice();
-    // addWindow should have made sure we're already sorted.
-    // sortedWindows.sort(sortWindows);
+    // sorting needs to be done here to address moved windows
+    sortedWindows.sort(sortWindows);
 
     let windowIdx = 0;
     for (let i = 0; i < numRows; i++) {
