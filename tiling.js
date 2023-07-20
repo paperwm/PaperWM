@@ -214,11 +214,6 @@ var Space = class Space extends Array {
             animateWindow(w);
         });
 
-        let selected = this.selectedWindow;
-        if (selected) {
-            ensureViewport(selected, this, {force: true});
-        }
-
         this.signals.connect(workspace, "window-added", Module.Utils().dynamic_function_ref("add_handler", Module.Extension.imports.tiling));
         this.signals.connect(workspace, "window-removed", Module.Utils().dynamic_function_ref("remove_handler", Module.Extension.imports.tiling));
         this.signals.connect(Main.overview, 'showing', this.startAnimate.bind(this));
@@ -1654,6 +1649,9 @@ var Spaces = class Spaces extends Map {
                 space.layout(false);
                 Main.activateWindow(space.selectedWindow);
                 spaces.setSpaceTopbarElementsVisible(true);
+
+                // ensure viewport on selected window
+                ensureViewport(space.selectedWindow, space);
             }
             return false; // on return false destroys timeout
         });
@@ -3002,7 +3000,7 @@ function animateDown(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
     let clone = metaWindow.clone;
     Easer.addEase(metaWindow.clone, {
-        y:  workArea.y,
+        y: workArea.y,
         time: prefs().animation_time,
     });
 }
@@ -3056,14 +3054,14 @@ function ensuredX(meta_window, space) {
 
 /**
    Make sure that `meta_window` is in view, scrolling the space if needed.
- * @param meta_window 
- * @param {Space} space 
+ * @param meta_window
+ * @param {Space} space
  * @param {Object} options
- * @param {boolean} options.force 
+ * @param {boolean} options.force
  * @param {boolean} options.moveto if true, executes a move_to animated action
- * @returns 
+ * @returns
  */
-function ensureViewport(meta_window, space, options={}) {
+function ensureViewport(meta_window, space, options = {}) {
     space = space || spaces.spaceOfWindow(meta_window);
     let force = options?.force ?? false;
     let moveto = options?.moveto ?? true;
@@ -3089,10 +3087,11 @@ function ensureViewport(meta_window, space, options={}) {
             selected.clone.y = y;
         } else if (!ty || ty.get_interval().final !== y) {
             Easer.addEase(selected.clone,
-                             { y: y,
-                               time: prefs().animation_time,
-                               onComplete: space.moveDone.bind(space)
-                             });
+                {
+                    y: y,
+                    time: prefs().animation_time,
+                    onComplete: space.moveDone.bind(space),
+                });
         }
     }
 
