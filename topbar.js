@@ -2,9 +2,7 @@
   Functionality related to the top bar, often called the statusbar.
  */
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-
 const Easer = Module.Extension.imports.utils.easer;
-const prefs = Module.Extension.imports.settings.prefs;
 
 const {Clutter, St, Graphene, GLib, Meta, Gio} = imports.gi;
 const PanelMenu = imports.ui.panelMenu;
@@ -18,7 +16,6 @@ var panelMonitor;
 var workspaceManager = global.workspace_manager;
 var display = global.display;
 
-
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
 var colors = [
     '#9DB8D2', '#7590AE', '#4B6983', '#314E6C',
@@ -30,6 +27,10 @@ var colors = [
     '#DF421E', '#990000', '#EED680', '#D1940C',
     '#46A046', '#267726', '#ffffff', '#000000',
 ];
+
+function prefs() {
+    return Module.Settings().getPrefs();
+}
 
 function createButton(icon_name, accessible_name) {
     return new St.Button({
@@ -485,7 +486,7 @@ var WorkspaceMenu = Module.Utils().registerClass(
                     this.selected = spaces.selectedSpace;
                     Easer.removeEase(this.selected.actor);
                     Easer.addEase(this.selected.actor,
-                        { scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode });
+                        { scale_x: 0.9, scale_y: 0.9, time: prefs().animation_time, mode });
                 } else if (dy < 0
                     && ((this.selected.actor.y < downEdge &&
                         this.selected.actor.y - dy > downEdge)
@@ -498,7 +499,7 @@ var WorkspaceMenu = Module.Utils().registerClass(
                     this.selected = spaces.selectedSpace;
                     Easer.removeEase(this.selected.actor);
                     Easer.addEase(this.selected.actor,
-                        {scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode});
+                        {scale_x: 0.9, scale_y: 0.9, time: prefs().animation_time, mode});
                 }
 
                 this.selected.actor.y -= dy;
@@ -576,7 +577,7 @@ var WorkspaceMenu = Module.Utils().registerClass(
         }
 
         setName(name) {
-            if (prefs.use_workspace_name)
+            if (prefs().use_workspace_name)
                 this.label.text = name;
             else
                 this.label.text = orginalActivitiesText;
@@ -625,7 +626,7 @@ function enable () {
     });
 
     signals.connect(Module.GSettings(), 'changed::disable-topbar-styling', (settings, key) => {
-        const status = prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
+        const status = prefs().disable_topbar_styling ? 'DISABLED' : 'ENABLED';
         ExtensionModule.notify(
             `PaperWM: TopBar styling has been ${status}`, 
             `A restart of Gnome is required! (e.g. logout then login again)`)
@@ -677,7 +678,7 @@ function disable() {
 }
 
 function setClearStyle() {
-    if (prefs.disable_topbar_styling) {
+    if (prefs().disable_topbar_styling) {
         return;
     }
     removeStyles();
@@ -685,7 +686,7 @@ function setClearStyle() {
 }
 
 function setTransparentStyle() {
-    if (prefs.disable_topbar_styling) {
+    if (prefs().disable_topbar_styling) {
         return;
     }
     removeStyles();
@@ -702,7 +703,7 @@ function removeStyles() {
  * Applies correct style based on whether we use the windowPositionBar or not.
  */
 function fixStyle() {
-    prefs.show_window_position_bar ? setClearStyle() : setTransparentStyle();
+    prefs().show_window_position_bar ? setClearStyle() : setTransparentStyle();
 }
 
 function fixTopBar() {
@@ -732,12 +733,12 @@ function fixTopBar() {
 }
 
 function fixWorkspaceIndicator() {
-    prefs.show_workspace_indicator ? menu.show() : menu.hide();
+    prefs().show_workspace_indicator ? menu.show() : menu.hide();
     Module.Tiling().spaces.forEach(s => s.showWorkspaceIndicator());
 }
 
 function fixFocusModeIcon() {
-    prefs.show_focus_mode_icon ? focusButton.show() : focusButton.hide();
+    prefs().show_focus_mode_icon ? focusButton.show() : focusButton.hide();
     Module.Tiling().spaces.forEach(s => s.showFocusModeIcon());
 }
 
@@ -770,7 +771,7 @@ function updateMonitor() {
             Module.Tiling().spaces?.forEach(s => s.layout());
 
             // if to show window positon bar, then update across workspaces
-            if (prefs.show_window_position_bar) {
+            if (prefs().show_window_position_bar) {
                 Module.Tiling().spaces?.setSpaceTopbarElementsVisible();
             }
             fixStyle();

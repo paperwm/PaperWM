@@ -1,5 +1,4 @@
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const prefs = Module.Extension.imports.settings.prefs;
 
 const {Clutter, Shell, Meta, St} = imports.gi;
 const Main = imports.ui.main;
@@ -39,6 +38,10 @@ const Layout = imports.ui.layout;
   seems keep the stacking in sync (without entering into infinite
   restack loops)
 */
+
+function prefs() {
+    return Module.Settings().getPrefs();
+}
 
 function createAppIcon(metaWindow, size) {
     let tracker = Shell.WindowTracker.get_default();
@@ -222,8 +225,8 @@ var StackOverlay = class StackOverlay {
 
         this.monitor = monitor;
         let panelBox = Main.layoutManager.panelBox;
-        overlay.y = monitor.y + panelBox.height + prefs.vertical_margin;
-        overlay.height = this.monitor.height - panelBox.height - prefs.vertical_margin;
+        overlay.y = monitor.y + panelBox.height + prefs().vertical_margin;
+        overlay.height = this.monitor.height - panelBox.height - prefs().vertical_margin;
         overlay.width = Module.Tiling().stack_margin;
 
         this.signals = Module.Signals();
@@ -308,7 +311,7 @@ var StackOverlay = class StackOverlay {
         Module.Tiling().animateWindow(this.target);
 
         // set clone parameters
-        let scale = prefs.minimap_scale;
+        let scale = prefs().minimap_scale;
         clone.opacity = 255 * 0.95;
 
         clone.set_scale(scale, scale);
@@ -350,7 +353,7 @@ var StackOverlay = class StackOverlay {
         if (force)
             this.removeBarrier();
 
-        if (this.barrier || !prefs.pressure_barrier)
+        if (this.barrier || !prefs().pressure_barrier)
             return;
 
         this.pressureBarrier = new Layout.PressureBarrier(100, 0.25 * 1000, Shell.ActionMode.NORMAL);
@@ -414,7 +417,7 @@ var StackOverlay = class StackOverlay {
             return;
 
         let overlay = this.overlay;
-        overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + prefs.vertical_margin;
+        overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + prefs().vertical_margin;
 
         // Assume the resize edge is at least this big (empirically found..)
         const minResizeEdge = 8;

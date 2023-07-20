@@ -3,10 +3,13 @@ const {Meta, Clutter, St, Graphene} = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 
-const prefs = Module.Extension.imports.settings.prefs;
 const Easer = Module.Extension.imports.utils.easer;
 
 var virtualPointer;
+
+function prefs() {
+    return Module.Settings().getPrefs();
+}
 
 function isInRect(x, y, r) {
     return r.x <= x && x < r.x + r.width &&
@@ -147,7 +150,7 @@ var MoveGrab = class MoveGrab {
         let newScale = clone.scale_x * space.actor.scale_x;
         clone.set_scale(newScale, newScale);
 
-        let params = {time: prefs.animation_time, scale_x: 0.5, scale_y: 0.5, opacity: 240}
+        let params = {time: prefs().animation_time, scale_x: 0.5, scale_y: 0.5, opacity: 240}
         if (center) {
             this.pointerOffset = [0, 0];
             clone.set_pivot_point(0, 0);
@@ -166,9 +169,9 @@ var MoveGrab = class MoveGrab {
 
         let [x, y] = space.globalToViewport(gx, gy);
         if (!this.center && onSame && single && space[i]) {
-            Module.Tiling().move_to(space, space[i][0], {x: x + prefs.window_gap / 2});
+            Module.Tiling().move_to(space, space[i][0], {x: x + prefs().window_gap / 2});
         } else if (!this.center && onSame && single && space[i - 1]) {
-            Module.Tiling().move_to(space, space[i - 1][0], {x: x - space[i - 1][0].clone.width - prefs.window_gap / 2});
+            Module.Tiling().move_to(space, space[i - 1][0], {x: x - space[i - 1][0].clone.width - prefs().window_gap / 2});
         } else if (!this.center && onSame && space.length === 0) {
             space.targetX = x;
             space.cloneContainer.x = x;
@@ -190,7 +193,7 @@ var MoveGrab = class MoveGrab {
 
     /** x,y in scroll cooridinates */
     selectDndZone(space, x, y, initial=false) {
-        const gap = prefs.window_gap;
+        const gap = prefs().window_gap;
         const halfGap = gap / 2;
         const columnZoneMarginViz = 100 + halfGap;
         const columnZoneMargin = space.length > 0 ? columnZoneMarginViz : Math.round(space.width / 4);
@@ -373,7 +376,7 @@ var MoveGrab = class MoveGrab {
 
         this.zoneActors.forEach(actor => actor.destroy());
         let params = {
-            time: prefs.animation_time,
+            time: prefs().animation_time,
             scale_x: 1,
             scale_y: 1,
             opacity: clone?.__oldOpacity ?? 255,
@@ -518,7 +521,7 @@ var MoveGrab = class MoveGrab {
         this.zoneActors.add(zone.actor);
 
         let params = {
-            time: prefs.animation_time,
+            time: prefs().animation_time,
             [zone.originProp]: zone.center - zone.marginA,
             [zone.sizeProp]: zone.marginA + zone.marginB,
         };
@@ -548,7 +551,7 @@ var MoveGrab = class MoveGrab {
         if (zone) {
             zone.space.selection.show();
             Easer.addEase(zone.actor, {
-                time: prefs.animation_time,
+                time: prefs().animation_time,
                 [zone.originProp]: zone.center,
                 [zone.sizeProp]: 0,
                 onComplete: () => { zone.actor.destroy(); this.zoneActors.delete(zone.actor); }

@@ -14,12 +14,10 @@ var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 // This is the value mutter uses for the keyvalue of above_tab
 var META_KEY_ABOVE_TAB = 0x2f7259c9;
 
-var prefs = {};
-
 function setVerticalMargin() {
     let vMargin = Module.GSettings().get_int('vertical-margin');
     let gap = Module.GSettings().get_int('window-gap');
-    prefs.vertical_margin = Math.max(Math.round(gap / 2), vMargin);
+    getPrefs().vertical_margin = Math.max(Math.round(gap / 2), vMargin);
 }
 let timerId;
 function onWindowGapChanged() {
@@ -36,10 +34,28 @@ function onWindowGapChanged() {
     });
 }
 
+var prefs;
+function getPrefs() {
+    if (!prefs) {
+        prefs = {};
+        ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
+            'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
+            'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
+            'cycle-width-steps', 'cycle-height-steps', 'minimap-scale', 'winprops',
+            'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon',
+            'disable-topbar-styling', 'default-focus-mode']
+            .forEach(k => setState(null, k));
+        prefs.__defineGetter__("minimum_margin", function () {
+            return Math.min(15, this.horizontal_margin);
+        });
+    }
+    return prefs;
+}
+
 function setState($, key) {
     let value = Module.GSettings().get_value(key);
     let name = key.replace(/-/g, '_');
-    prefs[name] = value.deep_unpack();
+    getPrefs()[name] = value.deep_unpack();
 }
 
 var schemaSource;
@@ -81,19 +97,6 @@ function getWorkspaceList() {
 }
 
 function enable() {
-    // generate preferences
-    ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
-        'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
-        'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
-        'cycle-width-steps', 'cycle-height-steps', 'minimap-scale', 'winprops',
-        'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon',
-        'disable-topbar-styling', 'default-focus-mode']
-        .forEach(k => setState(null, k));
-    prefs.__defineGetter__("minimum_margin", function () {
-        return Math.min(15, this.horizontal_margin);
-    });
-
-
     Module.GSettings().connect('changed', setState);
     Module.GSettings().connect('changed::vertical-margin', onWindowGapChanged);
     Module.GSettings().connect('changed::vertical-margin-bottom', onWindowGapChanged);
@@ -114,15 +117,14 @@ function enable() {
     });
 
     addWinpropsFromGSettings();
-    setSchemas();
 }
 
 function disable() {
     Module.Utils().timeout_remove(timerId);
     timerId = null;
 
-    prefs = {};
     workspaceSettingsCache = {};
+    prefs = null;
     schemaSource = null;
     workspaceList = null;
     conflictSettings = null;
@@ -133,7 +135,7 @@ function disable() {
  */
 function getDefaultFocusMode() {
     // find matching focus mode
-    const mode = prefs.default_focus_mode;
+    const mode = getPrefs().default_focus_mode;
     const modes = Module.Extension.imports.tiling.FocusModes;
     let result = null;
     Object.entries(modes).forEach(([k,v]) => {

@@ -32,8 +32,8 @@ const Main = imports.ui.main;
      - gestures is responsible for 3-finger swiping (only works in wayland).
  */
 const modules = [
-    'settings', 'tiling', 'navigator', 'keybindings', 'scratch', 'liveAltTab', 'utils',
-    'stackoverlay', 'app', 'kludges', 'topbar', 'gestures',
+    'tiling', 'navigator', 'keybindings', 'scratch', 'liveAltTab', 'utils',
+    'stackoverlay', 'app', 'topbar', 'settings', 'gestures', 'kludges',
 ];
 
 /**

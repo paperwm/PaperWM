@@ -225,8 +225,6 @@ var SettingsWidget = class SettingsWidget {
         const workspaceStack = this.builder.get_object('workspace_stack');
 
         this.workspaceNames = wmSettings.get_strv('workspace-names');
-
-        Module.Settings().setSchemas();
         const nWorkspaces = Module.Settings().getWorkspaceList().get_strv('list').length;
 
         // Note: For some reason we can't set the visible child of the workspace
