@@ -42,7 +42,7 @@ function registerMinimapAction(name, handler) {
 }
 
 
-var signals, actions, nameMap, actionIdMap, keycomboMap, overrides, conflictSettings;
+var signals, actions, nameMap, actionIdMap, keycomboMap, overrides;
 function setupActions() {
     signals = Module.Signals();
     actions = [];
@@ -666,7 +666,7 @@ function resetConflicts() {
 
 function enable() {
     setupActions();
-    let schemas = [...Module.Settings().conflictSettings,
+    let schemas = [...Module.Settings().getConflictSettings(),
         Module.ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
     schemas.forEach(schema => {
         signals.connect(schema, 'changed', resolveConflicts);

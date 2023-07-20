@@ -42,25 +42,42 @@ function setState($, key) {
     prefs[name] = value.deep_unpack();
 }
 
-var schemaSource, workspaceList, conflictSettings;
-function setSchemas() {
-    // Schemas that may contain conflicting keybindings
-    // It's possible to inject or remove settings here on `user.init`.
-    conflictSettings = [
-        new Gio.Settings({schema_id: 'org.gnome.mutter.keybindings'}),
-        new Gio.Settings({schema_id: 'org.gnome.mutter.wayland.keybindings'}),
-        new Gio.Settings({schema_id: "org.gnome.desktop.wm.keybindings"}),
-        new Gio.Settings({schema_id: "org.gnome.shell.keybindings"})
-    ];
-    schemaSource = Gio.SettingsSchemaSource.new_from_directory(
-        GLib.build_filenamev([Module.Extension.path, "schemas"]),
-        Gio.SettingsSchemaSource.get_default(),
-        false
-    );
+var schemaSource;
+function getSchemaSource() {
+    if (!schemaSource) {
+        schemaSource = Gio.SettingsSchemaSource.new_from_directory(
+            GLib.build_filenamev([Module.Extension.path, "schemas"]),
+            Gio.SettingsSchemaSource.get_default(),
+            false
+        );
+    }
+    return schemaSource;
+}
 
-    workspaceList = new Gio.Settings({
-        settings_schema: schemaSource.lookup(WORKSPACE_LIST_KEY, true)
-    });
+var conflictSettings;
+function getConflictSettings() {
+    if (!conflictSettings) {
+        // Schemas that may contain conflicting keybindings
+        // It's possible to inject or remove settings here on `user.init`.
+        conflictSettings = [
+            new Gio.Settings({schema_id: 'org.gnome.mutter.keybindings'}),
+            new Gio.Settings({schema_id: 'org.gnome.mutter.wayland.keybindings'}),
+            new Gio.Settings({schema_id: "org.gnome.desktop.wm.keybindings"}),
+            new Gio.Settings({schema_id: "org.gnome.shell.keybindings"}),
+        ];
+    }
+
+    return conflictSettings;
+}
+
+var workspaceList;
+function getWorkspaceList() {
+    if (!workspaceList) {
+        workspaceList = new Gio.Settings({
+            settings_schema: getSchemaSource().lookup(WORKSPACE_LIST_KEY, true),
+        });
+    }
+    return workspaceList;
 }
 
 function enable() {
@@ -136,7 +153,7 @@ function getDefaultFocusMode() {
 /// Workspaces
 
 function getWorkspaceSettings(index) {
-    let list = workspaceList.get_strv('list');
+    let list = getWorkspaceList().get_strv('list');
     for (let uuid of list) {
         let settings = getWorkspaceSettingsByUUID(uuid);
         if (settings.get_int('index') === index) {
@@ -149,9 +166,9 @@ function getWorkspaceSettings(index) {
 function getNewWorkspaceSettings(index) {
     let uuid = GLib.uuid_string_random();
     let settings = getWorkspaceSettingsByUUID(uuid);
-    let list = workspaceList.get_strv('list');
+    let list = getWorkspaceList().get_strv('list');
     list.push(uuid);
-    workspaceList.set_strv('list', list);
+    getWorkspaceList().set_strv('list', list);
     settings.set_int('index', index);
     return [uuid, settings];
 }
@@ -159,7 +176,7 @@ function getNewWorkspaceSettings(index) {
 function getWorkspaceSettingsByUUID(uuid) {
     if (!workspaceSettingsCache[uuid]) {
         let settings = new Gio.Settings({
-            settings_schema: schemaSource.lookup(WORKSPACE_KEY, true),
+            settings_schema: getSchemaSource().lookup(WORKSPACE_KEY, true),
             path: `/org/gnome/shell/extensions/paperwm/workspaces/${uuid}/`
         });
         workspaceSettingsCache[uuid] = settings;
@@ -169,7 +186,7 @@ function getWorkspaceSettingsByUUID(uuid) {
 
 /** Returns [[uuid, settings, name], ...] (Only used for debugging/development atm.) */
 function findWorkspaceSettingsByName(regex) {
-    let list = workspaceList.get_strv('list');
+    let list = getWorkspaceList().get_strv('list');
     let settingss = list.map(getWorkspaceSettingsByUUID);
     return Module.Utils().zip(list, settingss, settingss.map(s => s.get_string('name')))
         .filter(([uuid, s, name]) => name.match(regex));
@@ -197,7 +214,7 @@ function deleteWorkspaceSettingsByName(regex, dryrun = true) {
 /** Only used for debugging/development atm. */
 function deleteWorkspaceSettings(uuid) {
     // NB! Does not check if the settings is currently in use. Does not reindex subsequent settings.
-    let list = workspaceList.get_strv('list');
+    let list = getWorkspaceList().get_strv('list');
     let i = list.indexOf(uuid);
     let settings = getWorkspaceSettingsByUUID(list[i]);
     for (let key of Module.GSettings().list_keys()) {
@@ -206,12 +223,12 @@ function deleteWorkspaceSettings(uuid) {
     }
 
     list.splice(i, 1);
-    workspaceList.set_strv('list', list);
+    getWorkspaceList().set_strv('list', list);
 }
 
 // Useful for debugging
 function printWorkspaceSettings() {
-    let list = workspaceList.get_strv('list');
+    let list = getWorkspaceList().get_strv('list');
     let settings = list.map(getWorkspaceSettingsByUUID);
     let zipped = Module.Utils().zip(list, settings);
     const key = s => s[1].get_int('index');
@@ -305,7 +322,7 @@ function generateKeycomboMap(settings) {
 }
 
 function findConflicts(schemas) {
-    schemas = schemas || conflictSettings;
+    schemas = schemas || getConflictSettings();
     let conflicts = [];
     const paperMap =
           generateKeycomboMap(Module.ExtensionUtils.getSettings(KEYBINDINGS_KEY));

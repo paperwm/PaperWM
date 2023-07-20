@@ -227,7 +227,7 @@ var SettingsWidget = class SettingsWidget {
         this.workspaceNames = wmSettings.get_strv('workspace-names');
 
         Module.Settings().setSchemas();
-        const nWorkspaces = Module.Settings().workspaceList.get_strv('list').length;
+        const nWorkspaces = Module.Settings().getWorkspaceList().get_strv('list').length;
 
         // Note: For some reason we can't set the visible child of the workspace
         //       stack at construction time.. (!)
