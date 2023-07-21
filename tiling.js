@@ -2379,17 +2379,17 @@ var Spaces = class Spaces extends Map {
         let space = new Space(workspace, this.spaceContainer, this._initDone);
         this.set(workspace, space);
         this.stack.push(space);
-    };
+    }
 
     removeSpace(space) {
         this.delete(space.workspace);
         this.stack.splice(this.stack.indexOf(space), 1);
         space.destroy();
-    };
+    }
 
     spaceOfWindow(meta_window) {
         return this.get(meta_window.get_workspace());
-    };
+    }
 
     /**
      * 
@@ -2398,7 +2398,7 @@ var Spaces = class Spaces extends Map {
      */
     spaceOf(workspace) {
         return this.get(workspace);
-    };
+    }
 
     /**
      * Returns the currently active space.
@@ -2684,10 +2684,10 @@ function prefs() {
     return Module.Settings().getPrefs();
 }
 
-var backgroundSettings, interfaceSettings;
-var signals, backgroundGroup, grabSignals;
-var oldSpaces = new Map();
-var oldMonitors = new Map();
+let signals, backgroundGroup, grabSignals;
+let backgroundSettings, interfaceSettings;
+let oldSpaces = new Map();
+let oldMonitors = new Map();
 function enable(errorNotification) {
     debug('#enable');
 
