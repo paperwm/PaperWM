@@ -1453,16 +1453,16 @@ border-radius: ${borderWidth}px;
             let z_sorted = display.sort_windows_by_stacking(windows);
             let xkey = (mw) => {
                 let frame = mw.get_frame_rect();
-                if(frame.x <= 0)
+                if (frame.x <= 0)
                     return 0;
-                if(frame.x+frame.width == this.width) {
+                if (frame.x+frame.width == this.width) {
                     return this.width;
                 }
                 return frame.x;
-            }
+            };
             // xorder: a|b c|d
             // zorder: a d b c
-            return (a,b) => {
+            return (a, b) => {
                 let ax = xkey(a);
                 let bx = xkey(b);
                 // Yes, this is not efficient
@@ -1480,12 +1480,12 @@ border-radius: ${borderWidth}px;
                     return bz - az;
                 }
             };
-        }
+        };
 
         if (oldSpace) {
             for (let i=0; i < oldSpace.length; i++) {
                 let column = oldSpace[i];
-                for(let j=0; j < column.length; j++) {
+                for (let j=0; j < column.length; j++) {
                     let metaWindow = column[j];
                     // Prune removed windows
                     if (metaWindow.get_compositor_private()) {
@@ -1510,16 +1510,15 @@ border-radius: ${borderWidth}px;
                 Module.Scratch().makeScratch(meta_window);
                 return;
             }
-            if(this.indexOf(meta_window) < 0 && add_filter(meta_window)) {
+            if (this.indexOf(meta_window) < 0 && add_filter(meta_window)) {
                 this.addWindow(meta_window, this.length);
             }
-        })
+        });
 
         let tabList = display.get_tab_list(Meta.TabList.NORMAL, workspace)
             .filter(metaWindow => { return this.indexOf(metaWindow) !== -1; });
         if (tabList[0]) {
-            this.selectedWindow = tabList[0]
-            // ensureViewport(space.selectedWindow, space);
+            this.selectedWindow = tabList[0];
         }
     }
 
@@ -1541,8 +1540,7 @@ border-radius: ${borderWidth}px;
         this.cloneContainer.destroy();
         this.cloneContainer = null;
         this.clip.destroy();
-        this.cloneContainer = null;
-        let workspace = this.workspace;
+        this.clip = null;
     }
 };
 
