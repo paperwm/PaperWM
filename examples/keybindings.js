@@ -30,9 +30,9 @@ function gotoByIndex() {
             }
         }
     }
-    for(let k = 1; k <= 9; k++) {
+    for (let k = 1; k <= 9; k++) {
         Keybindings.bindkey(`<Super>${k}`, `goto-coloumn-${k}`,
-                            goto(k-1), {activeInNavigator: true})
+            goto(k - 1), { activeInNavigator: true }),
     }
 }
 
