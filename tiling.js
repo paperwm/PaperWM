@@ -624,23 +624,6 @@ var Space = class Space extends Array {
             this.splice(index, 0, [metaWindow]);
         }
 
-        /*
-         * 3.35+ has a bug where move_frame sometimes triggers another move back to its original position. Make sure tiled windows are always positioned correctly.
-         */
-        this.signals.connect(metaWindow, 'position-changed', (w) => {
-            if (inGrab)
-                return;
-            let f = w.get_frame_rect();
-            let clone = w.clone;
-            let x = this.visibleX(w);
-            let y = this.monitor.y + clone.targetY;
-            x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
-            x += this.monitor.x;
-            if (f.x !== x || f.y !== y) {
-                w.move_frame(true, x, y);
-            }
-        });
-
         Module.Utils().actor_reparent(metaWindow.clone, this.cloneContainer);
 
         // Make sure the cloneContainer is in a clean state (centered) before layout
@@ -1793,8 +1776,7 @@ var Spaces = class Spaces extends Map {
 
         this.signals.destroy();
 
-        // Hold onto a copy of spaces to support reload.
-        oldSpaces = new Map(spaces);
+        // remove spaces
         for (let [workspace, space] of this) {
             this.removeSpace(space);
         }
@@ -2733,10 +2715,14 @@ function enable(errorNotification) {
 }
 
 function disable () {
-    signals.destroy();
     grabSignals.destroy();
-    spaces.destroy();
+    signals.destroy();
 
+    // save spaces map for restore (monitors are alrady stored)
+    oldSpaces = new Map(spaces);
+
+    console.log('oldmonitors size', oldMonitors?.size);
+    console.log('oldspaces size', oldSpaces?.size);
     oldSpaces.forEach(space => {
         let windows = space.getWindows();
         let selected = windows.indexOf(space.selectedWindow);
@@ -2751,6 +2737,7 @@ function disable () {
         }
     });
 
+    spaces.destroy();
     backgroundGroup = null;
     backgroundSettings = null;
     interfaceSettings = null;
