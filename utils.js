@@ -53,6 +53,23 @@ function print_stacktrace(error) {
     console.error(`JS ERROR: ${error}\n ${trace.join('\n')}`);
 }
 
+/**
+ * Pretty prints args using JSON.stringify.
+ * @param  {...any} arugs
+ */
+function prettyPrintToLog(...args) {
+    console.log(args.map(v => JSON.stringify(v, (key, value) => {
+        try {
+            if (key === 'itself') {
+                return null;
+            }
+            return value;
+        } catch (error) {
+            return null;
+        }
+    }), 2));
+}
+
 function framestr(rect) {
     return "[ x:"+rect.x + ", y:" + rect.y + " w:" + rect.width + " h:"+rect.height + " ]";
 }

@@ -1562,8 +1562,6 @@ var StackPositions = {
 
 /**
    A `Map` to store all `Spaces`'s, indexed by the corresponding workspace.
-
-   TODO: Move initialization to enable
 */
 var Spaces = class Spaces extends Map {
     // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
@@ -1603,8 +1601,6 @@ var Spaces = class Spaces extends Map {
             OVERRIDE_SCHEMA = 'org.gnome.mutter';
         }
         this.overrideSettings = new Gio.Settings({ schema_id: OVERRIDE_SCHEMA });
-
-        this.monitorsChanged();
     }
 
     init() {
@@ -1635,8 +1631,7 @@ var Spaces = class Spaces extends Map {
             });
         this._initDone = true;
 
-        // Redo the stack
-        // X11: Monitors aren't set up properly on `enable`, so we need it here too
+        // Monitors aren't set up properly on `enable`, so we need it here too
         this.monitorsChanged();
 
         // Initialize spaces _after_ monitors are set up
@@ -1656,9 +1651,6 @@ var Spaces = class Spaces extends Map {
         this._monitorsChanging = true;
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
 
-        if (this.monitors)
-            oldMonitors = this.monitors;
-
         this.monitors = new Map();
         this.get(workspaceManager.get_active_workspace()).getWindows().forEach(w => {
             animateWindow(w);
@@ -1670,16 +1662,16 @@ var Spaces = class Spaces extends Map {
             overlay.destroy();
         }
         this.clickOverlays = [];
-        for (let monitor of Main.layoutManager.monitors) {
+        let mru = this.mru();
+        let primary = Main.layoutManager.primaryMonitor;
+        let monitors = Main.layoutManager.monitors;
+
+        for (let monitor of monitors) {
             let overlay = new ClickOverlay(monitor, this.onlyOnPrimary);
             monitor.clickOverlay = overlay;
             overlay.activate();
             this.clickOverlays.push(overlay);
         }
-
-        let mru = this.mru();
-        let primary = Main.layoutManager.primaryMonitor;
-        let monitors = Main.layoutManager.monitors;
 
         let finish = () => {
             Module.TopBar().updateMonitor();
@@ -1695,13 +1687,13 @@ var Spaces = class Spaces extends Map {
                 space.layout(false);
                 let selected = space.selectedWindow;
                 if (selected) {
-                    ensureViewport(selected, space, { force: true });
+                    ensureViewport(selected, space, { moveto: false });
                 }
             });
             this.spaceContainer.show();
 
             Mainloop.timeout_add(
-                20, () => {
+                100, () => {
                     this._monitorsChanging = false;
                     return false; // on return false destroys timeout
                 });
@@ -1718,20 +1710,23 @@ var Spaces = class Spaces extends Map {
             return;
         }
 
+        // restore heuristic
         // Persist as many monitors as possible
-        for (let [oldMonitor, oldSpace] of oldMonitors) {
-            let monitor = monitors[oldMonitor.index];
-            let space = this.get(oldSpace.workspace);
-            if (monitor && space &&
-                oldMonitor.width === monitor.width &&
-                oldMonitor.height === monitor.height &&
-                oldMonitor.x === monitor.x &&
-                oldMonitor.y === monitor.y) {
-                this.monitors.set(monitor, space);
-                space.setMonitor(monitor, false);
-                mru = mru.filter(s => s !== space);
+        if (oldMonitors?.size > 0) {
+            for (let [oldMonitor, oldSpace] of oldMonitors) {
+                let monitor = monitors[oldMonitor.index];
+                let space = this.get(oldSpace.workspace);
+                if (monitor &&
+                    space &&
+                    oldMonitor.width === monitor.width &&
+                    oldMonitor.height === monitor.height &&
+                    oldMonitor.x === monitor.x &&
+                    oldMonitor.y === monitor.y) {
+                    this.monitors.set(monitor, space);
+                    space.setMonitor(monitor, false);
+                    mru = mru.filter(s => s !== space);
+                }
             }
-            oldMonitors.delete(oldMonitor);
         }
 
         // Populate any remaining monitors
@@ -1740,17 +1735,21 @@ var Spaces = class Spaces extends Map {
                 let space = mru[0];
                 if (space === undefined && this._initDone) {
                     let workspace = workspaceManager.append_new_workspace(
-                        false, global.get_current_time());
+                        false,
+                        global.get_current_time());
                     space = this.spaceOf(workspace);
                 }
                 if (space === undefined) {
-                    break;
+                    continue;
                 }
                 this.monitors.set(monitor, space);
                 space.setMonitor(monitor, false);
                 mru = mru.slice(1);
             }
         }
+
+        // update old monitors here
+        oldMonitors = new Map(this.monitors);
 
         // Reset any removed monitors
         mru.forEach(space => {
@@ -1794,8 +1793,7 @@ var Spaces = class Spaces extends Map {
 
         this.signals.destroy();
 
-        // Hold onto a copy of the old monitors and spaces to support reload.
-        oldMonitors = this.monitors;
+        // Hold onto a copy of spaces to support reload.
         oldSpaces = new Map(spaces);
         for (let [workspace, space] of this) {
             this.removeSpace(space);
