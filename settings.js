@@ -2,7 +2,6 @@
    Settings utility shared between the running extension and the preference UI.
  */
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const Settings = Module.GSettings();
 const {Gio, GLib, Gtk} = imports.gi;
 const Mainloop = imports.mainloop;
 
@@ -16,8 +15,8 @@ var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 var META_KEY_ABOVE_TAB = 0x2f7259c9;
 
 function setVerticalMargin() {
-    let vMargin = Settings.get_int('vertical-margin');
-    let gap = Settings.get_int('window-gap');
+    let vMargin = settings.get_int('vertical-margin');
+    let gap = settings.get_int('window-gap');
     prefs.vertical_margin = Math.max(Math.round(gap / 2), vMargin);
 }
 let timerId;
@@ -36,7 +35,7 @@ function onWindowGapChanged() {
 }
 
 function setState($, key) {
-    let value = Settings.get_value(key);
+    let value = settings.get_value(key);
     let name = key.replace(/-/g, '_');
     prefs[name] = value.deep_unpack();
 }
@@ -79,8 +78,10 @@ function getWorkspaceList() {
     return workspaceList;
 }
 
+let settings;
 var prefs;
 function enable() {
+    settings = Module.GSettings();
     prefs = {};
     ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
         'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
@@ -92,10 +93,13 @@ function enable() {
     prefs.__defineGetter__("minimum_margin", function () {
         return Math.min(15, this.horizontal_margin);
     });
-    Settings.connect('changed', setState);
-    Settings.connect('changed::vertical-margin', onWindowGapChanged);
-    Settings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
-    Settings.connect('changed::window-gap', onWindowGapChanged);
+    settings.connect('changed', setState);
+    settings.connect('changed::vertical-margin', onWindowGapChanged);
+    settings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
+    settings.connect('changed::window-gap', onWindowGapChanged);
+
+    // connect to settings and update winprops array when it's updated
+    settings.connect('changed::winprops', () => reloadWinpropsFromGSettings());
 
     setVerticalMargin();
 
@@ -120,6 +124,7 @@ function disable() {
     timerId = null;
 
     workspaceSettingsCache = {};
+    settings = null;
     prefs = null;
     schemaSource = null;
     workspaceList = null;
@@ -215,9 +220,9 @@ function deleteWorkspaceSettings(uuid) {
     let list = getWorkspaceList().get_strv('list');
     let i = list.indexOf(uuid);
     let settings = getWorkspaceSettingsByUUID(list[i]);
-    for (let key of Settings.list_keys()) {
+    for (let key of settings.list_keys()) {
         // Hopefully resetting all keys will delete the relocatable settings from dconf?
-        Settings.reset(key);
+        settings.reset(key);
     }
 
     list.splice(i, 1);
@@ -447,7 +452,7 @@ function defwinprop(spec) {
  */
 function addWinpropsFromGSettings() {
     // add gsetting (user config) winprops
-    Settings.get_value('winprops').deep_unpack()
+    settings.get_value('winprops').deep_unpack()
         .map(value => JSON.parse(value))
         .forEach(prop => {
             // test if wm_class or title is a regex expression

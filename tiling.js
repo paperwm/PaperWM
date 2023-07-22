@@ -2651,8 +2651,6 @@ let backgroundSettings, interfaceSettings;
 let oldSpaces;
 let oldMonitors;
 function enable(errorNotification) {
-    debug('#enable');
-
     backgroundSettings = new Gio.Settings({
         schema_id: 'org.gnome.desktop.background',
     });
@@ -2664,11 +2662,6 @@ function enable(errorNotification) {
     grabSignals = Module.Signals();
 
     backgroundGroup = Main.layoutManager._backgroundGroup;
-
-    // connect to settings and update winprops array when it's updated
-    Module.GSettings().connect('changed::winprops', () => {
-        Settings.reloadWinpropsFromGSettings();
-    });
 
     oldSpaces = oldSpaces ?? new Map();
     oldMonitors = oldMonitors ?? new Map();
