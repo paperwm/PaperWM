@@ -1675,8 +1675,8 @@ var Spaces = class Spaces extends Map {
             });
             this.spaceContainer.show();
 
-            Mainloop.timeout_add(
-                100, () => {
+            this.monitorsChangingTimeout = Mainloop.timeout_add(
+                20, () => {
                     this._monitorsChanging = false;
                     return false; // on return false destroys timeout
                 });
@@ -1693,7 +1693,6 @@ var Spaces = class Spaces extends Map {
             return;
         }
 
-        // restore heuristic
         // Persist as many monitors as possible
         if (oldMonitors?.size > 0) {
             for (let [oldMonitor, oldSpace] of oldMonitors) {
@@ -1775,6 +1774,7 @@ var Spaces = class Spaces extends Map {
             });
 
         this.signals.destroy();
+        Module.Utils().timeout_remove(this.monitorsChangingTimeout);
 
         // remove spaces
         for (let [workspace, space] of this) {
@@ -2651,8 +2651,8 @@ function prefs() {
 
 let signals, backgroundGroup, grabSignals;
 let backgroundSettings, interfaceSettings;
-let oldSpaces = new Map();
-let oldMonitors = new Map();
+let oldSpaces;
+let oldMonitors;
 function enable(errorNotification) {
     debug('#enable');
 
@@ -2673,6 +2673,8 @@ function enable(errorNotification) {
         Module.Settings().reloadWinpropsFromGSettings();
     });
 
+    oldSpaces = oldSpaces ?? new Map();
+    oldMonitors = oldMonitors ?? new Map();
     spaces = new Spaces();
 
     function initWorkspaces() {
@@ -2720,9 +2722,6 @@ function disable () {
 
     // save spaces map for restore (monitors are alrady stored)
     oldSpaces = new Map(spaces);
-
-    console.log('oldmonitors size', oldMonitors?.size);
-    console.log('oldspaces size', oldSpaces?.size);
     oldSpaces.forEach(space => {
         let windows = space.getWindows();
         let selected = windows.indexOf(space.selectedWindow);

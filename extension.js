@@ -45,7 +45,6 @@ function run(method) {
         if (!safeCall(name, method))
             return false;
     }
-
     return true;
 }
 
@@ -82,7 +81,6 @@ function enable() {
 
 function disable() {
     console.log('#PaperWM disable');
-
     run('disable');
 
     disableUserStylesheet();

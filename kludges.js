@@ -286,6 +286,9 @@ function setupRuntimeDisables() {
  * PaperWM was enabled.
  */
 function restoreRuntimeDisables() {
+    if (Main.sessionMode.isLocked) {
+        return;
+    }
     runtimeDisables.forEach(restore => {
         try {
             restore();

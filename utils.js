@@ -58,16 +58,7 @@ function print_stacktrace(error) {
  * @param  {...any} arugs
  */
 function prettyPrintToLog(...args) {
-    console.log(args.map(v => JSON.stringify(v, (key, value) => {
-        try {
-            if (key === 'itself') {
-                return null;
-            }
-            return value;
-        } catch (error) {
-            return null;
-        }
-    }), 2));
+    console.log(args.map(v => JSON.stringify(v, null), 2));
 }
 
 function framestr(rect) {
