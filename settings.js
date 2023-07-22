@@ -2,6 +2,7 @@
    Settings utility shared between the running extension and the preference UI.
  */
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const Settings = Module.GSettings();
 const {Gio, GLib, Gtk} = imports.gi;
 const Mainloop = imports.mainloop;
 
@@ -15,9 +16,9 @@ var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 var META_KEY_ABOVE_TAB = 0x2f7259c9;
 
 function setVerticalMargin() {
-    let vMargin = Module.GSettings().get_int('vertical-margin');
-    let gap = Module.GSettings().get_int('window-gap');
-    getPrefs().vertical_margin = Math.max(Math.round(gap / 2), vMargin);
+    let vMargin = Settings.get_int('vertical-margin');
+    let gap = Settings.get_int('window-gap');
+    prefs.vertical_margin = Math.max(Math.round(gap / 2), vMargin);
 }
 let timerId;
 function onWindowGapChanged() {
@@ -34,28 +35,10 @@ function onWindowGapChanged() {
     });
 }
 
-var prefs;
-function getPrefs() {
-    if (!prefs) {
-        prefs = {};
-        ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
-            'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
-            'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
-            'cycle-width-steps', 'cycle-height-steps', 'minimap-scale', 'winprops',
-            'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon',
-            'disable-topbar-styling', 'default-focus-mode']
-            .forEach(k => setState(null, k));
-        prefs.__defineGetter__("minimum_margin", function () {
-            return Math.min(15, this.horizontal_margin);
-        });
-    }
-    return prefs;
-}
-
 function setState($, key) {
-    let value = Module.GSettings().get_value(key);
+    let value = Settings.get_value(key);
     let name = key.replace(/-/g, '_');
-    getPrefs()[name] = value.deep_unpack();
+    prefs[name] = value.deep_unpack();
 }
 
 var schemaSource;
@@ -96,11 +79,24 @@ function getWorkspaceList() {
     return workspaceList;
 }
 
+var prefs;
 function enable() {
-    Module.GSettings().connect('changed', setState);
-    Module.GSettings().connect('changed::vertical-margin', onWindowGapChanged);
-    Module.GSettings().connect('changed::vertical-margin-bottom', onWindowGapChanged);
-    Module.GSettings().connect('changed::window-gap', onWindowGapChanged);
+    prefs = {};
+    ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
+        'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
+        'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
+        'cycle-width-steps', 'cycle-height-steps', 'minimap-scale', 'winprops',
+        'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon',
+        'disable-topbar-styling', 'default-focus-mode']
+        .forEach(k => setState(null, k));
+    prefs.__defineGetter__("minimum_margin", function () {
+        return Math.min(15, this.horizontal_margin);
+    });
+    Settings.connect('changed', setState);
+    Settings.connect('changed::vertical-margin', onWindowGapChanged);
+    Settings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
+    Settings.connect('changed::window-gap', onWindowGapChanged);
+
     setVerticalMargin();
 
     // A intermediate window is created before the prefs dialog is created.
@@ -135,7 +131,7 @@ function disable() {
  */
 function getDefaultFocusMode() {
     // find matching focus mode
-    const mode = getPrefs().default_focus_mode;
+    const mode = prefs.default_focus_mode;
     const modes = Module.Extension.imports.tiling.FocusModes;
     let result = null;
     Object.entries(modes).forEach(([k,v]) => {
@@ -219,9 +215,9 @@ function deleteWorkspaceSettings(uuid) {
     let list = getWorkspaceList().get_strv('list');
     let i = list.indexOf(uuid);
     let settings = getWorkspaceSettingsByUUID(list[i]);
-    for (let key of Module.GSettings().list_keys()) {
+    for (let key of Settings.list_keys()) {
         // Hopefully resetting all keys will delete the relocatable settings from dconf?
-        Module.GSettings().reset(key);
+        Settings.reset(key);
     }
 
     list.splice(i, 1);
@@ -451,7 +447,7 @@ function defwinprop(spec) {
  */
 function addWinpropsFromGSettings() {
     // add gsetting (user config) winprops
-    Module.GSettings().get_value('winprops').deep_unpack()
+    Settings.get_value('winprops').deep_unpack()
         .map(value => JSON.parse(value))
         .forEach(prop => {
             // test if wm_class or title is a regex expression

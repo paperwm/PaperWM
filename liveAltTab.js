@@ -1,13 +1,10 @@
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const Settings = Module.Settings();
 const Easer = Module.Extension.imports.utils.easer;
 
 const {Clutter, Meta, Gio} = imports.gi;
 const Main = imports.ui.main;
 const AltTab = imports.ui.altTab;
-
-function prefs() {
-    return Module.Settings().getPrefs();
-}
 
 var LiveAltTab = Module.Utils().registerClass(
     class LiveAltTab extends AltTab.WindowSwitcherPopup {
@@ -51,7 +48,7 @@ var LiveAltTab = Module.Utils().registerClass(
 
             Main.uiGroup.insert_child_above(fog, global.window_group);
             Easer.addEase(fog, {
-                time: prefs().animation_time,
+                time: Settings.prefs.animation_time,
                 opacity: 100,
             });
             this.fog = fog;
@@ -132,7 +129,7 @@ var LiveAltTab = Module.Utils().registerClass(
             super._onDestroy();
             Module.Utils().debug('#preview', 'onDestroy', this.was_accepted);
             Easer.addEase(this.fog, {
-                time: prefs().animation_time,
+                time: Settings.prefs.animation_time,
                 opacity: 0,
                 onStopped: () => {
                     this.fog.destroy();

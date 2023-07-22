@@ -1,4 +1,5 @@
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const Settings = Module.Settings();
 const Easer = Module.Extension.imports.utils.easer;
 const ClickOverlay = Module.Extension.imports.stackoverlay.ClickOverlay;
 
@@ -178,7 +179,7 @@ var Space = class Space extends Array {
         });
         this.windowPositionBar.hide(); // default on empty space
         Module.Utils().actor_raise(this.windowPositionBar);
-        if (prefs().show_window_position_bar) {
+        if (Settings.prefs.show_window_position_bar) {
             this.enableWindowPositionBar();
         }
 
@@ -268,8 +269,8 @@ var Space = class Space extends Array {
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
         workArea.x -= this.monitor.x;
         workArea.y -= this.monitor.y;
-        workArea.height -= prefs().vertical_margin + prefs().vertical_margin_bottom;
-        workArea.y += prefs().vertical_margin;
+        workArea.height -= Settings.prefs.vertical_margin + Settings.prefs.vertical_margin_bottom;
+        workArea.y += Settings.prefs.vertical_margin;
         return workArea;
     }
 
@@ -292,7 +293,7 @@ var Space = class Space extends Array {
             throw new Error("Anchor doesn't exist in column " + grabWindow.title);
         }
 
-        const gap = prefs().window_gap;
+        const gap = Settings.prefs.window_gap;
         const f = grabWindow.get_frame_rect();
         let yGrabRel = f.y - this.monitor.y;
         targetWidth = f.width;
@@ -331,7 +332,7 @@ var Space = class Space extends Array {
                     targetWidth = prop.value;
                 }
                 else if (prop.unit == '%') {
-                    let availableWidth = space.workArea().width - prefs().horizontal_margin*2 - prefs().window_gap;
+                    let availableWidth = space.workArea().width - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
                     targetWidth = Math.floor(availableWidth * Math.min(prop.value/100.0, 1.0));
                 }
                 else {
@@ -361,7 +362,7 @@ var Space = class Space extends Array {
             if (mw.maximized_vertically) {
                 // NOTE: This should really be f.y - monitor.y, but eg. firefox
                 // on wayland reports the wrong y coordinates at this point.
-                y = y - prefs().vertical_margin;
+                y = y - Settings.prefs.vertical_margin;
             }
 
             // When resize is synchronous, ie. for X11 windows
@@ -394,7 +395,7 @@ var Space = class Space extends Array {
                 }
             }
 
-            y += targetHeight + prefs().window_gap;
+            y += targetHeight + Settings.prefs.window_gap;
         }
         return [targetWidth, widthChanged || heightChanged, y];
     }
@@ -408,11 +409,11 @@ var Space = class Space extends Array {
         this._inLayout = true;
         this.startAnimate();
 
-        let time = animate ? prefs().animation_time : 0;
+        let time = animate ? Settings.prefs.animation_time : 0;
         if (window.instant) {
             time = 0;
         }
-        let gap = prefs().window_gap;
+        let gap = Settings.prefs.window_gap;
         let x = 0;
         let selectedIndex = this.selectedIndex();
         let workArea = this.workArea();
@@ -424,7 +425,7 @@ var Space = class Space extends Array {
         }
 
         // compensate to keep window position bar on all monitors
-        if (prefs().show_window_position_bar) {
+        if (Settings.prefs.show_window_position_bar) {
             const panelBoxHeight = Module.TopBar().panelBox.height;
             const monitor = Main.layoutManager.primaryMonitor;
             if (monitor !== this.monitor) {
@@ -452,7 +453,7 @@ var Space = class Space extends Array {
             } else {
                 targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
             }
-            targetWidth = Math.min(targetWidth, workArea.width - 2*prefs().minimum_margin);
+            targetWidth = Math.min(targetWidth, workArea.width - 2*Settings.prefs.minimum_margin);
 
             let resultingWidth, relayout;
             let allocator = options.customAllocators && options.customAllocators[i];
@@ -1053,7 +1054,7 @@ var Space = class Space extends Array {
      * @returns Boolean
      */
     getShowTopBarSetting() {
-        let showTopBar = prefs().default_show_top_bar;
+        let showTopBar = Settings.prefs.default_show_top_bar;
         let userValue = this.settings.get_user_value('show-top-bar');
         if (userValue) {
             showTopBar = userValue.unpack();
@@ -1099,8 +1100,8 @@ var Space = class Space extends Array {
     updateColor() {
         let color = this.settings.get_string('color');
         if (color === '') {
-            let colors = prefs().workspace_colors;
-            let index = this.workspace.index() % prefs().workspace_colors.length;
+            let colors = Settings.prefs.workspace_colors;
+            let index = this.workspace.index() % Settings.prefs.workspace_colors.length;
             color = colors[index];
         }
         this.color = color;
@@ -1112,7 +1113,7 @@ border-radius: ${borderWidth}px;
     }
 
     updateBackground() {
-        let path = this.settings.get_string('background') || prefs().default_background;
+        let path = this.settings.get_string('background') || Settings.prefs.default_background;
         let useDefault = Module.GSettings().get_boolean('use-default-background');
         const BackgroundStyle = GDesktopEnums.BackgroundStyle;
         let style = BackgroundStyle.ZOOM;
@@ -1133,7 +1134,7 @@ border-radius: ${borderWidth}px;
     }
 
     updateName() {
-        if (prefs().use_workspace_name) {
+        if (Settings.prefs.use_workspace_name) {
             this.workspaceLabel.show();
         } else {
             this.workspaceLabel.hide();
@@ -1184,7 +1185,7 @@ border-radius: ${borderWidth}px;
 
     updateWindowPositionBar() {
         // if pref show-window-position-bar, exit
-        if (!prefs().show_window_position_bar) {
+        if (!Settings.prefs.show_window_position_bar) {
             return;
         }
 
@@ -1232,7 +1233,7 @@ border-radius: ${borderWidth}px;
      */
     setSpaceTopbarElementsVisible(visible = true, changeTopBarStyle = true) {
         // if windowPositionBar shown, we want the topbar style to be transparent if visible
-        if (prefs().show_window_position_bar) {
+        if (Settings.prefs.show_window_position_bar) {
             if (changeTopBarStyle) {
                 visible ? Module.TopBar().setTransparentStyle() : Module.TopBar().setClearStyle();
             }
@@ -1272,7 +1273,7 @@ border-radius: ${borderWidth}px;
      * @param {boolean} show
      */
     showWorkspaceIndicator(show = true) {
-        if (show && prefs().show_workspace_indicator) {
+        if (show && Settings.prefs.show_workspace_indicator) {
             Module.Utils().actor_raise(this.workspaceIndicator);
             this.workspaceIndicator.show();
         } else {
@@ -1285,7 +1286,7 @@ border-radius: ${borderWidth}px;
      * @param {boolean} show
      */
     showFocusModeIcon(show = true) {
-        if (show && prefs().show_focus_mode_icon) {
+        if (show && Settings.prefs.show_focus_mode_icon) {
             Module.Utils().actor_raise(this.focusModeIcon);
             this.focusModeIcon.show();
         } else {
@@ -1393,7 +1394,7 @@ border-radius: ${borderWidth}px;
         this.width = monitor.width;
         this.height = monitor.height;
 
-        let time = animate ? prefs().animation_time : 0;
+        let time = animate ? Settings.prefs.animation_time : 0;
 
         Easer.addEase(this.actor,
             {
@@ -1966,7 +1967,7 @@ var Spaces = class Spaces extends Map {
             let y = ((space.height + padding) * (i - to)) * scale;
             if (animate) {
                 Easer.addEase(space.actor, {
-                    time: prefs().animation_time,
+                    time: Settings.prefs.animation_time,
                     y, scale_y: scale, scale_x: scale,
                 });
             } else {
@@ -1980,7 +1981,7 @@ var Spaces = class Spaces extends Map {
 
             let selected = space.selectedWindow;
             if (selected && selected.fullscreen && space !== toSpace) {
-                selected.clone.y = Main.panel.actor.height + prefs().vertical_margin;
+                selected.clone.y = Main.panel.actor.height + Settings.prefs.vertical_margin;
             }
         });
     }
@@ -2001,8 +2002,8 @@ var Spaces = class Spaces extends Map {
         let selected = this.selectedSpace.selectedWindow;
         if (selected && selected.fullscreen) {
             Easer.addEase(selected.clone, {
-                y: Main.panel.actor.height + prefs().vertical_margin,
-                time: prefs().animation_time,
+                y: Main.panel.actor.height + Settings.prefs.vertical_margin,
+                time: Settings.prefs.animation_time,
             });
         }
     }
@@ -2068,7 +2069,7 @@ var Spaces = class Spaces extends Map {
             space.show();
             Easer.addEase(space.actor, {
                 y: space_y,
-                time: prefs().animation_time,
+                time: Settings.prefs.animation_time,
                 scale_x: scale,
                 scale_y: scale,
             });
@@ -2143,7 +2144,7 @@ var Spaces = class Spaces extends Map {
             child !== sibling && cloneParent.set_child_below_sibling(child, sibling);
             let selected = space.selectedWindow;
             if (selected && selected.fullscreen) {
-                selected.clone.y = Main.panel.actor.height + prefs().vertical_margin;
+                selected.clone.y = Main.panel.actor.height + Settings.prefs.vertical_margin;
             }
         });
 
@@ -2153,8 +2154,8 @@ var Spaces = class Spaces extends Map {
         let selected = space.selectedWindow;
         if (selected && selected.fullscreen) {
             Easer.addEase(selected.clone, {
-                y: Main.panel.actor.height + prefs().vertical_margin,
-                time: prefs().animation_time,
+                y: Main.panel.actor.height + Settings.prefs.vertical_margin,
+                time: Settings.prefs.animation_time,
             });
         }
     }
@@ -2229,7 +2230,7 @@ var Spaces = class Spaces extends Map {
             Easer.addEase(actor,
                 {
                     y: h * space.height,
-                    time: prefs().animation_time,
+                    time: Settings.prefs.animation_time,
                     scale_x: scale + (to - i) * 0.01,
                     scale_y: scale + (to - i) * 0.01,
                     onComplete,
@@ -2271,7 +2272,7 @@ var Spaces = class Spaces extends Map {
 
             Easer.addEase(to.border, {
                 opacity: 0,
-                time: prefs().animation_time,
+                time: Settings.prefs.animation_time,
                 onComplete: () => {
                     to.border.hide();
                     to.border.opacity = 255;
@@ -2311,7 +2312,7 @@ var Spaces = class Spaces extends Map {
                 y: 0,
                 scale_x: 1,
                 scale_y: 1,
-                time: prefs().animation_time,
+                time: Settings.prefs.animation_time,
                 onComplete,
             });
 
@@ -2326,7 +2327,7 @@ var Spaces = class Spaces extends Map {
                 Easer.addEase(space.actor,
                     {
                         x: 0, y: space.height + 20,
-                        time: prefs().animation_time,
+                        time: Settings.prefs.animation_time,
                     });
             }
             above = above.get_next_sibling();
@@ -2444,12 +2445,12 @@ var Spaces = class Spaces extends Map {
      * Checks whether the window position bar should be enabled.
      */
     showWindowPositionBarChanged() {
-        if (prefs().show_window_position_bar) {
+        if (Settings.prefs.show_window_position_bar) {
             this.forEach(s => {
                 s.enableWindowPositionBar();
             });
         }
-        if (!prefs().show_window_position_bar) {
+        if (!Settings.prefs.show_window_position_bar) {
             // should be in normal topbar mode
             this.forEach(s => {
                 s.enableWindowPositionBar(false);
@@ -2598,11 +2599,11 @@ function allocateClone(metaWindow) {
         let selection = metaWindow.clone.first_child;
         let vMax = metaWindow.maximized_vertically;
         let hMax = metaWindow.maximized_horizontally;
-        let protrusion = Math.round(prefs().window_gap / 2);
+        let protrusion = Math.round(Settings.prefs.window_gap / 2);
         selection.x = hMax ? 0 : - protrusion;
         selection.y = vMax ? 0 : - protrusion;
-        selection.set_size(frame.width + (hMax ? 0 : prefs().window_gap),
-            frame.height + (vMax ? 0 : prefs().window_gap));
+        selection.set_size(frame.width + (hMax ? 0 : Settings.prefs.window_gap),
+            frame.height + (vMax ? 0 : Settings.prefs.window_gap));
     }
 }
 
@@ -2643,10 +2644,6 @@ function resizeHandler(metaWindow) {
         // Resizing from within a size-changed signal is troube (#73). Queue instead.
         space.queueLayout();
     }
-}
-
-function prefs() {
-    return Module.Settings().getPrefs();
 }
 
 let signals, backgroundGroup, grabSignals;
@@ -2938,7 +2935,7 @@ function insertWindow(metaWindow, { existing }) {
         Easer.addEase(clone, {
             scale_x: 1,
             scale_y: 1,
-            time: prefs().animation_time,
+            time: Settings.prefs.animation_time,
             onStopped: () => {
                 connectSizeChanged(true);
                 space.layout();
@@ -2963,7 +2960,7 @@ function animateDown(metaWindow) {
     let workArea = space.workArea();
     Easer.addEase(metaWindow.clone, {
         y: workArea.y,
-        time: prefs().animation_time,
+        time: Settings.prefs.animation_time,
     });
 }
 
@@ -2991,22 +2988,22 @@ function ensuredX(meta_window, space) {
         x = workArea.x + Math.round(workArea.width/2 - frame.width/2);
     } else if (meta_window.fullscreen) {
         x = 0;
-    } else if (frame.width > workArea.width*0.9 - 2*(prefs().horizontal_margin + prefs().window_gap)) {
+    } else if (frame.width > workArea.width*0.9 - 2*(Settings.prefs.horizontal_margin + Settings.prefs.window_gap)) {
         // Consider the window to be wide and center it
         x = min + Math.round((workArea.width - frame.width)/2);
     } else if (x + frame.width > max) {
         // Align to the right prefs.horizontal_margin
-        x = max - prefs().horizontal_margin - frame.width;
+        x = max - Settings.prefs.horizontal_margin - frame.width;
     } else if (x < min) {
         // Align to the left prefs.horizontal_margin
-        x = min + prefs().horizontal_margin;
+        x = min + Settings.prefs.horizontal_margin;
     } else if (x + frame.width === max) {
         // When opening new windows at the end, in the background, we want to
         // show some minimup margin
-        x = max - prefs().minimum_margin - frame.width;
+        x = max - Settings.prefs.minimum_margin - frame.width;
     } else if (x === min) {
         // Same for the start (though the case isn't as common)
-        x = min + prefs().minimum_margin;
+        x = min + Settings.prefs.minimum_margin;
     }
 
     return x;
@@ -3049,7 +3046,7 @@ function ensureViewport(meta_window, space, options = {}) {
             Easer.addEase(selected.clone,
                 {
                     y,
-                    time: prefs().animation_time,
+                    time: Settings.prefs.animation_time,
                     onComplete: space.moveDone.bind(space),
                 });
         }
@@ -3125,7 +3122,7 @@ function move_to(space, metaWindow, { x, y, force, instant }) {
     Easer.addEase(space.cloneContainer,
         {
             x: target,
-            time: prefs().animation_time,
+            time: Settings.prefs.animation_time,
             onComplete: space.moveDone.bind(space),
         });
 
@@ -3354,7 +3351,7 @@ function toggleMaximizeHorizontally(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
-    let reqWidth = workArea.width - prefs().minimum_margin*2;
+    let reqWidth = workArea.width - Settings.prefs.minimum_margin*2;
 
     // Some windows only resize in increments > 1px so we can't rely on a precise width
     // Hopefully this heuristic is good enough
@@ -3368,9 +3365,9 @@ function toggleMaximizeHorizontally(metaWindow) {
 
         metaWindow.unmaximizedRect = null;
     } else {
-        let x = workArea.x + space.monitor.x + prefs().minimum_margin;
+        let x = workArea.x + space.monitor.x + Settings.prefs.minimum_margin;
         metaWindow.unmaximizedRect = frame;
-        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - prefs().minimum_margin*2, frame.height);
+        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - Settings.prefs.minimum_margin*2, frame.height);
     }
 }
 
@@ -3380,7 +3377,7 @@ function resizeHInc(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
 
-    let maxHeight = workArea.height - prefs().horizontal_margin*2 - prefs().window_gap;
+    let maxHeight = workArea.height - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
     let step = Math.floor(maxHeight * 0.1)
     let currentHeight = Math.floor(frame.height/step)*step;
     let targetHeight = Math.min(currentHeight + step, maxHeight);
@@ -3400,7 +3397,7 @@ function resizeHDec(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
 
-    let maxHeight = workArea.height - prefs().horizontal_margin*2 - prefs().window_gap;
+    let maxHeight = workArea.height - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
     let step = Math.floor(maxHeight * 0.1);
     let currentHeight = Math.floor(frame.height/step)*step;
     let minHeight = step;
@@ -3421,7 +3418,7 @@ function resizeWInc(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
 
-    let maxWidth = workArea.width - prefs().horizontal_margin*2 - prefs().window_gap;
+    let maxWidth = workArea.width - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
     let step = Math.floor(maxWidth * 0.1);
     let currentWidth = Math.floor(frame.width/step)*step;
     let targetWidth = Math.min(currentWidth + step, maxWidth);
@@ -3441,7 +3438,7 @@ function resizeWDec(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
 
-    let maxWidth = workArea.width - prefs().horizontal_margin*2 - prefs().window_gap;
+    let maxWidth = workArea.width - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
     let step = Math.floor(maxWidth * 0.1);
     let currentWidth = Math.floor(frame.width/step)*step;
     let minWidth = step;
@@ -3457,14 +3454,14 @@ function resizeWDec(metaWindow) {
 }
 
 function getCycleWindowWidths(metaWindow) {
-    let steps = prefs().cycle_width_steps;
+    let steps = Settings.prefs.cycle_width_steps;
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
 
     if (steps[0] <= 1) {
         // Steps are specifed as ratios -> convert to pixels
         // Make sure two windows of "compatible" width will have room:
-        let availableWidth = workArea.width - prefs().horizontal_margin*2 - prefs().window_gap;
+        let availableWidth = workArea.width - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
         steps = steps.map(x => Math.floor(x*availableWidth));
     }
 
@@ -3482,9 +3479,9 @@ function cycleWindowWidth(metaWindow) {
     let targetX = frame.x;
 
     if (Module.Scratch().isScratchWindow(metaWindow)) {
-        if (targetX+targetWidth > workArea.x + workArea.width - prefs().minimum_margin) {
+        if (targetX+targetWidth > workArea.x + workArea.width - Settings.prefs.minimum_margin) {
             // Move the window so it remains fully visible
-            targetX = workArea.x + workArea.width - prefs().minimum_margin - targetWidth;
+            targetX = workArea.x + workArea.width - Settings.prefs.minimum_margin - targetWidth;
         }
     }
 
@@ -3497,7 +3494,7 @@ function cycleWindowWidth(metaWindow) {
 }
 
 function cycleWindowHeight(metaWindow) {
-    let steps = prefs().cycle_height_steps;
+    let steps = Settings.prefs.cycle_height_steps;
     let frame = metaWindow.get_frame_rect();
 
     let space = spaces.spaceOfWindow(metaWindow);
@@ -3518,7 +3515,7 @@ function cycleWindowHeight(metaWindow) {
         function allocate(column, available) {
             // NB: important to not retrieve the frame size inside allocate. Allocation of
             // metaWindow should stay the same during a potential fixpoint evaluation.
-            available -= (column.length - 1) * prefs().window_gap;
+            available -= (column.length - 1) * Settings.prefs.window_gap;
             let targetHeight = calcTargetHeight(available);
             return column.map(mw => {
                 if (mw === metaWindow) {
@@ -3683,7 +3680,7 @@ function allocateDefault(column, availableHeight, selectedWindow) {
         return [availableHeight];
     } else {
         // Distribute available height amongst non-selected windows in proportion to their existing height
-        const gap = prefs().window_gap;
+        const gap = Settings.prefs.window_gap;
         const minHeight = 50;
 
         function heightOf(mw) {
@@ -3720,7 +3717,7 @@ function allocateDefault(column, availableHeight, selectedWindow) {
 }
 
 function allocateEqualHeight(column, available) {
-    available = available - (column.length-1)*prefs().window_gap;
+    available = available - (column.length-1)*Settings.prefs.window_gap;
     return column.map(_ => Math.floor(available / column.length));
 }
 
@@ -3877,7 +3874,7 @@ function takeWindow(metaWindow, space, {navigator}) {
     Easer.addEase(metaWindow.clone,
         {
             x, y,
-            time: prefs().animation_time,
+            time: Settings.prefs.animation_time,
         });
 }
 

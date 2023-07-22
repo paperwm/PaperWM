@@ -1,4 +1,5 @@
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const Settings = Module.Settings();
 const Meta = imports.gi.Meta;
 const Gio = imports.gi.Gio;
 const Clutter = imports.gi.Clutter;
@@ -23,10 +24,6 @@ var gliding = false;
 var signals;
 // 1 is natural scrolling, -1 is unnatural
 var natural = 1;
-
-function prefs() {
-    return Module.Settings().getPrefs();
-}
 
 var touchpadSettings;
 function enable() {
@@ -74,7 +71,7 @@ function enable() {
                     return Clutter.EVENT_PROPAGATE;
                 }
 
-                let dir_y = -dy*natural*prefs().swipe_sensitivity[1];
+                let dir_y = -dy*natural*Settings.prefs.swipe_sensitivity[1];
                 // if not Tiling.inPreview and swipe is UP => propagate event to overview
                 if (!Module.Tiling().inPreview && dir_y > 0) {
                     swipeTrackersEnable();
@@ -138,7 +135,7 @@ function horizontalScroll(actor, event) {
             Easer.removeEase(this.cloneContainer);
             direction = DIRECTIONS.Horizontal;
         }
-        return update(this, -dx*natural*prefs().swipe_sensitivity[0], event.get_time());
+        return update(this, -dx*natural*Settings.prefs.swipe_sensitivity[0], event.get_time());
     case Clutter.TouchpadGesturePhase.CANCEL:
     case Clutter.TouchpadGesturePhase.END:
         this.hState = phase;
@@ -164,7 +161,7 @@ function update(space, dx, t) {
         space.vx = v;
     }
 
-    let accel = prefs().swipe_friction[0]/16; // px/ms^2
+    let accel = Settings.prefs.swipe_friction[0]/16; // px/ms^2
     accel = space.vx > 0 ? -accel : accel;
     let duration = -space.vx/accel;
     let d = space.vx*duration + .5*accel*duration**2;
@@ -190,7 +187,7 @@ function done(space) {
     let startGlide = space.targetX;
 
     // timetravel
-    let accel = prefs().swipe_friction[0]/16; // px/ms^2
+    let accel = Settings.prefs.swipe_friction[0]/16; // px/ms^2
     accel = space.vx > 0 ? -accel : accel;
     let t = -space.vx/accel;
     let d = space.vx*t + .5*accel*t**2;
@@ -342,7 +339,7 @@ function updateVertical(dy, t) {
         Easer.removeEase(selected.actor);
         Easer.addEase(selected.actor, {
             scale_x: 0.9, scale_y: 0.9, time:
-                prefs().animation_time, transition
+                Settings.prefs.animation_time, transition
         });
     } else if (dy < 0
         && (selected.actor.y - dy > StackPositions.down * monitor.height)) {
@@ -354,7 +351,7 @@ function updateVertical(dy, t) {
         Easer.removeEase(selected.actor);
         Easer.addEase(selected.actor, {
             scale_x: 0.9, scale_y: 0.9, time:
-                prefs().animation_time, transition
+                Settings.prefs.animation_time, transition
         });
     } else if (Number.isFinite(v)) {
         vy = v;
@@ -397,7 +394,7 @@ function endVertical() {
 
         let dy = vy*16;
         let v = vy;
-        let accel = prefs().swipe_friction[1];
+        let accel = Settings.prefs.swipe_friction[1];
         accel = v > 0 ? -accel : accel;
         updateVertical(dy, time + 16);
         vy = vy + accel;
