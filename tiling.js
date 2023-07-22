@@ -160,7 +160,7 @@ var Space = class Space extends Array {
                 monitor = oldMonitor;
         }
 
-        this.setSettings(Module.Settings().getWorkspaceSettings(this.workspace.index()));
+        this.setSettings(Settings.getWorkspaceSettings(this.workspace.index()));
         this.setMonitor(monitor, false);
 
         actor.set_pivot_point(0.5, 0);
@@ -209,7 +209,7 @@ var Space = class Space extends Array {
         this.setSpaceTopbarElementsVisible(false);
 
         // apply default focus mode
-        setFocusMode(Module.Settings().getDefaultFocusMode(), this);
+        setFocusMode(Settings.getDefaultFocusMode(), this);
 
         this.getWindows().forEach(w => {
             animateWindow(w);
@@ -230,7 +230,7 @@ var Space = class Space extends Array {
         });
 
         this.signals.connect(Module.GSettings(), 'changed::default-focus-mode', () => {
-            setFocusMode(Module.Settings().getDefaultFocusMode(), this);
+            setFocusMode(Settings.getDefaultFocusMode(), this);
         });
 
         const settings = Module.ExtensionUtils.getSettings();
@@ -2667,7 +2667,7 @@ function enable(errorNotification) {
 
     // connect to settings and update winprops array when it's updated
     Module.GSettings().connect('changed::winprops', () => {
-        Module.Settings().reloadWinpropsFromGSettings();
+        Settings.reloadWinpropsFromGSettings();
     });
 
     oldSpaces = oldSpaces ?? new Map();
@@ -2844,10 +2844,10 @@ function insertWindow(metaWindow, { existing }) {
         let scratchIsFocused = Module.Scratch().isScratchWindow(focusWindow);
         let addToScratch = scratchIsFocused;
 
-        let winprop = Module.Settings().find_winprop(metaWindow);
+        let winprop = Settings.find_winprop(metaWindow);
         if (winprop) {
             if (winprop.oneshot) {
-                Module.Settings().winprops.splice(Module.Settings().winprops.indexOf(winprop), 1);
+                Settings.winprops.splice(Settings.winprops.indexOf(winprop), 1);
             }
             if (winprop.scratch_layer) {
                 debug("#winprops", `Move ${metaWindow.title} to scratch`);
@@ -3900,7 +3900,7 @@ function rotated(list, dir=1) {
 
 function cycleWorkspaceSettings(dir=1) {
     let n = workspaceManager.get_n_workspaces();
-    let N = Module.Settings().getWorkspaceList().get_strv('list').length;
+    let N = Settings.getWorkspaceList().get_strv('list').length;
     let space = spaces.selectedSpace;
     let wsI = space.workspace.index();
 
@@ -3908,11 +3908,11 @@ function cycleWorkspaceSettings(dir=1) {
     // x a b c   <-- settings
     // a b c x   <-- rotated settings
 
-    let uuids = Module.Settings().getWorkspaceList().get_strv('list');
+    let uuids = Settings.getWorkspaceList().get_strv('list');
     // Work on tuples of [uuid, settings] since we need to uuid association
     // in the last step
     let settings = uuids.map(
-        uuid => [uuid, Module.Settings().getWorkspaceSettingsByUUID(uuid)]
+        uuid => [uuid, Settings.getWorkspaceSettingsByUUID(uuid)]
     );
     settings.sort((a, b) => a[1].get_int('index') - b[1].get_int('index'));
 
@@ -3936,5 +3936,5 @@ function cycleWorkspaceSettings(dir=1) {
 
 // Backward compatibility
 function defwinprop(...args) {
-    return Module.Settings().defwinprop(...args);
+    return Settings.defwinprop(...args);
 }
