@@ -4,6 +4,7 @@
 
 var ExtentionUtils = imports.misc.extensionUtils;
 var Extension = ExtentionUtils.getCurrentExtension();
+var ExtensionModule = Extension.imports.extension;
 var {Clutter, St, Graphene, GLib, Meta, Gio} = imports.gi;
 var PanelMenu = imports.ui.panelMenu;
 var PopupMenu = imports.ui.popupMenu;
