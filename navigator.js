@@ -67,15 +67,15 @@ class ActionDispatcher {
         }
 
         // grab = stage.grab(this.actor)
-        grab = Main.pushModal(this.actor)
+        grab = Main.pushModal(this.actor);
         // We expect at least a keyboard grab here
         if ((grab.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
             console.error("Failed to grab modal");
-            throw new Error('Could not grab modal')
+            throw new Error('Could not grab modal');
         }
 
-        this.signals.connect(this.actor, 'key-press-event', this._keyPressEvent.bind(this))
-        this.signals.connect(this.actor, 'key-release-event', this._keyReleaseEvent.bind(this))
+        this.signals.connect(this.actor, 'key-press-event', this._keyPressEvent.bind(this));
+        this.signals.connect(this.actor, 'key-release-event', this._keyReleaseEvent.bind(this));
 
         this._noModsTimeoutId = null;
         this._doActionTimeout = null;
@@ -342,7 +342,6 @@ class NavigatorClass {
         }
 
         const workspaceId = this.space.workspace.index();
-        const fromId = from.workspace.index();
         if (this.space === from) {
             // Animate the selected space into full view - normally this
             // happens on workspace switch, but activating the same workspace
@@ -402,6 +401,16 @@ function getNavigator() {
 
     navigator = new Navigator();
     return navigator;
+}
+
+/**
+ * Finishes navigation if navigator exists.
+ * Useful to call before disabling other modules.
+ */
+function finishNavigation() {
+    if (navigator) {
+        navigator.finish();
+    }
 }
 
 /**

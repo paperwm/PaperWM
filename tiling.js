@@ -1402,7 +1402,7 @@ border-radius: ${borderWidth}px;
                 time,
             });
         Easer.addEase(clip,
-            {scale_x: 1, scale_y: 1, time});
+            { scale_x: 1, scale_y: 1, time });
 
         clip.set_position(monitor.x, monitor.y);
         clip.set_size(monitor.width, monitor.height);

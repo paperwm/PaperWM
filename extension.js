@@ -30,9 +30,12 @@ const Main = imports.ui.main;
      - topbar adds the workspace name to the topbar and styles it.
 
      - gestures is responsible for 3-finger swiping (only works in wayland).
+
+     Notes of ordering:
+        - several modules import settings, so setting should be before them;
  */
 const modules = [
-    'settings', 'keybindings', 'gestures', 'tiling', 'navigator', 'scratch',
+    'settings', 'keybindings', 'gestures', 'navigator', 'tiling', 'scratch',
     'liveAltTab', 'utils', 'stackoverlay', 'app', 'topbar', 'kludges',
 ];
 
@@ -79,8 +82,21 @@ function enable() {
     }
 }
 
+/**
+ * Prepares PaperWM for disable across modules.
+ */
+function prepareForDisable() {
+    /**
+     * Finish any navigation (e.g. workspace switch view).
+     * Can put PaperWM in a breakable state of lock/disable
+     * while navigating.
+     */
+    Module.Navigator().finishNavigation();
+}
+
 function disable() {
     console.log('#PaperWM disabled');
+    prepareForDisable();
     run('disable');
 
     disableUserStylesheet();

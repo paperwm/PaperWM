@@ -248,7 +248,7 @@ function done(space) {
         onComplete: () => {
             if (!Module.Tiling().inPreview)
                 Navigator.getNavigator().finish();
-        }
+        },
     });
 }
 
