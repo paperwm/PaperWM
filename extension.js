@@ -32,7 +32,10 @@ const Main = imports.ui.main;
      - gestures is responsible for 3-finger swiping (only works in wayland).
 
      Notes of ordering:
-        - several modules import settings, so setting should be before them;
+        - several modules import settings, so settings should be before them;
+          - settings.js shouldn't depend on other modules (e.g with `imports` at the top).
+            It can however, call other modules' exported functions
+            (e.g. `Module.blahblah.somefunction()`) but only during runtime.
  */
 const modules = [
     'settings', 'keybindings', 'gestures', 'navigator', 'tiling', 'scratch',
