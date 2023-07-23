@@ -209,7 +209,7 @@ var Space = class Space extends Array {
         this.setSpaceTopbarElementsVisible(false);
 
         // apply default focus mode
-        setFocusMode(Settings.getDefaultFocusMode(), this);
+        setFocusMode(getDefaultFocusMode(), this);
 
         this.getWindows().forEach(w => {
             animateWindow(w);
@@ -230,7 +230,7 @@ var Space = class Space extends Array {
         });
 
         this.signals.connect(gsettings, 'changed::default-focus-mode', () => {
-            setFocusMode(Settings.getDefaultFocusMode(), this);
+            setFocusMode(getDefaultFocusMode(), this);
         });
 
         const settings = Module.ExtensionUtils.getSettings();
@@ -3199,6 +3199,28 @@ function grabEnd(metaWindow, type) {
  */
 function setAllWorkspacesInactive() {
     spaces.forEach(s => s.setSelectionInactive());
+}
+
+/**
+ * Returns the default focus mode (can be user-defined).
+ */
+function getDefaultFocusMode() {
+    // find matching focus mode
+    const mode = Module.Settings().prefs.default_focus_mode;
+    const modes = FocusModes;
+    let result = null;
+    Object.entries(modes).forEach(([k, v]) => {
+        if (v === mode) {
+            result = k;
+        }
+    });
+
+    // if found return, otherwise return default
+    if (result) {
+        return modes[result];
+    } else {
+        return modes.DEFAULT;
+    }
 }
 
 // `MetaWindow::focus` handling

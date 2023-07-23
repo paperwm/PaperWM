@@ -1,5 +1,8 @@
 /**
-   Settings utility shared between the running extension and the preference UI.
+    Settings utility shared between the running extension and the preference UI.
+    settings.js shouldn't depend on other modules (e.g with `imports` for other modules
+    at the top).  It can however, call other modules' exported functions
+    (e.g. `Module.blahblah.somefunction()`) but only during runtime.
  */
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
 const {Gio, GLib, Gtk} = imports.gi;
@@ -26,7 +29,7 @@ function onWindowGapChanged() {
         Mainloop.source_remove(timerId);
     }
     timerId = Mainloop.timeout_add(500, () => {
-        Module.Extension.imports.tiling.spaces.mru().forEach(space => {
+        Module.Tiling().spaces.mru().forEach(space => {
             space.layout();
         });
         timerId = null;
@@ -130,28 +133,6 @@ function disable() {
     schemaSource = null;
     workspaceList = null;
     conflictSettings = null;
-}
-
-/**
- * Returns the default focus mode (can be user-defined).
- */
-function getDefaultFocusMode() {
-    // find matching focus mode
-    const mode = prefs.default_focus_mode;
-    const modes = Module.Tiling().FocusModes;
-    let result = null;
-    Object.entries(modes).forEach(([k,v]) => {
-        if (v === mode) {
-            result = k;
-        }
-    });
-
-    // if found return, otherwise return default
-    if (result) {
-        return modes[result];
-    } else {
-        return modes.DEFAULT;
-    }
 }
 
 /// Workspaces
