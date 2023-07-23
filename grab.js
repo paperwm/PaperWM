@@ -52,7 +52,7 @@ var MoveGrab = class MoveGrab {
             Module.Scratch().isScratchWindow(metaWindow));
     }
 
-    begin({center} = {}) {
+    begin({ center } = {}) {
         Module.Utils().debug("#grab", "begin");
 
         this.center = center;
@@ -113,7 +113,7 @@ var MoveGrab = class MoveGrab {
         Easer.removeEase(space.cloneContainer);
     }
 
-    beginDnD({center} = {}) {
+    beginDnD({ center } = {}) {
         if (this.dnd)
             return;
         this.center = center;
@@ -184,12 +184,12 @@ var MoveGrab = class MoveGrab {
 
     spaceMotion(space, background, event) {
         let [gx, gy, $] = global.get_pointer();
-        let [sx, sy] = space.globalToScroll(gx, gy, {useTarget: true});
+        let [sx, sy] = space.globalToScroll(gx, gy, { useTarget: true });
         this.selectDndZone(space, sx, sy);
     }
 
     /** x,y in scroll cooridinates */
-    selectDndZone(space, x, y, initial=false) {
+    selectDndZone(space, x, y, initial = false) {
         const gap = Settings.prefs.window_gap;
         const halfGap = gap / 2;
         const columnZoneMarginViz = 100 + halfGap;
@@ -203,13 +203,13 @@ var MoveGrab = class MoveGrab {
             targetX: null,
             targetY: 0,
             width: columnZoneMargin,
-            height: tilingHeight
+            height: tilingHeight,
         };
         if (space.length > 0) {
             const lastClone = space[space.length - 1][0].clone;
             fakeClone.targetX = lastClone.x + lastClone.width + gap;
         } else {
-            let [sx, sy] = space.viewportToScroll(Math.round(space.width/2), 0);
+            let [sx, sy] = space.viewportToScroll(Math.round(space.width / 2), 0);
             fakeClone.targetX = sx + halfGap;
         }
 
@@ -242,11 +242,11 @@ var MoveGrab = class MoveGrab {
                     sizeProp: "width",
                     marginA: columnZoneMarginViz,
                     marginB: columnZoneMarginViz,
-                    space: space,
+                    space,
                     actorParams: {
                         y: Main.layoutManager.panelBox.height,
-                        height: tilingHeight
-                    }
+                        height: tilingHeight,
+                    },
                 };
                 break;
             }
@@ -281,11 +281,11 @@ var MoveGrab = class MoveGrab {
                         sizeProp: "height",
                         marginA: isFirst ? 0 : rowZoneMargin,
                         marginB: isLast  ? 0 : rowZoneMargin,
-                        space: space,
+                        space,
                         actorParams: {
                             x: clone.targetX,
                             width: clone.width,
-                        }
+                        },
                     };
                     break;
                 }
@@ -315,13 +315,13 @@ var MoveGrab = class MoveGrab {
         let [dx, dy] = this.pointerOffset;
         let clone = metaWindow.clone;
 
-        let tx = clone.get_transition('x')
-        let ty = clone.get_transition('y')
+        let tx = clone.get_transition('x');
+        let ty = clone.get_transition('y');
 
         if (this.dnd) {
             if (tx) {
-                tx.set_to(gx - dx)
-                ty.set_to(gy - dy)
+                tx.set_to(gx - dx);
+                ty.set_to(gy - dy);
             } else {
                 clone.x = gx - dx;
                 clone.y = gy - dy;
@@ -366,9 +366,7 @@ var MoveGrab = class MoveGrab {
 
         let metaWindow = this.window;
         let actor = metaWindow.get_compositor_private();
-        let frame = metaWindow.get_frame_rect();
         let clone = metaWindow.clone;
-        let destSpace;
         let [gx, gy, $] = global.get_pointer();
 
         this.zoneActors.forEach(actor => actor.destroy());
@@ -384,7 +382,6 @@ var MoveGrab = class MoveGrab {
 
             if (dndTarget) {
                 let space = dndTarget.space;
-                destSpace = space;
                 space.selection.show();
 
                 if (Module.Scratch().isScratchWindow(metaWindow))
@@ -441,7 +438,6 @@ var MoveGrab = class MoveGrab {
             Module.Navigator().getNavigator().accept();
         } else if (this.initialSpace.indexOf(metaWindow) !== -1) {
             let space = this.initialSpace;
-            destSpace = space;
             space.targetX = space.cloneContainer.x;
 
             actor.set_scale(1, 1);
@@ -474,7 +470,7 @@ var MoveGrab = class MoveGrab {
         // space.workspace.activate(global.get_current_time());
         Module.Tiling().inGrab = false;
         if (this.dispatcher) {
-            Module.Navigator().dismissDispatcher(Clutter.GrabState.POINTER)
+            Module.Navigator().dismissDispatcher(Clutter.GrabState.POINTER);
         }
 
         global.display.set_cursor(Meta.Cursor.DEFAULT);
@@ -488,7 +484,7 @@ var MoveGrab = class MoveGrab {
          */
         Module.Utils().later_add(Meta.LaterType.IDLE, () => {
             if (!global.display.end_grab_op && this.wasTiled) {
-                // move to current cursort position
+                // move to current cursor position
                 let [x, y, _mods] = global.get_pointer();
                 getVirtualPointer().notify_absolute_motion(
                     Clutter.get_current_event_time(),
@@ -504,15 +500,15 @@ var MoveGrab = class MoveGrab {
 
     activateDndTarget(zone, first) {
         function mkZoneActor(props) {
-            let actor = new St.Widget({style_class: "tile-preview"});
-            actor.x = props.x ?? 0
+            let actor = new St.Widget({ style_class: "tile-preview" });
+            actor.x = props.x ?? 0;
             actor.y = props.y ?? 0;
             actor.width = props.width ?? 0;
             actor.height = props.height ?? 0;
             return actor;
         }
 
-        zone.actor = mkZoneActor({...zone.actorParams});
+        zone.actor = mkZoneActor({ ...zone.actorParams });
 
         this.dndTarget = zone;
         this.zoneActors.add(zone.actor);
@@ -524,14 +520,14 @@ var MoveGrab = class MoveGrab {
         };
 
         if (first) {
-            params.height = zone.actor.height
-            params.y = zone.actor.y
+            params.height = zone.actor.height;
+            params.y = zone.actor.y;
 
             let clone = this.window.clone;
             let space = zone.space;
-            let [x, y] = space.globalToScroll(...clone.get_transformed_position())
-            zone.actor.set_position(x, y)
-            zone.actor.set_size(...clone.get_transformed_size())
+            let [x, y] = space.globalToScroll(...clone.get_transformed_position());
+            zone.actor.set_position(x, y);
+            zone.actor.set_size(...clone.get_transformed_size());
         } else {
             zone.actor[zone.sizeProp] = 0;
             zone.actor[zone.originProp] = zone.center;
@@ -578,11 +574,11 @@ var ResizeGrab = class ResizeGrab {
             this.space.targetX = frame.x - this.scrollAnchor;
             this.space.cloneContainer.x = this.space.targetX;
             this.space.layout(false);
-        })
+        });
     }
+
     end() {
         this.signals.destroy();
-
         this.window = null;
         this.space.layout();
     }

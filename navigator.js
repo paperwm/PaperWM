@@ -303,7 +303,7 @@ class NavigatorClass {
         });
 
         if (Module.Tiling().inGrab && !Module.Tiling().inGrab.dnd) {
-            Module.Tiling().inGrab.beginDnD()
+            Module.Tiling().inGrab.beginDnD();
         }
 
         if (Main.panel.statusArea.appMenu)

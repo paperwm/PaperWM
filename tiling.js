@@ -24,11 +24,11 @@ var stack_margin = 75;
 // Some features use this to determine if to sizes is considered equal. ie. `abs(w1 - w2) < sizeSlack`
 var sizeSlack = 30;
 
-var PreviewMode = {NONE: 0, STACK: 1, SEQUENTIAL: 2};
+var PreviewMode = { NONE: 0, STACK: 1, SEQUENTIAL: 2 };
 var inPreview = PreviewMode.NONE;
 
 // DEFAULT mode is normal/original PaperWM window focus behaviour
-var FocusModes = {DEFAULT: 0, CENTER: 1};
+var FocusModes = { DEFAULT: 0, CENTER: 1 };
 
 /**
    Scrolled and tiled per monitor workspace.
@@ -1302,8 +1302,8 @@ border-radius: ${borderWidth}px;
 
         let monitor = this.monitor;
         let backgroundParams = global.screen
-            ? {meta_screen: global.screen}
-            : {meta_display: display};
+            ? { meta_screen: global.screen }
+            : { meta_display: display };
 
         let metaBackground = new Meta.Background(backgroundParams);
         // gnome-shell 3.38
