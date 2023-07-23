@@ -124,6 +124,7 @@ function disable() {
     timerId = null;
 
     workspaceSettingsCache = {};
+    gsettings.run_dispose();
     gsettings = null;
     prefs = null;
     schemaSource = null;

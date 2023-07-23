@@ -2648,8 +2648,8 @@ function resizeHandler(metaWindow) {
 
 let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
-let oldSpaces;
-let oldMonitors;
+let oldSpaces, oldMonitors;
+let startupTimeoutId;
 function enable(errorNotification) {
     gsettings = Module.GSettings();
     backgroundSettings = new Gio.Settings({
@@ -2700,7 +2700,7 @@ function enable(errorNotification) {
     } else {
         // NOTE: this needs to happen after kludges.enable() have run, so we do
         // it in a timeout
-        Mainloop.timeout_add(0, () => {
+        startupTimeoutId = Mainloop.timeout_add(0, () => {
             initWorkspaces();
             return false; // on return false destroys timeout
         });
@@ -2708,6 +2708,7 @@ function enable(errorNotification) {
 }
 
 function disable () {
+    Module.Utils().timeout_remove(startupTimeoutId);
     grabSignals.destroy();
     signals.destroy();
 
