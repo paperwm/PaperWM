@@ -15,8 +15,8 @@ var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 var META_KEY_ABOVE_TAB = 0x2f7259c9;
 
 function setVerticalMargin() {
-    let vMargin = settings.get_int('vertical-margin');
-    let gap = settings.get_int('window-gap');
+    let vMargin = gsettings.get_int('vertical-margin');
+    let gap = gsettings.get_int('window-gap');
     prefs.vertical_margin = Math.max(Math.round(gap / 2), vMargin);
 }
 let timerId;
@@ -35,7 +35,7 @@ function onWindowGapChanged() {
 }
 
 function setState($, key) {
-    let value = settings.get_value(key);
+    let value = gsettings.get_value(key);
     let name = key.replace(/-/g, '_');
     prefs[name] = value.deep_unpack();
 }
@@ -78,10 +78,10 @@ function getWorkspaceList() {
     return workspaceList;
 }
 
-let settings;
+let gsettings;
 var prefs;
 function enable() {
-    settings = Module.GSettings();
+    gsettings = Module.GSettings();
     prefs = {};
     ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
         'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
@@ -93,13 +93,13 @@ function enable() {
     prefs.__defineGetter__("minimum_margin", function () {
         return Math.min(15, this.horizontal_margin);
     });
-    settings.connect('changed', setState);
-    settings.connect('changed::vertical-margin', onWindowGapChanged);
-    settings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
-    settings.connect('changed::window-gap', onWindowGapChanged);
+    gsettings.connect('changed', setState);
+    gsettings.connect('changed::vertical-margin', onWindowGapChanged);
+    gsettings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
+    gsettings.connect('changed::window-gap', onWindowGapChanged);
 
     // connect to settings and update winprops array when it's updated
-    settings.connect('changed::winprops', () => reloadWinpropsFromGSettings());
+    gsettings.connect('changed::winprops', () => reloadWinpropsFromGSettings());
 
     setVerticalMargin();
 
@@ -124,7 +124,7 @@ function disable() {
     timerId = null;
 
     workspaceSettingsCache = {};
-    settings = null;
+    gsettings = null;
     prefs = null;
     schemaSource = null;
     workspaceList = null;
@@ -137,7 +137,7 @@ function disable() {
 function getDefaultFocusMode() {
     // find matching focus mode
     const mode = prefs.default_focus_mode;
-    const modes = Module.Extension.imports.tiling.FocusModes;
+    const modes = Module.Tiling().FocusModes;
     let result = null;
     Object.entries(modes).forEach(([k,v]) => {
         if (v === mode) {
@@ -452,7 +452,7 @@ function defwinprop(spec) {
  */
 function addWinpropsFromGSettings() {
     // add gsetting (user config) winprops
-    settings.get_value('winprops').deep_unpack()
+    gsettings.get_value('winprops').deep_unpack()
         .map(value => JSON.parse(value))
         .forEach(prop => {
             // test if wm_class or title is a regex expression

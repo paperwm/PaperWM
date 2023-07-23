@@ -229,7 +229,7 @@ var Space = class Space extends Array {
             });
         });
 
-        this.signals.connect(Module.GSettings(), 'changed::default-focus-mode', () => {
+        this.signals.connect(gsettings, 'changed::default-focus-mode', () => {
             setFocusMode(Settings.getDefaultFocusMode(), this);
         });
 
@@ -1036,13 +1036,13 @@ var Space = class Space extends Array {
         this.updateShowTopBar();
         this.signals.connect(this.settings, 'changed::name',
             this.updateName.bind(this));
-        this.signals.connect(Module.GSettings(), 'changed::use-workspace-name',
+        this.signals.connect(gsettings, 'changed::use-workspace-name',
             this.updateName.bind(this));
         this.signals.connect(this.settings, 'changed::color',
             this.updateColor.bind(this));
         this.signals.connect(this.settings, 'changed::background',
             this.updateBackground.bind(this));
-        this.signals.connect(Module.GSettings(), 'changed::default-show-top-bar',
+        this.signals.connect(gsettings, 'changed::default-show-top-bar',
             this.showTopBarChanged.bind(this));
         this.signals.connect(this.settings, 'changed::show-top-bar',
             this.showTopBarChanged.bind(this));
@@ -1114,7 +1114,7 @@ border-radius: ${borderWidth}px;
 
     updateBackground() {
         let path = this.settings.get_string('background') || Settings.prefs.default_background;
-        let useDefault = Module.GSettings().get_boolean('use-default-background');
+        let useDefault = gsettings.get_boolean('use-default-background');
         const BackgroundStyle = GDesktopEnums.BackgroundStyle;
         let style = BackgroundStyle.ZOOM;
         if (!path && useDefault) {
@@ -2647,10 +2647,11 @@ function resizeHandler(metaWindow) {
 }
 
 let signals, backgroundGroup, grabSignals;
-let backgroundSettings, interfaceSettings;
+let gsettings, backgroundSettings, interfaceSettings;
 let oldSpaces;
 let oldMonitors;
 function enable(errorNotification) {
+    gsettings = Module.GSettings();
     backgroundSettings = new Gio.Settings({
         schema_id: 'org.gnome.desktop.background',
     });
@@ -2727,6 +2728,7 @@ function disable () {
     });
 
     spaces.destroy();
+    gsettings = null;
     backgroundGroup = null;
     backgroundSettings = null;
     interfaceSettings = null;

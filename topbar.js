@@ -585,7 +585,9 @@ var menu;
 var focusButton;
 var orginalActivitiesText;
 var screenSignals, signals;
+let gsettings;
 function enable () {
+    gsettings = Module.GSettings();
     let label = Main.panel.statusArea.activities.first_child;
     orginalActivitiesText = label.text;
     screenSignals = [];
@@ -622,25 +624,25 @@ function enable () {
         fixTopBar();
     });
 
-    signals.connect(Module.GSettings(), 'changed::disable-topbar-styling', (settings, key) => {
+    signals.connect(gsettings, 'changed::disable-topbar-styling', (settings, key) => {
         const status = Settings.prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
         Module.ExtensionModule().notify(
             `PaperWM: TopBar styling has been ${status}`, 
             `A restart of Gnome is required! (e.g. logout then login again)`);
     });
 
-    signals.connect(Module.GSettings(), 'changed::show-window-position-bar', (settings, key) => {
+    signals.connect(gsettings, 'changed::show-window-position-bar', (settings, key) => {
         const spaces = Module.Tiling().spaces;
         spaces.setSpaceTopbarElementsVisible(false);
         spaces.forEach(s => s.layout(false));
         spaces.showWindowPositionBarChanged();
     });
 
-    signals.connect(Module.GSettings(), 'changed::show-workspace-indicator', (settings, key) => {
+    signals.connect(gsettings, 'changed::show-workspace-indicator', (settings, key) => {
         fixWorkspaceIndicator();
     });
 
-    signals.connect(Module.GSettings(), 'changed::show-focus-mode-icon', (settings, key) => {
+    signals.connect(gsettings, 'changed::show-focus-mode-icon', (settings, key) => {
         fixFocusModeIcon();
     });
 
@@ -670,8 +672,9 @@ function disable() {
 
     screenSignals.forEach(id => workspaceManager.disconnect(id));
     screenSignals = [];
-
     panelBox.scale_y = 1;
+
+    gsettings = null;
 }
 
 function setClearStyle() {

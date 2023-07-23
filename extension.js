@@ -80,7 +80,7 @@ function enable() {
 }
 
 function disable() {
-    console.log('#PaperWM disable');
+    console.log('#PaperWM disabled');
     run('disable');
 
     disableUserStylesheet();
