@@ -2729,6 +2729,7 @@ function disable () {
     });
 
     spaces.destroy();
+    gsettings.run_dispose();
     gsettings = null;
     backgroundGroup = null;
     backgroundSettings = null;

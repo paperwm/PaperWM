@@ -197,9 +197,9 @@ function setupOverrides() {
 
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
         let metaWindow = win.meta_window || win;
-        if (settings.get_boolean('only-scratch-in-overview'))
+        if (gsettings.get_boolean('only-scratch-in-overview'))
             return Module.Scratch().isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
-        if (settings.get_boolean('disable-scratch-in-overview'))
+        if (gsettings.get_boolean('disable-scratch-in-overview'))
             return !Module.Scratch().isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
     });
 }
@@ -244,13 +244,13 @@ function saveRuntimeDisable(schemaSettings, key, disableValue) {
          * that they weren't previously restore properly (since on
          * successful restore we clear the values).
          */
-        if (settings.get_string(pkey) === '') {
-            settings.set_string(pkey, origValue.toString());
+        if (gsettings.get_string(pkey) === '') {
+            gsettings.set_string(pkey, origValue.toString());
         }
 
         // we want to restore from PaperWM back settings (safer)
         let restore = () => {
-            let value = settings.get_string(pkey);
+            let value = gsettings.get_string(pkey);
             // if value is empty, do nothing
             if (value === '') {
                 return;
@@ -260,7 +260,7 @@ function saveRuntimeDisable(schemaSettings, key, disableValue) {
             schemaSettings.set_boolean(key, bvalue);
 
             // after restore, empty papermw saved value
-            settings.set_string(pkey, '');
+            gsettings.set_string(pkey, '');
         };
 
         runtimeDisables.push(restore);
@@ -328,16 +328,16 @@ function setupSignals() {
     });
 
     function scratchInOverview() {
-        let onlyScratch = settings.get_boolean('only-scratch-in-overview');
-        let disableScratch = settings.get_boolean('disable-scratch-in-overview');
+        let onlyScratch = gsettings.get_boolean('only-scratch-in-overview');
+        let disableScratch = gsettings.get_boolean('disable-scratch-in-overview');
         if (onlyScratch || disableScratch) {
             enableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         } else {
             disableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         }
     }
-    signals.connect(settings, 'changed::only-scratch-in-overview', scratchInOverview);
-    signals.connect(settings, 'changed::disable-scratch-in-overview', scratchInOverview);
+    signals.connect(gsettings, 'changed::only-scratch-in-overview', scratchInOverview);
+    signals.connect(gsettings, 'changed::disable-scratch-in-overview', scratchInOverview);
     scratchInOverview();
 }
 
@@ -357,9 +357,9 @@ function setupActions() {
     actions.forEach(a => global.stage.remove_action(a));
 }
 
-var settings, wmSettings, mutterSettings;
+var gsettings, wmSettings, mutterSettings;
 function enable() {
-    settings = Module.ExtensionUtils.getSettings();
+    gsettings = Module.GSettings();
     wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
     mutterSettings = new Gio.Settings({schema_id: 'org.gnome.mutter'});
     setupSwipeTrackers();
@@ -379,7 +379,8 @@ function disable() {
     signals = null;
 
     swipeTrackers = null;
-    settings = null;
+    gsettings.run_dispose();
+    gsettings = null;
     wmSettings = null;
     mutterSettings = null;
     actions = null;
