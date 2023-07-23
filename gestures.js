@@ -1,5 +1,5 @@
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const Settings = Module.Settings();
+const Settings = Module.Extension.imports.settings;
 const Meta = imports.gi.Meta;
 const Gio = imports.gi.Gio;
 const Clutter = imports.gi.Clutter;

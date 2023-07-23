@@ -1,5 +1,5 @@
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const Settings = Module.Settings();
+const Settings = Module.Extension.imports.settings;
 const Easer = Module.Extension.imports.utils.easer;
 const ClickOverlay = Module.Extension.imports.stackoverlay.ClickOverlay;
 

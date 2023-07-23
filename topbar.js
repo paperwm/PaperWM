@@ -2,7 +2,7 @@
   Functionality related to the top bar, often called the statusbar.
  */
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const Settings = Module.Settings();
+const Settings = Module.Extension.imports.settings;
 const Easer = Module.Extension.imports.utils.easer;
 
 const {Clutter, St, Graphene, GLib, Meta, Gio} = imports.gi;

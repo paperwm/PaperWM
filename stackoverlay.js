@@ -1,5 +1,5 @@
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const Settings = Module.Settings();
+const Settings = Module.Extension.imports.settings;
 
 const {Clutter, Shell, Meta, St} = imports.gi;
 const Main = imports.ui.main;
