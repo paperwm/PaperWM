@@ -1,7 +1,9 @@
-const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Settings = Extension.imports.settings;
 const { Gio, GLib, GObject, Gtk, Gdk } = imports.gi;
-const {KeybindingsPane} = Module.Extension.imports.prefsKeybinding;
-const {WinpropsPane} = Module.Extension.imports.winpropsPane;
+const {KeybindingsPane} = Extension.imports.prefsKeybinding;
+const {WinpropsPane} = Extension.imports.winpropsPane;
 
 let _ = s => s;
 
@@ -45,8 +47,8 @@ var SettingsWidget = class SettingsWidget {
      */
     constructor(prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
         let wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
-        this._settings = Module.ExtensionUtils.getSettings();
-        this.builder = Gtk.Builder.new_from_file(Module.Extension.path + '/Settings.ui');
+        this._settings = ExtensionUtils.getSettings();
+        this.builder = Gtk.Builder.new_from_file(Extension.path + '/Settings.ui');
         this.window = prefsWindow;
 
         const pages = [
@@ -225,14 +227,14 @@ var SettingsWidget = class SettingsWidget {
         const workspaceStack = this.builder.get_object('workspace_stack');
 
         this.workspaceNames = wmSettings.get_strv('workspace-names');
-        const nWorkspaces = Module.Settings().getWorkspaceList().get_strv('list').length;
+        const nWorkspaces = Settings.getWorkspaceList().get_strv('list').length;
 
         // Note: For some reason we can't set the visible child of the workspace
         //       stack at construction time.. (!)
         //       Ensure the initially selected workspace is added to the stack
         //       first as a workaround.
         let wsIndices = range(nWorkspaces);
-        let wsSettingsByIndex = wsIndices.map(i => Module.Settings().getWorkspaceSettings(i)[1]);
+        let wsSettingsByIndex = wsIndices.map(i => Settings.getWorkspaceSettings(i)[1]);
         let wsIndicesSelectedFirst =
             swapArrayElements(wsIndices.slice(), 0, selectedWorkspace);
 
@@ -288,7 +290,7 @@ var SettingsWidget = class SettingsWidget {
 
         // About
         let versionLabel = this.builder.get_object('extension_version');
-        let version = Module.Extension.metadata.version?.toString() ?? '?';
+        let version = Extension.metadata.version?.toString() ?? '?';
         versionLabel.set_text(version);
     }
 
@@ -648,7 +650,7 @@ function parseAccelerator(accelerator) {
     if (accelerator.match(/Above_Tab/)) {
         accelerator = accelerator.replace('Above_Tab', 'grave');
     }
-    let [ok, key, mods] = Module.Settings().accelerator_parse(accelerator);
+    let [ok, key, mods] = Settings.accelerator_parse(accelerator);
     // log(`PaperWM: parseAccelerator(${accelerator}) -> [${key}, ${mods}]`);
 
     return [key, mods];
@@ -711,7 +713,7 @@ function addKeybinding(model, settings, id, position=null) {
 }
 
 function annotateKeybindings(model, settings) {
-    let conflicts = Module.Settings().findConflicts();
+    let conflicts = Settings.findConflicts();
     let warning = (id, c) => {
         return conflicts.filter(({name, combo}) => name === id && combo === c);
     };
@@ -727,12 +729,12 @@ function annotateKeybindings(model, settings) {
         let index = model.get_value(iter, COLUMN_INDEX);
         if (index === -1 || accels.length === 0)
             return true;
-        let combo = Module.Settings().keystrToKeycombo(accels[index]);
+        let combo = Settings.keystrToKeycombo(accels[index]);
 
         let conflict = warning(id, combo);
         let tooltip = null;
         if (conflict.length > 0) {
-            let keystr = Module.Settings().keycomboToKeylab(combo);
+            let keystr = Settings.keycomboToKeylab(combo);
             tooltip = `${keystr} overrides ${conflict[0].conflicts} in ${conflict[0].settings.path}`;
             model.set_value(iter, COLUMN_TOOLTIP,
                 GLib.markup_escape_text(tooltip, -1));
@@ -795,7 +797,7 @@ function syncStringSetting(settings, key, callback) {
  */
 function init() {
     const provider = new Gtk.CssProvider();
-    provider.load_from_path(Module.Extension.dir.get_path() + '/resources/prefs.css');
+    provider.load_from_path(Extension.dir.get_path() + '/resources/prefs.css');
     Gtk.StyleContext.add_provider_for_display(
         Gdk.Display.get_default(),
         provider,
