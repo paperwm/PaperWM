@@ -1,13 +1,9 @@
-const { GLib, Clutter, Meta, St, GObject, GdkPixbuf, Cogl } = imports.gi;
+const { GLib, Clutter, Meta, St, GdkPixbuf, Cogl } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
-
-const workspaceManager = global.workspace_manager;
 const display = global.display;
-const WindowTracker = imports.gi.Shell.WindowTracker;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
-var registerClass = GObject.registerClass;
 
 var debug_all = false; // Turn off by default
 var debug_filter = {'#paperwm': true, '#stacktrace': true};
@@ -80,7 +76,7 @@ function ppModiferState(state) {
             mods.push(mod);
         }
     }
-    return mods.join(", ")
+    return mods.join(", ");
 }
 
 /**
