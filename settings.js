@@ -1,10 +1,10 @@
 /**
     Settings utility shared between the running extension and the preference UI.
     settings.js shouldn't depend on other modules (e.g with `imports` for other modules
-    at the top).  It can however, call other modules' exported functions
-    (e.g. `Module.blahblah.somefunction()`) but only during runtime.
+    at the top).
  */
-const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
 const { Gio, GLib, Gtk } = imports.gi;
 
 var workspaceSettingsCache = {};
@@ -26,7 +26,7 @@ var schemaSource;
 function getSchemaSource() {
     if (!schemaSource) {
         schemaSource = Gio.SettingsSchemaSource.new_from_directory(
-            GLib.build_filenamev([Module.Extension.path, "schemas"]),
+            GLib.build_filenamev([Extension.path, "schemas"]),
             Gio.SettingsSchemaSource.get_default(),
             false
         );
@@ -60,10 +60,11 @@ function getWorkspaceList() {
     return workspaceList;
 }
 
-let gsettings;
 var prefs;
+let utils, gsettings;
 function enable() {
-    gsettings = Module.GSettings();
+    utils = Extension.imports.utils;
+    gsettings = ExtensionUtils.getSettings();
     prefs = {};
     ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
         'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
@@ -97,10 +98,8 @@ function enable() {
 }
 
 function disable() {
-    Module.Utils().timeout_remove(timerId);
-    timerId = null;
-
     workspaceSettingsCache = {};
+    utils = null;
     gsettings.run_dispose();
     gsettings = null;
     prefs = null;
@@ -147,7 +146,7 @@ function getWorkspaceSettingsByUUID(uuid) {
 function findWorkspaceSettingsByName(regex) {
     let list = getWorkspaceList().get_strv('list');
     let settingss = list.map(getWorkspaceSettingsByUUID);
-    return Module.Utils().zip(list, settingss, settingss.map(s => s.get_string('name')))
+    return utils.zip(list, settingss, settingss.map(s => s.get_string('name')))
         .filter(([uuid, s, name]) => name.match(regex));
 }
 
@@ -189,7 +188,7 @@ function deleteWorkspaceSettings(uuid) {
 function printWorkspaceSettings() {
     let list = getWorkspaceList().get_strv('list');
     let settings = list.map(getWorkspaceSettingsByUUID);
-    let zipped = Module.Utils().zip(list, settings);
+    let zipped = utils.zip(list, settings);
     const key = s => s[1].get_int('index');
     zipped.sort((a, b) => key(a) - key(b));
     for (let [uuid, s] of zipped) {
@@ -284,7 +283,7 @@ function findConflicts(schemas) {
     schemas = schemas || getConflictSettings();
     let conflicts = [];
     const paperMap =
-          generateKeycomboMap(Module.ExtensionUtils.getSettings(KEYBINDINGS_KEY));
+          generateKeycomboMap(ExtensionUtils.getSettings(KEYBINDINGS_KEY));
 
     for (let settings of schemas) {
         const against = generateKeycomboMap(settings);

@@ -1,8 +1,5 @@
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const {GLib, Clutter, Meta, GObject} = imports.gi;
-const St = imports.gi.St;
-const GdkPixbuf = imports.gi.GdkPixbuf;
-const Cogl = imports.gi.Cogl;
+const { GLib, Clutter, Meta, St, GObject, GdkPixbuf, Cogl } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 

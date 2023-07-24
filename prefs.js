@@ -1,5 +1,5 @@
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const {Gio, GLib, GObject, Gtk, Gdk} = imports.gi;
+const { Gio, GLib, GObject, Gtk, Gdk } = imports.gi;
 const {KeybindingsPane} = Module.Extension.imports.prefsKeybinding;
 const {WinpropsPane} = Module.Extension.imports.winpropsPane;
 
