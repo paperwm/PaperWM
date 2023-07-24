@@ -4,18 +4,14 @@
   This is a somewhat messy tangle of functionality relying on
   `SwitcherPopup.SwitcherPopup` when we really should just take full control.
  */
-  const ExtensionUtils = imports.misc.extensionUtils;
-  const Extension = ExtensionUtils.getCurrentExtension();
-  const Settings = Extension.imports.settings;
-  const Utils = Extension.imports.utils;
-  const Tiling = Extension.imports.tiling;
-  const Keybindings = Extension.imports.keybindings;
-  const Gestures = Extension.imports.gestures;
-  const TopBar = Extension.imports.topbar;
-  const Scratch = Extension.imports.scratch;
-  const Easer = Extension.imports.utils.easer;
-  const ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
-  const Minimap = Extension.imports.minimap;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Utils = Extension.imports.utils;
+const Tiling = Extension.imports.tiling;
+const Keybindings = Extension.imports.keybindings;
+const TopBar = Extension.imports.topbar;
+const Scratch = Extension.imports.scratch;
+const Minimap = Extension.imports.minimap;
 
 const { Meta, Clutter } = imports.gi;
 const Main = imports.ui.main;
@@ -23,7 +19,6 @@ const Mainloop = imports.mainloop;
 const Signals = imports.signals;
 
 const display = global.display;
-const stage = global.stage;
 
 var workspaceManager = global.workspace_manager;
 

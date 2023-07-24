@@ -1,8 +1,11 @@
-const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Utils = Extension.imports.utils;
+const Tiling = Extension.imports.tiling;
+
 const St = imports.gi.St;
 
-let fitProportionally = Module.Tiling().fitProportionally;
-
+let fitProportionally = Tiling.fitProportionally;
 let prefs = {
     window_gap: 5,
     minimum_margin: 3,
@@ -78,7 +81,7 @@ function repl() {
 
     sync()
 
-    Module.Utils().printActorTree(virtStage, Module.Utils().mkFmt({nameOnly: true}));
+    Utils.printActorTree(virtStage, Utils.mkFmt({nameOnly: true}));
 
     movecolumntoviewportposition(tilingContainer, monitor, columns[1][0], 30);
 

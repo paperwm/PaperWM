@@ -1,12 +1,17 @@
-const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const Settings = Module.Extension.imports.settings;
-const Easer = Module.Extension.imports.utils.easer;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Settings = Extension.imports.settings;
+const Utils = Extension.imports.utils;
+const Keybindings = Extension.imports.keybindings;
+const Tiling = Extension.imports.tiling;
+const Scratch = Extension.imports.scratch;
+const Easer = Extension.imports.utils.easer;
 
-const {Clutter, Meta, Gio} = imports.gi;
+const {Clutter, Meta, Gio, GObject} = imports.gi;
 const Main = imports.ui.main;
 const AltTab = imports.ui.altTab;
 
-var LiveAltTab = Module.Utils().registerClass(
+var LiveAltTab = GObject.registerClass(
     class LiveAltTab extends AltTab.WindowSwitcherPopup {
         _init(reverse) {
             this.reverse = reverse;
@@ -18,11 +23,11 @@ var LiveAltTab = Module.Utils().registerClass(
                 Meta.TabList.NORMAL_ALL,
                 switcherSettings.get_boolean('current-workspace-only') ?
                     global.workspace_manager.get_active_workspace() : null)
-                .filter(w => !Module.Scratch().isScratchWindow(w));
+                .filter(w => !Scratch.isScratchWindow(w));
 
-            let scratch = Module.Scratch().getScratchWindows();
+            let scratch = Scratch.getScratchWindows();
 
-            if (Module.Scratch().isScratchWindow(global.display.focus_window)) {
+            if (Scratch.isScratchWindow(global.display.focus_window)) {
                 // Access scratch windows in mru order with shift-super-tab
                 return scratch.concat(this.reverse ? tabList.reverse() : tabList);
             } else {
@@ -31,10 +36,10 @@ var LiveAltTab = Module.Utils().registerClass(
         }
 
         _initialSelection(backward, actionName) {
-            this.space = Module.Tiling().spaces.selectedSpace;
+            this.space = Tiling.spaces.selectedSpace;
             this.space.startAnimate();
 
-            let monitor = Module.Tiling().spaces.selectedSpace.monitor;
+            let monitor = Tiling.spaces.selectedSpace.monitor;
             let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
             let fog = new Clutter.Actor({
                 x: workArea.x, y: workArea.y,
@@ -68,16 +73,16 @@ var LiveAltTab = Module.Utils().registerClass(
             case Meta.KeyBindingAction.SWITCH_APPLICATIONS_BACKWARD:
                 mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
                 break;
-            case Module.Keybindings().idOf('live-alt-tab'):
+            case Keybindings.idOf('live-alt-tab'):
                 mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
                 break;
-            case Module.Keybindings().idOf('live-alt-tab-backward'):
+            case Keybindings.idOf('live-alt-tab-backward'):
                 mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
                 break;
             }
-            // let action = Module.Keybindings().byId(mutterActionId);
+            // let action = Keybindings.byId(mutterActionId);
             // if (action && action.options.activeInNavigator) {
-            //     let space = Module.Tiling().spaces.selectedSpace;
+            //     let space = Tiling.spaces.selectedSpace;
             //     let metaWindow = space.selectedWindow;
             //     action.handler(metaWindow, space);
             //     return true;
@@ -97,16 +102,16 @@ var LiveAltTab = Module.Utils().registerClass(
             let clone = new Clutter.Clone({ source: actor });
             clone.position = actor.position;
 
-            let space = Module.Tiling().spaces.spaceOfWindow(to);
+            let space = Tiling.spaces.spaceOfWindow(to);
             if (space.indexOf(to) !== -1) {
-                clone.x = Module.Tiling().ensuredX(to, space) + space.monitor.x;
+                clone.x = Tiling.ensuredX(to, space) + space.monitor.x;
                 clone.x -= frame.x - actor.x;
             }
 
             this.clone = clone;
             Main.uiGroup.insert_child_above(clone, this.fog);
 
-            // Module.Tiling().ensureViewport(to, space);
+            // Tiling.ensureViewport(to, space);
             this._selectedIndex = num;
             this._switcherList.highlight(num);
         }
@@ -127,7 +132,7 @@ var LiveAltTab = Module.Utils().registerClass(
 
         _onDestroy() {
             super._onDestroy();
-            Module.Utils().debug('#preview', 'onDestroy', this.was_accepted);
+            Utils.debug('#preview', 'onDestroy', this.was_accepted);
             Easer.addEase(this.fog, {
                 time: Settings.prefs.animation_time,
                 opacity: 0,
@@ -142,7 +147,7 @@ var LiveAltTab = Module.Utils().registerClass(
             });
             let index = this.was_accepted ? this._selectedIndex : 0
             let to = this._switcherList.windows[index];
-            Module.Tiling().focus_handler(to);
+            Tiling.focus_handler(to);
             let actor = to.get_compositor_private();
             if (this.was_accepted) {
                 actor.x = this.clone.x;

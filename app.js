@@ -1,7 +1,11 @@
 /*
   Application functionality, like global new window actions etc.
  */
-const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const ExtensionModule = Extension.imports.extension;
+const Kludges = Extension.imports.kludges;
+const Tiling = Extension.imports.tiling;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Shell = imports.gi.Shell;
@@ -25,7 +29,7 @@ function enable() {
         }
     }
 
-    let overrideWithFallback = Module.Kludges().overrideWithFallback;
+    let overrideWithFallback = Kludges.overrideWithFallback;
 
     overrideWithFallback(
         Shell.App, "open_new_window",
@@ -110,13 +114,13 @@ function duplicateWindow(metaWindow) {
 
     let handler = customHandlers[app.id];
     if (handler) {
-        let space = Module.Tiling().spaces.spaceOfWindow(metaWindow);
+        let space = Tiling.spaces.spaceOfWindow(metaWindow);
         return handler(metaWindow, app, space);
     }
 
     let workspaceId = metaWindow.get_workspace().workspace_index;
 
-    let original = Module.Kludges().getSavedProp(Shell.App.prototype, "open_new_window");
+    let original = Kludges.getSavedProp(Shell.App.prototype, "open_new_window");
     original.call(app, workspaceId);
     return true;
 }
@@ -127,7 +131,7 @@ function trySpawnWindow(app, workspace) {
     }
     let handler = customSpawnHandlers[app.id];
     if (handler) {
-        let space = Module.Tiling().spaces.selectedSpace;
+        let space = Tiling.spaces.selectedSpace;
         return handler(app, space);
     } else {
         launchFromWorkspaceDir(app, workspace);
@@ -147,7 +151,7 @@ function spawnWindow(app, workspace) {
 }
 
 function getWorkspaceDirectory(workspace=null) {
-    let space  = workspace ? Module.Tiling().spaces.get(workspace) : Module.Tiling().spaces.selectedSpace;
+    let space  = workspace ? Tiling.spaces.get(workspace) : Tiling.spaces.selectedSpace;
 
     let dir = space.settings.get_string("directory");
     if (dir[0] === "~") {
@@ -174,7 +178,7 @@ function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir=false) {
             success = GLib.spawn_async(workingDir, cmdArgs, GLib.get_environ(), GLib.SpawnFlags.SEARCH_PATH, null);
         }
         if (!success) {
-            Module.ExtensionModule().notify(
+            ExtensionModule.notify(
                 `Failed to run custom spawn handler for ${app.id}`,
                 `Attempted to run '${commandline}'`);
         }

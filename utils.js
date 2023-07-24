@@ -1,4 +1,3 @@
-const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
 const { GLib, Clutter, Meta, St, GObject, GdkPixbuf, Cogl } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
@@ -168,16 +167,6 @@ function setBackgroundImage(actor, resource_path) {
 
 
 //// Debug and development utils
-
-function setDevGlobals() {
-    // Accept the risk of this interfering with existing code for now
-    metaWindow = display.focus_window;
-    meta_window = display.focus_window;
-    workspace = workspaceManager.get_active_workspace();
-    actor = metaWindow.get_compositor_private();
-    space = Module.Tiling().spaces.spaceOfWindow(metaWindow);
-    app = WindowTracker.get_default().get_window_app(metaWindow);
-}
 
 /**
  * Visualize the frame and buffer bounding boxes of a meta window
@@ -456,55 +445,6 @@ var easer = {
 
 function isMetaWindow(obj) {
     return obj && obj.window_type && obj.get_compositor_private;
-}
-
-function trace(topic, ...args) {
-    if (!topic.match(/.*/)) {
-        return;
-    }
-
-    if (isMetaWindow(args[0])) {
-        windowTrace(topic, ...args);
-    } else {
-        let trace = shortTrace(1).join(" < ");
-        let extraInfo = args.length > 0 ? "\n\t" + args.map(x => x.toString()).join("\n\t") : ""
-        console.log(topic, trace, extraInfo);
-    }
-}
-
-let existingWindows = new Set();
-
-function windowTrace(topic, metaWindow, ...rest) {
-    if (existingWindows.has(metaWindow)) {
-        return;
-    }
-
-    console.log(topic, infoMetaWindow(metaWindow).join("\n"), ...rest.join("\n"));
-}
-
-function infoMetaWindow(metaWindow) {
-    let id = metaWindow.toString().split(" ")[4];
-    let trace = shortTrace(3).join(" < ");
-    let info = [
-        `(win: ${id}) ${trace}`,
-        `Title: ${metaWindow.title}`,
-    ];
-    if (!metaWindow.window_type === Meta.WindowType.NORMAL) {
-        info.push(`Type: ${ppEnumValue(metaWindow.window_type, Meta.WindowType)}`);
-    }
-    if (!metaWindow.get_compositor_private()) {
-        info.push(`- no actor`);
-    }
-    if (metaWindow.is_on_all_workspaces()) {
-        info.push(`- is_on_all_workspaces`);
-    }
-    if (metaWindow.above) {
-        info.push(`- above`);
-    }
-    if (Module.Scratch().isScratchWindow(metaWindow)) {
-        info.push(`- scratch`);
-    }
-    return info;
 }
 
 function shortTrace(skip=0) {

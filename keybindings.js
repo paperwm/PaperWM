@@ -146,10 +146,6 @@ function setupActions() {
         dynamic_function_ref("switchToNextFocusMode",
             Tiling));
 
-    registerPaperAction("develop-set-globals",
-        dynamic_function_ref("setDevGlobals",
-            Utils));
-
     registerPaperAction("resize-h-inc",
         dynamic_function_ref("resizeHInc",
             Tiling),

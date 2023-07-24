@@ -1,6 +1,8 @@
-const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const Settings = Module.Extension.imports.settings;
-const Easer = Module.Extension.imports.utils.easer;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Settings = Extension.imports.settings;
+const Utils = Extension.imports.utils;
+const Easer = Extension.imports.utils.easer;
 
 const Clutter = imports.gi.Clutter;
 const Main = imports.ui.main;
@@ -53,7 +55,7 @@ var Minimap = class Minimap extends Array {
         this.actor.opacity = 0;
         this.createClones();
 
-        this.signals = Module.Signals();
+        this.signals = new Utils.Signals();
         this.signals.connect(space, 'select', this.select.bind(this));
         this.signals.connect(space, 'window-added', this.addWindow.bind(this));
         this.signals.connect(space, 'window-removed', this.removeWindow.bind(this));
@@ -96,8 +98,8 @@ var Minimap = class Minimap extends Array {
 
     swapped(space, index, targetIndex, row, targetRow) {
         let column = this[index];
-        Module.Utils().swap(this, index, targetIndex);
-        Module.Utils().swap(column, row, targetRow);
+        Utils.swap(this, index, targetIndex);
+        Utils.swap(column, row, targetRow);
         this.layout();
     }
 
@@ -109,12 +111,12 @@ var Minimap = class Minimap extends Array {
         if (Settings.prefs.minimap_scale <= 0) {
             return;
         }
-        
+
         this.layout();
         let time = animate ? Settings.prefs.animation_time : 0;
         this.actor.show();
         Easer.addEase(this.actor,
-                         {opacity: 255, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO});
+            { opacity: 255, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO });
     }
 
     hide(animate) {
@@ -122,8 +124,10 @@ var Minimap = class Minimap extends Array {
             return;
         let time = animate ? Settings.prefs.animation_time : 0;
         Easer.addEase(this.actor,
-                         {opacity: 0, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO,
-                          onComplete: () => this.actor.hide() });
+            {
+                opacity: 0, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO,
+                onComplete: () => this.actor.hide()
+            });
     }
 
     createClones() {

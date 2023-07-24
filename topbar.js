@@ -11,7 +11,7 @@ const Navigator = Extension.imports.navigator;
 const Scratch = Extension.imports.scratch;
 const Easer = Extension.imports.utils.easer;
 
-const { Clutter, St, Graphene, GLib, Meta, Gio } = imports.gi;
+const { Clutter, St, Graphene, GLib, Meta, Gio, GObject } = imports.gi;
 const { panelMenu, popupMenu } = imports.ui;
 const Main = imports.ui.main;
 const Path = Extension.dir.get_path();
@@ -82,7 +82,7 @@ var PopupMenuEntryHelper = function constructor(text) {
 }
 
 // registerClass, breaking our somewhat lame registerClass polyfill.
-var PopupMenuEntry = Utils.registerClass(
+var PopupMenuEntry = GObject.registerClass(
     class PopupMenuEntry extends popupMenu.PopupBaseMenuItem {
         _init(text) {
             super._init({
@@ -162,7 +162,7 @@ class ColorEntry {
 /**
  * FocusMode icon class.
  */
-var FocusIcon = Utils.registerClass(
+var FocusIcon = GObject.registerClass(
     class FocusIcon extends St.Icon {
         _init(properties = {}, tooltip_parent, tooltip_x_point = 0) {
             super._init(properties);
@@ -267,7 +267,7 @@ Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
     }
 );
 
-var FocusButton = Utils.registerClass(
+var FocusButton = GObject.registerClass(
     class FocusButton extends panelMenu.Button {
         _init() {
             super._init(0.0, 'FocusMode');
@@ -308,7 +308,7 @@ var FocusButton = Utils.registerClass(
     }
 );
 
-var WorkspaceMenu = Utils.registerClass(
+var WorkspaceMenu = GObject.registerClass(
     class WorkspaceMenu extends panelMenu.Button {
         _init() {
             super._init(0.5, 'Workspace', false);

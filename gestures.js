@@ -1,14 +1,15 @@
-const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const Settings = Module.Extension.imports.settings;
-const Meta = imports.gi.Meta;
-const Gio = imports.gi.Gio;
-const Clutter = imports.gi.Clutter;
-const Main = imports.ui.main;
-const Shell = imports.gi.Shell;
-const Mainloop = imports.mainloop;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Kludges = Extension.imports.kludges;
+const Settings = Extension.imports.settings;
+const Tiling = Extension.imports.tiling;
+const Utils = Extension.imports.utils;
+const Easer = Extension.imports.utils.easer;
+const Navigator = Extension.imports.navigator;
 
-const Easer = Module.Extension.imports.utils.easer;
-const Navigator = Module.Extension.imports.navigator;
+const { Meta, Gio, Shell, Clutter } = imports.gi;
+const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
 
 const DIRECTIONS = {
     Horizontal: true,
@@ -27,7 +28,7 @@ var natural = 1;
 
 var touchpadSettings;
 function enable() {
-    signals = Module.Signals();
+    signals = new Utils.Signals();
     // Touchpad swipes only works in Wayland
     if (!Meta.is_wayland_compositor())
         return;
@@ -73,7 +74,7 @@ function enable() {
 
                 let dir_y = -dy*natural*Settings.prefs.swipe_sensitivity[1];
                 // if not Tiling.inPreview and swipe is UP => propagate event to overview
-                if (!Module.Tiling().inPreview && dir_y > 0) {
+                if (!Tiling.inPreview && dir_y > 0) {
                     swipeTrackersEnable();
                     return Clutter.EVENT_PROPAGATE;
                 }
@@ -107,7 +108,7 @@ function enable() {
 
 function disable() {
     signals.destroy();
-    Module.Utils().timeout_remove(endVerticalTimeout);
+    Utils.timeout_remove(endVerticalTimeout);
     endVerticalTimeout = null;
     touchpadSettings = null;
 }
@@ -155,7 +156,7 @@ function update(space, dx, t) {
 
     // Check which target windew will be selected if we releas the swipe at this
     // moment
-    dx = Module.Utils().sum(dxs.slice(-3));
+    dx = Utils.sum(dxs.slice(-3));
     let v = dx/(t - dts.slice(-3)[0]);
     if (Number.isFinite(v)) {
         space.vx = v;
@@ -170,7 +171,7 @@ function update(space, dx, t) {
     space.targetX = target;
     let selected = findTargetWindow(space, direction, start - space.targetX > 0);
     space.targetX = space.cloneContainer.x;
-    Module.Tiling().updateSelection(space, selected);
+    Tiling.updateSelection(space, selected);
     space.selectedWindow = selected;
     space.emit('select');
 
@@ -220,7 +221,7 @@ function done(space) {
     space.targetX = Math.round(target);
     selected = last || first || findTargetWindow(space, start - target > 0 );
     delete selected.lastFrame; // Invalidate frame information
-    let x = Module.Tiling().ensuredX(selected, space);
+    let x = Tiling.ensuredX(selected, space);
     target = x - selected.clone.targetX;
 
     // Scale down travel time if we've cut down the discance to travel
@@ -234,7 +235,7 @@ function done(space) {
     }
     space.targetX = target;
 
-    Module.Tiling().updateSelection(space, selected);
+    Tiling.updateSelection(space, selected);
     space.selectedWindow = selected;
     space.emit('select');
     gliding = true;
@@ -246,7 +247,7 @@ function done(space) {
             gliding = false;
         },
         onComplete: () => {
-            if (!Module.Tiling().inPreview)
+            if (!Tiling.inPreview)
                 Navigator.getNavigator().finish();
         },
     });
@@ -318,15 +319,15 @@ function findTargetWindow(space, direction) {
 var transition = 'easeOutQuad';
 function updateVertical(dy, t) {
     // if here then initiate workspace stack (for tiling inPreview show)
-    if (!Module.Tiling().inPreview) {
-        Module.Tiling().spaces.initWorkspaceStack();
+    if (!Tiling.inPreview) {
+        Tiling.spaces.initWorkspaceStack();
     }
 
-    let selected = Module.Tiling().spaces.selectedSpace;
+    let selected = Tiling.spaces.selectedSpace;
     let monitor = navigator.monitor;
     let v = dy/(t - time);
     time = t;
-    const StackPositions = Module.Tiling().StackPositions;
+    const StackPositions = Tiling.StackPositions;
     if (dy > 0
         && selected !== navigator.from
         && (selected.actor.y - dy < StackPositions.up * monitor.height)
@@ -334,8 +335,8 @@ function updateVertical(dy, t) {
         dy = 0;
         vy = 1;
         selected.actor.y = StackPositions.up * selected.height;
-        Module.Tiling().spaces.selectStackSpace(Meta.MotionDirection.UP, false, transition);
-        selected = Module.Tiling().spaces.selectedSpace;
+        Tiling.spaces.selectStackSpace(Meta.MotionDirection.UP, false, transition);
+        selected = Tiling.spaces.selectedSpace;
         Easer.removeEase(selected.actor);
         Easer.addEase(selected.actor, {
             scale_x: 0.9, scale_y: 0.9, time:
@@ -346,8 +347,8 @@ function updateVertical(dy, t) {
         dy = 0;
         vy = -1;
         selected.actor.y = StackPositions.down * selected.height;
-        Module.Tiling().spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, transition);
-        selected = Module.Tiling().spaces.selectedSpace;
+        Tiling.spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, transition);
+        selected = Tiling.spaces.selectedSpace;
         Easer.removeEase(selected.actor);
         Easer.addEase(selected.actor, {
             scale_x: 0.9, scale_y: 0.9, time:
@@ -381,7 +382,7 @@ function endVertical() {
             return false;
         }
 
-        let selected = Module.Tiling().spaces.selectedSpace;
+        let selected = Tiling.spaces.selectedSpace;
         let y = selected.actor.y;
         if (selected === navigator.from && y <= 0.1*selected.height) {
             navigator.finish();
@@ -416,5 +417,5 @@ function endVertical() {
  */
 function swipeTrackersEnable(option) {
     let enable = option ?? true;
-    Module.Kludges().swipeTrackers.forEach(t => t.enabled = enable);
+    Kludges.swipeTrackers.forEach(t => t.enabled = enable);
 }

@@ -5,9 +5,13 @@
   around these problems and facilitates new features.
  */
 
-const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const {Meta, Gio, Clutter, Shell} = imports.gi;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Utils = Extension.imports.utils;
+const Tiling = Extension.imports.tiling;
+const Scratch = Extension.imports.scratch;
 
+const { Meta, Gio, Clutter, Shell } = imports.gi;
 const Main = imports.ui.main;
 const Workspace = imports.ui.workspace;
 const WindowManager = imports.ui.windowManager;
@@ -19,7 +23,7 @@ const Params = imports.misc.params;
 // Get the correct positions of tiled windows when animating to/from the overview
 function getOriginalPosition() {
     let c = this.metaWindow.clone;
-    let space = Module.Tiling().spaces.spaceOfWindow(this.metaWindow);
+    let space = Tiling.spaces.spaceOfWindow(this.metaWindow);
     if (!space || space.indexOf(this.metaWindow) === -1) {
         return [this._boundingBox.x, this._boundingBox.y];
     }
@@ -139,7 +143,7 @@ function setupOverrides() {
                 return;
             }
 
-            let space = Module.Tiling().spaces.spaceOf(this.metaWorkspace);
+            let space = Tiling.spaces.spaceOf(this.metaWorkspace);
             if (space) {
                 clones.sort((a, b) => {
                     let aw = a.metaWindow;
@@ -198,9 +202,9 @@ function setupOverrides() {
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
         let metaWindow = win.meta_window || win;
         if (gsettings.get_boolean('only-scratch-in-overview'))
-            return Module.Scratch().isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+            return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
         if (gsettings.get_boolean('disable-scratch-in-overview'))
-            return !Module.Scratch().isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+            return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
     });
 }
 
@@ -315,7 +319,7 @@ function setupSwipeTrackers() {
 
 var signals;
 function setupSignals() {
-    signals = Module.Signals();
+    signals = new Utils.Signals();
 
     /**
      * Swipetrackers are reset by gnome during overview, once exits overview
@@ -359,7 +363,7 @@ function setupActions() {
 
 var gsettings, wmSettings, mutterSettings;
 function enable() {
-    gsettings = Module.GSettings();
+    gsettings = ExtensionUtils.getSettings();
     wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
     mutterSettings = new Gio.Settings({schema_id: 'org.gnome.mutter'});
     setupSwipeTrackers();
@@ -389,8 +393,8 @@ function disable() {
 function sortWindows(a, b) {
     let aw = a.metaWindow;
     let bw = b.metaWindow;
-    let spaceA = Module.Tiling().spaces.spaceOfWindow(aw);
-    let spaceB = Module.Tiling().spaces.spaceOfWindow(bw);
+    let spaceA = Tiling.spaces.spaceOfWindow(aw);
+    let spaceB = Tiling.spaces.spaceOfWindow(bw);
     let ia = spaceA.indexOf(aw);
     let ib = spaceB.indexOf(bw);
     if (ia === -1 && ib === -1) {
@@ -482,7 +486,7 @@ function _checkWorkspaces() {
     }
 
     // Update workspaces only if Dynamic Workspace Management has not been paused by some other function
-    if (this._pauseWorkspaceCheck || Module.Tiling().inPreview)
+    if (this._pauseWorkspaceCheck || Tiling.inPreview)
         return true;
 
     for (i = 0; i < this._workspaces.length; i++) {
@@ -544,7 +548,7 @@ function _checkWorkspaces() {
     }
 
     // Keep visible spaces
-    for (let [monitor, space] of Module.Tiling().spaces.monitors) {
+    for (let [monitor, space] of Tiling.spaces.monitors) {
         emptyWorkspaces[space.workspace.index()] = false;
     }
 
