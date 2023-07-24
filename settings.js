@@ -5,8 +5,7 @@
     (e.g. `Module.blahblah.somefunction()`) but only during runtime.
  */
 const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const {Gio, GLib, Gtk} = imports.gi;
-const Mainloop = imports.mainloop;
+const { Gio, GLib, Gtk } = imports.gi;
 
 var workspaceSettingsCache = {};
 
@@ -16,26 +15,6 @@ var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
 // This is the value mutter uses for the keyvalue of above_tab
 var META_KEY_ABOVE_TAB = 0x2f7259c9;
-
-function setVerticalMargin() {
-    let vMargin = gsettings.get_int('vertical-margin');
-    let gap = gsettings.get_int('window-gap');
-    prefs.vertical_margin = Math.max(Math.round(gap / 2), vMargin);
-}
-let timerId;
-function onWindowGapChanged() {
-    setVerticalMargin();
-    if (timerId) {
-        Mainloop.source_remove(timerId);
-    }
-    timerId = Mainloop.timeout_add(500, () => {
-        Module.Tiling().spaces.mru().forEach(space => {
-            space.layout();
-        });
-        timerId = null;
-        return false; // on return false destroys timeout
-    });
-}
 
 function setState($, key) {
     let value = gsettings.get_value(key);
@@ -97,14 +76,9 @@ function enable() {
         return Math.min(15, this.horizontal_margin);
     });
     gsettings.connect('changed', setState);
-    gsettings.connect('changed::vertical-margin', onWindowGapChanged);
-    gsettings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
-    gsettings.connect('changed::window-gap', onWindowGapChanged);
 
     // connect to settings and update winprops array when it's updated
     gsettings.connect('changed::winprops', () => reloadWinpropsFromGSettings());
-
-    setVerticalMargin();
 
     // A intermediate window is created before the prefs dialog is created.
     // Prevent it from being inserted into the tiling causing flickering and general disorder

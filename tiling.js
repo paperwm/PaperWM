@@ -3,7 +3,7 @@ const Settings = Module.Extension.imports.settings;
 const Easer = Module.Extension.imports.utils.easer;
 const ClickOverlay = Module.Extension.imports.stackoverlay.ClickOverlay;
 
-const {Clutter, St, Graphene, Meta, Gio, GDesktopEnums} = imports.gi;
+const { Clutter, St, Graphene, Meta, Gio, GDesktopEnums } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const Signals = imports.signals;
@@ -233,7 +233,7 @@ var Space = class Space extends Array {
             setFocusMode(getDefaultFocusMode(), this);
         });
 
-        const settings = Module.ExtensionUtils.getSettings();
+        const settings = Module.GSettings();
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
 
         this.signals.connect(settings, 'changed::default-background', this.updateBackground.bind(this));
@@ -2661,6 +2661,32 @@ function enable(errorNotification) {
 
     signals = Module.Signals();
     grabSignals = Module.Signals();
+
+    let setVerticalMargin = () => {
+        let vMargin = gsettings.get_int('vertical-margin');
+        let gap = gsettings.get_int('window-gap');
+        Settings.prefs.vertical_margin = Math.max(Math.round(gap / 2), vMargin);
+    };
+    setVerticalMargin();
+
+    // setup actions on gap changes
+    let timerId;
+    let onWindowGapChanged = () => {
+        setVerticalMargin();
+        if (timerId) {
+            Mainloop.source_remove(timerId);
+        }
+        timerId = Mainloop.timeout_add(500, () => {
+            Module.Tiling().spaces.mru().forEach(space => {
+                space.layout();
+            });
+            timerId = null;
+            return false; // on return false destroys timeout
+        });
+    };
+    gsettings.connect('changed::vertical-margin', onWindowGapChanged);
+    gsettings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
+    gsettings.connect('changed::window-gap', onWindowGapChanged);
 
     backgroundGroup = Main.layoutManager._backgroundGroup;
 
