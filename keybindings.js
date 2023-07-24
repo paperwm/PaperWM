@@ -1,10 +1,17 @@
-const Module = imports.misc.extensionUtils.getCurrentExtension().imports.module;
-const keystrToKeycombo = Module.Extension.imports.settings.keystrToKeycombo;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const ExtensionModule = Extension.imports.extension;
+const Settings = Extension.imports.settings;
+const Utils = Extension.imports.utils;
+const Tiling = Extension.imports.tiling;
+const Navigator = Extension.imports.navigator;
+const App = Extension.imports.app;
+const Scratch = Extension.imports.scratch;
+const LiveAltTab = Extension.imports.liveAltTab;
+const keystrToKeycombo = Extension.imports.settings.keystrToKeycombo;
 
-const Clutter = imports.gi.Clutter;
+const { Clutter, Meta, Shell } = imports.gi;
 const Seat = Clutter.get_default_backend().get_default_seat();
-const Meta = imports.gi.Meta;
-const Shell = imports.gi.Shell;
 const Main = imports.ui.main;
 const display = global.display;
 
@@ -12,7 +19,7 @@ const display = global.display;
 var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
 function registerPaperAction(actionName, handler, flags) {
-    let settings = Module.ExtensionUtils.getSettings(KEYBINDINGS_KEY);
+    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
     registerAction(
         actionName,
         handler,
@@ -20,7 +27,7 @@ function registerPaperAction(actionName, handler, flags) {
 }
 
 function registerNavigatorAction(name, handler) {
-    let settings = Module.ExtensionUtils.getSettings(KEYBINDINGS_KEY);
+    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
     registerAction(
         name,
         handler,
@@ -28,7 +35,7 @@ function registerNavigatorAction(name, handler) {
 }
 
 function registerMinimapAction(name, handler) {
-    let settings = Module.ExtensionUtils.getSettings(KEYBINDINGS_KEY);
+    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
     registerAction(
         name,
         handler,
@@ -44,7 +51,7 @@ function registerMinimapAction(name, handler) {
 
 var signals, actions, nameMap, actionIdMap, keycomboMap, overrides;
 function setupActions() {
-    signals = Module.Signals();
+    signals = new Utils.Signals();
     actions = [];
     nameMap = {};     // mutter keybinding action name -> action
     actionIdMap = {}; // actionID   -> action
@@ -52,10 +59,10 @@ function setupActions() {
     overrides = [];   // action names that have been given a custom handler
 
     /* Initialize keybindings */
-    let dynamic_function_ref = Module.Utils().dynamic_function_ref;
-    let liveAltTab = dynamic_function_ref('liveAltTab', Module.LiveAltTab());
+    let dynamic_function_ref = Utils.dynamic_function_ref;
+    let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
 
-    let settings = Module.ExtensionUtils.getSettings(KEYBINDINGS_KEY);
+    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
     registerAction('live-alt-tab',
         liveAltTab, { settings });
     registerAction('live-alt-tab-backward',
@@ -63,50 +70,50 @@ function setupActions() {
         {settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED});
 
     registerAction('switch-monitor-right', () => {
-        Module.Tiling().spaces.switchMonitor(Meta.DisplayDirection.RIGHT, false);
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.RIGHT, false);
     }, {settings});
     registerAction('switch-monitor-left', () => {
-        Module.Tiling().spaces.switchMonitor(Meta.DisplayDirection.LEFT, false);
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.LEFT, false);
     }, {settings});
     registerAction('switch-monitor-above', () => {
-        Module.Tiling().spaces.switchMonitor(Meta.DisplayDirection.UP, false);
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.UP, false);
     }, {settings});
     registerAction('switch-monitor-below', () => {
-        Module.Tiling().spaces.switchMonitor(Meta.DisplayDirection.DOWN, false);
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.DOWN, false);
     }, {settings});
 
     registerAction('move-monitor-right', () => {
-        Module.Tiling().spaces.switchMonitor(Meta.DisplayDirection.RIGHT, true);
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.RIGHT, true);
     }, {settings});
     registerAction('move-monitor-left', () => {
-        Module.Tiling().spaces.switchMonitor(Meta.DisplayDirection.LEFT, true);
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.LEFT, true);
     }, {settings});
     registerAction('move-monitor-above', () => {
-        Module.Tiling().spaces.switchMonitor(Meta.DisplayDirection.UP, true);
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.UP, true);
     }, {settings});
     registerAction('move-monitor-below', () => {
-        Module.Tiling().spaces.switchMonitor(Meta.DisplayDirection.DOWN, true);
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.DOWN, true);
     }, {settings});
 
-    registerNavigatorAction('previous-workspace', Module.Tiling().selectPreviousSpace);
-    registerNavigatorAction('previous-workspace-backward', Module.Tiling().selectPreviousSpaceBackwards);
+    registerNavigatorAction('previous-workspace', Tiling.selectPreviousSpace);
+    registerNavigatorAction('previous-workspace-backward', Tiling.selectPreviousSpaceBackwards);
 
-    registerNavigatorAction('move-previous-workspace', Module.Tiling().movePreviousSpace);
-    registerNavigatorAction('move-previous-workspace-backward', Module.Tiling().movePreviousSpaceBackwards);
+    registerNavigatorAction('move-previous-workspace', Tiling.movePreviousSpace);
+    registerNavigatorAction('move-previous-workspace-backward', Tiling.movePreviousSpaceBackwards);
 
-    registerNavigatorAction('switch-down-workspace', Module.Tiling().selectDownSpace);
-    registerNavigatorAction('switch-up-workspace', Module.Tiling().selectUpSpace);
+    registerNavigatorAction('switch-down-workspace', Tiling.selectDownSpace);
+    registerNavigatorAction('switch-up-workspace', Tiling.selectUpSpace);
 
-    registerNavigatorAction('move-down-workspace', Module.Tiling().moveDownSpace);
-    registerNavigatorAction('move-up-workspace', Module.Tiling().moveUpSpace);
+    registerNavigatorAction('move-down-workspace', Tiling.moveDownSpace);
+    registerNavigatorAction('move-up-workspace', Tiling.moveUpSpace);
 
-    registerNavigatorAction('take-window', Module.Tiling().takeWindow);
+    registerNavigatorAction('take-window', Tiling.takeWindow);
 
     registerMinimapAction("switch-next", (mw, space) => space.switchLinear(1));
     registerMinimapAction("switch-previous", (mw, space) => space.switchLinear(-1));
 
-    registerMinimapAction("switch-first", Module.Tiling().activateFirstWindow);
-    registerMinimapAction("switch-last", Module.Tiling().activateLastWindow);
+    registerMinimapAction("switch-first", Tiling.activateFirstWindow);
+    registerMinimapAction("switch-last", Tiling.activateLastWindow);
 
     registerMinimapAction("switch-right", (mw, space) => space.switchRight());
     registerMinimapAction("switch-left", (mw, space) => space.switchLeft());
@@ -124,63 +131,62 @@ function setupActions() {
 
     registerPaperAction("toggle-scratch-window",
         dynamic_function_ref("toggleScratchWindow",
-            Module.Scratch()));
+            Scratch));
 
     registerPaperAction("toggle-scratch-layer",
         dynamic_function_ref("toggleScratch",
-            Module.Scratch()));
+            Scratch));
 
     registerPaperAction("toggle-scratch",
         dynamic_function_ref("toggle",
-            Module.Scratch()),
+            Scratch),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("switch-focus-mode",
         dynamic_function_ref("switchToNextFocusMode",
-            Module.Tiling()));
+            Tiling));
 
     registerPaperAction("develop-set-globals",
         dynamic_function_ref("setDevGlobals",
-            Module.Utils()));
+            Utils));
 
     registerPaperAction("resize-h-inc",
         dynamic_function_ref("resizeHInc",
-            Module.Tiling()),
+            Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-h-dec",
         dynamic_function_ref("resizeHDec",
-            Module.Tiling()),
+            Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-w-inc",
         dynamic_function_ref("resizeWInc",
-            Module.Tiling()),
+            Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-w-dec",
         dynamic_function_ref("resizeWDec",
-            Module.Tiling()),
+            Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-width",
         dynamic_function_ref("cycleWindowWidth",
-            Module.Tiling()),
+            Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-height",
         dynamic_function_ref("cycleWindowHeight",
-            Module.Tiling()),
+            Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("center-horizontally",
         dynamic_function_ref("centerWindowHorizontally",
-            Module.Tiling()),
+            Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('new-window',
-        dynamic_function_ref('duplicateWindow',
-            Module.App()),
+        dynamic_function_ref('duplicateWindow', App),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('close-window',
@@ -190,17 +196,17 @@ function setupActions() {
 
     registerPaperAction('slurp-in',
         dynamic_function_ref('slurp',
-            Module.Tiling()),
+            Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('barf-out',
         dynamic_function_ref('barf',
-            Module.Tiling()),
+            Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('toggle-maximize-width',
         dynamic_function_ref("toggleMaximizeHorizontally",
-            Module.Tiling()),
+            Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('paper-toggle-fullscreen',
@@ -230,7 +236,7 @@ function byId(mutterId) {
 }
 
 function asKeyHandler(actionHandler) {
-    return (display, mw, binding) => actionHandler(mw, Module.Tiling().spaces.selectedSpace, {display, binding});
+    return (display, mw, binding) => actionHandler(mw, Tiling.spaces.selectedSpace, {display, binding});
 }
 
 function impliedOptions(options) {
@@ -264,10 +270,10 @@ function registerAction(actionName, handler, options) {
 
     let mutterName, keyHandler;
     if (settings) {
-        Module.Utils().assert(actionName, "Schema action must have a name");
+        Utils.assert(actionName, "Schema action must have a name");
         mutterName = actionName;
         keyHandler = opensNavigator
-            ? asKeyHandler(Module.Navigator().preview_navigate)
+            ? asKeyHandler(Navigator.preview_navigate)
             : asKeyHandler(handler);
     } else {
         // actionId, mutterName and keyHandler will be set if/when the action is bound
@@ -293,7 +299,7 @@ function registerAction(actionName, handler, options) {
  * Bind a key to an action (possibly creating a new action)
  */
 function bindkey(keystr, actionName=null, handler=null, options={}) {
-    Module.Utils().assert(!options.settings,
+    Utils.assert(!options.settings,
         "Can only bind schemaless actions - change action's settings instead",
         actionName);
 
@@ -370,7 +376,7 @@ function devirtualizeMask(gdkVirtualMask) {
 }
 
 function rawMaskOfKeystr(keystr) {
-    let [dontcare, keycodes, mask] = Module.Settings().accelerator_parse(keystr);
+    let [dontcare, keycodes, mask] = Settings.accelerator_parse(keystr);
     return devirtualizeMask(mask);
 }
 
@@ -383,7 +389,7 @@ function openNavigatorHandler(actionName, keystr) {
         is_reversed: () => false,
     }
     return function(display, screen, metaWindow) {
-        return Module.Navigator().preview_navigate(
+        return Navigator.preview_navigate(
             metaWindow, null, {screen, display, binding});
     }
 }
@@ -403,7 +409,7 @@ function getActionIdByActionName(actionName) {
 }
 
 function getBoundActionId(keystr) {
-    let [dontcare, keycodes, mask] = Module.Settings().accelerator_parse(keystr);
+    let [dontcare, keycodes, mask] = Settings.accelerator_parse(keystr);
     if (keycodes.length > 1) {
         throw new Error("Multiple keycodes " + keycodes + " " + keystr);
     }
@@ -414,7 +420,7 @@ function getBoundActionId(keystr) {
 function handleAccelerator(display, actionId, deviceId, timestamp) {
     const action = actionIdMap[actionId];
     if (action) {
-        Module.Utils().debug("#keybindings", "Schemaless keybinding activated",
+        Utils.debug("#keybindings", "Schemaless keybinding activated",
             actionId, action.name);
         if (global.screen) {
             action.keyHandler(display, null, display.focus_window);
@@ -533,7 +539,7 @@ function overrideAction(mutterName, action) {
 
 function resolveConflicts() {
     resetConflicts();
-    for (let conflict of Module.Settings().findConflicts()) {
+    for (let conflict of Settings.findConflicts()) {
         let {name, conflicts} = conflict;
         let action = byMutterName(name);
         // Actionless key, can happen with updated schema without restart
@@ -666,8 +672,8 @@ function resetConflicts() {
 
 function enable() {
     setupActions();
-    let schemas = [...Module.Settings().getConflictSettings(),
-        Module.ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
+    let schemas = [...Settings.getConflictSettings(),
+        ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
     schemas.forEach(schema => {
         signals.connect(schema, 'changed', resolveConflicts);
     });
@@ -675,7 +681,7 @@ function enable() {
     signals.connect(
         display,
         'accelerator-activated',
-        Module.Utils().dynamic_function_ref(handleAccelerator.name, this)
+        Utils.dynamic_function_ref(handleAccelerator.name, this)
     );
     actions.forEach(enableAction);
     resolveConflicts(schemas);
