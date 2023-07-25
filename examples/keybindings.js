@@ -100,7 +100,7 @@ function swapWithRight(binding = "<Super><Shift>d") {
         if (i === space.length - 1)
             return;
 
-        Utils.swap(space, i, i + 1);
+        Lib.swap(space, i, i + 1);
         space.layout(false);
         space.emit("full-layout");
         Main.activateWindow(space[i][0]);

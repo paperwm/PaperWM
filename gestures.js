@@ -4,6 +4,7 @@ const Kludges = Extension.imports.kludges;
 const Settings = Extension.imports.settings;
 const Tiling = Extension.imports.tiling;
 const Utils = Extension.imports.utils;
+const Lib = Extension.imports.lib;
 const Easer = Extension.imports.utils.easer;
 const Navigator = Extension.imports.navigator;
 
@@ -156,7 +157,7 @@ function update(space, dx, t) {
 
     // Check which target windew will be selected if we releas the swipe at this
     // moment
-    dx = Utils.sum(dxs.slice(-3));
+    dx = Lib.sum(dxs.slice(-3));
     let v = dx/(t - dts.slice(-3)[0]);
     if (Number.isFinite(v)) {
         space.vx = v;

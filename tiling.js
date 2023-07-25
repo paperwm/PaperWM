@@ -2,6 +2,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Settings = Extension.imports.settings;
 const Utils = Extension.imports.utils;
+const Lib = Extension.imports.lib;
 const Workspace = Extension.imports.workspace;
 const Gestures = Extension.imports.gestures;
 const Navigator = Extension.imports.navigator;
@@ -743,8 +744,8 @@ var Space = class Space extends Array {
             || targetRow < 0 || targetRow >= column.length)
             return;
 
-        Utils.swap(this[index], row, targetRow);
-        Utils.swap(this, index, targetIndex);
+        Lib.swap(this[index], row, targetRow);
+        Lib.swap(this, index, targetIndex);
 
         this.layout();
         this.emit('swapped', index, targetIndex, row, targetRow);
@@ -757,7 +758,7 @@ var Space = class Space extends Array {
         if (!column)
             return false;
         let row = column.indexOf(this.selectedWindow);
-        if (Utils.in_bounds(column, row + dir) == false) {
+        if (Lib.in_bounds(column, row + dir) == false) {
             index += dir;
             if (dir === 1) {
                 if (index < this.length) row = 0;
@@ -3527,7 +3528,7 @@ function cycleWindowWidth(metaWindow) {
     workArea.x += space.monitor.x;
 
     // 10px slack to avoid locking up windows that only resize in increments > 1px
-    let targetWidth = Math.min(Utils.findNext(frame.width, getCycleWindowWidths(metaWindow), sizeSlack), workArea.width);
+    let targetWidth = Math.min(Lib.findNext(frame.width, getCycleWindowWidths(metaWindow), sizeSlack), workArea.width);
     let targetX = frame.x;
 
     if (Scratch.isScratchWindow(metaWindow)) {
@@ -3555,10 +3556,10 @@ function cycleWindowHeight(metaWindow) {
     function calcTargetHeight(available) {
         let targetHeight;
         if (steps[0] <= 1) { // ratio steps
-            let targetR = Utils.findNext(frame.height/available, steps, sizeSlack/available);
+            let targetR = Lib.findNext(frame.height/available, steps, sizeSlack/available);
             targetHeight = Math.floor(targetR * available);
         } else { // pixel steps
-            targetHeight = Utils.findNext(frame.height, steps, sizeSlack);
+            targetHeight = Lib.findNext(frame.height, steps, sizeSlack);
         }
         return Math.min(targetHeight, available);
     }
@@ -3716,13 +3717,13 @@ function switchToNextFocusMode(space) {
  * "Fit" values such that they sum to `targetSum`
  */
 function fitProportionally(values, targetSum) {
-    let sum = Utils.sum(values);
+    let sum = Lib.sum(values);
     let weights = values.map(v => v / sum);
 
-    let fitted = Utils.zip(values, weights).map(
+    let fitted = Lib.zip(values, weights).map(
         ([h, w]) => Math.round(targetSum * w)
     );
-    let r = targetSum - Utils.sum(fitted);
+    let r = targetSum - Lib.sum(fitted);
     fitted[0] += r;
     return fitted;
 }

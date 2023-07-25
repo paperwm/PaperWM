@@ -2,6 +2,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Settings = Extension.imports.settings;
 const Utils = Extension.imports.utils;
+const Lib = Extension.imports.lib;
 const Easer = Extension.imports.utils.easer;
 
 const Clutter = imports.gi.Clutter;
@@ -98,8 +99,8 @@ var Minimap = class Minimap extends Array {
 
     swapped(space, index, targetIndex, row, targetRow) {
         let column = this[index];
-        Utils.swap(this, index, targetIndex);
-        Utils.swap(column, row, targetRow);
+        Lib.swap(this, index, targetIndex);
+        Lib.swap(column, row, targetRow);
         this.layout();
     }
 

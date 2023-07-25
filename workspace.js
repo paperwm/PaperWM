@@ -1,11 +1,12 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
+const Lib = Extension.imports.lib;
 const { Gio, GLib } = imports.gi;
 
 /**
  * Workspace related utility functions used by other modules.
  */
-var WORKSPACE_LIST_KEY = 'org.gnome.shell.extensions.paperwm.workspacelist';
+let WORKSPACE_LIST_KEY = 'org.gnome.shell.extensions.paperwm.workspacelist';
 let WORKSPACE_KEY = 'org.gnome.shell.extensions.paperwm.workspace';
 let workspaceSettingsCache;
 
@@ -75,7 +76,7 @@ function getWorkspaceSettingsByUUID(uuid) {
 function findWorkspaceSettingsByName(regex) {
     let list = getWorkspaceList().get_strv('list');
     let settings = list.map(getWorkspaceSettingsByUUID);
-    return zip(list, settings, settings.map(s => s.get_string('name')))
+    return Lib.zip(list, settings, settings.map(s => s.get_string('name')))
         .filter(([uuid, s, name]) => name.match(regex));
 }
 
@@ -117,19 +118,10 @@ function deleteWorkspaceSettings(uuid) {
 function printWorkspaceSettings() {
     let list = getWorkspaceList().get_strv('list');
     let settings = list.map(getWorkspaceSettingsByUUID);
-    let zipped = zip(list, settings);
+    let zipped = Lib.zip(list, settings);
     const key = s => s[1].get_int('index');
     zipped.sort((a, b) => key(a) - key(b));
     for (let [uuid, s] of zipped) {
         console.debug('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
     }
-}
-
-function zip(...as) {
-    let r = [];
-    let minLength = Math.min(...as.map(x => x.length));
-    for (let i = 0; i < minLength; i++) {
-        r.push(as.map(a => a[i]));
-    }
-    return r;
 }
