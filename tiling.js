@@ -18,26 +18,24 @@ const Mainloop = imports.mainloop;
 const Signals = imports.signals;
 const debug = Extension.imports.utils.debug;
 
-
-/**@type {import('@gi-types/meta').WorkspaceManager} */
-var workspaceManager = global.workspace_manager;
-var display = global.display;
+const workspaceManager = global.workspace_manager;
+const display = global.display;
 
 /** @type {Spaces} */
-var spaces;
+var spaces; // export
 
-var borderWidth = 8;
+let borderWidth = 8;
 // Mutter prevints windows from being placed further off the screen than 75 pixels.
-var stack_margin = 75;
+var stack_margin = 75; // export
 
 // Some features use this to determine if to sizes is considered equal. ie. `abs(w1 - w2) < sizeSlack`
-var sizeSlack = 30;
+let sizeSlack = 30;
 
-var PreviewMode = { NONE: 0, STACK: 1, SEQUENTIAL: 2 };
-var inPreview = PreviewMode.NONE;
+var PreviewMode = { NONE: 0, STACK: 1, SEQUENTIAL: 2 }; // export
+var inPreview = PreviewMode.NONE; // export
 
 // DEFAULT mode is normal/original PaperWM window focus behaviour
-var FocusModes = { DEFAULT: 0, CENTER: 1 };
+var FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
 
 /**
    Scrolled and tiled per monitor workspace.
@@ -226,8 +224,8 @@ var Space = class Space extends Array {
 
         this.layout(false);
 
-        this.signals.connect(workspace, "window-added", Utils.dynamic_function_ref("add_handler", Extension.imports.tiling));
-        this.signals.connect(workspace, "window-removed", Utils.dynamic_function_ref("remove_handler", Extension.imports.tiling));
+        this.signals.connect(workspace, "window-added", (ws, metawindow) => add_handler(ws, metawindow));
+        this.signals.connect(workspace, "window-removed", (ws, metawindow) => remove_handler(ws, metawindow));
         this.signals.connect(Main.overview, 'showing', this.startAnimate.bind(this));
         this.signals.connect(Main.overview, 'hidden', () => {
             if (!spaces.isActiveSpace(this)) {
