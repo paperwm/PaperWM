@@ -1,43 +1,41 @@
-var ExtensionUtils = imports.misc.extensionUtils;
-var Extension = ExtensionUtils.getCurrentExtension();
-var {Clutter, St, Graphene, Meta, Gio} = imports.gi;
-var Easer = Extension.imports.utils.easer;
-var Main = imports.ui.main;
-var Mainloop = imports.mainloop;
-var Signals = imports.signals;
-var utils = Extension.imports.utils;
-var debug = utils.debug;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Settings = Extension.imports.settings;
+const Utils = Extension.imports.utils;
+const Lib = Extension.imports.lib;
+const Workspace = Extension.imports.workspace;
+const Gestures = Extension.imports.gestures;
+const Navigator = Extension.imports.navigator;
+const Grab = Extension.imports.grab;
+const TopBar = Extension.imports.topbar;
+const Scratch = Extension.imports.scratch;
+const Easer = Extension.imports.utils.easer;
+const ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
 
-var GDesktopEnums = imports.gi.GDesktopEnums;
+const { Clutter, St, Graphene, Meta, Gio, GDesktopEnums } = imports.gi;
+const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
+const Signals = imports.signals;
+const debug = Extension.imports.utils.debug;
 
-/**@type {import('@gi-types/meta').WorkspaceManager} */
-var workspaceManager = global.workspace_manager;
-var display = global.display;
+const workspaceManager = global.workspace_manager;
+const display = global.display;
 
 /** @type {Spaces} */
-var spaces;
+var spaces; // export
 
-var Scratch = Extension.imports.scratch;
-var Gestures = Extension.imports.gestures;
-var TopBar = Extension.imports.topbar;
-var Navigator = Extension.imports.navigator;
-var ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
-var Settings = Extension.imports.settings;
-
-var prefs = Settings.prefs;
-
-var borderWidth = 8;
+let borderWidth = 8;
 // Mutter prevints windows from being placed further off the screen than 75 pixels.
-var stack_margin = 75;
+var stack_margin = 75; // export
 
 // Some features use this to determine if to sizes is considered equal. ie. `abs(w1 - w2) < sizeSlack`
-var sizeSlack = 30;
+let sizeSlack = 30;
 
-var PreviewMode = {NONE: 0, STACK: 1, SEQUENTIAL: 2};
-var inPreview = PreviewMode.NONE;
+var PreviewMode = { NONE: 0, STACK: 1, SEQUENTIAL: 2 }; // export
+var inPreview = PreviewMode.NONE; // export
 
 // DEFAULT mode is normal/original PaperWM window focus behaviour
-var FocusModes = {DEFAULT: 0, CENTER: 1};
+var FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
 
 /**
    Scrolled and tiled per monitor workspace.
@@ -95,7 +93,7 @@ var Space = class Space extends Array {
     constructor (workspace, container, doInit) {
         super(0);
         this.workspace = workspace;
-        this.signals = new utils.Signals();
+        this.signals = new Utils.Signals();
 
         // windows that should be represented by their WindowActor
         this.visible = [];
@@ -156,7 +154,7 @@ var Space = class Space extends Array {
         actor.add_actor(cloneClip);
         cloneClip.add_actor(cloneContainer);
 
-        this.border = new St.Widget({name: "border"});
+        this.border = new St.Widget({ name: "border" });
         this.actor.add_actor(this.border);
         this.border.hide();
 
@@ -169,7 +167,7 @@ var Space = class Space extends Array {
                 monitor = oldMonitor;
         }
 
-        this.setSettings(Settings.getWorkspaceSettings(this.workspace.index()));
+        this.setSettings(Workspace.getWorkspaceSettings(this.workspace.index()));
         this.setMonitor(monitor, false);
 
         actor.set_pivot_point(0.5, 0);
@@ -187,8 +185,8 @@ var Space = class Space extends Array {
             style_class: 'paperwm-window-position-bar tile-preview',
         });
         this.windowPositionBar.hide(); // default on empty space
-        utils.actor_raise(this.windowPositionBar);
-        if (prefs.show_window_position_bar) {
+        Utils.actor_raise(this.windowPositionBar);
+        if (Settings.prefs.show_window_position_bar) {
             this.enableWindowPositionBar();
         }
 
@@ -218,27 +216,28 @@ var Space = class Space extends Array {
         this.setSpaceTopbarElementsVisible(false);
 
         // apply default focus mode
-        setFocusMode(Settings.getDefaultFocusMode(), this);
+        setFocusMode(getDefaultFocusMode(), this);
 
         this.getWindows().forEach(w => {
             animateWindow(w);
         });
 
-        let selected = this.selectedWindow;
-        if (selected) {
-            ensureViewport(selected, this, {force: true});
-        }
+        this.layout(false);
 
-        this.signals.connect(workspace, "window-added", utils.dynamic_function_ref("add_handler", Extension.imports.tiling));
-        this.signals.connect(workspace, "window-removed", utils.dynamic_function_ref("remove_handler", Extension.imports.tiling));
+        this.signals.connect(workspace, "window-added", (ws, metawindow) => add_handler(ws, metawindow));
+        this.signals.connect(workspace, "window-removed", (ws, metawindow) => remove_handler(ws, metawindow));
         this.signals.connect(Main.overview, 'showing', this.startAnimate.bind(this));
-        this.signals.connect(Main.overview, 'hidden', this.moveDone.bind(this, (window) => {
-            // after moveDone, ensureViewport on display.focus_window (see moveDone function)
-            ensureViewport(window, this, {force: true});
-        }));
+        this.signals.connect(Main.overview, 'hidden', () => {
+            if (!spaces.isActiveSpace(this)) {
+                return;
+            }
+            Utils.later_add(Meta.LaterType.IDLE, () => {
+                ensureViewport(display.focus_window, this, { moveto: true, force: true });
+            });
+        });
 
-        this.signals.connect(Settings.settings, 'changed::default-focus-mode', () => {
-            setFocusMode(Settings.getDefaultFocusMode(), this);
+        this.signals.connect(gsettings, 'changed::default-focus-mode', () => {
+            setFocusMode(getDefaultFocusMode(), this);
         });
 
         const settings = ExtensionUtils.getSettings();
@@ -277,8 +276,8 @@ var Space = class Space extends Array {
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
         workArea.x -= this.monitor.x;
         workArea.y -= this.monitor.y;
-        workArea.height -= prefs.vertical_margin + prefs.vertical_margin_bottom;
-        workArea.y += prefs.vertical_margin;
+        workArea.height -= Settings.prefs.vertical_margin + Settings.prefs.vertical_margin_bottom;
+        workArea.y += Settings.prefs.vertical_margin;
         return workArea;
     }
 
@@ -301,7 +300,7 @@ var Space = class Space extends Array {
             throw new Error("Anchor doesn't exist in column " + grabWindow.title);
         }
 
-        const gap = prefs.window_gap;
+        const gap = Settings.prefs.window_gap;
         const f = grabWindow.get_frame_rect();
         let yGrabRel = f.y - this.monitor.y;
         targetWidth = f.width;
@@ -322,7 +321,6 @@ var Space = class Space extends Array {
         let widthChanged = false;
         let heightChanged = false;
 
-        // log("Layout column simple")
         for (let i = 0; i < windows.length; i++) {
             let mw = windows[i];
             let targetHeight = targetHeights[i];
@@ -335,17 +333,17 @@ var Space = class Space extends Array {
             if (mw.preferredWidth) {
                 let prop = mw.preferredWidth;
                 if (prop.value <= 0) {
-                    utils.warn("invalid preferredWidth value");
+                    console.warn("invalid preferredWidth value");
                 }
                 else if (prop.unit == 'px') {
                     targetWidth = prop.value;
                 }
                 else if (prop.unit == '%') {
-                    let availableWidth = space.workArea().width - prefs.horizontal_margin*2 - prefs.window_gap;
+                    let availableWidth = space.workArea().width - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
                     targetWidth = Math.floor(availableWidth * Math.min(prop.value/100.0, 1.0));
                 }
                 else {
-                    utils.warn("invalid preferredWidth unit:", "'" + prop.unit + "'", "(should be 'px' or '%')");
+                    console.warn("invalid preferredWidth unit:", "'" + prop.unit + "'", "(should be 'px' or '%')");
                 }
 
                 delete mw.preferredWidth;
@@ -371,17 +369,17 @@ var Space = class Space extends Array {
             if (mw.maximized_vertically) {
                 // NOTE: This should really be f.y - monitor.y, but eg. firefox
                 // on wayland reports the wrong y coordinates at this point.
-                y = y - prefs.vertical_margin;
+                y = y - Settings.prefs.vertical_margin;
             }
 
             // When resize is synchronous, ie. for X11 windows
             let nf = mw.get_frame_rect();
             if (nf.width !== targetWidth && nf.width !== f.width) {
-                // log("  Width did not obey", "new", nf.width, "old", f.width, "target", targetWidth, mw.title)
+                // console.debug("  Width did not obey", "new", nf.width, "old", f.width, "target", targetWidth, mw.title)
                 widthChanged = true;
             }
             if (nf.height !== targetHeight && nf.height !== f.height) {
-                // log("  Height did not obey", "new", nf.height, "old", f.height, "target", targetHeight, mw.title);
+                // console.debug("  Height did not obey", "new", nf.height, "old", f.height, "target", targetHeight, mw.title);
                 heightChanged = true;
                 targetHeight = nf.height; // Use actually height for layout
             }
@@ -389,7 +387,7 @@ var Space = class Space extends Array {
             let c = mw.clone;
             if (c.x !== x || c.targetX !== x ||
                 c.y !== y || c.targetY !== y) {
-                // log("  Position window", mw.title, `y: ${c.targetY} -> ${y} x: ${c.targetX} -> ${x}`);
+                // console.debug("  Position window", mw.title, `y: ${c.targetY} -> ${y} x: ${c.targetX} -> ${x}`);
                 c.targetX = x;
                 c.targetY = y;
                 if (time === 0) {
@@ -404,12 +402,12 @@ var Space = class Space extends Array {
                 }
             }
 
-            y += targetHeight + prefs.window_gap;
+            y += targetHeight + Settings.prefs.window_gap;
         }
         return [targetWidth, widthChanged || heightChanged, y];
     }
 
-    layout(animate = true, options={}) {
+    layout(animate = true, options = {}) {
         // Guard against recursively calling layout
         if (!this._populated)
             return;
@@ -418,11 +416,11 @@ var Space = class Space extends Array {
         this._inLayout = true;
         this.startAnimate();
 
-        let time = animate ? prefs.animation_time : 0;
+        let time = animate ? Settings.prefs.animation_time : 0;
         if (window.instant) {
             time = 0;
         }
-        let gap = prefs.window_gap;
+        let gap = Settings.prefs.window_gap;
         let x = 0;
         let selectedIndex = this.selectedIndex();
         let workArea = this.workArea();
@@ -434,7 +432,7 @@ var Space = class Space extends Array {
         }
 
         // compensate to keep window position bar on all monitors
-        if (prefs.show_window_position_bar) {
+        if (Settings.prefs.show_window_position_bar) {
             const panelBoxHeight = TopBar.panelBox.height;
             const monitor = Main.layoutManager.primaryMonitor;
             if (monitor !== this.monitor) {
@@ -442,7 +440,7 @@ var Space = class Space extends Array {
                 workArea.height -= panelBoxHeight;
             }
         }
-        
+
         let availableHeight = workArea.height;
         let y0 = workArea.y;
         let fixPointAttempCount = 0;
@@ -462,7 +460,7 @@ var Space = class Space extends Array {
             } else {
                 targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
             }
-            targetWidth = Math.min(targetWidth, workArea.width - 2*prefs.minimum_margin);
+            targetWidth = Math.min(targetWidth, workArea.width - 2*Settings.prefs.minimum_margin);
 
             let resultingWidth, relayout;
             let allocator = options.customAllocators && options.customAllocators[i];
@@ -483,7 +481,7 @@ var Space = class Space extends Array {
                     fixPointAttempCount++;
                     continue;
                 } else {
-                    log("Bail at fixpoint, max tries reached");
+                    console.warn("Bail at fixpoint, max tries reached");
                 }
             }
 
@@ -512,7 +510,7 @@ var Space = class Space extends Array {
                 {
                     x: this.targetX,
                     time,
-                    onComplete: this.moveDone.bind(this)
+                    onComplete: this.moveDone.bind(this),
                 });
         }
         if (animate) {
@@ -529,7 +527,7 @@ var Space = class Space extends Array {
             return;
 
         this._layoutQueued = true;
-        utils.later_add(Meta.LaterType.RESIZE, () => {
+        Utils.later_add(Meta.LaterType.RESIZE, () => {
             this._layoutQueued = false;
             this.layout();
         });
@@ -634,24 +632,7 @@ var Space = class Space extends Array {
             this.splice(index, 0, [metaWindow]);
         }
 
-        /*
-         * 3.35+ has a bug where move_frame sometimes triggers another move back to its original position. Make sure tiled windows are always positioned correctly.
-         */
-        this.signals.connect(metaWindow, 'position-changed', (w) => {
-            if (inGrab)
-                return;
-            let f = w.get_frame_rect();
-            let clone = w.clone;
-            let x = this.visibleX(w);
-            let y = this.monitor.y + clone.targetY;
-            x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
-            x += this.monitor.x;
-            if (f.x !== x || f.y !== y) {
-                w.move_frame(true, x, y);
-            }
-        });
-
-        utils.actor_reparent(metaWindow.clone, this.cloneContainer);
+        Utils.actor_reparent(metaWindow.clone, this.cloneContainer);
 
         // Make sure the cloneContainer is in a clean state (centered) before layout
         if (this.length === 1) {
@@ -717,7 +698,7 @@ var Space = class Space extends Array {
             return false;
         this._floating.push(metaWindow);
         let clone = metaWindow.clone;
-        utils.actor_reparent(clone, this.actor);
+        Utils.actor_reparent(clone, this.actor);
         return true;
     }
 
@@ -762,12 +743,12 @@ var Space = class Space extends Array {
             || targetRow < 0 || targetRow >= column.length)
             return;
 
-        utils.swap(this[index], row, targetRow);
-        utils.swap(this, index, targetIndex);
+        Lib.swap(this[index], row, targetRow);
+        Lib.swap(this, index, targetIndex);
 
         this.layout();
         this.emit('swapped', index, targetIndex, row, targetRow);
-        ensureViewport(this.selectedWindow, this, { force:true });
+        ensureViewport(this.selectedWindow, this, { force: true });
     }
 
     switchLinear(dir) {
@@ -776,13 +757,13 @@ var Space = class Space extends Array {
         if (!column)
             return false;
         let row = column.indexOf(this.selectedWindow);
-        if (utils.in_bounds(column, row + dir) == false) {
+        if (Lib.in_bounds(column, row + dir) == false) {
             index += dir;
             if (dir === 1) {
                 if (index < this.length) row = 0;
             } else {
                 if (index >= 0)
-                    row = this[index].length - 1
+                    row = this[index].length - 1;
             }
         } else {
             row += dir;
@@ -793,10 +774,10 @@ var Space = class Space extends Array {
         return true;
     }
 
-    switchLeft() { this.switch(Meta.MotionDirection.LEFT) }
-    switchRight() { this.switch(Meta.MotionDirection.RIGHT) }
-    switchUp() { this.switch(Meta.MotionDirection.UP) }
-    switchDown() { this.switch(Meta.MotionDirection.DOWN) }
+    switchLeft() { this.switch(Meta.MotionDirection.LEFT); }
+    switchRight() { this.switch(Meta.MotionDirection.RIGHT); }
+    switchUp() { this.switch(Meta.MotionDirection.UP); }
+    switchDown() { this.switch(Meta.MotionDirection.DOWN); }
     switch(direction) {
         let space = this;
         let index = space.selectedIndex();
@@ -808,7 +789,7 @@ var Space = class Space extends Array {
         case Meta.MotionDirection.RIGHT:
             index++;
             row = -1;
-            break;;
+            break;
         case Meta.MotionDirection.LEFT:
             index--;
             row = -1;
@@ -827,7 +808,7 @@ var Space = class Space extends Array {
         switch (direction) {
         case Meta.MotionDirection.UP:
             row--;
-            break;;
+            break;
         case Meta.MotionDirection.DOWN:
             row++;
         }
@@ -890,18 +871,18 @@ var Space = class Space extends Array {
         return [Math.round(sx), Math.round(sy)];
     }
 
-    viewportToScroll(vx, vy=0) {
+    viewportToScroll(vx, vy = 0) {
         return [vx - this.cloneContainer.x, vy - this.cloneContainer.y];
     }
 
-    moveDone(focusedWindowCallback = (focusedWindow) => {}) {
+    moveDone(focusedWindowCallback = focusedWindow => {}) {
         if (this.cloneContainer.x !== this.targetX ||
             this.actor.y !== 0 ||
             Navigator.navigating || inPreview ||
             Main.overview.visible ||
             // Block when we're carrying a window in dnd
             (inGrab && inGrab.window)
-           ) {
+        ) {
             return;
         }
 
@@ -933,7 +914,7 @@ var Space = class Space extends Array {
             x = Math.min(this.width - stack_margin, x);
             x += monitor.x;
             // let b = w.get_frame_rect();
-            if ((f.x !== x || f.y !== y)) {
+            if (f.x !== x || f.y !== y) {
                 w.move_frame(true, x, y);
             }
         });
@@ -1061,17 +1042,17 @@ var Space = class Space extends Array {
         this.updateName();
         this.updateShowTopBar();
         this.signals.connect(this.settings, 'changed::name',
-                             this.updateName.bind(this));
-        this.signals.connect(Settings.settings, 'changed::use-workspace-name',
-                             this.updateName.bind(this));
+            this.updateName.bind(this));
+        this.signals.connect(gsettings, 'changed::use-workspace-name',
+            this.updateName.bind(this));
         this.signals.connect(this.settings, 'changed::color',
-                             this.updateColor.bind(this));
+            this.updateColor.bind(this));
         this.signals.connect(this.settings, 'changed::background',
-                             this.updateBackground.bind(this));
-        this.signals.connect(Settings.settings, 'changed::default-show-top-bar',
-                             this.showTopBarChanged.bind(this));
+            this.updateBackground.bind(this));
+        this.signals.connect(gsettings, 'changed::default-show-top-bar',
+            this.showTopBarChanged.bind(this));
         this.signals.connect(this.settings, 'changed::show-top-bar',
-                             this.showTopBarChanged.bind(this));
+            this.showTopBarChanged.bind(this));
     }
 
     /**
@@ -1080,7 +1061,7 @@ var Space = class Space extends Array {
      * @returns Boolean
      */
     getShowTopBarSetting() {
-        let showTopBar = prefs.default_show_top_bar;
+        let showTopBar = Settings.prefs.default_show_top_bar;
         let userValue = this.settings.get_user_value('show-top-bar');
         if (userValue) {
             showTopBar = userValue.unpack();
@@ -1126,8 +1107,8 @@ var Space = class Space extends Array {
     updateColor() {
         let color = this.settings.get_string('color');
         if (color === '') {
-            let colors = prefs.workspace_colors;
-            let index = this.workspace.index() % prefs.workspace_colors.length;
+            let colors = Settings.prefs.workspace_colors;
+            let index = this.workspace.index() % Settings.prefs.workspace_colors.length;
             color = colors[index];
         }
         this.color = color;
@@ -1139,8 +1120,8 @@ border-radius: ${borderWidth}px;
     }
 
     updateBackground() {
-        let path = this.settings.get_string('background') || prefs.default_background;
-        let useDefault = Settings.settings.get_boolean('use-default-background');
+        let path = this.settings.get_string('background') || Settings.prefs.default_background;
+        let useDefault = gsettings.get_boolean('use-default-background');
         const BackgroundStyle = GDesktopEnums.BackgroundStyle;
         let style = BackgroundStyle.ZOOM;
         if (!path && useDefault) {
@@ -1160,7 +1141,7 @@ border-radius: ${borderWidth}px;
     }
 
     updateName() {
-        if (prefs.use_workspace_name) {
+        if (Settings.prefs.use_workspace_name) {
             this.workspaceLabel.show();
         } else {
             this.workspaceLabel.hide();
@@ -1211,7 +1192,7 @@ border-radius: ${borderWidth}px;
 
     updateWindowPositionBar() {
         // if pref show-window-position-bar, exit
-        if (!prefs.show_window_position_bar) {
+        if (!Settings.prefs.show_window_position_bar) {
             return;
         }
 
@@ -1227,7 +1208,7 @@ border-radius: ${borderWidth}px;
 
         // show space duplicate elements if not primary monitor
         if (!this.hasTopBar()) {
-            utils.actor_raise(this.workspaceIndicator);
+            Utils.actor_raise(this.workspaceIndicator);
             this.workspaceLabel.show();
         }
 
@@ -1259,7 +1240,7 @@ border-radius: ${borderWidth}px;
      */
     setSpaceTopbarElementsVisible(visible = true, changeTopBarStyle = true) {
         // if windowPositionBar shown, we want the topbar style to be transparent if visible
-        if (prefs.show_window_position_bar) {
+        if (Settings.prefs.show_window_position_bar) {
             if (changeTopBarStyle) {
                 visible ? TopBar.setTransparentStyle() : TopBar.setClearStyle();
             }
@@ -1299,8 +1280,8 @@ border-radius: ${borderWidth}px;
      * @param {boolean} show
      */
     showWorkspaceIndicator(show = true) {
-        if (show && prefs.show_workspace_indicator) {
-            utils.actor_raise(this.workspaceIndicator);
+        if (show && Settings.prefs.show_workspace_indicator) {
+            Utils.actor_raise(this.workspaceIndicator);
             this.workspaceIndicator.show();
         } else {
             this.workspaceIndicator.hide();
@@ -1312,8 +1293,8 @@ border-radius: ${borderWidth}px;
      * @param {boolean} show
      */
     showFocusModeIcon(show = true) {
-        if (show && prefs.show_focus_mode_icon) {
-            utils.actor_raise(this.focusModeIcon);
+        if (show && Settings.prefs.show_focus_mode_icon) {
+            Utils.actor_raise(this.focusModeIcon);
             this.focusModeIcon.show();
         } else {
             this.focusModeIcon.hide();
@@ -1328,8 +1309,8 @@ border-radius: ${borderWidth}px;
 
         let monitor = this.monitor;
         let backgroundParams = global.screen
-            ? {meta_screen: global.screen}
-            : {meta_display: display};
+            ? { meta_screen: global.screen }
+            : { meta_display: display };
 
         let metaBackground = new Meta.Background(backgroundParams);
         // gnome-shell 3.38
@@ -1346,10 +1327,10 @@ border-radius: ${borderWidth}px;
 
         if (this.background.content) {
             this.background.content.set({
-                background: metaBackground
-            })
+                background: metaBackground,
+            });
         }
-        this.metaBackground = metaBackground
+        this.metaBackground = metaBackground;
 
         this.actor.insert_child_below(this.background, null);
 
@@ -1388,14 +1369,14 @@ border-radius: ${borderWidth}px;
                 }
 
                 switch (dir) {
-                    case Clutter.ScrollDirection.LEFT:
-                    case Clutter.ScrollDirection.UP:
-                        this.switchLeft();
-                        break;
-                    case Clutter.ScrollDirection.RIGHT:
-                    case Clutter.ScrollDirection.DOWN:
-                        this.switchRight();
-                        break;
+                case Clutter.ScrollDirection.LEFT:
+                case Clutter.ScrollDirection.UP:
+                    this.switchLeft();
+                    break;
+                case Clutter.ScrollDirection.RIGHT:
+                case Clutter.ScrollDirection.DOWN:
+                    this.switchRight();
+                    break;
                 }
             });
 
@@ -1411,40 +1392,41 @@ border-radius: ${borderWidth}px;
             this.monitor = monitor;
             this.createBackground();
             this.updateBackground();
-            this.updateColor()
+            this.updateColor();
         }
-        let background = this.background;
 
-        let cloneContainer = this.cloneContainer;
+        let background = this.background;
         let clip = this.clip;
 
         this.width = monitor.width;
         this.height = monitor.height;
 
-        let time = animate ? prefs.animation_time : 0;
+        let time = animate ? Settings.prefs.animation_time : 0;
 
         Easer.addEase(this.actor,
-                        {x: 0, y: 0, scale_x: 1, scale_y: 1,
-                         time});
+            {
+                x: 0, y: 0, scale_x: 1, scale_y: 1,
+                time,
+            });
         Easer.addEase(clip,
-                         {scale_x: 1, scale_y: 1, time});
+            { scale_x: 1, scale_y: 1, time });
 
         clip.set_position(monitor.x, monitor.y);
         clip.set_size(monitor.width, monitor.height);
         clip.set_clip(0, 0,
-                      monitor.width,
-                      monitor.height);
+            monitor.width,
+            monitor.height);
 
         let scale = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        this.border.set_position(-borderWidth*scale, -borderWidth*scale);
-        this.border.set_size(monitor.width + scale*borderWidth*2,
-                             monitor.height + scale*borderWidth*2);
+        this.border.set_position(-borderWidth * scale, -borderWidth * scale);
+        this.border.set_size(monitor.width + scale * borderWidth * 2,
+            monitor.height + scale * borderWidth * 2);
 
         background.set_size(this.width, this.height);
 
         this.cloneClip.set_size(monitor.width, monitor.height);
         this.cloneClip.set_clip(0, 0,
-                                this.width, this.height);
+            this.width, this.height);
         // transforms break if there's no height
         this.cloneContainer.height = this.monitor.height;
 
@@ -1468,16 +1450,16 @@ border-radius: ${borderWidth}px;
             let z_sorted = display.sort_windows_by_stacking(windows);
             let xkey = (mw) => {
                 let frame = mw.get_frame_rect();
-                if(frame.x <= 0)
+                if (frame.x <= 0)
                     return 0;
-                if(frame.x+frame.width == this.width) {
+                if (frame.x+frame.width == this.width) {
                     return this.width;
                 }
                 return frame.x;
-            }
+            };
             // xorder: a|b c|d
             // zorder: a d b c
-            return (a,b) => {
+            return (a, b) => {
                 let ax = xkey(a);
                 let bx = xkey(b);
                 // Yes, this is not efficient
@@ -1495,12 +1477,12 @@ border-radius: ${borderWidth}px;
                     return bz - az;
                 }
             };
-        }
+        };
 
         if (oldSpace) {
             for (let i=0; i < oldSpace.length; i++) {
                 let column = oldSpace[i];
-                for(let j=0; j < column.length; j++) {
+                for (let j=0; j < column.length; j++) {
                     let metaWindow = column[j];
                     // Prune removed windows
                     if (metaWindow.get_compositor_private()) {
@@ -1525,16 +1507,15 @@ border-radius: ${borderWidth}px;
                 Scratch.makeScratch(meta_window);
                 return;
             }
-            if(this.indexOf(meta_window) < 0 && add_filter(meta_window)) {
+            if (this.indexOf(meta_window) < 0 && add_filter(meta_window)) {
                 this.addWindow(meta_window, this.length);
             }
-        })
+        });
 
         let tabList = display.get_tab_list(Meta.TabList.NORMAL, workspace)
             .filter(metaWindow => { return this.indexOf(metaWindow) !== -1; });
         if (tabList[0]) {
-            this.selectedWindow = tabList[0]
-            // ensureViewport(space.selectedWindow, space);
+            this.selectedWindow = tabList[0];
         }
     }
 
@@ -1556,8 +1537,7 @@ border-radius: ${borderWidth}px;
         this.cloneContainer.destroy();
         this.cloneContainer = null;
         this.clip.destroy();
-        this.cloneContainer = null;
-        let workspace = this.workspace;
+        this.clip = null;
     }
 };
 
@@ -1573,8 +1553,6 @@ var StackPositions = {
 
 /**
    A `Map` to store all `Spaces`'s, indexed by the corresponding workspace.
-
-   TODO: Move initialization to enable
 */
 var Spaces = class Spaces extends Map {
     // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
@@ -1585,7 +1563,7 @@ var Spaces = class Spaces extends Map {
 
         this._initDone = false;
         this.clickOverlays = [];
-        this.signals = new utils.Signals();
+        this.signals = new Utils.Signals();
         this.stack = [];
         let spaceContainer = new Clutter.Actor({name: 'spaceContainer'});
         spaceContainer.hide();
@@ -1599,12 +1577,12 @@ var Spaces = class Spaces extends Map {
             this.addSpace(workspace);
         }
         this.signals.connect(workspaceManager, 'notify::n-workspaces',
-            utils.dynamic_function_ref('workspacesChanged', this).bind(this));
+            Utils.dynamic_function_ref('workspacesChanged', this).bind(this));
 
         if (workspaceManager.reorder_workspace) {
             // Compatibility: only in recent gnome-shell versions
             this.signals.connect(workspaceManager, 'workspaces-reordered',
-                utils.dynamic_function_ref('workspacesChanged', this).bind(this));
+                Utils.dynamic_function_ref('workspacesChanged', this).bind(this));
         }
 
         let OVERRIDE_SCHEMA;
@@ -1614,8 +1592,6 @@ var Spaces = class Spaces extends Map {
             OVERRIDE_SCHEMA = 'org.gnome.mutter';
         }
         this.overrideSettings = new Gio.Settings({ schema_id: OVERRIDE_SCHEMA });
-
-        this.monitorsChanged();
     }
 
     init() {
@@ -1646,27 +1622,11 @@ var Spaces = class Spaces extends Map {
             });
         this._initDone = true;
 
-        // Redo the stack
-        // X11: Monitors aren't set up properly on `enable`, so we need it here too
+        // Monitors aren't set up properly on `enable`, so we need it here too
         this.monitorsChanged();
 
         // Initialize spaces _after_ monitors are set up
         this.forEach(space => space.init());
-
-        /**
-         * After spaces have init, do a final layout on active space and activate selected window.
-         * Ensures correct window layout with multi-monitors, and if windows already exist on init,
-         * (e.g. resetting gnome-shell) then will ensure selectedWindow is activated.
-         */
-        utils.later_add(Meta.LaterType.IDLE, () => {
-            const space = spaces.getActiveSpace();
-            if (space.selectedWindow) {
-                space.layout(false);
-                Main.activateWindow(space.selectedWindow);
-                spaces.setSpaceTopbarElementsVisible(true);
-            }
-            return false; // on return false destroys timeout
-        });
 
         this.stack = this.mru();
     }
@@ -1682,9 +1642,6 @@ var Spaces = class Spaces extends Map {
         this._monitorsChanging = true;
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
 
-        if (this.monitors)
-            oldMonitors = this.monitors;
-
         this.monitors = new Map();
         this.get(workspaceManager.get_active_workspace()).getWindows().forEach(w => {
             animateWindow(w);
@@ -1696,16 +1653,16 @@ var Spaces = class Spaces extends Map {
             overlay.destroy();
         }
         this.clickOverlays = [];
-        for (let monitor of Main.layoutManager.monitors) {
+        let mru = this.mru();
+        let primary = Main.layoutManager.primaryMonitor;
+        let monitors = Main.layoutManager.monitors;
+
+        for (let monitor of monitors) {
             let overlay = new ClickOverlay(monitor, this.onlyOnPrimary);
             monitor.clickOverlay = overlay;
             overlay.activate();
             this.clickOverlays.push(overlay);
         }
-
-        let mru = this.mru();
-        let primary = Main.layoutManager.primaryMonitor;
-        let monitors = Main.layoutManager.monitors;
 
         let finish = () => {
             TopBar.updateMonitor();
@@ -1715,18 +1672,18 @@ var Spaces = class Spaces extends Map {
             this.monitors.set(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
                 space.show();
-                utils.actor_raise(space.clip);
+                Utils.actor_raise(space.clip);
             }
             this.forEach(space => {
                 space.layout(false);
                 let selected = space.selectedWindow;
                 if (selected) {
-                    ensureViewport(selected, space, {force: true});
+                    ensureViewport(selected, space, { moveto: false });
                 }
             });
             this.spaceContainer.show();
 
-            Mainloop.timeout_add(
+            this.monitorsChangingTimeout = Mainloop.timeout_add(
                 20, () => {
                     this._monitorsChanging = false;
                     return false; // on return false destroys timeout
@@ -1745,19 +1702,21 @@ var Spaces = class Spaces extends Map {
         }
 
         // Persist as many monitors as possible
-        for (let [oldMonitor, oldSpace] of oldMonitors) {
-            let monitor = monitors[oldMonitor.index];
-            let space = this.get(oldSpace.workspace);
-            if (monitor && space &&
-                oldMonitor.width === monitor.width &&
-                oldMonitor.height === monitor.height &&
-                oldMonitor.x === monitor.x &&
-                oldMonitor.y === monitor.y) {
-                this.monitors.set(monitor, space);
-                space.setMonitor(monitor, false);
-                mru = mru.filter(s => s !== space);
+        if (oldMonitors?.size > 0) {
+            for (let [oldMonitor, oldSpace] of oldMonitors) {
+                let monitor = monitors[oldMonitor.index];
+                let space = this.get(oldSpace.workspace);
+                if (monitor &&
+                    space &&
+                    oldMonitor.width === monitor.width &&
+                    oldMonitor.height === monitor.height &&
+                    oldMonitor.x === monitor.x &&
+                    oldMonitor.y === monitor.y) {
+                    this.monitors.set(monitor, space);
+                    space.setMonitor(monitor, false);
+                    mru = mru.filter(s => s !== space);
+                }
             }
-            oldMonitors.delete(oldMonitor);
         }
 
         // Populate any remaining monitors
@@ -1766,17 +1725,21 @@ var Spaces = class Spaces extends Map {
                 let space = mru[0];
                 if (space === undefined && this._initDone) {
                     let workspace = workspaceManager.append_new_workspace(
-                        false, global.get_current_time());
+                        false,
+                        global.get_current_time());
                     space = this.spaceOf(workspace);
                 }
                 if (space === undefined) {
-                    break;
+                    continue;
                 }
                 this.monitors.set(monitor, space);
                 space.setMonitor(monitor, false);
                 mru = mru.slice(1);
             }
         }
+
+        // update old monitors here
+        oldMonitors = new Map(this.monitors);
 
         // Reset any removed monitors
         mru.forEach(space => {
@@ -1812,18 +1775,16 @@ var Spaces = class Spaces extends Map {
                 metaWindow._targetHeight = null;
                 metaWindow._targetWidth = null;
 
-                if (metaWindow.get_workspace() === workspaceManager.get_active_workspace()
-                    && !metaWindow.minimized)
+                if (metaWindow.get_workspace() === workspaceManager.get_active_workspace() && !metaWindow.minimized)
                     actor.show();
                 else
                     actor.hide();
             });
 
         this.signals.destroy();
+        Utils.timeout_remove(this.monitorsChangingTimeout);
 
-        // Hold onto a copy of the old monitors and spaces to support reload.
-        oldMonitors = this.monitors;
-        oldSpaces = new Map(spaces);
+        // remove spaces
         for (let [workspace, space] of this) {
             this.removeSpace(space);
         }
@@ -1951,7 +1912,7 @@ var Spaces = class Spaces extends Map {
         y -= monitor.y;
         if (x < 0 || x > monitor.width ||
             y < 0 || y > monitor.height) {
-            utils.warpPointer(monitor.x + Math.floor(monitor.width / 2),
+            Utils.warpPointer(monitor.x + Math.floor(monitor.width / 2),
                 monitor.y + Math.floor(monitor.height / 2));
         }
 
@@ -2013,7 +1974,7 @@ var Spaces = class Spaces extends Map {
             let y = ((space.height + padding) * (i - to)) * scale;
             if (animate) {
                 Easer.addEase(space.actor, {
-                    time: prefs.animation_time,
+                    time: Settings.prefs.animation_time,
                     y, scale_y: scale, scale_x: scale,
                 });
             } else {
@@ -2027,7 +1988,7 @@ var Spaces = class Spaces extends Map {
 
             let selected = space.selectedWindow;
             if (selected && selected.fullscreen && space !== toSpace) {
-                selected.clone.y = Main.panel.actor.height + prefs.vertical_margin;
+                selected.clone.y = Main.panel.actor.height + Settings.prefs.vertical_margin;
             }
         });
     }
@@ -2048,8 +2009,8 @@ var Spaces = class Spaces extends Map {
         let selected = this.selectedSpace.selectedWindow;
         if (selected && selected.fullscreen) {
             Easer.addEase(selected.clone, {
-                y: Main.panel.actor.height + prefs.vertical_margin,
-                time: prefs.animation_time,
+                y: Main.panel.actor.height + Settings.prefs.vertical_margin,
+                time: Settings.prefs.animation_time,
             });
         }
     }
@@ -2115,7 +2076,7 @@ var Spaces = class Spaces extends Map {
             space.show();
             Easer.addEase(space.actor, {
                 y: space_y,
-                time: prefs.animation_time,
+                time: Settings.prefs.animation_time,
                 scale_x: scale,
                 scale_y: scale,
             });
@@ -2190,7 +2151,7 @@ var Spaces = class Spaces extends Map {
             child !== sibling && cloneParent.set_child_below_sibling(child, sibling);
             let selected = space.selectedWindow;
             if (selected && selected.fullscreen) {
-                selected.clone.y = Main.panel.actor.height + prefs.vertical_margin;
+                selected.clone.y = Main.panel.actor.height + Settings.prefs.vertical_margin;
             }
         });
 
@@ -2200,8 +2161,8 @@ var Spaces = class Spaces extends Map {
         let selected = space.selectedWindow;
         if (selected && selected.fullscreen) {
             Easer.addEase(selected.clone, {
-                y: Main.panel.actor.height + prefs.vertical_margin,
-                time: prefs.animation_time,
+                y: Main.panel.actor.height + Settings.prefs.vertical_margin,
+                time: Settings.prefs.animation_time,
             });
         }
     }
@@ -2276,7 +2237,7 @@ var Spaces = class Spaces extends Map {
             Easer.addEase(actor,
                 {
                     y: h * space.height,
-                    time: prefs.animation_time,
+                    time: Settings.prefs.animation_time,
                     scale_x: scale + (to - i) * 0.01,
                     scale_y: scale + (to - i) * 0.01,
                     onComplete,
@@ -2318,13 +2279,13 @@ var Spaces = class Spaces extends Map {
 
             Easer.addEase(to.border, {
                 opacity: 0,
-                time: prefs.animation_time,
+                time: Settings.prefs.animation_time,
                 onComplete: () => {
                     to.border.hide();
                     to.border.opacity = 255;
                 },
             });
-            utils.actor_raise(to.clip);
+            Utils.actor_raise(to.clip);
 
             // Fixes a weird bug where mouse input stops
             // working after mousing to another monitor on
@@ -2358,7 +2319,7 @@ var Spaces = class Spaces extends Map {
                 y: 0,
                 scale_x: 1,
                 scale_y: 1,
-                time: prefs.animation_time,
+                time: Settings.prefs.animation_time,
                 onComplete,
             });
 
@@ -2373,7 +2334,7 @@ var Spaces = class Spaces extends Map {
                 Easer.addEase(space.actor,
                     {
                         x: 0, y: space.height + 20,
-                        time: prefs.animation_time,
+                        time: Settings.prefs.animation_time,
                     });
             }
             above = above.get_next_sibling();
@@ -2392,26 +2353,26 @@ var Spaces = class Spaces extends Map {
         let space = new Space(workspace, this.spaceContainer, this._initDone);
         this.set(workspace, space);
         this.stack.push(space);
-    };
+    }
 
     removeSpace(space) {
         this.delete(space.workspace);
         this.stack.splice(this.stack.indexOf(space), 1);
         space.destroy();
-    };
+    }
 
     spaceOfWindow(meta_window) {
         return this.get(meta_window.get_workspace());
-    };
+    }
 
     /**
-     * 
-     * @param {import('@gi-types/meta').Workspace} workspace 
+     *
+     * @param {import('@gi-types/meta').Workspace} workspace
      * @returns {Space}
      */
     spaceOf(workspace) {
         return this.get(workspace);
-    };
+    }
 
     /**
      * Returns the currently active space.
@@ -2422,8 +2383,8 @@ var Spaces = class Spaces extends Map {
 
     /**
      * Returns true if the space is the currently active space.
-     * @param {Space} space 
-     * @returns 
+     * @param {Space} space
+     * @returns
      */
     isActiveSpace(space) {
         return space === this.getActiveSpace();
@@ -2459,8 +2420,7 @@ var Spaces = class Spaces extends Map {
         return out;
     }
 
-    /** 
-     * 
+    /**
      * @param display {}
      * @param metaWindow {import("@gi-types/meta").Window}
      */
@@ -2492,12 +2452,12 @@ var Spaces = class Spaces extends Map {
      * Checks whether the window position bar should be enabled.
      */
     showWindowPositionBarChanged() {
-        if (prefs.show_window_position_bar) {
+        if (Settings.prefs.show_window_position_bar) {
             this.forEach(s => {
                 s.enableWindowPositionBar();
             });
         }
-        if (!prefs.show_window_position_bar) {
+        if (!Settings.prefs.show_window_position_bar) {
             // should be in normal topbar mode
             this.forEach(s => {
                 s.enableWindowPositionBar(false);
@@ -2506,7 +2466,7 @@ var Spaces = class Spaces extends Map {
 
         TopBar.fixStyle();
     }
-}
+};
 
 Signals.addSignalMethods(Spaces.prototype);
 
@@ -2519,8 +2479,8 @@ function isTiled(metaWindow) {
         return false;
     }
 
-    if (!isFloating(metaWindow) && 
-        !isScratch(metaWindow) && 
+    if (!isFloating(metaWindow) &&
+        !isScratch(metaWindow) &&
         !isTransient(metaWindow)) {
         return true;
     }
@@ -2532,8 +2492,8 @@ function isTiled(metaWindow) {
 /**
  * Transient windows are connected to a parent window and take focus.
  * On Wayland it takes entire focus (can't focus parent window while it's open).
- * @param metaWindow 
- * @returns 
+ * @param metaWindow
+ * @returns
  */
 function isTransient(metaWindow) {
     if (!metaWindow) {
@@ -2549,8 +2509,8 @@ function isTransient(metaWindow) {
 
 /**
  * Returns true if a metaWindow has at least one transient window.
- * @param metaWindow 
- * @returns 
+ * @param metaWindow
+ * @returns
  */
 function hasTransient(metaWindow) {
     if (!metaWindow) {
@@ -2603,7 +2563,7 @@ function registerWindow(metaWindow) {
     if (metaWindow.clone) {
         // Can now happen when setting session-modes to "unlock-dialog" or
         // resetting gnome-shell in-place (e.g. on X11)
-        utils.warn("window already registered", metaWindow.title);
+        console.warn("window already registered", metaWindow.title);
         return false
     }
 
@@ -2638,7 +2598,7 @@ function allocateClone(metaWindow) {
     let clone = metaWindow.clone;
     let cloneActor = clone.cloneActor;
     cloneActor.set_position(buffer.x - frame.x,
-                       buffer.y - frame.y);
+        buffer.y - frame.y);
     cloneActor.set_size(buffer.width, buffer.height);
     clone.set_size(frame.width, frame.height);
 
@@ -2646,11 +2606,11 @@ function allocateClone(metaWindow) {
         let selection = metaWindow.clone.first_child;
         let vMax = metaWindow.maximized_vertically;
         let hMax = metaWindow.maximized_horizontally;
-        let protrusion = Math.round(prefs.window_gap/2);
+        let protrusion = Math.round(Settings.prefs.window_gap / 2);
         selection.x = hMax ? 0 : - protrusion;
         selection.y = vMax ? 0 : - protrusion;
-        selection.set_size(frame.width + (hMax ? 0 : prefs.window_gap),
-                           frame.height + (vMax ? 0 : prefs.window_gap));
+        selection.set_size(frame.width + (hMax ? 0 : Settings.prefs.window_gap),
+            frame.height + (vMax ? 0 : Settings.prefs.window_gap));
     }
 }
 
@@ -2693,13 +2653,12 @@ function resizeHandler(metaWindow) {
     }
 }
 
-var backgroundSettings, interfaceSettings;
-var signals, backgroundGroup, grabSignals;
-var oldSpaces = new Map();
-var oldMonitors = new Map();
+let signals, backgroundGroup, grabSignals;
+let gsettings, backgroundSettings, interfaceSettings;
+let oldSpaces, oldMonitors;
+let startupTimeoutId;
 function enable(errorNotification) {
-    debug('#enable');
-
+    gsettings = ExtensionUtils.getSettings();
     backgroundSettings = new Gio.Settings({
         schema_id: 'org.gnome.desktop.background',
     });
@@ -2707,24 +2666,47 @@ function enable(errorNotification) {
         schema_id: "org.gnome.desktop.interface",
     });
 
-    signals = new utils.Signals();
-    grabSignals = new utils.Signals();
+    signals = new Utils.Signals();
+    grabSignals = new Utils.Signals();
+
+    let setVerticalMargin = () => {
+        let vMargin = gsettings.get_int('vertical-margin');
+        let gap = gsettings.get_int('window-gap');
+        Settings.prefs.vertical_margin = Math.max(Math.round(gap / 2), vMargin);
+    };
+    setVerticalMargin();
+
+    // setup actions on gap changes
+    let timerId;
+    let onWindowGapChanged = () => {
+        setVerticalMargin();
+        if (timerId) {
+            Mainloop.source_remove(timerId);
+        }
+        timerId = Mainloop.timeout_add(500, () => {
+            spaces.mru().forEach(space => {
+                space.layout();
+            });
+            timerId = null;
+            return false; // on return false destroys timeout
+        });
+    };
+    gsettings.connect('changed::vertical-margin', onWindowGapChanged);
+    gsettings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
+    gsettings.connect('changed::window-gap', onWindowGapChanged);
 
     backgroundGroup = Main.layoutManager._backgroundGroup;
 
-    // connect to settings and update winprops array when it's updated
-    Settings.settings.connect('changed::winprops', () => {
-        Settings.reloadWinpropsFromGSettings();
-    });
-
+    oldSpaces = oldSpaces ?? new Map();
+    oldMonitors = oldMonitors ?? new Map();
     spaces = new Spaces();
 
     function initWorkspaces() {
         try {
             spaces.init();
         } catch (e) {
-            log('#paperwm startup failed');
-            log(`JS ERROR: ${e}\n${e.stack}`);
+            console.error('#paperwm startup failed');
+            console.error(`JS ERROR: ${e}\n${e.stack}`);
             errorNotification(
                 "PaperWM",
                 `Error occured in paperwm startup:\n\n${e.message}`,
@@ -2733,16 +2715,14 @@ function enable(errorNotification) {
 
         // Fix the stack overlay
         spaces.mru().reverse().forEach(s => {
-            s.selectedWindow && ensureViewport(s.selectedWindow, s, { force:true });
+            // if s.selectedWindow exists and is in view, then use option moveto: false
+            if (s.selectedWindow) {
+                let options = s.isFullyVisible(s.selectedWindow) ? { moveto: false } : { force: true };
+                ensureViewport(s.selectedWindow, s, options);
+            }
             s.monitor.clickOverlay.show();
         });
         TopBar.fixTopBar();
-
-        // run a final layout for multi-monitor topbar and window position indicator init
-        Mainloop.timeout_add(200, () => {
-            spaces.forEach(s => s.layout(false));
-            return false; // on return false destroys timeout
-        });
     }
 
     if (Main.layoutManager._startingUp) {
@@ -2753,7 +2733,7 @@ function enable(errorNotification) {
     } else {
         // NOTE: this needs to happen after kludges.enable() have run, so we do
         // it in a timeout
-        Mainloop.timeout_add(0, () => {
+        startupTimeoutId = Mainloop.timeout_add(0, () => {
             initWorkspaces();
             return false; // on return false destroys timeout
         });
@@ -2761,10 +2741,12 @@ function enable(errorNotification) {
 }
 
 function disable () {
-    signals.destroy();
+    Utils.timeout_remove(startupTimeoutId);
     grabSignals.destroy();
-    spaces.destroy();
+    signals.destroy();
 
+    // save spaces map for restore (monitors are alrady stored)
+    oldSpaces = new Map(spaces);
     oldSpaces.forEach(space => {
         let windows = space.getWindows();
         let selected = windows.indexOf(space.selectedWindow);
@@ -2779,6 +2761,9 @@ function disable () {
         }
     });
 
+    spaces.destroy();
+    gsettings.run_dispose();
+    gsettings = null;
     backgroundGroup = null;
     backgroundSettings = null;
     interfaceSettings = null;
@@ -2856,8 +2841,7 @@ function add_handler(ws, metaWindow) {
    and `Display::window-created` through `WindowActor::show` if window is newly
    created to ensure that the WindowActor exists.
 */
-function insertWindow(metaWindow, {existing}) {
-
+function insertWindow(metaWindow, { existing }) {
     // Add newly created windows to the space being previewed
     if (!existing &&
         !metaWindow.is_on_all_workspaces() &&
@@ -2869,7 +2853,7 @@ function insertWindow(metaWindow, {existing}) {
 
     let actor = metaWindow.get_compositor_private();
 
-    let connectSizeChanged = (tiled) => {
+    let connectSizeChanged = tiled => {
         if (tiled)
             animateWindow(metaWindow);
         actor.opacity = 255;
@@ -2948,7 +2932,7 @@ function insertWindow(metaWindow, {existing}) {
     let ok, x, y;
     // Figure out the matching coordinates before the clone is reparented.
     if (isWindowAnimating(metaWindow)) {
-        let point = clone.apply_transform_to_point(new Graphene.Point3D({x: 0, y: 0}));
+        let point = clone.apply_transform_to_point(new Graphene.Point3D({ x: 0, y: 0 }));
         [ok, x, y] = space.cloneContainer.transform_stage_point(point.x, point.y);
     } else {
         let frame = metaWindow.get_frame_rect();
@@ -2981,7 +2965,7 @@ function insertWindow(metaWindow, {existing}) {
         Easer.addEase(clone, {
             scale_x: 1,
             scale_y: 1,
-            time: prefs.animation_time,
+            time: Settings.prefs.animation_time,
             onStopped: () => {
                 connectSizeChanged(true);
                 space.layout();
@@ -3004,12 +2988,9 @@ function insertWindow(metaWindow, {existing}) {
 function animateDown(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
-    let frame = metaWindow.get_frame_rect();
-    let buffer = metaWindow.get_buffer_rect();
-    let clone = metaWindow.clone;
     Easer.addEase(metaWindow.clone, {
-        y:  workArea.y,
-        time: prefs.animation_time,
+        y: workArea.y,
+        time: Settings.prefs.animation_time,
     });
 }
 
@@ -3021,7 +3002,6 @@ function ensuredX(meta_window, space) {
 
     let monitor = space.monitor;
     let frame = meta_window.get_frame_rect();
-    let buffer = meta_window.get_buffer_rect();
     let clone = meta_window.clone;
 
     let x;
@@ -3029,32 +3009,31 @@ function ensuredX(meta_window, space) {
         x = Math.round(clone.targetX) + space.targetX;
     else
         x = meta_window.lastFrame.x - monitor.x;
-    let gap = prefs.window_gap;
     let workArea = space.workArea();
     let min = workArea.x;
     let max = min + workArea.width;
-    
+
     if (space.focusMode == FocusModes.CENTER) {
         // window switching should centre focus
         x = workArea.x + Math.round(workArea.width/2 - frame.width/2);
     } else if (meta_window.fullscreen) {
         x = 0;
-    } else if (frame.width > workArea.width*0.9 - 2*(prefs.horizontal_margin + prefs.window_gap)) {
+    } else if (frame.width > workArea.width*0.9 - 2*(Settings.prefs.horizontal_margin + Settings.prefs.window_gap)) {
         // Consider the window to be wide and center it
         x = min + Math.round((workArea.width - frame.width)/2);
     } else if (x + frame.width > max) {
         // Align to the right prefs.horizontal_margin
-        x = max - prefs.horizontal_margin - frame.width;
+        x = max - Settings.prefs.horizontal_margin - frame.width;
     } else if (x < min) {
         // Align to the left prefs.horizontal_margin
-        x = min + prefs.horizontal_margin;
+        x = min + Settings.prefs.horizontal_margin;
     } else if (x + frame.width === max) {
         // When opening new windows at the end, in the background, we want to
         // show some minimup margin
-        x = max - prefs.minimum_margin - frame.width;
+        x = max - Settings.prefs.minimum_margin - frame.width;
     } else if (x === min) {
         // Same for the start (though the case isn't as common)
-        x = min + prefs.minimum_margin;
+        x = min + Settings.prefs.minimum_margin;
     }
 
     return x;
@@ -3062,14 +3041,14 @@ function ensuredX(meta_window, space) {
 
 /**
    Make sure that `meta_window` is in view, scrolling the space if needed.
- * @param meta_window 
- * @param {Space} space 
+ * @param meta_window
+ * @param {Space} space
  * @param {Object} options
- * @param {boolean} options.force 
+ * @param {boolean} options.force
  * @param {boolean} options.moveto if true, executes a move_to animated action
- * @returns 
+ * @returns
  */
-function ensureViewport(meta_window, space, options={}) {
+function ensureViewport(meta_window, space, options = {}) {
     space = space || spaces.spaceOfWindow(meta_window);
     let force = options?.force ?? false;
     let moveto = options?.moveto ?? true;
@@ -3095,10 +3074,11 @@ function ensureViewport(meta_window, space, options={}) {
             selected.clone.y = y;
         } else if (!ty || ty.get_interval().final !== y) {
             Easer.addEase(selected.clone,
-                             { y: y,
-                               time: prefs.animation_time,
-                               onComplete: space.moveDone.bind(space)
-                             });
+                {
+                    y,
+                    time: Settings.prefs.animation_time,
+                    onComplete: space.moveDone.bind(space),
+                });
         }
     }
 
@@ -3109,7 +3089,7 @@ function ensureViewport(meta_window, space, options={}) {
     }
 
     selected.raise();
-    utils.actor_raise(selected.clone);
+    Utils.actor_raise(selected.clone);
     updateSelection(space, meta_window);
     space.emit('select');
 }
@@ -3139,7 +3119,7 @@ function updateSelection(space, metaWindow) {
 
     if (space.selection.get_parent() === clone)
         return;
-    utils.actor_reparent(space.selection, clone);
+    Utils.actor_reparent(space.selection, clone);
     clone.set_child_below_sibling(space.selection, cloneActor);
     allocateClone(metaWindow);
 }
@@ -3172,7 +3152,7 @@ function move_to(space, metaWindow, { x, y, force, instant }) {
     Easer.addEase(space.cloneContainer,
         {
             x: target,
-            time: prefs.animation_time,
+            time: Settings.prefs.animation_time,
             onComplete: space.moveDone.bind(space),
         });
 
@@ -3187,7 +3167,7 @@ function grabBegin(metaWindow, type) {
         // Don't handle pushModal grabs and SCD button (close/minimize/etc.) grabs
         break;
     case Meta.GrabOp.KEYBOARD_MOVING:
-        inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
+        inGrab = new Grab.MoveGrab(metaWindow, type);
         if (!isTiled(metaWindow)) {
             return;
         }
@@ -3195,7 +3175,7 @@ function grabBegin(metaWindow, type) {
         // NOTE: Keyboard grab moves the cursor, but it happens after grab
         // signals have run. Simply delay the dnd so it will get the correct
         // pointer coordinates.
-        utils.later_add(Meta.LaterType.IDLE, () => {
+        Utils.later_add(Meta.LaterType.IDLE, () => {
             inGrab.begin();
             inGrab.beginDnD();
         });
@@ -3206,9 +3186,9 @@ function grabBegin(metaWindow, type) {
             return;
         }
 
-        inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
+        inGrab = new Grab.MoveGrab(metaWindow, type);
 
-        if (utils.getModiferState() & Clutter.ModifierType.CONTROL_MASK) {
+        if (Utils.getModiferState() & Clutter.ModifierType.CONTROL_MASK) {
             inGrab.begin();
             inGrab.beginDnD();
         } else if (inGrab.initialSpace && inGrab.initialSpace.indexOf(metaWindow) > -1) {
@@ -3233,7 +3213,7 @@ function grabBegin(metaWindow, type) {
     case Meta.GrabOp.KEYBOARD_RESIZING_S:
     case Meta.GrabOp.KEYBOARD_RESIZING_SE:
     case Meta.GrabOp.KEYBOARD_RESIZING_W:
-        inGrab = new Extension.imports.grab.ResizeGrab(metaWindow, type);
+        inGrab = new Grab.ResizeGrab(metaWindow, type);
         break;
     }
 }
@@ -3254,9 +3234,31 @@ function setAllWorkspacesInactive() {
     spaces.forEach(s => s.setSelectionInactive());
 }
 
+/**
+ * Returns the default focus mode (can be user-defined).
+ */
+function getDefaultFocusMode() {
+    // find matching focus mode
+    const mode = Settings.prefs.default_focus_mode;
+    const modes = FocusModes;
+    let result = null;
+    Object.entries(modes).forEach(([k, v]) => {
+        if (v === mode) {
+            result = k;
+        }
+    });
+
+    // if found return, otherwise return default
+    if (result) {
+        return modes[result];
+    } else {
+        return modes.DEFAULT;
+    }
+}
+
 // `MetaWindow::focus` handling
 function focus_handler(metaWindow, user_data) {
-    debug("focus:", metaWindow.title, utils.framestr(metaWindow.get_frame_rect()));
+    debug("focus:", metaWindow.title, Utils.framestr(metaWindow.get_frame_rect()));
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
         Scratch.makeScratch(metaWindow);
@@ -3318,7 +3320,7 @@ function focus_handler(metaWindow, user_data) {
 
     TopBar.fixTopBar();
 }
-var focus_wrapper = utils.dynamic_function_ref('focus_handler', this);
+var focus_wrapper = Utils.dynamic_function_ref('focus_handler', this);
 
 /**
    Push all minimized windows to the scratch layer
@@ -3329,7 +3331,7 @@ function minimizeHandler(metaWindow) {
         Scratch.makeScratch(metaWindow);
     }
 }
-var minimizeWrapper = utils.dynamic_function_ref('minimizeHandler', this);
+var minimizeWrapper = Utils.dynamic_function_ref('minimizeHandler', this);
 
 /**
   `WindowActor::show` handling
@@ -3353,11 +3355,11 @@ function showHandler(actor) {
         || isWindowAnimating(metaWindow)
         // The built-in workspace-change animation is running: suppress it
         || actor.get_parent() !== global.window_group
-       ) {
+    ) {
         animateWindow(metaWindow);
     }
 }
-var showWrapper = utils.dynamic_function_ref('showHandler', this);
+var showWrapper = Utils.dynamic_function_ref('showHandler', this);
 
 function showWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
@@ -3401,7 +3403,7 @@ function toggleMaximizeHorizontally(metaWindow) {
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
-    let reqWidth = workArea.width - prefs.minimum_margin*2;
+    let reqWidth = workArea.width - Settings.prefs.minimum_margin*2;
 
     // Some windows only resize in increments > 1px so we can't rely on a precise width
     // Hopefully this heuristic is good enough
@@ -3415,20 +3417,19 @@ function toggleMaximizeHorizontally(metaWindow) {
 
         metaWindow.unmaximizedRect = null;
     } else {
-        let x = workArea.x + space.monitor.x + prefs.minimum_margin;
+        let x = workArea.x + space.monitor.x + Settings.prefs.minimum_margin;
         metaWindow.unmaximizedRect = frame;
-        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - prefs.minimum_margin*2, frame.height);
+        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - Settings.prefs.minimum_margin*2, frame.height);
     }
 }
 
 function resizeHInc(metaWindow) {
     metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
-    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
 
-    let maxHeight = workArea.height - prefs.horizontal_margin*2 - prefs.window_gap;
+    let maxHeight = workArea.height - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
     let step = Math.floor(maxHeight * 0.1)
     let currentHeight = Math.floor(frame.height/step)*step;
     let targetHeight = Math.min(currentHeight + step, maxHeight);
@@ -3445,11 +3446,10 @@ function resizeHInc(metaWindow) {
 function resizeHDec(metaWindow) {
     metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
-    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
 
-    let maxHeight = workArea.height - prefs.horizontal_margin*2 - prefs.window_gap;
+    let maxHeight = workArea.height - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
     let step = Math.floor(maxHeight * 0.1);
     let currentHeight = Math.floor(frame.height/step)*step;
     let minHeight = step;
@@ -3467,11 +3467,10 @@ function resizeHDec(metaWindow) {
 function resizeWInc(metaWindow) {
     metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
-    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
 
-    let maxWidth = workArea.width - prefs.horizontal_margin*2 - prefs.window_gap;
+    let maxWidth = workArea.width - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
     let step = Math.floor(maxWidth * 0.1);
     let currentWidth = Math.floor(frame.width/step)*step;
     let targetWidth = Math.min(currentWidth + step, maxWidth);
@@ -3488,11 +3487,10 @@ function resizeWInc(metaWindow) {
 function resizeWDec(metaWindow) {
     metaWindow = metaWindow || display.focus_window;
     let frame = metaWindow.get_frame_rect();
-    let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
 
-    let maxWidth = workArea.width - prefs.horizontal_margin*2 - prefs.window_gap;
+    let maxWidth = workArea.width - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
     let step = Math.floor(maxWidth * 0.1);
     let currentWidth = Math.floor(frame.width/step)*step;
     let minWidth = step;
@@ -3508,19 +3506,18 @@ function resizeWDec(metaWindow) {
 }
 
 function getCycleWindowWidths(metaWindow) {
-    let steps = prefs.cycle_width_steps;
-    let frame = metaWindow.get_frame_rect();
+    let steps = Settings.prefs.cycle_width_steps;
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
 
     if (steps[0] <= 1) {
         // Steps are specifed as ratios -> convert to pixels
         // Make sure two windows of "compatible" width will have room:
-        let availableWidth = workArea.width - prefs.horizontal_margin*2 - prefs.window_gap;
+        let availableWidth = workArea.width - Settings.prefs.horizontal_margin*2 - Settings.prefs.window_gap;
         steps = steps.map(x => Math.floor(x*availableWidth));
     }
 
-   return steps;
+    return steps;
 }
 
 function cycleWindowWidth(metaWindow) {
@@ -3530,13 +3527,13 @@ function cycleWindowWidth(metaWindow) {
     workArea.x += space.monitor.x;
 
     // 10px slack to avoid locking up windows that only resize in increments > 1px
-    let targetWidth = Math.min(utils.findNext(frame.width, getCycleWindowWidths(metaWindow), sizeSlack), workArea.width);
+    let targetWidth = Math.min(Lib.findNext(frame.width, getCycleWindowWidths(metaWindow), sizeSlack), workArea.width);
     let targetX = frame.x;
 
     if (Scratch.isScratchWindow(metaWindow)) {
-        if (targetX+targetWidth > workArea.x + workArea.width - prefs.minimum_margin) {
+        if (targetX+targetWidth > workArea.x + workArea.width - Settings.prefs.minimum_margin) {
             // Move the window so it remains fully visible
-            targetX = workArea.x + workArea.width - prefs.minimum_margin - targetWidth;
+            targetX = workArea.x + workArea.width - Settings.prefs.minimum_margin - targetWidth;
         }
     }
 
@@ -3549,7 +3546,7 @@ function cycleWindowWidth(metaWindow) {
 }
 
 function cycleWindowHeight(metaWindow) {
-    let steps = prefs.cycle_height_steps;
+    let steps = Settings.prefs.cycle_height_steps;
     let frame = metaWindow.get_frame_rect();
 
     let space = spaces.spaceOfWindow(metaWindow);
@@ -3558,10 +3555,10 @@ function cycleWindowHeight(metaWindow) {
     function calcTargetHeight(available) {
         let targetHeight;
         if (steps[0] <= 1) { // ratio steps
-            let targetR = utils.findNext(frame.height/available, steps, sizeSlack/available);
+            let targetR = Lib.findNext(frame.height/available, steps, sizeSlack/available);
             targetHeight = Math.floor(targetR * available);
         } else { // pixel steps
-            targetHeight = utils.findNext(frame.height, steps, sizeSlack);
+            targetHeight = Lib.findNext(frame.height, steps, sizeSlack);
         }
         return Math.min(targetHeight, available);
     }
@@ -3570,7 +3567,7 @@ function cycleWindowHeight(metaWindow) {
         function allocate(column, available) {
             // NB: important to not retrieve the frame size inside allocate. Allocation of
             // metaWindow should stay the same during a potential fixpoint evaluation.
-            available -= (column.length - 1) * prefs.window_gap;
+            available -= (column.length - 1) * Settings.prefs.window_gap;
             let targetHeight = calcTargetHeight(available);
             return column.map(mw => {
                 if (mw === metaWindow) {
@@ -3582,7 +3579,7 @@ function cycleWindowHeight(metaWindow) {
         }
 
         if (space[i].length > 1) {
-            space.layout(false, {customAllocators: {[i]: allocate}});
+            space.layout(false, { customAllocators: { [i]: allocate } });
         }
     } else {
         // Not in tiling
@@ -3637,8 +3634,8 @@ function centerWindowHorizontally(metaWindow) {
     let [pointerX, pointerY, mask] = global.get_pointer();
     let relPointerX = pointerX - monitor.x - space.cloneContainer.x;
     let relPointerY = pointerY - monitor.y - space.cloneContainer.y;
-    if (utils.isPointInsideActor(metaWindow.clone, relPointerX, relPointerY)) {
-        utils.warpPointer(pointerX + dx, pointerY)
+    if (Utils.isPointInsideActor(metaWindow.clone, relPointerX, relPointerY)) {
+        Utils.warpPointer(pointerX + dx, pointerY)
     }
     if (space.indexOf(metaWindow) === -1) {
         metaWindow.move_frame(true, targetX + monitor.x, frame.y);
@@ -3696,8 +3693,8 @@ function setFocusMode(mode, space) {
             position = space.unfocusXPosition;
         }
         // do the move
-        move_to(space, space.selectedWindow, {x: position});
-        ensureViewport(space.selectedWindow, space, {force: true});
+        move_to(space, space.selectedWindow, { x: position });
+        ensureViewport(space.selectedWindow, space, { force: true });
         space.unfocusXPosition = null;
     }
 }
@@ -3719,13 +3716,13 @@ function switchToNextFocusMode(space) {
  * "Fit" values such that they sum to `targetSum`
  */
 function fitProportionally(values, targetSum) {
-    let sum = utils.sum(values);
+    let sum = Lib.sum(values);
     let weights = values.map(v => v / sum);
 
-    let fitted = utils.zip(values, weights).map(
+    let fitted = Lib.zip(values, weights).map(
         ([h, w]) => Math.round(targetSum * w)
     );
-    let r = targetSum - utils.sum(fitted);
+    let r = targetSum - Lib.sum(fitted);
     fitted[0] += r;
     return fitted;
 }
@@ -3735,7 +3732,7 @@ function allocateDefault(column, availableHeight, selectedWindow) {
         return [availableHeight];
     } else {
         // Distribute available height amongst non-selected windows in proportion to their existing height
-        const gap = prefs.window_gap;
+        const gap = Settings.prefs.window_gap;
         const minHeight = 50;
 
         function heightOf(mw) {
@@ -3772,7 +3769,7 @@ function allocateDefault(column, availableHeight, selectedWindow) {
 }
 
 function allocateEqualHeight(column, available) {
-    available = available - (column.length-1)*prefs.window_gap;
+    available = available - (column.length-1)*Settings.prefs.window_gap;
     return column.map(_ => Math.floor(available / column.length));
 }
 
@@ -3818,10 +3815,10 @@ function slurp(metaWindow) {
     }
 
     space.layout(true, {
-        customAllocators: { [to]: allocateEqualHeight }
+        customAllocators: { [to]: allocateEqualHeight },
     });
     space.emit("full-layout");
-    ensureViewport(metaWindowToEnsure, space, { force:true });
+    ensureViewport(metaWindowToEnsure, space, { force: true });
 }
 
 function barf(metaWindow) {
@@ -3841,9 +3838,9 @@ function barf(metaWindow) {
     space.splice(index + 1, 0, [bottom]);
 
     space.layout(true, {
-        customAllocators: { [index]: allocateEqualHeight }
-    })
-    space.emit("full-layout")
+        customAllocators: { [index]: allocateEqualHeight },
+    });
+    space.emit("full-layout");
     ensureViewport(space.selectedWindow, space, { force:true });
 }
 
@@ -3903,7 +3900,7 @@ function takeWindow(metaWindow, space, {navigator}) {
             });
 
             // activate last metaWindow after taken windows inserted
-            utils.later_add(Meta.LaterType.IDLE, () => {
+            Utils.later_add(Meta.LaterType.IDLE, () => {
                 Main.activateWindow(metaWindow);
             });
         });
@@ -3929,7 +3926,7 @@ function takeWindow(metaWindow, space, {navigator}) {
     Easer.addEase(metaWindow.clone,
         {
             x, y,
-            time: prefs.animation_time,
+            time: Settings.prefs.animation_time,
         });
 }
 
@@ -3955,7 +3952,7 @@ function rotated(list, dir=1) {
 
 function cycleWorkspaceSettings(dir=1) {
     let n = workspaceManager.get_n_workspaces();
-    let N = Settings.workspaceList.get_strv('list').length;
+    let N = Workspace.getWorkspaceList().get_strv('list').length;
     let space = spaces.selectedSpace;
     let wsI = space.workspace.index();
 
@@ -3963,11 +3960,11 @@ function cycleWorkspaceSettings(dir=1) {
     // x a b c   <-- settings
     // a b c x   <-- rotated settings
 
-    let uuids = Settings.workspaceList.get_strv('list');
+    let uuids = Workspace.getWorkspaceList().get_strv('list');
     // Work on tuples of [uuid, settings] since we need to uuid association
     // in the last step
     let settings = uuids.map(
-        uuid => [uuid, Settings.getWorkspaceSettingsByUUID(uuid)]
+        uuid => [uuid, Workspace.getWorkspaceSettingsByUUID(uuid)]
     );
     settings.sort((a, b) => a[1].get_int('index') - b[1].get_int('index'));
 

@@ -4,32 +4,27 @@
   This is a somewhat messy tangle of functionality relying on
   `SwitcherPopup.SwitcherPopup` when we really should just take full control.
  */
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Utils = Extension.imports.utils;
+const Tiling = Extension.imports.tiling;
+const Keybindings = Extension.imports.keybindings;
+const TopBar = Extension.imports.topbar;
+const Scratch = Extension.imports.scratch;
+const Minimap = Extension.imports.minimap;
 
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Meta = imports.gi.Meta;
-var Main = imports.ui.main;
-var Mainloop = imports.mainloop;
-/** @type {import('@gi-types/clutter10')} */
-var Clutter = imports.gi.Clutter;
-var Signals = imports.signals;
+const { Meta, Clutter } = imports.gi;
+const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
+const Signals = imports.signals;
 
-var TopBar = Extension.imports.topbar;
-var Scratch = Extension.imports.scratch;
-var Minimap = Extension.imports.minimap;
-var Tiling = Extension.imports.tiling;
-var Keybindings = Extension.imports.keybindings;
-var utils = Extension.imports.utils;
-var debug = utils.debug;
+const display = global.display;
 
 var workspaceManager = global.workspace_manager;
-var display = global.display;
-
-const stage = global.stage;
 
 var scale = 0.9;
 var navigating = false;
 var grab = null;
-
 
 /** @type {ActionDispatcher} */
 var dispatcher = null
@@ -62,29 +57,30 @@ class ActionDispatcher {
     mode;
 
     constructor() {
-        debug("#dispatch", "created")
-        this.signals = new utils.Signals()
-        this.actor = Tiling.spaces.spaceContainer
+        Utils.debug("#dispatch", "created");
+        this.signals = new Utils.Signals();
+        this.actor = Tiling.spaces.spaceContainer;
         this.actor.set_flags(Clutter.ActorFlags.REACTIVE);
         this.navigator = getNavigator();
 
         if (grab) {
-            debug("#dispatch", "already in grab")
+            Utils.debug("#dispatch", "already in grab")
             return;
         }
 
         // grab = stage.grab(this.actor)
-        grab = Main.pushModal(this.actor)
+        grab = Main.pushModal(this.actor);
         // We expect at least a keyboard grab here
         if ((grab.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
-            log("Failed to grab modal");
-            throw new Error('Could not grab modal')
+            console.error("Failed to grab modal");
+            throw new Error('Could not grab modal');
         }
 
-        this.signals.connect(this.actor, 'key-press-event', this._keyPressEvent.bind(this))
-        this.signals.connect(this.actor, 'key-release-event', this._keyReleaseEvent.bind(this))
+        this.signals.connect(this.actor, 'key-press-event', this._keyPressEvent.bind(this));
+        this.signals.connect(this.actor, 'key-release-event', this._keyReleaseEvent.bind(this));
 
-        this._noModsTimeoutId = 0;
+        this._noModsTimeoutId = null;
+        this._doActionTimeout = null;
     }
 
     show(backward, binding, mask) {
@@ -97,7 +93,7 @@ class ActionDispatcher {
                 // Check for built-in actions
                 actionId = Meta.prefs_get_keybinding_action(binding);
             } catch(e) {
-                debug("Couldn't resolve action name");
+                Utils.debug("Couldn't resolve action name");
                 return false;
             }
         }
@@ -122,14 +118,11 @@ class ActionDispatcher {
     }
 
     _resetNoModsTimeout() {
-        if (this._noModsTimeoutId != 0)
-            Mainloop.source_remove(this._noModsTimeoutId);
-
+        Utils.timeout_remove(this._noModsTimeoutId);
         this._noModsTimeoutId = Mainloop.timeout_add(
-            0,
-            () => {
+            0, () => {
                 this._finish(global.get_current_time());
-                this._noModsTimeoutId = 0;
+                this._noModsTimeoutId = null;
                 return false; // stops timeout recurrence
             });
     }
@@ -205,7 +198,7 @@ class ActionDispatcher {
             // closes navigator and action is performed afterwards
             // (e.g. switch-monitor-left)
             this._resetNoModsTimeout();
-            Mainloop.timeout_add(0, () => {
+            this._doActionTimeout = Mainloop.timeout_add(0, () => {
                 action.handler(metaWindow, space);
                 return false; // on return false destroys timeout
             });
@@ -227,8 +220,10 @@ class ActionDispatcher {
     }
 
     destroy() {
-        if (this._noModsTimeoutId != 0)
-            Mainloop.source_remove(this._noModsTimeoutId);
+        Utils.timeout_remove(this._noModsTimeoutId);
+        Utils.timeout_remove(this._doActionTimeout);
+        this._noModsTimeoutId = null;
+        this._doActionTimeout = null;
 
         try {
             if (grab) {
@@ -236,7 +231,7 @@ class ActionDispatcher {
                 grab = null;
             }
         } catch (e) {
-            utils.debug("Failed to release grab: ", e);
+            Utils.debug("Failed to release grab: ", e);
         }
 
         this.actor.unset_flags(Clutter.ActorFlags.REACTIVE);
@@ -251,7 +246,7 @@ var index = 0;
 var navigator;
 class NavigatorClass {
     constructor() {
-        debug("#navigator", "nav created");
+        Utils.debug("#navigator", "nav created");
         navigating = true;
 
         this.was_accepted = false;
@@ -310,7 +305,7 @@ class NavigatorClass {
         });
 
         if (Tiling.inGrab && !Tiling.inGrab.dnd) {
-            Tiling.inGrab.beginDnD()
+            Tiling.inGrab.beginDnD();
         }
 
         if (Main.panel.statusArea.appMenu)
@@ -349,7 +344,6 @@ class NavigatorClass {
         }
 
         const workspaceId = this.space.workspace.index();
-        const fromId = from.workspace.index();
         if (this.space === from) {
             // Animate the selected space into full view - normally this
             // happens on workspace switch, but activating the same workspace
@@ -411,6 +405,15 @@ function getNavigator() {
     return navigator;
 }
 
+/**
+ * Finishes navigation if navigator exists.
+ * Useful to call before disabling other modules.
+ */
+function finishNavigation() {
+    if (navigator) {
+        navigator.finish();
+    }
+}
 
 /**
  *

@@ -1,20 +1,17 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Clutter = imports.gi.Clutter;
-var Meta = imports.gi.Meta;
-var AltTab = imports.ui.altTab;
-var Main = imports.ui.main;
-var Easer = Extension.imports.utils.easer;
-var Gio = imports.gi.Gio;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Settings = Extension.imports.settings;
+const Utils = Extension.imports.utils;
+const Keybindings = Extension.imports.keybindings;
+const Tiling = Extension.imports.tiling;
+const Scratch = Extension.imports.scratch;
+const Easer = Extension.imports.utils.easer;
 
-var Scratch = Extension.imports.scratch;
-var Tiling = Extension.imports.tiling;
-var Keybindings = Extension.imports.keybindings;
-var utils = Extension.imports.utils;
-var debug = utils.debug;
+const {Clutter, Meta, Gio, GObject} = imports.gi;
+const Main = imports.ui.main;
+const AltTab = imports.ui.altTab;
 
-var prefs = Extension.imports.settings.prefs;
-
-var LiveAltTab = utils.registerClass(
+var LiveAltTab = GObject.registerClass(
     class LiveAltTab extends AltTab.WindowSwitcherPopup {
         _init(reverse) {
             this.reverse = reverse;
@@ -56,7 +53,7 @@ var LiveAltTab = utils.registerClass(
 
             Main.uiGroup.insert_child_above(fog, global.window_group);
             Easer.addEase(fog, {
-                time: prefs.animation_time,
+                time: Settings.prefs.animation_time,
                 opacity: 100,
             });
             this.fog = fog;
@@ -70,19 +67,18 @@ var LiveAltTab = utils.registerClass(
             // After the first super-tab the mutterActionId we get is apparently
             // SWITCH_APPLICATIONS so we need to case on those too.
             switch (mutterActionId) {
-                case Meta.KeyBindingAction.SWITCH_APPLICATIONS:
-                    mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
-                    break;
-                case Meta.KeyBindingAction.SWITCH_APPLICATIONS_BACKWARD:
-                    mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
-                    break;
-                case Keybindings.idOf('live-alt-tab'):
-                    mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
-                    break;
-                    ;;
-                case Keybindings.idOf('live-alt-tab-backward'):
-                    mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
-                    break;
+            case Meta.KeyBindingAction.SWITCH_APPLICATIONS:
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
+                break;
+            case Meta.KeyBindingAction.SWITCH_APPLICATIONS_BACKWARD:
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
+                break;
+            case Keybindings.idOf('live-alt-tab'):
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
+                break;
+            case Keybindings.idOf('live-alt-tab-backward'):
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
+                break;
             }
             // let action = Keybindings.byId(mutterActionId);
             // if (action && action.options.activeInNavigator) {
@@ -136,9 +132,9 @@ var LiveAltTab = utils.registerClass(
 
         _onDestroy() {
             super._onDestroy();
-            debug('#preview', 'onDestroy', this.was_accepted);
+            Utils.debug('#preview', 'onDestroy', this.was_accepted);
             Easer.addEase(this.fog, {
-                time: prefs.animation_time,
+                time: Settings.prefs.animation_time,
                 opacity: 0,
                 onStopped: () => {
                     this.fog.destroy();

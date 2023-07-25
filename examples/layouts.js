@@ -1,10 +1,10 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Keybindings = Extension.imports.keybindings;
-var Tiling = Extension.imports.tiling;
-var Virt = Extension.imports.virtTiling;
-var Easer = Extension.imports.utils.easer;
-var Utils = Extension.imports.utils;
-var prefs = Tiling.prefs;
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Keybindings = Extension.imports.keybindings;
+const Lib = Extension.imports.lib;
+const Tiling = Extension.imports.tiling;
+const Virt = Extension.imports.virtTiling;
+const Easer = Extension.imports.utils.easer;
+const prefs = Tiling.prefs;
 
 /** Adapts an action handler to operate on the neighbour in the given direction */
 function useNeigbour(dir, action) {
@@ -107,8 +107,6 @@ function fitAvailable(metaWindow) {
     }
 }
 
-
-
 function cycleLayoutDirection(dir) {
     const splits = [
         [0.5, 0.5],
@@ -137,7 +135,7 @@ function cycleLayoutDirection(dir) {
 
         let state;
         if (!navigator["cycle-layouts"]) {
-            navigator["cycle-layouts"] = {i: Utils.eq(s1, splits[0][0]) ? 1 : 0 };
+            navigator["cycle-layouts"] = { i: Lib.eq(s1, splits[0][0]) ? 1 : 0 };
         }
         state = navigator["cycle-layouts"];
 

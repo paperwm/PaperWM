@@ -1,17 +1,18 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Keybindings = Extension.imports.keybindings;
-var Main = imports.ui.main;
-var Tiling = Extension.imports.tiling;
-var Scratch = Extension.imports.scratch;
-var Utils = Extension.imports.utils;
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Keybindings = Extension.imports.keybindings;
+const Main = imports.ui.main;
+const Tiling = Extension.imports.tiling;
+const Scratch = Extension.imports.scratch;
+const Utils = Extension.imports.utils;
+const Examples = Extension.imports.examples;
 
-var Meta = imports.gi.Meta;
+const Meta = imports.gi.Meta;
 
 /**
    To use an example as-is ("gotoByIndex" for instance) add the following to the
    `init` function in "user.js":
 
-   Extension.imports.examples.keybindings.gotoByIndex();
+   Example.keybindings.gotoByIndex();
  */
 
 function gotoByIndex() {
@@ -30,9 +31,9 @@ function gotoByIndex() {
             }
         }
     }
-    for(let k = 1; k <= 9; k++) {
+    for (let k = 1; k <= 9; k++) {
         Keybindings.bindkey(`<Super>${k}`, `goto-coloumn-${k}`,
-                            goto(k-1), {activeInNavigator: true})
+            goto(k - 1), { activeInNavigator: true }),
     }
 }
 
@@ -100,7 +101,7 @@ function swapWithRight(binding = "<Super><Shift>d") {
         if (i === space.length - 1)
             return;
 
-        Utils.swap(space, i, i + 1);
+        Lib.swap(space, i, i + 1);
         space.layout(false);
         space.emit("full-layout");
         Main.activateWindow(space[i][0]);
@@ -215,7 +216,7 @@ function adjustWidth(incBinding="<Super>plus", decBinding="<Super>minus", increm
 }
 
 function tileInto(leftBinding="<Super><Shift>less", rightBinding="<Super><Shift>less") {
-    Extension.imports.examples.layouts.bindTileInto(leftBinding, rightBinding);
+    Examples.layouts.bindTileInto(leftBinding, rightBinding);
 }
 
 function stackUnstack(basebinding = '<Super><Alt><Ctrl>') {
@@ -304,7 +305,7 @@ function cycleEdgeSnap(binding = "<Super>u") {
 
 function reorderWorkspace(bindingUp = "<Alt><Super>Page_Up", bindingDown = "<Alt><Super>Page_Down") {
     if (!global.workspace_manager.reorder_workspace) {
-        log("Reorder workspaces not supported by this gnome-shell version");
+        console.log("Reorder workspaces not supported by this gnome-shell version");
         return;
     }
     function moveWorkspace(dir, metaWindow, space) {

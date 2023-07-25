@@ -1,10 +1,11 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var St = imports.gi.St;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Utils = Extension.imports.utils;
+const Tiling = Extension.imports.tiling;
 
-var Tiling = Extension.imports.tiling;
-var Utils = Extension.imports.utils;
+const St = imports.gi.St;
+
 let fitProportionally = Tiling.fitProportionally;
-
 let prefs = {
     window_gap: 5,
     minimum_margin: 3,

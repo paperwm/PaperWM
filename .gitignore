@@ -4,8 +4,7 @@ TAGS
 # any generated extension zip
 paperwm@paperwm.github.com.zip
 
-# eslint files
-.eslintrc.*
+# eslint support files
 node_modules/
 package.json
 package-lock.json

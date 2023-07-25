@@ -1,9 +1,10 @@
-var ExtensionUtils = imports.misc.extensionUtils;
-var Extension = ExtensionUtils.getCurrentExtension();
-var {St, Gio, GLib} = imports.gi;
-var Main = imports.ui.main;
-var Util = imports.misc.util;
-var MessageTray = imports.ui.messageTray;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Navigator = Extension.imports.navigator;
+const { Gio, GLib, St } = imports.gi;
+const Util = imports.misc.util;
+const MessageTray = imports.ui.messageTray;
+const Main = imports.ui.main;
 
 /**
    The currently used modules
@@ -31,10 +32,14 @@ var MessageTray = imports.ui.messageTray;
      - topbar adds the workspace name to the topbar and styles it.
 
      - gestures is responsible for 3-finger swiping (only works in wayland).
+
+     Notes of ordering:
+        - several modules import settings, so settings should be before them;
+          - settings.js should not depend on other paperwm modules;
  */
 const modules = [
-    'settings', 'tiling', 'navigator', 'keybindings', 'scratch', 'liveAltTab', 'utils',
-    'stackoverlay', 'app', 'kludges', 'topbar', 'gestures',
+    'settings', 'keybindings', 'gestures', 'navigator', 'workspace', 'tiling', 'scratch',
+    'liveAltTab', 'stackoverlay', 'topbar', 'app', 'kludges',
 ];
 
 /**
@@ -46,7 +51,6 @@ function run(method) {
         if (!safeCall(name, method))
             return false;
     }
-
     return true;
 }
 
@@ -54,13 +58,13 @@ function safeCall(name, method) {
     try {
         let module = Extension.imports[name];
         if (module && module[method]) {
-            log("#paperwm", `${method} ${name}`);
+            console.debug("#paperwm", `${method} ${name}`);
         }
         module && module[method] && module[method].call(module, errorNotification);
         return true;
     } catch(e) {
-        log("#paperwm", `${name} failed ${method}`);
-        log(`JS ERROR: ${e}\n${e.stack}`);
+        console.error("#paperwm", `${name} failed ${method}`);
+        console.error(`JS ERROR: ${e}\n${e.stack}`);
         errorNotification(
             "PaperWM",
             `Error occured in ${name} @${method}:\n\n${e.message}`,
@@ -69,56 +73,34 @@ function safeCall(name, method) {
     }
 }
 
-var SESSIONID = "" + (new Date().getTime());
-
-/**
- * The extension sometimes go through multiple init -> enable -> disable
- * cycles. So we need to keep track of whether we're initialized..
- */
-var enabled = false;
-let lastDisabledTime = 0; // init (epoch ms)
-
 let firstEnable = true;
 function enable() {
-    log(`#paperwm enable ${SESSIONID}`);
-    if (enabled) {
-        log('enable called without calling disable');
-        return;
-    }
+    console.log(`#PaperWM enabled`);
 
-    SESSIONID += "#";
     enableUserConfig();
     enableUserStylesheet();
 
     if (run('enable')) {
-        enabled = true;
         firstEnable = false;
     }
 }
 
-function disable() {
-    log(`#paperwm disable ${SESSIONID}`);
+/**
+ * Prepares PaperWM for disable across modules.
+ */
+function prepareForDisable() {
     /**
-     * The below acts as a guard against multiple disable -> enable -> disable
-     * calls that can caused by gnome during unlocking.  This rapid enable/disable
-     * cycle can cause mutter (and other) issues since paperwm hasn't had sufficient 
-     * time to destroy/clean-up signals, actors, etc. before the next enable/disable 
-     * cycle begins.  The below guard forces at least 500 milliseconds before a 
-     * subsequent disable can be called.
+     * Finish any navigation (e.g. workspace switch view).
+     * Can put PaperWM in a breakable state of lock/disable
+     * while navigating.
      */
-    if (Math.abs(Date.now() - lastDisabledTime) <= 500) {
-        log('disable has just been called');
-        return;
-    }
-    if (!enabled) {
-        log('disable called without calling enable');
-        return;
-    }
+    Navigator.finishNavigation();
+}
 
-    if (run('disable')) {
-        enabled = false;
-        lastDisabledTime = Date.now();
-    }
+function disable() {
+    console.log('#PaperWM disabled');
+    prepareForDisable();
+    run('disable');
 
     disableUserStylesheet();
     safeCall('user', 'disable');
@@ -153,7 +135,7 @@ function updateUserConfigMetadata() {
         const metadata = Extension.dir.get_child("metadata.json");
         metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.OVERWRITE, null, null);
     } catch (error) {
-        log('PaperWM', `could not update user config metadata.json: ${error}`);
+        console.error('PaperWM', `could not update user config metadata.json: ${error}`);
     }
 }
 
@@ -182,7 +164,7 @@ function enableUserConfig() {
             });
         } catch (e) {
             errorNotification("PaperWM", `Failed to install user config: ${e.message}`, e.stack);
-            log("PaperWM", "User config install failed", e.message);
+            console.error("PaperWM", "User config install failed", e.message);
         }
     }
 
