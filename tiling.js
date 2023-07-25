@@ -6,6 +6,7 @@ const Lib = Extension.imports.lib;
 const Workspace = Extension.imports.workspace;
 const Gestures = Extension.imports.gestures;
 const Navigator = Extension.imports.navigator;
+const Grab = Extension.imports.grab;
 const TopBar = Extension.imports.topbar;
 const Scratch = Extension.imports.scratch;
 const Easer = Extension.imports.utils.easer;
@@ -103,7 +104,7 @@ var Space = class Space extends Array {
 
         // default focusMode (can be overriden by saved user pref in Space.init method)
         this.focusMode = FocusModes.DEFAULT;
-        this.focusModeIcon = new Extension.imports.topbar.FocusIcon({
+        this.focusModeIcon = new TopBar.FocusIcon({
             name: 'panel',
             style_class: 'space-focus-mode-icon',
         })
@@ -3168,7 +3169,7 @@ function grabBegin(metaWindow, type) {
         // Don't handle pushModal grabs and SCD button (close/minimize/etc.) grabs
         break;
     case Meta.GrabOp.KEYBOARD_MOVING:
-        inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
+        inGrab = new Grab.MoveGrab(metaWindow, type);
         if (!isTiled(metaWindow)) {
             return;
         }
@@ -3187,7 +3188,7 @@ function grabBegin(metaWindow, type) {
             return;
         }
 
-        inGrab = new Extension.imports.grab.MoveGrab(metaWindow, type);
+        inGrab = new Grab.MoveGrab(metaWindow, type);
 
         if (Utils.getModiferState() & Clutter.ModifierType.CONTROL_MASK) {
             inGrab.begin();
@@ -3214,7 +3215,7 @@ function grabBegin(metaWindow, type) {
     case Meta.GrabOp.KEYBOARD_RESIZING_S:
     case Meta.GrabOp.KEYBOARD_RESIZING_SE:
     case Meta.GrabOp.KEYBOARD_RESIZING_W:
-        inGrab = new Extension.imports.grab.ResizeGrab(metaWindow, type);
+        inGrab = new Grab.ResizeGrab(metaWindow, type);
         break;
     }
 }
