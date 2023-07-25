@@ -1,6 +1,7 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Settings = Extension.imports.settings;
+const Workspace = Extension.imports.workspace;
 const { Gio, GLib, GObject, Gtk, Gdk } = imports.gi;
 const {KeybindingsPane} = Extension.imports.prefsKeybinding;
 const {WinpropsPane} = Extension.imports.winpropsPane;
@@ -227,14 +228,14 @@ var SettingsWidget = class SettingsWidget {
         const workspaceStack = this.builder.get_object('workspace_stack');
 
         this.workspaceNames = wmSettings.get_strv('workspace-names');
-        const nWorkspaces = Settings.getWorkspaceList().get_strv('list').length;
+        const nWorkspaces = Workspace.getWorkspaceList().get_strv('list').length;
 
         // Note: For some reason we can't set the visible child of the workspace
         //       stack at construction time.. (!)
         //       Ensure the initially selected workspace is added to the stack
         //       first as a workaround.
         let wsIndices = range(nWorkspaces);
-        let wsSettingsByIndex = wsIndices.map(i => Settings.getWorkspaceSettings(i)[1]);
+        let wsSettingsByIndex = wsIndices.map(i => Workspace.getWorkspaceSettings(i)[1]);
         let wsIndicesSelectedFirst =
             swapArrayElements(wsIndices.slice(), 0, selectedWorkspace);
 

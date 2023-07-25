@@ -6,7 +6,7 @@ const display = global.display;
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
 
 var debug_all = false; // Turn off by default
-var debug_filter = {'#paperwm': true, '#stacktrace': true};
+var debug_filter = { '#paperwm': true, '#stacktrace': true };
 function debug() {
     let keyword = arguments[0];
     let filter = debug_filter[keyword];
@@ -281,11 +281,11 @@ function monitorOfPoint(x, y) {
 
 
 function indent(level, str) {
-    let blank = ""
+    let blank = "";
     for (let i = 0; i < level; i++) {
-        blank += "  "
+        blank += "  ";
     }
-    return blank + str
+    return blank + str;
 }
 
 function mkFmt({nameOnly}={nameOnly: false}) {

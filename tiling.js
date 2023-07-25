@@ -2,6 +2,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Settings = Extension.imports.settings;
 const Utils = Extension.imports.utils;
+const Workspace = Extension.imports.workspace;
 const Gestures = Extension.imports.gestures;
 const Navigator = Extension.imports.navigator;
 const TopBar = Extension.imports.topbar;
@@ -166,7 +167,7 @@ var Space = class Space extends Array {
                 monitor = oldMonitor;
         }
 
-        this.setSettings(Settings.getWorkspaceSettings(this.workspace.index()));
+        this.setSettings(Workspace.getWorkspaceSettings(this.workspace.index()));
         this.setMonitor(monitor, false);
 
         actor.set_pivot_point(0.5, 0);
@@ -3951,7 +3952,7 @@ function rotated(list, dir=1) {
 
 function cycleWorkspaceSettings(dir=1) {
     let n = workspaceManager.get_n_workspaces();
-    let N = Settings.getWorkspaceList().get_strv('list').length;
+    let N = Workspace.getWorkspaceList().get_strv('list').length;
     let space = spaces.selectedSpace;
     let wsI = space.workspace.index();
 
@@ -3959,11 +3960,11 @@ function cycleWorkspaceSettings(dir=1) {
     // x a b c   <-- settings
     // a b c x   <-- rotated settings
 
-    let uuids = Settings.getWorkspaceList().get_strv('list');
+    let uuids = Workspace.getWorkspaceList().get_strv('list');
     // Work on tuples of [uuid, settings] since we need to uuid association
     // in the last step
     let settings = uuids.map(
-        uuid => [uuid, Settings.getWorkspaceSettingsByUUID(uuid)]
+        uuid => [uuid, Workspace.getWorkspaceSettingsByUUID(uuid)]
     );
     settings.sort((a, b) => a[1].get_int('index') - b[1].get_int('index'));
 
