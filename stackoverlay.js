@@ -1,14 +1,14 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Tiling = Extension.imports.tiling;
-var Mainloop = imports.mainloop;
-var {Clutter, Shell, Meta, St} = imports.gi;
-var Main = imports.ui.main;
-var utils = Extension.imports.utils;
-var Layout = imports.ui.layout;
-var Grab = Extension.imports.grab;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Settings = Extension.imports.settings;
+const Utils = Extension.imports.utils;
+const Grab = Extension.imports.grab;
+const Tiling = Extension.imports.tiling;
 
-var Settings = Extension.imports.settings;
-var prefs = Settings.prefs;
+const { Clutter, Shell, Meta, St } = imports.gi;
+const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
+const Layout = imports.ui.layout;
 
 /*
   The stack overlay decorates the top stacked window with its icon and
@@ -74,9 +74,10 @@ var ClickOverlay = class ClickOverlay {
         Main.uiGroup.add_actor(enterMonitor);
         Main.layoutManager.trackChrome(enterMonitor);
 
-        this.signals = new utils.Signals();
+        this.signals = new Utils.Signals();
 
         this._lastPointer = [];
+        this._lastPointerTimeout = null;
         this.signals.connect(
             enterMonitor, 'motion-event',
             (actor, event) => {
@@ -86,7 +87,7 @@ var ClickOverlay = class ClickOverlay {
                 let [x, y, z] = global.get_pointer();
                 let [lX, lY] = this._lastPointer;
                 this._lastPointer = [x, y];
-                Mainloop.timeout_add(500, () => {
+                this._lastPointerTimeout = Mainloop.timeout_add(500, () => {
                     this._lastPointer = [];
                     return false; // on return false destroys timeout
                 });
@@ -192,6 +193,8 @@ var ClickOverlay = class ClickOverlay {
     }
 
     destroy() {
+        Utils.timeout_remove(this._lastPointerTimeout);
+        this._lastPointerTimeout = null;
         this.signals.destroy();
         for (let overlay of [this.left, this.right]) {
             let actor = overlay.overlay;
@@ -223,16 +226,18 @@ var StackOverlay = class StackOverlay {
 
         this.monitor = monitor;
         let panelBox = Main.layoutManager.panelBox;
-        overlay.y = monitor.y + panelBox.height + prefs.vertical_margin;
-        overlay.height = this.monitor.height - panelBox.height - prefs.vertical_margin;
+        overlay.y = monitor.y + panelBox.height + Settings.prefs.vertical_margin;
+        overlay.height = this.monitor.height - panelBox.height - Settings.prefs.vertical_margin;
         overlay.width = Tiling.stack_margin;
 
-        this.signals = new utils.Signals();
+        this.signals = new Utils.Signals();
+
+        this.triggerPreviewTimeout = null;
         this.signals.connect(overlay, 'button-press-event', () => {
             Main.activateWindow(this.target);
             // remove/cleanup the previous preview
             this.removePreview();
-            Mainloop.timeout_add(200, () => {
+            this.triggerPreviewTimeout = Mainloop.timeout_add(200, () => {
                 // if pointer is still at edge (within 2px), trigger preview
                 let [x, y, mask] = global.get_pointer();
                 if (x <= 2 || x >= this.monitor.width - 2) {
@@ -242,9 +247,10 @@ var StackOverlay = class StackOverlay {
             });
         });
 
+        let gsettings = ExtensionUtils.getSettings();
         this.signals.connect(overlay, 'enter-event', this.triggerPreview.bind(this));
         this.signals.connect(overlay, 'leave-event', this.removePreview.bind(this));
-        this.signals.connect(Settings.settings, 'changed::pressure-barrier',
+        this.signals.connect(gsettings, 'changed::pressure-barrier',
             this.updateBarrier.bind(this, true));
 
         this.updateBarrier();
@@ -307,7 +313,7 @@ var StackOverlay = class StackOverlay {
         Tiling.animateWindow(this.target);
 
         // set clone parameters
-        let scale = prefs.minimap_scale;
+        let scale = Settings.prefs.minimap_scale;
         clone.opacity = 255 * 0.95;
 
         clone.set_scale(scale, scale);
@@ -349,7 +355,7 @@ var StackOverlay = class StackOverlay {
         if (force)
             this.removeBarrier();
 
-        if (this.barrier || !prefs.pressure_barrier)
+        if (this.barrier || !Settings.prefs.pressure_barrier)
             return;
 
         this.pressureBarrier = new Layout.PressureBarrier(100, 0.25 * 1000, Shell.ActionMode.NORMAL);
@@ -413,7 +419,7 @@ var StackOverlay = class StackOverlay {
             return;
 
         let overlay = this.overlay;
-        overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + prefs.vertical_margin;
+        overlay.y = this.monitor.y + Main.layoutManager.panelBox.height + Settings.prefs.vertical_margin;
 
         // Assume the resize edge is at least this big (empirically found..)
         const minResizeEdge = 8;
@@ -431,7 +437,7 @@ var StackOverlay = class StackOverlay {
                 width = Math.min(width, 1);
             overlay.x = this.monitor.x;
             overlay.width = Math.max(width, 1);
-            utils.actor_raise(overlay, neighbour.get_compositor_private());
+            Utils.actor_raise(overlay, neighbour.get_compositor_private());
         } else {
             let column = space[space.indexOf(metaWindow) - 1];
             let neighbour = column &&
@@ -447,7 +453,7 @@ var StackOverlay = class StackOverlay {
             width = Math.max(width, 1);
             overlay.x = this.monitor.x + this.monitor.width - width;
             overlay.width = width;
-            utils.actor_raise(overlay, neighbour.get_compositor_private());
+            Utils.actor_raise(overlay, neighbour.get_compositor_private());
         }
 
         if (space.selectedWindow.fullscreen || space.selectedWindow.maximized_vertically)
@@ -460,9 +466,14 @@ var StackOverlay = class StackOverlay {
     }
 
     destroy() {
+        Utils.timeout_remove(this.triggerPreviewTimeout);
+        this.triggerPreviewTimeout = null;
+
         this.signals.destroy();
         this.removePreview();
         this.removeBarrier();
+        Main.layoutManager.untrackChrome(this.overlay);
+        this.overlay.destroy();
     }
 
     /**

@@ -1,12 +1,15 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Meta = imports.gi.Meta;
-var Main = imports.ui.main;
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Meta = imports.gi.Meta;
+const Main = imports.ui.main;
+const PopupMenu = imports.ui.popupMenu;
+const WindowMenu = imports.ui.windowMenu;
 
-var TopBar = Extension.imports.topbar;
-var Tiling = Extension.imports.tiling;
-var utils = Extension.imports.utils;
-var float, scratchFrame; // symbols used for expando properties on metawindow
-
+const Settings = Extension.imports.settings;
+const utils = Extension.imports.utils;
+const Easer = Extension.imports.utils.easer;
+const Tiling = Extension.imports.tiling;
+const TopBar = Extension.imports.topbar;
+let float, scratchFrame; // symbols used for expando properties on metawindow
 
 function focusMonitor() {
     if (global.display.focus_window) {
@@ -26,8 +29,6 @@ function focusMonitor() {
    other windows/clones (clones if the space animates)
  */
 function tweenScratch(metaWindow, targetX, targetY, tweenParams={}) {
-    let Easer = Extension.imports.utils.easer;
-    let Settings = Extension.imports.settings;
     let f = metaWindow.get_frame_rect();
     let b = metaWindow.get_buffer_rect();
     let dx = f.x - b.x;
@@ -215,11 +216,7 @@ function showWindows() {
     ws.forEach(Tiling.showWindow)
 }
 
-// Monkey patch the alt-space menu
-var PopupMenu = imports.ui.popupMenu;
-var WindowMenu = imports.ui.windowMenu;
 var originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
-
 function enable() {
     float = Symbol();
     scratchFrame = Symbol();

@@ -1,23 +1,22 @@
 /*
   Application functionality, like global new window actions etc.
  */
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const ExtensionModule = Extension.imports.extension;
+const Kludges = Extension.imports.kludges;
+const Tiling = Extension.imports.tiling;
+const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
+const Shell = imports.gi.Shell;
 
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var ExtensionModule = Extension.imports.extension;
-var GLib = imports.gi.GLib
-var Gio = imports.gi.Gio;
-var Tiling = Extension.imports.tiling
-var Kludges = Extension.imports.kludges;
-
-var Shell = imports.gi.Shell;
 var Tracker = Shell.WindowTracker.get_default();
-
 var CouldNotLaunch = Symbol();
 
 // Lookup table for custom handlers, keys being the app id
 var customHandlers, customSpawnHandlers;
 function enable() {
-    customHandlers = { 'org.gnome.Terminal.desktop': newGnomeTerminal };
+    customHandlers = {'org.gnome.Terminal.desktop': newGnomeTerminal};
     customSpawnHandlers = {
         'com.gexperts.Tilix.desktop': mkCommandLineSpawner('tilix --working-directory %d')
     };
@@ -47,9 +46,9 @@ function enable() {
             else {
                 return fallback();
             }
-
         }
     );
+
     overrideWithFallback(
         Gio.DesktopAppInfo, "launch",
         (fallback, appInfo) => {
@@ -65,7 +64,6 @@ function enable() {
             else {
                 return fallback();
             }
-
         }
     );
 }
@@ -94,7 +92,7 @@ function launchFromWorkspaceDir(app, workspace=null) {
     cmd = cmd.replace(/%./g, "");
     let [success, cmdArgs] = GLib.shell_parse_argv(cmd);
     if (!success) {
-        log("launchFromWorkspaceDir:", "Could not parse command line", cmd);
+        console.error("launchFromWorkspaceDir:", "Could not parse command line", cmd);
         throw CouldNotLaunch;
     }
     GLib.spawn_async(dir, cmdArgs, GLib.get_environ(), GLib.SpawnFlags.SEARCH_PATH, null);

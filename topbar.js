@@ -1,31 +1,26 @@
 /*
   Functionality related to the top bar, often called the statusbar.
  */
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const ExtensionModule = Extension.imports.extension;
+const Settings = Extension.imports.settings;
+const Utils = Extension.imports.utils;
+const Tiling = Extension.imports.tiling;
+const Navigator = Extension.imports.navigator;
+const Scratch = Extension.imports.scratch;
+const Easer = Extension.imports.utils.easer;
 
-var ExtentionUtils = imports.misc.extensionUtils;
-var Extension = ExtentionUtils.getCurrentExtension();
-var ExtensionModule = Extension.imports.extension;
-var {Clutter, St, Graphene, GLib, Meta, Gio} = imports.gi;
-var PanelMenu = imports.ui.panelMenu;
-var PopupMenu = imports.ui.popupMenu;
-var Main = imports.ui.main;
-var Easer = Extension.imports.utils.easer;
-var Path = ExtentionUtils.getCurrentExtension().dir.get_path();
-
-var Tiling = Extension.imports.tiling;
-var Navigator = Extension.imports.navigator;
-var Utils = Extension.imports.utils;
-var Scratch = Extension.imports.scratch;
-
-var Settings = Extension.imports.settings;
-var prefs = Settings.prefs;
+const { Clutter, St, Graphene, GLib, Meta, Gio, GObject } = imports.gi;
+const { panelMenu, popupMenu } = imports.ui;
+const Main = imports.ui.main;
+const Path = Extension.dir.get_path();
 
 var panelBox = Main.layoutManager.panelBox;
 var panelMonitor;
 
 var workspaceManager = global.workspace_manager;
 var display = global.display;
-
 
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
 var colors = [
@@ -87,14 +82,14 @@ var PopupMenuEntryHelper = function constructor(text) {
 }
 
 // registerClass, breaking our somewhat lame registerClass polyfill.
-var PopupMenuEntry = Utils.registerClass(
-    class PopupMenuEntry extends PopupMenu.PopupBaseMenuItem {
+var PopupMenuEntry = GObject.registerClass(
+    class PopupMenuEntry extends popupMenu.PopupBaseMenuItem {
         _init(text) {
             super._init({
                 activate: false,
                 reactive: true,
                 hover: false,
-                can_focus: false
+                can_focus: false,
             });
 
             PopupMenuEntryHelper.call(this, text);
@@ -167,7 +162,7 @@ class ColorEntry {
 /**
  * FocusMode icon class.
  */
-var FocusIcon = Utils.registerClass(
+var FocusIcon = GObject.registerClass(
     class FocusIcon extends St.Icon {
         _init(properties = {}, tooltip_parent, tooltip_x_point = 0) {
             super._init(properties);
@@ -222,7 +217,6 @@ var FocusIcon = Utils.registerClass(
          * Updates tooltip position relative to this button.
          */
         _updateTooltipPosition(xpoint = 0) {
-            //const offset = Tiling.spaces.getActiveSpace().width;
             let point = this.apply_transform_to_point(
                 new Graphene.Point3D({ x: xpoint, y: 0 }));
             this.tooltip.set_position(Math.max(0, point.x - 62), point.y + 34);
@@ -273,13 +267,13 @@ Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
     }
 );
 
-var FocusButton = Utils.registerClass(
-    class FocusButton extends PanelMenu.Button {
+var FocusButton = GObject.registerClass(
+    class FocusButton extends panelMenu.Button {
         _init() {
             super._init(0.0, 'FocusMode');
 
             this._icon = new FocusIcon({
-                style_class: 'system-status-icon focus-mode-button'
+                style_class: 'system-status-icon focus-mode-button',
             }, this, -10);
 
             this.setFocusMode();
@@ -289,7 +283,7 @@ var FocusButton = Utils.registerClass(
 
         /**
          * Sets the focus mode with this button.
-         * @param {*} mode 
+         * @param {*} mode
          */
         setFocusMode(mode) {
             mode = mode ?? Tiling.FocusModes.DEFAULT;
@@ -314,8 +308,8 @@ var FocusButton = Utils.registerClass(
     }
 );
 
-var WorkspaceMenu = Utils.registerClass(
-    class WorkspaceMenu extends PanelMenu.Button {
+var WorkspaceMenu = GObject.registerClass(
+    class WorkspaceMenu extends panelMenu.Button {
         _init() {
             super._init(0.5, 'Workspace', false);
 
@@ -338,7 +332,7 @@ var WorkspaceMenu = Utils.registerClass(
                 'switch-workspace',
                 this.workspaceSwitched.bind(this));
 
-            this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem(_('Workspace Settings')));
+            this.menu.addMenuItem(new popupMenu.PopupSeparatorMenuItem(_('Workspace Settings')));
 
             this.entry = new PopupMenuEntry(this.label.text);
             this.menu.addMenuItem(this.entry);
@@ -351,15 +345,15 @@ var WorkspaceMenu = Utils.registerClass(
             this.signals.connect(this.entry.label.clutter_text, 'text-changed',
                 changed);
 
-            // this._zenItem = new PopupMenu.PopupSwitchMenuItem('Hide top bar', false);
+            // this._zenItem = new popupMenu.PopupSwitchMenuItem('Hide top bar', false);
             // this.menu.addMenuItem(this._zenItem);
             // this._zenItem.connect('toggled', item => {
             //     Tiling.spaces.selectedSpace.settings.set_boolean('show-top-bar', !item.state);
             // });
 
-            this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+            this.menu.addMenuItem(new popupMenu.PopupSeparatorMenuItem());
 
-            this._prefItem = new PopupMenu.PopupImageMenuItem('Workspace preference', 'preferences-system-symbolic');
+            this._prefItem = new popupMenu.PopupImageMenuItem('Workspace preference', 'preferences-system-symbolic');
             this.menu.addMenuItem(this._prefItem);
 
             // this.prefsIcon = createButton('preferences-system-symbolic', 'workspace preference');
@@ -371,7 +365,7 @@ var WorkspaceMenu = Utils.registerClass(
                 let wi = workspaceManager.get_active_workspace_index();
                 let temp_file = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace')
                 temp_file.replace_contents(wi.toString(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null)
-                ExtentionUtils.openPrefs()
+                ExtensionUtils.openPrefs();
             });
 
             // this.iconBox = new St.BoxLayout();
@@ -394,7 +388,7 @@ var WorkspaceMenu = Utils.registerClass(
 
         _onEvent(actor, event) {
             if (!this.menu) {
-                log("?? no menu ??");
+                console.warn("?? no menu ??");
                 Utils.print_stacktrace();
                 return Clutter.EVENT_PROPAGATE;
             }
@@ -405,8 +399,8 @@ var WorkspaceMenu = Utils.registerClass(
 
             let type = event.type();
 
-            if ((type == Clutter.EventType.TOUCH_END ||
-                type == Clutter.EventType.BUTTON_RELEASE)) {
+            if (type == Clutter.EventType.TOUCH_END ||
+                type == Clutter.EventType.BUTTON_RELEASE) {
                 if (Navigator.navigating) {
                     Navigator.getNavigator().finish();
                 } else {
@@ -446,7 +440,7 @@ var WorkspaceMenu = Utils.registerClass(
                 }
 
                 let device = event.get_source_device();
-                // log(`source: ${device.get_device_type()}`);
+                // console.debug(`source: ${device.get_device_type()}`);
                 let direction = event.get_scroll_direction();
                 if (direction === Clutter.ScrollDirection.SMOOTH
                     && device.get_device_type() !== Clutter.InputDeviceType.POINTER_DEVICE) {
@@ -470,7 +464,7 @@ var WorkspaceMenu = Utils.registerClass(
                 dy *= active.height * 0.05;
                 let t = event.get_time();
                 let v = -dy / (this.time - t);
-                // log(`v ${v}, dy: ${dy}`);
+                // console.debug(`v ${v}, dy: ${dy}`);
 
                 let firstEvent = false;
                 if (!this.selected) {
@@ -494,7 +488,7 @@ var WorkspaceMenu = Utils.registerClass(
                     this.selected = spaces.selectedSpace;
                     Easer.removeEase(this.selected.actor);
                     Easer.addEase(this.selected.actor,
-                        { scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode });
+                        { scale_x: 0.9, scale_y: 0.9, time: Settings.prefs.animation_time, mode });
                 } else if (dy < 0
                     && ((this.selected.actor.y < downEdge &&
                         this.selected.actor.y - dy > downEdge)
@@ -507,7 +501,7 @@ var WorkspaceMenu = Utils.registerClass(
                     this.selected = spaces.selectedSpace;
                     Easer.removeEase(this.selected.actor);
                     Easer.addEase(this.selected.actor,
-                        {scale_x: 0.9, scale_y: 0.9, time: prefs.animation_time, mode});
+                        {scale_x: 0.9, scale_y: 0.9, time: Settings.prefs.animation_time, mode});
                 }
 
                 this.selected.actor.y -= dy;
@@ -520,7 +514,7 @@ var WorkspaceMenu = Utils.registerClass(
                 }
 
                 if (v === 0 && !firstEvent) {
-                    // log(`finish: ${this.velocity}`);
+                    // console.debug(`finish: ${this.velocity}`);
                     let test;
                     if (this.velocity > 0)
                         test = () => this.velocity > 0;
@@ -532,13 +526,13 @@ var WorkspaceMenu = Utils.registerClass(
                     while (test()) {
                         let dy = this.velocity * 16;
                         y -= dy;
-                        // log(`calc target: ${dy} ${y} ${this.velocity}`);
+                        // console.debug(`calc target: ${dy} ${y} ${this.velocity}`);
                         if (this.velocity > 0)
                             this.velocity -= friction;
                         else
                             this.velocity += friction;
                     }
-                    // log(`zero: ${y/this.selected.height}`);
+                    // console.debug(`zero: ${y/this.selected.height}`);
 
                     if (this.selected === active && y <= 0.1 * this.selected.height) {
                         this._navigator.finish();
@@ -585,7 +579,7 @@ var WorkspaceMenu = Utils.registerClass(
         }
 
         setName(name) {
-            if (prefs.use_workspace_name)
+            if (Settings.prefs.use_workspace_name)
                 this.label.text = name;
             else
                 this.label.text = orginalActivitiesText;
@@ -596,7 +590,9 @@ var menu;
 var focusButton;
 var orginalActivitiesText;
 var screenSignals, signals;
+let gsettings;
 function enable () {
+    gsettings = ExtensionUtils.getSettings();
     let label = Main.panel.statusArea.activities.first_child;
     orginalActivitiesText = label.text;
     screenSignals = [];
@@ -633,25 +629,25 @@ function enable () {
         fixTopBar();
     });
 
-    signals.connect(Settings.settings, 'changed::disable-topbar-styling', (settings, key) => {
-        const status = prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
+    signals.connect(gsettings, 'changed::disable-topbar-styling', (settings, key) => {
+        const status = Settings.prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
         ExtensionModule.notify(
             `PaperWM: TopBar styling has been ${status}`, 
-            `A restart of Gnome is required! (e.g. logout then login again)`)
+            `A restart of Gnome is required! (e.g. logout then login again)`);
     });
 
-    signals.connect(Settings.settings, 'changed::show-window-position-bar', (settings, key) => {
+    signals.connect(gsettings, 'changed::show-window-position-bar', (settings, key) => {
         const spaces = Tiling.spaces;
         spaces.setSpaceTopbarElementsVisible(false);
         spaces.forEach(s => s.layout(false));
         spaces.showWindowPositionBarChanged();
     });
 
-    signals.connect(Settings.settings, 'changed::show-workspace-indicator', (settings, key) => {
+    signals.connect(gsettings, 'changed::show-workspace-indicator', (settings, key) => {
         fixWorkspaceIndicator();
     });
 
-    signals.connect(Settings.settings, 'changed::show-focus-mode-icon', (settings, key) => {
+    signals.connect(gsettings, 'changed::show-focus-mode-icon', (settings, key) => {
         fixFocusModeIcon();
     });
 
@@ -681,12 +677,13 @@ function disable() {
 
     screenSignals.forEach(id => workspaceManager.disconnect(id));
     screenSignals = [];
-
     panelBox.scale_y = 1;
+    gsettings.run_dispose();
+    gsettings = null;
 }
 
 function setClearStyle() {
-    if (prefs.disable_topbar_styling) {
+    if (Settings.prefs.disable_topbar_styling) {
         return;
     }
     removeStyles();
@@ -694,7 +691,7 @@ function setClearStyle() {
 }
 
 function setTransparentStyle() {
-    if (prefs.disable_topbar_styling) {
+    if (Settings.prefs.disable_topbar_styling) {
         return;
     }
     removeStyles();
@@ -711,7 +708,7 @@ function removeStyles() {
  * Applies correct style based on whether we use the windowPositionBar or not.
  */
 function fixStyle() {
-    prefs.show_window_position_bar ? setClearStyle() : setTransparentStyle();
+    Settings.prefs.show_window_position_bar ? setClearStyle() : setTransparentStyle();
 }
 
 function fixTopBar() {
@@ -741,12 +738,12 @@ function fixTopBar() {
 }
 
 function fixWorkspaceIndicator() {
-    prefs.show_workspace_indicator ? menu.show() : menu.hide();
+    Settings.prefs.show_workspace_indicator ? menu.show() : menu.hide();
     Tiling.spaces.forEach(s => s.showWorkspaceIndicator());
 }
 
 function fixFocusModeIcon() {
-    prefs.show_focus_mode_icon ? focusButton.show() : focusButton.hide();
+    Settings.prefs.show_focus_mode_icon ? focusButton.show() : focusButton.hide();
     Tiling.spaces.forEach(s => s.showFocusModeIcon());
 }
 
@@ -779,7 +776,7 @@ function updateMonitor() {
             Tiling.spaces?.forEach(s => s.layout());
 
             // if to show window positon bar, then update across workspaces
-            if (prefs.show_window_position_bar) {
+            if (Settings.prefs.show_window_position_bar) {
                 Tiling.spaces?.setSpaceTopbarElementsVisible();
             }
             fixStyle();

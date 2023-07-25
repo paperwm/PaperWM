@@ -1,42 +1,41 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Meta = imports.gi.Meta;
-var Gio = imports.gi.Gio;
-var Clutter = imports.gi.Clutter;
-var Main = imports.ui.main;
-var Shell = imports.gi.Shell;
-var Easer = Extension.imports.utils.easer;
-var Mainloop = imports.mainloop;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Kludges = Extension.imports.kludges;
+const Settings = Extension.imports.settings;
+const Tiling = Extension.imports.tiling;
+const Utils = Extension.imports.utils;
+const Lib = Extension.imports.lib;
+const Easer = Extension.imports.utils.easer;
+const Navigator = Extension.imports.navigator;
 
-var Utils = Extension.imports.utils;
-var Tiling = Extension.imports.tiling;
-var Navigator = Extension.imports.navigator;
-var prefs = Extension.imports.settings.prefs;
-var Kludges = Extension.imports.kludges;
-
-const stage = global.stage;
+const { Meta, Gio, Shell, Clutter } = imports.gi;
+const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
 
 const DIRECTIONS = {
     Horizontal: true,
     Vertical: false,
 };
 
-var gliding = false;
 var vy;
 var time;
 var vState;
 var navigator;
 var direction = undefined;
+var gliding = false;
 var signals;
 // 1 is natural scrolling, -1 is unnatural
 var natural = 1;
+
+var touchpadSettings;
 function enable() {
     signals = new Utils.Signals();
     // Touchpad swipes only works in Wayland
     if (!Meta.is_wayland_compositor())
         return;
 
-    var touchpadSettings = new Gio.Settings({
-        schema_id: 'org.gnome.desktop.peripherals.touchpad'
+    touchpadSettings = new Gio.Settings({
+        schema_id: 'org.gnome.desktop.peripherals.touchpad',
     });
 
     /**
@@ -48,7 +47,7 @@ function enable() {
        scrolling works anywhere, while horizontal scrolling is done on the space
        under the mouse cursor.
      */
-    signals.connect(stage, 'captured-event', (actor, event) => {
+    signals.connect(global.stage, 'captured-event', (actor, event) => {
         if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
             event.get_touchpad_gesture_finger_count() < 3 ||
             (Main.actionMode & Shell.ActionMode.OVERVIEW) > 0) {
@@ -74,7 +73,7 @@ function enable() {
                     return Clutter.EVENT_PROPAGATE;
                 }
 
-                let dir_y = -dy*natural*prefs.swipe_sensitivity[1];
+                let dir_y = -dy*natural*Settings.prefs.swipe_sensitivity[1];
                 // if not Tiling.inPreview and swipe is UP => propagate event to overview
                 if (!Tiling.inPreview && dir_y > 0) {
                     swipeTrackersEnable();
@@ -110,6 +109,8 @@ function enable() {
 
 function disable() {
     signals.destroy();
+    Utils.timeout_remove(endVerticalTimeout);
+    endVerticalTimeout = null;
     touchpadSettings = null;
 }
 
@@ -136,7 +137,7 @@ function horizontalScroll(actor, event) {
             Easer.removeEase(this.cloneContainer);
             direction = DIRECTIONS.Horizontal;
         }
-        return update(this, -dx*natural*prefs.swipe_sensitivity[0], event.get_time());
+        return update(this, -dx*natural*Settings.prefs.swipe_sensitivity[0], event.get_time());
     case Clutter.TouchpadGesturePhase.CANCEL:
     case Clutter.TouchpadGesturePhase.END:
         this.hState = phase;
@@ -156,13 +157,13 @@ function update(space, dx, t) {
 
     // Check which target windew will be selected if we releas the swipe at this
     // moment
-    dx = Utils.sum(dxs.slice(-3));
+    dx = Lib.sum(dxs.slice(-3));
     let v = dx/(t - dts.slice(-3)[0]);
     if (Number.isFinite(v)) {
         space.vx = v;
     }
 
-    let accel = prefs.swipe_friction[0]/16; // px/ms^2
+    let accel = Settings.prefs.swipe_friction[0]/16; // px/ms^2
     accel = space.vx > 0 ? -accel : accel;
     let duration = -space.vx/accel;
     let d = space.vx*duration + .5*accel*duration**2;
@@ -188,7 +189,7 @@ function done(space) {
     let startGlide = space.targetX;
 
     // timetravel
-    let accel = prefs.swipe_friction[0]/16; // px/ms^2
+    let accel = Settings.prefs.swipe_friction[0]/16; // px/ms^2
     accel = space.vx > 0 ? -accel : accel;
     let t = -space.vx/accel;
     let d = space.vx*t + .5*accel*t**2;
@@ -249,7 +250,7 @@ function done(space) {
         onComplete: () => {
             if (!Tiling.inPreview)
                 Navigator.getNavigator().finish();
-        }
+        },
     });
 }
 
@@ -330,26 +331,30 @@ function updateVertical(dy, t) {
     const StackPositions = Tiling.StackPositions;
     if (dy > 0
         && selected !== navigator.from
-        && (selected.actor.y - dy < StackPositions.up*monitor.height)
-       ) {
+        && (selected.actor.y - dy < StackPositions.up * monitor.height)
+    ) {
         dy = 0;
         vy = 1;
-        selected.actor.y = StackPositions.up*selected.height;
+        selected.actor.y = StackPositions.up * selected.height;
         Tiling.spaces.selectStackSpace(Meta.MotionDirection.UP, false, transition);
         selected = Tiling.spaces.selectedSpace;
         Easer.removeEase(selected.actor);
-        Easer.addEase(selected.actor, {scale_x: 0.9, scale_y: 0.9, time:
-                                          prefs.animation_time, transition});
+        Easer.addEase(selected.actor, {
+            scale_x: 0.9, scale_y: 0.9, time:
+                Settings.prefs.animation_time, transition
+        });
     } else if (dy < 0
-               && (selected.actor.y - dy > StackPositions.down*monitor.height)) {
+        && (selected.actor.y - dy > StackPositions.down * monitor.height)) {
         dy = 0;
         vy = -1;
-        selected.actor.y = StackPositions.down*selected.height;
+        selected.actor.y = StackPositions.down * selected.height;
         Tiling.spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, transition);
         selected = Tiling.spaces.selectedSpace;
         Easer.removeEase(selected.actor);
-        Easer.addEase(selected.actor, {scale_x: 0.9, scale_y: 0.9, time:
-                                          prefs.animation_time, transition});
+        Easer.addEase(selected.actor, {
+            scale_x: 0.9, scale_y: 0.9, time:
+                Settings.prefs.animation_time, transition
+        });
     } else if (Number.isFinite(v)) {
         vy = v;
     }
@@ -364,6 +369,7 @@ function updateVertical(dy, t) {
     }
 }
 
+var endVerticalTimeout;
 function endVertical() {
     let test = vy > 0 ?
         () => vy < 0 :
@@ -390,7 +396,7 @@ function endVertical() {
 
         let dy = vy*16;
         let v = vy;
-        let accel = prefs.swipe_friction[1];
+        let accel = Settings.prefs.swipe_friction[1];
         accel = v > 0 ? -accel : accel;
         updateVertical(dy, time + 16);
         vy = vy + accel;
@@ -402,7 +408,7 @@ function endVertical() {
      * function - which returns false (thus destroying this timeout)
      * when user gesture fininshes, a space is selected, etc.
      */
-    Mainloop.timeout_add(16, glide, 0);
+    endVerticalTimeout = Mainloop.timeout_add(16, glide, 0);
 }
 
 /**

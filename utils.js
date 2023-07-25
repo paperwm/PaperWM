@@ -1,32 +1,22 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var {GLib, Clutter, Meta, GObject} = imports.gi;
-var St = imports.gi.St;
-var GdkPixbuf = imports.gi.GdkPixbuf;
-var Cogl = imports.gi.Cogl;
-var Main = imports.ui.main;
-
-var workspaceManager = global.workspace_manager;
-var display = global.display;
-var WindowTracker = imports.gi.Shell.WindowTracker;
-
-var Tiling = Extension.imports.tiling;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Lib = Extension.imports.lib;
+const { GLib, Clutter, Meta, St, GdkPixbuf, Cogl } = imports.gi;
+const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
+const display = global.display;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
-var registerClass = GObject.registerClass;
 
 var debug_all = false; // Turn off by default
-var debug_filter = {'#paperwm': true, '#stacktrace': true};
+var debug_filter = { '#paperwm': true, '#stacktrace': true };
 function debug() {
     let keyword = arguments[0];
     let filter = debug_filter[keyword];
     if (filter === false)
         return;
     if (debug_all || filter === true)
-        log(Array.prototype.join.call(arguments, " | "));
-}
-
-function warn(...args) {
-    log("WARNING:", ...args);
+        console.debug(Array.prototype.join.call(arguments, " | "));
 }
 
 function assert(condition, message, ...dump) {
@@ -39,7 +29,7 @@ function withTimer(message, fn) {
     let start = GLib.get_monotonic_time();
     let ret = fn();
     let stop = GLib.get_monotonic_time();
-    log(`${message} ${((stop - start)/1000).toFixed(1)}ms`);
+    console.debug(`${message} ${((stop - start)/1000).toFixed(1)}ms`);
 }
 
 function print_stacktrace(error) {
@@ -55,7 +45,15 @@ function print_stacktrace(error) {
     let filtered = trace.filter((frame) => {
         return frame !== "wrapper@resource:///org/gnome/gjs/modules/lang.js:178";
     });
-    log(`JS ERROR: ${error}\n ${trace.join('\n')}`);
+    console.error(`JS ERROR: ${error}\n ${trace.join('\n')}`);
+}
+
+/**
+ * Pretty prints args using JSON.stringify.
+ * @param  {...any} arugs
+ */
+function prettyPrintToLog(...args) {
+    console.log(args.map(v => JSON.stringify(v, null), 2));
 }
 
 function framestr(rect) {
@@ -81,7 +79,7 @@ function ppModiferState(state) {
             mods.push(mod);
         }
     }
-    return mods.join(", ")
+    return mods.join(", ");
 }
 
 /**
@@ -96,55 +94,6 @@ function dynamic_function_ref(handler_name, owner_obj) {
     }
 }
 
-/**
-   Find the first x in `values` that's larger than `cur`.
-   Cycle to first value if no larger value is found.
-   `values` should be sorted in ascending order.
- */
-function findNext(cur, values, slack=0) {
-    for (let i = 0; i < values.length; i++) {
-        let x = values[i];
-        if (cur < x) {
-            if (x - cur < slack) {
-                // Consider `cur` practically equal to `x`
-                continue;
-            } else {
-                return x;
-            }
-        }
-    }
-    return values[0]; // cycle
-}
-
-function arrayEqual(a, b) {
-    if (a === b)
-        return true;
-    if (!a || !b)
-        return false;
-    if (a.length !== b.length)
-        return false;
-    for (let i = 0; i < a.length; i++) {
-        if (a[i] !== b[i])
-            return false;
-    }
-    return true;
-}
-
-/** Is the floating point numbers equal enough */
-function eq(a, b, epsilon=0.00000001) {
-    return Math.abs(a-b) < epsilon;
-}
-
-function swap(array, i, j) {
-    let temp = array[i];
-    array[i] = array[j];
-    array[j] = temp;
-}
-
-function in_bounds(array, i) {
-    return i >= 0 && i < array.length;
-}
-
 function isPointInsideActor(actor, x, y) {
     return (actor.x <= x && x <= actor.x+actor.width)
         && (actor.y <= y && y <= actor.y+actor.height);
@@ -154,30 +103,20 @@ function setBackgroundImage(actor, resource_path) {
     // resource://{resource_path}
     let image = new Clutter.Image();
 
-    let pixbuf = GdkPixbuf.Pixbuf.new_from_resource(resource_path)
+    let pixbuf = GdkPixbuf.Pixbuf.new_from_resource(resource_path);
 
-    image.set_data(pixbuf.get_pixels() ,
-                   pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
-                   : Cogl.PixelFormat.RGB_888,
-                   pixbuf.get_width() ,
-                   pixbuf.get_height() ,
-                   pixbuf.get_rowstride());
+    image.set_data(pixbuf.get_pixels(),
+        pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
+            : Cogl.PixelFormat.RGB_888,
+        pixbuf.get_width(),
+        pixbuf.get_height(),
+        pixbuf.get_rowstride());
     actor.set_content(image);
-    actor.content_repeat = Clutter.ContentRepeat.BOTH
+    actor.content_repeat = Clutter.ContentRepeat.BOTH;
 }
 
 
 //// Debug and development utils
-
-function setDevGlobals() {
-    // Accept the risk of this interfering with existing code for now
-    metaWindow = display.focus_window;
-    meta_window = display.focus_window;
-    workspace = workspaceManager.get_active_workspace();
-    actor = metaWindow.get_compositor_private();
-    space = Tiling.spaces.spaceOfWindow(metaWindow);
-    app = WindowTracker.get_default().get_window_app(metaWindow);
-}
 
 /**
  * Visualize the frame and buffer bounding boxes of a meta window
@@ -229,7 +168,6 @@ function toggleCloneMarks() {
         if (metaWindow.clone) {
             metaWindow.clone.opacity = 190;
             metaWindow.clone.__oldOpacity = 190;
-
             metaWindow.clone.background_color = Clutter.color_from_string("red")[1];
         }
     }
@@ -253,19 +191,6 @@ function toggleCloneMarks() {
 
         windows.forEach(markCloneOf);
     }
-}
-
-function sum(array) {
-    return array.reduce((a, b) => a + b, 0);
-}
-
-function zip(...as) {
-    let r = [];
-    let minLength = Math.min(...as.map(x => x.length));
-    for (let i = 0; i < minLength; i++) {
-        r.push(as.map(a => a[i]));
-    }
-    return r;
 }
 
 function warpPointer(x, y) {
@@ -295,18 +220,8 @@ function monitorOfPoint(x, y) {
     return null;
 }
 
-
-function indent(level, str) {
-    let blank = ""
-    for (let i = 0; i < level; i++) {
-        blank += "  "
-    }
-    return blank + str
-}
-
-
-function mkFmt({nameOnly}={nameOnly: false}) {
-    function defaultFmt(actor, prefix="") {
+function mkFmt({ nameOnly } = { nameOnly: false }) {
+    function defaultFmt(actor, prefix = "") {
         const fmtNum = num => num.toFixed(0);
         let extra = [
             `${actor.get_position().map(fmtNum)}`,
@@ -369,7 +284,7 @@ function printActorTree(node, fmt=mkFmt(), options={}, state=null) {
         }
     }
     if (!collapse) {
-        log(indent(state.level, fmt(node, state.actorPrefix)));
+        console.log(Lib.indent(state.level, fmt(node, state.actorPrefix)));
         state.actorPrefix = "";
         state.level += 1;
     }
@@ -460,55 +375,6 @@ function isMetaWindow(obj) {
     return obj && obj.window_type && obj.get_compositor_private;
 }
 
-function trace(topic, ...args) {
-    if (!topic.match(/.*/)) {
-        return;
-    }
-
-    if (isMetaWindow(args[0])) {
-        windowTrace(topic, ...args);
-    } else {
-        let trace = shortTrace(1).join(" < ");
-        let extraInfo = args.length > 0 ? "\n\t" + args.map(x => x.toString()).join("\n\t") : ""
-        log(topic, trace, extraInfo);
-    }
-}
-
-let existingWindows = new Set();
-
-function windowTrace(topic, metaWindow, ...rest) {
-    if (existingWindows.has(metaWindow)) {
-        return;
-    }
-
-    log(topic, infoMetaWindow(metaWindow).join("\n"), ...rest.join("\n"));
-}
-
-function infoMetaWindow(metaWindow) {
-    let id = metaWindow.toString().split(" ")[4];
-    let trace = shortTrace(3).join(" < ");
-    let info = [
-        `(win: ${id}) ${trace}`,
-        `Title: ${metaWindow.title}`,
-    ];
-    if (!metaWindow.window_type === Meta.WindowType.NORMAL) {
-        info.push(`Type: ${ppEnumValue(metaWindow.window_type, Meta.WindowType)}`);
-    }
-    if (!metaWindow.get_compositor_private()) {
-        info.push(`- no actor`);
-    }
-    if (metaWindow.is_on_all_workspaces()) {
-        info.push(`- is_on_all_workspaces`);
-    }
-    if (metaWindow.above) {
-        info.push(`- above`);
-    }
-    if (Extension.imports.scratch.isScratchWindow(metaWindow)) {
-        info.push(`- scratch`);
-    }
-    return info;
-}
-
 function shortTrace(skip=0) {
     let trace = new Error().stack.split("\n").map(s => {
         let words = s.split(/[@/]/)
@@ -552,5 +418,14 @@ function later_add(...args) {
     // Gnome 42, 43 used Meta.later_add
     else if (Meta.later_add) {
         Meta.later_add(...args);
+    }
+}
+
+/**
+ * Convenience method for removing a timeout source from Mainloop.
+ */
+function timeout_remove(timeoutId) {
+    if (timeoutId) {
+        Mainloop.source_remove(timeoutId);
     }
 }

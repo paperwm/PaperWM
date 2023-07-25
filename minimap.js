@@ -1,12 +1,14 @@
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Clutter = imports.gi.Clutter;
-var Easer = Extension.imports.utils.easer;
-var Main = imports.ui.main;
-var St = imports.gi.St;
-var Pango = imports.gi.Pango;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const Settings = Extension.imports.settings;
+const Utils = Extension.imports.utils;
+const Lib = Extension.imports.lib;
+const Easer = Extension.imports.utils.easer;
 
-var utils = Extension.imports.utils;
-var prefs = Extension.imports.settings.prefs;
+const Clutter = imports.gi.Clutter;
+const Main = imports.ui.main;
+const St = imports.gi.St;
+const Pango = imports.gi.Pango;
 
 function calcOffset(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
@@ -42,19 +44,19 @@ var Minimap = class Minimap extends Array {
         this.clip = clip;
         let container = new St.Widget({name: 'minimap-container'});
         this.container = container;
-        container.height = Math.round(space.height*prefs.minimap_scale) - prefs.window_gap;
+        container.height = Math.round(space.height*Settings.prefs.minimap_scale) - Settings.prefs.window_gap;
 
         actor.add_actor(highlight);
         actor.add_actor(label);
         actor.add_actor(clip);
         clip.add_actor(container);
-        clip.set_position(12 + prefs.window_gap, 12 + Math.round(1.5*prefs.window_gap));
+        clip.set_position(12 + Settings.prefs.window_gap, 12 + Math.round(1.5*Settings.prefs.window_gap));
         highlight.y = clip.y - 10;
         Main.uiGroup.add_actor(this.actor);
         this.actor.opacity = 0;
         this.createClones();
 
-        this.signals = new utils.Signals();
+        this.signals = new Utils.Signals();
         this.signals.connect(space, 'select', this.select.bind(this));
         this.signals.connect(space, 'window-added', this.addWindow.bind(this));
         this.signals.connect(space, 'window-removed', this.removeWindow.bind(this));
@@ -97,8 +99,8 @@ var Minimap = class Minimap extends Array {
 
     swapped(space, index, targetIndex, row, targetRow) {
         let column = this[index];
-        utils.swap(this, index, targetIndex);
-        utils.swap(column, row, targetRow);
+        Lib.swap(this, index, targetIndex);
+        Lib.swap(column, row, targetRow);
         this.layout();
     }
 
@@ -107,24 +109,26 @@ var Minimap = class Minimap extends Array {
             return;
 
         // if minimap_scale preference is 0, then don't show
-        if (prefs.minimap_scale <= 0) {
+        if (Settings.prefs.minimap_scale <= 0) {
             return;
         }
-        
+
         this.layout();
-        let time = animate ? prefs.animation_time : 0;
+        let time = animate ? Settings.prefs.animation_time : 0;
         this.actor.show();
         Easer.addEase(this.actor,
-                         {opacity: 255, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO});
+            { opacity: 255, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO });
     }
 
     hide(animate) {
         if (this.destroyed)
             return;
-        let time = animate ? prefs.animation_time : 0;
+        let time = animate ? Settings.prefs.animation_time : 0;
         Easer.addEase(this.actor,
-                         {opacity: 0, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO,
-                          onComplete: () => this.actor.hide() });
+            {
+                opacity: 0, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO,
+                onComplete: () => this.actor.hide()
+            });
     }
 
     createClones() {
@@ -154,8 +158,8 @@ var Minimap = class Minimap extends Array {
         let meta_window = clone.meta_window;
         let buffer = meta_window.get_buffer_rect();
         let frame = meta_window.get_frame_rect();
-        let scale = prefs.minimap_scale;
-        clone.set_size(buffer.width*scale, buffer.height*scale - prefs.window_gap);
+        let scale = Settings.prefs.minimap_scale;
+        clone.set_size(buffer.width*scale, buffer.height*scale - Settings.prefs.window_gap);
         clone.set_position(((buffer.x - frame.x)*scale),
                            (buffer.y - frame.y)*scale);
         container.set_size(frame.width*scale, frame.height*scale);
@@ -164,7 +168,7 @@ var Minimap = class Minimap extends Array {
     layout() {
         if (this.destroyed)
             return;
-        let gap = prefs.window_gap;
+        let gap = Settings.prefs.window_gap;
         let x = 0;
         for (let column of this) {
             let y = 0, w = 0;
@@ -225,11 +229,11 @@ var Minimap = class Minimap extends Array {
         if (container.x > 0)
             container.x = 0;
 
-        let gap = prefs.window_gap;
+        let gap = Settings.prefs.window_gap;
         highlight.x = Math.round(
             clip.x + container.x + selected.x - gap/2);
         highlight.y = Math.round(
-            clip.y + selected.y - prefs.window_gap);
+            clip.y + selected.y - Settings.prefs.window_gap);
         highlight.set_size(Math.round(selected.width + gap),
                            Math.round(Math.min(selected.height, this.clip.height + gap) + gap));
 

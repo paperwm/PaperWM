@@ -1,88 +1,57 @@
+const ExtensionUtils = imports.misc.extensionUtils;
+const { Gio, Gtk } = imports.gi;
+
 /**
-   Settings utility shared between the running extension and the preference UI.
+    Settings utility shared between the running extension and the preference UI.
+    settings.js shouldn't depend on other modules (e.g with `imports` for other modules
+    at the top).
  */
-
-var ExtensionUtils = imports.misc.extensionUtils;
-var Extension = ExtensionUtils.getCurrentExtension();
-var Gio = imports.gi.Gio;
-var GLib = imports.gi.GLib;
-var Gtk = imports.gi.Gtk;
-var Mainloop = imports.mainloop;
-
-var settings = ExtensionUtils.getSettings();
-var workspaceSettingsCache = {};
-
-var WORKSPACE_KEY = 'org.gnome.shell.extensions.paperwm.workspace';
-var WORKSPACE_LIST_KEY = 'org.gnome.shell.extensions.paperwm.workspacelist';
 var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
 // This is the value mutter uses for the keyvalue of above_tab
 var META_KEY_ABOVE_TAB = 0x2f7259c9;
 
-var prefs = {};
-['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
- 'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
- 'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
- 'cycle-width-steps', 'cycle-height-steps', 'minimap-scale', 'winprops',
- 'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon',
- 'disable-topbar-styling', 'default-focus-mode']
-    .forEach(k => setState(null, k));
-
-prefs.__defineGetter__("minimum_margin", function() { return Math.min(15, this.horizontal_margin) });
-
-function setVerticalMargin() {
-    let vMargin = settings.get_int('vertical-margin');
-    let gap = settings.get_int('window-gap');
-    prefs.vertical_margin = Math.max(Math.round(gap / 2), vMargin);
-}
-let timerId;
-function onWindowGapChanged() {
-    setVerticalMargin();
-    if (timerId) {
-        Mainloop.source_remove(timerId);
-    }
-    timerId = Mainloop.timeout_add(500, () => {
-        Extension.imports.tiling.spaces.mru().forEach(space => {
-            space.layout();
-        });
-        timerId = null;
-        return false; // on return false destroys timeout
-    });
-}
-
 function setState($, key) {
-    let value = settings.get_value(key);
+    let value = gsettings.get_value(key);
     let name = key.replace(/-/g, '_');
     prefs[name] = value.deep_unpack();
 }
 
-var schemaSource, workspaceList, conflictSettings;
-function setSchemas() {
-    // Schemas that may contain conflicting keybindings
-    // It's possible to inject or remove settings here on `user.init`.
-    conflictSettings = [
-        new Gio.Settings({schema_id: 'org.gnome.mutter.keybindings'}),
-        new Gio.Settings({schema_id: 'org.gnome.mutter.wayland.keybindings'}),
-        new Gio.Settings({schema_id: "org.gnome.desktop.wm.keybindings"}),
-        new Gio.Settings({schema_id: "org.gnome.shell.keybindings"})
-    ];
-    schemaSource = Gio.SettingsSchemaSource.new_from_directory(
-        GLib.build_filenamev([Extension.path, "schemas"]),
-        Gio.SettingsSchemaSource.get_default(),
-        false
-    );
+var conflictSettings;
+function getConflictSettings() {
+    if (!conflictSettings) {
+        // Schemas that may contain conflicting keybindings
+        // It's possible to inject or remove settings here on `user.init`.
+        conflictSettings = [
+            new Gio.Settings({schema_id: 'org.gnome.mutter.keybindings'}),
+            new Gio.Settings({schema_id: 'org.gnome.mutter.wayland.keybindings'}),
+            new Gio.Settings({schema_id: "org.gnome.desktop.wm.keybindings"}),
+            new Gio.Settings({schema_id: "org.gnome.shell.keybindings"}),
+        ];
+    }
 
-    workspaceList = new Gio.Settings({
-        settings_schema: schemaSource.lookup(WORKSPACE_LIST_KEY, true)
-    });
+    return conflictSettings;
 }
 
+var prefs;
+let gsettings;
 function enable() {
-    settings.connect('changed', setState);
-    settings.connect('changed::vertical-margin', onWindowGapChanged);
-    settings.connect('changed::vertical-margin-bottom', onWindowGapChanged);
-    settings.connect('changed::window-gap', onWindowGapChanged);
-    setVerticalMargin();
+    gsettings = ExtensionUtils.getSettings();
+    prefs = {};
+    ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
+        'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
+        'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
+        'cycle-width-steps', 'cycle-height-steps', 'minimap-scale', 'winprops',
+        'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon',
+        'disable-topbar-styling', 'default-focus-mode']
+        .forEach(k => setState(null, k));
+    prefs.__defineGetter__("minimum_margin", function () {
+        return Math.min(15, this.horizontal_margin);
+    });
+    gsettings.connect('changed', setState);
+
+    // connect to settings and update winprops array when it's updated
+    gsettings.connect('changed::winprops', () => reloadWinpropsFromGSettings());
 
     // A intermediate window is created before the prefs dialog is created.
     // Prevent it from being inserted into the tiling causing flickering and general disorder
@@ -98,124 +67,13 @@ function enable() {
     });
 
     addWinpropsFromGSettings();
-    setSchemas();
 }
 
 function disable() {
-    workspaceSettingsCache = {};
-    schemaSource = null;
-    workspaceList = null;
+    gsettings.run_dispose();
+    gsettings = null;
+    prefs = null;
     conflictSettings = null;
-}
-
-/**
- * Returns the default focus mode (can be user-defined).
- */
-function getDefaultFocusMode() {
-    // find matching focus mode
-    const mode = prefs.default_focus_mode;
-    const modes = Extension.imports.tiling.FocusModes;
-    let result = null;
-    Object.entries(modes).forEach(([k,v]) => {
-        if (v === mode) {
-            result = k;
-        }
-    });
-
-    // if found return, otherwise return default
-    if (result) {
-        return modes[result];
-    } else {
-        return modes.DEFAULT;
-    }
-}
-
-/// Workspaces
-
-function getWorkspaceSettings(index) {
-    let list = workspaceList.get_strv('list');
-    for (let uuid of list) {
-        let settings = getWorkspaceSettingsByUUID(uuid);
-        if (settings.get_int('index') === index) {
-            return [uuid, settings];
-        }
-    }
-    return getNewWorkspaceSettings(index);
-}
-
-function getNewWorkspaceSettings(index) {
-    let uuid = GLib.uuid_string_random();
-    let settings = getWorkspaceSettingsByUUID(uuid);
-    let list = workspaceList.get_strv('list');
-    list.push(uuid);
-    workspaceList.set_strv('list', list);
-    settings.set_int('index', index);
-    return [uuid, settings];
-}
-
-function getWorkspaceSettingsByUUID(uuid) {
-    if (!workspaceSettingsCache[uuid]) {
-        let settings = new Gio.Settings({
-            settings_schema: schemaSource.lookup(WORKSPACE_KEY, true),
-            path: `/org/gnome/shell/extensions/paperwm/workspaces/${uuid}/`
-        });
-        workspaceSettingsCache[uuid] = settings;
-    }
-    return workspaceSettingsCache[uuid];
-}
-
-/** Returns [[uuid, settings, name], ...] (Only used for debugging/development atm.) */
-function findWorkspaceSettingsByName(regex) {
-    let list = workspaceList.get_strv('list');
-    let settingss = list.map(getWorkspaceSettingsByUUID);
-    return Extension.imports.utils.zip(list, settingss, settingss.map(s => s.get_string('name')))
-        .filter(([uuid, s, name]) => name.match(regex));
-}
-
-/** Only used for debugging/development atm. */
-function deleteWorkspaceSettingsByName(regex, dryrun = true) {
-    let out = "";
-    function rprint(...args) { log(...args); out += args.join(" ") + "\n"; }
-    let n = global.workspace_manager.get_n_workspaces();
-    for (let [uuid, s, name] of findWorkspaceSettingsByName(regex)) {
-        let index = s.get_int('index');
-        if (index < n) {
-            rprint("Skipping in-use settings", name, index);
-            continue;
-        }
-        rprint(dryrun ? "[dry]" : "", `Delete settings for '${name}' (${uuid})`);
-        if (!dryrun) {
-            deleteWorkspaceSettings(uuid);
-        }
-    }
-    return out;
-}
-
-/** Only used for debugging/development atm. */
-function deleteWorkspaceSettings(uuid) {
-    // NB! Does not check if the settings is currently in use. Does not reindex subsequent settings.
-    let list = workspaceList.get_strv('list');
-    let i = list.indexOf(uuid);
-    let settings = getWorkspaceSettingsByUUID(list[i]);
-    for (let key of settings.list_keys()) {
-        // Hopefully resetting all keys will delete the relocatable settings from dconf?
-        settings.reset(key);
-    }
-
-    list.splice(i, 1);
-    workspaceList.set_strv('list', list);
-}
-
-// Useful for debugging
-function printWorkspaceSettings() {
-    let list = workspaceList.get_strv('list');
-    let settings = list.map(getWorkspaceSettingsByUUID);
-    let zipped = Extension.imports.utils.zip(list, settings);
-    const key = s => s[1].get_int('index');
-    zipped.sort((a, b) => key(a) - key(b));
-    for (let [uuid, s] of zipped) {
-        log('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
-    }
 }
 
 /// Keybindings
@@ -302,7 +160,7 @@ function generateKeycomboMap(settings) {
 }
 
 function findConflicts(schemas) {
-    schemas = schemas || conflictSettings;
+    schemas = schemas || getConflictSettings();
     let conflicts = [];
     const paperMap =
           generateKeycomboMap(ExtensionUtils.getSettings(KEYBINDINGS_KEY));
@@ -429,7 +287,7 @@ function defwinprop(spec) {
  */
 function addWinpropsFromGSettings() {
     // add gsetting (user config) winprops
-    settings.get_value('winprops').deep_unpack()
+    gsettings.get_value('winprops').deep_unpack()
         .map(value => JSON.parse(value))
         .forEach(prop => {
             // test if wm_class or title is a regex expression

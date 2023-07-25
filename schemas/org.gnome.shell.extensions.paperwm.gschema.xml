@@ -220,13 +220,6 @@
       <summary>Toggle fullscreen</summary>
     </key>
 
-    <key type="as" name="develop-set-globals">
-      <default><![CDATA[['<Super>Insert']]]></default>
-      <summary>
-        Develop: set various global js variables. Eg. `metaWindow` to the active window
-      </summary>
-    </key>
-
     <key type="as" name="close-window">
       <default><![CDATA[['<Super>BackSpace']]]></default>
       <summary>Close the active window</summary>

@@ -1,25 +1,20 @@
-var ExtensionUtils = imports.misc.extensionUtils;
-var Extension = ExtensionUtils.getCurrentExtension();
-var ExtensionModule = Extension.imports.extension;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Extension = ExtensionUtils.getCurrentExtension();
+const ExtensionModule = Extension.imports.extension;
+const Settings = Extension.imports.settings;
+const Utils = Extension.imports.utils;
+const Tiling = Extension.imports.tiling;
+const Navigator = Extension.imports.navigator;
+const App = Extension.imports.app;
+const Scratch = Extension.imports.scratch;
+const LiveAltTab = Extension.imports.liveAltTab;
+const keystrToKeycombo = Extension.imports.settings.keystrToKeycombo;
 
-var Clutter = imports.gi.Clutter;
-var Seat = Clutter.get_default_backend().get_default_seat();
-var Meta = imports.gi.Meta;
+const { Clutter, Meta, Shell } = imports.gi;
+const Seat = Clutter.get_default_backend().get_default_seat();
+const Main = imports.ui.main;
+const display = global.display;
 
-var Utils = Extension.imports.utils;
-var Main = imports.ui.main;
-var Shell = imports.gi.Shell;
-
-var Settings = Extension.imports.settings;
-var keystrToKeycombo = Settings.keystrToKeycombo;
-
-var Navigator = Extension.imports.navigator;
-var Tiling = Extension.imports.tiling;
-var LiveAltTab = Extension.imports.liveAltTab;
-var Scratch = Extension.imports.scratch;
-var App = Extension.imports.app;
-
-var display = global.display;
 
 var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
@@ -48,13 +43,13 @@ function registerMinimapAction(name, handler) {
             settings: settings,
             opensNavigator: true,
             opensMinimap: true,
-            mutterFlags: Meta.KeyBindingFlags.PER_WINDOW
+            mutterFlags: Meta.KeyBindingFlags.PER_WINDOW,
         }
     );
 }
 
 
-var signals, actions, nameMap, actionIdMap, keycomboMap, overrides, conflictSettings;
+var signals, actions, nameMap, actionIdMap, keycomboMap, overrides;
 function setupActions() {
     signals = new Utils.Signals();
     actions = [];
@@ -151,10 +146,6 @@ function setupActions() {
         dynamic_function_ref("switchToNextFocusMode",
             Tiling));
 
-    registerPaperAction("develop-set-globals",
-        dynamic_function_ref("setDevGlobals",
-            Utils));
-
     registerPaperAction("resize-h-inc",
         dynamic_function_ref("resizeHInc",
             Tiling),
@@ -191,8 +182,7 @@ function setupActions() {
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('new-window',
-        dynamic_function_ref('duplicateWindow',
-            App),
+        dynamic_function_ref('duplicateWindow', App),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('close-window',
@@ -280,7 +270,7 @@ function registerAction(actionName, handler, options) {
         mutterName = actionName;
         keyHandler = opensNavigator
             ? asKeyHandler(Navigator.preview_navigate)
-            : asKeyHandler(handler)
+            : asKeyHandler(handler);
     } else {
         // actionId, mutterName and keyHandler will be set if/when the action is bound
     }
@@ -317,7 +307,7 @@ function bindkey(keystr, actionName=null, handler=null, options={}) {
     } else {
         let boundAction = keycomboMap[keycombo];
         if (boundAction && boundAction != action) {
-            log("Rebinding", keystr, "to", actionName, "from", boundAction.name);
+            console.debug("Rebinding", keystr, "to", actionName, "from", boundAction.name);
             disableAction(boundAction);
         }
 
@@ -408,7 +398,7 @@ function getActionIdByActionName(actionName) {
         try {
             return parseInt(e.message.split(" ")[0]);
         } catch(e2) {
-            log("Could not find actionId for", actionName);
+            console.error("Could not find actionId for", actionName);
             return Meta.KeyBindingAction.NONE;
         }
     }
@@ -474,11 +464,11 @@ function enableAction(action) {
             action.id = actionId;
             actionIdMap[actionId] = action;
         } else {
-            Utils.warn("Could not enable action", action.name);
+            console.warn("Could not enable action", action.name);
         }
     } else {
         if (keycomboMap[action.keycombo]) {
-            Utils.warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name);
+            console.warn("Other action bound to", action.keystr, keycomboMap[action.keycombo].name);
             return Meta.KeyBindingAction.NONE;
         }
 
@@ -491,7 +481,7 @@ function enableAction(action) {
         }
 
         if (actionId === Meta.KeyBindingAction.NONE) {
-            Utils.warn("Failed to grab. Binding probably already taken");
+            console.warn("Failed to grab. Binding probably already taken");
             return Meta.KeyBindingAction.NONE;
         }
 
@@ -678,7 +668,7 @@ function resetConflicts() {
 
 function enable() {
     setupActions();
-    let schemas = [...Settings.conflictSettings,
+    let schemas = [...Settings.getConflictSettings(),
         ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
     schemas.forEach(schema => {
         signals.connect(schema, 'changed', resolveConflicts);

@@ -1,7 +1,7 @@
 // -*- mode: gnome-shell -*-
-var Extension = imports.misc.extensionUtils.getCurrentExtension();
-var Tiling = Extension.imports.tiling;
-var Keybindings = Extension.imports.keybindings;
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Tiling = Extension.imports.tiling;
+const Keybindings = Extension.imports.keybindings;
 
 function enable() {
     // Runs when extension is enabled

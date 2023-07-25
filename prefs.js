@@ -1,7 +1,8 @@
-const {Gio, GLib, GObject, Gtk, Gdk} = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Settings = Extension.imports.settings;
+const Workspace = Extension.imports.workspace;
+const { Gio, GLib, GObject, Gtk, Gdk } = imports.gi;
 const {KeybindingsPane} = Extension.imports.prefsKeybinding;
 const {WinpropsPane} = Extension.imports.winpropsPane;
 
@@ -33,7 +34,7 @@ function swapArrayElements(array, i, j) {
 }
 
 function getOk(okValue) {
-    if(okValue[0]) {
+    if (okValue[0]) {
         return okValue[1];
     } else {
         return null;
@@ -114,12 +115,12 @@ var SettingsWidget = class SettingsWidget {
                 let isPercent = value.split(';').map(v => v.trim()).every(v => /^.*%$/.test(v));
                 let isPixels = value.split(';').map(v => v.trim()).every(v => /^.*px$/.test(v));
                 if (isPercent && isPixels) {
-                    log("cycle width/height values cannot mix percentage and pixel values");
+                    console.error("cycle width/height values cannot mix percentage and pixel values");
                     element.add_css_class('error');
                     return;
                 }
                 if (!isPercent && !isPixels) {
-                    log("no cycle width/height value units present");
+                    console.error("no cycle width/height value units present");
                     element.add_css_class('error');
                     return;
                 }
@@ -131,12 +132,12 @@ var SettingsWidget = class SettingsWidget {
                     .map(v => v.replaceAll(/[^\d.]/g, '')) // strip everything but digits and period
                     .filter(v => v.length > 0) // needed to remove invalid inputs
                     .map(Number) // only accept valid numbers
-                    .map(v => isPercent ? v/100.0 : v)
-                    .sort((a,b) => a - b); // sort values to ensure monotonicity
+                    .map(v => isPercent ? v / 100.0 : v)
+                    .sort((a, b) => a - b); // sort values to ensure monotonicity
 
                 // check to make sure if percent than input cannot be > 100%
                 if (isPercent && varr.some(v => v > 1)) {
-                    log("cycle width/height percent inputs cannot be greater than 100%");
+                    console.error("cycle width/height percent inputs cannot be greater than 100%");
                     element.add_css_class('error');
                     return;
                 }
@@ -227,16 +228,14 @@ var SettingsWidget = class SettingsWidget {
         const workspaceStack = this.builder.get_object('workspace_stack');
 
         this.workspaceNames = wmSettings.get_strv('workspace-names');
-
-        Settings.setSchemas();
-        const nWorkspaces = Settings.workspaceList.get_strv('list').length;
+        const nWorkspaces = Workspace.getWorkspaceList().get_strv('list').length;
 
         // Note: For some reason we can't set the visible child of the workspace
         //       stack at construction time.. (!)
         //       Ensure the initially selected workspace is added to the stack
         //       first as a workaround.
         let wsIndices = range(nWorkspaces);
-        let wsSettingsByIndex = wsIndices.map(i => Settings.getWorkspaceSettings(i)[1]);
+        let wsSettingsByIndex = wsIndices.map(i => Workspace.getWorkspaceSettings(i)[1]);
         let wsIndicesSelectedFirst =
             swapArrayElements(wsIndices.slice(), 0, selectedWorkspace);
 
@@ -348,7 +347,7 @@ var SettingsWidget = class SettingsWidget {
         let clearDirectory = new Gtk.Button({
             icon_name: 'edit-clear-symbolic',
             tooltip_text: 'Clear workspace directory',
-            sensitive: settings.get_string('directory') != ''
+            sensitive: settings.get_string('directory') != '',
         });
         directoryBox.append(directoryChooser);
         directoryBox.append(clearDirectory);
@@ -686,8 +685,6 @@ function addKeybinding(model, settings, id, position=null) {
         [COLUMN_MODS, mods],
     ]));
 
-
-
     // Add one subrow for each additional keybinding
     accels.slice(1).forEach((accelerator, i) => {
         let [key, mods] = parseAccelerator(accelerator);
@@ -800,6 +797,7 @@ function syncStringSetting(settings, key, callback) {
  * (not when initialising the extension on login).
  */
 function init() {
+    Workspace.enable();
     const provider = new Gtk.CssProvider();
     provider.load_from_path(Extension.dir.get_path() + '/resources/prefs.css');
     Gtk.StyleContext.add_provider_for_display(
