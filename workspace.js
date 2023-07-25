@@ -7,27 +7,35 @@ const { Gio, GLib } = imports.gi;
  */
 var WORKSPACE_LIST_KEY = 'org.gnome.shell.extensions.paperwm.workspacelist';
 let WORKSPACE_KEY = 'org.gnome.shell.extensions.paperwm.workspace';
-let workspaceSettingsCache = {};
+let workspaceSettingsCache;
 
-var schemaSource;
+let schemaSource, workspaceList;
+function enable() {
+    workspaceSettingsCache = {};
+
+    schemaSource = Gio.SettingsSchemaSource.new_from_directory(
+        GLib.build_filenamev([Extension.path, "schemas"]),
+        Gio.SettingsSchemaSource.get_default(),
+        false
+    );
+
+    workspaceList = new Gio.Settings({
+        settings_schema: getSchemaSource().lookup(WORKSPACE_LIST_KEY, true),
+    });
+}
+
+function disable() {
+    workspaceSettingsCache = null;
+    schemaSource = null;
+    workspaceList = null;
+}
+
 function getSchemaSource() {
-    if (!schemaSource) {
-        schemaSource = Gio.SettingsSchemaSource.new_from_directory(
-            GLib.build_filenamev([Extension.path, "schemas"]),
-            Gio.SettingsSchemaSource.get_default(),
-            false
-        );
-    }
     return schemaSource;
 }
 
-var workspaceList;
+
 function getWorkspaceList() {
-    if (!workspaceList) {
-        workspaceList = new Gio.Settings({
-            settings_schema: getSchemaSource().lookup(WORKSPACE_LIST_KEY, true),
-        });
-    }
     return workspaceList;
 }
 

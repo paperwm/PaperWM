@@ -288,8 +288,8 @@ function indent(level, str) {
     return blank + str;
 }
 
-function mkFmt({nameOnly}={nameOnly: false}) {
-    function defaultFmt(actor, prefix="") {
+function mkFmt({ nameOnly } = { nameOnly: false }) {
+    function defaultFmt(actor, prefix = "") {
         const fmtNum = num => num.toFixed(0);
         let extra = [
             `${actor.get_position().map(fmtNum)}`,

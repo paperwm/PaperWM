@@ -34,7 +34,7 @@ function swapArrayElements(array, i, j) {
 }
 
 function getOk(okValue) {
-    if(okValue[0]) {
+    if (okValue[0]) {
         return okValue[1];
     } else {
         return null;
@@ -797,6 +797,7 @@ function syncStringSetting(settings, key, callback) {
  * (not when initialising the extension on login).
  */
 function init() {
+    Workspace.enable();
     const provider = new Gtk.CssProvider();
     provider.load_from_path(Extension.dir.get_path() + '/resources/prefs.css');
     Gtk.StyleContext.add_provider_for_display(

@@ -38,8 +38,8 @@ const Main = imports.ui.main;
           - settings.js shouldn't depend on other modules (e.g with `imports` at the top).
  */
 const modules = [
-    'settings', 'keybindings', 'gestures', 'navigator', 'tiling', 'scratch',
-    'liveAltTab', 'utils', 'stackoverlay', 'app', 'topbar', 'kludges',
+    'settings', 'keybindings', 'gestures', 'navigator', 'workspace', 'tiling', 'scratch',
+    'liveAltTab', 'stackoverlay', 'app', 'topbar', 'kludges',
 ];
 
 /**
