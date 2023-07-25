@@ -1,4 +1,9 @@
 /**
+ * Library of simple functions for use in all other modules.
+ * This libary should be clean and not depend on any other modules.
+ */
+
+/**
    Find the first x in `values` that's larger than `cur`.
    Cycle to first value if no larger value is found.
    `values` should be sorted in ascending order.

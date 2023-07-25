@@ -35,11 +35,11 @@ const Main = imports.ui.main;
 
      Notes of ordering:
         - several modules import settings, so settings should be before them;
-          - settings.js shouldn't depend on other modules (e.g with `imports` at the top).
+          - settings.js should not depend on other paperwm modules;
  */
 const modules = [
     'settings', 'keybindings', 'gestures', 'navigator', 'workspace', 'tiling', 'scratch',
-    'liveAltTab', 'stackoverlay', 'app', 'topbar', 'kludges',
+    'liveAltTab', 'stackoverlay', 'topbar', 'app', 'kludges',
 ];
 
 /**
