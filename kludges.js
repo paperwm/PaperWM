@@ -556,7 +556,8 @@ function _checkWorkspaces() {
     // to avoid index changes
     for (i = lastIndex; i >= 0; i--) {
         if (emptyWorkspaces[i] && i != lastEmptyIndex) {
-            workspaceManager.remove_workspace(this._workspaces[i], global.get_current_time());
+            workspaceManager.remove_workspace(this._workspaces[i]
+                ,global.get_current_time());
         }
     }
 
