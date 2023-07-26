@@ -1595,9 +1595,6 @@ var Spaces = class Spaces extends Map {
     }
 
     init() {
-        // Create extra workspaces if required
-        Main.wm._workspaceTracker._checkWorkspaces();
-
         this.signals.connect(display, 'window-created',
             this.window_created.bind(this));
 
@@ -1624,6 +1621,9 @@ var Spaces = class Spaces extends Map {
 
         // Monitors aren't set up properly on `enable`, so we need it here too
         this.monitorsChanged();
+
+        // Create extra workspaces if required
+        Main.wm._workspaceTracker._checkWorkspaces();
 
         // Initialize spaces _after_ monitors are set up
         this.forEach(space => space.init());
