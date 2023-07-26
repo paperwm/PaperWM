@@ -632,6 +632,24 @@ var Space = class Space extends Array {
             this.splice(index, 0, [metaWindow]);
         }
 
+        /*
+         * Fix for 3.35+ (still present is 44) which has a bug where move_frame sometimes triggers
+         * another move back to its original position. Make sure tiled windows are always positioned correctly.
+         */
+        this.signals.connect(metaWindow, 'position-changed', w => {
+            if (inGrab)
+                return;
+            let f = w.get_frame_rect();
+            let clone = w.clone;
+            let x = this.visibleX(w);
+            let y = this.monitor.y + clone.targetY;
+            x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
+            x += this.monitor.x;
+            if (f.x !== x || f.y !== y) {
+                w.move_frame(true, x, y);
+            }
+        });
+
         Utils.actor_reparent(metaWindow.clone, this.cloneContainer);
 
         // Make sure the cloneContainer is in a clean state (centered) before layout
