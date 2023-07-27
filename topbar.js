@@ -16,14 +16,14 @@ const { panelMenu, popupMenu } = imports.ui;
 const Main = imports.ui.main;
 const Path = Extension.dir.get_path();
 
-var panelBox = Main.layoutManager.panelBox;
-var panelMonitor;
+const workspaceManager = global.workspace_manager;
+const display = global.display;
 
-var workspaceManager = global.workspace_manager;
-var display = global.display;
+var panelBox = Main.layoutManager.panelBox; // exported
+var panelMonitor; // exported
 
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
-var colors = [
+let colors = [
     '#9DB8D2', '#7590AE', '#4B6983', '#314E6C',
     '#EAE8E3', '#BAB5AB', '#807D74', '#565248',
     '#C5D2C8', '#83A67F', '#5D7555', '#445632',
@@ -586,11 +586,8 @@ var WorkspaceMenu = GObject.registerClass(
         }
     });
 
-var menu;
-var focusButton;
-var orginalActivitiesText;
-var screenSignals, signals;
-let gsettings;
+var menu, focusButton; // exported
+let orginalActivitiesText, screenSignals, signals, gsettings;
 function enable () {
     gsettings = ExtensionUtils.getSettings();
     let label = Main.panel.statusArea.activities.first_child;

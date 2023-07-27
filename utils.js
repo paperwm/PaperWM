@@ -3,6 +3,7 @@ const Extension = ExtensionUtils.getCurrentExtension();
 const Lib = Extension.imports.lib;
 const { GLib, Clutter, Meta, St, GdkPixbuf, Cogl } = imports.gi;
 const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
 const display = global.display;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
@@ -426,11 +427,7 @@ function later_add(...args) {
 function timeout_remove(...timeouts) {
     timeouts.forEach(t => {
         if (t) {
-            try {
-                Mainloop.source_remove(t);
-            } catch (e) {
-                console.log('hehehe');
-            }
+            Mainloop.source_remove(t);
         }
     });
 }

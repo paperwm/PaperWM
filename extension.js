@@ -39,7 +39,7 @@ const Main = imports.ui.main;
  */
 const modules = [
     'settings', 'keybindings', 'gestures', 'navigator', 'workspace', 'tiling', 'scratch',
-    'liveAltTab', 'stackoverlay', 'topbar', 'app', 'kludges',
+    'liveAltTab', 'stackoverlay', 'topbar', 'kludges', 'app',
 ];
 
 /**
