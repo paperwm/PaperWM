@@ -43,10 +43,12 @@ const modules = [
 ];
 
 /**
-  Tell the modules to run init, enable or disable
+  Tell the modules to run enable or disable.
  */
-function run(method) {
-    for (let name of modules) {
+function run(method, reverse = false) {
+    // reverse order an array (useful for controlling execution order)
+    let arr = reverse ? [...modules].reverse() : modules;
+    for (let name of arr) {
         // Bail if there's an error in our own modules
         if (!safeCall(name, method))
             return false;
@@ -100,7 +102,7 @@ function prepareForDisable() {
 function disable() {
     console.log('#PaperWM disabled');
     prepareForDisable();
-    run('disable');
+    run('disable', true);
 
     disableUserStylesheet();
     safeCall('user', 'disable');
