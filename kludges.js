@@ -304,7 +304,7 @@ function restoreRuntimeDisables() {
  * move from gnome version to gnome version.  Next to the swipe tracker locations
  * below are the gnome versions when they were first (or last) seen.
  */
-let swipeTrackers;
+var swipeTrackers; // exported
 function setupSwipeTrackers() {
     swipeTrackers = [
         Main?.overview?._swipeTracker, // gnome 40+
