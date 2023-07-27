@@ -2698,14 +2698,11 @@ function enable(errorNotification) {
     let timerId;
     let onWindowGapChanged = () => {
         setVerticalMargin();
-        if (timerId) {
-            Mainloop.source_remove(timerId);
-        }
+        Utils.timeout_remove(timerId);
         timerId = Mainloop.timeout_add(500, () => {
             spaces.mru().forEach(space => {
                 space.layout();
             });
-            timerId = null;
             return false; // on return false destroys timeout
         });
     };
