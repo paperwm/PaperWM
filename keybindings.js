@@ -16,7 +16,7 @@ const Main = imports.ui.main;
 const display = global.display;
 
 
-var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
+let KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
 function registerPaperAction(actionName, handler, flags) {
     let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
@@ -49,7 +49,7 @@ function registerMinimapAction(name, handler) {
 }
 
 
-var signals, actions, nameMap, actionIdMap, keycomboMap, overrides;
+let signals, actions, nameMap, actionIdMap, keycomboMap, overrides;
 function setupActions() {
     signals = new Utils.Signals();
     actions = [];

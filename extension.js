@@ -192,7 +192,7 @@ function enableUserConfig() {
 /**
  * Reloads user.css styles (if user.css present in ~/.config/paperwm).
  */
-var userStylesheet;
+let userStylesheet;
 function enableUserStylesheet() {
     userStylesheet = getConfigDir().get_child("user.css");
     if (userStylesheet.query_exists(null)) {

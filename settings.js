@@ -6,10 +6,11 @@ const { Gio, Gtk } = imports.gi;
     settings.js shouldn't depend on other modules (e.g with `imports` for other modules
     at the top).
  */
-var KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
+
+let KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
 // This is the value mutter uses for the keyvalue of above_tab
-var META_KEY_ABOVE_TAB = 0x2f7259c9;
+let META_KEY_ABOVE_TAB = 0x2f7259c9;
 
 function setState($, key) {
     let value = gsettings.get_value(key);
@@ -17,7 +18,7 @@ function setState($, key) {
     prefs[name] = value.deep_unpack();
 }
 
-var conflictSettings;
+var conflictSettings; // exported
 function getConflictSettings() {
     if (!conflictSettings) {
         // Schemas that may contain conflicting keybindings

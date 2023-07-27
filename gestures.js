@@ -17,17 +17,17 @@ const DIRECTIONS = {
     Vertical: false,
 };
 
-var vy;
-var time;
-var vState;
-var navigator;
-var direction = undefined;
-var gliding = false;
-var signals;
+let vy;
+let time;
+let vState;
+let navigator;
+let direction = undefined;
+let signals;
 // 1 is natural scrolling, -1 is unnatural
-var natural = 1;
+let natural = 1;
+var gliding = false; //exported
 
-var touchpadSettings;
+let touchpadSettings;
 function enable() {
     signals = new Utils.Signals();
     // Touchpad swipes only works in Wayland
@@ -317,7 +317,7 @@ function findTargetWindow(space, direction) {
         return next.meta_window;
 }
 
-var transition = 'easeOutQuad';
+let transition = 'easeOutQuad';
 function updateVertical(dy, t) {
     // if here then initiate workspace stack (for tiling inPreview show)
     if (!Tiling.inPreview) {
@@ -369,7 +369,7 @@ function updateVertical(dy, t) {
     }
 }
 
-var endVerticalTimeout;
+let endVerticalTimeout;
 function endVertical() {
     let test = vy > 0 ?
         () => vy < 0 :

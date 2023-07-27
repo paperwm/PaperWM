@@ -25,6 +25,7 @@ const display = global.display;
 var spaces; // export
 
 let borderWidth = 8;
+
 // Mutter prevints windows from being placed further off the screen than 75 pixels.
 var stack_margin = 75; // export
 
@@ -1557,6 +1558,7 @@ border-radius: ${borderWidth}px;
 
 Signals.addSignalMethods(Space.prototype);
 
+// static object
 var StackPositions = {
     top: 0.01,
     up: 0.035,
@@ -2671,7 +2673,9 @@ let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
 let oldSpaces, oldMonitors;
 let startupTimeoutId;
+var inGrab;
 function enable(errorNotification) {
+    inGrab = false;
     gsettings = ExtensionUtils.getSettings();
     backgroundSettings = new Gio.Settings({
         schema_id: 'org.gnome.desktop.background',
@@ -2777,6 +2781,7 @@ function disable () {
 
     spaces.destroy();
     gsettings.run_dispose();
+    inGrab = null;
     gsettings = null;
     backgroundGroup = null;
     backgroundSettings = null;
@@ -3173,7 +3178,6 @@ function move_to(space, metaWindow, { x, y, force, instant }) {
     space.fixOverlays(metaWindow);
 }
 
-var inGrab = false;
 function grabBegin(metaWindow, type) {
     switch (type) {
     case Meta.GrabOp.COMPOSITOR:
