@@ -562,10 +562,6 @@ var Space = class Space extends Array {
         let x = this.visibleX(metaWindow);
         let workArea = this.workArea();
         let min = workArea.x;
-
-        let left = min - x
-        let right = x + clone.width
-
         return min <= x && x + clone.width < min + workArea.width;
     }
 
