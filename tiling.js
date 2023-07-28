@@ -1756,9 +1756,6 @@ var Spaces = class Spaces extends Map {
             }
         }
 
-        // update old monitors here
-        oldMonitors = new Map(this.monitors);
-
         // Reset any removed monitors
         mru.forEach(space => {
             if (!monitors.includes(space.monitor)) {
@@ -2763,8 +2760,7 @@ function disable () {
     grabSignals.destroy();
     signals.destroy();
 
-    // save spaces map for restore (monitors are alrady stored)
-    oldSpaces = new Map(spaces);
+    oldMonitors = new Map(spaces.monitors);
     oldSpaces.forEach(space => {
         let windows = space.getWindows();
         let selected = windows.indexOf(space.selectedWindow);
