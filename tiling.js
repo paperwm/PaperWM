@@ -2738,6 +2738,14 @@ function enable(errorNotification) {
             s.monitor.clickOverlay.show();
         });
         TopBar.fixTopBar();
+
+        // on idle update space topbar elements and name
+        Utils.later_add(Meta.LaterType.IDLE, () => {
+            spaces.forEach(s => {
+                s.setSpaceTopbarElementsVisible(false);
+                s.updateName();
+            });
+        });
     }
 
     if (Main.layoutManager._startingUp) {
