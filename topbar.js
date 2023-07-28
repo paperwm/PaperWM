@@ -764,6 +764,14 @@ function updateWorkspaceIndicator(index) {
     }
 }
 
+/**
+ * Refreshes topbar workspace indicator.
+ */
+function refreshWorkspaceIndicator() {
+    let panelSpace = Tiling.spaces.monitors.get(panelMonitor);
+    updateWorkspaceIndicator(panelSpace.workspace.index());
+}
+
 function setWorkspaceName (name) {
     menu && menu.setName(name);
 }

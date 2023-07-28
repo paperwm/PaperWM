@@ -1685,8 +1685,7 @@ var Spaces = class Spaces extends Map {
         let finish = () => {
             // update topbar workspace indicator
             TopBar.updateMonitor();
-            let panelSpace = spaces.monitors.get(TopBar.panelMonitor);
-            TopBar.updateWorkspaceIndicator(panelSpace.workspace.index());
+            TopBar.refreshWorkspaceIndicator();
 
             let activeSpace = this.get(workspaceManager.get_active_workspace());
             let mru = this.mru();
