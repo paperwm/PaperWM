@@ -770,6 +770,7 @@ function setWorkspaceName (name) {
 
 function updateMonitor() {
     let primaryMonitor = Main.layoutManager.primaryMonitor;
+
     // if panelMonitor has changed, then update layouts on workspaces
     if (panelMonitor !== primaryMonitor) {
         Utils.later_add(Meta.LaterType.IDLE, () => {
@@ -782,5 +783,7 @@ function updateMonitor() {
             fixStyle();
         });
     }
+
+    // update topbar monitor
     panelMonitor = primaryMonitor;
 }
