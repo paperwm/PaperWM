@@ -73,7 +73,7 @@ function enable() {
                     return Clutter.EVENT_PROPAGATE;
                 }
 
-                let dir_y = -dy*natural*Settings.prefs.swipe_sensitivity[1];
+                let dir_y = -dy * natural * Settings.prefs.swipe_sensitivity[1];
                 // if not Tiling.inPreview and swipe is UP => propagate event to overview
                 if (!Tiling.inPreview && dir_y > 0) {
                     swipeTrackersEnable();
@@ -102,7 +102,7 @@ function enable() {
                 endVertical();
                 return Clutter.EVENT_STOP;
             }
-        };
+        }
         return Clutter.EVENT_PROPAGATE;
     });
 }
@@ -137,7 +137,7 @@ function horizontalScroll(actor, event) {
             Easer.removeEase(this.cloneContainer);
             direction = DIRECTIONS.Horizontal;
         }
-        return update(this, -dx*natural*Settings.prefs.swipe_sensitivity[0], event.get_time());
+        return update(this, -dx * natural * Settings.prefs.swipe_sensitivity[0], event.get_time());
     case Clutter.TouchpadGesturePhase.CANCEL:
     case Clutter.TouchpadGesturePhase.END:
         this.hState = phase;
@@ -163,10 +163,10 @@ function update(space, dx, t) {
         space.vx = v;
     }
 
-    let accel = Settings.prefs.swipe_friction[0]/16; // px/ms^2
+    let accel = Settings.prefs.swipe_friction[0] / 16; // px/ms^2
     accel = space.vx > 0 ? -accel : accel;
-    let duration = -space.vx/accel;
-    let d = space.vx*duration + .5*accel*duration**2;
+    let duration = -space.vx / accel;
+    let d = space.vx * duration + .5 * accel * duration ** 2;
     let target = Math.round(space.targetX - d);
 
     space.targetX = target;
@@ -304,11 +304,11 @@ function findTargetWindow(space, direction) {
     let next = windows[1].clone;
     let r1, r2;
     if (direction) { // ->
-        r1 = Math.abs(closest.targetX + closest.width + space.targetX)/closest.width;
-        r2 = Math.abs(next.targetX + space.targetX - space.width)/next.width;
+        r1 = Math.abs(closest.targetX + closest.width + space.targetX) / closest.width;
+        r2 = Math.abs(next.targetX + space.targetX - space.width) / next.width;
     } else {
-        r1 = Math.abs(closest.targetX + space.targetX - space.width)/closest.width;
-        r2 = Math.abs(next.targetX + next.width + space.targetX)/next.width;
+        r1 = Math.abs(closest.targetX + space.targetX - space.width) / closest.width;
+        r2 = Math.abs(next.targetX + next.width + space.targetX) / next.width;
     }
     // Choose the window the most visible width (as a ratio)
     if (r1 > r2)
@@ -353,7 +353,7 @@ function updateVertical(dy, t) {
         Easer.removeEase(selected.actor);
         Easer.addEase(selected.actor, {
             scale_x: 0.9, scale_y: 0.9, time:
-                Settings.prefs.animation_time, transition
+                Settings.prefs.animation_time, transition,
         });
     } else if (Number.isFinite(v)) {
         vy = v;
@@ -362,7 +362,7 @@ function updateVertical(dy, t) {
     selected.actor.y -= dy;
     if (selected === navigator.from) {
         let scale = 0.90;
-        let s = 1 - (1 - scale)*(selected.actor.y/(0.1*monitor.height));
+        let s = 1 - (1 - scale) * (selected.actor.y / (0.1 * monitor.height));
         s = Math.max(s, scale);
         Easer.removeEase(selected.actor);
         selected.actor.set_scale(s, s);
@@ -371,13 +371,11 @@ function updateVertical(dy, t) {
 
 let endVerticalTimeout;
 function endVertical() {
-    let test = vy > 0 ?
-        () => vy < 0 :
-        () => vy > 0;
-
+    let test = vy > 0 ? () => vy < 0 : () => vy > 0;
     let glide = () => {
-        if (vState < Clutter.TouchpadGesturePhase.END)
+        if (vState < Clutter.TouchpadGesturePhase.END) {
             return false;
+        }
 
         if (!Number.isFinite(vy)) {
             return false;
@@ -385,7 +383,7 @@ function endVertical() {
 
         let selected = Tiling.spaces.selectedSpace;
         let y = selected.actor.y;
-        if (selected === navigator.from && y <= 0.1*selected.height) {
+        if (selected === navigator.from && y <= 0.1 * selected.height) {
             navigator.finish();
             return false;
         }
@@ -394,12 +392,12 @@ function endVertical() {
             return false;
         }
 
-        let dy = vy*16;
+        let dy = vy * 16;
         let v = vy;
         let accel = Settings.prefs.swipe_friction[1];
         accel = v > 0 ? -accel : accel;
         updateVertical(dy, time + 16);
-        vy = vy + accel;
+        vy += accel;
         return true; // repeat
     };
 
