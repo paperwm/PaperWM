@@ -1180,7 +1180,7 @@ border-radius: ${borderWidth}px;
      * Enables or disables this space's window position bar.
      * @param {boolean} enable
      */
-    enableWindowPositionBar(enable=true) {
+    enableWindowPositionBar(enable = true) {
         if (enable) {
             [this.windowPositionBarBackdrop, this.windowPositionBar]
                 .forEach(i => this.actor.add_actor(i));
@@ -2074,8 +2074,6 @@ var Spaces = class Spaces extends Map {
         newSpace = monitorSpaces[to];
         this.selectedSpace = newSpace;
 
-        TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
-
         const scale = 0.825;
         const padding_percentage = 4;
         let last = monitorSpaces.length - 1;
@@ -2229,8 +2227,6 @@ var Spaces = class Spaces extends Map {
 
         newSpace = mru[to];
         this.selectedSpace = newSpace;
-
-        TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
         mru.forEach((space, i) => {
             let actor = space.actor;

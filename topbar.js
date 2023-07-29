@@ -756,10 +756,8 @@ function fixFocusModeIcon() {
 */
 function updateWorkspaceIndicator(index) {
     let spaces = Tiling.spaces;
-    let space = spaces && spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
-    let onMonitor = space && space.monitor === panelMonitor;
-    let nav = Navigator.navigator;
-    if (onMonitor || (Tiling.inPreview && nav && nav.from.monitor === panelMonitor)) {
+    let space = spaces?.spaceOf(workspaceManager.get_workspace_by_index(index));
+    if (space && space.monitor === panelMonitor) {
         setWorkspaceName(space.name);
 
         // also update focus mode
