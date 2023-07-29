@@ -2259,7 +2259,6 @@ var Spaces = class Spaces extends Map {
 
         newSpace = mru[to];
         this.selectedSpace = newSpace;
-        Utils.print_stacktrace();
         TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
         mru.forEach((space, i) => {
