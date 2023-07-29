@@ -2775,6 +2775,7 @@ function disable () {
     signals.destroy();
 
     prevMonitors = new Map(spaces.monitors);
+    prevSpaces = new Map(spaces);
     prevSpaces.forEach(space => {
         let windows = space.getWindows();
         let selected = windows.indexOf(space.selectedWindow);
