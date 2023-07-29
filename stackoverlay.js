@@ -89,10 +89,11 @@ var ClickOverlay = class ClickOverlay {
                 this._lastPointer = [x, y];
                 this._lastPointerTimeout = Mainloop.timeout_add(500, () => {
                     this._lastPointer = [];
+                    this._lastPointerTimeout = null;
                     return false; // on return false destroys timeout
                 });
                 if (lX === undefined ||
-                    Math.sqrt((lX - x)**2 + (lY - y)**2) < 10)
+                    Math.sqrt((lX - x) ** 2 + (lY - y) ** 2) < 10)
                     return;
                 this.select();
                 return Clutter.EVENT_STOP;
@@ -223,6 +224,7 @@ var StackOverlay = class StackOverlay {
                 if (x <= 2 || x >= this.monitor.width - 2) {
                     this.triggerPreview.bind(this)();
                 }
+                this.triggerPreviewTimeout = null;
                 return false; // on return false destroys timeout
             });
         });
@@ -251,6 +253,7 @@ var StackOverlay = class StackOverlay {
             delete this._previewId;
             this.removePreview();
             this.showPreview();
+            this._previewId = null;
             return false; // on return false destroys timeout
         });
 
@@ -258,6 +261,7 @@ var StackOverlay = class StackOverlay {
         /*
         this._removeId = Mainloop.timeout_add_seconds(2, () => {
             this.removePreview();
+            this._removeId = null;
             return false; // on return false destroys timeout
         });
         */
@@ -328,7 +332,7 @@ var StackOverlay = class StackOverlay {
             this.pressureBarrier.destroy();
             this.barrier = null;
         }
-        this._removeBarrierTimeoutId = 0;
+        this._removeBarrierTimeoutId = null;
     }
 
     updateBarrier(force) {
@@ -344,11 +348,12 @@ var StackOverlay = class StackOverlay {
         this.pressureBarrier.connect('trigger', () => {
             this.pressureBarrier._reset();
             this.pressureBarrier._isTriggered = false;
-            if (this._removeBarrierTimeoutId > 0) {
+            if (this._removeBarrierTimeoutId) {
                 Mainloop.source_remove(this._removeBarrierTimeoutId);
             }
             this._removeBarrierTimeoutId = Mainloop.timeout_add(100, () => {
                 this.removeBarrier();
+                this._removeBarrierTimeoutId = null;
                 return false;
             });
             overlay.show();
@@ -446,6 +451,8 @@ var StackOverlay = class StackOverlay {
     }
 
     destroy() {
+        Utils.timeout_remove(this._removeBarrierTimeoutId);
+        this._removeBarrierTimeoutId = null;
         Utils.timeout_remove(this.triggerPreviewTimeout);
         this.triggerPreviewTimeout = null;
 

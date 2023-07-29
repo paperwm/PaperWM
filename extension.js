@@ -38,15 +38,19 @@ const Main = imports.ui.main;
           - settings.js should not depend on other paperwm modules;
  */
 const modules = [
-    'settings', 'keybindings', 'gestures', 'navigator', 'workspace', 'tiling', 'scratch',
-    'liveAltTab', 'stackoverlay', 'topbar', 'app', 'kludges',
+    'settings',
+    'gestures', 'keybindings', 'liveAltTab', 'navigator', 'stackoverlay', 'scratch',
+    'workspace', 'tiling', 'topbar', // these have `enable` dependency order
+    'kludges', 'app', // these have `enable` dependency order
 ];
 
 /**
-  Tell the modules to run init, enable or disable
+  Tell the modules to run enable or disable.
  */
-function run(method) {
-    for (let name of modules) {
+function run(method, reverse = false) {
+    // reverse order an array (useful for controlling execution order)
+    let arr = reverse ? [...modules].reverse() : modules;
+    for (let name of arr) {
         // Bail if there's an error in our own modules
         if (!safeCall(name, method))
             return false;
@@ -100,7 +104,7 @@ function prepareForDisable() {
 function disable() {
     console.log('#PaperWM disabled');
     prepareForDisable();
-    run('disable');
+    run('disable', true);
 
     disableUserStylesheet();
     safeCall('user', 'disable');
@@ -190,7 +194,7 @@ function enableUserConfig() {
 /**
  * Reloads user.css styles (if user.css present in ~/.config/paperwm).
  */
-var userStylesheet;
+let userStylesheet;
 function enableUserStylesheet() {
     userStylesheet = getConfigDir().get_child("user.css");
     if (userStylesheet.query_exists(null)) {

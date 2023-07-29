@@ -8,8 +8,8 @@ const display = global.display;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
 
-var debug_all = false; // Turn off by default
-var debug_filter = { '#paperwm': true, '#stacktrace': true };
+let debug_all = false; // Turn off by default
+let debug_filter = { '#paperwm': true, '#stacktrace': true };
 function debug() {
     let keyword = arguments[0];
     let filter = debug_filter[keyword];
@@ -160,7 +160,7 @@ function toggleWindowBoxes(metaWindow) {
     return boxes;
 }
 
-var markNewClonesSignalId = null;
+let markNewClonesSignalId = null;
 function toggleCloneMarks() {
     // NB: doesn't clean up signal on disable
 
@@ -422,10 +422,12 @@ function later_add(...args) {
 }
 
 /**
- * Convenience method for removing a timeout source from Mainloop.
+ * Convenience method for removing timeout source(s) from Mainloop.
  */
-function timeout_remove(timeoutId) {
-    if (timeoutId) {
-        Mainloop.source_remove(timeoutId);
-    }
+function timeout_remove(...timeouts) {
+    timeouts.forEach(t => {
+        if (t) {
+            Mainloop.source_remove(t);
+        }
+    });
 }

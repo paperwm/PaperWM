@@ -20,14 +20,17 @@ const Signals = imports.signals;
 
 const display = global.display;
 
-var workspaceManager = global.workspace_manager;
+var navigating; // exported
+let grab, dispatcher;
+function enable() {
+    navigating = false;
+}
 
-var scale = 0.9;
-var navigating = false;
-var grab = null;
-
-/** @type {ActionDispatcher} */
-var dispatcher = null
+function disable() {
+    navigating = false;
+    grab = null;
+    dispatcher = null;
+}
 
 function dec2bin(dec) {
     return (dec >>> 0).toString(2);
@@ -200,6 +203,7 @@ class ActionDispatcher {
             this._resetNoModsTimeout();
             this._doActionTimeout = Mainloop.timeout_add(0, () => {
                 action.handler(metaWindow, space);
+                this._doActionTimeout = null;
                 return false; // on return false destroys timeout
             });
         }
@@ -221,8 +225,8 @@ class ActionDispatcher {
 
     destroy() {
         Utils.timeout_remove(this._noModsTimeoutId);
-        Utils.timeout_remove(this._doActionTimeout);
         this._noModsTimeoutId = null;
+        Utils.timeout_remove(this._doActionTimeout);
         this._doActionTimeout = null;
 
         try {
@@ -242,8 +246,8 @@ class ActionDispatcher {
     }
 }
 
-var index = 0;
-var navigator;
+let index = 0;
+var navigator; // exported
 class NavigatorClass {
     constructor() {
         Utils.debug("#navigator", "nav created");
