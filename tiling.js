@@ -168,8 +168,6 @@ var Space = class Space extends Array {
         }
 
         this.setSettings(Workspace.getWorkspaceSettings(this.workspace.index()));
-        this.setMonitor(monitor, false);
-
         actor.set_pivot_point(0.5, 0);
 
         this.selectedWindow = null;
@@ -189,6 +187,9 @@ var Space = class Space extends Array {
         if (Settings.prefs.show_window_position_bar) {
             this.enableWindowPositionBar();
         }
+
+        // now set monitor for this space
+        this.setMonitor(monitor, false);
 
         if (doInit)
             this.init();
@@ -211,7 +212,6 @@ var Space = class Space extends Array {
         this.cloneContainer.x = this.targetX;
 
         // init window position bar and space topbar elements
-        this.windowPositionBarBackdrop.width = this.monitor.width;
         this.windowPositionBarBackdrop.height = TopBar.panelBox.height;
         this.setSpaceTopbarElementsVisible(false);
 
@@ -1411,6 +1411,9 @@ border-radius: ${borderWidth}px;
             this.createBackground();
             this.updateBackground();
             this.updateColor();
+
+            // update width of windowPositonBarBackdrop (to match monitor)
+            this.windowPositionBarBackdrop.width = monitor.width;
         }
 
         let background = this.background;
