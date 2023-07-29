@@ -216,8 +216,9 @@ function showWindows() {
     ws.forEach(Tiling.showWindow)
 }
 
-var originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
+let originalBuildMenu;
 function enable() {
+    originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
     float = Symbol();
     scratchFrame = Symbol();
     WindowMenu.WindowMenu.prototype._buildMenu =
@@ -235,6 +236,7 @@ function enable() {
 
 function disable() {
     WindowMenu.WindowMenu.prototype._buildMenu = originalBuildMenu;
+    originalBuildMenu = null;
     float = null;
     scratchFrame = null;
 }

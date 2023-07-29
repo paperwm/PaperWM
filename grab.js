@@ -11,7 +11,6 @@ const { Meta, Clutter, St, Graphene } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 
-var virtualPointer;
 
 function isInRect(x, y, r) {
     return r.x <= x && x < r.x + r.width &&
@@ -31,7 +30,8 @@ function monitorAtPoint(gx, gy) {
  * "clickout" of a drag operation when `grab_end_op` is unavailable
  * (i.e. as of Gnome 44 where `grab_end_op` was removed).
  * @returns Clutter.VirtualInputDevice
- */
+*/
+let virtualPointer;
 function getVirtualPointer() {
     if (!virtualPointer) {
         virtualPointer = Clutter.get_default_backend()

@@ -11,7 +11,7 @@ let prefs = {
     minimum_margin: 3,
 };
 
-var virtStage = null;
+let virtStage = null;
 
 function repl() {
     if (virtStage) {

@@ -17,17 +17,17 @@ const DIRECTIONS = {
     Vertical: false,
 };
 
-var vy;
-var time;
-var vState;
-var navigator;
-var direction = undefined;
-var gliding = false;
-var signals;
+let vy;
+let time;
+let vState;
+let navigator;
+let direction = undefined;
+let signals;
 // 1 is natural scrolling, -1 is unnatural
-var natural = 1;
+let natural = 1;
+var gliding = false; //exported
 
-var touchpadSettings;
+let touchpadSettings;
 function enable() {
     signals = new Utils.Signals();
     // Touchpad swipes only works in Wayland
@@ -73,7 +73,7 @@ function enable() {
                     return Clutter.EVENT_PROPAGATE;
                 }
 
-                let dir_y = -dy*natural*Settings.prefs.swipe_sensitivity[1];
+                let dir_y = -dy * natural * Settings.prefs.swipe_sensitivity[1];
                 // if not Tiling.inPreview and swipe is UP => propagate event to overview
                 if (!Tiling.inPreview && dir_y > 0) {
                     swipeTrackersEnable();
@@ -102,7 +102,7 @@ function enable() {
                 endVertical();
                 return Clutter.EVENT_STOP;
             }
-        };
+        }
         return Clutter.EVENT_PROPAGATE;
     });
 }
@@ -137,7 +137,7 @@ function horizontalScroll(actor, event) {
             Easer.removeEase(this.cloneContainer);
             direction = DIRECTIONS.Horizontal;
         }
-        return update(this, -dx*natural*Settings.prefs.swipe_sensitivity[0], event.get_time());
+        return update(this, -dx * natural * Settings.prefs.swipe_sensitivity[0], event.get_time());
     case Clutter.TouchpadGesturePhase.CANCEL:
     case Clutter.TouchpadGesturePhase.END:
         this.hState = phase;
@@ -163,10 +163,10 @@ function update(space, dx, t) {
         space.vx = v;
     }
 
-    let accel = Settings.prefs.swipe_friction[0]/16; // px/ms^2
+    let accel = Settings.prefs.swipe_friction[0] / 16; // px/ms^2
     accel = space.vx > 0 ? -accel : accel;
-    let duration = -space.vx/accel;
-    let d = space.vx*duration + .5*accel*duration**2;
+    let duration = -space.vx / accel;
+    let d = space.vx * duration + .5 * accel * duration ** 2;
     let target = Math.round(space.targetX - d);
 
     space.targetX = target;
@@ -304,11 +304,11 @@ function findTargetWindow(space, direction) {
     let next = windows[1].clone;
     let r1, r2;
     if (direction) { // ->
-        r1 = Math.abs(closest.targetX + closest.width + space.targetX)/closest.width;
-        r2 = Math.abs(next.targetX + space.targetX - space.width)/next.width;
+        r1 = Math.abs(closest.targetX + closest.width + space.targetX) / closest.width;
+        r2 = Math.abs(next.targetX + space.targetX - space.width) / next.width;
     } else {
-        r1 = Math.abs(closest.targetX + space.targetX - space.width)/closest.width;
-        r2 = Math.abs(next.targetX + next.width + space.targetX)/next.width;
+        r1 = Math.abs(closest.targetX + space.targetX - space.width) / closest.width;
+        r2 = Math.abs(next.targetX + next.width + space.targetX) / next.width;
     }
     // Choose the window the most visible width (as a ratio)
     if (r1 > r2)
@@ -317,7 +317,7 @@ function findTargetWindow(space, direction) {
         return next.meta_window;
 }
 
-var transition = 'easeOutQuad';
+let transition = 'easeOutQuad';
 function updateVertical(dy, t) {
     // if here then initiate workspace stack (for tiling inPreview show)
     if (!Tiling.inPreview) {
@@ -353,7 +353,7 @@ function updateVertical(dy, t) {
         Easer.removeEase(selected.actor);
         Easer.addEase(selected.actor, {
             scale_x: 0.9, scale_y: 0.9, time:
-                Settings.prefs.animation_time, transition
+                Settings.prefs.animation_time, transition,
         });
     } else if (Number.isFinite(v)) {
         vy = v;
@@ -362,44 +362,46 @@ function updateVertical(dy, t) {
     selected.actor.y -= dy;
     if (selected === navigator.from) {
         let scale = 0.90;
-        let s = 1 - (1 - scale)*(selected.actor.y/(0.1*monitor.height));
+        let s = 1 - (1 - scale) * (selected.actor.y / (0.1 * monitor.height));
         s = Math.max(s, scale);
         Easer.removeEase(selected.actor);
         selected.actor.set_scale(s, s);
     }
 }
 
-var endVerticalTimeout;
+let endVerticalTimeout;
 function endVertical() {
-    let test = vy > 0 ?
-        () => vy < 0 :
-        () => vy > 0;
-
+    let test = vy > 0 ? () => vy < 0 : () => vy > 0;
     let glide = () => {
-        if (vState < Clutter.TouchpadGesturePhase.END)
+        if (vState < Clutter.TouchpadGesturePhase.END) {
+            endVerticalTimeout = null;
             return false;
+        }
 
         if (!Number.isFinite(vy)) {
+            endVerticalTimeout = null;
             return false;
         }
 
         let selected = Tiling.spaces.selectedSpace;
         let y = selected.actor.y;
-        if (selected === navigator.from && y <= 0.1*selected.height) {
+        if (selected === navigator.from && y <= 0.1 * selected.height) {
             navigator.finish();
+            endVerticalTimeout = null;
             return false;
         }
 
         if (test()) {
+            endVerticalTimeout = null;
             return false;
         }
 
-        let dy = vy*16;
+        let dy = vy * 16;
         let v = vy;
         let accel = Settings.prefs.swipe_friction[1];
         accel = v > 0 ? -accel : accel;
         updateVertical(dy, time + 16);
-        vy = vy + accel;
+        vy += accel;
         return true; // repeat
     };
 
