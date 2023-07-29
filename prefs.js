@@ -799,7 +799,7 @@ function syncStringSetting(settings, key, callback) {
 function init() {
     Workspace.enable();
     const provider = new Gtk.CssProvider();
-    provider.load_from_path(Extension.dir.get_path() + '/resources/prefs.css');
+    provider.load_from_path(Extension.path + '/resources/prefs.css');
     Gtk.StyleContext.add_provider_for_display(
         Gdk.Display.get_default(),
         provider,

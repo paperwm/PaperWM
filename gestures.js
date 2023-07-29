@@ -109,6 +109,7 @@ function enable() {
 
 function disable() {
     signals.destroy();
+    signals = null;
     Utils.timeout_remove(endVerticalTimeout);
     endVerticalTimeout = null;
     touchpadSettings = null;
