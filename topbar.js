@@ -16,14 +16,14 @@ const { panelMenu, popupMenu } = imports.ui;
 const Main = imports.ui.main;
 const Path = Extension.dir.get_path();
 
-var panelBox = Main.layoutManager.panelBox;
-var panelMonitor;
+const workspaceManager = global.workspace_manager;
+const display = global.display;
 
-var workspaceManager = global.workspace_manager;
-var display = global.display;
+var panelBox = Main.layoutManager.panelBox; // exported
+var panelMonitor; // exported
 
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
-var colors = [
+let colors = [
     '#9DB8D2', '#7590AE', '#4B6983', '#314E6C',
     '#EAE8E3', '#BAB5AB', '#807D74', '#565248',
     '#C5D2C8', '#83A67F', '#5D7555', '#445632',
@@ -586,11 +586,8 @@ var WorkspaceMenu = GObject.registerClass(
         }
     });
 
-var menu;
-var focusButton;
-var orginalActivitiesText;
-var screenSignals, signals;
-let gsettings;
+var menu, focusButton; // exported
+let orginalActivitiesText, screenSignals, signals, gsettings;
 function enable () {
     gsettings = ExtensionUtils.getSettings();
     let label = Main.panel.statusArea.activities.first_child;
@@ -753,15 +750,21 @@ function fixFocusModeIcon() {
 */
 function updateWorkspaceIndicator(index) {
     let spaces = Tiling.spaces;
-    let space = spaces && spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
-    let onMonitor = space && space.monitor === panelMonitor;
-    let nav = Navigator.navigator;
-    if (onMonitor || (Tiling.inPreview && nav && nav.from.monitor === panelMonitor)) {
+    let space = spaces?.spaceOf(workspaceManager.get_workspace_by_index(index));
+    if (space && space.monitor === panelMonitor) {
         setWorkspaceName(space.name);
 
         // also update focus mode
         focusButton.setFocusMode(space.focusMode);
     }
+}
+
+/**
+ * Refreshes topbar workspace indicator.
+ */
+function refreshWorkspaceIndicator() {
+    let panelSpace = Tiling.spaces.monitors.get(panelMonitor);
+    updateWorkspaceIndicator(panelSpace.workspace.index());
 }
 
 function setWorkspaceName (name) {
@@ -770,6 +773,7 @@ function setWorkspaceName (name) {
 
 function updateMonitor() {
     let primaryMonitor = Main.layoutManager.primaryMonitor;
+
     // if panelMonitor has changed, then update layouts on workspaces
     if (panelMonitor !== primaryMonitor) {
         Utils.later_add(Meta.LaterType.IDLE, () => {
@@ -782,5 +786,7 @@ function updateMonitor() {
             fixStyle();
         });
     }
+
+    // update topbar monitor
     panelMonitor = primaryMonitor;
 }

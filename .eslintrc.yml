@@ -177,7 +177,7 @@ rules:
   no-trailing-spaces: error
   no-undef-init: error
   no-unneeded-ternary: error
-  no-unused-expressions: error
+  #no-unused-expressions: error
   no-unused-vars:
     - error
     # Vars use a suffix _ instead of a prefix because of file-scope private vars
@@ -198,7 +198,7 @@ rules:
     - error
     - consistent: true
       multiline: true
-  # object-curly-spacing: error
+  #object-curly-spacing: error
   object-curly-spacing: 
     - error
     - always

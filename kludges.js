@@ -31,9 +31,6 @@ function getOriginalPosition() {
     return [x, y];
 }
 
-var savedProps;
-savedProps = savedProps || new Map();
-
 function registerOverrideProp(obj, name, override) {
     if (!obj)
         return;
@@ -307,7 +304,7 @@ function restoreRuntimeDisables() {
  * move from gnome version to gnome version.  Next to the swipe tracker locations
  * below are the gnome versions when they were first (or last) seen.
  */
-var swipeTrackers;
+var swipeTrackers; // exported
 function setupSwipeTrackers() {
     swipeTrackers = [
         Main?.overview?._swipeTracker, // gnome 40+
@@ -317,7 +314,7 @@ function setupSwipeTrackers() {
     ].filter(t => typeof t !== 'undefined');
 }
 
-var signals;
+let signals;
 function setupSignals() {
     signals = new Utils.Signals();
 
@@ -345,7 +342,7 @@ function setupSignals() {
     scratchInOverview();
 }
 
-var actions;
+let actions;
 function setupActions() {
     /*
      * Some actions work rather poorly.
@@ -361,8 +358,10 @@ function setupActions() {
     actions.forEach(a => global.stage.remove_action(a));
 }
 
-var gsettings, wmSettings, mutterSettings;
+let savedProps;
+let gsettings, wmSettings, mutterSettings;
 function enable() {
+    savedProps = new Map();
     gsettings = ExtensionUtils.getSettings();
     wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
     mutterSettings = new Gio.Settings({schema_id: 'org.gnome.mutter'});
@@ -378,10 +377,12 @@ function disable() {
     disableOverrides();
     restoreRuntimeDisables();
     actions.forEach(a => global.stage.add_action(a));
+    actions = null;
 
     signals.destroy();
     signals = null;
 
+    savedProps = null;
     swipeTrackers = null;
     gsettings.run_dispose();
     gsettings = null;

@@ -10,21 +10,21 @@ const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Shell = imports.gi.Shell;
 
-var Tracker = Shell.WindowTracker.get_default();
-var CouldNotLaunch = Symbol();
+let Tracker = Shell.WindowTracker.get_default();
+let CouldNotLaunch = Symbol();
 
 // Lookup table for custom handlers, keys being the app id
 var customHandlers, customSpawnHandlers;
 function enable() {
-    customHandlers = {'org.gnome.Terminal.desktop': newGnomeTerminal};
+    customHandlers = { 'org.gnome.Terminal.desktop': newGnomeTerminal };
     customSpawnHandlers = {
-        'com.gexperts.Tilix.desktop': mkCommandLineSpawner('tilix --working-directory %d')
+        'com.gexperts.Tilix.desktop': mkCommandLineSpawner('tilix --working-directory %d'),
     };
 
     function spawnWithFallback(fallback, ...args) {
         try {
             return trySpawnWindow(...args);
-        } catch(e) {
+        } catch (e) {
             return fallback();
         }
     }

@@ -162,7 +162,7 @@ function liveAltTab(meta_window, space, {display, screen, binding}) {
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
 
-var switcherSettings;
+let switcherSettings;
 function enable() {
     switcherSettings = new Gio.Settings({
         schema_id: 'org.gnome.shell.window-switcher',
