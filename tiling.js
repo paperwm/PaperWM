@@ -1257,12 +1257,17 @@ border-radius: ${borderWidth}px;
         // if windowPositionBar shown, we want the topbar style to be transparent if visible
         if (Settings.prefs.show_window_position_bar) {
             if (changeTopBarStyle) {
-                visible ? TopBar.setTransparentStyle() : TopBar.setClearStyle();
+                visible && this.hasTopBar() ? TopBar.setTransparentStyle() : TopBar.setClearStyle();
             }
 
             // if on different monitor then override to show elements
             if (!this.hasTopBar()) {
                 visible = true;
+            }
+
+            // don't show elements on spaces with actual TopBar (unless inPreview)
+            if (this.hasTopBar() && !inPreview) {
+                visible = false;
             }
         }
 
@@ -2076,6 +2081,7 @@ var Spaces = class Spaces extends Map {
 
         newSpace = monitorSpaces[to];
         this.selectedSpace = newSpace;
+        TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
         const scale = 0.825;
         const padding_percentage = 4;
@@ -2230,6 +2236,7 @@ var Spaces = class Spaces extends Map {
 
         newSpace = mru[to];
         this.selectedSpace = newSpace;
+        TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
 
         mru.forEach((space, i) => {
             let actor = space.actor;

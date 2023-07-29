@@ -728,9 +728,6 @@ function fixTopBar() {
     else if (normal && fullscreen) {
         panelBox.hide();
     }
-    else if (Tiling.inPreview) {
-        panelBox.hide();
-    }
     else {
         panelBox.scale_y = 1;
         panelBox.show();
