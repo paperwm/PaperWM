@@ -2053,6 +2053,11 @@ var Spaces = class Spaces extends Map {
             return;
         }
 
+        if (this._inPreviewProgress) {
+            return;
+        }
+        this._inPreviewProgress = true;
+
         let currentSpace = this.getActiveSpace();
         let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
 
@@ -2079,11 +2084,15 @@ var Spaces = class Spaces extends Map {
         else
             to = from - 1;
 
-        if (to < 0 || to >= monitorSpaces.length)
+        if (to < 0 || to >= monitorSpaces.length) {
+            this._inPreviewProgress = false;
             return;
+        }
 
-        if (to === from && Easer.isEasing(newSpace.actor))
+        if (to === from && Easer.isEasing(newSpace.actor)) {
+            this._inPreviewProgress = false;
             return;
+        }
 
         newSpace = monitorSpaces[to];
         this.selectedSpace = newSpace;
@@ -2114,6 +2123,9 @@ var Spaces = class Spaces extends Map {
                 time: Settings.prefs.animation_time,
                 scale_x: scale,
                 scale_y: scale,
+                onComplete: () => {
+                    this._inPreviewProgress = false;
+                },
             });
         });
     }
@@ -2122,11 +2134,6 @@ var Spaces = class Spaces extends Map {
         if (inPreview) {
             return;
         }
-
-        if (this._inPreviewProgress) {
-            return;
-        }
-        this._inPreviewProgress = true;
 
         inPreview = PreviewMode.STACK;
 
@@ -2185,7 +2192,6 @@ var Spaces = class Spaces extends Map {
             Easer.removeEase(space.actor);
 
             if (mru[i - 1] === undefined) {
-                this._inPreviewProgress = false;
                 return;
             }
             let child = space.clip;
@@ -2205,9 +2211,6 @@ var Spaces = class Spaces extends Map {
             Easer.addEase(selected.clone, {
                 y: Main.panel.height + Settings.prefs.vertical_margin,
                 time: Settings.prefs.animation_time,
-                onComplete: () => {
-                    this._inPreviewProgress = false;
-                },
             });
         }
     }
