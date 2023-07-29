@@ -326,12 +326,12 @@ function updateVertical(dy, t) {
 
     let selected = Tiling.spaces.selectedSpace;
     let monitor = navigator.monitor;
-    let v = dy/(t - time);
+    let v = dy / (t - time);
     time = t;
     const StackPositions = Tiling.StackPositions;
-    if (dy > 0
-        && selected !== navigator.from
-        && (selected.actor.y - dy < StackPositions.up * monitor.height)
+    if (dy > 0 &&
+        selected !== navigator.from &&
+        (selected.actor.y - dy < StackPositions.up * monitor.height)
     ) {
         dy = 0;
         vy = 1;
@@ -341,10 +341,10 @@ function updateVertical(dy, t) {
         Easer.removeEase(selected.actor);
         Easer.addEase(selected.actor, {
             scale_x: 0.9, scale_y: 0.9, time:
-                Settings.prefs.animation_time, transition
+                Settings.prefs.animation_time, transition,
         });
-    } else if (dy < 0
-        && (selected.actor.y - dy > StackPositions.down * monitor.height)) {
+    } else if (dy < 0 &&
+        (selected.actor.y - dy > StackPositions.down * monitor.height)) {
         dy = 0;
         vy = -1;
         selected.actor.y = StackPositions.down * selected.height;

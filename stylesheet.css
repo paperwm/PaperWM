@@ -25,7 +25,8 @@
 }
 
 .topbar-transparent {
-    background-color: rgba(0, 0, 0, 0.35)
+    background-color: rgba(0, 0, 0, 0.35);
+    box-shadow: none;
 }
 
 .workspace-icon-button {

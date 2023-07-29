@@ -750,15 +750,21 @@ function fixFocusModeIcon() {
 */
 function updateWorkspaceIndicator(index) {
     let spaces = Tiling.spaces;
-    let space = spaces && spaces.spaceOf(workspaceManager.get_workspace_by_index(index));
-    let onMonitor = space && space.monitor === panelMonitor;
-    let nav = Navigator.navigator;
-    if (onMonitor || (Tiling.inPreview && nav && nav.from.monitor === panelMonitor)) {
+    let space = spaces?.spaceOf(workspaceManager.get_workspace_by_index(index));
+    if (space && space.monitor === panelMonitor) {
         setWorkspaceName(space.name);
 
         // also update focus mode
         focusButton.setFocusMode(space.focusMode);
     }
+}
+
+/**
+ * Refreshes topbar workspace indicator.
+ */
+function refreshWorkspaceIndicator() {
+    let panelSpace = Tiling.spaces.monitors.get(panelMonitor);
+    updateWorkspaceIndicator(panelSpace.workspace.index());
 }
 
 function setWorkspaceName (name) {
@@ -767,6 +773,7 @@ function setWorkspaceName (name) {
 
 function updateMonitor() {
     let primaryMonitor = Main.layoutManager.primaryMonitor;
+
     // if panelMonitor has changed, then update layouts on workspaces
     if (panelMonitor !== primaryMonitor) {
         Utils.later_add(Meta.LaterType.IDLE, () => {
@@ -779,5 +786,7 @@ function updateMonitor() {
             fixStyle();
         });
     }
+
+    // update topbar monitor
     panelMonitor = primaryMonitor;
 }

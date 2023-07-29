@@ -160,17 +160,15 @@ var Space = class Space extends Array {
         this.border.hide();
 
         let monitor = Main.layoutManager.primaryMonitor;
-        let oldSpace = oldSpaces.get(workspace);
+        let prevSpace = prevSpaces.get(workspace);
         this.targetX = 0;
-        if (oldSpace && oldSpace.monitor) {
-            let oldMonitor = Main.layoutManager.monitors[oldSpace.monitor.index];
-            if (oldMonitor)
-                monitor = oldMonitor;
+        if (prevSpace && prevSpace.monitor) {
+            let prevMonitor = Main.layoutManager.monitors[prevSpace.monitor.index];
+            if (prevMonitor)
+                monitor = prevMonitor;
         }
 
         this.setSettings(Workspace.getWorkspaceSettings(this.workspace.index()));
-        this.setMonitor(monitor, false);
-
         actor.set_pivot_point(0.5, 0);
 
         this.selectedWindow = null;
@@ -191,6 +189,9 @@ var Space = class Space extends Array {
             this.enableWindowPositionBar();
         }
 
+        // now set monitor for this space
+        this.setMonitor(monitor, false);
+
         if (doInit)
             this.init();
     }
@@ -199,20 +200,19 @@ var Space = class Space extends Array {
         if (this._populated || Main.layoutManager._startingUp)
             return;
         let workspace = this.workspace;
-        let oldSpace = oldSpaces.get(workspace);
+        let prevSpace = prevSpaces.get(workspace);
 
-        this.addAll(oldSpace);
-        oldSpaces.delete(workspace);
+        this.addAll(prevSpace);
+        prevSpaces.delete(workspace);
         this._populated = true;
         // FIXME: this prevents bad old values propagating
         // Though, targetX shouldn't ideally be able to get into this state.
-        if (oldSpace && Number.isFinite(oldSpace.targetX)) {
-            this.targetX = oldSpace.targetX;
+        if (prevSpace && Number.isFinite(prevSpace.targetX)) {
+            this.targetX = prevSpace.targetX;
         }
         this.cloneContainer.x = this.targetX;
 
         // init window position bar and space topbar elements
-        this.windowPositionBarBackdrop.width = this.monitor.width;
         this.windowPositionBarBackdrop.height = TopBar.panelBox.height;
         this.setSpaceTopbarElementsVisible(false);
 
@@ -1177,7 +1177,7 @@ border-radius: ${borderWidth}px;
      * Enables or disables this space's window position bar.
      * @param {boolean} enable
      */
-    enableWindowPositionBar(enable=true) {
+    enableWindowPositionBar(enable = true) {
         if (enable) {
             [this.windowPositionBarBackdrop, this.windowPositionBar]
                 .forEach(i => this.actor.add_actor(i));
@@ -1257,12 +1257,22 @@ border-radius: ${borderWidth}px;
         // if windowPositionBar shown, we want the topbar style to be transparent if visible
         if (Settings.prefs.show_window_position_bar) {
             if (changeTopBarStyle) {
-                visible ? TopBar.setTransparentStyle() : TopBar.setClearStyle();
+                if (visible && this.hasTopBar()) {
+                    TopBar.setTransparentStyle();
+                }
+                else {
+                    TopBar.setClearStyle();
+                }
             }
 
             // if on different monitor then override to show elements
             if (!this.hasTopBar()) {
                 visible = true;
+            }
+
+            // don't show elements on spaces with actual TopBar (unless inPreview)
+            if (this.hasTopBar() && !inPreview) {
+                visible = false;
             }
         }
 
@@ -1408,6 +1418,9 @@ border-radius: ${borderWidth}px;
             this.createBackground();
             this.updateBackground();
             this.updateColor();
+
+            // update width of windowPositonBarBackdrop (to match monitor)
+            this.windowPositionBarBackdrop.width = monitor.width;
         }
 
         let background = this.background;
@@ -1451,9 +1464,9 @@ border-radius: ${borderWidth}px;
 
     /**
        Add existing windows on workspace to the space. Restore the
-       layout of oldSpace if present.
+       layout of prevSpace if present.
     */
-    addAll(oldSpace) {
+    addAll(prevSpace) {
         // On gnome-shell-restarts the windows are moved into the viewport, but
         // they're moved minimally and the stacking is not changed, so the tiling
         // order is preserved (sans full-width windows..)
@@ -1494,9 +1507,9 @@ border-radius: ${borderWidth}px;
             };
         };
 
-        if (oldSpace) {
-            for (let i=0; i < oldSpace.length; i++) {
-                let column = oldSpace[i];
+        if (prevSpace) {
+            for (let i=0; i < prevSpace.length; i++) {
+                let column = prevSpace[i];
                 for (let j=0; j < column.length; j++) {
                     let metaWindow = column[j];
                     // Prune removed windows
@@ -1507,7 +1520,7 @@ border-radius: ${borderWidth}px;
                     }
                 }
                 if (column.length === 0) {
-                    oldSpace.splice(i, 1); i--;
+                    prevSpace.splice(i, 1); i--;
                 }
             }
         }
@@ -1578,6 +1591,7 @@ var Spaces = class Spaces extends Map {
         super();
 
         this._initDone = false;
+        this._inPreviewProgress = false;
         this.clickOverlays = [];
         this.signals = new Utils.Signals();
         this.stack = [];
@@ -1681,7 +1695,10 @@ var Spaces = class Spaces extends Map {
         }
 
         let finish = () => {
+            // update topbar workspace indicator
             TopBar.updateMonitor();
+            TopBar.refreshWorkspaceIndicator();
+
             let activeSpace = this.get(workspaceManager.get_active_workspace());
             let mru = this.mru();
             this.selectedSpace = mru[0];
@@ -1719,16 +1736,16 @@ var Spaces = class Spaces extends Map {
         }
 
         // Persist as many monitors as possible
-        if (oldMonitors?.size > 0) {
-            for (let [oldMonitor, oldSpace] of oldMonitors) {
-                let monitor = monitors[oldMonitor.index];
-                let space = this.get(oldSpace.workspace);
+        if (prevMonitors?.size > 0) {
+            for (let [prevMonitor, prevSpace] of prevMonitors) {
+                let monitor = monitors[prevMonitor.index];
+                let space = this.get(prevSpace.workspace);
                 if (monitor &&
                     space &&
-                    oldMonitor.width === monitor.width &&
-                    oldMonitor.height === monitor.height &&
-                    oldMonitor.x === monitor.x &&
-                    oldMonitor.y === monitor.y) {
+                    prevMonitor.width === monitor.width &&
+                    prevMonitor.height === monitor.height &&
+                    prevMonitor.x === monitor.x &&
+                    prevMonitor.y === monitor.y) {
                     this.monitors.set(monitor, space);
                     space.setMonitor(monitor, false);
                     mru = mru.filter(s => s !== space);
@@ -1754,9 +1771,6 @@ var Spaces = class Spaces extends Map {
                 mru = mru.slice(1);
             }
         }
-
-        // update old monitors here
-        oldMonitors = new Map(this.monitors);
 
         // Reset any removed monitors
         mru.forEach(space => {
@@ -2006,7 +2020,7 @@ var Spaces = class Spaces extends Map {
 
             let selected = space.selectedWindow;
             if (selected && selected.fullscreen && space !== toSpace) {
-                selected.clone.y = Main.panel.actor.height + Settings.prefs.vertical_margin;
+                selected.clone.y = Main.panel.height + Settings.prefs.vertical_margin;
             }
         });
     }
@@ -2027,7 +2041,7 @@ var Spaces = class Spaces extends Map {
         let selected = this.selectedSpace.selectedWindow;
         if (selected && selected.fullscreen) {
             Easer.addEase(selected.clone, {
-                y: Main.panel.actor.height + Settings.prefs.vertical_margin,
+                y: Main.panel.height + Settings.prefs.vertical_margin,
                 time: Settings.prefs.animation_time,
             });
         }
@@ -2052,7 +2066,7 @@ var Spaces = class Spaces extends Map {
 
         if (move && this.selectedSpace.selectedWindow) {
             const navigator = Navigator.getNavigator();
-            if (navigator._moving == null || 
+            if (navigator._moving === null ||
                 (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
@@ -2074,7 +2088,10 @@ var Spaces = class Spaces extends Map {
         newSpace = monitorSpaces[to];
         this.selectedSpace = newSpace;
 
-        TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
+        // if active (source space) is panelMonitor update indicator
+        if (currentSpace.monitor === TopBar.panelMonitor) {
+            TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
+        }
 
         const scale = 0.825;
         const padding_percentage = 4;
@@ -2105,6 +2122,11 @@ var Spaces = class Spaces extends Map {
         if (inPreview) {
             return;
         }
+
+        if (this._inPreviewProgress) {
+            return;
+        }
+        this._inPreviewProgress = true;
 
         inPreview = PreviewMode.STACK;
 
@@ -2162,14 +2184,16 @@ var Spaces = class Spaces extends Map {
             // Remove any lingering onComplete handlers from animateToSpace
             Easer.removeEase(space.actor);
 
-            if (mru[i - 1] === undefined)
+            if (mru[i - 1] === undefined) {
+                this._inPreviewProgress = false;
                 return;
+            }
             let child = space.clip;
             let sibling = mru[i - 1].clip;
             child !== sibling && cloneParent.set_child_below_sibling(child, sibling);
             let selected = space.selectedWindow;
             if (selected && selected.fullscreen) {
-                selected.clone.y = Main.panel.actor.height + Settings.prefs.vertical_margin;
+                selected.clone.y = Main.panel.height + Settings.prefs.vertical_margin;
             }
         });
 
@@ -2179,8 +2203,11 @@ var Spaces = class Spaces extends Map {
         let selected = space.selectedWindow;
         if (selected && selected.fullscreen) {
             Easer.addEase(selected.clone, {
-                y: Main.panel.actor.height + Settings.prefs.vertical_margin,
+                y: Main.panel.height + Settings.prefs.vertical_margin,
                 time: Settings.prefs.animation_time,
+                onComplete: () => {
+                    this._inPreviewProgress = false;
+                },
             });
         }
     }
@@ -2190,6 +2217,11 @@ var Spaces = class Spaces extends Map {
         if (inPreview === PreviewMode.SEQUENTIAL) {
             return;
         }
+
+        if (this._inPreviewProgress) {
+            return;
+        }
+        this._inPreviewProgress = true;
 
         const scale = 0.9;
         let space = this.getActiveSpace();
@@ -2224,17 +2256,24 @@ var Spaces = class Spaces extends Map {
             to = 0;
         }
 
-        if (to === from && Easer.isEasing(newSpace.actor))
+        if (to === from && Easer.isEasing(newSpace.actor)) {
+            this._inPreviewProgress = false;
             return;
+        }
 
         newSpace = mru[to];
         this.selectedSpace = newSpace;
 
-        TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
+        // if active (source space) is panelMonitor update indicator
+        if (space.monitor === TopBar.panelMonitor) {
+            TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
+        }
 
         mru.forEach((space, i) => {
             let actor = space.actor;
-            let h, onComplete = () => {};
+            let h, onComplete = () => {
+                this._inPreviewProgress = false;
+            };
             if (to === i)
                 h = StackPositions.selected;
             else if (to + 1 === i)
@@ -2247,7 +2286,10 @@ var Spaces = class Spaces extends Map {
                 h = StackPositions.bottom;
 
             if (Math.abs(i - to) > 2) {
-                onComplete = () => space.hide();
+                onComplete = () => {
+                    space.hide();
+                    this._inPreviewProgress = false;
+                };
             } else {
                 space.show();
             }
@@ -2268,7 +2310,6 @@ var Spaces = class Spaces extends Map {
         inPreview = PreviewMode.NONE;
 
         TopBar.updateWorkspaceIndicator(to.workspace.index());
-
         this.selectedSpace = to;
 
         to.show();
@@ -2308,18 +2349,24 @@ var Spaces = class Spaces extends Map {
             // Fixes a weird bug where mouse input stops
             // working after mousing to another monitor on
             // X11.
-            !Meta.is_wayland_compositor() && to.startAnimate();
+            if (!Meta.is_wayland_compositor()) {
+                to.startAnimate();
+            }
 
             to.moveDone();
-            callback && callback();
+            if (callback) {
+                callback();
+            }
         };
 
         if (currentPreviewMode === PreviewMode.SEQUENTIAL) {
             this._animateToSpaceOrdered(to, true);
             let t = to.actor.get_transition('y');
             if (t) {
-                t && t.connect('stopped', (t, finished) => {
-                    finished && onComplete();
+                t.connect('stopped', (timeline, finished) => {
+                    if (finished) {
+                        onComplete();
+                    }
                 });
             } else {
                 // When switching between monitors there's no animation we can
@@ -2330,7 +2377,6 @@ var Spaces = class Spaces extends Map {
         }
 
         this._updateMonitor();
-
         Easer.addEase(to.actor,
             {
                 x: 0,
@@ -2340,7 +2386,6 @@ var Spaces = class Spaces extends Map {
                 time: Settings.prefs.animation_time,
                 onComplete,
             });
-
 
         // Animate all the spaces above `to` down below the monitor. We get
         // these spaces by looking at siblings of upper most actor, ie. the
@@ -2475,6 +2520,7 @@ var Spaces = class Spaces extends Map {
                 s.enableWindowPositionBar();
             });
         }
+
         if (!Settings.prefs.show_window_position_bar) {
             // should be in normal topbar mode
             this.forEach(s => {
@@ -2567,9 +2613,9 @@ function is_override_redirect(metaWindow) {
     // Note: is_overrride_redirect() seem to be false for all wayland windows
     const windowType = metaWindow.windowType;
     return (
-        metaWindow.is_override_redirect()
-            || windowType === Meta.WindowType.DROPDOWN_MENU
-            || windowType === Meta.WindowType.TOOLTIP
+        metaWindow.is_override_redirect() ||
+        windowType === Meta.WindowType.DROPDOWN_MENU ||
+        windowType === Meta.WindowType.TOOLTIP
     );
 }
 
@@ -2582,11 +2628,11 @@ function registerWindow(metaWindow) {
         // Can now happen when setting session-modes to "unlock-dialog" or
         // resetting gnome-shell in-place (e.g. on X11)
         console.warn("window already registered", metaWindow.title);
-        return false
+        return false;
     }
 
     let actor = metaWindow.get_compositor_private();
-    let cloneActor = new Clutter.Clone({source: actor});
+    let cloneActor = new Clutter.Clone({ source: actor });
     let clone = new Clutter.Actor();
 
     clone.add_actor(cloneActor);
@@ -2602,7 +2648,6 @@ function registerWindow(metaWindow) {
     signals.connect(metaWindow, 'notify::fullscreen', TopBar.fixTopBar);
     signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
     signals.connect(actor, 'show', showWrapper);
-
     signals.connect(actor, 'destroy', destroyHandler);
 
     return true;
@@ -2661,10 +2706,11 @@ function resizeHandler(metaWindow) {
 
     if (!space._inLayout && needLayout) {
         // Restore window position when eg. exiting fullscreen
-        !Navigator.navigating && selected
-            && move_to(space, metaWindow, {
-                x: metaWindow.get_frame_rect().x - space.monitor.x
+        if (!Navigator.navigating && selected) {
+            move_to(space, metaWindow, {
+                x: metaWindow.get_frame_rect().x - space.monitor.x,
             });
+        }
 
         // Resizing from within a size-changed signal is troube (#73). Queue instead.
         space.queueLayout();
@@ -2673,7 +2719,7 @@ function resizeHandler(metaWindow) {
 
 let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
-let oldSpaces, oldMonitors;
+let prevSpaces, prevMonitors;
 let startupTimeoutId, timerId;
 var inGrab;
 function enable(errorNotification) {
@@ -2714,8 +2760,8 @@ function enable(errorNotification) {
 
     backgroundGroup = Main.layoutManager._backgroundGroup;
 
-    oldSpaces = oldSpaces ?? new Map();
-    oldMonitors = oldMonitors ?? new Map();
+    prevSpaces = prevSpaces ?? new Map();
+    prevMonitors = prevMonitors ?? new Map();
     spaces = new Spaces();
 
     function initWorkspaces() {
@@ -2740,6 +2786,14 @@ function enable(errorNotification) {
             s.monitor.clickOverlay.show();
         });
         TopBar.fixTopBar();
+
+        // on idle update space topbar elements and name
+        Utils.later_add(Meta.LaterType.IDLE, () => {
+            spaces.forEach(s => {
+                s.setSpaceTopbarElementsVisible(false);
+                s.updateName();
+            });
+        });
     }
 
     if (Main.layoutManager._startingUp) {
@@ -2767,9 +2821,9 @@ function disable () {
     grabSignals.destroy();
     signals.destroy();
 
-    // save spaces map for restore (monitors are alrady stored)
-    oldSpaces = new Map(spaces);
-    oldSpaces.forEach(space => {
+    prevMonitors = new Map(spaces.monitors);
+    prevSpaces = new Map(spaces);
+    prevSpaces.forEach(space => {
         let windows = space.getWindows();
         let selected = windows.indexOf(space.selectedWindow);
         if (selected === -1)
