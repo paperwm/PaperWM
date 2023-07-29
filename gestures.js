@@ -374,10 +374,12 @@ function endVertical() {
     let test = vy > 0 ? () => vy < 0 : () => vy > 0;
     let glide = () => {
         if (vState < Clutter.TouchpadGesturePhase.END) {
+            endVerticalTimeout = null;
             return false;
         }
 
         if (!Number.isFinite(vy)) {
+            endVerticalTimeout = null;
             return false;
         }
 
@@ -385,10 +387,12 @@ function endVertical() {
         let y = selected.actor.y;
         if (selected === navigator.from && y <= 0.1 * selected.height) {
             navigator.finish();
+            endVerticalTimeout = null;
             return false;
         }
 
         if (test()) {
+            endVerticalTimeout = null;
             return false;
         }
 

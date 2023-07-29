@@ -203,6 +203,7 @@ class ActionDispatcher {
             this._resetNoModsTimeout();
             this._doActionTimeout = Mainloop.timeout_add(0, () => {
                 action.handler(metaWindow, space);
+                this._doActionTimeout = null;
                 return false; // on return false destroys timeout
             });
         }
@@ -224,8 +225,8 @@ class ActionDispatcher {
 
     destroy() {
         Utils.timeout_remove(this._noModsTimeoutId);
-        Utils.timeout_remove(this._doActionTimeout);
         this._noModsTimeoutId = null;
+        Utils.timeout_remove(this._doActionTimeout);
         this._doActionTimeout = null;
 
         try {

@@ -1702,6 +1702,7 @@ var Spaces = class Spaces extends Map {
             this.monitorsChangingTimeout = Mainloop.timeout_add(
                 20, () => {
                     this._monitorsChanging = false;
+                    this.monitorsChangingTimeout = null;
                     return false; // on return false destroys timeout
                 });
 
@@ -1799,6 +1800,7 @@ var Spaces = class Spaces extends Map {
 
         this.signals.destroy();
         Utils.timeout_remove(this.monitorsChangingTimeout);
+        this.monitorsChangingTimeout = null;
 
         // remove spaces
         for (let [workspace, space] of this) {
@@ -2672,7 +2674,7 @@ function resizeHandler(metaWindow) {
 let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
 let oldSpaces, oldMonitors;
-let startupTimeoutId;
+let startupTimeoutId, timerId;
 var inGrab;
 function enable(errorNotification) {
     inGrab = false;
@@ -2695,7 +2697,6 @@ function enable(errorNotification) {
     setVerticalMargin();
 
     // setup actions on gap changes
-    let timerId;
     let onWindowGapChanged = () => {
         setVerticalMargin();
         Utils.timeout_remove(timerId);
@@ -2703,6 +2704,7 @@ function enable(errorNotification) {
             spaces.mru().forEach(space => {
                 space.layout();
             });
+            timerId = null;
             return false; // on return false destroys timeout
         });
     };
@@ -2750,6 +2752,7 @@ function enable(errorNotification) {
         // it in a timeout
         startupTimeoutId = Mainloop.timeout_add(0, () => {
             initWorkspaces();
+            startupTimeoutId = null;
             return false; // on return false destroys timeout
         });
     }
@@ -2757,6 +2760,10 @@ function enable(errorNotification) {
 
 function disable () {
     Utils.timeout_remove(startupTimeoutId);
+    startupTimeoutId = null;
+    Utils.timeout_remove(timerId);
+    timerId = null;
+
     grabSignals.destroy();
     signals.destroy();
 
