@@ -2845,7 +2845,6 @@ function disable () {
     });
 
     spaces.destroy();
-    gsettings.run_dispose();
     inGrab = null;
     gsettings = null;
     backgroundGroup = null;
