@@ -2066,7 +2066,7 @@ var Spaces = class Spaces extends Map {
 
         if (move && this.selectedSpace.selectedWindow) {
             const navigator = Navigator.getNavigator();
-            if (navigator._moving == null || 
+            if (navigator._moving === null ||
                 (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
@@ -2087,7 +2087,11 @@ var Spaces = class Spaces extends Map {
 
         newSpace = monitorSpaces[to];
         this.selectedSpace = newSpace;
-        TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
+
+        // if active (source space) is panelMonitor update indicator
+        if (currentSpace.monitor === TopBar.panelMonitor) {
+            TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
+        }
 
         const scale = 0.825;
         const padding_percentage = 4;
@@ -2259,7 +2263,11 @@ var Spaces = class Spaces extends Map {
 
         newSpace = mru[to];
         this.selectedSpace = newSpace;
-        TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
+
+        // if active (source space) is panelMonitor update indicator
+        if (space.monitor === TopBar.panelMonitor) {
+            TopBar.updateWorkspaceIndicator(newSpace.workspace.index());
+        }
 
         mru.forEach((space, i) => {
             let actor = space.actor;
