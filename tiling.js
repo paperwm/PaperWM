@@ -159,12 +159,12 @@ var Space = class Space extends Array {
         this.border.hide();
 
         let monitor = Main.layoutManager.primaryMonitor;
-        let oldSpace = oldSpaces.get(workspace);
+        let prevSpace = prevSpaces.get(workspace);
         this.targetX = 0;
-        if (oldSpace && oldSpace.monitor) {
-            let oldMonitor = Main.layoutManager.monitors[oldSpace.monitor.index];
-            if (oldMonitor)
-                monitor = oldMonitor;
+        if (prevSpace && prevSpace.monitor) {
+            let prevMonitor = Main.layoutManager.monitors[prevSpace.monitor.index];
+            if (prevMonitor)
+                monitor = prevMonitor;
         }
 
         this.setSettings(Workspace.getWorkspaceSettings(this.workspace.index()));
@@ -199,15 +199,15 @@ var Space = class Space extends Array {
         if (this._populated || Main.layoutManager._startingUp)
             return;
         let workspace = this.workspace;
-        let oldSpace = oldSpaces.get(workspace);
+        let prevSpace = prevSpaces.get(workspace);
 
-        this.addAll(oldSpace);
-        oldSpaces.delete(workspace);
+        this.addAll(prevSpace);
+        prevSpaces.delete(workspace);
         this._populated = true;
         // FIXME: this prevents bad old values propagating
         // Though, targetX shouldn't ideally be able to get into this state.
-        if (oldSpace && Number.isFinite(oldSpace.targetX)) {
-            this.targetX = oldSpace.targetX;
+        if (prevSpace && Number.isFinite(prevSpace.targetX)) {
+            this.targetX = prevSpace.targetX;
         }
         this.cloneContainer.x = this.targetX;
 
@@ -1457,9 +1457,9 @@ border-radius: ${borderWidth}px;
 
     /**
        Add existing windows on workspace to the space. Restore the
-       layout of oldSpace if present.
+       layout of prevSpace if present.
     */
-    addAll(oldSpace) {
+    addAll(prevSpace) {
         // On gnome-shell-restarts the windows are moved into the viewport, but
         // they're moved minimally and the stacking is not changed, so the tiling
         // order is preserved (sans full-width windows..)
@@ -1500,9 +1500,9 @@ border-radius: ${borderWidth}px;
             };
         };
 
-        if (oldSpace) {
-            for (let i=0; i < oldSpace.length; i++) {
-                let column = oldSpace[i];
+        if (prevSpace) {
+            for (let i=0; i < prevSpace.length; i++) {
+                let column = prevSpace[i];
                 for (let j=0; j < column.length; j++) {
                     let metaWindow = column[j];
                     // Prune removed windows
@@ -1513,7 +1513,7 @@ border-radius: ${borderWidth}px;
                     }
                 }
                 if (column.length === 0) {
-                    oldSpace.splice(i, 1); i--;
+                    prevSpace.splice(i, 1); i--;
                 }
             }
         }
@@ -1726,16 +1726,16 @@ var Spaces = class Spaces extends Map {
         }
 
         // Persist as many monitors as possible
-        if (oldMonitors?.size > 0) {
-            for (let [oldMonitor, oldSpace] of oldMonitors) {
-                let monitor = monitors[oldMonitor.index];
-                let space = this.get(oldSpace.workspace);
+        if (prevMonitors?.size > 0) {
+            for (let [prevMonitor, prevSpace] of prevMonitors) {
+                let monitor = monitors[prevMonitor.index];
+                let space = this.get(prevSpace.workspace);
                 if (monitor &&
                     space &&
-                    oldMonitor.width === monitor.width &&
-                    oldMonitor.height === monitor.height &&
-                    oldMonitor.x === monitor.x &&
-                    oldMonitor.y === monitor.y) {
+                    prevMonitor.width === monitor.width &&
+                    prevMonitor.height === monitor.height &&
+                    prevMonitor.x === monitor.x &&
+                    prevMonitor.y === monitor.y) {
                     this.monitors.set(monitor, space);
                     space.setMonitor(monitor, false);
                     mru = mru.filter(s => s !== space);
@@ -2676,7 +2676,7 @@ function resizeHandler(metaWindow) {
 
 let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
-let oldSpaces, oldMonitors;
+let prevSpaces, prevMonitors;
 let startupTimeoutId;
 function enable(errorNotification) {
     gsettings = ExtensionUtils.getSettings();
@@ -2718,8 +2718,8 @@ function enable(errorNotification) {
 
     backgroundGroup = Main.layoutManager._backgroundGroup;
 
-    oldSpaces = oldSpaces ?? new Map();
-    oldMonitors = oldMonitors ?? new Map();
+    prevSpaces = prevSpaces ?? new Map();
+    prevMonitors = prevMonitors ?? new Map();
     spaces = new Spaces();
 
     function initWorkspaces() {
@@ -2774,8 +2774,8 @@ function disable () {
     grabSignals.destroy();
     signals.destroy();
 
-    oldMonitors = new Map(spaces.monitors);
-    oldSpaces.forEach(space => {
+    prevMonitors = new Map(spaces.monitors);
+    prevSpaces.forEach(space => {
         let windows = space.getWindows();
         let selected = windows.indexOf(space.selectedWindow);
         if (selected === -1)
