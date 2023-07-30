@@ -1592,7 +1592,6 @@ var Spaces = class Spaces extends Map {
         super();
 
         this._initDone = false;
-        this._inPreviewProgress = false;
         this.clickOverlays = [];
         this.signals = new Utils.Signals();
         this.stack = [];
@@ -2055,11 +2054,6 @@ var Spaces = class Spaces extends Map {
             return;
         }
 
-        if (this._inPreviewProgress) {
-            return;
-        }
-        this._inPreviewProgress = true;
-
         let currentSpace = this.getActiveSpace();
         let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
 
@@ -2073,7 +2067,7 @@ var Spaces = class Spaces extends Map {
 
         if (move && this.selectedSpace.selectedWindow) {
             const navigator = Navigator.getNavigator();
-            if (navigator._moving === null ||
+            if (navigator._moving == null ||
                 (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
@@ -2087,12 +2081,10 @@ var Spaces = class Spaces extends Map {
             to = from - 1;
 
         if (to < 0 || to >= monitorSpaces.length) {
-            this._inPreviewProgress = false;
             return;
         }
 
         if (to === from && Easer.isEasing(newSpace.actor)) {
-            this._inPreviewProgress = false;
             return;
         }
 
@@ -2125,9 +2117,6 @@ var Spaces = class Spaces extends Map {
                 time: Settings.prefs.animation_time,
                 scale_x: scale,
                 scale_y: scale,
-                onComplete: () => {
-                    this._inPreviewProgress = false;
-                },
             });
         });
     }
@@ -2223,11 +2212,6 @@ var Spaces = class Spaces extends Map {
             return;
         }
 
-        if (this._inPreviewProgress) {
-            return;
-        }
-        this._inPreviewProgress = true;
-
         const scale = 0.9;
         let space = this.getActiveSpace();
         let mru = [...this.stack];
@@ -2262,7 +2246,6 @@ var Spaces = class Spaces extends Map {
         }
 
         if (to === from && Easer.isEasing(newSpace.actor)) {
-            this._inPreviewProgress = false;
             return;
         }
 
@@ -2276,9 +2259,7 @@ var Spaces = class Spaces extends Map {
 
         mru.forEach((space, i) => {
             let actor = space.actor;
-            let h, onComplete = () => {
-                this._inPreviewProgress = false;
-            };
+            let h, onComplete = () => {};
             if (to === i)
                 h = StackPositions.selected;
             else if (to + 1 === i)
@@ -2293,7 +2274,6 @@ var Spaces = class Spaces extends Map {
             if (Math.abs(i - to) > 2) {
                 onComplete = () => {
                     space.hide();
-                    this._inPreviewProgress = false;
                 };
             } else {
                 space.show();
