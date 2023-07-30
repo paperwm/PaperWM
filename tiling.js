@@ -1560,6 +1560,7 @@ border-radius: ${borderWidth}px;
 
     destroy() {
         this.signals.destroy();
+        this.signals = null;
         this.background.destroy();
         this.background = null;
         this.cloneContainer.destroy();
@@ -1813,6 +1814,7 @@ var Spaces = class Spaces extends Map {
             });
 
         this.signals.destroy();
+        this.signals = null;
         Utils.timeout_remove(this.monitorsChangingTimeout);
         this.monitorsChangingTimeout = null;
 
@@ -2822,7 +2824,9 @@ function disable () {
     timerId = null;
 
     grabSignals.destroy();
+    grabSignals = null;
     signals.destroy();
+    signals = null;
 
     prevMonitors = new Map(spaces.monitors);
     prevSpaces = new Map(spaces);
@@ -2841,7 +2845,6 @@ function disable () {
     });
 
     spaces.destroy();
-    gsettings.run_dispose();
     inGrab = null;
     gsettings = null;
     backgroundGroup = null;

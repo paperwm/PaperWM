@@ -71,7 +71,6 @@ function enable() {
 }
 
 function disable() {
-    gsettings.run_dispose();
     gsettings = null;
     prefs = null;
     conflictSettings = null;

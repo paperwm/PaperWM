@@ -384,7 +384,6 @@ function disable() {
 
     savedProps = null;
     swipeTrackers = null;
-    gsettings.run_dispose();
     gsettings = null;
     wmSettings = null;
     mutterSettings = null;

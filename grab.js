@@ -368,6 +368,7 @@ var MoveGrab = class MoveGrab {
     end() {
         Utils.debug("#grab", "end");
         this.signals.destroy();
+        this.signals = null;
 
         let metaWindow = this.window;
         let actor = metaWindow.get_compositor_private();
@@ -584,6 +585,7 @@ var ResizeGrab = class ResizeGrab {
 
     end() {
         this.signals.destroy();
+        this.signals = null;
         this.window = null;
         this.space.layout();
     }
