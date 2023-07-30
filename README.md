@@ -16,13 +16,7 @@ We often hang out on [zulip](https://paperwm.zulipchat.com).
 
 ### Install via [extensions.gnome.org](https://extensions.gnome.org/extension/6099/paperwm/)
 
-> #### ⚠️ NOTE: we've just disabled install via extensions.gnome.org as there is an issue in the version available there (it's still on `v44.6.1` which has an issue that `v44.6.3` fixes).
-> #### The fixed version is awaiting review.  We'll re-enable once the fixed version is up on extensions.gnome.org.
-> _P.S. you can still install the latest via source (see below)._
-
 [<img alt="Intall it on extensions.gnome.org" src="media/get-it-on-ego.svg" width="150px">](https://extensions.gnome.org/extension/6099/paperwm/)
-
-> Note: there can be a delay in the deploying the latest version of PaperWM at `extensions.gnome.org` as each version needs to be approved by reviewers there.
 
 ### Install via Source
 
