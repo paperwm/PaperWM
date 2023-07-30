@@ -240,6 +240,7 @@ class ActionDispatcher {
 
         this.actor.unset_flags(Clutter.ActorFlags.REACTIVE);
         this.signals.destroy();
+        this.signals = null;
         // We have already destroyed the navigator
         getNavigator().destroy();
         dispatcher = null;

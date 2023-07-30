@@ -14,7 +14,7 @@ const Easer = Extension.imports.utils.easer;
 const { Clutter, St, Graphene, GLib, Meta, Gio, GObject } = imports.gi;
 const { panelMenu, popupMenu } = imports.ui;
 const Main = imports.ui.main;
-const Path = Extension.dir.get_path();
+const Path = Extension.path;
 
 const workspaceManager = global.workspace_manager;
 const display = global.display;
@@ -575,6 +575,7 @@ var WorkspaceMenu = GObject.registerClass(
 
         destroy() {
             this.signals.destroy();
+            this.signals = null;
             super.destroy();
         }
 
@@ -664,6 +665,7 @@ function enable () {
 
 function disable() {
     signals.destroy();
+    signals = null;
     focusButton.destroy();
     focusButton = null;
     menu.destroy();
@@ -675,7 +677,6 @@ function disable() {
     screenSignals.forEach(id => workspaceManager.disconnect(id));
     screenSignals = [];
     panelBox.scale_y = 1;
-    gsettings.run_dispose();
     gsettings = null;
 }
 

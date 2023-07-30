@@ -256,6 +256,7 @@ var Minimap = class Minimap extends Array {
             return;
         this.destroyed = true;
         this.signals.destroy();
+        this.signals = null;
         this.splice(0,this.length);
         this.actor.destroy();
         this.actor = null;

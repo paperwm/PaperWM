@@ -278,7 +278,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 #+END_SRC
 
-The absolute path of the an extension: `Extension.dir.get_path()`
+The absolute path of the an extension: `Extension.path`
 * Misc HowTo
 ** Defer an execution of a function
 [[https://developer.gnome.org/meta/stable/meta-Utility-functions.html#meta-later-add][~Meta.later_add~]] (assoc: ~imports.mainloop.timeout_add~)

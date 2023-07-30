@@ -685,6 +685,7 @@ function enable() {
 
 function disable() {
     signals.destroy();
+    signals = null;
     actions.forEach(disableAction);
     resetConflicts();
 

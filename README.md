@@ -2,11 +2,6 @@
 
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://paperwm.zulipchat.com)
 
-> #### ⚠️ **BREAKING CHANGE:** we're working towards simplifying the install process for PaperWM, and having it installable from [extensions.gnome.org](https://extensions.gnome.org).  This requires changing the extension UUID for PaperWM to `paperwm@paperwm.github.com`.  Because of this change, users will likely need to re-run the `install.sh` and logout/login.
-> _Note: if you have run into issues, delete any older `paperwm@...` symlinks from `~/.local/share/gnome-shell/extensions` and re-run the `install.sh` script._
-
-> #### ➡️ **ATTENTION:** we recently set [`release`](https://github.com/paperwm/PaperWM/tree/release) branch as default.  This change aims to provide a more tested and stable experience for most users.  You can continue to use [`develop`](https://github.com/paperwm/PaperWM/tree/develop) branch if you want the latest features and fixes as soon as they're available.  Changes will be merged into `release` branch after a week or so of testing in `develop` branch.
-
 PaperWM is a [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension which provides scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
 Supports Gnome Shell from 3.28 to 44 on X11 and wayland.
@@ -15,9 +10,15 @@ _While PaperWM can be installed on a wide range of Gnome versions, new features 
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
-We hang out on [zulip](https://paperwm.zulipchat.com).
+We often hang out on [zulip](https://paperwm.zulipchat.com).
 
 ## Installation
+
+### Install via [extensions.gnome.org (EGO)](https://extensions.gnome.org/extension/6099/paperwm/) _(recommended)_
+
+[<img alt="Intall it on extensions.gnome.org" src="media/get-it-on-ego.svg" width="250px">](https://extensions.gnome.org/extension/6099/paperwm/)
+
+### Install via Source
 
 Clone the repo and check out the branch supporting the Gnome Shell version you're running.
 
@@ -39,6 +40,9 @@ from the repository. The installer will create a link to the repo in
 > ```bash
 > /usr/bin/gnome-extensions enable paperwm@paperwm.github.com
 > ```
+
+> if you have run into issues, delete any older `paperwm@...` symlinks from `~/.local/share/gnome-shell/extensions` and re-run the `install.sh` script.
+
 ### Uninstall PaperWM
 To uninstall simply run `./uninstall.sh`.
 

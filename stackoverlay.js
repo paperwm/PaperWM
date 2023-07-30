@@ -177,9 +177,11 @@ var ClickOverlay = class ClickOverlay {
         Utils.timeout_remove(this._lastPointerTimeout);
         this._lastPointerTimeout = null;
         this.signals.destroy();
+        this.signals = null;
         for (let overlay of [this.left, this.right]) {
             let actor = overlay.overlay;
             overlay.signals.destroy();
+            overlay.signals = null;
             if (overlay.clone) {
                 overlay.clone.destroy();
                 overlay.clone = null;
@@ -457,6 +459,7 @@ var StackOverlay = class StackOverlay {
         this.triggerPreviewTimeout = null;
 
         this.signals.destroy();
+        this.signals = null;
         this.removePreview();
         this.removeBarrier();
         Main.layoutManager.untrackChrome(this.overlay);
