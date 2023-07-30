@@ -14,9 +14,11 @@ We often hang out on [zulip](https://paperwm.zulipchat.com).
 
 ## Installation
 
-### Install via [extensions.gnome.org (EGO)](https://extensions.gnome.org/extension/6099/paperwm/) _(recommended)_
+### Install via [extensions.gnome.org](https://extensions.gnome.org/extension/6099/paperwm/)
 
-[<img alt="Intall it on extensions.gnome.org" src="media/get-it-on-ego.svg" width="250px">](https://extensions.gnome.org/extension/6099/paperwm/)
+[<img alt="Intall it on extensions.gnome.org" src="media/get-it-on-ego.svg" width="150px">](https://extensions.gnome.org/extension/6099/paperwm/)
+
+> Note: there can be a delay in the deploying the latest version of PaperWM at `extensions.gnome.org` as each version needs to be approved by reviewers there.
 
 ### Install via Source
 
