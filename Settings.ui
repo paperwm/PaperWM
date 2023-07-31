@@ -563,7 +563,7 @@
                 <child>
                   <object class="GtkGrid">
                     <property name="focusable">False</property>
-                    <property name="tooltip_text" translatable="yes">Sets the duration of PaperWM animations. Lower values result in faster animations</property>
+                    <property name="tooltip_text" translatable="yes">Sets the duration of PaperWM animated transitions (e.g. switching windows, workspaces etc.). Lower values result in faster transitions.</property>
                     <property name="margin_start">12</property>
                     <property name="margin_end">12</property>
                     <property name="margin_top">6</property>
@@ -573,7 +573,7 @@
                       <object class="GtkLabel">
                         <property name="focusable">False</property>
                         <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Animation duration (seconds)</property>
+                        <property name="label" translatable="yes">Animated transition duration (seconds)</property>
                         <property name="use_markup">1</property>
                         <property name="xalign">0</property>
                         <layout>
