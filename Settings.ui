@@ -45,6 +45,12 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+    <object class="GtkAdjustment" id="animation_time_adjustment">
+    <property name="upper">9.99</property>
+    <property name="lower">0.01</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">0.1</property>
+  </object>
   <object class="GtkAdjustment" id="minimap_scale">
     <property name="upper">95</property>
     <property name="lower">0</property>
@@ -463,7 +469,7 @@
                 <property name="activatable">False</property>
                 <property name="focusable">False</property>
                 <child>
-                  <object class="GtkGrid" id="workspace_grid9">
+                  <object class="GtkGrid">
                     <property name="focusable">False</property>
                     <property name="margin_start">12</property>
                     <property name="margin_end">12</property>
@@ -472,7 +478,7 @@
                     <property name="row_spacing">12</property>
                     <property name="column_spacing">32</property>
                     <child>
-                      <object class="GtkLabel" id="workspace_label4">
+                      <object class="GtkLabel">
                         <property name="focusable">False</property>
                         <property name="hexpand">1</property>
                         <property name="label" translatable="yes">Vertical sensitivity</property>
@@ -500,7 +506,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="workspace_label6">
+                      <object class="GtkLabel">
                         <property name="focusable">False</property>
                         <property name="hexpand">1</property>
                         <property name="label" translatable="yes">Vertical friction</property>
@@ -555,7 +561,52 @@
                 <property name="activatable">False</property>
                 <property name="focusable">False</property>
                 <child>
-                  <object class="GtkGrid" id="workspace_grid11">
+                  <object class="GtkGrid">
+                    <property name="focusable">False</property>
+                    <property name="tooltip_text" translatable="yes">Sets the duration of PaperWM animations. Lower values result in faster animations</property>
+                    <property name="margin_start">12</property>
+                    <property name="margin_end">12</property>
+                    <property name="margin_top">6</property>
+                    <property name="margin_bottom">6</property>
+                    <property name="column_spacing">32</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="focusable">False</property>
+                        <property name="hexpand">1</property>
+                        <property name="label" translatable="yes">Animation duration (seconds)</property>
+                        <property name="use_markup">1</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                          <property name="column">0</property>
+                          <property name="row">0</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="animation_time_spin">
+                        <property name="width_chars">3</property>
+                        <property name="max_width_chars">3</property>
+                        <property name="adjustment">animation_time_adjustment</property>
+                        <property name="numeric">1</property>
+                        <property name="digits">2</property>
+                        <property name="snap_to_ticks">1</property>
+                        <property name="update_policy">if-valid</property>
+                        <layout>
+                          <property name="column">1</property>
+                          <property name="row">0</property>
+                        </layout>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkListBoxRow">
+                <property name="activatable">False</property>
+                <property name="focusable">False</property>
+                <child>
+                  <object class="GtkGrid">
                     <property name="focusable">False</property>
                     <property name="tooltip_text" translatable="yes">This setting controls the "size" of mini-map tiles as compared to their actual window size (e.g. "15" corresponds to a mini-map tile size being approximately 15% of the actual window size)</property>
                     <property name="margin_start">12</property>
@@ -564,7 +615,7 @@
                     <property name="margin_bottom">6</property>
                     <property name="column_spacing">32</property>
                     <child>
-                      <object class="GtkLabel" id="workspace_label11">
+                      <object class="GtkLabel">
                         <property name="focusable">False</property>
                         <property name="hexpand">1</property>
                         <property name="label" translatable="yes">Mini-map scale &lt;i&gt;(0 hides Mini-map)&lt;/i&gt;</property>
@@ -599,7 +650,7 @@
                 <property name="activatable">False</property>
                 <property name="focusable">False</property>
                 <child>
-                  <object class="GtkGrid" id="workspace_grid10">
+                  <object class="GtkGrid">
                     <property name="focusable">False</property>
                     <property name="margin_start">12</property>
                     <property name="margin_end">12</property>
