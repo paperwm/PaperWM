@@ -175,6 +175,12 @@ var SettingsWidget = class SettingsWidget {
         vFric.connect('value-changed', fricChanged);
         hFric.connect('value-changed', fricChanged);
 
+        let animationTime = this.builder.get_object('animation_time_spin');
+        animationTime.set_value(this._settings.get_double('animation-time'));
+        animationTime.connect('value-changed', () => {
+            this._settings.set_double('animation-time', animationTime.get_value());
+        });
+
         let minimapScale = this.builder.get_object('minimap_scale_spin');
         minimapScale.set_value(this._settings.get_double('minimap-scale') * 100.0);
         minimapScale.connect('value-changed', () => {
