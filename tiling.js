@@ -3958,6 +3958,9 @@ function takeWindow(metaWindow, space, { navigator }) {
                 w.change_workspace(selectedSpace.workspace);
                 if (w.get_workspace() === selectedSpace.workspace) {
                     insertWindow(w, { existing: true });
+
+                    // make space selectedWindow (keeps index for next insert)
+                    selectedSpace.selectedWindow = w;
                 }
             });
 
