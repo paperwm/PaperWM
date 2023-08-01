@@ -3962,9 +3962,15 @@ function takeWindow(metaWindow, space, { navigator }) {
             });
 
             // activate last metaWindow after taken windows inserted
-            Utils.later_add(Meta.LaterType.IDLE, () => {
-                Main.activateWindow(metaWindow);
-            });
+            let firstWindow = navigator._moving.find(v => v !== undefined);
+            if (firstWindow) {
+                Utils.later_add(Meta.LaterType.IDLE, () => {
+                    Main.activateWindow(firstWindow);
+                });
+            }
+
+            // clean up after move
+            navigator._moving = [];
         });
     }
 
