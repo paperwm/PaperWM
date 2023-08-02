@@ -44,10 +44,10 @@ const modMask = Clutter.ModifierType.SUPER_MASK |
     // Clutter.ModifierType.MOD2_MASK | uhmm, for some reason this is triggered on keygrab
     Clutter.ModifierType.MOD3_MASK |
     Clutter.ModifierType.MOD4_MASK |
-    Clutter.ModifierType.MOD5_MASK
+    Clutter.ModifierType.MOD5_MASK;
 
 function getModLock(mods) {
-    return mods & modMask
+    return mods & modMask;
 }
 
 /**
@@ -56,7 +56,7 @@ function getModLock(mods) {
    Adapted from SwitcherPopup, without any visual handling.
  */
 class ActionDispatcher {
-    /**@type {import('@gi-types/clutter10').GrabState} */
+    /** @type {import('@gi-types/clutter10').GrabState} */
     mode;
 
     constructor() {
@@ -67,7 +67,7 @@ class ActionDispatcher {
         this.navigator = getNavigator();
 
         if (grab) {
-            Utils.debug("#dispatch", "already in grab")
+            Utils.debug("#dispatch", "already in grab");
             return;
         }
 
@@ -95,7 +95,7 @@ class ActionDispatcher {
             try {
                 // Check for built-in actions
                 actionId = Meta.prefs_get_keybinding_action(binding);
-            } catch(e) {
+            } catch (e) {
                 Utils.debug("Couldn't resolve action name");
                 return false;
             }
@@ -132,7 +132,7 @@ class ActionDispatcher {
 
     _keyPressEvent(actor, event) {
         if (!this._modifierMask) {
-            this._modifierMask = getModLock(event.get_state())
+            this._modifierMask = getModLock(event.get_state());
         }
         let keysym = event.get_key_symbol();
         let action = global.display.get_keybinding_action(event.get_key_code(), event.get_state());
@@ -189,7 +189,7 @@ class ActionDispatcher {
             if (!Tiling.inGrab && action.options.opensMinimap) {
                 nav._showMinimap(space);
             }
-            action.handler(metaWindow, space, {navigator: this.navigator});
+            action.handler(metaWindow, space, { navigator: this.navigator });
             if (space !== Tiling.spaces.selectedSpace) {
                 this.navigator.minimaps.forEach(m => typeof m === 'number'
                     ? Mainloop.source_remove(m) : m.hide());
@@ -286,7 +286,7 @@ class NavigatorClass {
             });
             this.minimaps.set(space, minimapId);
         } else {
-            typeof(minimap) !== 'number' && minimap.show();
+            typeof  minimap !== 'number' && minimap.show();
         }
     }
 
@@ -303,7 +303,7 @@ class NavigatorClass {
 
     destroy(space, focus) {
         this.minimaps.forEach(m => {
-            if (typeof(m) === 'number')
+            if (typeof  m === 'number')
                 Mainloop.source_remove(m);
             else
                 m.destroy();
@@ -356,16 +356,14 @@ class NavigatorClass {
             if (force) {
                 Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId);
             }
+        } else if (Tiling.inGrab && Tiling.inGrab.window) {
+            this.space.workspace.activate_with_focus(Tiling.inGrab.window, global.get_current_time());
         } else {
-            if (Tiling.inGrab && Tiling.inGrab.window) {
-                this.space.workspace.activate_with_focus(Tiling.inGrab.window, global.get_current_time());
-            } else {
-                this.space.workspace.activate(global.get_current_time());
-            }
+            this.space.workspace.activate(global.get_current_time());
         }
 
-        selected = this.space.indexOf(selected) !== -1 ? selected :
-            this.space.selectedWindow;
+        selected = this.space.indexOf(selected) !== -1 ? selected
+            : this.space.selectedWindow;
 
         let curFocus = display.focus_window;
         if (force && curFocus && curFocus.is_on_all_workspaces())
@@ -422,21 +420,21 @@ function finishNavigation() {
 
 /**
  *
- * @param {import('@gi-types/clutter10').GrabState} mode 
+ * @param {import('@gi-types/clutter10').GrabState} mode
  * @returns {ActionDispatcher}
  */
 function getActionDispatcher(mode) {
     if (dispatcher) {
-        dispatcher.mode |= mode
-        return dispatcher
+        dispatcher.mode |= mode;
+        return dispatcher;
     }
-    dispatcher = new ActionDispatcher()
-    return getActionDispatcher(mode)
+    dispatcher = new ActionDispatcher();
+    return getActionDispatcher(mode);
 }
 
 /**
  *
- * @param {import('@gi-types/clutter10').GrabState} mode 
+ * @param {import('@gi-types/clutter10').GrabState} mode
  */
 function dismissDispatcher(mode) {
     if (!dispatcher) {
@@ -449,7 +447,7 @@ function dismissDispatcher(mode) {
     }
 }
 
-function preview_navigate(meta_window, space, {display, screen, binding}) {
+function preview_navigate(meta_window, space, { display, screen, binding }) {
     let tabPopup = getActionDispatcher(Clutter.GrabState.KEYBOARD);
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
