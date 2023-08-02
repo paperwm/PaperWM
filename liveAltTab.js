@@ -7,7 +7,7 @@ const Tiling = Extension.imports.tiling;
 const Scratch = Extension.imports.scratch;
 const Easer = Extension.imports.utils.easer;
 
-const {Clutter, Meta, Gio, GObject} = imports.gi;
+const { Clutter, Meta, Gio, GObject } = imports.gi;
 const Main = imports.ui.main;
 const AltTab = imports.ui.altTab;
 
@@ -21,8 +21,8 @@ var LiveAltTab = GObject.registerClass(
         _getWindowList(reverse) {
             let tabList = global.display.get_tab_list(
                 Meta.TabList.NORMAL_ALL,
-                switcherSettings.get_boolean('current-workspace-only') ?
-                    global.workspace_manager.get_active_workspace() : null)
+                switcherSettings.get_boolean('current-workspace-only')
+                    ? global.workspace_manager.get_active_workspace() : null)
                 .filter(w => !Scratch.isScratchWindow(w));
 
             let scratch = Scratch.getScratchWindows();
@@ -44,7 +44,7 @@ var LiveAltTab = GObject.registerClass(
             let fog = new Clutter.Actor({
                 x: workArea.x, y: workArea.y,
                 width: workArea.width, height: workArea.height,
-                opacity: 0, background_color: Clutter.color_from_string("black")[1]
+                opacity: 0, background_color: Clutter.color_from_string("black")[1],
             });
 
             // this.blur = new Clutter.BlurEffect();
@@ -143,9 +143,9 @@ var LiveAltTab = GObject.registerClass(
                     this.clone && this.clone.destroy();
                     this.clone = null;
                     this.space.moveDone();
-                }
+                },
             });
-            let index = this.was_accepted ? this._selectedIndex : 0
+            let index = this.was_accepted ? this._selectedIndex : 0;
             let to = this._switcherList.windows[index];
             Tiling.focus_handler(to);
             let actor = to.get_compositor_private();
@@ -157,7 +157,7 @@ var LiveAltTab = GObject.registerClass(
         }
     });
 
-function liveAltTab(meta_window, space, {display, screen, binding}) {
+function liveAltTab(meta_window, space, { display, screen, binding }) {
     let tabPopup = new LiveAltTab(binding.is_reversed());
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
