@@ -10,7 +10,8 @@ const Grab = Extension.imports.grab;
 const TopBar = Extension.imports.topbar;
 const Scratch = Extension.imports.scratch;
 const Easer = Extension.imports.utils.easer;
-const ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
+const StackOverlay = Extension.imports.stackoverlay;
+const ClickOverlay = StackOverlay.ClickOverlay;
 
 const { Clutter, St, Graphene, Meta, Gio, GDesktopEnums } = imports.gi;
 const Main = imports.ui.main;
@@ -1723,6 +1724,7 @@ var Spaces = class Spaces extends Map {
                 });
 
             activeSpace.monitor.clickOverlay.deactivate();
+            StackOverlay.multimonitorDragDropSupport();
         };
 
         if (this.onlyOnPrimary) {

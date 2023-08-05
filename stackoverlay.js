@@ -46,6 +46,31 @@ const Layout = imports.ui.layout;
 
 let monitorActiveTimeout;
 function enable() {
+
+}
+
+function disable() {
+    removeMonitorActiveTimeout();
+}
+
+function removeMonitorActiveTimeout () {
+    Utils.timeout_remove(monitorActiveTimeout);
+    monitorActiveTimeout = null;
+}
+
+/**
+ * Checks for multiple monitors and if so, then enables multimonitor
+ * drag/drop support in PaperWM.
+ */
+function multimonitorDragDropSupport() {
+    // remove current support (will add new if multimonitors)
+    removeMonitorActiveTimeout();
+
+    // if only one monitor, return
+    if (Tiling.spaces.monitors?.size <= 1) {
+        return;
+    }
+
     /*
     We monitor mouse position to pickup when monitor changes.  This approach
     was the only one found that also works for drag-n-drop cases (note for drag
@@ -65,11 +90,6 @@ function enable() {
         }
         return true;
     });
-}
-
-function disable() {
-    Utils.timeout_remove(monitorActiveTimeout);
-    monitorActiveTimeout = null;
 }
 
 function createAppIcon(metaWindow, size) {
