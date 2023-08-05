@@ -94,22 +94,27 @@ function multimonitorDragDropSupport() {
     none for signals fire when in drag phase).
     */
     removeMonitorActiveTimeout();
-    monitorActiveTimeout = Mainloop.timeout_add(200, () => {
-        if (Main.overview.visible || Tiling.inPreview) {
+    /**
+     * We use a later here to avoid a side-effect where the check interferes
+     * with other overview `hidden` callbacks (which should take priority).
+     */
+    Utils.later_add(Meta.LaterType.IDLE, () => {
+        monitorActiveTimeout = Mainloop.timeout_add(200, () => {
+            if (Main.overview.visible || Tiling.inPreview) {
+                return true;
+            }
+
+            // get monitor that has mouse
+            let [gx, gy, $] = global.get_pointer();
+            let mouseMonitor = Grab.monitorAtPoint(gx, gy);
+            let clickOverlay = mouseMonitor?.clickOverlay;
+            if (clickOverlay?.active) {
+                clickOverlay?.select();
+            }
             return true;
-        }
-
-        // get monitor that has mouse
-        let [gx, gy, $] = global.get_pointer();
-        let mouseMonitor = Grab.monitorAtPoint(gx, gy);
-        let clickOverlay = mouseMonitor?.clickOverlay;
-        if (clickOverlay?.active) {
-            clickOverlay?.select();
-        }
-        return true;
+        });
+        console.debug('paperwm multimonitor drag/drop support ENABLED');
     });
-
-    console.debug('paperwm multimonitor drag/drop support ENABLED');
 }
 
 function createAppIcon(metaWindow, size) {
