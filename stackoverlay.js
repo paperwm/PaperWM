@@ -44,6 +44,34 @@ const Layout = imports.ui.layout;
   restack loops)
 */
 
+let monitorActiveTimeout;
+function enable() {
+    /*
+    We monitor mouse position to pickup when monitor changes.  This approach
+    was the only one found that also works for drag-n-drop cases (note for drag
+    none for signals fire when in drag phase).
+    */
+    monitorActiveTimeout = Mainloop.timeout_add(100, () => {
+        if (Tiling.inPreview) {
+            return true;
+        }
+
+        // get monitor that has mouse
+        let [gx, gy, $] = global.get_pointer();
+        let mouseMonitor = Grab.monitorAtPoint(gx, gy);
+        let clickOverlay = mouseMonitor?.clickOverlay;
+        if (clickOverlay?.active) {
+            clickOverlay?.select();
+        }
+        return true;
+    });
+}
+
+function disable() {
+    Utils.timeout_remove(monitorActiveTimeout);
+    monitorActiveTimeout = null;
+}
+
 function createAppIcon(metaWindow, size) {
     let tracker = Shell.WindowTracker.get_default();
     let app = tracker.get_window_app(metaWindow);
@@ -67,7 +95,7 @@ var ClickOverlay = class ClickOverlay {
         this.left = new StackOverlay(Meta.MotionDirection.LEFT, monitor);
         this.right = new StackOverlay(Meta.MotionDirection.RIGHT, monitor);
 
-        let enterMonitor = new Clutter.Actor({reactive: true});
+        let enterMonitor = new Clutter.Actor({ reactive: true });
         this.enterMonitor = enterMonitor;
         enterMonitor.set_position(monitor.x, monitor.y);
 
@@ -148,11 +176,13 @@ var ClickOverlay = class ClickOverlay {
         if (spaces && spaces.monitors.get(monitor) === spaces.get(active))
             return;
 
+        this.active = true;
         this.enterMonitor.set_position(monitor.x, monitor.y);
         this.enterMonitor.set_size(monitor.width, monitor.height);
     }
 
     deactivate() {
+        this.active = false;
         this.enterMonitor.set_size(0, 0);
     }
 
@@ -291,7 +321,7 @@ var StackOverlay = class StackOverlay {
     showPreview() {
         let [x, y, mask] = global.get_pointer();
         let actor = this.target.get_compositor_private();
-        let clone = new Clutter.Clone({source: actor});
+        let clone = new Clutter.Clone({ source: actor });
         this.clone = clone;
 
         // Remove any window clips, and show the metaWindow.clone's
@@ -316,7 +346,7 @@ var StackOverlay = class StackOverlay {
         }
 
         // calculate y position - center of mouse
-        y = y - (scale * clone.height)/2;
+        y -= (scale * clone.height) / 2;
 
         // bound to remain within view
         let workArea = this.getWorkArea();
