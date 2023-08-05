@@ -51,7 +51,7 @@ function enable() {
     was the only one found that also works for drag-n-drop cases (note for drag
     none for signals fire when in drag phase).
     */
-    monitorActiveTimeout = Mainloop.timeout_add(100, () => {
+    monitorActiveTimeout = Mainloop.timeout_add(200, () => {
         if (Tiling.inPreview) {
             return true;
         }
