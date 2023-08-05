@@ -59,6 +59,7 @@ function enable() {
             c.activate();
             c.show();
         });
+        monitorActiveCheck();
         multimonitorDragDropSupport();
     });
 }
@@ -99,22 +100,24 @@ function multimonitorDragDropSupport() {
      * with other overview `hidden` callbacks (which should take priority).
      */
     Utils.later_add(Meta.LaterType.IDLE, () => {
-        monitorActiveTimeout = Mainloop.timeout_add(200, () => {
-            if (Main.overview.visible || Tiling.inPreview) {
-                return true;
-            }
-
-            // get monitor that has mouse
-            let [gx, gy, $] = global.get_pointer();
-            let mouseMonitor = Grab.monitorAtPoint(gx, gy);
-            let clickOverlay = mouseMonitor?.clickOverlay;
-            if (clickOverlay?.active) {
-                clickOverlay?.select();
-            }
-            return true;
-        });
+        monitorActiveTimeout = Mainloop.timeout_add(200, monitorActiveCheck);
         console.debug('paperwm multimonitor drag/drop support ENABLED');
     });
+}
+
+function monitorActiveCheck() {
+    if (Main.overview.visible || Tiling.inPreview) {
+        return true;
+    }
+
+    // get monitor that has mouse
+    let [gx, gy, $] = global.get_pointer();
+    let mouseMonitor = Grab.monitorAtPoint(gx, gy);
+    let clickOverlay = mouseMonitor?.clickOverlay;
+    if (clickOverlay?.active) {
+        clickOverlay?.select();
+    }
+    return true;
 }
 
 function createAppIcon(metaWindow, size) {
@@ -151,6 +154,7 @@ var ClickOverlay = class ClickOverlay {
 
         this._lastPointer = [];
         this._lastPointerTimeout = null;
+        /*
         this.signals.connect(enterMonitor, 'motion-event', (actor, event) => {
             // Changing monitors while in workspace preview doesn't work
             if (Tiling.inPreview)
@@ -168,16 +172,16 @@ var ClickOverlay = class ClickOverlay {
                 return;
             this.select();
             return Clutter.EVENT_STOP;
-        }
-        );
+        });
+        */
 
         this.signals.connect(enterMonitor, 'button-press-event', () => {
+            console.log('button-pressed');
             if (Tiling.inPreview)
                 return;
             this.select();
             return Clutter.EVENT_STOP;
-        }
-        );
+        });
 
         /**
          * Handle grabbed (drag & drop) windows in ClickOverlay.  If a window is
@@ -193,9 +197,16 @@ var ClickOverlay = class ClickOverlay {
     }
 
     select() {
-        this.deactivate();
         let space = Tiling.spaces.monitors.get(this.monitor);
-        space.workspace.activate(global.get_current_time());
+        console.log('active worksace', space.workspace.index());
+
+        this.deactivate();
+        if (space.selectedWindow) {
+            space.workspace.activate_with_focus(space.selectedWindow, global.get_current_time());
+        }
+        else {
+            space.workspace.activate(global.get_current_time());
+        }
     }
 
     activate() {

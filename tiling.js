@@ -3321,7 +3321,7 @@ function getDefaultFocusMode() {
 
 // `MetaWindow::focus` handling
 function focus_handler(metaWindow, user_data) {
-    debug("focus:", metaWindow.title, Utils.framestr(metaWindow.get_frame_rect()));
+    console.debug("focus:", metaWindow.title, Utils.framestr(metaWindow.get_frame_rect()));
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
         Scratch.makeScratch(metaWindow);
