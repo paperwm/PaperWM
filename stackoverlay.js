@@ -44,18 +44,37 @@ const Layout = imports.ui.layout;
   restack loops)
 */
 
-let monitorActiveTimeout;
+let signals, monitorActiveTimeout;
 function enable() {
-
+    signals = new Utils.Signals();
+    signals.connect(Main.overview, 'showing', () => {
+        removeMonitorActiveTimeout(true);
+        Tiling.spaces.clickOverlays.forEach(c => {
+            c.deactivate();
+            c.hide();
+        });
+    });
+    signals.connect(Main.overview, 'hidden', () => {
+        Tiling.spaces.clickOverlays.forEach(c => {
+            c.activate();
+            c.show();
+        });
+        multimonitorDragDropSupport();
+    });
 }
 
 function disable() {
+    signals.destroy();
+    signals = null;
     removeMonitorActiveTimeout();
 }
 
-function removeMonitorActiveTimeout () {
+function removeMonitorActiveTimeout(log = false) {
     Utils.timeout_remove(monitorActiveTimeout);
     monitorActiveTimeout = null;
+    if (log) {
+        console.debug('paperwm multimonitor drag/drop support DISABLED');
+    }
 }
 
 /**
@@ -63,11 +82,9 @@ function removeMonitorActiveTimeout () {
  * drag/drop support in PaperWM.
  */
 function multimonitorDragDropSupport() {
-    // remove current support (will add new if multimonitors)
-    removeMonitorActiveTimeout();
-
     // if only one monitor, return
     if (Tiling.spaces.monitors?.size <= 1) {
+        removeMonitorActiveTimeout(true);
         return;
     }
 
@@ -76,8 +93,9 @@ function multimonitorDragDropSupport() {
     was the only one found that also works for drag-n-drop cases (note for drag
     none for signals fire when in drag phase).
     */
+    removeMonitorActiveTimeout();
     monitorActiveTimeout = Mainloop.timeout_add(200, () => {
-        if (Tiling.inPreview) {
+        if (Main.overview.visible || Tiling.inPreview) {
             return true;
         }
 
@@ -90,6 +108,8 @@ function multimonitorDragDropSupport() {
         }
         return true;
     });
+
+    console.debug('paperwm multimonitor drag/drop support ENABLED');
 }
 
 function createAppIcon(metaWindow, size) {
@@ -153,15 +173,6 @@ var ClickOverlay = class ClickOverlay {
             return Clutter.EVENT_STOP;
         }
         );
-
-        this.signals.connect(Main.overview, 'showing', () => {
-            this.deactivate();
-            this.hide();
-        });
-        this.signals.connect(Main.overview, 'hidden', () => {
-            this.activate();
-            this.show();
-        });
 
         /**
          * Handle grabbed (drag & drop) windows in ClickOverlay.  If a window is
