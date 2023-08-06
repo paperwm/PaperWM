@@ -7,8 +7,9 @@ const Tiling = Extension.imports.tiling;
 
 const { Clutter, Shell, Meta, St } = imports.gi;
 const Main = imports.ui.main;
-const Mainloop = imports.mainloop;
 const Layout = imports.ui.layout;
+const Dnd = imports.ui.dnd;
+const Mainloop = imports.mainloop;
 
 /*
   The stack overlay decorates the top stacked window with its icon and
@@ -43,6 +44,31 @@ const Layout = imports.ui.layout;
   seems keep the stacking in sync (without entering into infinite
   restack loops)
 */
+
+let dragMonitor;
+function enable() {
+    // drag/drop support
+    dragMonitor = {
+        dragMotion: event => {
+            console.log('drag motion!');
+            return Dnd.DragMotionResult.CONTINUE;
+        },
+    };
+    Dnd.addDragMonitor(dragMonitor);
+
+    /*
+    let dnd = global.backend.get_dnd();
+    dnd.connect('dnd-position-change', () => {
+        console.log('drag-pos-changed!');
+    });
+
+    Main.xdndHandler.connect('drag-end', () => console.log('drag-end!'));
+    */
+}
+
+function disable() {
+    Dnd.removeDragMonitor(dragMonitor);
+}
 
 function createAppIcon(metaWindow, size) {
     let tracker = Shell.WindowTracker.get_default();
