@@ -67,7 +67,7 @@ var ClickOverlay = class ClickOverlay {
         this.left = new StackOverlay(Meta.MotionDirection.LEFT, monitor);
         this.right = new StackOverlay(Meta.MotionDirection.RIGHT, monitor);
 
-        let enterMonitor = new Clutter.Actor({reactive: true});
+        let enterMonitor = new Clutter.Actor({ reactive: true });
         this.enterMonitor = enterMonitor;
         enterMonitor.set_position(monitor.x, monitor.y);
 
@@ -78,36 +78,31 @@ var ClickOverlay = class ClickOverlay {
 
         this._lastPointer = [];
         this._lastPointerTimeout = null;
-        this.signals.connect(
-            enterMonitor, 'motion-event',
-            (actor, event) => {
-                // Changing monitors while in workspace preview doesn't work
-                if (Tiling.inPreview)
-                    return;
-                let [x, y, z] = global.get_pointer();
-                let [lX, lY] = this._lastPointer;
-                this._lastPointer = [x, y];
-                this._lastPointerTimeout = Mainloop.timeout_add(500, () => {
-                    this._lastPointer = [];
-                    this._lastPointerTimeout = null;
-                    return false; // on return false destroys timeout
-                });
-                if (lX === undefined ||
+        this.signals.connect(enterMonitor, 'motion-event', (actor, event) => {
+            // Changing monitors while in workspace preview doesn't work
+            if (Tiling.inPreview)
+                return;
+            let [x, y, z] = global.get_pointer();
+            let [lX, lY] = this._lastPointer;
+            this._lastPointer = [x, y];
+            this._lastPointerTimeout = Mainloop.timeout_add(500, () => {
+                this._lastPointer = [];
+                this._lastPointerTimeout = null;
+                return false; // on return false destroys timeout
+            });
+            if (lX === undefined ||
                     Math.sqrt((lX - x) ** 2 + (lY - y) ** 2) < 10)
-                    return;
-                this.select();
-                return Clutter.EVENT_STOP;
-            }
-        );
+                return;
+            this.select();
+            return Clutter.EVENT_STOP;
+        });
 
-        this.signals.connect(
-            enterMonitor, 'button-press-event', () => {
-                if (Tiling.inPreview)
-                    return;
-                this.select();
-                return Clutter.EVENT_STOP;
-            }
-        );
+        this.signals.connect(enterMonitor, 'button-press-event', () => {
+            if (Tiling.inPreview)
+                return;
+            this.select();
+            return Clutter.EVENT_STOP;
+        });
 
         this.signals.connect(Main.overview, 'showing', () => {
             this.deactivate();
@@ -291,7 +286,7 @@ var StackOverlay = class StackOverlay {
     showPreview() {
         let [x, y, mask] = global.get_pointer();
         let actor = this.target.get_compositor_private();
-        let clone = new Clutter.Clone({source: actor});
+        let clone = new Clutter.Clone({ source: actor });
         this.clone = clone;
 
         // Remove any window clips, and show the metaWindow.clone's
@@ -316,7 +311,7 @@ var StackOverlay = class StackOverlay {
         }
 
         // calculate y position - center of mouse
-        y = y - (scale * clone.height)/2;
+        y -= (scale * clone.height) / 2;
 
         // bound to remain within view
         let workArea = this.getWorkArea();
