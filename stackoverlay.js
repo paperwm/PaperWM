@@ -144,6 +144,8 @@ var ClickOverlay = class ClickOverlay {
         this.right = new StackOverlay(Meta.MotionDirection.RIGHT, monitor);
 
         let enterMonitor = new Clutter.Actor({ reactive: true });
+        enterMonitor.background_color = Clutter.color_from_string('green')[1];
+        enterMonitor.opacity = 100;
         this.enterMonitor = enterMonitor;
         enterMonitor.set_position(monitor.x, monitor.y);
 
@@ -175,8 +177,15 @@ var ClickOverlay = class ClickOverlay {
         });
         */
 
+        this.signals.connect(enterMonitor, 'enter-event', () => {
+            Utils.print_stacktrace(new Error('button press'));
+            if (Tiling.inPreview)
+                return;
+            this.select();
+        });
+
         this.signals.connect(enterMonitor, 'button-press-event', () => {
-            console.log('button-pressed');
+            Utils.print_stacktrace(new Error('button press'));
             if (Tiling.inPreview)
                 return;
             this.select();
@@ -197,16 +206,25 @@ var ClickOverlay = class ClickOverlay {
     }
 
     select() {
-        let space = Tiling.spaces.monitors.get(this.monitor);
-        console.log('active worksace', space.workspace.index());
-
         this.deactivate();
+        let space = Tiling.spaces.monitors.get(this.monitor);
+
+        Utils.print_stacktrace(new Error(`activate workspace' ${space.workspace.index()}`));
+        space.workspace.activate(global.get_current_time());
+        /**
+         * calling explicit switchWorkspace here since selecting same workspace doesn't
+         * fire switch-workspace signal again.
+         */
+        /*
+        let workspaceId = space.workspace.index();
+        Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId);
+        space.moveDone();
+
         if (space.selectedWindow) {
-            space.workspace.activate_with_focus(space.selectedWindow, global.get_current_time());
+            Utils.print_stacktrace(new Error(`ensureViewport on' ${space.selectedWindow.title}`));
+            Tiling.ensureViewport(space.selectedWindow, space);
         }
-        else {
-            space.workspace.activate(global.get_current_time());
-        }
+        */
     }
 
     activate() {
