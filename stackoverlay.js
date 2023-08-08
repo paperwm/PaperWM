@@ -9,6 +9,8 @@ const { Clutter, Shell, Meta, St } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const Layout = imports.ui.layout;
+const PointerWatcher = imports.ui.pointerWatcher;
+
 
 /*
   The stack overlay decorates the top stacked window with its icon and
@@ -44,38 +46,13 @@ const Layout = imports.ui.layout;
   restack loops)
 */
 
-let signals, monitorActiveTimeout;
+let pointerWatch;
 function enable() {
-    signals = new Utils.Signals();
-    signals.connect(Main.overview, 'showing', () => {
-        removeMonitorActiveTimeout(true);
-        Tiling.spaces.clickOverlays.forEach(c => {
-            c.deactivate();
-            c.hide();
-        });
-    });
-    signals.connect(Main.overview, 'hidden', () => {
-        Tiling.spaces.clickOverlays.forEach(c => {
-            c.activate();
-            c.show();
-        });
-        monitorActiveCheck();
-        multimonitorDragDropSupport();
-    });
+
 }
 
 function disable() {
-    signals.destroy();
-    signals = null;
-    removeMonitorActiveTimeout();
-}
-
-function removeMonitorActiveTimeout(log = false) {
-    Utils.timeout_remove(monitorActiveTimeout);
-    monitorActiveTimeout = null;
-    if (log) {
-        console.debug('paperwm multimonitor drag/drop support DISABLED');
-    }
+    disableMultimonitorDragDropSupport();
 }
 
 /**
@@ -84,40 +61,27 @@ function removeMonitorActiveTimeout(log = false) {
  */
 function multimonitorDragDropSupport() {
     // if only one monitor, return
-    if (Tiling.spaces.monitors?.size <= 1) {
-        removeMonitorActiveTimeout(true);
-        return;
+    if (Tiling.spaces.monitors?.size > 1) {
+        enableMultimonitorDragDropSupport();
     }
-
-    /*
-    We monitor mouse position to pickup when monitor changes.  This approach
-    was the only one found that also works for drag-n-drop cases (note for drag
-    none for signals fire when in drag phase).
-    */
-    removeMonitorActiveTimeout();
-    /**
-     * We use a later here to avoid a side-effect where the check interferes
-     * with other overview `hidden` callbacks (which should take priority).
-     */
-    Utils.later_add(Meta.LaterType.IDLE, () => {
-        monitorActiveTimeout = Mainloop.timeout_add(200, monitorActiveCheck);
-        console.debug('paperwm multimonitor drag/drop support ENABLED');
-    });
+    else {
+        disableMultimonitorDragDropSupport();
+    }
 }
 
-function monitorActiveCheck() {
-    if (Main.overview.visible || Tiling.inPreview) {
-        return true;
-    }
+function enableMultimonitorDragDropSupport() {
+    pointerWatch = PointerWatcher.getPointerWatcher().addWatch(100,
+        () => {
+            Tiling.spaces?.clickOverlays?.forEach(c => {
+                c.monitorActiveCheck();
+            });
+        });
+    console.debug('paperwm multimonitor drag/drop support is ENABLED');
+}
 
-    // get monitor that has mouse
-    let [gx, gy, $] = global.get_pointer();
-    let mouseMonitor = Grab.monitorAtPoint(gx, gy);
-    let clickOverlay = mouseMonitor?.clickOverlay;
-    if (clickOverlay?.active) {
-        clickOverlay?.select();
-    }
-    return true;
+function disableMultimonitorDragDropSupport() {
+    pointerWatch?.remove();
+    console.debug('paperwm multimonitor drag/drop support is DISABLED');
 }
 
 function createAppIcon(metaWindow, size) {
@@ -134,8 +98,6 @@ function createAppIcon(metaWindow, size) {
     return appIcon;
 }
 
-/**
- */
 var ClickOverlay = class ClickOverlay {
     constructor(monitor, onlyOnPrimary) {
         this.monitor = monitor;
@@ -144,10 +106,12 @@ var ClickOverlay = class ClickOverlay {
         this.right = new StackOverlay(Meta.MotionDirection.RIGHT, monitor);
 
         let enterMonitor = new Clutter.Actor({ reactive: true });
-        enterMonitor.background_color = Clutter.color_from_string('green')[1];
-        enterMonitor.opacity = 100;
         this.enterMonitor = enterMonitor;
         enterMonitor.set_position(monitor.x, monitor.y);
+
+        // Uncomment to debug the overlays
+        // enterMonitor.background_color = Clutter.color_from_string('green')[1];
+        // enterMonitor.opacity = 100;
 
         Main.uiGroup.add_actor(enterMonitor);
         Main.layoutManager.trackChrome(enterMonitor);
@@ -178,18 +142,26 @@ var ClickOverlay = class ClickOverlay {
         */
 
         this.signals.connect(enterMonitor, 'enter-event', () => {
-            Utils.print_stacktrace(new Error('button press'));
             if (Tiling.inPreview)
                 return;
             this.select();
         });
 
         this.signals.connect(enterMonitor, 'button-press-event', () => {
-            Utils.print_stacktrace(new Error('button press'));
             if (Tiling.inPreview)
                 return;
             this.select();
             return Clutter.EVENT_STOP;
+        });
+
+        this.signals.connect(Main.overview, 'showing', () => {
+            this.deactivate();
+            this.hide();
+        });
+
+        this.signals.connect(Main.overview, 'hidden', () => {
+            this.activate();
+            this.show();
         });
 
         /**
@@ -205,26 +177,27 @@ var ClickOverlay = class ClickOverlay {
         });
     }
 
+    monitorActiveCheck() {
+        // if clickoverlay not active, then nothing to do
+        if (!this.active) {
+            return;
+        }
+
+        if (Main.overview.visible || Tiling.inPreview) {
+            return;
+        }
+
+        // if mouse on me, select
+        let [gx, gy, $] = global.get_pointer();
+        if (this.monitor === Grab.monitorAtPoint(gx, gy)) {
+            this.select();
+        }
+    }
+
     select() {
         this.deactivate();
         let space = Tiling.spaces.monitors.get(this.monitor);
-
-        Utils.print_stacktrace(new Error(`activate workspace' ${space.workspace.index()}`));
         space.workspace.activate(global.get_current_time());
-        /**
-         * calling explicit switchWorkspace here since selecting same workspace doesn't
-         * fire switch-workspace signal again.
-         */
-        /*
-        let workspaceId = space.workspace.index();
-        Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId);
-        space.moveDone();
-
-        if (space.selectedWindow) {
-            Utils.print_stacktrace(new Error(`ensureViewport on' ${space.selectedWindow.title}`));
-            Tiling.ensureViewport(space.selectedWindow, space);
-        }
-        */
     }
 
     activate() {
