@@ -120,26 +120,6 @@ var ClickOverlay = class ClickOverlay {
 
         this._lastPointer = [];
         this._lastPointerTimeout = null;
-        /*
-        this.signals.connect(enterMonitor, 'motion-event', (actor, event) => {
-            // Changing monitors while in workspace preview doesn't work
-            if (Tiling.inPreview)
-                return;
-            let [x, y, z] = global.get_pointer();
-            let [lX, lY] = this._lastPointer;
-            this._lastPointer = [x, y];
-            this._lastPointerTimeout = Mainloop.timeout_add(500, () => {
-                this._lastPointer = [];
-                this._lastPointerTimeout = null;
-                return false; // on return false destroys timeout
-            });
-            if (lX === undefined ||
-                    Math.sqrt((lX - x) ** 2 + (lY - y) ** 2) < 10)
-                return;
-            this.select();
-            return Clutter.EVENT_STOP;
-        });
-        */
 
         this.signals.connect(enterMonitor, 'enter-event', () => {
             if (Tiling.inPreview)

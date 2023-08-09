@@ -21,15 +21,26 @@ const Signals = imports.signals;
 const display = global.display;
 
 var navigating; // exported
-let grab, dispatcher;
+let grab, dispatcher, signals;
 function enable() {
     navigating = false;
+    signals = new Utils.Signals();
+    /**
+     * Clear navigation once out of overview. Avoids an issue most seen
+     * in multimonitors where coming out of overview and quickly clicking
+     * the background actor causes a monitor swtich.
+     */
+    signals.connect(Main.overview, 'hidden', () => {
+        finishNavigation();
+    });
 }
 
 function disable() {
     navigating = false;
     grab = null;
     dispatcher = null;
+    signals.destroy();
+    signals = null;
 }
 
 function dec2bin(dec) {

@@ -1377,7 +1377,7 @@ border-radius: ${borderWidth}px;
 
                 spaces.selectedSpace = this;
                 Utils.later_add(Meta.LaterType.BEFORE_REDRAW, () => {
-                    Navigator.getNavigator().finish();
+                    Navigator.finishNavigation();
                 });
             });
 
