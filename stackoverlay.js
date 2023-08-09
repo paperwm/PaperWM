@@ -4,6 +4,7 @@ const Settings = Extension.imports.settings;
 const Utils = Extension.imports.utils;
 const Grab = Extension.imports.grab;
 const Tiling = Extension.imports.tiling;
+const Navigator = Extension.imports.navigator;
 
 const { Clutter, Shell, Meta, St } = imports.gi;
 const Main = imports.ui.main;
@@ -175,6 +176,11 @@ var ClickOverlay = class ClickOverlay {
     }
 
     select() {
+        /**
+         * stop navigation before activating workspace. Avoids an issue most seen
+         * in multimonitors where workspaces can get snapped to another monitor.
+         */
+        Navigator.finishNavigation();
         this.deactivate();
         let space = Tiling.spaces.monitors.get(this.monitor);
         space.workspace.activate(global.get_current_time());
