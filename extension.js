@@ -52,9 +52,27 @@ function run(method, reverse = false) {
     let arr = reverse ? [...modules].reverse() : modules;
     for (let name of arr) {
         // Bail if there's an error in our own modules
-        if (!safeCall(name, method))
+        if (!safeCall(name, method)) {
             return false;
+        }
     }
+
+    /**
+     * run 'user.js' routines.
+     */
+    if (hasUserConfigFile()) {
+        // if enable method, call 'init' for backwards compat and then enable
+        if (method === 'enable') {
+            if (firstEnable) {
+                safeCall('user', 'init');
+            }
+            safeCall('user', 'enable');
+        }
+        else {
+            safeCall('user', method);
+        }
+    }
+
     return true;
 }
 
@@ -66,7 +84,7 @@ function safeCall(name, method) {
         }
         module && module[method] && module[method].call(module, errorNotification);
         return true;
-    } catch(e) {
+    } catch (e) {
         console.error("#paperwm", `${name} failed ${method}`);
         console.error(`JS ERROR: ${e}\n${e.stack}`);
         errorNotification(
@@ -111,7 +129,7 @@ function disable() {
 }
 
 function getConfigDir() {
-    return Gio.file_new_for_path(GLib.get_user_config_dir() + '/paperwm');
+    return Gio.file_new_for_path(`${GLib.get_user_config_dir()}/paperwm`);
 }
 
 function configDirExists() {
@@ -181,13 +199,6 @@ function enableUserConfig() {
         if (!SearchPath.includes(path)) {
             SearchPath.push(path);
         }
-
-        // run user.js routines
-        if (firstEnable) {
-            safeCall('user', 'init');
-        }
-
-        safeCall('user', 'enable');
     }
 }
 
