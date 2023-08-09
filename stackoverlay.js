@@ -177,7 +177,7 @@ var ClickOverlay = class ClickOverlay {
 
     select() {
         /**
-         * stop navigation before activating workspace. Avoids an issue most seen
+         * stop navigation before activating workspace. Avoids an issue
          * in multimonitors where workspaces can get snapped to another monitor.
          */
         Navigator.finishNavigation();
