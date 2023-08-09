@@ -312,24 +312,29 @@ This special operator is at a lower precedence, so more specific properties that
 
 ### New Window Handlers
 
-If opening a new application window with <kbd>Super</kbd><kbd>Return</kbd> isn't doing exactly what you want you can create custom functions to fit your needs. Say you want new emacs windows to open the current buffer by default, or have new terminals inherit the current directory:
+If opening a new application window with <kbd>Super</kbd><kbd>Return</kbd> isn't doing exactly what you want, you can create custom functions to suit your needs. FOr example, you might want new emacs windows to open the current buffer by default, or have new terminals inherit the current directory.  To implement this, you can modify `user.js` as below (see [User configuration & development](#user-configuration--development) section):
 
 ```javascript
-    let App = Extension.imports.app;
+// -*- mode: gnome-shell -*-
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const App = Extension.imports.app;
+
+function enable() {
     App.customHandlers['emacs.desktop'] =
         () => imports.misc.util.spawn(['emacsclient', '--eval', '(make-frame)']);
     App.customHandlers['org.gnome.Terminal.desktop'] =
         (metaWindow, app) => app.action_group.activate_action(
           "win.new-terminal",
           new imports.gi.GLib.Variant("(ss)", ["window", "current"]));
+}
 ```
 
 The app id of a window can be looked up like this:
 
 ```javascript
-var Shell = imports.gi.Shell;
-var Tracker = Shell.WindowTracker.get_default();
-var app = Tracker.get_window_app(metaWindow);
+let Shell = imports.gi.Shell;
+let Tracker = Shell.WindowTracker.get_default();
+let app = Tracker.get_window_app(metaWindow);
 app.get_id();
 ```
 
