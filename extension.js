@@ -57,9 +57,7 @@ function run(method, reverse = false) {
         }
     }
 
-    /**
-     * run 'user.js' routines.
-     */
+    // run 'user.js' methods (if it exists)
     if (hasUserConfigFile()) {
         // if enable method, call 'init' for backwards compat and then enable
         if (method === 'enable') {
