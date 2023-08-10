@@ -21,15 +21,29 @@ const Signals = imports.signals;
 const display = global.display;
 
 var navigating; // exported
-let grab, dispatcher;
+let grab, dispatcher, signals;
 function enable() {
     navigating = false;
+
+    /**
+     * Stop navigation before before/after overview. Avoids a corner-case issue
+     * in multimonitors where workspaces can get snapped to another monitor.
+     */
+    signals = new Utils.Signals();
+    signals.connect(Main.overview, 'showing', () => {
+        finishNavigation();
+    });
+    signals.connect(Main.overview, 'hidden', () => {
+        finishNavigation();
+    });
 }
 
 function disable() {
     navigating = false;
     grab = null;
     dispatcher = null;
+    signals.destroy();
+    signals = null;
 }
 
 function dec2bin(dec) {

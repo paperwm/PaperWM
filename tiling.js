@@ -10,7 +10,8 @@ const Grab = Extension.imports.grab;
 const TopBar = Extension.imports.topbar;
 const Scratch = Extension.imports.scratch;
 const Easer = Extension.imports.utils.easer;
-const ClickOverlay = Extension.imports.stackoverlay.ClickOverlay;
+const StackOverlay = Extension.imports.stackoverlay;
+const ClickOverlay = StackOverlay.ClickOverlay;
 
 const { Clutter, St, Graphene, Meta, Gio, GDesktopEnums } = imports.gi;
 const Main = imports.ui.main;
@@ -1375,7 +1376,7 @@ border-radius: ${borderWidth}px;
                 }
 
                 spaces.selectedSpace = this;
-                Navigator.getNavigator().finish();
+                Navigator.finishNavigation();
             });
 
         this.signals.connect(
@@ -1723,6 +1724,7 @@ var Spaces = class Spaces extends Map {
                 });
 
             activeSpace.monitor.clickOverlay.deactivate();
+            StackOverlay.multimonitorDragDropSupport();
         };
 
         if (this.onlyOnPrimary) {
@@ -3319,7 +3321,7 @@ function getDefaultFocusMode() {
 
 // `MetaWindow::focus` handling
 function focus_handler(metaWindow, user_data) {
-    debug("focus:", metaWindow.title, Utils.framestr(metaWindow.get_frame_rect()));
+    console.debug("focus:", metaWindow.title, Utils.framestr(metaWindow.get_frame_rect()));
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
         Scratch.makeScratch(metaWindow);
