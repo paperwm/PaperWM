@@ -4,11 +4,14 @@ const Settings = Extension.imports.settings;
 const Utils = Extension.imports.utils;
 const Grab = Extension.imports.grab;
 const Tiling = Extension.imports.tiling;
+const Navigator = Extension.imports.navigator;
 
 const { Clutter, Shell, Meta, St } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const Layout = imports.ui.layout;
+const PointerWatcher = imports.ui.pointerWatcher;
+
 
 /*
   The stack overlay decorates the top stacked window with its icon and
@@ -44,6 +47,44 @@ const Layout = imports.ui.layout;
   restack loops)
 */
 
+let pointerWatch;
+function enable() {
+
+}
+
+function disable() {
+    disableMultimonitorDragDropSupport();
+}
+
+/**
+ * Checks for multiple monitors and if so, then enables multimonitor
+ * drag/drop support in PaperWM.
+ */
+function multimonitorDragDropSupport() {
+    // if only one monitor, return
+    if (Tiling.spaces.monitors?.size > 1) {
+        enableMultimonitorDragDropSupport();
+    }
+    else {
+        disableMultimonitorDragDropSupport();
+    }
+}
+
+function enableMultimonitorDragDropSupport() {
+    pointerWatch = PointerWatcher.getPointerWatcher().addWatch(100,
+        () => {
+            Tiling.spaces?.clickOverlays?.forEach(c => {
+                c.monitorActiveCheck();
+            });
+        });
+    console.debug('paperwm multimonitor drag/drop support is ENABLED');
+}
+
+function disableMultimonitorDragDropSupport() {
+    pointerWatch?.remove();
+    console.debug('paperwm multimonitor drag/drop support is DISABLED');
+}
+
 function createAppIcon(metaWindow, size) {
     let tracker = Shell.WindowTracker.get_default();
     let app = tracker.get_window_app(metaWindow);
@@ -58,8 +99,6 @@ function createAppIcon(metaWindow, size) {
     return appIcon;
 }
 
-/**
- */
 var ClickOverlay = class ClickOverlay {
     constructor(monitor, onlyOnPrimary) {
         this.monitor = monitor;
@@ -67,9 +106,13 @@ var ClickOverlay = class ClickOverlay {
         this.left = new StackOverlay(Meta.MotionDirection.LEFT, monitor);
         this.right = new StackOverlay(Meta.MotionDirection.RIGHT, monitor);
 
-        let enterMonitor = new Clutter.Actor({reactive: true});
+        let enterMonitor = new Clutter.Actor({ reactive: true });
         this.enterMonitor = enterMonitor;
         enterMonitor.set_position(monitor.x, monitor.y);
+
+        // Uncomment to debug the overlays
+        // enterMonitor.background_color = Clutter.color_from_string('green')[1];
+        // enterMonitor.opacity = 100;
 
         Main.uiGroup.add_actor(enterMonitor);
         Main.layoutManager.trackChrome(enterMonitor);
@@ -78,41 +121,25 @@ var ClickOverlay = class ClickOverlay {
 
         this._lastPointer = [];
         this._lastPointerTimeout = null;
-        this.signals.connect(
-            enterMonitor, 'motion-event',
-            (actor, event) => {
-                // Changing monitors while in workspace preview doesn't work
-                if (Tiling.inPreview)
-                    return;
-                let [x, y, z] = global.get_pointer();
-                let [lX, lY] = this._lastPointer;
-                this._lastPointer = [x, y];
-                this._lastPointerTimeout = Mainloop.timeout_add(500, () => {
-                    this._lastPointer = [];
-                    this._lastPointerTimeout = null;
-                    return false; // on return false destroys timeout
-                });
-                if (lX === undefined ||
-                    Math.sqrt((lX - x) ** 2 + (lY - y) ** 2) < 10)
-                    return;
-                this.select();
-                return Clutter.EVENT_STOP;
-            }
-        );
 
-        this.signals.connect(
-            enterMonitor, 'button-press-event', () => {
-                if (Tiling.inPreview)
-                    return;
-                this.select();
-                return Clutter.EVENT_STOP;
-            }
-        );
+        this.signals.connect(enterMonitor, 'enter-event', () => {
+            if (Tiling.inPreview)
+                return;
+            this.select();
+        });
+
+        this.signals.connect(enterMonitor, 'button-press-event', () => {
+            if (Tiling.inPreview)
+                return;
+            this.select();
+            return Clutter.EVENT_STOP;
+        });
 
         this.signals.connect(Main.overview, 'showing', () => {
             this.deactivate();
             this.hide();
         });
+
         this.signals.connect(Main.overview, 'hidden', () => {
             this.activate();
             this.show();
@@ -131,7 +158,29 @@ var ClickOverlay = class ClickOverlay {
         });
     }
 
+    monitorActiveCheck() {
+        // if clickoverlay not active, then nothing to do
+        if (!this.active) {
+            return;
+        }
+
+        if (Main.overview.visible || Tiling.inPreview) {
+            return;
+        }
+
+        // if mouse on me, select
+        let [gx, gy, $] = global.get_pointer();
+        if (this.monitor === Grab.monitorAtPoint(gx, gy)) {
+            this.select();
+        }
+    }
+
     select() {
+        /**
+         * stop navigation before activating workspace. Avoids an issue
+         * in multimonitors where workspaces can get snapped to another monitor.
+         */
+        Navigator.finishNavigation();
         this.deactivate();
         let space = Tiling.spaces.monitors.get(this.monitor);
         space.workspace.activate(global.get_current_time());
@@ -148,11 +197,13 @@ var ClickOverlay = class ClickOverlay {
         if (spaces && spaces.monitors.get(monitor) === spaces.get(active))
             return;
 
+        this.active = true;
         this.enterMonitor.set_position(monitor.x, monitor.y);
         this.enterMonitor.set_size(monitor.width, monitor.height);
     }
 
     deactivate() {
+        this.active = false;
         this.enterMonitor.set_size(0, 0);
     }
 
@@ -291,7 +342,7 @@ var StackOverlay = class StackOverlay {
     showPreview() {
         let [x, y, mask] = global.get_pointer();
         let actor = this.target.get_compositor_private();
-        let clone = new Clutter.Clone({source: actor});
+        let clone = new Clutter.Clone({ source: actor });
         this.clone = clone;
 
         // Remove any window clips, and show the metaWindow.clone's
@@ -316,7 +367,7 @@ var StackOverlay = class StackOverlay {
         }
 
         // calculate y position - center of mouse
-        y = y - (scale * clone.height)/2;
+        y -= (scale * clone.height) / 2;
 
         // bound to remain within view
         let workArea = this.getWorkArea();
