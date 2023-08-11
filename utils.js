@@ -4,9 +4,9 @@ const Lib = Extension.imports.lib;
 const { GLib, Clutter, Meta, St, GdkPixbuf, Cogl } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
-const display = global.display;
+const Display = global.display;
 
-var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
+var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number); // exported
 
 let debug_all = false; // Turn off by default
 let debug_filter = { '#paperwm': true, '#stacktrace': true };
@@ -122,7 +122,7 @@ function setBackgroundImage(actor, resource_path) {
  * Visualize the frame and buffer bounding boxes of a meta window
  */
 function toggleWindowBoxes(metaWindow) {
-    metaWindow = metaWindow || display.focus_window;
+    metaWindow = metaWindow || Display.focus_window;
 
     if (metaWindow._paperDebugBoxes) {
         metaWindow._paperDebugBoxes.forEach(box => {
@@ -179,14 +179,14 @@ function toggleCloneMarks() {
         }
     }
 
-    let windows = display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
+    let windows = Display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
 
     if (markNewClonesSignalId) {
-        display.disconnect(markNewClonesSignalId);
+        Display.disconnect(markNewClonesSignalId);
         markNewClonesSignalId = null;
         windows.forEach(unmarkCloneOf);
     } else {
-        markNewClonesSignalId = display.connect_after(
+        markNewClonesSignalId = Display.connect_after(
             "window-created", (_, mw) => markCloneOf(mw));
 
         windows.forEach(markCloneOf);
