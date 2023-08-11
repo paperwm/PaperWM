@@ -1797,7 +1797,7 @@ var Spaces = class Spaces extends Map {
          * and restores to the last multimonitor layout.
          */
         if (this.monitors.size > 1) {
-            prevMonitors = new Map(this.monitors);
+            savePrevious();
         }
     }
 
