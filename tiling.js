@@ -244,7 +244,6 @@ var Space = class Space extends Array {
 
         const settings = ExtensionUtils.getSettings();
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
-
         this.signals.connect(settings, 'changed::default-background', this.updateBackground.bind(this));
         this.signals.connect(settings, 'changed::use-default-background', this.updateBackground.bind(this));
         this.signals.connect(backgroundSettings, 'changed::picture-uri', this.updateBackground.bind(this));
@@ -1672,9 +1671,6 @@ var Spaces = class Spaces extends Map {
         this._monitorsChanging = true;
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
 
-        // save prevMonitors and prevSpaces
-        savePrevious();
-
         this.monitors = new Map();
         this.get(workspaceManager.get_active_workspace()).getWindows().forEach(w => {
             animateWindow(w);
@@ -1705,7 +1701,7 @@ var Spaces = class Spaces extends Map {
             let activeSpace = this.get(workspaceManager.get_active_workspace());
             let mru = this.mru();
             this.selectedSpace = mru[0];
-            this.monitors.set(activeSpace.monitor, activeSpace);
+            this.setMonitors(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
                 space.show();
                 Utils.actor_raise(space.clip);
@@ -1734,7 +1730,7 @@ var Spaces = class Spaces extends Map {
             this.forEach(space => {
                 space.setMonitor(primary);
             });
-            this.monitors.set(primary, mru[0]);
+            this.setMonitors(primary, mru[0]);
             finish();
             return;
         }
@@ -1744,13 +1740,13 @@ var Spaces = class Spaces extends Map {
             for (let [prevMonitor, prevSpace] of prevMonitors) {
                 let monitor = monitors[prevMonitor.index];
                 let space = this.get(prevSpace.workspace);
-                if (monitor &&
-                    space &&
+                if (monitor && space &&
                     prevMonitor.width === monitor.width &&
                     prevMonitor.height === monitor.height &&
                     prevMonitor.x === monitor.x &&
                     prevMonitor.y === monitor.y) {
-                    this.monitors.set(monitor, space);
+                    console.debug(`${space.name} restored to monitor ${monitor.index}`);
+                    this.setMonitors(monitor, space);
                     space.setMonitor(monitor);
                     mru = mru.filter(s => s !== space);
                 }
@@ -1770,7 +1766,7 @@ var Spaces = class Spaces extends Map {
                 if (space === undefined) {
                     continue;
                 }
-                this.monitors.set(monitor, space);
+                this.setMonitors(monitor, space);
                 space.setMonitor(monitor);
                 mru = mru.slice(1);
             }
@@ -1787,6 +1783,22 @@ var Spaces = class Spaces extends Map {
         });
 
         finish();
+    }
+
+    /**
+     * Sets this.monitors map and updates prevMonitors map (for restore).
+     */
+    setMonitors(monitor, space) {
+        this.monitors.set(monitor, space);
+
+        /**
+         * Update prevMonitors if in multimonitor.  This persists
+         * monitor layouts when switching to single monitor mode,
+         * and restores to the last multimonitor layout.
+         */
+        if (this.monitors.size > 1) {
+            prevMonitors = new Map(this.monitors);
+        }
     }
 
     destroy() {
@@ -1938,7 +1950,7 @@ var Spaces = class Spaces extends Map {
         this.stack = [toSpace, ...this.stack];
 
         let monitor = toSpace.monitor;
-        this.monitors.set(monitor, toSpace);
+        this.setMonitors(monitor, toSpace);
 
         this.animateToSpace(toSpace, fromSpace, () => this.setSpaceTopbarElementsVisible(false));
 

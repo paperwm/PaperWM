@@ -182,10 +182,10 @@ function moveSpaceToMonitor(basebinding = '<super><alt>') {
         let next = spaces.monitors.get(Main.layoutManager.monitors[n]);
 
         currentSpace.setMonitor(next.monitor);
-        spaces.monitors.set(next.monitor, currentSpace);
+        spaces.setMonitors(next.monitor, currentSpace);
 
         next.setMonitor(monitor);
-        spaces.monitors.set(monitor, next);
+        spaces.setMonitors(monitor, next);
 
         // This is pretty hacky
         spaces.switchWorkspace(null, currentSpace.workspace.index(), currentSpace.workspace.index());
