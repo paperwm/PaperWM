@@ -1675,7 +1675,7 @@ var Spaces = class Spaces extends Map {
         savePrevious();
 
         this.monitors = new Map();
-        this.get(workspaceManager.get_active_workspace()).getWindows().forEach(w => {
+        this.activeSpace.getWindows().forEach(w => {
             animateWindow(w);
         });
 
@@ -1700,8 +1700,8 @@ var Spaces = class Spaces extends Map {
             // update topbar workspace indicator
             TopBar.updateMonitor();
 
-            let activeSpace = this.get(workspaceManager.get_active_workspace());
-            this.selectedSpace = this.mru()[0];
+            let activeSpace = this.activeSpace;
+            this.selectedSpace = activeSpace;//this.mru()[0];
             this.setMonitors(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
                 space.show();
@@ -1716,19 +1716,26 @@ var Spaces = class Spaces extends Map {
                 }
             });
             */
+
+            this.forEach(space => {
+                space.setSelectionInactive();
+            });
+
             this.spaceContainer.show();
             activeSpace.monitor.clickOverlay.deactivate();
             StackOverlay.multimonitorDragDropSupport();
 
             this.monitorsChangingTimeout = Mainloop.timeout_add(
                 20, () => {
-                    activeSpace.setSelectionActive();
-                    TopBar.refreshWorkspaceIndicator();
-
                     this._monitorsChanging = false;
                     this.monitorsChangingTimeout = null;
                     return false; // on return false destroys timeout
                 });
+
+            Utils.later_add(Meta.LaterType.IDLE, () => {
+                activeSpace.setSelectionActive();
+                TopBar.refreshWorkspaceIndicator();
+            });
         };
 
         if (this.onlyOnPrimary) {
@@ -2067,7 +2074,7 @@ var Spaces = class Spaces extends Map {
             return;
         }
 
-        let currentSpace = this.getActiveSpace();
+        let currentSpace = this.activeSpace;
         let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
 
         if (!inPreview) {
@@ -2145,7 +2152,7 @@ var Spaces = class Spaces extends Map {
         TopBar.fixTopBar();
         this.setSpaceTopbarElementsVisible();
         const scale = 0.9;
-        let space = this.getActiveSpace();
+        let space = this.activeSpace;
         let mru = [...this.stack];
         this.monitors.forEach(space => mru.splice(mru.indexOf(space), 1));
         mru = [space, ...mru];
@@ -2226,7 +2233,7 @@ var Spaces = class Spaces extends Map {
         }
 
         const scale = 0.9;
-        let space = this.getActiveSpace();
+        let space = this.activeSpace;
         let mru = [...this.stack];
 
         this.monitors.forEach(space => mru.splice(mru.indexOf(space), 1));
@@ -2438,7 +2445,7 @@ var Spaces = class Spaces extends Map {
     /**
      * Returns the currently active space.
      */
-    getActiveSpace() {
+    get activeSpace() {
         return this.spaceOf(workspaceManager.get_active_workspace());
     }
 
@@ -2448,7 +2455,7 @@ var Spaces = class Spaces extends Map {
      * @returns
      */
     isActiveSpace(space) {
-        return space === this.getActiveSpace();
+        return space === this.activeSpace;
     }
 
     /**
@@ -3684,18 +3691,18 @@ function cycleWindowHeight(metaWindow) {
 }
 
 function activateNthWindow(n, space) {
-    space = space || spaces.getActiveSpace();
+    space = space || spaces.activeSpace;
     let nth = space[n][0];
     ensureViewport(nth, space);
 }
 
 function activateFirstWindow(mw, space) {
-    space = space || spaces.getActiveSpace();
+    space = space || spaces.activeSpace;
     activateNthWindow(0, space);
 }
 
 function activateLastWindow(mw, space) {
-    space = space || spaces.getActiveSpace();
+    space = space || spaces.activeSpace;
     activateNthWindow(space.length - 1, space);
 }
 
@@ -3746,7 +3753,7 @@ function centerWindowHorizontally(metaWindow) {
  * @param {Space} space
  */
 function setFocusMode(mode, space) {
-    space = space ?? spaces.getActiveSpace();
+    space = space ?? spaces.activeSpace;
     space.focusMode = mode;
     space.focusModeIcon.setMode(mode);
     if (space.hasTopBar()) {
@@ -3797,7 +3804,7 @@ function setFocusMode(mode, space) {
  * @param {Space} space
  */
 function switchToNextFocusMode(space) {
-    space = space ?? spaces.getActiveSpace();
+    space = space ?? spaces.activeSpace;
     const numModes = Object.keys(FocusModes).length;
     // for currMode we switch to 1-based to use it validly in remainder operation
     const currMode = Object.values(FocusModes).indexOf(space.focusMode) + 1;

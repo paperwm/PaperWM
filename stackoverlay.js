@@ -148,11 +148,24 @@ var ClickOverlay = class ClickOverlay {
          * (which deactivates ClickOverlay and immediately activates/selects the dropped window.
          */
         this.signals.connect(global.display, 'grab-op-end', (display, mw, type) => {
-            let [gx, gy, $] = global.get_pointer();
-            if (this.monitor === Grab.monitorAtPoint(gx, gy)) {
+            if (this.monitor === this.mouseMonitor) {
                 this.select();
             }
         });
+    }
+
+    /**
+     * Returns the space of this ClickOverlay instance.
+     */
+    get space() {
+        return Tiling.spaces.monitors.get(this.monitor);
+    }
+
+    /**
+     * Returns the monitor the mouse is currently on.
+     */
+    get mouseMonitor() {
+        return Grab.monitorAtCurrentPoint();
     }
 
     monitorActiveCheck() {
@@ -166,8 +179,7 @@ var ClickOverlay = class ClickOverlay {
         }
 
         // if mouse on me, select
-        let [gx, gy, $] = global.get_pointer();
-        if (this.monitor === Grab.monitorAtPoint(gx, gy)) {
+        if (this.monitor === this.mouseMonitor) {
             this.select();
         }
     }
@@ -179,8 +191,7 @@ var ClickOverlay = class ClickOverlay {
          */
         Navigator.finishNavigation();
         this.deactivate();
-        let space = Tiling.spaces.monitors.get(this.monitor);
-        space.workspace.activate(global.get_current_time());
+        this.space.workspace.activate(global.get_current_time());
     }
 
     activate() {

@@ -153,7 +153,7 @@ class ColorEntry {
     }
 
     clicked() {
-        let space = Tiling.spaces.getActiveSpace();
+        let space = Tiling.spaces.activeSpace;
         let color = this.entry.actor.text;
         space.settings.set_string('color', color);
     }
@@ -338,7 +338,7 @@ var WorkspaceMenu = GObject.registerClass(
             this.menu.addMenuItem(this.entry);
             let changed = () => {
                 let name = this.entry.label.text;
-                let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
+                let space = Tiling.spaces.activeSpace;
                 space.settings.set_string('name', name);
                 this.setName(name);
             };
@@ -458,7 +458,7 @@ var WorkspaceMenu = GObject.registerClass(
             if (this.state === 'SMOOTH' && type === Clutter.EventType.SCROLL
                 && event.get_scroll_direction() === Clutter.ScrollDirection.SMOOTH) {
                 let spaces = Tiling.spaces;
-                let active = spaces.getActiveSpace();
+                let active = spaces.activeSpace;
 
                 let [dx, dy] = event.get_scroll_delta();
                 dy *= active.height * 0.05;
@@ -562,7 +562,7 @@ var WorkspaceMenu = GObject.registerClass(
             if (!open)
                 return;
 
-            let space = Tiling.spaces.getActiveSpace();
+            let space = Tiling.spaces.activeSpace;
             this.entry.label.text = space.name;
             GLib.idle_add(GLib.PRIORITY_DEFAULT, this.entry.activate.bind(this.entry));
 

@@ -17,12 +17,23 @@ function isInRect(x, y, r) {
         r.y <= y && y < r.y + r.height;
 }
 
+/**
+ * Returns monitor a pointer co-ordinates.
+ */
 function monitorAtPoint(gx, gy) {
     for (let monitor of Main.layoutManager.monitors) {
         if (isInRect(gx, gy, monitor))
             return monitor;
     }
     return null;
+}
+
+/**
+ * Returns the monitor current pointer coordinates.
+ */
+function monitorAtCurrentPoint() {
+    let [gx, gy, $] = global.get_pointer();
+    return monitorAtPoint(gx, gy);
 }
 
 /**
@@ -166,7 +177,6 @@ var MoveGrab = class MoveGrab {
         this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
 
         let monitor = monitorAtPoint(gx, gy);
-
         let onSame = monitor === space.monitor;
 
         let [x, y] = space.globalToViewport(gx, gy);

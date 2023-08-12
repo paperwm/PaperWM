@@ -133,7 +133,7 @@ function toggle(metaWindow) {
         makeScratch(metaWindow);
 
         if (metaWindow.has_focus) {
-            let space = Tiling.spaces.get(global.workspace_manager.get_active_workspace());
+            let space = Tiling.activeSpace;
             space.setSelectionInactive();
         }
     }

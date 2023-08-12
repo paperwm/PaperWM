@@ -274,7 +274,7 @@ class NavigatorClass {
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
         // Meta.disable_unredirect_for_screen(screen);
-        this.space = Tiling.spaces.getActiveSpace();
+        this.space = Tiling.spaces.activeSpace;
 
         this._startWindow = this.space.selectedWindow;
         this.from = this.space;
