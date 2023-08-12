@@ -1717,12 +1717,13 @@ var Spaces = class Spaces extends Map {
             });
             */
             this.spaceContainer.show();
+            activeSpace.monitor.clickOverlay.deactivate();
+            StackOverlay.multimonitorDragDropSupport();
 
             this.monitorsChangingTimeout = Mainloop.timeout_add(
                 20, () => {
+                    activeSpace.setSelectionActive();
                     TopBar.refreshWorkspaceIndicator();
-                    activeSpace.monitor.clickOverlay.deactivate();
-                    StackOverlay.multimonitorDragDropSupport();
 
                     this._monitorsChanging = false;
                     this.monitorsChangingTimeout = null;
