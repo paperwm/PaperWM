@@ -1630,7 +1630,7 @@ var Spaces = class Spaces extends Map {
         this.signals.connect(display, 'grab-op-begin', (display, mw, type) => grabBegin(mw, type));
         this.signals.connect(display, 'grab-op-end', (display, mw, type) => grabEnd(mw, type));
 
-        this.signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChanged.bind(this));
+        this.signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChangeGuard.bind(this));
 
         this.signals.connect(global.window_manager, 'switch-workspace',
             this.switchWorkspace.bind(this));
