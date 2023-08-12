@@ -206,6 +206,7 @@ var ClickOverlay = class ClickOverlay {
             return;
 
         this.active = true;
+        this.space?.setSelectionInactive();
         this.enterMonitor.set_position(monitor.x, monitor.y);
         this.enterMonitor.set_size(monitor.width, monitor.height);
     }

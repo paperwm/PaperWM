@@ -1721,9 +1721,7 @@ var Spaces = class Spaces extends Map {
 
             // update workspace indicator and correct selectionActive
             Utils.later_add(Meta.LaterType.IDLE, () => {
-                this.forEach(space => {
-                    space.setSelectionInactive();
-                });
+                setAllWorkspacesInactive();
 
                 // update selectionActive for current pointer monitor
                 let monitor = Grab.monitorAtCurrentPoint();
