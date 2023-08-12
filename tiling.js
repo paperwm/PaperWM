@@ -1697,29 +1697,16 @@ var Spaces = class Spaces extends Map {
         }
 
         let finish = () => {
-            // update topbar workspace indicator
+            // update monitor for TopBar
             TopBar.updateMonitor();
 
             let activeSpace = this.activeSpace;
-            this.selectedSpace = activeSpace;//this.mru()[0];
+            this.selectedSpace = activeSpace;
             this.setMonitors(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
                 space.show();
                 Utils.actor_raise(space.clip);
             }
-            /*
-            this.forEach(space => {
-                space.layout(false);
-                let selected = space.selectedWindow;
-                if (selected) {
-                    ensureViewport(selected, space, { moveto: false });
-                }
-            });
-            */
-
-            this.forEach(space => {
-                space.setSelectionInactive();
-            });
 
             this.spaceContainer.show();
             activeSpace.monitor.clickOverlay.deactivate();
@@ -1732,8 +1719,15 @@ var Spaces = class Spaces extends Map {
                     return false; // on return false destroys timeout
                 });
 
+            // update workspace indicator and correct selectionActive
             Utils.later_add(Meta.LaterType.IDLE, () => {
-                activeSpace.setSelectionActive();
+                this.forEach(space => {
+                    space.setSelectionInactive();
+                });
+
+                // update selectionActive for current pointer monitor
+                let monitor = Grab.monitorAtCurrentPoint();
+                this.monitors.get(monitor).setSelectionActive();
                 TopBar.refreshWorkspaceIndicator();
             });
         };
