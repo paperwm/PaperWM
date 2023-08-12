@@ -1624,6 +1624,9 @@ var Spaces = class Spaces extends Map {
     }
 
     init() {
+        // Monitors aren't set up properly on `enable`, so we need it enable here.
+        this.monitorsChanged();
+
         this.signals.connect(display, 'window-created',
             (display, metaWindow, user_data) => this.window_created(metaWindow));
 
@@ -1648,9 +1651,6 @@ var Spaces = class Spaces extends Map {
             });
         this._initDone = true;
 
-        // Monitors aren't set up properly on `enable`, so we need it here too
-        this.monitorsChanged();
-
         // Create extra workspaces if required
         Main.wm._workspaceTracker._checkWorkspaces();
 
@@ -1670,7 +1670,7 @@ var Spaces = class Spaces extends Map {
 
         this._monitorsChanging = true;
         this.monitorsChangingTimeout = Mainloop.timeout_add(
-            100, () => {
+            20, () => {
                 this.monitorsChangingTimeout = null;
                 this.monitorsChanged();
                 return false; // on return false destroys timeout
@@ -1756,8 +1756,8 @@ var Spaces = class Spaces extends Map {
                 let monitor = monitors[prevMonitor.index];
                 let space = this.get(prevSpace.workspace);
                 if (monitor && space &&
-                    //prevMonitor.width === monitor.width &&
-                    //prevMonitor.height === monitor.height &&
+                    // prevMonitor.width === monitor.width &&
+                    // prevMonitor.height === monitor.height &&
                     prevMonitor.x === monitor.x &&
                     prevMonitor.y === monitor.y) {
                     console.debug(`${space.name} restored to monitor ${monitor.index}`);
