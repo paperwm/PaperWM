@@ -135,7 +135,7 @@ var MoveGrab = class MoveGrab {
         let point = {};
         if (center) {
             point = space.cloneContainer.apply_relative_transform_to_point(
-                global.stage, new Graphene.Point3D({x: Math.round(clone.x), y: Math.round(clone.y)}));
+                global.stage, new Graphene.Point3D({ x: Math.round(clone.x), y: Math.round(clone.y) }));
         } else {
             // For some reason the above isn't smooth when DnD is triggered from dragging
             let [dx, dy] = this.pointerOffset;
@@ -152,7 +152,7 @@ var MoveGrab = class MoveGrab {
         let newScale = clone.scale_x * space.actor.scale_x;
         clone.set_scale(newScale, newScale);
 
-        let params = {time: Settings.prefs.animation_time, scale_x: 0.5, scale_y: 0.5, opacity: 240}
+        let params = { time: Settings.prefs.animation_time, scale_x: 0.5, scale_y: 0.5, opacity: 240 };
         if (center) {
             this.pointerOffset = [0, 0];
             clone.set_pivot_point(0, 0);
@@ -171,15 +171,15 @@ var MoveGrab = class MoveGrab {
 
         let [x, y] = space.globalToViewport(gx, gy);
         if (!this.center && onSame && single && space[i]) {
-            Tiling.move_to(space, space[i][0], {x: x + Settings.prefs.window_gap / 2});
+            Tiling.move_to(space, space[i][0], { x: x + Settings.prefs.window_gap / 2 });
         } else if (!this.center && onSame && single && space[i - 1]) {
-            Tiling.move_to(space, space[i - 1][0], {x: x - space[i - 1][0].clone.width - Settings.prefs.window_gap / 2});
+            Tiling.move_to(space, space[i - 1][0], { x: x - space[i - 1][0].clone.width - Settings.prefs.window_gap / 2 });
         } else if (!this.center && onSame && space.length === 0) {
             space.targetX = x;
             space.cloneContainer.x = x;
         }
 
-        let [sx, sy] = space.globalToScroll(gx, gy, {useTarget: true});
+        let [sx, sy] = space.globalToScroll(gx, gy, { useTarget: true });
 
         for (let [workspace, space] of Tiling.spaces) {
             this.signals.connect(space.background, "motion-event", this.spaceMotion.bind(this, space));
@@ -265,12 +265,12 @@ var MoveGrab = class MoveGrab {
                 if (i < column.length) {
                     clone = column[i].clone;
                 } else {
-                    let lastClone = column[i-1].clone;
+                    let lastClone = column[i - 1].clone;
                     clone = {
                         targetX: lastClone.targetX,
                         targetY: lastClone.targetY + lastClone.height + gap,
                         width: lastClone.width,
-                        height: 0
+                        height: 0,
                     };
                 }
                 const isFirst = i === 0;
@@ -401,7 +401,7 @@ var MoveGrab = class MoveGrab {
                 let [dx, dy] = this.pointerOffset;
                 clone.x = sx - dx;
                 clone.y = sy - dy;
-                let newScale = clone.scale_x/space.actor.scale_x;
+                let newScale = clone.scale_x / space.actor.scale_x;
                 clone.set_scale(newScale, newScale);
 
                 actor.set_scale(1, 1);
@@ -409,19 +409,19 @@ var MoveGrab = class MoveGrab {
 
                 // Tiling.animateWindow(metaWindow);
                 params.onStopped = () => {
-                    space.moveDone()
-                    clone.set_pivot_point(0, 0)
-                }
+                    space.moveDone();
+                    clone.set_pivot_point(0, 0);
+                };
                 Easer.addEase(clone, params);
 
                 space.targetX = space.cloneContainer.x;
                 space.selectedWindow = metaWindow;
                 if (dndTarget.position) {
-                    space.layout(true, {customAllocators: {[dndTarget.position[0]]: Tiling.allocateEqualHeight}});
+                    space.layout(true, { customAllocators: { [dndTarget.position[0]]: Tiling.allocateEqualHeight } });
                 } else {
                     space.layout();
                 }
-                Tiling.move_to(space, metaWindow, {x: x - space.monitor.x})
+                Tiling.move_to(space, metaWindow, { x: x - space.monitor.x });
                 Tiling.ensureViewport(metaWindow, space);
 
                 Utils.actor_raise(clone);
@@ -437,7 +437,7 @@ var MoveGrab = class MoveGrab {
                 clone.set_scale(1, 1);
                 clone.set_pivot_point(0, 0);
 
-                params.onStopped = () => { actor.set_pivot_point(0, 0) };
+                params.onStopped = () => { actor.set_pivot_point(0, 0); };
                 Easer.addEase(actor, params);
             }
 
@@ -453,7 +453,7 @@ var MoveGrab = class MoveGrab {
             params.onStopped = () => {
                 space.moveDone();
                 clone.set_pivot_point(0, 0);
-            }
+            };
             Easer.addEase(clone, params);
 
             Tiling.ensureViewport(metaWindow, space);
@@ -553,7 +553,7 @@ var MoveGrab = class MoveGrab {
                 time: Settings.prefs.animation_time,
                 [zone.originProp]: zone.center,
                 [zone.sizeProp]: 0,
-                onComplete: () => { zone.actor.destroy(); this.zoneActors.delete(zone.actor); }
+                onComplete: () => { zone.actor.destroy(); this.zoneActors.delete(zone.actor); },
             });
         }
 

@@ -48,10 +48,6 @@ const PointerWatcher = imports.ui.pointerWatcher;
 */
 
 let pointerWatch;
-function enable() {
-
-}
-
 function disable() {
     disableMultimonitorDragDropSupport();
 }
@@ -82,6 +78,7 @@ function enableMultimonitorDragDropSupport() {
 
 function disableMultimonitorDragDropSupport() {
     pointerWatch?.remove();
+    pointerWatch = null;
     console.debug('paperwm multimonitor drag/drop support is DISABLED');
 }
 
