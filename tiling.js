@@ -1671,6 +1671,9 @@ var Spaces = class Spaces extends Map {
         this._monitorsChanging = true;
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
 
+        // backup previous multimonitors save
+        savePrevious();
+
         this.monitors = new Map();
         this.get(workspaceManager.get_active_workspace()).getWindows().forEach(w => {
             animateWindow(w);
@@ -1696,16 +1699,15 @@ var Spaces = class Spaces extends Map {
         let finish = () => {
             // update topbar workspace indicator
             TopBar.updateMonitor();
-            TopBar.refreshWorkspaceIndicator();
 
             let activeSpace = this.get(workspaceManager.get_active_workspace());
-            let mru = this.mru();
-            this.selectedSpace = mru[0];
+            this.selectedSpace = this.mru()[0];
             this.setMonitors(activeSpace.monitor, activeSpace);
             for (let [monitor, space] of this.monitors) {
                 space.show();
                 Utils.actor_raise(space.clip);
             }
+            /*
             this.forEach(space => {
                 space.layout(false);
                 let selected = space.selectedWindow;
@@ -1713,17 +1715,19 @@ var Spaces = class Spaces extends Map {
                     ensureViewport(selected, space, { moveto: false });
                 }
             });
+            */
             this.spaceContainer.show();
 
             this.monitorsChangingTimeout = Mainloop.timeout_add(
                 20, () => {
+                    TopBar.refreshWorkspaceIndicator();
+                    activeSpace.monitor.clickOverlay.deactivate();
+                    StackOverlay.multimonitorDragDropSupport();
+
                     this._monitorsChanging = false;
                     this.monitorsChangingTimeout = null;
                     return false; // on return false destroys timeout
                 });
-
-            activeSpace.monitor.clickOverlay.deactivate();
-            StackOverlay.multimonitorDragDropSupport();
         };
 
         if (this.onlyOnPrimary) {
@@ -1790,15 +1794,7 @@ var Spaces = class Spaces extends Map {
      */
     setMonitors(monitor, space) {
         this.monitors.set(monitor, space);
-
-        /**
-         * Update prevMonitors if in multimonitor.  This persists
-         * monitor layouts when switching to single monitor mode,
-         * and restores to the last multimonitor layout.
-         */
-        if (this.monitors.size > 1) {
-            savePrevious();
-        }
+        savePrevious();
     }
 
     destroy() {
@@ -2852,9 +2848,15 @@ function disable () {
  * of PaperWM.
  */
 function savePrevious() {
-    if (spaces?.monitors) {
+    /**
+     * Update prevMonitors if in multimonitor.  This persists
+     * monitor layouts when switching to single monitor mode,
+     * and restores to the last multimonitor layout.
+     */
+    if (spaces?.monitors?.size > 1) {
         prevMonitors = new Map(spaces.monitors);
     }
+
     if (spaces) {
         prevSpaces = new Map(spaces);
     }
