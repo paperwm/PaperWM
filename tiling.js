@@ -1661,6 +1661,23 @@ var Spaces = class Spaces extends Map {
     }
 
     /**
+     * Acts as a guard in case of rapid monitor-change signals.
+     */
+    monitorsChangeGuard() {
+        if (this._monitorsChanging) {
+            return;
+        }
+
+        this._monitorsChanging = true;
+        this.monitorsChangingTimeout = Mainloop.timeout_add(
+            100, () => {
+                this.monitorsChangingTimeout = null;
+                this.monitorsChanged();
+                return false; // on return false destroys timeout
+            });
+    }
+
+    /**
        The monitors-changed signal can trigger _many_ times when
        connection/disconnecting monitors.
 
@@ -1668,7 +1685,6 @@ var Spaces = class Spaces extends Map {
        left with heuristics.
      */
     monitorsChanged() {
-        this._monitorsChanging = true;
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
 
         // backup previous multimonitors save
@@ -1712,13 +1728,6 @@ var Spaces = class Spaces extends Map {
             activeSpace.monitor.clickOverlay.deactivate();
             StackOverlay.multimonitorDragDropSupport();
 
-            this.monitorsChangingTimeout = Mainloop.timeout_add(
-                20, () => {
-                    this._monitorsChanging = false;
-                    this.monitorsChangingTimeout = null;
-                    return false; // on return false destroys timeout
-                });
-
             // update workspace indicator and correct selectionActive
             Utils.later_add(Meta.LaterType.IDLE, () => {
                 setAllWorkspacesInactive();
@@ -1727,6 +1736,8 @@ var Spaces = class Spaces extends Map {
                 let monitor = Grab.monitorAtCurrentPoint();
                 this.monitors.get(monitor).setSelectionActive();
                 TopBar.refreshWorkspaceIndicator();
+
+                this._monitorsChanging = false;
             });
         };
 
@@ -1745,8 +1756,8 @@ var Spaces = class Spaces extends Map {
                 let monitor = monitors[prevMonitor.index];
                 let space = this.get(prevSpace.workspace);
                 if (monitor && space &&
-                    prevMonitor.width === monitor.width &&
-                    prevMonitor.height === monitor.height &&
+                    //prevMonitor.width === monitor.width &&
+                    //prevMonitor.height === monitor.height &&
                     prevMonitor.x === monitor.x &&
                     prevMonitor.y === monitor.y) {
                     console.debug(`${space.name} restored to monitor ${monitor.index}`);
