@@ -1742,7 +1742,7 @@ var Spaces = class Spaces extends Map {
         if (prevMonitors?.size > 0) {
             for (let [prevMonitor, prevSpace] of prevMonitors) {
                 let monitor = monitors.find(m => m.connector === prevMonitor.connector);
-                let space = this.get(prevSpace.workspace);
+                let space = this.spaceOfIndex(prevSpace.index);
                 if (monitor && space) {
                     console.log(`${space.name} restored to monitor ${monitor.connector}`);
                     this.setMonitors(monitor, space);
@@ -2428,6 +2428,14 @@ var Spaces = class Spaces extends Map {
     }
 
     /**
+     * Returns the space by it's workspace index value.
+     */
+    spaceOfIndex(workspaceIndex) {
+        let workspace = [...this.keys()].find(w => workspaceIndex === w.index());
+        return this.spaceOf(workspace);
+    }
+
+    /**
      * Returns the currently active space.
      */
     get activeSpace() {
@@ -2866,7 +2874,10 @@ function savePrevious() {
             prevMonitors.set({
                 index: monitor.index,
                 connector: monitor.connector,
-            }, space);
+            }, {
+                index: space.workspace.index(),
+                name: space.name,
+            });
         }
     }
 
