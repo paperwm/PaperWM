@@ -448,7 +448,7 @@ var DisplayConfig = class DisplayConfig {
     }
 
     constructor() {
-        this._monitorsConfigProxy = new DisplayConfig.proxyWrapper(
+        this.proxy = new DisplayConfig.proxyWrapper(
             Gio.DBus.session,
             'org.gnome.Mutter.DisplayConfig',
             '/org/gnome/Mutter/DisplayConfig',
@@ -468,13 +468,13 @@ var DisplayConfig = class DisplayConfig {
      * layouts.
      */
     upgradeGnomeMonitors(callback = () => {}) {
-        this._monitorsConfigProxy.GetCurrentStateRemote((resources, err) => {
-            if (err) {
-                console.error(err);
+        this.proxy.GetCurrentStateRemote((state, error) => {
+            if (error) {
+                console.error(error);
                 return;
             }
 
-            const [serial, monitors, logicalMonitors] = resources;
+            const [serial, monitors, logicalMonitors] = state;
             for (const monitor of monitors) {
                 const [specs, modes, props] = monitor;
                 const [connector, vendor, product, serial] = specs;
