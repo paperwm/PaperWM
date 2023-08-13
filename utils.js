@@ -1,7 +1,7 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Lib = Extension.imports.lib;
-const { GLib, Clutter, Meta, St, GdkPixbuf, Cogl } = imports.gi;
+const { GLib, Clutter, Meta, St, GdkPixbuf, Cogl, Gio } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const Display = global.display;
@@ -294,6 +294,67 @@ function printActorTree(node, fmt = mkFmt(), options = {}, state = null) {
     }
 }
 
+function isMetaWindow(obj) {
+    return obj && obj.window_type && obj.get_compositor_private;
+}
+
+function shortTrace(skip = 0) {
+    let trace = new Error().stack.split("\n").map(s => {
+        let words = s.split(/[@/]/);
+        let cols = s.split(":");
+        let ln = parseInt(cols[2]);
+        if (ln === null)
+            ln = "?";
+
+        return [words[0], ln];
+    });
+    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : `${f}:${ln}`);
+    return trace.slice(skip + 1, skip + 5);
+}
+
+function actor_raise(actor, above) {
+    const parent = actor.get_parent();
+    if (!parent) {
+        return;
+    }
+    // needs to be null (not undefined) for valid second argument
+    above = above ?? null;
+    parent.set_child_above_sibling(actor, above);
+}
+
+function actor_reparent(actor, newParent) {
+    const parent = actor.get_parent();
+    if (parent) {
+        parent.remove_child(actor);
+    }
+    newParent.add_child(actor);
+}
+
+/**
+ * Backwards compatible later_add function.
+ */
+function later_add(...args) {
+    // Gnome 44+ uses global.compositor.get_laters()
+    if (global.compositor?.get_laters) {
+        global.compositor.get_laters().add(...args);
+    }
+    // Gnome 42, 43 used Meta.later_add
+    else if (Meta.later_add) {
+        Meta.later_add(...args);
+    }
+}
+
+/**
+ * Convenience method for removing timeout source(s) from Mainloop.
+ */
+function timeout_remove(...timeouts) {
+    timeouts.forEach(t => {
+        if (t) {
+            Mainloop.source_remove(t);
+        }
+    });
+}
+
 var Signals = class Signals extends Map {
     static get [Symbol.species]() { return Map; }
 
@@ -371,63 +432,65 @@ var easer = {
     },
 };
 
-function isMetaWindow(obj) {
-    return obj && obj.window_type && obj.get_compositor_private;
-}
-
-function shortTrace(skip = 0) {
-    let trace = new Error().stack.split("\n").map(s => {
-        let words = s.split(/[@/]/);
-        let cols = s.split(":");
-        let ln = parseInt(cols[2]);
-        if (ln === null)
-            ln = "?";
-
-        return [words[0], ln];
-    });
-    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : `${f}:${ln}`);
-    return trace.slice(skip + 1, skip + 5);
-}
-
-function actor_raise(actor, above) {
-    const parent = actor.get_parent();
-    if (!parent) {
-        return;
+var DisplayConfig = class DisplayConfig {
+    static get proxyWrapper() {
+        return Gio.DBusProxy.makeProxyWrapper('<node>\
+        <interface name="org.gnome.Mutter.DisplayConfig">\
+            <method name="GetCurrentState">\
+            <arg name="serial" direction="out" type="u" />\
+            <arg name="monitors" direction="out" type="a((ssss)a(siiddada{sv})a{sv})" />\
+            <arg name="logical_monitors" direction="out" type="a(iiduba(ssss)a{sv})" />\
+            <arg name="properties" direction="out" type="a{sv}" />\
+            </method>\
+            <signal name="MonitorsChanged" />\
+        </interface>\
+    </node>');
     }
-    // needs to be null (not undefined) for valid second argument
-    above = above ?? null;
-    parent.set_child_above_sibling(actor, above);
-}
 
-function actor_reparent(actor, newParent) {
-    const parent = actor.get_parent();
-    if (parent) {
-        parent.remove_child(actor);
+    constructor() {
+        this._monitorsConfigProxy = new DisplayConfig.proxyWrapper(
+            Gio.DBus.session,
+            'org.gnome.Mutter.DisplayConfig',
+            '/org/gnome/Mutter/DisplayConfig',
+            (proxy, error) => {
+                if (error) {
+                    console.error(error);
+                    return;
+                }
+                this.upgradeGnomeMonitors();
+            }
+        );
     }
-    newParent.add_child(actor);
-}
 
-/**
- * Backwards compatible later_add function.
- */
-function later_add(...args) {
-    // Gnome 44+ uses global.compositor.get_laters()
-    if (global.compositor?.get_laters) {
-        global.compositor.get_laters().add(...args);
-    }
-    // Gnome 42, 43 used Meta.later_add
-    else if (Meta.later_add) {
-        Meta.later_add(...args);
-    }
-}
+    upgradeGnomeMonitors(callback = () => {}) {
+        this._monitorsConfigProxy.GetCurrentStateRemote((resources, err) => {
+            if (err) {
+                console.error(err);
+                return;
+            }
 
-/**
- * Convenience method for removing timeout source(s) from Mainloop.
- */
-function timeout_remove(...timeouts) {
-    timeouts.forEach(t => {
-        if (t) {
-            Mainloop.source_remove(t);
-        }
-    });
-}
+            const [serial, monitors, logicalMonitors] = resources;
+            for (const monitor of monitors) {
+                const [specs, modes, props] = monitor;
+                const [connector, vendor, product, serial] = specs;
+
+                // upgrade gnome monitor object to add connector
+                let gnomeIndex = this.monitorManager.get_monitor_for_connector(connector);
+                let gnomeMonitor = this.gnomeMonitors.find(m => m.index === gnomeIndex);
+                if (gnomeMonitor) {
+                    gnomeMonitor.connector = connector;
+                }
+            }
+
+            callback();
+        });
+    }
+
+    get monitorManager() {
+        return global.backend.get_monitor_manager();
+    }
+
+    get gnomeMonitors() {
+        return Main.layoutManager.monitors;
+    }
+};

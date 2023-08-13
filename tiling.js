@@ -1625,7 +1625,11 @@ var Spaces = class Spaces extends Map {
 
     init() {
         // Monitors aren't set up properly on `enable`, so we need it enable here.
+        this.DisplayConfig = new Utils.DisplayConfig();
         this.monitorsChanged();
+        this.signals.connect(Main.layoutManager, 'monitors-changed', () => {
+            this.DisplayConfig.upgradeGnomeMonitors(() => this.monitorsChanged());
+        });
 
         this.signals.connect(display, 'window-created',
             (display, metaWindow, user_data) => this.window_created(metaWindow));
@@ -1633,7 +1637,6 @@ var Spaces = class Spaces extends Map {
         this.signals.connect(display, 'grab-op-begin', (display, mw, type) => grabBegin(mw, type));
         this.signals.connect(display, 'grab-op-end', (display, mw, type) => grabEnd(mw, type));
 
-        this.signals.connect(Main.layoutManager, 'monitors-changed', this.monitorsChangeGuard.bind(this));
 
         this.signals.connect(global.window_manager, 'switch-workspace',
             this.switchWorkspace.bind(this));
@@ -1672,7 +1675,7 @@ var Spaces = class Spaces extends Map {
         this.monitorsChangingTimeout = Mainloop.timeout_add(
             20, () => {
                 this.monitorsChangingTimeout = null;
-                this.monitorsChanged();
+                this.DisplayConfig.upgradeGnomeMonitors(() => this.monitorsChanged());
                 return false; // on return false destroys timeout
             });
     }
@@ -1702,6 +1705,7 @@ var Spaces = class Spaces extends Map {
         }
         this.clickOverlays = [];
         let mru = this.mru();
+
         let primary = Main.layoutManager.primaryMonitor;
         let monitors = Main.layoutManager.monitors;
 
@@ -1753,14 +1757,22 @@ var Spaces = class Spaces extends Map {
         // Persist as many monitors as possible
         if (prevMonitors?.size > 0) {
             for (let [prevMonitor, prevSpace] of prevMonitors) {
-                let monitor = monitors[prevMonitor.index];
+                // let monitor = monitors[prevMonitor.index];
+
+                let monitor = monitors.find(m => m.connector === prevMonitor.connector);
+                console.log('prev connector', prevMonitor.connector);
+                monitors.forEach(m => {
+                    console.log('gnome monitor', m.connector);
+                });
+
                 let space = this.get(prevSpace.workspace);
-                if (monitor && space &&
-                    // prevMonitor.width === monitor.width &&
-                    // prevMonitor.height === monitor.height &&
-                    prevMonitor.x === monitor.x &&
-                    prevMonitor.y === monitor.y) {
-                    console.debug(`${space.name} restored to monitor ${monitor.index}`);
+
+                if (monitor && space
+                // prevMonitor.width === monitor.width &&
+                // prevMonitor.height === monitor.height &&
+                // prevMonitor.x === monitor.x &&prevMonitor.y === monitor.y
+                ) {
+                    console.debug(`${space.name} restored to monitor ${monitor.connector}`);
                     this.setMonitors(monitor, space);
                     space.setMonitor(monitor);
                     mru = mru.filter(s => s !== space);
