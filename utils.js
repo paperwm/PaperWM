@@ -501,10 +501,6 @@ var DisplayConfig = class DisplayConfig {
         });
     }
 
-    destroy() {
-        this.downgradeGnomeMonitors();
-    }
-
     get monitorManager() {
         return global.backend.get_monitor_manager();
     }

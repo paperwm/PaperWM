@@ -1743,7 +1743,6 @@ var Spaces = class Spaces extends Map {
             for (let [prevMonitor, prevSpace] of prevMonitors) {
                 let monitor = monitors.find(m => m.connector === prevMonitor.connector);
                 let space = this.get(prevSpace.workspace);
-
                 if (monitor && space) {
                     console.log(`${space.name} restored to monitor ${monitor.connector}`);
                     this.setMonitors(monitor, space);
@@ -2711,9 +2710,9 @@ function resizeHandler(metaWindow) {
 let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
 let displayConfig;
-let prevSpaces, prevMonitors;
-let timerId;
-var inGrab;
+let prevMonitors, prevSpaces;
+let startupTimeoutId, timerId;
+var inGrab; // exported
 function enable(errorNotification) {
     inGrab = false;
     displayConfig = new Utils.DisplayConfig();
@@ -2800,13 +2799,19 @@ function enable(errorNotification) {
          * Upgrade gnome monitor info objects by add "connector" information, and
          * when done (async) callback to initworkspaces.
          */
-        displayConfig.upgradeGnomeMonitors(initWorkspaces);
+        // NOTE: this should happen after kludges.enable() have run, so we do
+        // it in a timeout
+        startupTimeoutId = Mainloop.timeout_add(0, () => {
+            displayConfig.upgradeGnomeMonitors(initWorkspaces);
+            startupTimeoutId = null;
+            return false; // on return false destroys timeout
+        });
     }
 }
 
 function disable () {
-    displayConfig.destroy();
-    displayConfig = null;
+    Utils.timeout_remove(startupTimeoutId);
+    startupTimeoutId = null;
     Utils.timeout_remove(timerId);
     timerId = null;
 
@@ -2830,6 +2835,8 @@ function disable () {
         }
     });
 
+    displayConfig.downgradeGnomeMonitors();
+    displayConfig = null;
     spaces.destroy();
     inGrab = null;
     gsettings = null;
@@ -2849,7 +2856,18 @@ function savePrevious() {
      * and restores to the last multimonitor layout.
      */
     if (spaces?.monitors?.size > 1) {
-        prevMonitors = new Map(spaces.monitors);
+        /**
+         * for monitors, since these are upgraded with "connector" field,
+         * which we delete on disable. Beefore we delete this field, we want
+         * a copy on connector (and maybe index) to restore space to monitor.
+         */
+        prevMonitors = new Map();
+        for (let [monitor, space] of spaces.monitors) {
+            prevMonitors.set({
+                index: monitor.index,
+                connector: monitor.connector,
+            }, space);
+        }
     }
 
     if (spaces) {
