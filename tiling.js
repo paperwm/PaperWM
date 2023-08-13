@@ -1640,8 +1640,9 @@ var Spaces = class Spaces extends Map {
         this.signals.connect(global.window_manager, 'switch-workspace',
             this.switchWorkspace.bind(this));
 
-        this.signals.connect(this.overrideSettings, 'changed::workspaces-only-on-primary',
-            this.monitorsChanged.bind(this));
+        this.signals.connect(this.overrideSettings, 'changed::workspaces-only-on-primary', () => {
+            displayConfig.upgradeGnomeMonitors(() => this.monitorsChanged());
+        });
 
         // Clone and hook up existing windows
         display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
