@@ -1663,28 +1663,12 @@ var Spaces = class Spaces extends Map {
     }
 
     /**
-     * Acts as a guard in case of rapid monitor-change signals.
-     */
-    monitorsChangeGuard() {
-        if (this._monitorsChanging) {
-            return;
-        }
-
-        this._monitorsChanging = true;
-        this.monitorsChangingTimeout = Mainloop.timeout_add(
-            20, () => {
-                this.monitorsChangingTimeout = null;
-                this.DisplayConfig.upgradeGnomeMonitors(() => this.monitorsChanged());
-                return false; // on return false destroys timeout
-            });
-    }
-
-    /**
        The monitors-changed signal can trigger _many_ times when
        connection/disconnecting monitors.
 
-       Monitors also doesn't seem to have a stable identity, which means we're
-       left with heuristics.
+       Monitors are now upgraded via a dbus proxy connector which upgrades
+       Main.layoutManager.monitors with a "connector" property (e.g "eDP-1")
+       which is more stable for restoring monitor layouts.
      */
     monitorsChanged() {
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
@@ -1760,7 +1744,7 @@ var Spaces = class Spaces extends Map {
                 let space = this.get(prevSpace.workspace);
 
                 if (monitor && space) {
-                    console.debug(`${space.name} restored to monitor ${monitor.connector}`);
+                    console.log(`${space.name} restored to monitor ${monitor.connector}`);
                     this.setMonitors(monitor, space);
                     space.setMonitor(monitor);
                     mru = mru.filter(s => s !== space);
@@ -1837,8 +1821,6 @@ var Spaces = class Spaces extends Map {
 
         this.signals.destroy();
         this.signals = null;
-        Utils.timeout_remove(this.monitorsChangingTimeout);
-        this.monitorsChangingTimeout = null;
 
         // remove spaces
         for (let [workspace, space] of this) {
@@ -2727,9 +2709,9 @@ function resizeHandler(metaWindow) {
 
 let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
-let prevSpaces, prevMonitors;
-let startupTimeoutId, timerId;
 let displayConfig;
+let prevSpaces, prevMonitors;
+let timerId;
 var inGrab;
 function enable(errorNotification) {
     inGrab = false;
@@ -2813,23 +2795,17 @@ function enable(errorNotification) {
         signals.connectOneShot(Main.layoutManager, 'startup-complete',
             () => displayConfig.upgradeGnomeMonitors(initWorkspaces));
     } else {
+        /**
+         * Upgrade gnome monitor info objects by add "connector" information, and
+         * when done (async) callback to initworkspaces.
+         */
         displayConfig.upgradeGnomeMonitors(initWorkspaces);
-        /*
-        // NOTE: this needs to happen after kludges.enable() have run, so we do
-        // it in a timeout
-        startupTimeoutId = Mainloop.timeout_add(0, () => {
-            initWorkspaces();
-            startupTimeoutId = null;
-            return false; // on return false destroys timeout
-        });
-        */
     }
 }
 
 function disable () {
+    displayConfig.destroy();
     displayConfig = null;
-    Utils.timeout_remove(startupTimeoutId);
-    startupTimeoutId = null;
     Utils.timeout_remove(timerId);
     timerId = null;
 
@@ -2873,10 +2849,6 @@ function savePrevious() {
      */
     if (spaces?.monitors?.size > 1) {
         prevMonitors = new Map(spaces.monitors);
-        global.pm = prevMonitors;
-        prevMonitors.forEach((monitor, space) => {
-            console.log('saved monitor', monitor.index, monitor.connector);
-        });
     }
 
     if (spaces) {

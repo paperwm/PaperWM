@@ -462,6 +462,11 @@ var DisplayConfig = class DisplayConfig {
         );
     }
 
+    /**
+     * Upgrades Main.layoutManager.monitors by adding a dbus monitor connector
+     * (e.g. "eDP-1" or "DP-1", etc.).  Used for stable restoring for monitor
+     * layouts.
+     */
     upgradeGnomeMonitors(callback = () => {}) {
         this._monitorsConfigProxy.GetCurrentStateRemote((resources, err) => {
             if (err) {
@@ -484,6 +489,20 @@ var DisplayConfig = class DisplayConfig {
 
             callback();
         });
+    }
+
+    /**
+     * Downgrades Main.layoutManager.monitors to default gnome state (without "connector"
+     * information).
+     */
+    downgradeGnomeMonitors() {
+        this.gnomeMonitors.forEach(m => {
+            delete m.connector;
+        });
+    }
+
+    destroy() {
+        this.downgradeGnomeMonitors();
     }
 
     get monitorManager() {
