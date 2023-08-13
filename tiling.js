@@ -1625,10 +1625,9 @@ var Spaces = class Spaces extends Map {
 
     init() {
         // Monitors aren't set up properly on `enable`, so we need it enable here.
-        this.DisplayConfig = new Utils.DisplayConfig();
         this.monitorsChanged();
         this.signals.connect(Main.layoutManager, 'monitors-changed', () => {
-            this.DisplayConfig.upgradeGnomeMonitors(() => this.monitorsChanged());
+            displayConfig.upgradeGnomeMonitors(() => this.monitorsChanged());
         });
 
         this.signals.connect(display, 'window-created',
@@ -1757,21 +1756,10 @@ var Spaces = class Spaces extends Map {
         // Persist as many monitors as possible
         if (prevMonitors?.size > 0) {
             for (let [prevMonitor, prevSpace] of prevMonitors) {
-                // let monitor = monitors[prevMonitor.index];
-
                 let monitor = monitors.find(m => m.connector === prevMonitor.connector);
-                console.log('prev connector', prevMonitor.connector);
-                monitors.forEach(m => {
-                    console.log('gnome monitor', m.connector);
-                });
-
                 let space = this.get(prevSpace.workspace);
 
-                if (monitor && space
-                // prevMonitor.width === monitor.width &&
-                // prevMonitor.height === monitor.height &&
-                // prevMonitor.x === monitor.x &&prevMonitor.y === monitor.y
-                ) {
+                if (monitor && space) {
                     console.debug(`${space.name} restored to monitor ${monitor.connector}`);
                     this.setMonitors(monitor, space);
                     space.setMonitor(monitor);
@@ -2741,9 +2729,11 @@ let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
 let prevSpaces, prevMonitors;
 let startupTimeoutId, timerId;
+let displayConfig;
 var inGrab;
 function enable(errorNotification) {
     inGrab = false;
+    displayConfig = new Utils.DisplayConfig();
     gsettings = ExtensionUtils.getSettings();
     backgroundSettings = new Gio.Settings({
         schema_id: 'org.gnome.desktop.background',
@@ -2820,8 +2810,11 @@ function enable(errorNotification) {
         // Defer workspace initialization until existing windows are accessible.
         // Otherwise we're unable to restore the tiling-order. (when restarting
         // gnome-shell)
-        signals.connectOneShot(Main.layoutManager, 'startup-complete', initWorkspaces);
+        signals.connectOneShot(Main.layoutManager, 'startup-complete',
+            () => displayConfig.upgradeGnomeMonitors(initWorkspaces));
     } else {
+        displayConfig.upgradeGnomeMonitors(initWorkspaces);
+        /*
         // NOTE: this needs to happen after kludges.enable() have run, so we do
         // it in a timeout
         startupTimeoutId = Mainloop.timeout_add(0, () => {
@@ -2829,10 +2822,12 @@ function enable(errorNotification) {
             startupTimeoutId = null;
             return false; // on return false destroys timeout
         });
+        */
     }
 }
 
 function disable () {
+    displayConfig = null;
     Utils.timeout_remove(startupTimeoutId);
     startupTimeoutId = null;
     Utils.timeout_remove(timerId);
@@ -2878,6 +2873,10 @@ function savePrevious() {
      */
     if (spaces?.monitors?.size > 1) {
         prevMonitors = new Map(spaces.monitors);
+        global.pm = prevMonitors;
+        prevMonitors.forEach((monitor, space) => {
+            console.log('saved monitor', monitor.index, monitor.connector);
+        });
     }
 
     if (spaces) {
