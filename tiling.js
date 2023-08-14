@@ -1691,7 +1691,10 @@ var Spaces = class Spaces extends Map {
         let mru = this.mru();
 
         let primary = Main.layoutManager.primaryMonitor;
-        let monitors = Main.layoutManager.monitors;
+        // get monitors but ensure primary monitor is first
+        let monitors = Main.layoutManager.monitors
+            .filter(m => m !== primary);
+        monitors.unshift(primary);
 
         for (let monitor of monitors) {
             let overlay = new ClickOverlay(monitor, this.onlyOnPrimary);
@@ -1775,8 +1778,10 @@ var Spaces = class Spaces extends Map {
         mru.forEach(space => {
             if (!monitors.includes(space.monitor)) {
                 let monitor = monitors[space.monitor.index];
-                if (!monitor)
+                if (!monitor) {
                     monitor = primary;
+                }
+
                 space.setMonitor(monitor);
             }
         });
