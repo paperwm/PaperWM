@@ -1748,23 +1748,35 @@ var Spaces = class Spaces extends Map {
 
         // Persist as many monitors as possible
         let indexTracker = [];
+        let applyRestore = (prevConn, prevSpaceIndex) => {
+            indexTracker.push(prevSpaceIndex);
+            let monitor = monitors.find(m => m.connector === prevConn);
+            let space = this.spaceOfIndex(prevSpaceIndex);
+            if (monitor && space) {
+                console.log(`${space.name} restored to monitor ${monitor.connector}`);
+                this.setMonitors(monitor, space);
+                space.setMonitor(monitor);
+                mru = mru.filter(s => s !== space);
+            }
+        };
+
         if (prevMonitors?.size > 0) {
+            // restore primary first!
+            for (let [prevConn, prevSpaceIndex] of prevMonitors) {
+                let monitor = monitors.find(m => m.connector === prevConn);
+                if (monitor === primary) {
+                    applyRestore(prevConn, prevSpaceIndex);
+                    break;
+                }
+            }
+
+            // restore rest
             for (let [prevConn, prevSpaceIndex] of prevMonitors) {
                 // if space has already been assigned, skip
                 if (indexTracker.includes(prevSpaceIndex)) {
                     continue;
                 }
-                indexTracker.push(prevSpaceIndex);
-
-                let monitor = monitors.find(m => m.connector === prevConn);
-                let space = this.spaceOfIndex(prevSpaceIndex);
-
-                if (monitor && space) {
-                    console.log(`${space.name} restored to monitor ${monitor.connector}`);
-                    this.setMonitors(monitor, space);
-                    space.setMonitor(monitor);
-                    mru = mru.filter(s => s !== space);
-                }
+                applyRestore(prevConn, prevSpaceIndex);
             }
         }
 
