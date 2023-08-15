@@ -1674,9 +1674,6 @@ var Spaces = class Spaces extends Map {
     monitorsChanged() {
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
 
-        // backup previous multimonitors save
-        savePrevious();
-
         this.monitors = new Map();
         this.activeSpace.getWindows().forEach(w => {
             animateWindow(w);
@@ -1704,6 +1701,9 @@ var Spaces = class Spaces extends Map {
         }
 
         let finish = () => {
+            // save layout changed to
+            savePrevious();
+
             // update monitor for TopBar
             TopBar.updateMonitor();
 
@@ -1725,7 +1725,7 @@ var Spaces = class Spaces extends Map {
 
                 // update selectionActive for current pointer monitor
                 let monitor = Grab.monitorAtCurrentPoint();
-                this.monitors.get(monitor).setSelectionActive();
+                this.monitors.get(activeSpace.monitor).setSelectionActive();
                 TopBar.refreshWorkspaceIndicator();
 
                 this._monitorsChanging = false;
@@ -2863,12 +2863,7 @@ function disable () {
  * of PaperWM.
  */
 function savePrevious() {
-    /**
-     * Update prevMonitors if in multimonitor.  This persists
-     * monitor layouts when switching to single monitor mode,
-     * and restores to the last multimonitor layout.
-     */
-    if (spaces?.monitors?.size > 1) {
+    if (spaces?.monitors) {
         /**
          * for monitors, since these are upgraded with "connector" field,
          * which we delete on disable. Beefore we delete this field, we want
