@@ -1122,7 +1122,7 @@ var Space = class Space extends Array {
      * Returns true if this space has the topbar.
      */
     get hasTopBar() {
-        return this.monitor && this.monitor === TopBar.panelMonitor;
+        return this.monitor && this.monitor === TopBar.panelMonitor();
     }
 
     updateColor() {
@@ -1696,8 +1696,7 @@ var Spaces = class Spaces extends Map {
 
         let primary = Main.layoutManager.primaryMonitor;
         // get monitors but ensure primary monitor is first
-        let monitors = Main.layoutManager.monitors
-            .filter(m => m !== primary);
+        let monitors = Main.layoutManager.monitors.filter(m => m !== primary);
         monitors.unshift(primary);
 
         for (let monitor of monitors) {
@@ -1710,9 +1709,7 @@ var Spaces = class Spaces extends Map {
         let finish = () => {
             // save layout changed to
             savePrevious();
-
-            // update monitor for TopBar
-            TopBar.updateMonitor();
+            this.setSpaceTopbarElementsVisible();
 
             let activeSpace = this.activeSpace;
             this.selectedSpace = activeSpace;
@@ -1725,16 +1722,7 @@ var Spaces = class Spaces extends Map {
             this.spaceContainer.show();
             activeSpace.monitor.clickOverlay.deactivate();
             StackOverlay.multimonitorDragDropSupport();
-
-            // update workspace indicator and correct selectionActive
-            Utils.later_add(Meta.LaterType.IDLE, () => {
-                setAllWorkspacesInactive();
-
-                // update selectionActive for current pointer monitor
-                let monitor = Grab.monitorAtCurrentPoint();
-                this.monitors.get(activeSpace.monitor).setSelectionActive();
-                TopBar.refreshWorkspaceIndicator();
-            });
+            TopBar.refreshWorkspaceIndicator();
         };
 
         if (this.onlyOnPrimary) {
@@ -2114,7 +2102,7 @@ var Spaces = class Spaces extends Map {
         this.selectedSpace = newSpace;
 
         // if active (source space) is panelMonitor update indicator
-        if (currentSpace.monitor === TopBar.panelMonitor) {
+        if (currentSpace.monitor === TopBar.panelMonitor()) {
             TopBar.updateWorkspaceIndicator(newSpace.index);
         }
 
@@ -2275,7 +2263,7 @@ var Spaces = class Spaces extends Map {
         this.selectedSpace = newSpace;
 
         // if active (source space) is panelMonitor update indicator
-        if (space.monitor === TopBar.panelMonitor) {
+        if (space.monitor === TopBar.panelMonitor()) {
             TopBar.updateWorkspaceIndicator(newSpace.index);
         }
 
@@ -2781,7 +2769,7 @@ function enable(errorNotification) {
     prevMonitors = prevMonitors ?? new Map();
     spaces = new Spaces();
 
-    function initWorkspaces() {
+    let initWorkspaces = () => {
         try {
             spaces.init();
         } catch (e) {

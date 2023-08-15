@@ -20,7 +20,6 @@ const workspaceManager = global.workspace_manager;
 const display = global.display;
 
 var panelBox = Main.layoutManager.panelBox; // exported
-var panelMonitor; // exported
 
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
 let colors = [
@@ -604,11 +603,6 @@ function enable () {
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');
 
-    // on allocation propagate position information
-    signals.connectOneShot(menu.label, 'notify::allocation', () => {
-        updateMonitor();
-    });
-
     Tiling.spaces.forEach(s => {
         s.workspaceLabel.clutter_text.set_font_description(menu.label.clutter_text.font_description);
     });
@@ -680,6 +674,10 @@ function disable() {
     gsettings = null;
 }
 
+function panelMonitor() {
+    return Main.layoutManager.primaryMonitor;
+}
+
 function setClearStyle() {
     if (Settings.prefs.disable_topbar_styling) {
         return;
@@ -710,7 +708,7 @@ function fixStyle() {
 }
 
 function fixTopBar() {
-    let space = Tiling.spaces?.monitors.get(panelMonitor) ?? false;
+    let space = Tiling.spaces?.monitors.get(panelMonitor()) ?? false;
     if (!space)
         return;
 
@@ -752,7 +750,7 @@ function fixFocusModeIcon() {
 function updateWorkspaceIndicator(index) {
     let spaces = Tiling.spaces;
     let space = spaces?.spaceOf(workspaceManager.get_workspace_by_index(index));
-    if (space && space.monitor === panelMonitor) {
+    if (space && space.monitor === panelMonitor()) {
         setWorkspaceName(space.name);
 
         // also update focus mode
@@ -764,30 +762,10 @@ function updateWorkspaceIndicator(index) {
  * Refreshes topbar workspace indicator.
  */
 function refreshWorkspaceIndicator() {
-    let panelSpace = Tiling.spaces.monitors.get(panelMonitor);
+    let panelSpace = Tiling.spaces.monitors.get(panelMonitor());
     updateWorkspaceIndicator(panelSpace.index);
 }
 
 function setWorkspaceName (name) {
     menu && menu.setName(name);
-}
-
-function updateMonitor() {
-    let primaryMonitor = Main.layoutManager.primaryMonitor;
-
-    // if panelMonitor has changed, then update layouts on workspaces
-    if (panelMonitor !== primaryMonitor) {
-        Utils.later_add(Meta.LaterType.IDLE, () => {
-            Tiling.spaces?.forEach(s => s.layout());
-
-            // if to show window positon bar, then update across workspaces
-            if (Settings.prefs.show_window_position_bar) {
-                Tiling.spaces?.setSpaceTopbarElementsVisible();
-            }
-            fixStyle();
-        });
-    }
-
-    // update topbar monitor
-    panelMonitor = primaryMonitor;
 }
