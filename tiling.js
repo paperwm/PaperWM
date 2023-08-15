@@ -201,17 +201,11 @@ var Space = class Space extends Array {
         if (this._populated || Main.layoutManager._startingUp)
             return;
         let workspace = this.workspace;
-        let prevSpace = prevSpaces.get(workspace);
 
+        let prevSpace = prevSpaces.get(workspace);
         this.addAll(prevSpace);
         prevSpaces.delete(workspace);
         this._populated = true;
-        // FIXME: this prevents bad old values propagating
-        // Though, targetX shouldn't ideally be able to get into this state.
-        if (prevSpace && Number.isFinite(prevSpace.targetX)) {
-            this.targetX = prevSpace.targetX;
-        }
-        this.cloneContainer.x = this.targetX;
 
         // init window position bar and space topbar elements
         this.windowPositionBarBackdrop.height = TopBar.panelBox.height;
@@ -896,6 +890,27 @@ var Space = class Space extends Array {
         return [vx - this.cloneContainer.x, vy - this.cloneContainer.y];
     }
 
+    /**
+     * Moves the space viewport to position x.
+     * @param {Number} x
+     */
+    viewportMoveToX(x, animate = true) {
+        this.targetX = x;
+        this.cloneContainer.x = x;
+        this.startAnimate();
+        if (animate) {
+            Easer.addEase(this.cloneContainer,
+                {
+                    x,
+                    time: Settings.prefs.animation_time,
+                    onComplete: this.moveDone.bind(this),
+                });
+        }
+        else {
+            this.moveDone.bind(this);
+        }
+    }
+
     moveDone(focusedWindowCallback = focusedWindow => {}) {
         if (this.cloneContainer.x !== this.targetX ||
             this.actor.y !== 0 ||
@@ -978,7 +993,7 @@ var Space = class Space extends Array {
         this.emit('move-done');
     }
 
-    startAnimate(grabWindow) {
+    startAnimate() {
         if (!this._isAnimating && !Meta.is_wayland_compositor()) {
             // Tracking the background fixes issue #80
             // It also let us activate window clones clicked during animation
@@ -1486,7 +1501,7 @@ border-radius: ${borderWidth}px;
                 let frame = mw.get_frame_rect();
                 if (frame.x <= 0)
                     return 0;
-                if (frame.x + frame.width == this.width) {
+                if (frame.x + frame.width === this.width) {
                     return this.width;
                 }
                 return frame.x;
@@ -1632,7 +1647,7 @@ var Spaces = class Spaces extends Map {
 
     init() {
         // Monitors aren't set up properly on `enable`, so we need it enable here.
-        this.monitorsChanged();
+        this.monitorsChanged(false);
         this.signals.connect(Main.layoutManager, 'monitors-changed', () => {
             displayConfig.upgradeGnomeMonitors(() => this.monitorsChanged());
         });
@@ -1666,7 +1681,6 @@ var Spaces = class Spaces extends Map {
 
         // Initialize spaces _after_ monitors are set up
         this.forEach(space => space.init());
-
         this.stack = this.mru();
     }
 
@@ -1678,7 +1692,7 @@ var Spaces = class Spaces extends Map {
        Main.layoutManager.monitors with a "connector" property (e.g "eDP-1")
        which is more stable for restoring monitor layouts.
      */
-    monitorsChanged() {
+    monitorsChanged(savePreviewOnComplete = true) {
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
 
         this.monitors = new Map();
@@ -1708,7 +1722,7 @@ var Spaces = class Spaces extends Map {
 
         let finish = () => {
             // save layout changed to
-            savePrevious();
+            savePrevious(savePreviewOnComplete);
             this.setSpaceTopbarElementsVisible();
 
             let activeSpace = this.activeSpace;
@@ -1724,6 +1738,22 @@ var Spaces = class Spaces extends Map {
             StackOverlay.multimonitorDragDropSupport();
             TopBar.refreshWorkspaceIndicator();
         };
+
+        /**
+         * Schedule to restore space targetX after this.  Needs to be
+         * scheduled before other loops since prevTargetX will be
+         * updated after this.
+         */
+        Utils.later_add(Meta.LaterType.IDLE, () => {
+            if (prevTargetX?.size > 0) {
+                for (let [spaceIndex, targetX] of prevTargetX) {
+                    let space = this.spaceOfIndex(spaceIndex);
+                    if (space && Number.isFinite(targetX)) {
+                        space.viewportMoveToX(targetX, true);
+                    }
+                }
+            }
+        });
 
         if (this.onlyOnPrimary) {
             this.forEach(space => {
@@ -1792,9 +1822,9 @@ var Spaces = class Spaces extends Map {
     /**
      * Sets this.monitors map and updates prevMonitors map (for restore).
      */
-    setMonitors(monitor, space) {
+    setMonitors(monitor, space, save = false) {
         this.monitors.set(monitor, space);
-        savePrevious();
+        savePrevious(save);
     }
 
     destroy() {
@@ -1944,7 +1974,7 @@ var Spaces = class Spaces extends Map {
         this.stack = [toSpace, ...this.stack];
 
         let monitor = toSpace.monitor;
-        this.setMonitors(monitor, toSpace);
+        this.setMonitors(monitor, toSpace, true);
 
         this.animateToSpace(toSpace, fromSpace, () => this.setSpaceTopbarElementsVisible(false));
 
@@ -2723,7 +2753,7 @@ function resizeHandler(metaWindow) {
 let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
 let displayConfig;
-let prevMonitors, prevSpaces;
+let prevMonitors, prevTargetX, prevSpaces;
 let startupTimeoutId, timerId;
 var inGrab; // exported
 function enable(errorNotification) {
@@ -2765,8 +2795,9 @@ function enable(errorNotification) {
 
     backgroundGroup = Main.layoutManager._backgroundGroup;
 
-    prevSpaces = prevSpaces ?? new Map();
     prevMonitors = prevMonitors ?? new Map();
+    prevTargetX = prevTargetX ?? new Map();
+    prevSpaces = prevSpaces ?? new Map();
     spaces = new Spaces();
 
     let initWorkspaces = () => {
@@ -2799,7 +2830,7 @@ function enable(errorNotification) {
                 s.updateName();
             });
         });
-    }
+    };
 
     if (Main.layoutManager._startingUp) {
         // Defer workspace initialization until existing windows are accessible.
@@ -2862,7 +2893,11 @@ function disable () {
  * Saves prevMonitors and prevSpaces for controlled enables
  * of PaperWM.
  */
-function savePrevious() {
+function savePrevious(save = true) {
+    if (!save) {
+        return;
+    }
+
     if (spaces?.monitors) {
         /**
          * for monitors, since these are upgraded with "connector" field,
@@ -2875,6 +2910,13 @@ function savePrevious() {
     }
 
     if (spaces) {
+        // store space targetx values
+        prevTargetX = new Map();
+        spaces.forEach(s => {
+            prevTargetX.set(s.index, s.targetX);
+        });
+
+        // save spaces (for window restore)
         prevSpaces = new Map(spaces);
     }
 }

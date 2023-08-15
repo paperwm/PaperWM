@@ -185,7 +185,7 @@ function moveSpaceToMonitor(basebinding = '<super><alt>') {
         spaces.setMonitors(next.monitor, currentSpace);
 
         next.setMonitor(monitor);
-        spaces.setMonitors(monitor, next);
+        spaces.setMonitors(monitor, next, true); // save on the last one
 
         // This is pretty hacky
         spaces.switchWorkspace(null, currentSpace.index, currentSpace.index);
