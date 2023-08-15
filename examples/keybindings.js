@@ -188,7 +188,7 @@ function moveSpaceToMonitor(basebinding = '<super><alt>') {
         spaces.setMonitors(monitor, next);
 
         // This is pretty hacky
-        spaces.switchWorkspace(null, currentSpace.workspace.index(), currentSpace.workspace.index());
+        spaces.switchWorkspace(null, currentSpace.index, currentSpace.index);
     }
 
     for (let arrow of ['Down', 'Left', 'Up', 'Right']) {
@@ -312,7 +312,7 @@ function reorderWorkspace(bindingUp = "<Alt><Super>Page_Up", bindingDown = "<Alt
         if (!space)
             return;
 
-        let nextI = Math.min(Tiling.spaces.size-1 , Math.max(0, space.workspace.index() + dir));
+        let nextI = Math.min(Tiling.spaces.size-1 , Math.max(0, space.index + dir));
         global.workspace_manager.reorder_workspace(space.workspace, nextI);
     }
 

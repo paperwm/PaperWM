@@ -765,7 +765,7 @@ function updateWorkspaceIndicator(index) {
  */
 function refreshWorkspaceIndicator() {
     let panelSpace = Tiling.spaces.monitors.get(panelMonitor);
-    updateWorkspaceIndicator(panelSpace.workspace.index());
+    updateWorkspaceIndicator(panelSpace.index);
 }
 
 function setWorkspaceName (name) {
