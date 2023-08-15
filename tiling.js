@@ -1747,10 +1747,18 @@ var Spaces = class Spaces extends Map {
         }
 
         // Persist as many monitors as possible
+        let indexTracker = [];
         if (prevMonitors?.size > 0) {
-            for (let [prevMonitor, prevSpace] of prevMonitors) {
-                let monitor = monitors.find(m => m.connector === prevMonitor.connector);
-                let space = this.spaceOfIndex(prevSpace.index);
+            for (let [prevConn, prevSpaceIndex] of prevMonitors) {
+                // if space has already been assigned, skip
+                if (indexTracker.includes(prevSpaceIndex)) {
+                    continue;
+                }
+                indexTracker.push(prevSpaceIndex);
+
+                let monitor = monitors.find(m => m.connector === prevConn);
+                let space = this.spaceOfIndex(prevSpaceIndex);
+
                 if (monitor && space) {
                     console.log(`${space.name} restored to monitor ${monitor.connector}`);
                     this.setMonitors(monitor, space);
@@ -2874,15 +2882,8 @@ function savePrevious() {
          * which we delete on disable. Beefore we delete this field, we want
          * a copy on connector (and maybe index) to restore space to monitor.
          */
-        prevMonitors = new Map();
         for (let [monitor, space] of spaces.monitors) {
-            prevMonitors.set({
-                index: monitor.index,
-                connector: monitor.connector,
-            }, {
-                index: space.index,
-                name: space.name,
-            });
+            prevMonitors.set(monitor.connector, space.index);
         }
     }
 
