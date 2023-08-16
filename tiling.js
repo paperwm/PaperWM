@@ -1747,7 +1747,7 @@ var Spaces = class Spaces extends Map {
                 for (let [spaceIndex, targetX] of saveState.prevTargetX) {
                     let space = this.spaceOfIndex(spaceIndex);
                     if (space && Number.isFinite(targetX)) {
-                        space.viewportMoveToX(targetX, true);
+                        space.viewportMoveToX(targetX, false);
                     }
                 }
             }
@@ -1775,7 +1775,7 @@ var Spaces = class Spaces extends Map {
 
                 let space = this.spaceOfIndex(spaceIndex);
                 if (space) {
-                    console.log(`${space.name} restored to monitor ${monitor.connector}`);
+                    console.info(`${space.name} restored to monitor ${monitor.connector}`);
                     this.setMonitors(monitor, space);
                     space.setMonitor(monitor);
                     mru = mru.filter(s => s !== space);
