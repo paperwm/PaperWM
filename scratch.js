@@ -133,7 +133,7 @@ function toggle(metaWindow) {
         makeScratch(metaWindow);
 
         if (metaWindow.has_focus) {
-            let space = Tiling.activeSpace;
+            let space = Tiling.spaces.activeSpace;
             space.setSelectionInactive();
         }
     }
