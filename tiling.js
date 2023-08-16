@@ -2915,7 +2915,6 @@ let SaveState = class SaveState {
         // store space targetx values
         this.prevTargetX = new Map();
         spaces.forEach(s => {
-            console.log(s.index, s.targetX);
             this.prevTargetX.set(s.index, s.targetX);
         });
 
