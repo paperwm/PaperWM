@@ -161,7 +161,7 @@ var Space = class Space extends Array {
         this.border.hide();
 
         let monitor = Main.layoutManager.primaryMonitor;
-        let prevSpace = prevSpaces.get(workspace);
+        let prevSpace = saveState.prevSpaces.get(workspace);
         this.targetX = 0;
         if (prevSpace && prevSpace.monitor) {
             let prevMonitor = Main.layoutManager.monitors[prevSpace.monitor.index];
@@ -202,9 +202,9 @@ var Space = class Space extends Array {
             return;
         let workspace = this.workspace;
 
-        let prevSpace = prevSpaces.get(workspace);
+        let prevSpace = saveState.prevSpaces.get(workspace);
         this.addAll(prevSpace);
-        prevSpaces.delete(workspace);
+        saveState.prevSpaces.delete(workspace);
         this._populated = true;
 
         // init window position bar and space topbar elements
@@ -1608,10 +1608,8 @@ var StackPositions = {
 var Spaces = class Spaces extends Map {
     // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
     static get [Symbol.species]() { return Map; }
-
     constructor() {
         super();
-
         this._initDone = false;
         this.clickOverlays = [];
         this.signals = new Utils.Signals();
@@ -1692,7 +1690,7 @@ var Spaces = class Spaces extends Map {
        Main.layoutManager.monitors with a "connector" property (e.g "eDP-1")
        which is more stable for restoring monitor layouts.
      */
-    monitorsChanged(savePreviewOnComplete = true) {
+    monitorsChanged(saveStateOnComplete = true) {
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
 
         this.monitors = new Map();
@@ -1722,7 +1720,7 @@ var Spaces = class Spaces extends Map {
 
         let finish = () => {
             // save layout changed to
-            savePrevious(savePreviewOnComplete);
+            saveState.update(saveStateOnComplete);
             this.setSpaceTopbarElementsVisible();
 
             let activeSpace = this.activeSpace;
@@ -1745,8 +1743,8 @@ var Spaces = class Spaces extends Map {
          * updated after this.
          */
         Utils.later_add(Meta.LaterType.IDLE, () => {
-            if (prevTargetX?.size > 0) {
-                for (let [spaceIndex, targetX] of prevTargetX) {
+            if (saveState.hasPrevTargetX()) {
+                for (let [spaceIndex, targetX] of saveState.prevTargetX) {
                     let space = this.spaceOfIndex(spaceIndex);
                     if (space && Number.isFinite(targetX)) {
                         space.viewportMoveToX(targetX, true);
@@ -1766,10 +1764,10 @@ var Spaces = class Spaces extends Map {
 
         // Persist as many monitors as possible
         let indexTracker = [];
-        if (prevMonitors?.size > 0) {
+        if (saveState.hasPrevMonitors()) {
             for (let monitor of monitors) {
                 // if processed spaceIndex, skip
-                let spaceIndex = prevMonitors.get(monitor.connector);
+                let spaceIndex = saveState.prevMonitors.get(monitor.connector);
                 if (indexTracker.includes(spaceIndex)) {
                     continue;
                 }
@@ -1824,7 +1822,7 @@ var Spaces = class Spaces extends Map {
      */
     setMonitors(monitor, space, save = false) {
         this.monitors.set(monitor, space);
-        savePrevious(save);
+        saveState.update(save);
     }
 
     destroy() {
@@ -2564,7 +2562,6 @@ var Spaces = class Spaces extends Map {
         TopBar.fixStyle();
     }
 };
-
 Signals.addSignalMethods(Spaces.prototype);
 
 /**
@@ -2753,12 +2750,15 @@ function resizeHandler(metaWindow) {
 let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
 let displayConfig;
-let prevMonitors, prevTargetX, prevSpaces;
+let saveState;
 let startupTimeoutId, timerId;
 var inGrab; // exported
 function enable(errorNotification) {
     inGrab = false;
+
     displayConfig = new Utils.DisplayConfig();
+    saveState = saveState ?? new SaveState();
+
     gsettings = ExtensionUtils.getSettings();
     backgroundSettings = new Gio.Settings({
         schema_id: 'org.gnome.desktop.background',
@@ -2795,11 +2795,7 @@ function enable(errorNotification) {
 
     backgroundGroup = Main.layoutManager._backgroundGroup;
 
-    prevMonitors = prevMonitors ?? new Map();
-    prevTargetX = prevTargetX ?? new Map();
-    prevSpaces = prevSpaces ?? new Map();
     spaces = new Spaces();
-
     let initWorkspaces = () => {
         try {
             spaces.init();
@@ -2864,21 +2860,7 @@ function disable () {
     signals.destroy();
     signals = null;
 
-    savePrevious();
-    prevSpaces.forEach(space => {
-        let windows = space.getWindows();
-        let selected = windows.indexOf(space.selectedWindow);
-        if (selected === -1)
-            return;
-        // Stack windows correctly for controlled restarts
-        for (let i = selected; i < windows.length; i++) {
-            windows[i].lower();
-        }
-        for (let i = selected; i >= 0; i--) {
-            windows[i].lower();
-        }
-    });
-
+    saveState.prepare();
     displayConfig.downgradeGnomeMonitors();
     displayConfig = null;
     spaces.destroy();
@@ -2890,36 +2872,77 @@ function disable () {
 }
 
 /**
- * Saves prevMonitors and prevSpaces for controlled enables
- * of PaperWM.
+ * Saves current state for controlled restarts of PaperWM.
  */
-function savePrevious(save = true) {
-    if (!save) {
-        return;
+let SaveState = class SaveState {
+    constructor() {
+        this.prevMonitors = new Map();
+        this.prevSpaces = new Map();
+        this.prevTargetX = new Map();
     }
 
-    if (spaces?.monitors) {
+    hasPrevMonitors() {
+        return this.prevMonitors?.size > 0;
+    }
+
+    hasPrevSpaces() {
+        return this.prevSpaces?.size > 0;
+    }
+
+    hasPrevTargetX() {
+        return this.prevTargetX?.size > 0;
+    }
+
+    /**
+     * Updates save state based on current monitors, spaces, and layouts.
+     */
+    update(save = true) {
+        if (!save) {
+            return;
+        }
+
         /**
-         * for monitors, since these are upgraded with "connector" field,
+         * For monitors, since these are upgraded with "connector" field,
          * which we delete on disable. Beefore we delete this field, we want
          * a copy on connector (and maybe index) to restore space to monitor.
          */
-        for (let [monitor, space] of spaces.monitors) {
-            prevMonitors.set(monitor.connector, space.index);
+        if (spaces?.monitors) {
+            for (let [monitor, space] of spaces.monitors) {
+                this.prevMonitors.set(monitor.connector, space.index);
+            }
         }
-    }
 
-    if (spaces) {
         // store space targetx values
-        prevTargetX = new Map();
+        this.prevTargetX = new Map();
         spaces.forEach(s => {
-            prevTargetX.set(s.index, s.targetX);
+            console.log(s.index, s.targetX);
+            this.prevTargetX.set(s.index, s.targetX);
         });
 
         // save spaces (for window restore)
-        prevSpaces = new Map(spaces);
+        this.prevSpaces = new Map(spaces);
     }
-}
+
+    /**
+     * Prepares state for restoring on next enable.
+     */
+    prepare() {
+        this.update();
+        this.prevSpaces.forEach(space => {
+            let windows = space.getWindows();
+            let selected = windows.indexOf(space.selectedWindow);
+            if (selected === -1)
+                return;
+            // Stack windows correctly for controlled restarts
+            for (let i = selected; i < windows.length; i++) {
+                windows[i].lower();
+            }
+            for (let i = selected; i >= 0; i--) {
+                windows[i].lower();
+            }
+        });
+    }
+};
 
 /**
    Types of windows which never should be tiled.
