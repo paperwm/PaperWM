@@ -1825,6 +1825,14 @@ var Spaces = class Spaces extends Map {
         saveState.update(save);
     }
 
+    _updateMonitor() {
+        let monitorSpaces = this._getOrderedSpaces(this.selectedSpace.monitor);
+        let currentMonitor = this.selectedSpace.monitor;
+        monitorSpaces.forEach((space, i) => {
+            space.setMonitor(currentMonitor);
+        });
+    }
+
     destroy() {
         for (let overlay of this.clickOverlays) {
             overlay.destroy();
@@ -1905,7 +1913,7 @@ var Spaces = class Spaces extends Map {
 
     switchMonitor(direction, move) {
         let focus = display.focus_window;
-        let monitor = Scratch.focusMonitor();
+        let monitor = focusMonitor();
         let currentSpace = this.monitors.get(monitor);
         let i = display.get_monitor_neighbor_index(monitor.index, direction);
         if (i === -1)
@@ -2427,14 +2435,6 @@ var Spaces = class Spaces extends Map {
         }
     }
 
-    _updateMonitor() {
-        let monitorSpaces = this._getOrderedSpaces(this.selectedSpace.monitor);
-        let currentMonitor = this.selectedSpace.monitor;
-        monitorSpaces.forEach((space, i) => {
-            space.setMonitor(currentMonitor);
-        });
-    }
-
     addSpace(workspace) {
         let space = new Space(workspace, this.spaceContainer, this._initDone);
         this.set(workspace, space);
@@ -2942,6 +2942,14 @@ let SaveState = class SaveState {
         });
     }
 };
+
+/**
+ * Return the currently focused monitor (or more specifically, the current
+ * active space's monitor).
+ */
+function focusMonitor() {
+    return spaces?.activeSpace?.monitor;
+}
 
 /**
    Types of windows which never should be tiled.
