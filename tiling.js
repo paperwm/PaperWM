@@ -3807,9 +3807,11 @@ function centerWindowHorizontally(metaWindow) {
     let [pointerX, pointerY, mask] = global.get_pointer();
     let relPointerX = pointerX - monitor.x - space.cloneContainer.x;
     let relPointerY = pointerY - monitor.y - space.cloneContainer.y;
+    /* don't know why we would want to warp pointer on centering window... disabling
     if (Utils.isPointInsideActor(metaWindow.clone, relPointerX, relPointerY)) {
         Utils.warpPointer(pointerX + dx, pointerY);
     }
+    */
     if (space.indexOf(metaWindow) === -1) {
         metaWindow.move_frame(true, targetX + monitor.x, frame.y);
     } else {
