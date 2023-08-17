@@ -193,7 +193,25 @@ function toggleCloneMarks() {
     }
 }
 
+/**
+ * Warps pointer to the center of a monitor.
+ */
+function warpPointerToMonitor(monitor) {
+    let [x, y, _mods] = global.get_pointer();
+    x -= monitor.x;
+    y -= monitor.y;
+    if (x < 0 || x > monitor.width ||
+        y < 0 || y > monitor.height) {
+        warpPointer(monitor.x + Math.floor(monitor.width / 2),
+            monitor.y + Math.floor(monitor.height / 2));
+    }
+}
+
+/**
+ * Warps pointer to x, y coordinates.
+ */
 function warpPointer(x, y) {
+    print_stacktrace(new Error('warpy'));
     let backend = Clutter.get_default_backend();
     let seat = backend.get_default_seat();
     seat.warp_pointer(x, y);

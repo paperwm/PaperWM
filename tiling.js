@@ -1658,7 +1658,7 @@ var Spaces = class Spaces extends Map {
 
 
         this.signals.connect(global.window_manager, 'switch-workspace',
-            this.switchWorkspace.bind(this));
+            (wm, from, to, direction) => this.switchWorkspace(wm, from, to));
 
         this.signals.connect(this.overrideSettings, 'changed::workspaces-only-on-primary', () => {
             displayConfig.upgradeGnomeMonitors(() => this.monitorsChanged());
@@ -1919,6 +1919,7 @@ var Spaces = class Spaces extends Map {
         if (i === -1)
             return;
         let newMonitor = Main.layoutManager.monitors[i];
+        Utils.warpPointerToMonitor(newMonitor);
         let space = this.monitors.get(newMonitor);
 
         if (move && focus) {
@@ -1985,15 +1986,6 @@ var Spaces = class Spaces extends Map {
         this.animateToSpace(toSpace, fromSpace, () => this.setSpaceTopbarElementsVisible(false));
 
         toSpace.monitor.clickOverlay.deactivate();
-
-        let [x, y, _mods] = global.get_pointer();
-        x -= monitor.x;
-        y -= monitor.y;
-        if (x < 0 || x > monitor.width ||
-            y < 0 || y > monitor.height) {
-            Utils.warpPointer(monitor.x + Math.floor(monitor.width / 2),
-                monitor.y + Math.floor(monitor.height / 2));
-        }
 
         for (let monitor of Main.layoutManager.monitors) {
             if (monitor === toSpace.monitor)
