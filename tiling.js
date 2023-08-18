@@ -1770,19 +1770,6 @@ var Spaces = class Spaces extends Map {
             }
         });
 
-        /**
-         * Reset spaces where their monitors no longer exist.
-         * These spaces should be be restored.  We'll track
-         * which spaces have their monitor gone.
-         */
-        let monitorGoneSpaces = [];
-        this.forEach(space => {
-            if (!monitors.includes(space.monitor)) {
-                monitorGoneSpaces.push(space);
-                space.setMonitor(primary);
-            }
-        });
-
         // Persist as many monitors as possible
         let indexTracker = [];
         if (saveState.hasPrevMonitors()) {
@@ -1822,6 +1809,19 @@ var Spaces = class Spaces extends Map {
                 mru = mru.slice(1);
             }
         }
+
+        /**
+         * Reset spaces where their monitors no longer exist.
+         * These spaces should be be restored.  We'll track
+         * which spaces have their monitor gone.
+         */
+        let monitorGoneSpaces = [];
+        this.forEach(space => {
+            if (!monitors.includes(space.monitor)) {
+                monitorGoneSpaces.push(space);
+                space.setMonitor(primary);
+            }
+        });
 
         finish();
     }
