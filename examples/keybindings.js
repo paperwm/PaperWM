@@ -116,7 +116,7 @@ function cycleMonitor(binding = "<Super>d") {
         let nextMonitor = monitors[nextMonitorI];
         let nextSpace = Tiling.spaces.monitors.get(nextMonitor);
         if (nextSpace) {
-            nextSpace.workspace.activate(global.get_current_time());
+            nextSpace.activate();
         }
     });
 }

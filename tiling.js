@@ -251,6 +251,33 @@ var Space = class Space extends Array {
         return this.workspace.index();
     }
 
+    /**
+     * Actives this space. Safer alternative to space.workspace.activate.  Allows
+     * setting animation on workspaceSwitch.
+     * @param {Boolean} animate
+     */
+    activate(animate = true) {
+        spaces._space_activate_animate = animate;
+        this.workspace.activate(global.get_current_time());
+        spaces._space_activate_animate = true; // switch to default
+    }
+
+    /**
+     * Actives this space. Safer alternative to space.workspace.activate_with_focus.  Allows
+     * setting animation on workspaceSwitch.
+     * @param {Boolean} animate
+     */
+    activateWithFocus(metaWindow, animate = true) {
+        spaces._space_activate_animate = animate;
+        if (metaWindow) {
+            this.workspace.activate_with_focus(metaWindow, global.get_current_time());
+        }
+        else {
+            this.workspace.activate(global.get_current_time());
+        }
+        spaces._space_activate_animate = true; // switch to default
+    }
+
     show() {
         if (this._visible)
             return;
@@ -1726,7 +1753,7 @@ var Spaces = class Spaces extends Map {
              */
             let recent = this.mru().filter(s => !monitorGoneSpaces.includes(s));
             let activeSpace = recent?.[0] ?? this.monitors.get(primary);
-            activeSpace.workspace.activate(global.get_current_time());
+            activeSpace.activate(false);
 
             // save layout changed to
             saveState.update(saveStateOnComplete);
@@ -1950,12 +1977,12 @@ var Spaces = class Spaces extends Map {
                 metaWindow.foreach_transient(t => {
                     space.addFloating(t);
                 });
-                space.workspace.activate_with_focus(focus, global.get_current_time());
+                space.activateWithFocus(focus);
             } else {
                 metaWindow.move_to_monitor(newMonitor.index);
             }
         } else {
-            space.workspace.activate(global.get_current_time());
+            space.activate();
         }
     }
 
@@ -1992,7 +2019,8 @@ var Spaces = class Spaces extends Map {
         let monitor = toSpace.monitor;
         this.setMonitors(monitor, toSpace, true);
 
-        this.animateToSpace(toSpace, fromSpace, () => this.setSpaceTopbarElementsVisible());
+        this.animateToSpace(toSpace, fromSpace, this._space_activate_animate,
+            () => this.setSpaceTopbarElementsVisible());
 
         toSpace.monitor.clickOverlay.deactivate();
 
@@ -2337,7 +2365,7 @@ var Spaces = class Spaces extends Map {
         });
     }
 
-    animateToSpace(to, from, callback) {
+    animateToSpace(to, from, animate = true, callback) {
         let currentPreviewMode = inPreview;
         inPreview = PreviewMode.NONE;
 
@@ -2358,6 +2386,7 @@ var Spaces = class Spaces extends Map {
             visible.set(space, true);
         }
 
+        let time = animate ? Settings.prefs.animation_time : 0;
         let onComplete = () => {
             // Hide any spaces that aren't visible This
             // avoids a nasty preformance degregration in some
@@ -2370,7 +2399,7 @@ var Spaces = class Spaces extends Map {
 
             Easer.addEase(to.border, {
                 opacity: 0,
-                time: Settings.prefs.animation_time,
+                time,
                 onComplete: () => {
                     to.border.hide();
                     to.border.opacity = 255;
@@ -2415,7 +2444,7 @@ var Spaces = class Spaces extends Map {
                 y: 0,
                 scale_x: 1,
                 scale_y: 1,
-                time: Settings.prefs.animation_time,
+                time,
                 onComplete,
             });
 
@@ -2429,7 +2458,7 @@ var Spaces = class Spaces extends Map {
                 Easer.addEase(space.actor,
                     {
                         x: 0, y: space.height + 20,
-                        time: Settings.prefs.animation_time,
+                        time,
                     });
             }
             above = above.get_next_sibling();

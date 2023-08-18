@@ -192,12 +192,7 @@ var ClickOverlay = class ClickOverlay {
         Navigator.finishNavigation();
         this.deactivate();
         let selected = this.space.selectedWindow;
-        if (selected) {
-            this.space.workspace.activate_with_focus(selected, global.get_current_time());
-        }
-        else {
-            this.space.workspace.activate(global.get_current_time());
-        }
+        this.space.activateWithFocus(selected, false);
     }
 
     activate() {
