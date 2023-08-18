@@ -1,5 +1,10 @@
-.background-clear {
+.topbar-no-background {
     background-color: rgba(0, 0, 0, 0);
+}
+
+.topbar-transparent-background {
+    background-color: rgba(0, 0, 0, 0.35);
+    box-shadow: none;
 }
 
 .space-workspace-indicator {
@@ -22,11 +27,6 @@
     padding: 8px;
     border-radius: 8px;
     font-weight: 600;
-}
-
-.topbar-transparent {
-    background-color: rgba(0, 0, 0, 0.35);
-    box-shadow: none;
 }
 
 .workspace-icon-button {

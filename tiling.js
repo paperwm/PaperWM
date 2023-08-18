@@ -209,7 +209,7 @@ var Space = class Space extends Array {
 
         // init window position bar and space topbar elements
         this.windowPositionBarBackdrop.height = TopBar.panelBox.height;
-        this.setSpaceTopbarElementsVisible(false);
+        this.setSpaceTopbarElementsVisible();
 
         // apply default focus mode
         setFocusMode(getDefaultFocusMode(), this);
@@ -1274,7 +1274,7 @@ border-radius: ${borderWidth}px;
      * sets these elements' visibility when not needed.
      * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible = true, changeTopBarStyle = true) {
+    setSpaceTopbarElementsVisible(visible = false, changeTopBarStyle = true) {
         // if windowPositionBar shown, we want the topbar style to be transparent if visible
         if (Settings.prefs.show_window_position_bar) {
             if (changeTopBarStyle) {
@@ -1282,7 +1282,7 @@ border-radius: ${borderWidth}px;
                     TopBar.setTransparentStyle();
                 }
                 else {
-                    TopBar.setClearStyle();
+                    TopBar.setNoBackgroundStyle();
                 }
             }
 
@@ -1719,8 +1719,6 @@ var Spaces = class Spaces extends Map {
         }
 
         let finish = () => {
-            this.setSpaceTopbarElementsVisible();
-
             /**
              * Gnome may select a workspace that just had it monitor removed (gone).
              * This this case find the next most recent space that's maintained it's
@@ -1742,8 +1740,9 @@ var Spaces = class Spaces extends Map {
 
             this.spaceContainer.show();
             activeSpace.monitor.clickOverlay.deactivate();
-            StackOverlay.multimonitorDragDropSupport();
             TopBar.refreshWorkspaceIndicator();
+            this.setSpaceTopbarElementsVisible();
+            StackOverlay.multimonitorDragDropSupport();
         };
 
         if (this.onlyOnPrimary) {
@@ -1993,7 +1992,7 @@ var Spaces = class Spaces extends Map {
         let monitor = toSpace.monitor;
         this.setMonitors(monitor, toSpace, true);
 
-        this.animateToSpace(toSpace, fromSpace, () => this.setSpaceTopbarElementsVisible(false));
+        this.animateToSpace(toSpace, fromSpace, () => this.setSpaceTopbarElementsVisible());
 
         toSpace.monitor.clickOverlay.deactivate();
 
@@ -2010,7 +2009,7 @@ var Spaces = class Spaces extends Map {
      * See Space.setSpaceTopbarElementsVisible function for what this does.
      * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible = true, changeTopBarStyle = true) {
+    setSpaceTopbarElementsVisible(visible = false, changeTopBarStyle = true) {
         this.forEach(s => {
             s.setSpaceTopbarElementsVisible(visible, changeTopBarStyle);
         });
@@ -2079,7 +2078,7 @@ var Spaces = class Spaces extends Map {
             return;
         }
         inPreview = PreviewMode.SEQUENTIAL;
-        this.setSpaceTopbarElementsVisible();
+        this.setSpaceTopbarElementsVisible(true);
 
         if (Main.panel.statusArea.appMenu) {
             Main.panel.statusArea.appMenu.container.hide();
@@ -2178,7 +2177,7 @@ var Spaces = class Spaces extends Map {
 
         // Always show the topbar when using the workspace stack
         TopBar.fixTopBar();
-        this.setSpaceTopbarElementsVisible();
+        this.setSpaceTopbarElementsVisible(true);
         const scale = 0.9;
         let space = this.activeSpace;
         let mru = [...this.stack];
@@ -2824,7 +2823,7 @@ function enable(errorNotification) {
         // on idle update space topbar elements and name
         Utils.later_add(Meta.LaterType.IDLE, () => {
             spaces.forEach(s => {
-                s.setSpaceTopbarElementsVisible(false);
+                s.setSpaceTopbarElementsVisible();
                 s.updateName();
             });
         });
