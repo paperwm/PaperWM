@@ -1719,23 +1719,41 @@ var Spaces = class Spaces extends Map {
         }
 
         let finish = () => {
-            // save layout changed to
-            saveState.update(saveStateOnComplete);
             this.setSpaceTopbarElementsVisible();
 
-            let activeSpace = this.activeSpace;
+            /**
+             * Gnome may select a workspace that just had it monitor removed (gone).
+             * This this case find the next most recent space that's maintained it's
+             * monitor, and select that.
+             */
+            let recent = this.mru().filter(s => !monitorGoneSpaces.includes(s));
+            let activeSpace = recent?.[0] ?? this.monitors.get(primary);
+            activeSpace.workspace.activate(global.get_current_time());
+
+            // save layout changed to
+            saveState.update(saveStateOnComplete);
+
             this.selectedSpace = activeSpace;
             this.setMonitors(activeSpace.monitor, activeSpace);
-            for (let [monitor, space] of this.monitors) {
+            this.monitors.forEach(space => {
                 space.show();
                 Utils.actor_raise(space.clip);
-            }
+            });
 
             this.spaceContainer.show();
             activeSpace.monitor.clickOverlay.deactivate();
             StackOverlay.multimonitorDragDropSupport();
             TopBar.refreshWorkspaceIndicator();
         };
+
+        if (this.onlyOnPrimary) {
+            this.forEach(space => {
+                space.setMonitor(primary);
+            });
+            this.setMonitors(primary, mru[0]);
+            finish();
+            return;
+        }
 
         /**
          * Schedule to restore space targetX after this.  Needs to be
@@ -1753,14 +1771,18 @@ var Spaces = class Spaces extends Map {
             }
         });
 
-        if (this.onlyOnPrimary) {
-            this.forEach(space => {
+        /**
+         * Reset spaces where their monitors no longer exist.
+         * These spaces should be be restored.  We'll track
+         * which spaces have their monitor gone.
+         */
+        let monitorGoneSpaces = [];
+        this.forEach(space => {
+            if (!monitors.includes(space.monitor)) {
+                monitorGoneSpaces.push(space);
                 space.setMonitor(primary);
-            });
-            this.setMonitors(primary, mru[0]);
-            finish();
-            return;
-        }
+            }
+        });
 
         // Persist as many monitors as possible
         let indexTracker = [];
@@ -1801,18 +1823,6 @@ var Spaces = class Spaces extends Map {
                 mru = mru.slice(1);
             }
         }
-
-        // Reset any removed monitors
-        mru.forEach(space => {
-            if (!monitors.includes(space.monitor)) {
-                let monitor = monitors[space.monitor.index];
-                if (!monitor) {
-                    monitor = primary;
-                }
-
-                space.setMonitor(monitor);
-            }
-        });
 
         finish();
     }
