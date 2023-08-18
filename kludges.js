@@ -189,7 +189,7 @@ function setupOverrides() {
     }
 
     let layout = computeLayout40;
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout)
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
 
     // disable swipe gesture trackers
     swipeTrackers.forEach(t => {
@@ -238,7 +238,7 @@ function saveRuntimeDisable(schemaSettings, key, disableValue) {
         schemaSettings.set_boolean(key, disableValue);
 
         // save a backup copy to PaperWM settings (for restore)
-        let pkey = 'restore-' + key;
+        let pkey = `restore-${key}`;
 
         /**
          * Now if paperwm settings has restore values, it means
@@ -363,8 +363,8 @@ let gsettings, wmSettings, mutterSettings;
 function enable() {
     savedProps = new Map();
     gsettings = ExtensionUtils.getSettings();
-    wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
-    mutterSettings = new Gio.Settings({schema_id: 'org.gnome.mutter'});
+    wmSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.wm.preferences' });
+    mutterSettings = new Gio.Settings({ schema_id: 'org.gnome.mutter' });
     setupSwipeTrackers();
     setupOverrides();
     enableOverrides();
@@ -530,7 +530,7 @@ function _checkWorkspaces() {
     }
 
     // If we don't have an empty workspace at the end, add one
-    if (!emptyWorkspaces[emptyWorkspaces.length -1]) {
+    if (!emptyWorkspaces[emptyWorkspaces.length - 1]) {
         workspaceManager.append_new_workspace(false, global.get_current_time());
         emptyWorkspaces.push(true);
     }
@@ -548,8 +548,10 @@ function _checkWorkspaces() {
     }
 
     // Keep visible spaces
-    for (let [monitor, space] of Tiling.spaces.monitors) {
-        emptyWorkspaces[space.workspace.index()] = false;
+    if (Tiling?.spaces?.monitors) {
+        for (let [monitor, space] of Tiling.spaces.monitors) {
+            emptyWorkspaces[space.workspace.index()] = false;
+        }
     }
 
     // Delete empty workspaces except for the last one; do it from the end
@@ -557,7 +559,7 @@ function _checkWorkspaces() {
     for (i = lastIndex; i >= 0; i--) {
         if (emptyWorkspaces[i] && i != lastEmptyIndex) {
             workspaceManager.remove_workspace(this._workspaces[i]
-                ,global.get_current_time());
+                , global.get_current_time());
         }
     }
 
