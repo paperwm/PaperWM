@@ -1803,7 +1803,7 @@ var Spaces = class Spaces extends Map {
         // add any new / need workspaces that were present from prev state
         let prevNSpaces = saveState?.prevSpaces?.size ?? 0;
         let addSpaces = Math.max(0, prevNSpaces - workspaceManager.n_workspaces);
-        console.log(`nPrevSpaces ${prevNSpaces}, current nSpaces ${workspaceManager.n_workspaces} need to add ${addSpaces}`);
+        console.debug(`nPrevSpaces ${prevNSpaces}, current nSpaces ${workspaceManager.n_workspaces} need to add ${addSpaces}`);
         for (let i = 0; i < addSpaces; i++ ) {
             workspaceManager.append_new_workspace(false, global.get_current_time());
         }

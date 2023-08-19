@@ -147,6 +147,21 @@ PaperWM currently works best using the workspaces span monitors preference, this
 | <kbd>Super</kbd><kbd>Shift</kbd><kbd>Arrow_key</kbd>                | Select neighbouring monitor                |
 | <kbd>Super</kbd><kbd>Shift</kbd><kbd>Ctrl</kbd><kbd>Arrow_key</kbd> | Move active window to neighbouring monitor |
 
+#### Dynamic Workspaces ####
+
+Currently PaperWM does not support dynamic workspaces well.  Unfortuantely, many of Gnome's dynamic workspace functions (shortcuts etc.) produce side-effects and other issues in PaperWM (such as unstable / incorrect restoration of monitor/workspaces after an unlock, and workspace names being duplicated, incorrectly ordered etc.).
+
+In order to provide a stable experience for users and avoid some of these issues, PaperWM now manages the `dynamic-workspace` setting.  Which means that PaperWM will switch to fixed worksapces when it is enabled, and restore the original setting for `dynamic workspaces` when PaperWM is disabled.
+
+We do plan to provide better support for dynamic workspaces in an upcoming update.
+
+> Note: despite the current issues, users may choose to stop PaperWM from disabling it by executing the following command from a terminal: 
+>
+> ```
+> dconf write /org/gnome/shell/extensions/paperwm/allow-dynamic-workspaces true
+> ```
+
+
 ### Scratch layer ###
 
 ![The floating scratch layer, with the alt tab menu open](https://github.com/paperwm/media/blob/master/scratch.png)

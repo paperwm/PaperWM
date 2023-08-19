@@ -283,6 +283,11 @@
         <summary>Original setting value (used for restore)</summary>
     </key>
 
+    <key type="b" name="allow-dynamic-workspaces">
+        <default>false</default>
+        <summary>Override PaperWM controlled setting for dynamic-workspaces</summary>
+    </key>
+
     <!-- Settings -->
     <key type="i" name="horizontal-margin">
       <default>20</default>
