@@ -280,7 +280,11 @@ function setupRuntimeDisables() {
     saveRuntimeDisable(mutterSettings, 'attach-modal-dialogs', false);
     saveRuntimeDisable(mutterSettings, 'workspaces-only-on-primary', false);
     saveRuntimeDisable(mutterSettings, 'edge-tiling', false);
-    saveRuntimeDisable(mutterSettings, 'dynamic-workspaces', false);
+
+    // set dynamic-workspaces as a controlled setting
+    if (gsettings.get_boolean('allow-dynamic-workspaces') === false) {
+        saveRuntimeDisable(mutterSettings, 'dynamic-workspaces', false);
+    }
 }
 
 /**
