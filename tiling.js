@@ -1977,12 +1977,12 @@ var Spaces = class Spaces extends Map {
                 metaWindow.foreach_transient(t => {
                     space.addFloating(t);
                 });
-                space.activateWithFocus(focus);
+                space.activateWithFocus(focus, false);
             } else {
                 metaWindow.move_to_monitor(newMonitor.index);
             }
         } else {
-            space.activate();
+            space.activate(false);
         }
     }
 
@@ -2415,7 +2415,7 @@ var Spaces = class Spaces extends Map {
         };
 
         if (currentPreviewMode === PreviewMode.SEQUENTIAL) {
-            this._animateToSpaceOrdered(to, true);
+            this._animateToSpaceOrdered(to, animate);
             let t = to.actor.get_transition('y');
             if (t) {
                 t.connect('stopped', (timeline, finished) => {
