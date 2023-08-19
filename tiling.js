@@ -1760,7 +1760,6 @@ var Spaces = class Spaces extends Map {
             this.monitors.forEach(space => {
                 space.show();
                 Utils.actor_raise(space.clip);
-                space.layout();
             });
 
             this.spaceContainer.show();
@@ -1796,6 +1795,9 @@ var Spaces = class Spaces extends Map {
 
             // save restore state after restored previous targetX's
             saveState.update();
+
+            // run layout on spaces after monitor to ensure windows layout is correct
+            this.monitors.forEach(space => space.layout());
         });
 
         // Persist as many monitors as possible
