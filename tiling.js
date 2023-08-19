@@ -1760,6 +1760,7 @@ var Spaces = class Spaces extends Map {
             this.monitors.forEach(space => {
                 space.show();
                 Utils.actor_raise(space.clip);
+                space.layout();
             });
 
             this.spaceContainer.show();
