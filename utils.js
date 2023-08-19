@@ -211,7 +211,6 @@ function warpPointerToMonitor(monitor) {
  * Warps pointer to x, y coordinates.
  */
 function warpPointer(x, y) {
-    print_stacktrace(new Error('warpy'));
     let backend = Clutter.get_default_backend();
     let seat = backend.get_default_seat();
     seat.warp_pointer(x, y);
