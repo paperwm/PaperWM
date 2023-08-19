@@ -368,12 +368,12 @@ class NavigatorClass {
             // happens on workspace switch, but activating the same workspace
             // again doesn't trigger a switch signal
             if (force) {
-                Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId);
+                Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId, force);
             }
         } else if (Tiling.inGrab && Tiling.inGrab.window) {
-            this.space.activateWithFocus(Tiling.inGrab.window);
+            this.space.activateWithFocus(Tiling.inGrab.window, true);
         } else {
-            this.space.activate();
+            this.space.activate(true);
         }
 
         selected = this.space.indexOf(selected) !== -1 ? selected

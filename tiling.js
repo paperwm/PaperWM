@@ -1986,7 +1986,7 @@ var Spaces = class Spaces extends Map {
         }
     }
 
-    switchWorkspace(wm, fromIndex, toIndex) {
+    switchWorkspace(wm, fromIndex, toIndex, animate = false) {
         let to = workspaceManager.get_workspace_by_index(toIndex);
         let from = workspaceManager.get_workspace_by_index(fromIndex);
         let toSpace = this.spaceOf(to);
@@ -2019,7 +2019,7 @@ var Spaces = class Spaces extends Map {
         let monitor = toSpace.monitor;
         this.setMonitors(monitor, toSpace, true);
 
-        this.animateToSpace(toSpace, fromSpace, this._space_activate_animate,
+        this.animateToSpace(toSpace, fromSpace, animate || this._space_activate_animate,
             () => this.setSpaceTopbarElementsVisible());
 
         toSpace.monitor.clickOverlay.deactivate();
