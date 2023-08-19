@@ -2397,14 +2397,8 @@ var Spaces = class Spaces extends Map {
                 }
             }
 
-            Easer.addEase(to.border, {
-                opacity: 0,
-                time,
-                onComplete: () => {
-                    to.border.hide();
-                    to.border.opacity = 255;
-                },
-            });
+            to.border.hide();
+            to.border.opacity = 255;
             Utils.actor_raise(to.clip);
 
             // Fixes a weird bug where mouse input stops
