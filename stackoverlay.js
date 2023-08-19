@@ -192,7 +192,7 @@ var ClickOverlay = class ClickOverlay {
         Navigator.finishNavigation();
         this.deactivate();
         let selected = this.space.selectedWindow;
-        this.space.activateWithFocus(selected, false);
+        this.space.activateWithFocus(selected);
     }
 
     activate() {

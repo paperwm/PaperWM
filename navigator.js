@@ -371,9 +371,9 @@ class NavigatorClass {
                 Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId);
             }
         } else if (Tiling.inGrab && Tiling.inGrab.window) {
-            this.space.activateWithFocus(Tiling.inGrab.window, false);
+            this.space.activateWithFocus(Tiling.inGrab.window);
         } else {
-            this.space.activate(false);
+            this.space.activate();
         }
 
         selected = this.space.indexOf(selected) !== -1 ? selected

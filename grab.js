@@ -483,7 +483,7 @@ var MoveGrab = class MoveGrab {
         // // Make sure the window is on the correct workspace.
         // // If the window is transient this will take care of its parent too.
         // metaWindow.change_workspace(space.workspace)
-        // space.activate();
+        // space.activate(true);
         Tiling.inGrab = false;
         if (this.dispatcher) {
             Navigator.dismissDispatcher(Clutter.GrabState.POINTER);

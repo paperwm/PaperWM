@@ -252,22 +252,22 @@ var Space = class Space extends Array {
     }
 
     /**
-     * Actives this space. Safer alternative to space.workspace.activate.  Allows
+     * Activates this space. Safer alternative to space.workspace.activate.  Also allows
      * setting animation on workspaceSwitch.
      * @param {Boolean} animate
      */
-    activate(animate = true) {
+    activate(animate = false) {
         spaces._space_activate_animate = animate;
         this.workspace.activate(global.get_current_time());
-        spaces._space_activate_animate = true; // switch to default
+        spaces._space_activate_animate = false; // switch to default
     }
 
     /**
-     * Actives this space. Safer alternative to space.workspace.activate_with_focus.  Allows
+     * Activates this space. Safer alternative to space.workspace.activate_with_focus.  also allows
      * setting animation on workspaceSwitch.
      * @param {Boolean} animate
      */
-    activateWithFocus(metaWindow, animate = true) {
+    activateWithFocus(metaWindow, animate = false) {
         spaces._space_activate_animate = animate;
         if (metaWindow) {
             this.workspace.activate_with_focus(metaWindow, global.get_current_time());
@@ -275,7 +275,7 @@ var Space = class Space extends Array {
         else {
             this.workspace.activate(global.get_current_time());
         }
-        spaces._space_activate_animate = true; // switch to default
+        spaces._space_activate_animate = false; // switch to default
     }
 
     show() {
@@ -1753,7 +1753,7 @@ var Spaces = class Spaces extends Map {
              */
             let recent = this.mru().filter(s => !monitorGoneSpaces.includes(s));
             let activeSpace = recent?.[0] ?? this.monitors.get(primary);
-            activeSpace.activate(false);
+            activeSpace.activate();
 
             // save layout changed to
             saveState.update(saveStateOnComplete);
@@ -1977,12 +1977,12 @@ var Spaces = class Spaces extends Map {
                 metaWindow.foreach_transient(t => {
                     space.addFloating(t);
                 });
-                space.activateWithFocus(focus, false);
+                space.activateWithFocus(focus);
             } else {
                 metaWindow.move_to_monitor(newMonitor.index);
             }
         } else {
-            space.activate(false);
+            space.activate();
         }
     }
 
