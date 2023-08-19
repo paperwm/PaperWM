@@ -548,10 +548,12 @@ function _checkWorkspaces() {
     }
 
     // Keep visible spaces
-    if (Tiling?.spaces?.monitors) {
-        for (let [monitor, space] of Tiling.spaces.monitors) {
-            emptyWorkspaces[space.workspace.index()] = false;
-        }
+    if (Tiling?.spaces) {
+        Tiling.spaces.forEach(space => {
+            if (space.getWindows().length > 0) {
+                emptyWorkspaces[space.workspace.index()] = false;
+            }
+        });
     }
 
     // Delete empty workspaces except for the last one; do it from the end

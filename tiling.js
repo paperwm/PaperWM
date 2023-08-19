@@ -1671,6 +1671,9 @@ var Spaces = class Spaces extends Map {
     }
 
     init() {
+        // Create extra workspaces if required
+        Main.wm._workspaceTracker._checkWorkspaces();
+
         // Monitors aren't set up properly on `enable`, so we need it enable here.
         this.monitorsChanged();
         this.signals.connect(Main.layoutManager, 'monitors-changed', () => {
@@ -1700,9 +1703,6 @@ var Spaces = class Spaces extends Map {
                 this.signals.connect(w, 'size-changed', resizeHandler);
             });
         this._initDone = true;
-
-        // Create extra workspaces if required
-        Main.wm._workspaceTracker._checkWorkspaces();
 
         // Initialize spaces _after_ monitors are set up
         this.forEach(space => space.init());
@@ -1800,6 +1800,14 @@ var Spaces = class Spaces extends Map {
             this.monitors.forEach(space => space.layout());
         });
 
+        // add any new / need workspaces that were present from prev state
+        let prevNSpaces = saveState?.prevSpaces?.size ?? 0;
+        let addSpaces = Math.max(0, prevNSpaces - workspaceManager.n_workspaces);
+        console.log(`nPrevSpaces ${prevNSpaces}, current nSpaces ${workspaceManager.n_workspaces} need to add ${addSpaces}`);
+        for (let i = 0; i < addSpaces; i++ ) {
+            workspaceManager.append_new_workspace(false, global.get_current_time());
+        }
+
         // Persist as many monitors as possible
         let indexTracker = [];
         if (saveState.hasPrevMonitors()) {
@@ -1825,12 +1833,6 @@ var Spaces = class Spaces extends Map {
         for (let monitor of monitors) {
             if (this.monitors.get(monitor) === undefined) {
                 let space = mru[0];
-                if (space === undefined && this._initDone) {
-                    let workspace = workspaceManager.append_new_workspace(
-                        false,
-                        global.get_current_time());
-                    space = this.spaceOf(workspace);
-                }
                 if (space === undefined) {
                     continue;
                 }
