@@ -1672,7 +1672,7 @@ var Spaces = class Spaces extends Map {
 
     init() {
         // Monitors aren't set up properly on `enable`, so we need it enable here.
-        this.monitorsChanged(false);
+        this.monitorsChanged();
         this.signals.connect(Main.layoutManager, 'monitors-changed', () => {
             displayConfig.upgradeGnomeMonitors(() => this.monitorsChanged());
         });
@@ -1717,7 +1717,7 @@ var Spaces = class Spaces extends Map {
        Main.layoutManager.monitors with a "connector" property (e.g "eDP-1")
        which is more stable for restoring monitor layouts.
      */
-    monitorsChanged(saveStateOnComplete = true) {
+    monitorsChanged() {
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
 
         this.monitors = new Map();
@@ -1754,9 +1754,6 @@ var Spaces = class Spaces extends Map {
             let recent = this.mru().filter(s => !monitorGoneSpaces.includes(s));
             let activeSpace = recent?.[0] ?? this.monitors.get(primary);
             activeSpace.activate();
-
-            // save layout changed to
-            saveState.update(saveStateOnComplete);
 
             this.selectedSpace = activeSpace;
             this.setMonitors(activeSpace.monitor, activeSpace);
@@ -1795,6 +1792,9 @@ var Spaces = class Spaces extends Map {
                     }
                 }
             }
+
+            // save restore state after restored previous targetX's
+            saveState.update();
         });
 
         // Persist as many monitors as possible
