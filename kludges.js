@@ -528,13 +528,10 @@ function _checkWorkspaces() {
     }
 
     /**
-     * Set minimum workspaces to be max of num_monitors+1 and the number
-     * of workspaces set in "fixed_workspaces" (see gnome multitask settings).
+     * Set minimum workspaces to be max of num_monitors+1.
      * This ensures that we have at least one workspace at the end.
      */
-    let minimum = Math.max(
-        Main.layoutManager.monitors.length + 1,
-        wmSettings.get_int('num-workspaces'));
+    let minimum = Main.layoutManager.monitors.length + 1;
     // Make sure we have a minimum number of spaces
     for (i = 0; i < minimum; i++) {
         if (i >= emptyWorkspaces.length) {
