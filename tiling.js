@@ -200,11 +200,15 @@ var Space = class Space extends Array {
     init() {
         if (this._populated || Main.layoutManager._startingUp)
             return;
-        let workspace = this.workspace;
 
-        let prevSpace = saveState.prevSpaces.get(workspace);
-        this.addAll(prevSpace);
-        saveState.prevSpaces.delete(workspace);
+        let workspace = this.workspace;
+        let prevSpace = saveState.getPrevSpaceByUUID(this.uuid);
+        console.log(`restore by uuid: ${this.uuid}, prevSpace name: ${prevSpace?.name}`);
+        if (prevSpace) {
+            this.addAll(prevSpace);
+            saveState.prevSpaces.delete(workspace);
+        }
+
         this._populated = true;
 
         // init window position bar and space topbar elements
@@ -1803,7 +1807,7 @@ var Spaces = class Spaces extends Map {
         // add any new / need workspaces that were present from prev state
         let prevNSpaces = saveState?.prevSpaces?.size ?? 0;
         let addSpaces = Math.max(0, prevNSpaces - workspaceManager.n_workspaces);
-        console.debug(`nPrevSpaces ${prevNSpaces}, current nSpaces ${workspaceManager.n_workspaces} need to add ${addSpaces}`);
+        console.log(`nPrevSpaces ${prevNSpaces}, current nSpaces ${workspaceManager.n_workspaces} need to add ${addSpaces}`);
         for (let i = 0; i < addSpaces; i++ ) {
             workspaceManager.append_new_workspace(false, global.get_current_time());
         }
@@ -2920,6 +2924,17 @@ let SaveState = class SaveState {
 
     hasPrevTargetX() {
         return this.prevTargetX?.size > 0;
+    }
+
+    getPrevSpaceByUUID(uuid) {
+        let space;
+        this.prevSpaces.forEach(s => {
+            if (uuid === s.uuid) {
+                space = s;
+            }
+        });
+
+        return space;
     }
 
     /**
