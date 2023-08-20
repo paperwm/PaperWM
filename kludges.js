@@ -499,9 +499,9 @@ function _checkWorkspaces() {
     for (i = 0; i < this._workspaces.length; i++) {
         let lastRemoved = this._workspaces[i]._lastRemovedWindow;
         if ((lastRemoved &&
-             (lastRemoved.get_window_type() == Meta.WindowType.SPLASHSCREEN ||
-              lastRemoved.get_window_type() == Meta.WindowType.DIALOG ||
-              lastRemoved.get_window_type() == Meta.WindowType.MODAL_DIALOG)) ||
+             (lastRemoved.get_window_type() === Meta.WindowType.SPLASHSCREEN ||
+              lastRemoved.get_window_type() === Meta.WindowType.DIALOG ||
+              lastRemoved.get_window_type() === Meta.WindowType.MODAL_DIALOG)) ||
             this._workspaces[i]._keepAliveId)
             emptyWorkspaces[i] = false;
         else
@@ -527,9 +527,16 @@ function _checkWorkspaces() {
         emptyWorkspaces[workspaceIndex] = false;
     }
 
-    let minimum = wmSettings.get_int('num-workspaces');
+    /**
+     * Set minimum workspaces to be max of num_monitors+1 and the number
+     * of workspaces set in "fixed_workspaces" (see gnome multitask settings).
+     * This ensures that we have at least one workspace at the end.
+     */
+    let minimum = Math.max(
+        Main.layoutManager.monitors.length + 1,
+        wmSettings.get_int('num-workspaces'));
     // Make sure we have a minimum number of spaces
-    for (i = 0; i < Math.max(Main.layoutManager.monitors.length, minimum); i++) {
+    for (i = 0; i < minimum; i++) {
         if (i >= emptyWorkspaces.length) {
             workspaceManager.append_new_workspace(false, global.get_current_time());
             emptyWorkspaces.push(true);

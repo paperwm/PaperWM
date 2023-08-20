@@ -203,7 +203,7 @@ var Space = class Space extends Array {
 
         let workspace = this.workspace;
         let prevSpace = saveState.getPrevSpaceByUUID(this.uuid);
-        console.log(`restore by uuid: ${this.uuid}, prevSpace name: ${prevSpace?.name}`);
+        console.info(`restore by uuid: ${this.uuid}, prevSpace name: ${prevSpace?.name}`);
         if (prevSpace) {
             this.addAll(prevSpace);
             saveState.prevSpaces.delete(workspace);
@@ -662,8 +662,9 @@ var Space = class Space extends Array {
         }
 
         /*
-         * Fix for 3.35+ (still present is 44) which has a bug where move_frame sometimes triggers
-         * another move back to its original position. Make sure tiled windows are always positioned correctly.
+         * Fix (still needed is 44) for bug where move_frame sometimes triggers
+         * another move back to its original position. Make sure tiled windows are
+         * always positioned correctly.
          */
         this.signals.connect(metaWindow, 'position-changed', w => {
             if (inGrab)
@@ -675,7 +676,12 @@ var Space = class Space extends Array {
             x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
             x += this.monitor.x;
             if (f.x !== x || f.y !== y) {
-                w.move_frame(true, x, y);
+                try {
+                    w.move_frame(true, x, y);
+                }
+                catch (ex) {
+
+                }
             }
         });
 
@@ -1807,7 +1813,7 @@ var Spaces = class Spaces extends Map {
         // add any new / need workspaces that were present from prev state
         let prevNSpaces = saveState?.prevSpaces?.size ?? 0;
         let addSpaces = Math.max(0, prevNSpaces - workspaceManager.n_workspaces);
-        console.log(`nPrevSpaces ${prevNSpaces}, current nSpaces ${workspaceManager.n_workspaces} need to add ${addSpaces}`);
+        console.info(`nPrevSpaces ${prevNSpaces}, current nSpaces ${workspaceManager.n_workspaces}, need to add ${addSpaces}`);
         for (let i = 0; i < addSpaces; i++ ) {
             workspaceManager.append_new_workspace(false, global.get_current_time());
         }
