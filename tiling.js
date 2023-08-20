@@ -1797,7 +1797,7 @@ var Spaces = class Spaces extends Map {
             saveState.update();
 
             // run layout on spaces after monitor to ensure windows layout is correct
-            this.monitors.forEach(space => space.layout());
+            this.forEach(space => space.layout(false));
         });
 
         // add any new / need workspaces that were present from prev state
