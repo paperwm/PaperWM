@@ -282,9 +282,11 @@ function setupRuntimeDisables() {
     saveRuntimeDisable(mutterSettings, 'edge-tiling', false);
 
     // set dynamic-workspaces as a controlled setting
+    /*
     if (gsettings.get_boolean('allow-dynamic-workspaces') === false) {
         saveRuntimeDisable(mutterSettings, 'dynamic-workspaces', false);
     }
+    */
 }
 
 /**
