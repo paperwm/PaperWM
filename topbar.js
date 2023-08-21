@@ -706,7 +706,7 @@ function fixStyle() {
 }
 
 function fixTopBar() {
-    let space = Tiling.spaces?.monitors.get(panelMonitor()) ?? false;
+    let space = Tiling?.spaces?.monitors?.get(panelMonitor()) ?? false;
     if (!space)
         return;
 
