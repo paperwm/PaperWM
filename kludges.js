@@ -189,7 +189,7 @@ function setupOverrides() {
     }
 
     let layout = computeLayout40;
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout)
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
 
     // disable swipe gesture trackers
     swipeTrackers.forEach(t => {
@@ -238,7 +238,7 @@ function saveRuntimeDisable(schemaSettings, key, disableValue) {
         schemaSettings.set_boolean(key, disableValue);
 
         // save a backup copy to PaperWM settings (for restore)
-        let pkey = 'restore-' + key;
+        let pkey = `restore-${key}`;
 
         /**
          * Now if paperwm settings has restore values, it means
@@ -280,6 +280,13 @@ function setupRuntimeDisables() {
     saveRuntimeDisable(mutterSettings, 'attach-modal-dialogs', false);
     saveRuntimeDisable(mutterSettings, 'workspaces-only-on-primary', false);
     saveRuntimeDisable(mutterSettings, 'edge-tiling', false);
+
+    // set dynamic-workspaces as a controlled setting
+    /*
+    if (gsettings.get_boolean('allow-dynamic-workspaces') === false) {
+        saveRuntimeDisable(mutterSettings, 'dynamic-workspaces', false);
+    }
+    */
 }
 
 /**
@@ -363,8 +370,8 @@ let gsettings, wmSettings, mutterSettings;
 function enable() {
     savedProps = new Map();
     gsettings = ExtensionUtils.getSettings();
-    wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
-    mutterSettings = new Gio.Settings({schema_id: 'org.gnome.mutter'});
+    wmSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.wm.preferences' });
+    mutterSettings = new Gio.Settings({ schema_id: 'org.gnome.mutter' });
     setupSwipeTrackers();
     setupOverrides();
     enableOverrides();
@@ -492,9 +499,9 @@ function _checkWorkspaces() {
     for (i = 0; i < this._workspaces.length; i++) {
         let lastRemoved = this._workspaces[i]._lastRemovedWindow;
         if ((lastRemoved &&
-             (lastRemoved.get_window_type() == Meta.WindowType.SPLASHSCREEN ||
-              lastRemoved.get_window_type() == Meta.WindowType.DIALOG ||
-              lastRemoved.get_window_type() == Meta.WindowType.MODAL_DIALOG)) ||
+             (lastRemoved.get_window_type() === Meta.WindowType.SPLASHSCREEN ||
+              lastRemoved.get_window_type() === Meta.WindowType.DIALOG ||
+              lastRemoved.get_window_type() === Meta.WindowType.MODAL_DIALOG)) ||
             this._workspaces[i]._keepAliveId)
             emptyWorkspaces[i] = false;
         else
@@ -520,9 +527,13 @@ function _checkWorkspaces() {
         emptyWorkspaces[workspaceIndex] = false;
     }
 
-    let minimum = wmSettings.get_int('num-workspaces');
+    /**
+     * Set minimum workspaces to be max of num_monitors+1.
+     * This ensures that we have at least one workspace at the end.
+     */
+    let minimum = Main.layoutManager.monitors.length + 1;
     // Make sure we have a minimum number of spaces
-    for (i = 0; i < Math.max(Main.layoutManager.monitors.length, minimum); i++) {
+    for (i = 0; i < minimum; i++) {
         if (i >= emptyWorkspaces.length) {
             workspaceManager.append_new_workspace(false, global.get_current_time());
             emptyWorkspaces.push(true);
@@ -530,7 +541,7 @@ function _checkWorkspaces() {
     }
 
     // If we don't have an empty workspace at the end, add one
-    if (!emptyWorkspaces[emptyWorkspaces.length -1]) {
+    if (!emptyWorkspaces[emptyWorkspaces.length - 1]) {
         workspaceManager.append_new_workspace(false, global.get_current_time());
         emptyWorkspaces.push(true);
     }
@@ -548,8 +559,10 @@ function _checkWorkspaces() {
     }
 
     // Keep visible spaces
-    for (let [monitor, space] of Tiling.spaces.monitors) {
-        emptyWorkspaces[space.workspace.index()] = false;
+    if (Tiling?.spaces?.monitors) {
+        for (let [monitor, space] of Tiling.spaces.monitors) {
+            emptyWorkspaces[space.workspace.index()] = false;
+        }
     }
 
     // Delete empty workspaces except for the last one; do it from the end
@@ -557,7 +570,7 @@ function _checkWorkspaces() {
     for (i = lastIndex; i >= 0; i--) {
         if (emptyWorkspaces[i] && i != lastEmptyIndex) {
             workspaceManager.remove_workspace(this._workspaces[i]
-                ,global.get_current_time());
+                , global.get_current_time());
         }
     }
 
