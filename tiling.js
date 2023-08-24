@@ -204,11 +204,8 @@ var Space = class Space extends Array {
         let workspace = this.workspace;
         let prevSpace = saveState.getPrevSpaceByUUID(this.uuid);
         console.info(`restore by uuid: ${this.uuid}, prevSpace name: ${prevSpace?.name}`);
-        if (prevSpace) {
-            this.addAll(prevSpace);
-            saveState.prevSpaces.delete(workspace);
-        }
-
+        this.addAll(prevSpace);
+        saveState.prevSpaces.delete(workspace);
         this._populated = true;
 
         // init window position bar and space topbar elements
