@@ -3,8 +3,8 @@ const Extension = ExtensionUtils.getCurrentExtension();
 const Settings = Extension.imports.settings;
 const Workspace = Extension.imports.workspace;
 const { Gio, GLib, GObject, Gtk, Gdk } = imports.gi;
-const {KeybindingsPane} = Extension.imports.prefsKeybinding;
-const {WinpropsPane} = Extension.imports.winpropsPane;
+const { KeybindingsPane } = Extension.imports.prefsKeybinding;
+const { WinpropsPane } = Extension.imports.winpropsPane;
 
 let _ = s => s;
 
@@ -47,9 +47,9 @@ var SettingsWidget = class SettingsWidget {
        selectedTab: index of initially shown tab
      */
     constructor(prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
-        let wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
+        let wmSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.wm.preferences' });
         this._settings = ExtensionUtils.getSettings();
-        this.builder = Gtk.Builder.new_from_file(Extension.path + '/Settings.ui');
+        this.builder = Gtk.Builder.new_from_file(`${Extension.path}/Settings.ui`);
         this.window = prefsWindow;
 
         const pages = [
@@ -184,7 +184,7 @@ var SettingsWidget = class SettingsWidget {
         let minimapScale = this.builder.get_object('minimap_scale_spin');
         minimapScale.set_value(this._settings.get_double('minimap-scale') * 100.0);
         minimapScale.connect('value-changed', () => {
-            this._settings.set_double('minimap-scale', minimapScale.get_value()/100.0);
+            this._settings.set_double('minimap-scale', minimapScale.get_value() / 100.0);
         });
 
         let scratchOverview = this.builder.get_object('scratch-in-overview');
@@ -256,6 +256,29 @@ var SettingsWidget = class SettingsWidget {
             workspaceCombo.append_text(name);
         }
 
+        this.builder.get_object('workspace_reset_button').connect('clicked', () => {
+            this._updatingName = true;
+            wmSettings.set_strv('workspace-names', []);
+
+            let settings = i => wsSettingsByIndex[i];
+            let name = (s, i) => this.getWorkspaceName(s, i);
+            workspaceCombo.remove_all();
+            for (let i of wsIndices) {
+                settings(i).reset('name');
+                workspaceCombo.append_text(name(settings(i), i));
+            }
+
+            // update pages
+            for (let j of wsIndicesSelectedFirst) {
+                let view = workspaceStack.get_child_by_name(j.toString());
+                let nameEntry = view.get_first_child().get_last_child();
+                nameEntry.set_text(name(settings(j), j));
+            }
+            this._updatingName = false;
+
+            workspaceCombo.set_active(0);
+        });
+
         workspaceCombo.connect('changed', () => {
             if (this._updatingName)
                 return;
@@ -311,7 +334,7 @@ var SettingsWidget = class SettingsWidget {
 
         // Background
 
-        let backgroundBox = new Gtk.Box({spacing: 16});
+        let backgroundBox = new Gtk.Box({ spacing: 16 });
         let background = createFileChooserButton(
             settings,
             'background',
@@ -323,7 +346,7 @@ var SettingsWidget = class SettingsWidget {
                 filter: this._backgroundFilter,
                 select_multiple: false,
                 modal: true,
-                transient_for: this.window.get_root()
+                transient_for: this.window.get_root(),
             }
         );
         let clearBackground = new Gtk.Button({
@@ -334,9 +357,9 @@ var SettingsWidget = class SettingsWidget {
         backgroundBox.append(background);
         backgroundBox.append(clearBackground);
 
-        let hideTopBarSwitch = new Gtk.Switch({active: !settings.get_boolean('show-top-bar')});
+        let hideTopBarSwitch = new Gtk.Switch({ active: !settings.get_boolean('show-top-bar') });
 
-        let directoryBox = new Gtk.Box({spacing: 16});
+        let directoryBox = new Gtk.Box({ spacing: 16 });
         let directoryChooser = createFileChooserButton(
             settings,
             'directory',
@@ -347,7 +370,7 @@ var SettingsWidget = class SettingsWidget {
                 title: 'Select workspace background',
                 select_multiple: false,
                 modal: true,
-                transient_for: this.window.get_root()
+                transient_for: this.window.get_root(),
             }
         );
         let clearDirectory = new Gtk.Button({
@@ -378,6 +401,9 @@ var SettingsWidget = class SettingsWidget {
         let workspace_combo = this.builder.get_object('workspace_combo_text');
 
         nameEntry.connect('changed', () => {
+            if (this._updatingName) {
+                return;
+            }
             let active = workspace_combo.get_active();
             let name = nameEntry.get_text();
 
@@ -435,11 +461,11 @@ function createRow(text, widget, signal, handler) {
     let margin = 12;
     let box = new Gtk.Box({
         margin_start: margin, margin_end: margin,
-        margin_top: margin/2, margin_bottom: margin/2,
-        orientation: Gtk.Orientation.HORIZONTAL
+        margin_top: margin / 2, margin_bottom: margin / 2,
+        orientation: Gtk.Orientation.HORIZONTAL,
     });
     let label = new Gtk.Label({
-        label: text, hexpand: true, xalign: 0
+        label: text, hexpand: true, xalign: 0,
     });
 
     box.append(label);
@@ -454,12 +480,12 @@ function createKeybindingSection(settings, searchEntry) {
 
 function createKeybindingWidget(settings, searchEntry) {
     let model = new Gtk.TreeStore();
-    let filteredModel = new Gtk.TreeModelFilter({child_model: model});
+    let filteredModel = new Gtk.TreeModelFilter({ child_model: model });
     filteredModel.set_visible_func(
         (model, iter) => {
             let desc = model.get_value(iter, COLUMN_DESCRIPTION);
 
-            if(getOk(model.iter_parent(iter)) || desc === null) {
+            if (getOk(model.iter_parent(iter)) || desc === null) {
                 return true;
             }
 
@@ -672,7 +698,7 @@ function transpose(colValPairs) {
     return [colKeys, values];
 }
 
-function addKeybinding(model, settings, id, position=null) {
+function addKeybinding(model, settings, id, position = null) {
     let accels = settings.get_strv(id);
 
     let schema = settings.settings_schema;
@@ -697,7 +723,7 @@ function addKeybinding(model, settings, id, position=null) {
         let subrow = model.insert(row, 0);
         model.set(subrow, ...transpose([
             [COLUMN_ID, id],
-            [COLUMN_INDEX, i+1],
+            [COLUMN_INDEX, i + 1],
             [COLUMN_DESCRIPTION, "..."],
             [COLUMN_KEY, key],
             [COLUMN_MODS, mods],
@@ -722,13 +748,13 @@ function addKeybinding(model, settings, id, position=null) {
 function annotateKeybindings(model, settings) {
     let conflicts = Settings.findConflicts();
     let warning = (id, c) => {
-        return conflicts.filter(({name, combo}) => name === id && combo === c);
+        return conflicts.filter(({ name, combo }) => name === id && combo === c);
     };
 
     model.foreach((model, path, iter) => {
         let id = model.get_value(iter, COLUMN_ID);
         if (model.iter_depth(iter) === 0) {
-            let reset = settings.get_user_value(id) ? true : false;
+            let reset = !!settings.get_user_value(id);
             model.set_value(iter, COLUMN_RESET, reset);
         }
 
@@ -765,10 +791,10 @@ function createFileChooserButton(settings, key, iconName, symbolicIconName, prop
     buttonBox.append(buttonIcon);
     buttonBox.append(buttonLabel);
     if (symbolicIconName) {
-        buttonBox.append(new Gtk.Image({icon_name: symbolicIconName, margin_start: 8}));
+        buttonBox.append(new Gtk.Image({ icon_name: symbolicIconName, margin_start: 8 }));
     }
 
-    const button = new Gtk.Button({child: buttonBox});
+    const button = new Gtk.Button({ child: buttonBox });
 
     syncStringSetting(settings, key, path => {
         buttonIcon.visible = path !== '';
@@ -777,7 +803,8 @@ function createFileChooserButton(settings, key, iconName, symbolicIconName, prop
     button.connect('clicked', () => {
         const chooser = new Gtk.FileChooserDialog(properties);
         let path = settings.get_string(key);
-        if (path !== '') chooser.set_file(Gio.File.new_for_path(path));
+        if (path !== '')
+            chooser.set_file(Gio.File.new_for_path(path));
         chooser.add_button('Open', Gtk.ResponseType.OK);
         chooser.add_button('Cancel', Gtk.ResponseType.CANCEL);
         chooser.connect('response', (dialog, response) => {
@@ -792,7 +819,7 @@ function createFileChooserButton(settings, key, iconName, symbolicIconName, prop
 }
 
 function syncStringSetting(settings, key, callback) {
-    settings.connect('changed::' + key, () => {
+    settings.connect(`changed::${key}`, () => {
         callback(settings.get_string(key));
     });
     callback(settings.get_string(key));
@@ -805,7 +832,7 @@ function syncStringSetting(settings, key, callback) {
 function init() {
     Workspace.enable();
     const provider = new Gtk.CssProvider();
-    provider.load_from_path(Extension.path + '/resources/prefs.css');
+    provider.load_from_path(`${Extension.path}/resources/prefs.css`);
     Gtk.StyleContext.add_provider_for_display(
         Gdk.Display.get_default(),
         provider,
