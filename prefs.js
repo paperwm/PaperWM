@@ -232,8 +232,6 @@ var SettingsWidget = class SettingsWidget {
 
         const workspaceCombo = this.builder.get_object('workspace_combo_text');
         const workspaceStack = this.builder.get_object('workspace_stack');
-
-        this.workspaceNames = wmSettings.get_strv('workspace-names');
         const nWorkspaces = Workspace.getWorkspaceList().get_strv('list').length;
 
         // Note: For some reason we can't set the visible child of the workspace
@@ -448,11 +446,10 @@ var SettingsWidget = class SettingsWidget {
     }
 
     getWorkspaceName(settings, index) {
-        let name = settings.get_string('name');
-        if (name === '')
-            name = this.workspaceNames[index];
-        if (name === undefined)
+        let name = settings.get_string('name') ?? `Workspace ${index + 1}`;
+        if (!name || name === '') {
             name = `Workspace ${index + 1}`;
+        }
         return name;
     }
 };
