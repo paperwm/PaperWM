@@ -205,7 +205,11 @@ function setupOverrides() {
             return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
     });
 
-    // always show workspaces thumbnails if more than one workspace
+    /**
+     * Always show workspace thumbnails in overview if more than one workspace.
+     * See original function at:
+     * https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/gnome-44/js/ui/workspaceThumbnail.js#L690
+     */
     registerOverridePrototype(ThumbnailsBox, '_updateShouldShow',
         function () {
             const { nWorkspaces } = global.workspace_manager;
