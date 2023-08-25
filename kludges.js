@@ -16,6 +16,7 @@ const Main = imports.ui.main;
 const Workspace = imports.ui.workspace;
 const WindowManager = imports.ui.windowManager;
 const WorkspaceAnimation = imports.ui.workspaceAnimation;
+const ThumbnailsBox = imports.ui.workspaceThumbnail.ThumbnailsBox;
 const Mainloop = imports.mainloop;
 const Params = imports.misc.params;
 
@@ -203,6 +204,19 @@ function setupOverrides() {
         if (gsettings.get_boolean('disable-scratch-in-overview'))
             return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
     });
+
+    // always show workspaces thumbnails if more than one workspace
+    registerOverridePrototype(ThumbnailsBox, '_updateShouldShow',
+        function () {
+            const { nWorkspaces } = global.workspace_manager;
+            const shouldShow = nWorkspaces > 1;
+
+            if (this._shouldShow === shouldShow)
+                return;
+
+            this._shouldShow = shouldShow;
+            this.notify('should-show');
+        });
 }
 
 /**
