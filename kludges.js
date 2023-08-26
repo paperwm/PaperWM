@@ -16,6 +16,7 @@ const Main = imports.ui.main;
 const Workspace = imports.ui.workspace;
 const WindowManager = imports.ui.windowManager;
 const WorkspaceAnimation = imports.ui.workspaceAnimation;
+const ThumbnailsBox = imports.ui.workspaceThumbnail.ThumbnailsBox;
 const Mainloop = imports.mainloop;
 const Params = imports.misc.params;
 
@@ -203,6 +204,23 @@ function setupOverrides() {
         if (gsettings.get_boolean('disable-scratch-in-overview'))
             return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
     });
+
+    /**
+     * Always show workspace thumbnails in overview if more than one workspace.
+     * See original function at:
+     * https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/gnome-44/js/ui/workspaceThumbnail.js#L690
+     */
+    registerOverridePrototype(ThumbnailsBox, '_updateShouldShow',
+        function () {
+            const { nWorkspaces } = global.workspace_manager;
+            const shouldShow = nWorkspaces > 1;
+
+            if (this._shouldShow === shouldShow)
+                return;
+
+            this._shouldShow = shouldShow;
+            this.notify('should-show');
+        });
 }
 
 /**
@@ -359,11 +377,10 @@ function setupActions() {
 }
 
 let savedProps;
-let gsettings, wmSettings, mutterSettings;
+let gsettings, mutterSettings;
 function enable() {
     savedProps = new Map();
     gsettings = ExtensionUtils.getSettings();
-    wmSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.wm.preferences' });
     mutterSettings = new Gio.Settings({ schema_id: 'org.gnome.mutter' });
     setupSwipeTrackers();
     setupOverrides();
@@ -385,7 +402,6 @@ function disable() {
     savedProps = null;
     swipeTrackers = null;
     gsettings = null;
-    wmSettings = null;
     mutterSettings = null;
     actions = null;
 }

@@ -1111,8 +1111,7 @@ var Space = class Space extends Array {
         }
         this.updateName();
         this.updateShowTopBar();
-        this.signals.connect(this.settings, 'changed::name',
-            this.updateName.bind(this));
+        this.signals.connect(this.settings, 'changed::name', this.updateName.bind(this));
         this.signals.connect(gsettings, 'changed::use-workspace-name',
             this.updateName.bind(this));
         this.signals.connect(this.settings, 'changed::color',
@@ -1216,9 +1215,7 @@ border-radius: ${borderWidth}px;
         } else {
             this.workspaceLabel.hide();
         }
-        let name = this.settings.get_string('name');
-        if (name === '')
-            name = Meta.prefs_get_workspace_name(this.index);
+        let name = Workspace.getWorkspaceName(this.settings, this.index);
         Meta.prefs_change_workspace_name(this.index, name);
         this.workspaceLabel.text = name;
         this.name = name;
@@ -1360,6 +1357,7 @@ border-radius: ${borderWidth}px;
      * @param {boolean} show
      */
     showWorkspaceIndicator(show = true) {
+        this.updateName();
         if (show && Settings.prefs.show_workspace_indicator) {
             Utils.actor_raise(this.workspaceIndicator);
             this.workspaceIndicator.show();
@@ -1726,7 +1724,6 @@ var Spaces = class Spaces extends Map {
      */
     monitorsChanged() {
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
-
         this.monitors = new Map();
         this.activeSpace.getWindows().forEach(w => {
             animateWindow(w);
@@ -2951,7 +2948,7 @@ let SaveState = class SaveState {
         /**
          * For monitors, since these are upgraded with "connector" field,
          * which we delete on disable. Beefore we delete this field, we want
-         * a copy on connector (and maybe index) to restore space to monitor.
+         * a copy on connector (and index) to restore space to monitor.
          */
         if (spaces?.monitors) {
             for (let [monitor, space] of spaces.monitors) {
@@ -2962,7 +2959,9 @@ let SaveState = class SaveState {
         // store space targetx values
         this.prevTargetX = new Map();
         spaces.forEach(s => {
-            this.prevTargetX.set(s.index, s.targetX);
+            if (s.getWindows().length > 0 && s.targetX !== 0) {
+                this.prevTargetX.set(s.index, s.targetX);
+            }
         });
 
         // save spaces (for window restore)

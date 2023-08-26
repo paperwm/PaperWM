@@ -262,7 +262,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkListBoxRow" id="general_row_4">
+              <object class="GtkListBoxRow">
                 <property name="activatable">False</property>
                 <property name="focusable">False</property>
                 <property name="tooltip_text" translatable="yes">Semicolon separated values of "useful window widths" that will be cycled through. Values types can be either percentage (of available screen width), e.g. "50%" or pixel values, e.g. "500px". Mixed value types are not supported.</property>
@@ -316,7 +316,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkListBoxRow" id="general_row_5">
+              <object class="GtkListBoxRow">
                 <property name="activatable">False</property>
                 <property name="focusable">False</property>
                 <property name="tooltip_text" translatable="yes">Semicolon separated values of "useful window heights" that will be cycled through. Values types can be either percentage (of available screen width), e.g. "50%" or pixel values, e.g. "500px". Mixed value types are not supported.</property>
@@ -804,6 +804,47 @@
                           <property name="column">1</property>
                           <property name="row">0</property>
                         </layout>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkListBoxRow">
+                <property name="activatable">False</property>
+                <property name="focusable">False</property>
+                <property name="tooltip_text" translatable="yes">Resets workspace names to default.</property>
+                <child>
+                  <object class="GtkGrid">
+                    <property name="focusable">False</property>
+                    <property name="margin_start">12</property>
+                    <property name="margin_end">12</property>
+                    <property name="margin_top">6</property>
+                    <property name="margin_bottom">6</property>
+                    <property name="column_spacing">32</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="focusable">False</property>
+                        <property name="hexpand">1</property>
+                        <property name="label" translatable="yes">Reset workspace names</property>
+                        <property name="xalign">0</property>
+                        <layout>
+                          <property name="column">0</property>
+                          <property name="row">0</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="workspace_reset_button">
+                        <property name="label">Reset</property>
+                        <layout>
+                          <property name="column">2</property>
+                          <property name="row">0</property>
+                        </layout>
+                        <style>
+                          <class name="destructive-action" />
+                        </style>
                       </object>
                     </child>
                   </object>

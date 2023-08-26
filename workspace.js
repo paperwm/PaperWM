@@ -35,6 +35,13 @@ function getSchemaSource() {
     return schemaSource;
 }
 
+function getWorkspaceName(settings, index) {
+    let name = settings.get_string('name') ?? `Workspace ${index + 1}`;
+    if (!name || name === '') {
+        name = `Workspace ${index + 1}`;
+    }
+    return name;
+}
 
 function getWorkspaceList() {
     return workspaceList;
