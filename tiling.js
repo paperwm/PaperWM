@@ -1726,7 +1726,6 @@ var Spaces = class Spaces extends Map {
      */
     monitorsChanged() {
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
-        saveState.update();
         this.monitors = new Map();
         this.activeSpace.getWindows().forEach(w => {
             animateWindow(w);
