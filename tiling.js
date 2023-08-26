@@ -1789,8 +1789,8 @@ var Spaces = class Spaces extends Map {
          */
         Utils.later_add(Meta.LaterType.IDLE, () => {
             if (saveState.hasPrevTargetX()) {
-                for (let [spaceIndex, targetX] of saveState.prevTargetX) {
-                    let space = this.spaceOfIndex(spaceIndex);
+                for (let [uuid, targetX] of saveState.prevTargetX) {
+                    let space = this.spaceOfUuid(uuid);
                     if (space && Number.isFinite(targetX)) {
                         space.viewportMoveToX(targetX, false);
                     }
@@ -2502,6 +2502,13 @@ var Spaces = class Spaces extends Map {
     }
 
     /**
+     * Returns the space of a specific uuid.
+     */
+    spaceOfUuid(uuid) {
+        return [...this.values()].find(s => uuid === s.uuid);
+    }
+
+    /**
      * Returns the currently active space.
      */
     get activeSpace() {
@@ -2927,14 +2934,7 @@ let SaveState = class SaveState {
     }
 
     getPrevSpaceByUUID(uuid) {
-        let space;
-        this.prevSpaces.forEach(s => {
-            if (uuid === s.uuid) {
-                space = s;
-            }
-        });
-
-        return space;
+        return [...this.prevSpaces.values()].find(s => uuid === s.uuid);
     }
 
     /**
@@ -2960,7 +2960,7 @@ let SaveState = class SaveState {
         this.prevTargetX = new Map();
         spaces.forEach(s => {
             if (s.getWindows().length > 0 && s.targetX !== 0) {
-                this.prevTargetX.set(s.index, s.targetX);
+                this.prevTargetX.set(s.uuid, s.targetX);
             }
         });
 
