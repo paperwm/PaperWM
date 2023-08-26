@@ -1111,8 +1111,7 @@ var Space = class Space extends Array {
         }
         this.updateName();
         this.updateShowTopBar();
-        this.signals.connect(this.settings, 'changed::name',
-            this.updateName.bind(this));
+        this.signals.connect(this.settings, 'changed::name', this.updateName.bind(this));
         this.signals.connect(gsettings, 'changed::use-workspace-name',
             this.updateName.bind(this));
         this.signals.connect(this.settings, 'changed::color',
@@ -1216,9 +1215,7 @@ border-radius: ${borderWidth}px;
         } else {
             this.workspaceLabel.hide();
         }
-        let name = this.settings.get_string('name');
-        if (name === '')
-            name = Meta.prefs_get_workspace_name(this.index);
+        let name = Workspace.getWorkspaceName(this.settings, this.index);
         Meta.prefs_change_workspace_name(this.index, name);
         this.workspaceLabel.text = name;
         this.name = name;
@@ -1360,6 +1357,7 @@ border-radius: ${borderWidth}px;
      * @param {boolean} show
      */
     showWorkspaceIndicator(show = true) {
+        this.updateName();
         if (show && Settings.prefs.show_workspace_indicator) {
             Utils.actor_raise(this.workspaceIndicator);
             this.workspaceIndicator.show();
