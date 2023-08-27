@@ -193,18 +193,51 @@ function toggleCloneMarks() {
     }
 }
 
+function isInRect(x, y, r) {
+    return r.x <= x && x < r.x + r.width &&
+        r.y <= y && y < r.y + r.height;
+}
+
+/**
+ * Returns monitor a pointer co-ordinates.
+ */
+function monitorAtPoint(gx, gy) {
+    for (let monitor of Main.layoutManager.monitors) {
+        if (isInRect(gx, gy, monitor))
+            return monitor;
+    }
+    return null;
+}
+
+/**
+ * Returns the monitor current pointer coordinates.
+ */
+function monitorAtCurrentPoint() {
+    let [gx, gy, $] = global.get_pointer();
+    return monitorAtPoint(gx, gy);
+}
+
 /**
  * Warps pointer to the center of a monitor.
  */
-function warpPointerToMonitor(monitor) {
+function warpPointerToMonitor(monitor, center = false) {
     let [x, y, _mods] = global.get_pointer();
-    x -= monitor.x;
-    y -= monitor.y;
-    if (x < 0 || x > monitor.width ||
-        y < 0 || y > monitor.height) {
+    if (center) {
+        x -= monitor.x;
+        y -= monitor.y;
         warpPointer(monitor.x + Math.floor(monitor.width / 2),
             monitor.y + Math.floor(monitor.height / 2));
+        return;
     }
+
+    let currMonitor = monitorAtCurrentPoint();
+    let normX = x - currMonitor.x;
+    let normY = y - currMonitor.y;
+
+    console.log(x, y, normX, normY, monitor.x, monitor.y);
+    warpPointer(
+        monitor.x + normX,
+        monitor.y + normY);
 }
 
 /**

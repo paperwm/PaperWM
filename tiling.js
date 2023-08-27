@@ -228,6 +228,8 @@ var Space = class Space extends Array {
             if (!spaces.isActiveSpace(this)) {
                 return;
             }
+            // warp pointer to monitor that is active
+            Utils.warpPointerToMonitor(this.monitor);
             Utils.later_add(Meta.LaterType.IDLE, () => {
                 ensureViewport(display.focus_window, this, { moveto: true, force: true });
             });
@@ -1963,7 +1965,7 @@ var Spaces = class Spaces extends Map {
         if (i === -1)
             return;
         let newMonitor = Main.layoutManager.monitors[i];
-        Utils.warpPointerToMonitor(newMonitor);
+        Utils.warpPointerToMonitor(newMonitor, true);
         let space = this.monitors.get(newMonitor);
 
         if (move && focus) {

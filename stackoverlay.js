@@ -165,7 +165,7 @@ var ClickOverlay = class ClickOverlay {
      * Returns the monitor the mouse is currently on.
      */
     get mouseMonitor() {
-        return Grab.monitorAtCurrentPoint();
+        return Utils.monitorAtCurrentPoint();
     }
 
     monitorActiveCheck() {
