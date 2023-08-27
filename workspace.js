@@ -35,13 +35,27 @@ function getSchemaSource() {
     return schemaSource;
 }
 
+function getWorkspaceName(settings, index) {
+    let name = settings.get_string('name') ?? `Workspace ${index + 1}`;
+    if (!name || name === '') {
+        name = `Workspace ${index + 1}`;
+    }
+    return name;
+}
 
 function getWorkspaceList() {
     return workspaceList;
 }
 
+/**
+ * Returns list of ordered workspace UUIDs.
+ */
+function getListUUID() {
+    return getWorkspaceList().get_strv('list');
+}
+
 function getWorkspaceSettings(index) {
-    let list = getWorkspaceList().get_strv('list');
+    let list = getListUUID();
     for (let uuid of list) {
         let settings = getWorkspaceSettingsByUUID(uuid);
         if (settings.get_int('index') === index) {
@@ -54,7 +68,7 @@ function getWorkspaceSettings(index) {
 function getNewWorkspaceSettings(index) {
     let uuid = GLib.uuid_string_random();
     let settings = getWorkspaceSettingsByUUID(uuid);
-    let list = getWorkspaceList().get_strv('list');
+    let list = getListUUID();
     list.push(uuid);
     getWorkspaceList().set_strv('list', list);
     settings.set_int('index', index);
@@ -65,7 +79,7 @@ function getWorkspaceSettingsByUUID(uuid) {
     if (!workspaceSettingsCache[uuid]) {
         let settings = new Gio.Settings({
             settings_schema: getSchemaSource().lookup(WORKSPACE_KEY, true),
-            path: `/org/gnome/shell/extensions/paperwm/workspaces/${uuid}/`
+            path: `/org/gnome/shell/extensions/paperwm/workspaces/${uuid}/`,
         });
         workspaceSettingsCache[uuid] = settings;
     }
@@ -74,7 +88,7 @@ function getWorkspaceSettingsByUUID(uuid) {
 
 /** Returns [[uuid, settings, name], ...] (Only used for debugging/development atm.) */
 function findWorkspaceSettingsByName(regex) {
-    let list = getWorkspaceList().get_strv('list');
+    let list = getListUUID();
     let settings = list.map(getWorkspaceSettingsByUUID);
     return Lib.zip(list, settings, settings.map(s => s.get_string('name')))
         .filter(([uuid, s, name]) => name.match(regex));
@@ -83,7 +97,7 @@ function findWorkspaceSettingsByName(regex) {
 /** Only used for debugging/development atm. */
 function deleteWorkspaceSettingsByName(regex, dryrun = true) {
     let out = "";
-    function rprint(...args) { console.debug(...args); out += args.join(" ") + "\n"; }
+    function rprint(...args) { console.debug(...args); out += `${args.join(" ")}\n`; }
     let n = global.workspace_manager.get_n_workspaces();
     for (let [uuid, s, name] of findWorkspaceSettingsByName(regex)) {
         let index = s.get_int('index');
@@ -102,7 +116,7 @@ function deleteWorkspaceSettingsByName(regex, dryrun = true) {
 /** Only used for debugging/development atm. */
 function deleteWorkspaceSettings(uuid) {
     // NB! Does not check if the settings is currently in use. Does not reindex subsequent settings.
-    let list = getWorkspaceList().get_strv('list');
+    let list = getListUUID();
     let i = list.indexOf(uuid);
     let settings = getWorkspaceSettingsByUUID(list[i]);
     for (let key of settings.list_keys()) {
@@ -116,12 +130,12 @@ function deleteWorkspaceSettings(uuid) {
 
 // Useful for debugging
 function printWorkspaceSettings() {
-    let list = getWorkspaceList().get_strv('list');
+    let list = getListUUID();
     let settings = list.map(getWorkspaceSettingsByUUID);
     let zipped = Lib.zip(list, settings);
     const key = s => s[1].get_int('index');
     zipped.sort((a, b) => key(a) - key(b));
     for (let [uuid, s] of zipped) {
-        console.debug('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
+        console.log('index:', s.get_int('index'), s.get_string('name'), s.get_string('color'), uuid);
     }
 }

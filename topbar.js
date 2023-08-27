@@ -20,7 +20,6 @@ const workspaceManager = global.workspace_manager;
 const display = global.display;
 
 var panelBox = Main.layoutManager.panelBox; // exported
-var panelMonitor; // exported
 
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
 let colors = [
@@ -41,11 +40,11 @@ function createButton(icon_name, accessible_name) {
         track_hover: true,
         accessible_name,
         style_class: 'button workspace-icon-button',
-        child: new St.Icon({ icon_name })
+        child: new St.Icon({ icon_name }),
     });
 }
 
-var PopupMenuEntryHelper = function constructor(text) {
+function popupMenuEntryHelper(text) {
     this.label = new St.Entry({
         text,
         // While not a search entry, this looks much better
@@ -53,7 +52,7 @@ var PopupMenuEntryHelper = function constructor(text) {
         name: 'workspace-name-entry',
         track_hover: true,
         reactive: true,
-        can_focus: true
+        can_focus: true,
     });
 
     this.label.set_style(`
@@ -92,7 +91,7 @@ var PopupMenuEntry = GObject.registerClass(
                 can_focus: false,
             });
 
-            PopupMenuEntryHelper.call(this, text);
+            popupMenuEntryHelper.call(this, text);
         }
 
         activate(event) {
@@ -127,14 +126,14 @@ class Color {
 
 class ColorEntry {
     constructor(startColor) {
-        this.actor = new St.BoxLayout({vertical: true});
+        this.actor = new St.BoxLayout({ vertical: true });
 
         let flowbox = new St.Widget();
         let flowLayout = new Clutter.FlowLayout();
         let flow = new St.Widget();
         flowbox.add_actor(flow);
         flow.layout_manager = flowLayout;
-        flow.width = 24*16;
+        flow.width = 24 * 16;
         for (let c of colors) {
             flow.add_actor(new Color(c, this).actor);
         }
@@ -153,7 +152,7 @@ class ColorEntry {
     }
 
     clicked() {
-        let space = Tiling.spaces.getActiveSpace();
+        let space = Tiling.spaces.activeSpace;
         let color = this.entry.actor.text;
         space.settings.set_string('color', color);
     }
@@ -188,8 +187,8 @@ var FocusIcon = GObject.registerClass(
 
         /**
          * Sets a function to be executed on click.
-         * @param {Function} clickFunction 
-         * @returns 
+         * @param {Function} clickFunction
+         * @returns
          */
         setClickFunction(clickFunction) {
             this.clickFunction = clickFunction;
@@ -320,7 +319,7 @@ var WorkspaceMenu = GObject.registerClass(
                 y_align: Clutter.ActorAlign.CENTER,
                 // Avoid moving the menu on short names
                 // TODO: update on scale changes
-                min_width: 60 * scale
+                min_width: 60 * scale,
             });
 
             this.setName(Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()));
@@ -338,7 +337,7 @@ var WorkspaceMenu = GObject.registerClass(
             this.menu.addMenuItem(this.entry);
             let changed = () => {
                 let name = this.entry.label.text;
-                let space = Tiling.spaces.spaceOf(workspaceManager.get_active_workspace());
+                let space = Tiling.spaces.activeSpace;
                 space.settings.set_string('name', name);
                 this.setName(name);
             };
@@ -363,8 +362,8 @@ var WorkspaceMenu = GObject.registerClass(
             this._prefItem.connect('activate', () => {
                 this.menu.close(true);
                 let wi = workspaceManager.get_active_workspace_index();
-                let temp_file = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace')
-                temp_file.replace_contents(wi.toString(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null)
+                let temp_file = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace');
+                temp_file.replace_contents(wi.toString(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null);
                 ExtensionUtils.openPrefs();
             });
 
@@ -442,8 +441,8 @@ var WorkspaceMenu = GObject.registerClass(
                 let device = event.get_source_device();
                 // console.debug(`source: ${device.get_device_type()}`);
                 let direction = event.get_scroll_direction();
-                if (direction === Clutter.ScrollDirection.SMOOTH
-                    && device.get_device_type() !== Clutter.InputDeviceType.POINTER_DEVICE) {
+                if (direction === Clutter.ScrollDirection.SMOOTH &&
+                    device.get_device_type() !== Clutter.InputDeviceType.POINTER_DEVICE) {
                     this.state = 'SMOOTH';
                 }
 
@@ -455,10 +454,10 @@ var WorkspaceMenu = GObject.registerClass(
                 }
             }
 
-            if (this.state === 'SMOOTH' && type === Clutter.EventType.SCROLL
-                && event.get_scroll_direction() === Clutter.ScrollDirection.SMOOTH) {
+            if (this.state === 'SMOOTH' && type === Clutter.EventType.SCROLL &&
+                event.get_scroll_direction() === Clutter.ScrollDirection.SMOOTH) {
                 let spaces = Tiling.spaces;
-                let active = spaces.getActiveSpace();
+                let active = spaces.activeSpace;
 
                 let [dx, dy] = event.get_scroll_delta();
                 dy *= active.height * 0.05;
@@ -475,11 +474,10 @@ var WorkspaceMenu = GObject.registerClass(
                 const StackPositions = Tiling.StackPositions;
                 const upEdge = 0.385 * active.height;
                 const downEdge = 0.60 * active.height;
-                if (dy > 0
-                    && this.selected !== active
-                    && ((this.selected.actor.y > upEdge &&
-                        this.selected.actor.y - dy < upEdge)
-                        ||
+                if (dy > 0 &&
+                    this.selected !== active &&
+                    ((this.selected.actor.y > upEdge &&
+                        this.selected.actor.y - dy < upEdge)                        ||
                         (this.selected.actor.y - dy < StackPositions.up * active.height))
                 ) {
                     dy = 0;
@@ -489,10 +487,9 @@ var WorkspaceMenu = GObject.registerClass(
                     Easer.removeEase(this.selected.actor);
                     Easer.addEase(this.selected.actor,
                         { scale_x: 0.9, scale_y: 0.9, time: Settings.prefs.animation_time, mode });
-                } else if (dy < 0
-                    && ((this.selected.actor.y < downEdge &&
-                        this.selected.actor.y - dy > downEdge)
-                        ||
+                } else if (dy < 0 &&
+                    ((this.selected.actor.y < downEdge &&
+                        this.selected.actor.y - dy > downEdge)                        ||
                         (this.selected.actor.y - dy > StackPositions.down * active.height))
                 ) {
                     dy = 0;
@@ -501,7 +498,7 @@ var WorkspaceMenu = GObject.registerClass(
                     this.selected = spaces.selectedSpace;
                     Easer.removeEase(this.selected.actor);
                     Easer.addEase(this.selected.actor,
-                        {scale_x: 0.9, scale_y: 0.9, time: Settings.prefs.animation_time, mode});
+                        { scale_x: 0.9, scale_y: 0.9, time: Settings.prefs.animation_time, mode });
                 }
 
                 this.selected.actor.y -= dy;
@@ -554,7 +551,7 @@ var WorkspaceMenu = GObject.registerClass(
         }
 
         vfunc_event(event) {
-            this._onEvent(null, event)
+            this._onEvent(null, event);
         }
 
         // WorkspaceMenu.prototype._onOpenStateChanged = function
@@ -562,7 +559,7 @@ var WorkspaceMenu = GObject.registerClass(
             if (!open)
                 return;
 
-            let space = Tiling.spaces.getActiveSpace();
+            let space = Tiling.spaces.activeSpace;
             this.entry.label.text = space.name;
             GLib.idle_add(GLib.PRIORITY_DEFAULT, this.entry.activate.bind(this.entry));
 
@@ -604,11 +601,6 @@ function enable () {
     Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
     Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');
 
-    // on allocation propagate position information
-    signals.connectOneShot(menu.label, 'notify::allocation', () => {
-        updateMonitor();
-    });
-
     Tiling.spaces.forEach(s => {
         s.workspaceLabel.clutter_text.set_font_description(menu.label.clutter_text.font_description);
     });
@@ -630,13 +622,13 @@ function enable () {
     signals.connect(gsettings, 'changed::disable-topbar-styling', (settings, key) => {
         const status = Settings.prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
         ExtensionModule.notify(
-            `PaperWM: TopBar styling has been ${status}`, 
+            `PaperWM: TopBar styling has been ${status}`,
             `A restart of Gnome is required! (e.g. logout then login again)`);
     });
 
     signals.connect(gsettings, 'changed::show-window-position-bar', (settings, key) => {
         const spaces = Tiling.spaces;
-        spaces.setSpaceTopbarElementsVisible(false);
+        spaces.setSpaceTopbarElementsVisible();
         spaces.forEach(s => s.layout(false));
         spaces.showWindowPositionBarChanged();
     });
@@ -680,12 +672,16 @@ function disable() {
     gsettings = null;
 }
 
-function setClearStyle() {
+function panelMonitor() {
+    return Main.layoutManager.primaryMonitor;
+}
+
+function setNoBackgroundStyle() {
     if (Settings.prefs.disable_topbar_styling) {
         return;
     }
     removeStyles();
-    Main.panel.add_style_class_name('background-clear');
+    Main.panel.add_style_class_name('topbar-no-background');
 }
 
 function setTransparentStyle() {
@@ -693,11 +689,11 @@ function setTransparentStyle() {
         return;
     }
     removeStyles();
-    Main.panel.add_style_class_name('topbar-transparent');
+    Main.panel.add_style_class_name('topbar-transparent-background');
 }
 
 function removeStyles() {
-    ['background-clear', 'topbar-transparent'].forEach(s => {
+    ['topbar-no-background', 'topbar-transparent-background'].forEach(s => {
         Main.panel.remove_style_class_name(s);
     });
 }
@@ -706,11 +702,11 @@ function removeStyles() {
  * Applies correct style based on whether we use the windowPositionBar or not.
  */
 function fixStyle() {
-    Settings.prefs.show_window_position_bar ? setClearStyle() : setTransparentStyle();
+    Settings.prefs.show_window_position_bar ? setNoBackgroundStyle() : setTransparentStyle();
 }
 
 function fixTopBar() {
-    let space = Tiling.spaces?.monitors.get(panelMonitor) ?? false;
+    let space = Tiling?.spaces?.monitors?.get(panelMonitor()) ?? false;
     if (!space)
         return;
 
@@ -752,7 +748,7 @@ function fixFocusModeIcon() {
 function updateWorkspaceIndicator(index) {
     let spaces = Tiling.spaces;
     let space = spaces?.spaceOf(workspaceManager.get_workspace_by_index(index));
-    if (space && space.monitor === panelMonitor) {
+    if (space && space.monitor === panelMonitor()) {
         setWorkspaceName(space.name);
 
         // also update focus mode
@@ -764,30 +760,10 @@ function updateWorkspaceIndicator(index) {
  * Refreshes topbar workspace indicator.
  */
 function refreshWorkspaceIndicator() {
-    let panelSpace = Tiling.spaces.monitors.get(panelMonitor);
-    updateWorkspaceIndicator(panelSpace.workspace.index());
+    let panelSpace = Tiling.spaces.monitors.get(panelMonitor());
+    updateWorkspaceIndicator(panelSpace.index);
 }
 
 function setWorkspaceName (name) {
     menu && menu.setName(name);
-}
-
-function updateMonitor() {
-    let primaryMonitor = Main.layoutManager.primaryMonitor;
-
-    // if panelMonitor has changed, then update layouts on workspaces
-    if (panelMonitor !== primaryMonitor) {
-        Utils.later_add(Meta.LaterType.IDLE, () => {
-            Tiling.spaces?.forEach(s => s.layout());
-
-            // if to show window positon bar, then update across workspaces
-            if (Settings.prefs.show_window_position_bar) {
-                Tiling.spaces?.setSpaceTopbarElementsVisible();
-            }
-            fixStyle();
-        });
-    }
-
-    // update topbar monitor
-    panelMonitor = primaryMonitor;
 }

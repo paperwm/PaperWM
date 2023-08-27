@@ -16,6 +16,7 @@ const Main = imports.ui.main;
 const Workspace = imports.ui.workspace;
 const WindowManager = imports.ui.windowManager;
 const WorkspaceAnimation = imports.ui.workspaceAnimation;
+const ThumbnailsBox = imports.ui.workspaceThumbnail.ThumbnailsBox;
 const Mainloop = imports.mainloop;
 const Params = imports.misc.params;
 
@@ -189,7 +190,7 @@ function setupOverrides() {
     }
 
     let layout = computeLayout40;
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout)
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
 
     // disable swipe gesture trackers
     swipeTrackers.forEach(t => {
@@ -203,6 +204,23 @@ function setupOverrides() {
         if (gsettings.get_boolean('disable-scratch-in-overview'))
             return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
     });
+
+    /**
+     * Always show workspace thumbnails in overview if more than one workspace.
+     * See original function at:
+     * https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/gnome-44/js/ui/workspaceThumbnail.js#L690
+     */
+    registerOverridePrototype(ThumbnailsBox, '_updateShouldShow',
+        function () {
+            const { nWorkspaces } = global.workspace_manager;
+            const shouldShow = nWorkspaces > 1;
+
+            if (this._shouldShow === shouldShow)
+                return;
+
+            this._shouldShow = shouldShow;
+            this.notify('should-show');
+        });
 }
 
 /**
@@ -238,7 +256,7 @@ function saveRuntimeDisable(schemaSettings, key, disableValue) {
         schemaSettings.set_boolean(key, disableValue);
 
         // save a backup copy to PaperWM settings (for restore)
-        let pkey = 'restore-' + key;
+        let pkey = `restore-${key}`;
 
         /**
          * Now if paperwm settings has restore values, it means
@@ -359,12 +377,11 @@ function setupActions() {
 }
 
 let savedProps;
-let gsettings, wmSettings, mutterSettings;
+let gsettings, mutterSettings;
 function enable() {
     savedProps = new Map();
     gsettings = ExtensionUtils.getSettings();
-    wmSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.preferences'});
-    mutterSettings = new Gio.Settings({schema_id: 'org.gnome.mutter'});
+    mutterSettings = new Gio.Settings({ schema_id: 'org.gnome.mutter' });
     setupSwipeTrackers();
     setupOverrides();
     enableOverrides();
@@ -385,7 +402,6 @@ function disable() {
     savedProps = null;
     swipeTrackers = null;
     gsettings = null;
-    wmSettings = null;
     mutterSettings = null;
     actions = null;
 }
@@ -492,9 +508,9 @@ function _checkWorkspaces() {
     for (i = 0; i < this._workspaces.length; i++) {
         let lastRemoved = this._workspaces[i]._lastRemovedWindow;
         if ((lastRemoved &&
-             (lastRemoved.get_window_type() == Meta.WindowType.SPLASHSCREEN ||
-              lastRemoved.get_window_type() == Meta.WindowType.DIALOG ||
-              lastRemoved.get_window_type() == Meta.WindowType.MODAL_DIALOG)) ||
+             (lastRemoved.get_window_type() === Meta.WindowType.SPLASHSCREEN ||
+              lastRemoved.get_window_type() === Meta.WindowType.DIALOG ||
+              lastRemoved.get_window_type() === Meta.WindowType.MODAL_DIALOG)) ||
             this._workspaces[i]._keepAliveId)
             emptyWorkspaces[i] = false;
         else
@@ -520,9 +536,13 @@ function _checkWorkspaces() {
         emptyWorkspaces[workspaceIndex] = false;
     }
 
-    let minimum = wmSettings.get_int('num-workspaces');
+    /**
+     * Set minimum workspaces to be max of num_monitors+1.
+     * This ensures that we have at least one workspace at the end.
+     */
+    let minimum = Main.layoutManager.monitors.length + 1;
     // Make sure we have a minimum number of spaces
-    for (i = 0; i < Math.max(Main.layoutManager.monitors.length, minimum); i++) {
+    for (i = 0; i < minimum; i++) {
         if (i >= emptyWorkspaces.length) {
             workspaceManager.append_new_workspace(false, global.get_current_time());
             emptyWorkspaces.push(true);
@@ -530,7 +550,7 @@ function _checkWorkspaces() {
     }
 
     // If we don't have an empty workspace at the end, add one
-    if (!emptyWorkspaces[emptyWorkspaces.length -1]) {
+    if (!emptyWorkspaces[emptyWorkspaces.length - 1]) {
         workspaceManager.append_new_workspace(false, global.get_current_time());
         emptyWorkspaces.push(true);
     }
@@ -548,8 +568,10 @@ function _checkWorkspaces() {
     }
 
     // Keep visible spaces
-    for (let [monitor, space] of Tiling.spaces.monitors) {
-        emptyWorkspaces[space.workspace.index()] = false;
+    if (Tiling?.spaces?.monitors) {
+        for (let [monitor, space] of Tiling.spaces.monitors) {
+            emptyWorkspaces[space.workspace.index()] = false;
+        }
     }
 
     // Delete empty workspaces except for the last one; do it from the end
@@ -557,7 +579,7 @@ function _checkWorkspaces() {
     for (i = lastIndex; i >= 0; i--) {
         if (emptyWorkspaces[i] && i != lastEmptyIndex) {
             workspaceManager.remove_workspace(this._workspaces[i]
-                ,global.get_current_time());
+                , global.get_current_time());
         }
     }
 

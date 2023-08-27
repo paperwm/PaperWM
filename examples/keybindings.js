@@ -116,7 +116,7 @@ function cycleMonitor(binding = "<Super>d") {
         let nextMonitor = monitors[nextMonitorI];
         let nextSpace = Tiling.spaces.monitors.get(nextMonitor);
         if (nextSpace) {
-            nextSpace.workspace.activate(global.get_current_time());
+            nextSpace.activate();
         }
     });
 }
@@ -182,13 +182,13 @@ function moveSpaceToMonitor(basebinding = '<super><alt>') {
         let next = spaces.monitors.get(Main.layoutManager.monitors[n]);
 
         currentSpace.setMonitor(next.monitor);
-        spaces.monitors.set(next.monitor, currentSpace);
+        spaces.setMonitors(next.monitor, currentSpace);
 
         next.setMonitor(monitor);
-        spaces.monitors.set(monitor, next);
+        spaces.setMonitors(monitor, next, true); // save on the last one
 
         // This is pretty hacky
-        spaces.switchWorkspace(null, currentSpace.workspace.index(), currentSpace.workspace.index());
+        spaces.switchWorkspace(null, currentSpace.index, currentSpace.index);
     }
 
     for (let arrow of ['Down', 'Left', 'Up', 'Right']) {
@@ -312,7 +312,7 @@ function reorderWorkspace(bindingUp = "<Alt><Super>Page_Up", bindingDown = "<Alt
         if (!space)
             return;
 
-        let nextI = Math.min(Tiling.spaces.size-1 , Math.max(0, space.workspace.index() + dir));
+        let nextI = Math.min(Tiling.spaces.size-1 , Math.max(0, space.index + dir));
         global.workspace_manager.reorder_workspace(space.workspace, nextI);
     }
 
