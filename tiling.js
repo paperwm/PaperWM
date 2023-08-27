@@ -884,7 +884,6 @@ var Space = class Space extends Array {
 
     positionOf(metaWindow) {
         metaWindow = metaWindow || this.selectedWindow;
-        let index, row;
         for (let i = 0; i < this.length; i++) {
             if (this[i].includes(metaWindow))
                 return [i, this[i].indexOf(metaWindow)];

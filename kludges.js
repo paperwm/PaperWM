@@ -172,8 +172,6 @@ function setupOverrides() {
             this._updateWindowPositions(flags);
         });
 
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
-
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
 
     if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
@@ -189,20 +187,26 @@ function setupOverrides() {
             });
     }
 
-    let layout = computeLayout40;
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
-
     // disable swipe gesture trackers
     swipeTrackers.forEach(t => {
         registerOverrideProp(t, "enabled", false);
     });
 
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', computeLayout40);
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
         let metaWindow = win.meta_window || win;
         if (gsettings.get_boolean('only-scratch-in-overview'))
             return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
         if (gsettings.get_boolean('disable-scratch-in-overview'))
             return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+    });
+    registerOverridePrototype(Workspace.Workspace, '_isMyWindow', function(window) {
+        const space = Tiling.spaces.spaceOf(this.metaWorkspace);
+        let onSpace = space.indexOf(window) >= 0;
+        const isOnMonitor = space.monitor.index === this.monitorIndex;
+
+        return onSpace && isOnMonitor;
     });
 
     /**
@@ -462,7 +466,7 @@ function computeLayout40(windows, layoutParams) {
             row.fullHeight = Math.max(row.fullHeight, height);
 
             // either new width is < idealWidth or new width is nearer from idealWidth then oldWidth
-            if (this._keepSameRow(row, window, width, idealRowWidth) || (i == numRows - 1)) {
+            if (this._keepSameRow(row, window, width, idealRowWidth) || (i === numRows - 1)) {
                 row.windows.push(window);
                 row.fullWidth += width;
             } else {
