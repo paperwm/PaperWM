@@ -203,10 +203,7 @@ function setupOverrides() {
     });
     registerOverridePrototype(Workspace.Workspace, '_isMyWindow', function(window) {
         const space = Tiling.spaces.spaceOf(this.metaWorkspace);
-        let onSpace = space.indexOf(window) >= 0;
-        const isOnMonitor = space.monitor.index === this.monitorIndex;
-
-        return onSpace && isOnMonitor;
+        return space.indexOf(window) >= 0;
     });
 
     /**
