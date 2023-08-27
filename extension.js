@@ -38,7 +38,7 @@ const Main = imports.ui.main;
           - settings.js should not depend on other paperwm modules;
  */
 const modules = [
-    'settings',
+    'utils', 'settings',
     'gestures', 'keybindings', 'liveAltTab', 'navigator', 'stackoverlay', 'scratch',
     'workspace', 'tiling', 'topbar', // these have `enable` dependency order
     'kludges', 'app', // these have `enable` dependency order

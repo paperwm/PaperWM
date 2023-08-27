@@ -1965,7 +1965,7 @@ var Spaces = class Spaces extends Map {
         if (i === -1)
             return;
         let newMonitor = Main.layoutManager.monitors[i];
-        Utils.warpPointerToMonitor(newMonitor, true);
+        Utils.warpPointerToMonitor(newMonitor);
         let space = this.monitors.get(newMonitor);
 
         if (move && focus) {

@@ -3,10 +3,23 @@ const Extension = ExtensionUtils.getCurrentExtension();
 const Lib = Extension.imports.lib;
 const { GLib, Clutter, Meta, St, GdkPixbuf, Cogl, Gio } = imports.gi;
 const Main = imports.ui.main;
+const Ripples = imports.ui.ripples;
 const Mainloop = imports.mainloop;
 const Display = global.display;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number); // exported
+
+
+let warpRipple;
+function enable() {
+    warpRipple = new Ripples.Ripples(0.5, 0.5, 'ripple-pointer-location');
+    warpRipple.addTo(Main.uiGroup);
+}
+
+function disable() {
+    warpRipple?.destroy();
+    warpRipple = null;
+}
 
 let debug_all = false; // Turn off by default
 let debug_filter = { '#paperwm': true, '#stacktrace': true };
@@ -247,6 +260,7 @@ function warpPointer(x, y) {
     let backend = Clutter.get_default_backend();
     let seat = backend.get_default_seat();
     seat.warp_pointer(x, y);
+    warpRipple.playAnimation(x, y);
 }
 
 /**
