@@ -14,9 +14,9 @@ const Scratch = Extension.imports.scratch;
 const { Meta, Gio, Clutter, Shell } = imports.gi;
 const Main = imports.ui.main;
 const Workspace = imports.ui.workspace;
-const WindowManager = imports.ui.windowManager;
+const WorkspaceThumbnail = imports.ui.workspaceThumbnail;
 const WorkspaceAnimation = imports.ui.workspaceAnimation;
-const ThumbnailsBox = imports.ui.workspaceThumbnail.ThumbnailsBox;
+const WindowManager = imports.ui.windowManager;
 const Mainloop = imports.mainloop;
 const Params = imports.misc.params;
 
@@ -123,7 +123,6 @@ function setupOverrides() {
             onComplete();
         });
 
-    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
     if (Workspace.WindowClone)
         registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
 
@@ -207,13 +206,20 @@ function setupOverrides() {
         const onMonitor = this._monitor === space.monitor;
         return onSpace && onMonitor;
     });
+    registerOverridePrototype(WorkspaceThumbnail.WorkspaceThumbnail, '_isMyWindow', function(actor) {
+        const window = actor.meta_window;
+        const space = Tiling.spaces.spaceOf(this.metaWorkspace);
+        const onSpace = space.indexOf(window) >= 0;
+        const onMonitor = this.monitorIndex === space.monitor.index;
+        return onSpace && onMonitor;
+    });
 
     /**
      * Always show workspace thumbnails in overview if more than one workspace.
      * See original function at:
      * https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/gnome-44/js/ui/workspaceThumbnail.js#L690
      */
-    registerOverridePrototype(ThumbnailsBox, '_updateShouldShow',
+    registerOverridePrototype(WorkspaceThumbnail.ThumbnailsBox, '_updateShouldShow',
         function () {
             const { nWorkspaces } = global.workspace_manager;
             const shouldShow = nWorkspaces > 1;
