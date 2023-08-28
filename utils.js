@@ -234,6 +234,12 @@ function monitorAtCurrentPoint() {
  * Warps pointer to the center of a monitor.
  */
 function warpPointerToMonitor(monitor, center = false) {
+    // no need to warp if already on this monitor
+    let currMonitor = monitorAtCurrentPoint();
+    if (currMonitor === monitor) {
+        return;
+    }
+
     let [x, y, _mods] = global.get_pointer();
     if (center) {
         x -= monitor.x;
@@ -243,11 +249,8 @@ function warpPointerToMonitor(monitor, center = false) {
         return;
     }
 
-    let currMonitor = monitorAtCurrentPoint();
     let normX = x - currMonitor.x;
     let normY = y - currMonitor.y;
-
-    console.log(x, y, normX, normY, monitor.x, monitor.y);
     warpPointer(
         monitor.x + normX,
         monitor.y + normY);
