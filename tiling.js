@@ -1957,7 +1957,7 @@ var Spaces = class Spaces extends Map {
         }
     }
 
-    switchMonitor(direction, move) {
+    switchMonitor(direction, move, warp = true) {
         let focus = display.focus_window;
         let monitor = focusMonitor();
         let currentSpace = this.monitors.get(monitor);
@@ -1965,7 +1965,9 @@ var Spaces = class Spaces extends Map {
         if (i === -1)
             return;
         let newMonitor = Main.layoutManager.monitors[i];
-        Utils.warpPointerToMonitor(newMonitor);
+        if (warp) {
+            Utils.warpPointerToMonitor(newMonitor);
+        }
         let space = this.monitors.get(newMonitor);
 
         if (move && focus) {
@@ -2003,28 +2005,29 @@ var Spaces = class Spaces extends Map {
             return;
 
         let t1, t2, t3;
+        const wait = 0;
         // now have monitors, we need to mru down and then switch monitor and another mru down
         const firstSwitch = () => {
             this.selectStackSpace(Meta.MotionDirection.DOWN);
-            t1 = Mainloop.timeout_add(Settings.prefs.animation_time, firstMonitor);
+            t1 = Mainloop.timeout_add(wait, firstMonitor);
             return false;
         };
         const firstMonitor = () => {
             Navigator.getNavigator().finish();
-            this.switchMonitor(direction);
+            this.switchMonitor(direction, false, false);
             this.selectStackSpace(Meta.MotionDirection.DOWN);
             Utils.timeout_remove(t1);
             t1 = null;
-            t2 = Mainloop.timeout_add(Settings.prefs.animation_time, backMonitor);
+            t2 = Mainloop.timeout_add(wait, backMonitor);
             return false;
         };
         const backMonitor = () => {
             Navigator.getNavigator().finish();
-            this.switchMonitor(backDirection);
+            this.switchMonitor(backDirection, false, false);
             this.selectStackSpace(Meta.MotionDirection.DOWN);
             Utils.timeout_remove(t2);
             t2 = null;
-            t3 = Mainloop.timeout_add(Settings.prefs.animation_time, () => {
+            t3 = Mainloop.timeout_add(wait, () => {
                 Navigator.getNavigator().finish();
                 this.switchMonitor(direction);
                 Utils.timeout_remove(t3);
