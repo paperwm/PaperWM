@@ -2004,39 +2004,20 @@ var Spaces = class Spaces extends Map {
         if (i === -1)
             return;
 
-        let t1, t2, t3;
-        const wait = 0;
-        // now have monitors, we need to mru down and then switch monitor and another mru down
-        const firstSwitch = () => {
-            this.selectStackSpace(Meta.MotionDirection.DOWN);
-            t1 = Mainloop.timeout_add(wait, firstMonitor);
-            return false;
-        };
-        const firstMonitor = () => {
-            Navigator.getNavigator().finish();
-            this.switchMonitor(direction, false, false);
-            this.selectStackSpace(Meta.MotionDirection.DOWN);
-            Utils.timeout_remove(t1);
-            t1 = null;
-            t2 = Mainloop.timeout_add(wait, backMonitor);
-            return false;
-        };
-        const backMonitor = () => {
-            Navigator.getNavigator().finish();
-            this.switchMonitor(backDirection, false, false);
-            this.selectStackSpace(Meta.MotionDirection.DOWN);
-            Utils.timeout_remove(t2);
-            t2 = null;
-            t3 = Mainloop.timeout_add(wait, () => {
-                Navigator.getNavigator().finish();
-                this.switchMonitor(direction);
-                Utils.timeout_remove(t3);
-                t3 = null;
-                return false;
-            });
-        };
-
-        firstSwitch();
+        let navFinish = () => Navigator.getNavigator().finish();
+        // action on current monitor
+        this.selectStackSpace(Meta.MotionDirection.DOWN);
+        navFinish();
+        // switch to target monitor and action mru
+        this.switchMonitor(direction, false, false);
+        this.selectStackSpace(Meta.MotionDirection.DOWN);
+        navFinish();
+        // switch back to orig monitor and action mru
+        this.switchMonitor(backDirection, false, false);
+        this.selectStackSpace(Meta.MotionDirection.DOWN);
+        navFinish();
+        // final switch with warp
+        this.switchMonitor(direction);
     }
 
     switchWorkspace(wm, fromIndex, toIndex, animate = false) {
