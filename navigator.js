@@ -300,7 +300,7 @@ class NavigatorClass {
             });
             this.minimaps.set(space, minimapId);
         } else {
-            typeof  minimap !== 'number' && minimap.show();
+            typeof minimap !== 'number' && minimap.show();
         }
     }
 
@@ -317,10 +317,12 @@ class NavigatorClass {
 
     destroy(space, focus) {
         this.minimaps.forEach(m => {
-            if (typeof  m === 'number')
+            if (typeof  m === 'number') {
                 Mainloop.source_remove(m);
-            else
+            }
+            else {
                 m.destroy();
+            }
         });
 
         if (Tiling.inGrab && !Tiling.inGrab.dnd) {
