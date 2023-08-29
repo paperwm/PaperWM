@@ -1,12 +1,12 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Lib = Extension.imports.lib;
-const { GLib, Clutter, Meta, St, GdkPixbuf, Cogl } = imports.gi;
+const { GLib, Clutter, Meta, St, GdkPixbuf, Cogl, Gio } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
-const display = global.display;
+const Display = global.display;
 
-var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
+var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number); // exported
 
 let debug_all = false; // Turn off by default
 let debug_filter = { '#paperwm': true, '#stacktrace': true };
@@ -122,7 +122,7 @@ function setBackgroundImage(actor, resource_path) {
  * Visualize the frame and buffer bounding boxes of a meta window
  */
 function toggleWindowBoxes(metaWindow) {
-    metaWindow = metaWindow || display.focus_window;
+    metaWindow = metaWindow || Display.focus_window;
 
     if (metaWindow._paperDebugBoxes) {
         metaWindow._paperDebugBoxes.forEach(box => {
@@ -179,20 +179,37 @@ function toggleCloneMarks() {
         }
     }
 
-    let windows = display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
+    let windows = Display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
 
     if (markNewClonesSignalId) {
-        display.disconnect(markNewClonesSignalId);
+        Display.disconnect(markNewClonesSignalId);
         markNewClonesSignalId = null;
         windows.forEach(unmarkCloneOf);
     } else {
-        markNewClonesSignalId = display.connect_after(
+        markNewClonesSignalId = Display.connect_after(
             "window-created", (_, mw) => markCloneOf(mw));
 
         windows.forEach(markCloneOf);
     }
 }
 
+/**
+ * Warps pointer to the center of a monitor.
+ */
+function warpPointerToMonitor(monitor) {
+    let [x, y, _mods] = global.get_pointer();
+    x -= monitor.x;
+    y -= monitor.y;
+    if (x < 0 || x > monitor.width ||
+        y < 0 || y > monitor.height) {
+        warpPointer(monitor.x + Math.floor(monitor.width / 2),
+            monitor.y + Math.floor(monitor.height / 2));
+    }
+}
+
+/**
+ * Warps pointer to x, y coordinates.
+ */
 function warpPointer(x, y) {
     let backend = Clutter.get_default_backend();
     let seat = backend.get_default_seat();
@@ -294,6 +311,67 @@ function printActorTree(node, fmt = mkFmt(), options = {}, state = null) {
     }
 }
 
+function isMetaWindow(obj) {
+    return obj && obj.window_type && obj.get_compositor_private;
+}
+
+function shortTrace(skip = 0) {
+    let trace = new Error().stack.split("\n").map(s => {
+        let words = s.split(/[@/]/);
+        let cols = s.split(":");
+        let ln = parseInt(cols[2]);
+        if (ln === null)
+            ln = "?";
+
+        return [words[0], ln];
+    });
+    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : `${f}:${ln}`);
+    return trace.slice(skip + 1, skip + 5);
+}
+
+function actor_raise(actor, above) {
+    const parent = actor.get_parent();
+    if (!parent) {
+        return;
+    }
+    // needs to be null (not undefined) for valid second argument
+    above = above ?? null;
+    parent.set_child_above_sibling(actor, above);
+}
+
+function actor_reparent(actor, newParent) {
+    const parent = actor.get_parent();
+    if (parent) {
+        parent.remove_child(actor);
+    }
+    newParent.add_child(actor);
+}
+
+/**
+ * Backwards compatible later_add function.
+ */
+function later_add(...args) {
+    // Gnome 44+ uses global.compositor.get_laters()
+    if (global.compositor?.get_laters) {
+        global.compositor.get_laters().add(...args);
+    }
+    // Gnome 42, 43 used Meta.later_add
+    else if (Meta.later_add) {
+        Meta.later_add(...args);
+    }
+}
+
+/**
+ * Convenience method for removing timeout source(s) from Mainloop.
+ */
+function timeout_remove(...timeouts) {
+    timeouts.forEach(t => {
+        if (t) {
+            Mainloop.source_remove(t);
+        }
+    });
+}
+
 var Signals = class Signals extends Map {
     static get [Symbol.species]() { return Map; }
 
@@ -371,63 +449,80 @@ var easer = {
     },
 };
 
-function isMetaWindow(obj) {
-    return obj && obj.window_type && obj.get_compositor_private;
-}
-
-function shortTrace(skip = 0) {
-    let trace = new Error().stack.split("\n").map(s => {
-        let words = s.split(/[@/]/);
-        let cols = s.split(":");
-        let ln = parseInt(cols[2]);
-        if (ln === null)
-            ln = "?";
-
-        return [words[0], ln];
-    });
-    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : `${f}:${ln}`);
-    return trace.slice(skip + 1, skip + 5);
-}
-
-function actor_raise(actor, above) {
-    const parent = actor.get_parent();
-    if (!parent) {
-        return;
+var DisplayConfig = class DisplayConfig {
+    static get proxyWrapper() {
+        return Gio.DBusProxy.makeProxyWrapper('<node>\
+        <interface name="org.gnome.Mutter.DisplayConfig">\
+            <method name="GetCurrentState">\
+            <arg name="serial" direction="out" type="u" />\
+            <arg name="monitors" direction="out" type="a((ssss)a(siiddada{sv})a{sv})" />\
+            <arg name="logical_monitors" direction="out" type="a(iiduba(ssss)a{sv})" />\
+            <arg name="properties" direction="out" type="a{sv}" />\
+            </method>\
+            <signal name="MonitorsChanged" />\
+        </interface>\
+    </node>');
     }
-    // needs to be null (not undefined) for valid second argument
-    above = above ?? null;
-    parent.set_child_above_sibling(actor, above);
-}
 
-function actor_reparent(actor, newParent) {
-    const parent = actor.get_parent();
-    if (parent) {
-        parent.remove_child(actor);
+    constructor() {
+        this.proxy = new DisplayConfig.proxyWrapper(
+            Gio.DBus.session,
+            'org.gnome.Mutter.DisplayConfig',
+            '/org/gnome/Mutter/DisplayConfig',
+            (proxy, error) => {
+                if (error) {
+                    console.error(error);
+                    return;
+                }
+                this.upgradeGnomeMonitors();
+            }
+        );
     }
-    newParent.add_child(actor);
-}
 
-/**
- * Backwards compatible later_add function.
- */
-function later_add(...args) {
-    // Gnome 44+ uses global.compositor.get_laters()
-    if (global.compositor?.get_laters) {
-        global.compositor.get_laters().add(...args);
-    }
-    // Gnome 42, 43 used Meta.later_add
-    else if (Meta.later_add) {
-        Meta.later_add(...args);
-    }
-}
+    /**
+     * Upgrades Main.layoutManager.monitors by adding a dbus monitor connector
+     * (e.g. "eDP-1" or "DP-1", etc.).  Used for stable restoring for monitor
+     * layouts.
+     */
+    upgradeGnomeMonitors(callback = () => {}) {
+        this.proxy.GetCurrentStateRemote((state, error) => {
+            if (error) {
+                console.error(error);
+                return;
+            }
 
-/**
- * Convenience method for removing timeout source(s) from Mainloop.
- */
-function timeout_remove(...timeouts) {
-    timeouts.forEach(t => {
-        if (t) {
-            Mainloop.source_remove(t);
-        }
-    });
-}
+            const [serial, monitors, logicalMonitors] = state;
+            for (const monitor of monitors) {
+                const [specs, modes, props] = monitor;
+                const [connector, vendor, product, serial] = specs;
+
+                // upgrade gnome monitor object to add connector
+                let gnomeIndex = this.monitorManager.get_monitor_for_connector(connector);
+                let gnomeMonitor = this.gnomeMonitors.find(m => m.index === gnomeIndex);
+                if (gnomeMonitor) {
+                    gnomeMonitor.connector = connector;
+                }
+            }
+
+            callback();
+        });
+    }
+
+    /**
+     * Downgrades Main.layoutManager.monitors to default gnome state (without "connector"
+     * information).
+     */
+    downgradeGnomeMonitors() {
+        this.gnomeMonitors.forEach(m => {
+            delete m.connector;
+        });
+    }
+
+    get monitorManager() {
+        return global.backend.get_monitor_manager();
+    }
+
+    get gnomeMonitors() {
+        return Main.layoutManager.monitors;
+    }
+};

@@ -21,11 +21,11 @@ let vy;
 let time;
 let vState;
 let navigator;
-let direction = undefined;
+let direction;
 let signals;
 // 1 is natural scrolling, -1 is unnatural
 let natural = 1;
-var gliding = false; //exported
+var gliding = false; // exported
 
 let touchpadSettings;
 function enable() {
@@ -159,7 +159,7 @@ function update(space, dx, t) {
     // Check which target windew will be selected if we releas the swipe at this
     // moment
     dx = Lib.sum(dxs.slice(-3));
-    let v = dx/(t - dts.slice(-3)[0]);
+    let v = dx / (t - dts.slice(-3)[0]);
     if (Number.isFinite(v)) {
         space.vx = v;
     }
@@ -190,10 +190,10 @@ function done(space) {
     let startGlide = space.targetX;
 
     // timetravel
-    let accel = Settings.prefs.swipe_friction[0]/16; // px/ms^2
+    let accel = Settings.prefs.swipe_friction[0] / 16; // px/ms^2
     accel = space.vx > 0 ? -accel : accel;
-    let t = -space.vx/accel;
-    let d = space.vx*t + .5*accel*t**2;
+    let t = -space.vx / accel;
+    let d = space.vx * t + .5 * accel * t ** 2;
     let target = Math.round(space.targetX - d);
 
     let mode = Clutter.AnimationMode.EASE_OUT_QUAD;
@@ -202,18 +202,18 @@ function done(space) {
 
     let full = space.cloneContainer.width > space.width;
     // Only snap to the edges if we started gliding when the viewport is fully covered
-    let snap = !(0 <= space.targetX ||
+    let snap = !(space.targetX >= 0 ||
                  space.targetX + space.cloneContainer.width <= space.width);
-    if ((snap && target > 0)
-        || (full && target > space.width*2)) {
+    if ((snap && target > 0) ||
+        (full && target > space.width * 2)) {
         // Snap to left edge
         first = space[0][0];
         target = 0;
         mode = Clutter.AnimationMode.EASE_OUT_BACK;
-    } else if ((snap && target + space.cloneContainer.width < space.width)
-               || (full && target + space.cloneContainer.width < -space.width)) {
+    } else if ((snap && target + space.cloneContainer.width < space.width) ||
+               (full && target + space.cloneContainer.width < -space.width)) {
         // Snap to right edge
-        last = space[space.length-1][0];
+        last = space[space.length - 1][0];
         target = space.width - space.cloneContainer.width;
         mode = Clutter.AnimationMode.EASE_OUT_BACK;
     }
@@ -229,7 +229,7 @@ function done(space) {
     // Scale down travel time if we've cut down the discance to travel
     let newD = Math.abs(startGlide - target);
     if (newD < Math.abs(d))
-        t = t*Math.abs(newD/d);
+        t *= Math.abs(newD / d);
 
     // Use a minimum duration if we've adjusted travel
     if (target !== space.targetX || mode === Clutter.AnimationMode.EASE_OUT_BACK) {
@@ -273,8 +273,8 @@ function findTargetWindow(space, direction) {
     let windows = space.getWindows().filter(w => {
         let  clone = w.clone;
         let x = clone.targetX + space.targetX;
-        return !(x + clone.width < min
-                 || x > min + workArea.width);
+        return !(x + clone.width < min ||
+                 x > min + workArea.width);
     });
     if (!direction) // scroll left
         windows.reverse();

@@ -11,16 +11,6 @@ const Tiling = Extension.imports.tiling;
 const TopBar = Extension.imports.topbar;
 let float, scratchFrame; // symbols used for expando properties on metawindow
 
-function focusMonitor() {
-    if (global.display.focus_window) {
-        return Main.layoutManager.monitors[global.display.focus_window.get_monitor()]
-    } else {
-        let [pointerX, pointerY, mask] = global.get_pointer();
-        let monitor = utils.monitorOfPoint(pointerX, pointerY);
-        return monitor || Main.layoutManager.primaryMonitor;
-    }
-}
-
 /**
    Tween window to "frame-coordinate" (targetX, targetY).
    The frame is moved once the tween is done.
@@ -28,7 +18,7 @@ function focusMonitor() {
    The actual window actor (not clone) is tweened to ensure it's on top of the
    other windows/clones (clones if the space animates)
  */
-function tweenScratch(metaWindow, targetX, targetY, tweenParams={}) {
+function easeScratch(metaWindow, targetX, targetY, tweenParams = {}) {
     let f = metaWindow.get_frame_rect();
     let b = metaWindow.get_buffer_rect();
     let dx = f.x - b.x;
@@ -42,10 +32,10 @@ function tweenScratch(metaWindow, targetX, targetY, tweenParams={}) {
         },
         tweenParams,
         {
-            onComplete: function (...args) {
+            onComplete (...args) {
                 metaWindow.move_frame(true, targetX, targetY);
                 tweenParams.onComplete && tweenParams.onComplete.apply(this, args);
-            }
+            },
         }));
 }
 
@@ -79,7 +69,7 @@ function makeScratch(metaWindow) {
 
         if (metaWindow[scratchFrame]) {
             let sf = metaWindow[scratchFrame];
-            if (utils.monitorOfPoint(sf.x, sf.y) === focusMonitor()) {
+            if (utils.monitorOfPoint(sf.x, sf.y) === Tiling.focusMonitor()) {
                 targetFrame = sf;
             }
         }
@@ -90,30 +80,30 @@ function makeScratch(metaWindow) {
             let [x, y] = windowPositionSeen;  // The window could be non-placable so can't use frame
 
             targetFrame = new Meta.Rectangle({
-                x: x, y: y + vDisplacement,
+                x, y: y + vDisplacement,
                 width: f.width,
-                height: Math.min(f.height - vDisplacement, Math.floor(f.height * 0.9))
-            })
+                height: Math.min(f.height - vDisplacement, Math.floor(f.height * 0.9)),
+            });
         }
 
         if (!metaWindow.minimized) {
             metaWindow.move_resize_frame(true, f.x, f.y,
-                                         targetFrame.width, targetFrame.height);
-            tweenScratch(metaWindow, targetFrame.x, targetFrame.y,
-                         {onComplete: () => delete metaWindow[scratchFrame]});
+                targetFrame.width, targetFrame.height);
+            easeScratch(metaWindow, targetFrame.x, targetFrame.y,
+                { onComplete: () => delete metaWindow[scratchFrame] });
         } else {
             // Can't restore the scratch geometry immediately since it distort the minimize animation
             // ASSUMPTION: minimize animation is not disabled and not already done
             let actor = metaWindow.get_compositor_private();
             let signal = actor.connect('effects-completed', () => {
                 metaWindow.move_resize_frame(true, targetFrame.x, targetFrame.y,
-                                             targetFrame.width, targetFrame.height);
-                actor.disconnect(signal)
-            })
+                    targetFrame.width, targetFrame.height);
+                actor.disconnect(signal);
+            });
         }
     }
 
-    let monitor = focusMonitor();
+    let monitor = Tiling.focusMonitor();
     if (monitor.clickOverlay)
         monitor.clickOverlay.hide();
 }
@@ -133,7 +123,7 @@ function toggle(metaWindow) {
         makeScratch(metaWindow);
 
         if (metaWindow.has_focus) {
-            let space = Tiling.spaces.get(global.workspace_manager.get_active_workspace());
+            let space = Tiling.spaces.activeSpace;
             space.setSelectionInactive();
         }
     }
@@ -174,7 +164,7 @@ function show(top) {
         return;
     }
     if (top)
-        windows = windows.slice(0,1);
+        windows = windows.slice(0, 1);
 
     TopBar.fixTopBar();
 
@@ -183,10 +173,10 @@ function show(top) {
             meta_window.unminimize();
             meta_window.make_above();
             meta_window.get_compositor_private().show();
-    });
+        });
     windows[0].activate(global.get_current_time());
 
-    let monitor = focusMonitor();
+    let monitor = Tiling.focusMonitor();
     if (monitor.clickOverlay)
         monitor.clickOverlay.hide();
 }
@@ -202,9 +192,9 @@ function animateWindows() {
     let ws = getScratchWindows().filter(w => !w.minimized);
     ws = global.display.sort_windows_by_stacking(ws);
     for (let w of ws) {
-        let parent = w.clone.get_parent()
+        let parent = w.clone.get_parent();
         parent && parent.remove_child(w.clone);
-        Main.uiGroup.insert_child_below(w.clone, Main.layoutManager.panelBox)
+        Main.uiGroup.insert_child_below(w.clone, Main.layoutManager.panelBox);
         let f = w.get_frame_rect();
         w.clone.set_position(f.x, f.y);
         Tiling.animateWindow(w);
@@ -213,7 +203,7 @@ function animateWindows() {
 
 function showWindows() {
     let ws = getScratchWindows().filter(w => !w.minimized);
-    ws.forEach(Tiling.showWindow)
+    ws.forEach(Tiling.showWindow);
 }
 
 let originalBuildMenu;

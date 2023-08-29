@@ -73,8 +73,8 @@ function disable() {
     customSpawnHandlers = null;
 }
 
-function launchFromWorkspaceDir(app, workspace=null) {
-    if (typeof(app) === 'string') {
+function launchFromWorkspaceDir(app, workspace = null) {
+    if (typeof  app === 'string') {
         app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
     }
     let dir = getWorkspaceDirectory(workspace);
@@ -126,7 +126,7 @@ function duplicateWindow(metaWindow) {
 }
 
 function trySpawnWindow(app, workspace) {
-    if (typeof(app) === 'string') {
+    if (typeof  app === 'string') {
         app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
     }
     let handler = customSpawnHandlers[app.id];
@@ -139,18 +139,18 @@ function trySpawnWindow(app, workspace) {
 }
 
 function spawnWindow(app, workspace) {
-    if (typeof(app) === 'string') {
+    if (typeof  app === 'string') {
         app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
     }
     try {
         return trySpawnWindow(app, workspace);
-    } catch(e) {
+    } catch (e) {
         // Let the overide take care any fallback
         return app.open_new_window(-1);
     }
 }
 
-function getWorkspaceDirectory(workspace=null) {
+function getWorkspaceDirectory(workspace = null) {
     let space  = workspace ? Tiling.spaces.get(workspace) : Tiling.spaces.selectedSpace;
 
     let dir = space.settings.get_string("directory");
@@ -161,14 +161,14 @@ function getWorkspaceDirectory(workspace=null) {
 }
 
 function expandCommandline(commandline, workspace) {
-    let dir = getWorkspaceDirectory(workspace)
+    let dir = getWorkspaceDirectory(workspace);
 
     commandline = commandline.replace(/%d/g, () => GLib.shell_quote(dir));
 
-    return commandline
+    return commandline;
 }
 
-function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir=false) {
+function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir = false) {
     return (app, space) => {
         let workspace = space.workspace;
         let commandline = expandCommandline(commandlineTemplate, workspace);
@@ -182,5 +182,5 @@ function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir=false) {
                 `Failed to run custom spawn handler for ${app.id}`,
                 `Attempted to run '${commandline}'`);
         }
-    }
+    };
 }

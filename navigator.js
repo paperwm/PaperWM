@@ -274,7 +274,7 @@ class NavigatorClass {
         this._block = Main.wm._blockAnimations;
         Main.wm._blockAnimations = true;
         // Meta.disable_unredirect_for_screen(screen);
-        this.space = Tiling.spaces.getActiveSpace();
+        this.space = Tiling.spaces.activeSpace;
 
         this._startWindow = this.space.selectedWindow;
         this.from = this.space;
@@ -300,7 +300,7 @@ class NavigatorClass {
             });
             this.minimaps.set(space, minimapId);
         } else {
-            typeof  minimap !== 'number' && minimap.show();
+            typeof minimap !== 'number' && minimap.show();
         }
     }
 
@@ -317,10 +317,12 @@ class NavigatorClass {
 
     destroy(space, focus) {
         this.minimaps.forEach(m => {
-            if (typeof  m === 'number')
+            if (typeof  m === 'number') {
                 Mainloop.source_remove(m);
-            else
+            }
+            else {
                 m.destroy();
+            }
         });
 
         if (Tiling.inGrab && !Tiling.inGrab.dnd) {
@@ -368,12 +370,12 @@ class NavigatorClass {
             // happens on workspace switch, but activating the same workspace
             // again doesn't trigger a switch signal
             if (force) {
-                Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId);
+                Tiling.spaces.switchWorkspace(null, workspaceId, workspaceId, force);
             }
         } else if (Tiling.inGrab && Tiling.inGrab.window) {
-            this.space.workspace.activate_with_focus(Tiling.inGrab.window, global.get_current_time());
+            this.space.activateWithFocus(Tiling.inGrab.window, true);
         } else {
-            this.space.workspace.activate(global.get_current_time());
+            this.space.activate(true);
         }
 
         selected = this.space.indexOf(selected) !== -1 ? selected
