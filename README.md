@@ -84,7 +84,7 @@ Swiping the trackpad horizontally with three fingers will scroll the tiling (onl
 PaperWM doesn't handle attached modal dialogs very well, so it's best to turn it off in Gnome Tweaks (under Windows).
 
 > **NOTE**
-> A summary of all current default Keybindings can be found in [Keybindings.md](Keybindings.md)
+> A summary of all current default Keybindings can be found in [keyBindings.md](keyBindings.md)
 
 | Keybindings                                                                                       |                                                        |
 | ------                                                                                            | -------                                                |
