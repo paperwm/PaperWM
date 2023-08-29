@@ -23,7 +23,7 @@ function registerPaperAction(actionName, handler, flags) {
     registerAction(
         actionName,
         handler,
-        {settings: settings, mutterFlags: flags, activeInNavigator: true});
+        { settings, mutterFlags: flags, activeInNavigator: true });
 }
 
 function registerNavigatorAction(name, handler) {
@@ -31,7 +31,7 @@ function registerNavigatorAction(name, handler) {
     registerAction(
         name,
         handler,
-        {settings: settings, opensNavigator: true});
+        { settings, opensNavigator: true });
 }
 
 function registerMinimapAction(name, handler) {
@@ -40,7 +40,7 @@ function registerMinimapAction(name, handler) {
         name,
         handler,
         {
-            settings: settings,
+            settings,
             opensNavigator: true,
             opensMinimap: true,
             mutterFlags: Meta.KeyBindingFlags.PER_WINDOW,
@@ -67,33 +67,46 @@ function setupActions() {
         liveAltTab, { settings });
     registerAction('live-alt-tab-backward',
         liveAltTab,
-        {settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED});
-
-    registerAction('switch-monitor-right', () => {
-        Tiling.spaces.switchMonitor(Meta.DisplayDirection.RIGHT, false);
-    }, {settings});
-    registerAction('switch-monitor-left', () => {
-        Tiling.spaces.switchMonitor(Meta.DisplayDirection.LEFT, false);
-    }, {settings});
-    registerAction('switch-monitor-above', () => {
-        Tiling.spaces.switchMonitor(Meta.DisplayDirection.UP, false);
-    }, {settings});
-    registerAction('switch-monitor-below', () => {
-        Tiling.spaces.switchMonitor(Meta.DisplayDirection.DOWN, false);
-    }, {settings});
+        { settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED });
 
     registerAction('move-monitor-right', () => {
         Tiling.spaces.switchMonitor(Meta.DisplayDirection.RIGHT, true);
-    }, {settings});
+    }, { settings });
     registerAction('move-monitor-left', () => {
         Tiling.spaces.switchMonitor(Meta.DisplayDirection.LEFT, true);
-    }, {settings});
+    }, { settings });
     registerAction('move-monitor-above', () => {
         Tiling.spaces.switchMonitor(Meta.DisplayDirection.UP, true);
-    }, {settings});
+    }, { settings });
     registerAction('move-monitor-below', () => {
         Tiling.spaces.switchMonitor(Meta.DisplayDirection.DOWN, true);
-    }, {settings});
+    }, { settings });
+
+    registerAction('switch-monitor-right', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.RIGHT, false);
+    }, { settings });
+    registerAction('switch-monitor-left', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.LEFT, false);
+    }, { settings });
+    registerAction('switch-monitor-above', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.UP, false);
+    }, { settings });
+    registerAction('switch-monitor-below', () => {
+        Tiling.spaces.switchMonitor(Meta.DisplayDirection.DOWN, false);
+    }, { settings });
+
+    registerAction('swap-monitor-right', () => {
+        Tiling.spaces.swapMonitor(Meta.DisplayDirection.RIGHT, Meta.DisplayDirection.LEFT);
+    }, { settings });
+    registerAction('swap-monitor-left', () => {
+        Tiling.spaces.swapMonitor(Meta.DisplayDirection.LEFT, Meta.DisplayDirection.RIGHT);
+    }, { settings });
+    registerAction('swap-monitor-above', () => {
+        Tiling.spaces.swapMonitor(Meta.DisplayDirection.UP, Meta.DisplayDirection.DOWN);
+    }, { settings });
+    registerAction('swap-monitor-below', () => {
+        Tiling.spaces.swapMonitor(Meta.DisplayDirection.DOWN, Meta.DisplayDirection.UP);
+    }, { settings });
 
     registerNavigatorAction('previous-workspace', Tiling.selectPreviousSpace);
     registerNavigatorAction('previous-workspace-backward', Tiling.selectPreviousSpaceBackwards);
@@ -186,7 +199,7 @@ function setupActions() {
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('close-window',
-        (metaWindow) =>
+        metaWindow =>
             metaWindow.delete(global.get_current_time()),
         Meta.KeyBindingFlags.PER_WINDOW);
 
@@ -206,7 +219,7 @@ function setupActions() {
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('paper-toggle-fullscreen',
-        (metaWindow) => {
+        metaWindow => {
             if (metaWindow.fullscreen)
                 metaWindow.unmake_fullscreen();
             else
@@ -232,11 +245,11 @@ function byId(mutterId) {
 }
 
 function asKeyHandler(actionHandler) {
-    return (display, mw, binding) => actionHandler(mw, Tiling.spaces.selectedSpace, {display, binding});
+    return (display, mw, binding) => actionHandler(mw, Tiling.spaces.selectedSpace, { display, binding });
 }
 
 function impliedOptions(options) {
-    options = options = Object.assign({mutterFlags: Meta.KeyBindingFlags.NONE}, options);
+    options = options = Object.assign({ mutterFlags: Meta.KeyBindingFlags.NONE }, options);
 
     if (options.opensMinimap)
         options.opensNavigator = true;
@@ -278,10 +291,10 @@ function registerAction(actionName, handler, options) {
     let action = {
         id: Meta.KeyBindingAction.NONE,
         name: actionName,
-        mutterName: mutterName,
-        keyHandler: keyHandler,
-        handler: handler,
-        options: options,
+        mutterName,
+        keyHandler,
+        handler,
+        options,
     };
 
     actions.push(action);
@@ -294,7 +307,7 @@ function registerAction(actionName, handler, options) {
 /**
  * Bind a key to an action (possibly creating a new action)
  */
-function bindkey(keystr, actionName=null, handler=null, options={}) {
+function bindkey(keystr, actionName = null, handler = null, options = {}) {
     Utils.assert(!options.settings,
         "Can only bind schemaless actions - change action's settings instead",
         actionName);
@@ -353,7 +366,7 @@ function bindkey(keystr, actionName=null, handler=null, options={}) {
 
 function unbindkey(actionIdOrKeystr) {
     let actionId;
-    if (typeof(actionIdOrKeystr) === "string") {
+    if (typeof  actionIdOrKeystr === "string") {
         const action = keycomboMap[keystrToKeycombo(actionIdOrKeystr)];
         actionId = action && action.id;
     } else {
@@ -367,7 +380,7 @@ function devirtualizeMask(gdkVirtualMask) {
     const keymap = Seat.get_keymap();
     let [success, rawMask] = keymap.map_virtual_modifiers(gdkVirtualMask);
     if (!success)
-        throw new Error("Couldn't devirtualize mask " + gdkVirtualMask);
+        throw new Error(`Couldn't devirtualize mask ${gdkVirtualMask}`);
     return rawMask;
 }
 
@@ -383,21 +396,21 @@ function openNavigatorHandler(actionName, keystr) {
         get_name: () => actionName,
         get_mask: () => mask,
         is_reversed: () => false,
-    }
+    };
     return function(display, screen, metaWindow) {
         return Navigator.preview_navigate(
-            metaWindow, null, {screen, display, binding});
-    }
+            metaWindow, null, { screen, display, binding });
+    };
 }
 
 function getActionIdByActionName(actionName) {
     // HACK!!
     try {
         return Meta.prefs_get_keybinding_action(actionName);
-    } catch(e) {
+    } catch (e) {
         try {
             return parseInt(e.message.split(" ")[0]);
-        } catch(e2) {
+        } catch (e2) {
             console.error("Could not find actionId for", actionName);
             return Meta.KeyBindingAction.NONE;
         }
@@ -407,7 +420,7 @@ function getActionIdByActionName(actionName) {
 function getBoundActionId(keystr) {
     let [dontcare, keycodes, mask] = Settings.accelerator_parse(keystr);
     if (keycodes.length > 1) {
-        throw new Error("Multiple keycodes " + keycodes + " " + keystr);
+        throw new Error(`Multiple keycodes ${keycodes} ${keystr}`);
     }
     const rawMask = devirtualizeMask(mask);
     return display.get_keybinding_action(keycodes[0], rawMask);
@@ -437,7 +450,7 @@ function disableAction(action) {
         action.id = Meta.KeyBindingAction.NONE;
         delete actionIdMap[oldId];
     } else {
-        display.ungrab_accelerator(action.id)
+        display.ungrab_accelerator(action.id);
         action.id = Meta.KeyBindingAction.NONE;
 
         delete nameMap[action.mutterName];
@@ -536,7 +549,7 @@ function overrideAction(mutterName, action) {
 function resolveConflicts() {
     resetConflicts();
     for (let conflict of Settings.findConflicts()) {
-        let {name, conflicts} = conflict;
+        let { name, conflicts } = conflict;
         let action = byMutterName(name);
         // Actionless key, can happen with updated schema without restart
         if (!action)
@@ -620,7 +633,7 @@ function resetConflicts() {
             break;
         case  'toggle-application-view':
             // overview._controls: Backward compatibility for 3.34 and below:
-            const viewSelector = (Main.overview._overview._controls || Main.overview.viewSelector || Main.overview._controls.viewSelector);
+            const viewSelector = Main.overview._overview._controls || Main.overview.viewSelector || Main.overview._controls.viewSelector;
 
             Main.wm.setCustomKeybindingHandler(
                 name,
@@ -662,7 +675,7 @@ function resetConflicts() {
         default:
             Meta.keybindings_set_custom_handler(name, null);
         }
-    };
+    }
     overrides = [];
 }
 

@@ -1996,6 +1996,46 @@ var Spaces = class Spaces extends Map {
         }
     }
 
+    swapMonitor(direction, backDirection) {
+        const monitor = focusMonitor();
+        const i = display.get_monitor_neighbor_index(monitor.index, direction);
+        if (i === -1)
+            return;
+
+        let t1, t2, t3;
+        // now have monitors, we need to mru down and then switch monitor and another mru down
+        const firstSwitch = () => {
+            this.selectStackSpace(Meta.MotionDirection.DOWN);
+            t1 = Mainloop.timeout_add(Settings.prefs.animation_time, firstMonitor);
+            return false;
+        };
+        const firstMonitor = () => {
+            Navigator.getNavigator().finish();
+            this.switchMonitor(direction);
+            this.selectStackSpace(Meta.MotionDirection.DOWN);
+            Utils.timeout_remove(t1);
+            t1 = null;
+            t2 = Mainloop.timeout_add(Settings.prefs.animation_time, backMonitor);
+            return false;
+        };
+        const backMonitor = () => {
+            Navigator.getNavigator().finish();
+            this.switchMonitor(backDirection);
+            this.selectStackSpace(Meta.MotionDirection.DOWN);
+            Utils.timeout_remove(t2);
+            t2 = null;
+            t3 = Mainloop.timeout_add(Settings.prefs.animation_time, () => {
+                Navigator.getNavigator().finish();
+                this.switchMonitor(direction);
+                Utils.timeout_remove(t3);
+                t3 = null;
+                return false;
+            });
+        };
+
+        firstSwitch();
+    }
+
     switchWorkspace(wm, fromIndex, toIndex, animate = false) {
         let to = workspaceManager.get_workspace_by_index(toIndex);
         let from = workspaceManager.get_workspace_by_index(fromIndex);
