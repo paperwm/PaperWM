@@ -89,6 +89,23 @@
         <summary>Switch to the below monitor</summary>
     </key>
 
+    <key type="as" name="swap-monitor-right">
+        <default><![CDATA[['<Super><Alt>Right']]]></default>
+        <summary>Swap workspace with monitor to the right</summary>
+    </key>
+    <key type="as" name="swap-monitor-left">
+        <default><![CDATA[['<Super><Alt>Left']]]></default>
+        <summary>Swap workspace with monitor to the left</summary>
+    </key>
+    <key type="as" name="swap-monitor-above">
+        <default><![CDATA[['<Super><Alt>Up']]]></default>
+        <summary>Swap workspace with monitor above</summary>
+    </key>
+    <key type="as" name="swap-monitor-below">
+        <default><![CDATA[['<Super><Alt>Down']]]></default>
+        <summary>Swap workspace with monitor below</summary>
+    </key>
+
     <key type="as" name="toggle-scratch-window">
       <default><![CDATA[['<Super>Escape']]]></default>
       <summary>Toggle the most recent scratch window</summary>

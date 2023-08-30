@@ -228,6 +228,8 @@ var Space = class Space extends Array {
             if (!spaces.isActiveSpace(this)) {
                 return;
             }
+            // warp pointer to monitor that is active
+            Utils.warpPointerToMonitor(this.monitor);
             Utils.later_add(Meta.LaterType.IDLE, () => {
                 ensureViewport(display.focus_window, this, { moveto: true, force: true });
             });
@@ -884,7 +886,6 @@ var Space = class Space extends Array {
 
     positionOf(metaWindow) {
         metaWindow = metaWindow || this.selectedWindow;
-        let index, row;
         for (let i = 0; i < this.length; i++) {
             if (this[i].includes(metaWindow))
                 return [i, this[i].indexOf(metaWindow)];
@@ -1956,7 +1957,7 @@ var Spaces = class Spaces extends Map {
         }
     }
 
-    switchMonitor(direction, move) {
+    switchMonitor(direction, move, warp = true) {
         let focus = display.focus_window;
         let monitor = focusMonitor();
         let currentSpace = this.monitors.get(monitor);
@@ -1964,7 +1965,9 @@ var Spaces = class Spaces extends Map {
         if (i === -1)
             return;
         let newMonitor = Main.layoutManager.monitors[i];
-        Utils.warpPointerToMonitor(newMonitor);
+        if (warp) {
+            Utils.warpPointerToMonitor(newMonitor);
+        }
         let space = this.monitors.get(newMonitor);
 
         if (move && focus) {
@@ -1993,6 +1996,28 @@ var Spaces = class Spaces extends Map {
         } else {
             space.activate();
         }
+    }
+
+    swapMonitor(direction, backDirection) {
+        const monitor = focusMonitor();
+        const i = display.get_monitor_neighbor_index(monitor.index, direction);
+        if (i === -1)
+            return;
+
+        let navFinish = () => Navigator.getNavigator().finish();
+        // action on current monitor
+        this.selectStackSpace(Meta.MotionDirection.DOWN);
+        navFinish();
+        // switch to target monitor and action mru
+        this.switchMonitor(direction, false, false);
+        this.selectStackSpace(Meta.MotionDirection.DOWN);
+        navFinish();
+        // switch back to orig monitor and action mru
+        this.switchMonitor(backDirection, false, false);
+        this.selectStackSpace(Meta.MotionDirection.DOWN);
+        navFinish();
+        // final switch with warp
+        this.switchMonitor(direction);
     }
 
     switchWorkspace(wm, fromIndex, toIndex, animate = false) {
@@ -2754,7 +2779,7 @@ function destroyHandler(actor) {
 function resizeHandler(metaWindow) {
     // if navigator is showing, reset/refresh it after a window has resized
     if (Navigator.navigating) {
-        Navigator.getNavigator().minimaps.forEach(m => m.reset());
+        Navigator.getNavigator().minimaps.forEach(m => typeof m !== 'number' && m.reset());
     }
 
     if (inGrab && inGrab.window === metaWindow)

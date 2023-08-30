@@ -3,10 +3,23 @@ const Extension = ExtensionUtils.getCurrentExtension();
 const Lib = Extension.imports.lib;
 const { GLib, Clutter, Meta, St, GdkPixbuf, Cogl, Gio } = imports.gi;
 const Main = imports.ui.main;
+const Ripples = imports.ui.ripples;
 const Mainloop = imports.mainloop;
 const Display = global.display;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number); // exported
+
+
+let warpRipple;
+function enable() {
+    warpRipple = new Ripples.Ripples(0.5, 0.5, 'ripple-pointer-location');
+    warpRipple.addTo(Main.uiGroup);
+}
+
+function disable() {
+    warpRipple?.destroy();
+    warpRipple = null;
+}
 
 let debug_all = false; // Turn off by default
 let debug_filter = { '#paperwm': true, '#stacktrace': true };
@@ -193,18 +206,54 @@ function toggleCloneMarks() {
     }
 }
 
+function isInRect(x, y, r) {
+    return r.x <= x && x < r.x + r.width &&
+        r.y <= y && y < r.y + r.height;
+}
+
+/**
+ * Returns monitor a pointer co-ordinates.
+ */
+function monitorAtPoint(gx, gy) {
+    for (let monitor of Main.layoutManager.monitors) {
+        if (isInRect(gx, gy, monitor))
+            return monitor;
+    }
+    return null;
+}
+
+/**
+ * Returns the monitor current pointer coordinates.
+ */
+function monitorAtCurrentPoint() {
+    let [gx, gy, $] = global.get_pointer();
+    return monitorAtPoint(gx, gy);
+}
+
 /**
  * Warps pointer to the center of a monitor.
  */
-function warpPointerToMonitor(monitor) {
+function warpPointerToMonitor(monitor, center = false) {
+    // no need to warp if already on this monitor
+    let currMonitor = monitorAtCurrentPoint();
+    if (currMonitor === monitor) {
+        return;
+    }
+
     let [x, y, _mods] = global.get_pointer();
-    x -= monitor.x;
-    y -= monitor.y;
-    if (x < 0 || x > monitor.width ||
-        y < 0 || y > monitor.height) {
+    if (center) {
+        x -= monitor.x;
+        y -= monitor.y;
         warpPointer(monitor.x + Math.floor(monitor.width / 2),
             monitor.y + Math.floor(monitor.height / 2));
+        return;
     }
+
+    let normX = x - currMonitor.x;
+    let normY = y - currMonitor.y;
+    warpPointer(
+        monitor.x + normX,
+        monitor.y + normY);
 }
 
 /**
@@ -214,6 +263,7 @@ function warpPointer(x, y) {
     let backend = Clutter.get_default_backend();
     let seat = backend.get_default_seat();
     seat.warp_pointer(x, y);
+    warpRipple.playAnimation(x, y);
 }
 
 /**
