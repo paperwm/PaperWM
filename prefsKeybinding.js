@@ -69,6 +69,10 @@ const actions = {
         'switch-monitor-left',
         'switch-monitor-above',
         'switch-monitor-below',
+        'swap-monitor-right',
+        'swap-monitor-left',
+        'swap-monitor-above',
+        'swap-monitor-below',
         'move-monitor-right',
         'move-monitor-left',
         'move-monitor-above',
@@ -77,7 +81,7 @@ const actions = {
     scratch: [
         'toggle-scratch-layer',
         'toggle-scratch',
-        'toggle-scratch-window'
+        'toggle-scratch-window',
     ],
 };
 

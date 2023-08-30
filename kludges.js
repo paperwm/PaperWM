@@ -14,9 +14,9 @@ const Scratch = Extension.imports.scratch;
 const { Meta, Gio, Clutter, Shell } = imports.gi;
 const Main = imports.ui.main;
 const Workspace = imports.ui.workspace;
-const WindowManager = imports.ui.windowManager;
+const WorkspaceThumbnail = imports.ui.workspaceThumbnail;
 const WorkspaceAnimation = imports.ui.workspaceAnimation;
-const ThumbnailsBox = imports.ui.workspaceThumbnail.ThumbnailsBox;
+const WindowManager = imports.ui.windowManager;
 const Mainloop = imports.mainloop;
 const Params = imports.misc.params;
 
@@ -123,7 +123,6 @@ function setupOverrides() {
             onComplete();
         });
 
-    registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow');
     if (Workspace.WindowClone)
         registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
 
@@ -172,8 +171,6 @@ function setupOverrides() {
             this._updateWindowPositions(flags);
         });
 
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
-
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
 
     if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
@@ -189,14 +186,13 @@ function setupOverrides() {
             });
     }
 
-    let layout = computeLayout40;
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', layout);
-
     // disable swipe gesture trackers
     swipeTrackers.forEach(t => {
         registerOverrideProp(t, "enabled", false);
     });
 
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
+    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', computeLayout40);
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
         let metaWindow = win.meta_window || win;
         if (gsettings.get_boolean('only-scratch-in-overview'))
@@ -204,13 +200,26 @@ function setupOverrides() {
         if (gsettings.get_boolean('disable-scratch-in-overview'))
             return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
     });
+    registerOverridePrototype(Workspace.Workspace, '_isMyWindow', function(window) {
+        const space = Tiling.spaces.spaceOf(this.metaWorkspace);
+        const onSpace = space.indexOf(window) >= 0;
+        const onMonitor = this._monitor === space.monitor;
+        return onSpace && onMonitor;
+    });
+    registerOverridePrototype(WorkspaceThumbnail.WorkspaceThumbnail, '_isMyWindow', function(actor) {
+        const window = actor.meta_window;
+        const space = Tiling.spaces.spaceOf(this.metaWorkspace);
+        const onSpace = space.indexOf(window) >= 0;
+        const onMonitor = this.monitorIndex === space.monitor.index;
+        return onSpace && onMonitor;
+    });
 
     /**
      * Always show workspace thumbnails in overview if more than one workspace.
      * See original function at:
      * https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/gnome-44/js/ui/workspaceThumbnail.js#L690
      */
-    registerOverridePrototype(ThumbnailsBox, '_updateShouldShow',
+    registerOverridePrototype(WorkspaceThumbnail.ThumbnailsBox, '_updateShouldShow',
         function () {
             const { nWorkspaces } = global.workspace_manager;
             const shouldShow = nWorkspaces > 1;
@@ -462,7 +471,7 @@ function computeLayout40(windows, layoutParams) {
             row.fullHeight = Math.max(row.fullHeight, height);
 
             // either new width is < idealWidth or new width is nearer from idealWidth then oldWidth
-            if (this._keepSameRow(row, window, width, idealRowWidth) || (i == numRows - 1)) {
+            if (this._keepSameRow(row, window, width, idealRowWidth) || (i === numRows - 1)) {
                 row.windows.push(window);
                 row.fullWidth += width;
             } else {
