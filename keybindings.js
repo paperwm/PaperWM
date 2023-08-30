@@ -184,8 +184,17 @@ function setupActions() {
             Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
+    registerPaperAction("cycle-width-backwards",
+        dynamic_function_ref("cycleWindowWidthBackwards",
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
+
     registerPaperAction("cycle-height",
         dynamic_function_ref("cycleWindowHeight",
+            Tiling),
+        Meta.KeyBindingFlags.PER_WINDOW);
+    registerPaperAction("cycle-height-backwards",
+        dynamic_function_ref("cycleWindowHeightBackwards",
             Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
 
