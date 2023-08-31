@@ -24,10 +24,10 @@ function getConflictSettings() {
         // Schemas that may contain conflicting keybindings
         // It's possible to inject or remove settings here on `user.init`.
         conflictSettings = [
-            new Gio.Settings({schema_id: 'org.gnome.mutter.keybindings'}),
-            new Gio.Settings({schema_id: 'org.gnome.mutter.wayland.keybindings'}),
-            new Gio.Settings({schema_id: "org.gnome.desktop.wm.keybindings"}),
-            new Gio.Settings({schema_id: "org.gnome.shell.keybindings"}),
+            new Gio.Settings({ schema_id: 'org.gnome.mutter.keybindings' }),
+            new Gio.Settings({ schema_id: 'org.gnome.mutter.wayland.keybindings' }),
+            new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings" }),
+            new Gio.Settings({ schema_id: "org.gnome.shell.keybindings" }),
         ];
     }
 
@@ -76,7 +76,7 @@ function disable() {
     conflictSettings = null;
 }
 
-/// Keybindings
+// / Keybindings
 
 /**
  * Depending on your gnome version, Gtk.accelerator_parse() can return a 2 value arrary
@@ -162,8 +162,7 @@ function generateKeycomboMap(settings) {
 function findConflicts(schemas) {
     schemas = schemas || getConflictSettings();
     let conflicts = [];
-    const paperMap =
-          generateKeycomboMap(ExtensionUtils.getSettings(KEYBINDINGS_KEY));
+    const paperMap = generateKeycomboMap(ExtensionUtils.getSettings(KEYBINDINGS_KEY));
 
     for (let settings of schemas) {
         const against = generateKeycomboMap(settings);
@@ -172,7 +171,7 @@ function findConflicts(schemas) {
                 conflicts.push({
                     name: paperMap[combo][0],
                     conflicts: against[combo],
-                    settings, combo
+                    settings, combo,
                 });
             }
         }
@@ -180,7 +179,7 @@ function findConflicts(schemas) {
     return conflicts;
 }
 
-/// Winprops
+// / Winprops
 
 /**
    Modelled after notion/ion3's system
@@ -209,10 +208,8 @@ function winprop_match_p(meta_window, prop) {
         if (prop.title instanceof RegExp) {
             if (!title.match(prop.title))
                 return false;
-        } else {
-            if (prop.title !== title)
-                return false;
-        }
+        } else if (prop.title !== title)
+            return false;
     }
 
     return true;
@@ -220,8 +217,6 @@ function winprop_match_p(meta_window, prop) {
 
 function find_winprop(meta_window)  {
     // sort by title first (prioritise title over wm_class)
-
-
     let props = winprops.filter(winprop_match_p.bind(null, meta_window));
 
     // if matching props found, return first one
@@ -234,7 +229,7 @@ function find_winprop(meta_window)  {
     if (starProps.length > 0) {
         return starProps[0];
     }
-    
+
     return null;
 }
 
@@ -246,7 +241,7 @@ function defwinprop(spec) {
             value: new Number((spec.preferredWidth.match(/\d+/) ?? ['0'])[0]),
             // unit is first contiguous block of apha chars or % char
             unit: (spec.preferredWidth.match(/[a-zA-Z%]+/) ?? ['NO_UNIT'])[0],
-        }
+        };
     }
 
     /**
@@ -259,7 +254,7 @@ function defwinprop(spec) {
     winprops.push(spec);
 
     // now order winprops with gsettings first, then title over wm_class
-    winprops.sort((a,b) => {
+    winprops.sort((a, b) => {
         let firstresult = 0;
         if (a.gsetting && !b.gsetting) {
             firstresult = -1;
@@ -282,7 +277,7 @@ function defwinprop(spec) {
 }
 
 /**
- * Adds user-defined winprops from gsettings (as defined in 
+ * Adds user-defined winprops from gsettings (as defined in
  * org.gnome.shell.extensions.paperwm.winprops) to the winprops array.
  */
 function addWinpropsFromGSettings() {
@@ -320,7 +315,7 @@ function removeGSettingWinpropsFromArray() {
 /**
  * Effectively reloads winprops from gsettings.
  * This is a convenience function which removes gsetting winprops from winprops
- * array and then adds the currently defined 
+ * array and then adds the currently defined
  * org.gnome.shell.extensions.paperwm.winprops winprops.
  */
 function reloadWinpropsFromGSettings() {
