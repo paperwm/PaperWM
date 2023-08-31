@@ -319,7 +319,7 @@ function bindkey(keystr, actionName = null, handler = null, options = {}) {
         action = registerAction(actionName, handler, options);
     } else {
         let boundAction = keycomboMap[keycombo];
-        if (boundAction && boundAction != action) {
+        if (boundAction && boundAction !== action) {
             console.debug("Rebinding", keystr, "to", actionName, "from", boundAction.name);
             disableAction(boundAction);
         }
@@ -485,14 +485,7 @@ function enableAction(action) {
             return Meta.KeyBindingAction.NONE;
         }
 
-        let actionId;
-        if (display.grab_accelerator.length > 1) {
-            actionId = display.grab_accelerator(action.keystr, Meta.KeyBindingFlags.NONE);
-        } else  {
-            // gnome-shell 3.2x
-            actionId = display.grab_accelerator(action.keystr);
-        }
-
+        let actionId = Utils.grab_accelerator(action.keystr);
         if (actionId === Meta.KeyBindingAction.NONE) {
             console.warn("Failed to grab. Binding probably already taken");
             return Meta.KeyBindingAction.NONE;
