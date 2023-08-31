@@ -27,9 +27,7 @@ function findPrev(cur, values, slack=0) {
     let i = 0;
     for (;i < values.length; i++) {
         let x = values[i];
-        log(`i at ${i}, x=${x}, slack=${slack}, cur=${cur}`);
         if (x + slack >= cur) {
-            log(`breaking`);
             break;
         }
     }
