@@ -95,7 +95,6 @@ function setupActions() {
         Tiling.spaces.switchMonitor(Meta.DisplayDirection.DOWN, false);
     }, { settings });
 
-    /*
     registerAction('swap-monitor-right', () => {
         Tiling.spaces.swapMonitor(Meta.DisplayDirection.RIGHT, Meta.DisplayDirection.LEFT);
     }, { settings });
@@ -108,7 +107,6 @@ function setupActions() {
     registerAction('swap-monitor-below', () => {
         Tiling.spaces.swapMonitor(Meta.DisplayDirection.DOWN, Meta.DisplayDirection.UP);
     }, { settings });
-    */
 
     registerNavigatorAction('previous-workspace', Tiling.selectPreviousSpace);
     registerNavigatorAction('previous-workspace-backward', Tiling.selectPreviousSpaceBackwards);
