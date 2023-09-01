@@ -402,20 +402,6 @@ function openNavigatorHandler(actionName, keystr) {
     };
 }
 
-function getActionIdByActionName(actionName) {
-    // HACK!!
-    try {
-        return Meta.prefs_get_keybinding_action(actionName);
-    } catch (e) {
-        try {
-            return parseInt(e.message.split(" ")[0]);
-        } catch (e2) {
-            console.error("Could not find actionId for", actionName);
-            return Meta.KeyBindingAction.NONE;
-        }
-    }
-}
-
 function getBoundActionId(keystr) {
     let [dontcare, keycodes, mask] = Settings.accelerator_parse(keystr);
     if (keycodes.length > 1) {
@@ -509,24 +495,6 @@ function enableAction(action) {
 
         return action.id;
     }
-}
-
-function getActionId(mutterName) {
-    let id;
-    try {
-        id = Meta.prefs_get_keybinding_action(mutterName);
-    } catch (e) {
-        // This is a pretty ugly hack to extract any action id
-        // When the mutterName isn't a builtin it throws, exposing the id in the
-        // message.
-
-        // The error message starts off with the action id, so we just strip
-        // everything after that.
-        id = Number.parseInt(e.message.replace(/ .*$/, ''));
-        if (!Number.isInteger(id))
-            throw Error(`${id} is not an integer, broken hack`);
-    }
-    return id;
 }
 
 function resolveConflicts() {
