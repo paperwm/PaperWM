@@ -49,14 +49,13 @@ function registerMinimapAction(name, handler) {
 }
 
 
-let signals, actions, nameMap, actionIdMap, keycomboMap, overrides;
+let signals, actions, nameMap, actionIdMap, keycomboMap;
 function setupActions() {
     signals = new Utils.Signals();
     actions = [];
     nameMap = {};     // mutter keybinding action name -> action
     actionIdMap = {}; // actionID   -> action
     keycomboMap = {}; // keycombo   -> action
-    overrides = [];   // action names that have been given a custom handler
 
     /* Initialize keybindings */
     let dynamic_function_ref = Utils.dynamic_function_ref;
@@ -530,182 +529,32 @@ function getActionId(mutterName) {
     return id;
 }
 
-function overrideAction(mutterName, action) {
-    let id = getActionId(mutterName);
-    Main.wm.setCustomKeybindingHandler(mutterName, Shell.ActionMode.NORMAL,
-        action.keyHandler);
-    if (id === Meta.KeyBindingAction.NONE)
-        return;
-    actionIdMap[id] = action;
-}
-
 function resolveConflicts() {
-    //resetConflicts();
-
     Settings.overrideConflicts();
-
-    /*
-    for (let conflict of Settings.findConflicts()) {
-        let { name, conflicts } = conflict;
-        let action = byMutterName(name);
-        // Actionless key, can happen with updated schema without restart
-        if (!action)
-            continue;
-        conflicts.forEach(c => overrideAction(c, action));
-        overrides.push(conflict);
-    }
-    */
-}
-
-function resetConflicts() {
-    let names = overrides.reduce((sum, add) => sum.concat(add.conflicts), []);
-    for (let name of names) {
-        let id = getActionId(name);
-        delete actionIdMap[id];
-        // Bultin mutter actions can be reset by setting their custom handler to
-        // null. However gnome-shell often sets a custom handler of its own,
-        // which means we most often can't rely on that
-        if (name.startsWith('switch-to-workspace-') ||
-            name.startsWith('move-to-workspace-')) {
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
-                Main.wm._showWorkspaceSwitcher.bind(Main.wm));
-            continue;
-        }
-        switch (name) {
-        case 'cycle-group': case 'cycle-group-backwards':
-        case 'cycle-windows': case 'cycle-windows-backwards':
-        case 'switch-applications': case 'switch-applications-backward':
-        case 'switch-group': case 'switch-group-backward':
-            Main.wm.setCustomKeybindingHandler(
-                name, Shell.ActionMode.NORMAL,
-                Main.wm._startSwitcher.bind(Main.wm));
-            break;
-        case 'switch-panels': case 'switch-panels-backwards':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW |
-                    Shell.ActionMode.LOCK_SCREEN |
-                    Shell.ActionMode.UNLOCK_SCREEN |
-                    Shell.ActionMode.LOGIN_SCREEN,
-                Main.wm._startA11ySwitcher.bind(Main.wm));
-            break;
-        case 'switch-monitor':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                Main.wm._startSwitcher.bind(Main.wm));
-            break;
-        case 'focus-active-notification':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                Main.messageTray._expandActiveNotification.bind(Main.messageTray));
-            break;
-        case 'pause-resume-tweens':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW |
-                    Shell.ActionMode.POPUP,
-                Main.wm._toggleCalendar.bind(Main.wm));
-            break;
-        case 'open-application-menu':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.POPUP,
-                Main.wm._toggleAppMenu.bind(Main.wm));
-            break;
-        case 'toggle-message-tray':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW |
-                    Shell.ActionMode.POPUP,
-                Main.wm._toggleCalendar.bind(Main.wm));
-            break;
-        case  'toggle-application-view':
-            // overview._controls: Backward compatibility for 3.34 and below:
-            const viewSelector =
-                Main.overview._overview._controls ||
-                Main.overview.viewSelector ||
-                Main.overview._controls.viewSelector;
-
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                viewSelector._toggleAppsPage.bind(viewSelector));
-            break;
-        case 'toggle-overview':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                Main.overview.toggle.bind(Main.overview));
-            break;
-        case 'switch-input-source':
-        case 'switch-input-source-backward':
-            const inputSourceIndicator = Main.inputMethod._inputSourceManager;
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.ALL,
-                inputSourceIndicator._switchInputSource.bind(inputSourceIndicator));
-            break;
-        case 'panel-main-menu':
-            const sessionMode = Main.sessionMode;
-            const overview = Main.overview;
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                sessionMode.hasOverview ? overview.toggle.bind(overview) : null);
-            break;
-        case 'panel-run-dialog':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                Main.sessionMode.hasRunDialog ? Main.openRunDialog : null);
-            break;
-        default:
-            Meta.keybindings_set_custom_handler(name, null);
-        }
-    }
-    overrides = [];
 }
 
 function enable() {
     setupActions();
-    let schemas = [...Settings.getConflictSettings(),
-        ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
+    let schemas = [...Settings.getConflictSettings(), ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
     schemas.forEach(schema => {
         signals.connect(schema, 'changed', resolveConflicts);
     });
 
-    signals.connect(
-        display,
+    signals.connect(display,
         'accelerator-activated',
         Utils.dynamic_function_ref(handleAccelerator.name, this)
     );
     actions.forEach(enableAction);
-    resolveConflicts(schemas);
+    resolveConflicts();
 }
 
 function disable() {
     signals.destroy();
     signals = null;
     actions.forEach(disableAction);
-    resetConflicts();
 
     actions = null;
     nameMap = null;
     actionIdMap = null;
     keycomboMap = null;
-    overrides = null;
 }

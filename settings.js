@@ -216,10 +216,18 @@ function overrideConflicts() {
         });
     }
 
+    // save override list
     ExtensionUtils.getSettings(KEYBINDINGS_KEY).set_string('overrides', JSON.stringify(saveList));
 
     // now disable all conflicts
     disableAll.forEach(d => d());
+}
+
+/**
+ * Restores previously overridden conflicts.
+ */
+function restoreConflicts() {
+
 }
 
 // / Winprops
