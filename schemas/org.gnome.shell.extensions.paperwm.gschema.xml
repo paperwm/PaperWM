@@ -4,6 +4,11 @@
   <schema id="org.gnome.shell.extensions.paperwm.keybindings"
           path="/org/gnome/shell/extensions/paperwm/keybindings/">
 
+    <key type="s" name="overrides">
+        <default>''</default>
+        <summary>Keybind overrides saved for restoring after PaperWM disable</summary>
+    </key>
+
     <key type="as" name="new-window">
       <default><![CDATA[['<Super>Return', '<Super>n']]]></default>
       <summary>Open new window</summary>

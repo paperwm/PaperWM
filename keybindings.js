@@ -540,7 +540,11 @@ function overrideAction(mutterName, action) {
 }
 
 function resolveConflicts() {
-    resetConflicts();
+    //resetConflicts();
+
+    Settings.overrideConflicts();
+
+    /*
     for (let conflict of Settings.findConflicts()) {
         let { name, conflicts } = conflict;
         let action = byMutterName(name);
@@ -550,6 +554,7 @@ function resolveConflicts() {
         conflicts.forEach(c => overrideAction(c, action));
         overrides.push(conflict);
     }
+    */
 }
 
 function resetConflicts() {

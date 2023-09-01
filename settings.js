@@ -1,5 +1,5 @@
 const ExtensionUtils = imports.misc.extensionUtils;
-const { Gio, Gtk } = imports.gi;
+const { Gio, Gtk, GLib } = imports.gi;
 
 /**
     Settings utility shared between the running extension and the preference UI.
@@ -177,6 +177,49 @@ function findConflicts(schemas) {
         }
     }
     return conflicts;
+}
+
+/**
+ * Override conflicts and save original values for restore.
+ */
+function overrideConflicts() {
+    // reconstitute saveList
+    let saveListJson = ExtensionUtils.getSettings(KEYBINDINGS_KEY).get_string('overrides');
+    let saveList, disableAll = [];
+    try {
+        saveList = JSON.parse(saveListJson);
+    } catch (error) {
+        saveList = [];
+    }
+    const foundConflicts = findConflicts();
+    for (let conflict of foundConflicts) {
+        // save conflicts (list of names of conflicting keybinds)
+        let { name, conflicts, settings } = conflict;
+
+        conflicts.forEach(c => {
+            // get current value
+            const keybind = settings.get_value(c);
+
+            let object = {
+                key: c,
+                bind: JSON.stringify(keybind.deep_unpack()),
+            };
+
+            // add only if doesn't exist
+            let index = saveList.findIndex(o => o.key === object.key);
+            if (index === -1) {
+                saveList.push(object);
+            }
+
+            // now disable conflict
+            disableAll.push(() => settings.set_value(c, new GLib.Variant('as', [])));
+        });
+    }
+
+    ExtensionUtils.getSettings(KEYBINDINGS_KEY).set_string('overrides', JSON.stringify(saveList));
+
+    // now disable all conflicts
+    disableAll.forEach(d => d());
 }
 
 // / Winprops
