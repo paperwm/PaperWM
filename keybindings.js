@@ -552,6 +552,7 @@ function disable() {
     signals.destroy();
     signals = null;
     actions.forEach(disableAction);
+    Settings.restoreConflicts();
 
     actions = null;
     nameMap = null;

@@ -180,17 +180,33 @@ function findConflicts(schemas) {
 }
 
 /**
- * Override conflicts and save original values for restore.
+ * Returns / reconstitutes saved overrides list.
  */
-function overrideConflicts() {
-    // reconstitute saveList
+function getSavedOverrides() {
     let saveListJson = ExtensionUtils.getSettings(KEYBINDINGS_KEY).get_string('overrides');
-    let saveList, disableAll = [];
+    let saveList;
     try {
         saveList = JSON.parse(saveListJson);
     } catch (error) {
         saveList = [];
     }
+    return saveList;
+}
+
+/**
+ * Saves an overrides list.
+ */
+function saveOverrides(overrides) {
+    ExtensionUtils.getSettings(KEYBINDINGS_KEY).set_string('overrides', JSON.stringify(overrides));
+}
+
+/**
+ * Override conflicts and save original values for restore.
+ */
+function overrideConflicts() {
+    let saveList = getSavedOverrides();
+    let disableAll = [];
+
     const foundConflicts = findConflicts();
     for (let conflict of foundConflicts) {
         // save conflicts (list of names of conflicting keybinds)
@@ -203,6 +219,7 @@ function overrideConflicts() {
             let object = {
                 key: c,
                 bind: JSON.stringify(keybind.deep_unpack()),
+                schema_id: settings.schema_id,
             };
 
             // add only if doesn't exist
@@ -217,7 +234,7 @@ function overrideConflicts() {
     }
 
     // save override list
-    ExtensionUtils.getSettings(KEYBINDINGS_KEY).set_string('overrides', JSON.stringify(saveList));
+    saveOverrides(saveList);
 
     // now disable all conflicts
     disableAll.forEach(d => d());
@@ -227,7 +244,21 @@ function overrideConflicts() {
  * Restores previously overridden conflicts.
  */
 function restoreConflicts() {
+    let saveList = getSavedOverrides();
+    const remove = [];
+    saveList.forEach(saved => {
+        const settings = getConflictSettings().find(s => s.schema_id === saved.schema_id);
+        if (settings) {
+            const keybind = JSON.parse(saved.bind);
+            settings.set_value(saved.key, new GLib.Variant('as', keybind));
 
+            remove.push(saved);
+        }
+    });
+
+    // now remove restored from list
+    saveList = saveList.filter(s => !remove.includes(s));
+    saveOverrides(saveList);
 }
 
 // / Winprops
