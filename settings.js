@@ -186,9 +186,9 @@ function getSavedOverrides() {
     let saveListJson = ExtensionUtils.getSettings(KEYBINDINGS_KEY).get_string('overrides');
     let saveList;
     try {
-        saveList = JSON.parse(saveListJson);
+        saveList = new Map(Object.entries(JSON.parse(saveListJson)));
     } catch (error) {
-        saveList = [];
+        saveList = new Map();
     }
     return saveList;
 }
@@ -197,7 +197,8 @@ function getSavedOverrides() {
  * Saves an overrides list.
  */
 function saveOverrides(overrides) {
-    ExtensionUtils.getSettings(KEYBINDINGS_KEY).set_string('overrides', JSON.stringify(overrides));
+    ExtensionUtils.getSettings(KEYBINDINGS_KEY)
+        .set_string('overrides', JSON.stringify(Object.fromEntries(overrides)));
 }
 
 /**
@@ -217,16 +218,11 @@ function overrideConflicts() {
             const keybind = settings.get_value(c);
 
             let object = {
-                key: c,
                 bind: JSON.stringify(keybind.deep_unpack()),
                 schema_id: settings.schema_id,
             };
 
-            // add only if doesn't exist
-            let index = saveList.findIndex(o => o.key === object.key);
-            if (index === -1) {
-                saveList.push(object);
-            }
+            saveList.set(c, object);
 
             // now disable conflict
             disableAll.push(() => settings.set_value(c, new GLib.Variant('as', [])));
@@ -246,18 +242,18 @@ function overrideConflicts() {
 function restoreConflicts() {
     let saveList = getSavedOverrides();
     const remove = [];
-    saveList.forEach(saved => {
+    saveList.forEach((saved, key) => {
         const settings = getConflictSettings().find(s => s.schema_id === saved.schema_id);
         if (settings) {
             const keybind = JSON.parse(saved.bind);
-            settings.set_value(saved.key, new GLib.Variant('as', keybind));
+            settings.set_value(key, new GLib.Variant('as', keybind));
 
-            remove.push(saved);
+            remove.push(key);
         }
     });
 
-    // now remove restored from list
-    saveList = saveList.filter(s => !remove.includes(s));
+    // now remove retored keybinds from list
+    remove.forEach(key => saveList.delete(key));
     saveOverrides(saveList);
 }
 
