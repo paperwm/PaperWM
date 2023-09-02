@@ -497,23 +497,21 @@ function enableAction(action) {
     }
 }
 
-function resolveConflicts() {
-    Settings.overrideConflicts();
-}
-
 function enable() {
     setupActions();
-    let schemas = [...Settings.getConflictSettings(), ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
-    schemas.forEach(schema => {
-        signals.connect(schema, 'changed', resolveConflicts);
-    });
-
     signals.connect(display,
         'accelerator-activated',
         Utils.dynamic_function_ref(handleAccelerator.name, this)
     );
     actions.forEach(enableAction);
-    resolveConflicts();
+    Settings.overrideConflicts();
+
+    let schemas = [...Settings.getConflictSettings(), ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
+    schemas.forEach(schema => {
+        signals.connect(schema, 'changed', (settings, key) => {
+            Settings.conflictKeyChanged(settings, key);
+        });
+    });
 }
 
 function disable() {

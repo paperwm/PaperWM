@@ -1,5 +1,6 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const { Gio, Gtk, GLib } = imports.gi;
+const Utils = ExtensionUtils.getCurrentExtension().imports.utils;
 
 /**
     Settings utility shared between the running extension and the preference UI.
@@ -35,9 +36,10 @@ function getConflictSettings() {
 }
 
 var prefs;
-let gsettings;
+let gsettings, _overriddingConflicts;
 function enable() {
     gsettings = ExtensionUtils.getSettings();
+    _overriddingConflicts = false;
     prefs = {};
     ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
         'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
@@ -72,6 +74,7 @@ function enable() {
 
 function disable() {
     gsettings = null;
+    _overriddingConflicts = null;
     prefs = null;
     conflictSettings = null;
 }
@@ -201,10 +204,33 @@ function saveOverrides(overrides) {
         .set_string('overrides', JSON.stringify(Object.fromEntries(overrides)));
 }
 
+function conflictKeyChanged(settings, key) {
+    if (_overriddingConflicts) {
+        return;
+    }
+
+    const newKeybind = settings.get_value(key).deep_unpack();
+    if (Array.isArray(newKeybind) && newKeybind.length === 0)
+        return;
+    }
+
+    const saveList = getSavedOverrides();
+    saveList.delete(key);
+    saveOverrides(saveList);
+
+    // check for new conflicts
+    overrideConflicts();
+}
+
 /**
  * Override conflicts and save original values for restore.
  */
 function overrideConflicts() {
+    if (_overriddingConflicts) {
+        return;
+    }
+
+    _overriddingConflicts = true;
     let saveList = getSavedOverrides();
     let disableAll = [];
 
@@ -217,7 +243,7 @@ function overrideConflicts() {
             // get current value
             const keybind = settings.get_value(c);
 
-            let object = {
+            const object = {
                 bind: JSON.stringify(keybind.deep_unpack()),
                 schema_id: settings.schema_id,
             };
@@ -234,6 +260,7 @@ function overrideConflicts() {
 
     // now disable all conflicts
     disableAll.forEach(d => d());
+    _overriddingConflicts = false;
 }
 
 /**
@@ -241,19 +268,20 @@ function overrideConflicts() {
  */
 function restoreConflicts() {
     let saveList = getSavedOverrides();
-    const remove = [];
+    const toRemove = [];
     saveList.forEach((saved, key) => {
         const settings = getConflictSettings().find(s => s.schema_id === saved.schema_id);
         if (settings) {
             const keybind = JSON.parse(saved.bind);
-            settings.set_value(key, new GLib.Variant('as', keybind));
-
-            remove.push(key);
+            toRemove.push({ key, remove: () => settings.set_value(key, new GLib.Variant('as', keybind)) });
         }
     });
 
     // now remove retored keybinds from list
-    remove.forEach(key => saveList.delete(key));
+    toRemove.forEach(r => {
+        r.remove();
+        saveList.delete(r.key);
+    });
     saveOverrides(saveList);
 }
 
