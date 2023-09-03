@@ -515,8 +515,8 @@ function enable() {
             const numConflicts = Settings.conflictKeyChanged(settings, key);
             if (numConflicts > 0) {
                 Main.notify(
-                    `PaperWM: overriding \`${key}\` keybind`,
-                    `This Gnome Keybind will be restored when PaperWM is disabled.`);
+                    `PaperWM: overriding '${key}' keybind`,
+                    `this Gnome Keybind will be restored when PaperWM is disabled`);
             }
         });
     });
