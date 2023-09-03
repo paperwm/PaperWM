@@ -498,6 +498,10 @@ function enableAction(action) {
 }
 
 function enable() {
+    // restore previous keybinds (in case failed to restore last time)
+    Settings.updateOverrides();
+    Settings.restoreConflicts();
+
     setupActions();
     signals.connect(display,
         'accelerator-activated',

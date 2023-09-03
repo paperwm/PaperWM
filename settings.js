@@ -1,6 +1,5 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const { Gio, Gtk, GLib } = imports.gi;
-const Utils = ExtensionUtils.getCurrentExtension().imports.utils;
 
 /**
     Settings utility shared between the running extension and the preference UI.
@@ -242,13 +241,10 @@ function overrideConflicts() {
         conflicts.forEach(c => {
             // get current value
             const keybind = settings.get_value(c);
-
-            const object = {
+            saveList.set(c, {
                 bind: JSON.stringify(keybind.deep_unpack()),
                 schema_id: settings.schema_id,
-            };
-
-            saveList.set(c, object);
+            });
 
             // now disable conflict
             disableAll.push(() => settings.set_value(c, new GLib.Variant('as', [])));
@@ -261,6 +257,30 @@ function overrideConflicts() {
     // now disable all conflicts
     disableAll.forEach(d => d());
     _overriddingConflicts = false;
+}
+
+/**
+ * Update overrides to their current keybinds.
+ */
+function updateOverrides() {
+    let saveList = getSavedOverrides();
+    saveList.forEach((saved, key) => {
+        const settings = getConflictSettings().find(s => s.schema_id === saved.schema_id);
+        if (settings) {
+            const newKeybind = settings.get_value(key).deep_unpack();
+            if (Array.isArray(newKeybind) && newKeybind.length === 0) {
+                return;
+            }
+
+            saveList.set(key, {
+                bind: JSON.stringify(newKeybind.deep_unpack()),
+                schema_id: settings.schema_id,
+            });
+        }
+    });
+
+    // save override list
+    saveOverrides(saveList);
 }
 
 /**
