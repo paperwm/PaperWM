@@ -9,6 +9,7 @@ const Utils = ExtensionUtils.getCurrentExtension().imports.utils;
  */
 
 let KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
+let RESTORE_KEYBINDS_KEY = 'restore-keybinds';
 
 // This is the value mutter uses for the keyvalue of above_tab
 let META_KEY_ABOVE_TAB = 0x2f7259c9;
@@ -186,7 +187,7 @@ function findConflicts(schemas) {
  * Returns / reconstitutes saved overrides list.
  */
 function getSavedOverrides() {
-    let saveListJson = ExtensionUtils.getSettings(KEYBINDINGS_KEY).get_string('overrides');
+    let saveListJson = gsettings.get_string(RESTORE_KEYBINDS_KEY);
     let saveList;
     try {
         saveList = new Map(Object.entries(JSON.parse(saveListJson)));
@@ -200,8 +201,7 @@ function getSavedOverrides() {
  * Saves an overrides list.
  */
 function saveOverrides(overrides) {
-    ExtensionUtils.getSettings(KEYBINDINGS_KEY)
-        .set_string('overrides', JSON.stringify(Object.fromEntries(overrides)));
+    gsettings.set_string(RESTORE_KEYBINDS_KEY, JSON.stringify(Object.fromEntries(overrides)));
 }
 
 function conflictKeyChanged(settings, key) {
@@ -210,7 +210,7 @@ function conflictKeyChanged(settings, key) {
     }
 
     const newKeybind = settings.get_value(key).deep_unpack();
-    if (Array.isArray(newKeybind) && newKeybind.length === 0)
+    if (Array.isArray(newKeybind) && newKeybind.length === 0) {
         return;
     }
 
