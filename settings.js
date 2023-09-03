@@ -273,7 +273,7 @@ function updateOverrides() {
             }
 
             saveList.set(key, {
-                bind: JSON.stringify(newKeybind.deep_unpack()),
+                bind: JSON.stringify(newKeybind),
                 schema_id: settings.schema_id,
             });
         }
