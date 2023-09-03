@@ -218,21 +218,24 @@ function conflictKeyChanged(settings, key) {
     saveOverrides(saveList);
 
     // check for new conflicts
-    return overrideConflicts();
+    return overrideConflicts(key);
 }
 
 /**
  * Override conflicts and save original values for restore.
  */
-function overrideConflicts() {
+function overrideConflicts(checkKey = null) {
     if (_overriddingConflicts) {
         return;
     }
 
     _overriddingConflicts = true;
     let saveList = getSavedOverrides();
-    let disableAll = [];
 
+    // restore orignal keybinds prior to conflict overriding
+    restoreConflicts();
+
+    let disableAll = [];
     const foundConflicts = findConflicts();
     for (let conflict of foundConflicts) {
         // save conflicts (list of names of conflicting keybinds)
@@ -258,7 +261,7 @@ function overrideConflicts() {
     disableAll.forEach(d => d());
     _overriddingConflicts = false;
 
-    return foundConflicts.length;
+    return checkKey ? saveList.has(checkKey) : false;
 }
 
 /**
