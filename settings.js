@@ -218,7 +218,7 @@ function conflictKeyChanged(settings, key) {
     saveOverrides(saveList);
 
     // check for new conflicts
-    overrideConflicts();
+    return overrideConflicts();
 }
 
 /**
@@ -257,6 +257,8 @@ function overrideConflicts() {
     // now disable all conflicts
     disableAll.forEach(d => d());
     _overriddingConflicts = false;
+
+    return foundConflicts.length;
 }
 
 /**

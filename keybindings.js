@@ -498,7 +498,7 @@ function enableAction(action) {
 }
 
 function enable() {
-    // restore previous keybinds (in case failed to restore last time)
+    // restore previous keybinds (in case failed to restore last time, e.g. gnome crash etc)
     Settings.updateOverrides();
     Settings.restoreConflicts();
 
@@ -513,7 +513,12 @@ function enable() {
     let schemas = [...Settings.getConflictSettings(), ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
     schemas.forEach(schema => {
         signals.connect(schema, 'changed', (settings, key) => {
-            Settings.conflictKeyChanged(settings, key);
+            const numConflicts = Settings.conflictKeyChanged(settings, key);
+            if (numConflicts > 0) {
+                Main.notify(
+                    `PaperWM: Overriding Keybind!`,
+                    `Disabled Gnome keybind due to a clash with a PaperWM keybind.`);
+            }
         });
     });
 }
