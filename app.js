@@ -4,7 +4,7 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const ExtensionModule = Extension.imports.extension;
-const Kludges = Extension.imports.kludges;
+const Patches = Extension.imports.patches;
 const Tiling = Extension.imports.tiling;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
@@ -29,7 +29,7 @@ function enable() {
         }
     }
 
-    let overrideWithFallback = Kludges.overrideWithFallback;
+    let overrideWithFallback = Patches.overrideWithFallback;
 
     overrideWithFallback(
         Shell.App, "open_new_window",
@@ -120,7 +120,7 @@ function duplicateWindow(metaWindow) {
 
     let workspaceId = metaWindow.get_workspace().workspace_index;
 
-    let original = Kludges.getSavedProp(Shell.App.prototype, "open_new_window");
+    let original = Patches.getSavedProp(Shell.App.prototype, "open_new_window");
     original.call(app, workspaceId);
     return true;
 }

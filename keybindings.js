@@ -49,14 +49,13 @@ function registerMinimapAction(name, handler) {
 }
 
 
-let signals, actions, nameMap, actionIdMap, keycomboMap, overrides;
+let signals, actions, nameMap, actionIdMap, keycomboMap;
 function setupActions() {
     signals = new Utils.Signals();
     actions = [];
     nameMap = {};     // mutter keybinding action name -> action
     actionIdMap = {}; // actionID   -> action
     keycomboMap = {}; // keycombo   -> action
-    overrides = [];   // action names that have been given a custom handler
 
     /* Initialize keybindings */
     let dynamic_function_ref = Utils.dynamic_function_ref;
@@ -95,7 +94,6 @@ function setupActions() {
         Tiling.spaces.switchMonitor(Meta.DisplayDirection.DOWN, false);
     }, { settings });
 
-    /*
     registerAction('swap-monitor-right', () => {
         Tiling.spaces.swapMonitor(Meta.DisplayDirection.RIGHT, Meta.DisplayDirection.LEFT);
     }, { settings });
@@ -108,7 +106,6 @@ function setupActions() {
     registerAction('swap-monitor-below', () => {
         Tiling.spaces.swapMonitor(Meta.DisplayDirection.DOWN, Meta.DisplayDirection.UP);
     }, { settings });
-    */
 
     registerNavigatorAction('previous-workspace', Tiling.selectPreviousSpace);
     registerNavigatorAction('previous-workspace-backward', Tiling.selectPreviousSpaceBackwards);
@@ -321,7 +318,7 @@ function bindkey(keystr, actionName = null, handler = null, options = {}) {
         action = registerAction(actionName, handler, options);
     } else {
         let boundAction = keycomboMap[keycombo];
-        if (boundAction && boundAction != action) {
+        if (boundAction && boundAction !== action) {
             console.debug("Rebinding", keystr, "to", actionName, "from", boundAction.name);
             disableAction(boundAction);
         }
@@ -405,20 +402,6 @@ function openNavigatorHandler(actionName, keystr) {
     };
 }
 
-function getActionIdByActionName(actionName) {
-    // HACK!!
-    try {
-        return Meta.prefs_get_keybinding_action(actionName);
-    } catch (e) {
-        try {
-            return parseInt(e.message.split(" ")[0]);
-        } catch (e2) {
-            console.error("Could not find actionId for", actionName);
-            return Meta.KeyBindingAction.NONE;
-        }
-    }
-}
-
 function getBoundActionId(keystr) {
     let [dontcare, keycodes, mask] = Settings.accelerator_parse(keystr);
     if (keycodes.length > 1) {
@@ -487,14 +470,7 @@ function enableAction(action) {
             return Meta.KeyBindingAction.NONE;
         }
 
-        let actionId;
-        if (display.grab_accelerator.length > 1) {
-            actionId = display.grab_accelerator(action.keystr, Meta.KeyBindingFlags.NONE);
-        } else  {
-            // gnome-shell 3.2x
-            actionId = display.grab_accelerator(action.keystr);
-        }
-
+        let actionId = Utils.grab_accelerator(action.keystr);
         if (actionId === Meta.KeyBindingAction.NONE) {
             console.warn("Failed to grab. Binding probably already taken");
             return Meta.KeyBindingAction.NONE;
@@ -521,192 +497,39 @@ function enableAction(action) {
     }
 }
 
-function getActionId(mutterName) {
-    let id;
-    try {
-        id = Meta.prefs_get_keybinding_action(mutterName);
-    } catch (e) {
-        // This is a pretty ugly hack to extract any action id
-        // When the mutterName isn't a builtin it throws, exposing the id in the
-        // message.
-
-        // The error message starts off with the action id, so we just strip
-        // everything after that.
-        id = Number.parseInt(e.message.replace(/ .*$/, ''));
-        if (!Number.isInteger(id))
-            throw Error(`${id} is not an integer, broken hack`);
-    }
-    return id;
-}
-
-function overrideAction(mutterName, action) {
-    let id = getActionId(mutterName);
-    Main.wm.setCustomKeybindingHandler(mutterName, Shell.ActionMode.NORMAL,
-        action.keyHandler);
-    if (id === Meta.KeyBindingAction.NONE)
-        return;
-    actionIdMap[id] = action;
-}
-
-function resolveConflicts() {
-    resetConflicts();
-    for (let conflict of Settings.findConflicts()) {
-        let { name, conflicts } = conflict;
-        let action = byMutterName(name);
-        // Actionless key, can happen with updated schema without restart
-        if (!action)
-            continue;
-        conflicts.forEach(c => overrideAction(c, action));
-        overrides.push(conflict);
-    }
-}
-
-function resetConflicts() {
-    let names = overrides.reduce((sum, add) => sum.concat(add.conflicts), []);
-    for (let name of names) {
-        let id = getActionId(name);
-        delete actionIdMap[id];
-        // Bultin mutter actions can be reset by setting their custom handler to
-        // null. However gnome-shell often sets a custom handler of its own,
-        // which means we most often can't rely on that
-        if (name.startsWith('switch-to-workspace-') ||
-            name.startsWith('move-to-workspace-')) {
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
-                Main.wm._showWorkspaceSwitcher.bind(Main.wm));
-            continue;
-        }
-        switch (name) {
-        case 'cycle-group': case 'cycle-group-backwards':
-        case 'cycle-windows': case 'cycle-windows-backwards':
-        case 'switch-applications': case 'switch-applications-backward':
-        case 'switch-group': case 'switch-group-backward':
-            Main.wm.setCustomKeybindingHandler(
-                name, Shell.ActionMode.NORMAL,
-                Main.wm._startSwitcher.bind(Main.wm));
-            break;
-        case 'switch-panels': case 'switch-panels-backwards':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW |
-                    Shell.ActionMode.LOCK_SCREEN |
-                    Shell.ActionMode.UNLOCK_SCREEN |
-                    Shell.ActionMode.LOGIN_SCREEN,
-                Main.wm._startA11ySwitcher.bind(Main.wm));
-            break;
-        case 'switch-monitor':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                Main.wm._startSwitcher.bind(Main.wm));
-            break;
-        case 'focus-active-notification':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                Main.messageTray._expandActiveNotification.bind(Main.messageTray));
-            break;
-        case 'pause-resume-tweens':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW |
-                    Shell.ActionMode.POPUP,
-                Main.wm._toggleCalendar.bind(Main.wm));
-            break;
-        case 'open-application-menu':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.POPUP,
-                Main.wm._toggleAppMenu.bind(Main.wm));
-            break;
-        case 'toggle-message-tray':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW |
-                    Shell.ActionMode.POPUP,
-                Main.wm._toggleCalendar.bind(Main.wm));
-            break;
-        case  'toggle-application-view':
-            // overview._controls: Backward compatibility for 3.34 and below:
-            const viewSelector = Main.overview._overview._controls || Main.overview.viewSelector || Main.overview._controls.viewSelector;
-
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                viewSelector._toggleAppsPage.bind(viewSelector));
-            break;
-        case 'toggle-overview':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                Main.overview.toggle.bind(Main.overview));
-            break;
-        case 'switch-input-source':
-        case 'switch-input-source-backward':
-            const inputSourceIndicator = Main.inputMethod._inputSourceManager;
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.ALL,
-                inputSourceIndicator._switchInputSource.bind(inputSourceIndicator));
-            break;
-        case 'panel-main-menu':
-            const sessionMode = Main.sessionMode;
-            const overview = Main.overview;
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                sessionMode.hasOverview ? overview.toggle.bind(overview) : null);
-            break;
-        case 'panel-run-dialog':
-            Main.wm.setCustomKeybindingHandler(
-                name,
-                Shell.ActionMode.NORMAL |
-                    Shell.ActionMode.OVERVIEW,
-                Main.sessionMode.hasRunDialog ? Main.openRunDialog : null);
-            break;
-        default:
-            Meta.keybindings_set_custom_handler(name, null);
-        }
-    }
-    overrides = [];
-}
-
 function enable() {
-    setupActions();
-    let schemas = [...Settings.getConflictSettings(),
-        ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
-    schemas.forEach(schema => {
-        signals.connect(schema, 'changed', resolveConflicts);
-    });
+    // restore previous keybinds (in case failed to restore last time, e.g. gnome crash etc)
+    Settings.updateOverrides();
 
-    signals.connect(
-        display,
+    setupActions();
+    signals.connect(display,
         'accelerator-activated',
         Utils.dynamic_function_ref(handleAccelerator.name, this)
     );
     actions.forEach(enableAction);
-    resolveConflicts(schemas);
+    Settings.overrideConflicts();
+
+    let schemas = [...Settings.getConflictSettings(), ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
+    schemas.forEach(schema => {
+        signals.connect(schema, 'changed', (settings, key) => {
+            const numConflicts = Settings.conflictKeyChanged(settings, key);
+            if (numConflicts > 0) {
+                Main.notify(
+                    `PaperWM: overriding '${key}' keybind`,
+                    `this Gnome Keybind will be restored when PaperWM is disabled`);
+            }
+        });
+    });
 }
 
 function disable() {
     signals.destroy();
     signals = null;
     actions.forEach(disableAction);
-    resetConflicts();
+    Settings.restoreConflicts();
 
     actions = null;
     nameMap = null;
     actionIdMap = null;
     keycomboMap = null;
-    overrides = null;
 }

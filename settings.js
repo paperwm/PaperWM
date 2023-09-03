@@ -1,5 +1,5 @@
 const ExtensionUtils = imports.misc.extensionUtils;
-const { Gio, Gtk } = imports.gi;
+const { Gio, Gtk, GLib } = imports.gi;
 
 /**
     Settings utility shared between the running extension and the preference UI.
@@ -8,6 +8,7 @@ const { Gio, Gtk } = imports.gi;
  */
 
 let KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
+let RESTORE_KEYBINDS_KEY = 'restore-keybinds';
 
 // This is the value mutter uses for the keyvalue of above_tab
 let META_KEY_ABOVE_TAB = 0x2f7259c9;
@@ -24,10 +25,10 @@ function getConflictSettings() {
         // Schemas that may contain conflicting keybindings
         // It's possible to inject or remove settings here on `user.init`.
         conflictSettings = [
-            new Gio.Settings({schema_id: 'org.gnome.mutter.keybindings'}),
-            new Gio.Settings({schema_id: 'org.gnome.mutter.wayland.keybindings'}),
-            new Gio.Settings({schema_id: "org.gnome.desktop.wm.keybindings"}),
-            new Gio.Settings({schema_id: "org.gnome.shell.keybindings"}),
+            new Gio.Settings({ schema_id: 'org.gnome.mutter.keybindings' }),
+            new Gio.Settings({ schema_id: 'org.gnome.mutter.wayland.keybindings' }),
+            new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings" }),
+            new Gio.Settings({ schema_id: "org.gnome.shell.keybindings" }),
         ];
     }
 
@@ -35,9 +36,10 @@ function getConflictSettings() {
 }
 
 var prefs;
-let gsettings;
+let gsettings, _overriddingConflicts;
 function enable() {
     gsettings = ExtensionUtils.getSettings();
+    _overriddingConflicts = false;
     prefs = {};
     ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
         'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
@@ -72,11 +74,12 @@ function enable() {
 
 function disable() {
     gsettings = null;
+    _overriddingConflicts = null;
     prefs = null;
     conflictSettings = null;
 }
 
-/// Keybindings
+// / Keybindings
 
 /**
  * Depending on your gnome version, Gtk.accelerator_parse() can return a 2 value arrary
@@ -162,8 +165,7 @@ function generateKeycomboMap(settings) {
 function findConflicts(schemas) {
     schemas = schemas || getConflictSettings();
     let conflicts = [];
-    const paperMap =
-          generateKeycomboMap(ExtensionUtils.getSettings(KEYBINDINGS_KEY));
+    const paperMap = generateKeycomboMap(ExtensionUtils.getSettings(KEYBINDINGS_KEY));
 
     for (let settings of schemas) {
         const against = generateKeycomboMap(settings);
@@ -172,7 +174,7 @@ function findConflicts(schemas) {
                 conflicts.push({
                     name: paperMap[combo][0],
                     conflicts: against[combo],
-                    settings, combo
+                    settings, combo,
                 });
             }
         }
@@ -180,7 +182,135 @@ function findConflicts(schemas) {
     return conflicts;
 }
 
-/// Winprops
+/**
+ * Returns / reconstitutes saved overrides list.
+ */
+function getSavedOverrides() {
+    let saveListJson = gsettings.get_string(RESTORE_KEYBINDS_KEY);
+    let saveList;
+    try {
+        saveList = new Map(Object.entries(JSON.parse(saveListJson)));
+    } catch (error) {
+        saveList = new Map();
+    }
+    return saveList;
+}
+
+/**
+ * Saves an overrides list.
+ */
+function saveOverrides(overrides) {
+    gsettings.set_string(RESTORE_KEYBINDS_KEY, JSON.stringify(Object.fromEntries(overrides)));
+}
+
+function conflictKeyChanged(settings, key) {
+    if (_overriddingConflicts) {
+        return;
+    }
+
+    const newKeybind = settings.get_value(key).deep_unpack();
+    if (Array.isArray(newKeybind) && newKeybind.length === 0) {
+        return;
+    }
+
+    const saveList = getSavedOverrides();
+    saveList.delete(key);
+    saveOverrides(saveList);
+
+    // check for new conflicts
+    return overrideConflicts(key);
+}
+
+/**
+ * Override conflicts and save original values for restore.
+ */
+function overrideConflicts(checkKey = null) {
+    if (_overriddingConflicts) {
+        return;
+    }
+
+    _overriddingConflicts = true;
+    let saveList = getSavedOverrides();
+
+    // restore orignal keybinds prior to conflict overriding
+    restoreConflicts();
+
+    let disableAll = [];
+    const foundConflicts = findConflicts();
+    for (let conflict of foundConflicts) {
+        // save conflicts (list of names of conflicting keybinds)
+        let { name, conflicts, settings } = conflict;
+
+        conflicts.forEach(c => {
+            // get current value
+            const keybind = settings.get_value(c);
+            saveList.set(c, {
+                bind: JSON.stringify(keybind.deep_unpack()),
+                schema_id: settings.schema_id,
+            });
+
+            // now disable conflict
+            disableAll.push(() => settings.set_value(c, new GLib.Variant('as', [])));
+        });
+    }
+
+    // save override list
+    saveOverrides(saveList);
+
+    // now disable all conflicts
+    disableAll.forEach(d => d());
+    _overriddingConflicts = false;
+
+    return checkKey ? saveList.has(checkKey) : false;
+}
+
+/**
+ * Update overrides to their current keybinds.
+ */
+function updateOverrides() {
+    let saveList = getSavedOverrides();
+    saveList.forEach((saved, key) => {
+        const settings = getConflictSettings().find(s => s.schema_id === saved.schema_id);
+        if (settings) {
+            const newKeybind = settings.get_value(key).deep_unpack();
+            if (Array.isArray(newKeybind) && newKeybind.length === 0) {
+                return;
+            }
+
+            saveList.set(key, {
+                bind: JSON.stringify(newKeybind),
+                schema_id: settings.schema_id,
+            });
+        }
+    });
+
+    // save override list
+    saveOverrides(saveList);
+}
+
+/**
+ * Restores previously overridden conflicts.
+ */
+function restoreConflicts() {
+    let saveList = getSavedOverrides();
+    const toRemove = [];
+    saveList.forEach((saved, key) => {
+        const settings = getConflictSettings().find(s => s.schema_id === saved.schema_id);
+        if (settings) {
+            const keybind = JSON.parse(saved.bind);
+            toRemove.push({ key, remove: () => settings.set_value(key, new GLib.Variant('as', keybind)) });
+        }
+    });
+
+    // now remove retored keybinds from list
+    toRemove.forEach(r => {
+        r.remove();
+        saveList.delete(r.key);
+    });
+    saveOverrides(saveList);
+}
+
+// / Winprops
 
 /**
    Modelled after notion/ion3's system
@@ -209,10 +339,8 @@ function winprop_match_p(meta_window, prop) {
         if (prop.title instanceof RegExp) {
             if (!title.match(prop.title))
                 return false;
-        } else {
-            if (prop.title !== title)
-                return false;
-        }
+        } else if (prop.title !== title)
+            return false;
     }
 
     return true;
@@ -220,8 +348,6 @@ function winprop_match_p(meta_window, prop) {
 
 function find_winprop(meta_window)  {
     // sort by title first (prioritise title over wm_class)
-
-
     let props = winprops.filter(winprop_match_p.bind(null, meta_window));
 
     // if matching props found, return first one
@@ -234,7 +360,7 @@ function find_winprop(meta_window)  {
     if (starProps.length > 0) {
         return starProps[0];
     }
-    
+
     return null;
 }
 
@@ -246,7 +372,7 @@ function defwinprop(spec) {
             value: new Number((spec.preferredWidth.match(/\d+/) ?? ['0'])[0]),
             // unit is first contiguous block of apha chars or % char
             unit: (spec.preferredWidth.match(/[a-zA-Z%]+/) ?? ['NO_UNIT'])[0],
-        }
+        };
     }
 
     /**
@@ -259,7 +385,7 @@ function defwinprop(spec) {
     winprops.push(spec);
 
     // now order winprops with gsettings first, then title over wm_class
-    winprops.sort((a,b) => {
+    winprops.sort((a, b) => {
         let firstresult = 0;
         if (a.gsetting && !b.gsetting) {
             firstresult = -1;
@@ -282,7 +408,7 @@ function defwinprop(spec) {
 }
 
 /**
- * Adds user-defined winprops from gsettings (as defined in 
+ * Adds user-defined winprops from gsettings (as defined in
  * org.gnome.shell.extensions.paperwm.winprops) to the winprops array.
  */
 function addWinpropsFromGSettings() {
@@ -320,7 +446,7 @@ function removeGSettingWinpropsFromArray() {
 /**
  * Effectively reloads winprops from gsettings.
  * This is a convenience function which removes gsetting winprops from winprops
- * array and then adds the currently defined 
+ * array and then adds the currently defined
  * org.gnome.shell.extensions.paperwm.winprops winprops.
  */
 function reloadWinpropsFromGSettings() {
