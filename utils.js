@@ -249,11 +249,12 @@ function warpPointerToMonitor(monitor, center = false) {
         return;
     }
 
-    let normX = x - currMonitor.x;
-    let normY = y - currMonitor.y;
+    let proportionalX = (x - currMonitor.x) / currMonitor.width;
+    let proportionalY = (y - currMonitor.y) / currMonitor.height;
     warpPointer(
-        monitor.x + normX,
-        monitor.y + normY);
+        monitor.x + Math.floor(proportionalX * monitor.width),
+        monitor.y + Math.floor(proportionalY * monitor.height)
+    );
 }
 
 /**
