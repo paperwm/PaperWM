@@ -48,9 +48,13 @@ function enable() {
        under the mouse cursor.
      */
     signals.connect(global.stage, 'captured-event', (actor, event) => {
-        if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
-            event.get_touchpad_gesture_finger_count() < 3 ||
-            (Main.actionMode & Shell.ActionMode.OVERVIEW) > 0) {
+        const fingers = event.get_touchpad_gesture_finger_count();
+        if (
+            !Settings.prefs.gesture_enabled ||
+            event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
+            fingers <= 2 ||
+            (Main.actionMode & Shell.ActionMode.OVERVIEW) > 0
+        ) {
             return Clutter.EVENT_PROPAGATE;
         }
         const phase = event.get_gesture_phase();
@@ -76,11 +80,19 @@ function enable() {
                 let dir_y = -dy * natural * Settings.prefs.swipe_sensitivity[1];
                 // if not Tiling.inPreview and swipe is UP => propagate event to overview
                 if (!Tiling.inPreview && dir_y > 0) {
-                    swipeTrackersEnable();
+                    // if overview fingers match, enable gnome swipe trackers
+                    if (Settings.prefs.gesture_overview_fingers === fingers) {
+                        swipeTrackersEnable();
+                    }
+
                     return Clutter.EVENT_PROPAGATE;
                 }
 
                 // do PaperWM vertical swipe actions
+                if (Settings.prefs.gesture_workspace_fingers !== fingers) {
+                    return Clutter.EVENT_PROPAGATE;
+                }
+
                 swipeTrackersEnable(false);
                 updateVertical(dir_y, event.get_time());
                 return Clutter.EVENT_STOP;
@@ -121,8 +133,12 @@ function disable() {
  */
 let start, dxs = [], dts = [];
 function horizontalScroll(actor, event) {
-    if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
-        event.get_touchpad_gesture_finger_count() < 3) {
+    const fingers = event.get_touchpad_gesture_finger_count();
+    if (
+        event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
+        fingers <= 2 ||
+        Settings.prefs.gesture_horizontal_fingers !== fingers
+    ) {
         return Clutter.EVENT_PROPAGATE;
     }
     const phase = event.get_gesture_phase();
