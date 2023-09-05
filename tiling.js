@@ -2039,8 +2039,7 @@ var Spaces = class Spaces extends Map {
             metaWindow.change_workspace(toSpace.workspace);
         }
 
-        if (
-            inPreview === PreviewMode.NONE &&
+        if (inPreview === PreviewMode.NONE &&
             toSpace.monitor === fromSpace.monitor) {
             // Only start an animation if we're moving between workspaces on the
             // same monitor
@@ -2055,10 +2054,7 @@ var Spaces = class Spaces extends Map {
         let monitor = toSpace.monitor;
         this.setMonitors(monitor, toSpace, true);
 
-        let doAnimate =
-             animate ||
-            this._space_activate_animate;
-
+        let doAnimate = animate || this._space_activate_animate;
         this.animateToSpace(
             toSpace,
             fromSpace,
