@@ -26,7 +26,7 @@ const Main = imports.ui.main;
      - app creates new windows based on the current application. It's possible
        to create custom new window handlers.
 
-     - kludges is used for monkey patching gnome shell behavior which simply
+     - Patches is used for monkey patching gnome shell behavior which simply
        doesn't fit paperwm.
 
      - topbar adds the workspace name to the topbar and styles it.
@@ -41,7 +41,7 @@ const modules = [
     'utils', 'settings',
     'gestures', 'keybindings', 'liveAltTab', 'navigator', 'stackoverlay', 'scratch',
     'workspace', 'tiling', 'topbar', // these have `enable` dependency order
-    'kludges', 'app', // these have `enable` dependency order
+    'patches', 'app', // these have `enable` dependency order
 ];
 
 /**

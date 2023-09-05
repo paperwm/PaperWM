@@ -1,6 +1,6 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
-const Kludges = Extension.imports.kludges;
+const Patches = Extension.imports.patches;
 const Settings = Extension.imports.settings;
 const Tiling = Extension.imports.tiling;
 const Utils = Extension.imports.utils;
@@ -421,5 +421,5 @@ function endVertical() {
  */
 function swipeTrackersEnable(option) {
     let enable = option ?? true;
-    Kludges.swipeTrackers.forEach(t => t.enabled = enable);
+    Patches.swipeTrackers.forEach(t => t.enabled = enable);
 }
