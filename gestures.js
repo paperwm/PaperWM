@@ -60,9 +60,10 @@ function enable() {
             return Clutter.EVENT_PROPAGATE;
         }
 
-        if (!Settings.prefs.gesture_enabled) {
+        const enabled = Settings.prefs.gesture_enabled;
+        if (!enabled) {
+            // switch to default swipe trackers
             swipeTrackersEnable();
-            return Clutter.EVENT_PROPAGATE;
         }
 
         const phase = event.get_gesture_phase();
@@ -72,14 +73,14 @@ function enable() {
                 return Clutter.EVENT_PROPAGATE;
             }
             let [dx, dy] = event.get_gesture_motion_delta();
-            if (direction === undefined) {
+            if (enabled && direction === undefined) {
                 if (Math.abs(dx) < Math.abs(dy)) {
                     vy = 0;
                     vState = phase;
                     direction = DIRECTIONS.Vertical;
                 }
             }
-            if (direction === DIRECTIONS.Vertical) {
+            if (enabled && direction === DIRECTIONS.Vertical) {
                 // if in overview => propagate event to overview
                 if (Main.overview.visible) {
                     return Clutter.EVENT_PROPAGATE;
@@ -89,10 +90,9 @@ function enable() {
                 // if not Tiling.inPreview and swipe is UP => propagate event to overview
                 if (!Tiling.inPreview && dir_y > 0) {
                     // if overview fingers match, enable gnome swipe trackers
-                    if (Settings.prefs.gesture_overview_fingers === fingers) {
+                    if (Settings.prefs.gesture_overview) {
                         swipeTrackersEnable();
                     }
-
                     return Clutter.EVENT_PROPAGATE;
                 }
 
