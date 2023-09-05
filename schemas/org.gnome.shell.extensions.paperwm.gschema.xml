@@ -219,7 +219,7 @@
 
     <key type="as" name="cycle-width-backwards">
       <default><![CDATA[['<Super><Alt>r']]]></default>
-      <summary>Cycle through useful window widthd backwards</summary>
+      <summary>Cycle through useful window widths backwards</summary>
     </key>
 
     <key type="as" name="cycle-height">
