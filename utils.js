@@ -412,6 +412,17 @@ function later_add(...args) {
 }
 
 /**
+ * Backwards compatible Display.grab_accelerator function.
+ */
+function grab_accelerator(keystr, keyBindingFlags = Meta.KeyBindingFlags.NONE) {
+    if (Display.grab_accelerator.length > 1) {
+        return Display.grab_accelerator(keystr, keyBindingFlags);
+    } else  {
+        return Display.grab_accelerator(keystr);
+    }
+}
+
+/**
  * Convenience method for removing timeout source(s) from Mainloop.
  */
 function timeout_remove(...timeouts) {

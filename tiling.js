@@ -2906,7 +2906,7 @@ function enable(errorNotification) {
          * Upgrade gnome monitor info objects by add "connector" information, and
          * when done (async) callback to initworkspaces.
          */
-        // NOTE: this should happen after kludges.enable() have run, so we do
+        // NOTE: this should happen after Patches.enable() have run, so we do
         // it in a timeout
         startupTimeoutId = Mainloop.timeout_add(0, () => {
             displayConfig.upgradeGnomeMonitors(initWorkspaces);
