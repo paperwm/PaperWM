@@ -48,15 +48,23 @@ function enable() {
        under the mouse cursor.
      */
     signals.connect(global.stage, 'captured-event', (actor, event) => {
+        if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+
         const fingers = event.get_touchpad_gesture_finger_count();
         if (
-            !Settings.prefs.gesture_enabled ||
-            event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
             fingers <= 2 ||
             (Main.actionMode & Shell.ActionMode.OVERVIEW) > 0
         ) {
             return Clutter.EVENT_PROPAGATE;
         }
+
+        if (!Settings.prefs.gesture_enabled) {
+            swipeTrackersEnable();
+            return Clutter.EVENT_PROPAGATE;
+        }
+
         const phase = event.get_gesture_phase();
         switch (phase) {
         case Clutter.TouchpadGesturePhase.UPDATE:
@@ -88,11 +96,11 @@ function enable() {
                     return Clutter.EVENT_PROPAGATE;
                 }
 
-                // do PaperWM vertical swipe actions
                 if (Settings.prefs.gesture_workspace_fingers !== fingers) {
                     return Clutter.EVENT_PROPAGATE;
                 }
 
+                // initiates workspace stack switching
                 swipeTrackersEnable(false);
                 updateVertical(dir_y, event.get_time());
                 return Clutter.EVENT_STOP;
@@ -133,9 +141,12 @@ function disable() {
  */
 let start, dxs = [], dts = [];
 function horizontalScroll(actor, event) {
+    if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE) {
+        return Clutter.EVENT_PROPAGATE;
+    }
+
     const fingers = event.get_touchpad_gesture_finger_count();
     if (
-        event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
         fingers <= 2 ||
         Settings.prefs.gesture_horizontal_fingers !== fingers
     ) {
