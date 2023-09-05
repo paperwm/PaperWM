@@ -39,6 +39,8 @@ var inPreview = PreviewMode.NONE; // export
 // DEFAULT mode is normal/original PaperWM window focus behaviour
 var FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
 
+var CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1};
+
 /**
    Scrolled and tiled per monitor workspace.
 
@@ -3817,11 +3819,11 @@ function cycleWindowWidthDirection(metaWindow, direction) {
 }
 
 function cycleWindowHeight(metawindow) {
-    return cycleWindowHeightDirection(metawindow, 0);
+    return cycleWindowHeightDirection(metawindow, CycleWindowSizesDirection.FORWARD);
 }
 
 function cycleWindowHeightBackwards(metawindow) {
-    return cycleWindowHeightDirection(metawindow, -1);
+    return cycleWindowHeightDirection(metawindow, CycleWindowSizesDirection.BACKWARDS);
 }
 
 function cycleWindowHeightDirection(metaWindow, direction) {
@@ -3831,12 +3833,7 @@ function cycleWindowHeightDirection(metaWindow, direction) {
     let space = spaces.spaceOfWindow(metaWindow);
     let i = space.indexOf(metaWindow);
 
-    let findFn = null;
-    if (direction >= 0) {
-        findFn = Lib.findNext;
-    } else {
-        findFn = Lib.findPrev;
-    }
+    let findFn = direction === CycleWindowSizesDirection.FORWARD ? Lib.findNext : Lib.FindPrev;
 
     function calcTargetHeight(available) {
         let targetHeight;
