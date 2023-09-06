@@ -3792,7 +3792,7 @@ function cycleWindowWidthDirection(metaWindow, direction) {
 
     // 10px slack to avoid locking up windows that only resize in increments > 1px
     let targetWidth = Math.min(
-        finderFn(frame.width, getCycleWindowWidths(metaWindow), sizeSlack),
+        findFn(frame.width, getCycleWindowWidths(metaWindow), sizeSlack),
         workArea.width
     );
 
