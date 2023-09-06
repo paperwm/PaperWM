@@ -3775,11 +3775,11 @@ function getCycleWindowWidths(metaWindow) {
 }
 
 function cycleWindowWidth(metawindow) {
-    return cycleWindowWidthDirection(metawindow, 0);
+    return cycleWindowWidthDirection(metawindow, CycleWindowSizesDirection.FORWARD);
 }
 
 function cycleWindowWidthBackwards(metawindow) {
-    return cycleWindowWidthDirection(metawindow, -1);
+    return cycleWindowWidthDirection(metawindow, CycleWindowSizesDirection.BACKWARDS);
 }
 
 function cycleWindowWidthDirection(metaWindow, direction) {
@@ -3788,14 +3788,9 @@ function cycleWindowWidthDirection(metaWindow, direction) {
     let workArea = space.workArea();
     workArea.x += space.monitor.x;
 
-    // 10px slack to avoid locking up windows that only resize in increments > 1px
-    let finderFn = null;
-    if (direction >= 0) {
-        finderFn = Lib.findNext;
-    } else {
-        finderFn = Lib.findPrev;
-    }
+    let findFn = direction === CycleWindowSizesDirection.FORWARD ? Lib.findNext : Lib.findPrev;
 
+    // 10px slack to avoid locking up windows that only resize in increments > 1px
     let targetWidth = Math.min(
         finderFn(frame.width, getCycleWindowWidths(metaWindow), sizeSlack),
         workArea.width
@@ -3833,7 +3828,7 @@ function cycleWindowHeightDirection(metaWindow, direction) {
     let space = spaces.spaceOfWindow(metaWindow);
     let i = space.indexOf(metaWindow);
 
-    let findFn = direction === CycleWindowSizesDirection.FORWARD ? Lib.findNext : Lib.FindPrev;
+    let findFn = direction === CycleWindowSizesDirection.FORWARD ? Lib.findNext : Lib.findPrev;
 
     function calcTargetHeight(available) {
         let targetHeight;
