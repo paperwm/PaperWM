@@ -51,7 +51,9 @@ const actions = {
         'resize-w-inc',
         'resize-w-dec',
         'cycle-width',
+        'cycle-width-backwards',
         'cycle-height',
+        'cycle-height-backwards',
         'take-window',
     ],
     workspaces: [
