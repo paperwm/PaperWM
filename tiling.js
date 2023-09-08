@@ -39,6 +39,8 @@ var inPreview = PreviewMode.NONE; // export
 // DEFAULT mode is normal/original PaperWM window focus behaviour
 var FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
 
+var CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1};
+
 /**
    Scrolled and tiled per monitor workspace.
 
@@ -3777,14 +3779,28 @@ function getCycleWindowWidths(metaWindow) {
     return steps;
 }
 
-function cycleWindowWidth(metaWindow) {
+function cycleWindowWidth(metawindow) {
+    return cycleWindowWidthDirection(metawindow, CycleWindowSizesDirection.FORWARD);
+}
+
+function cycleWindowWidthBackwards(metawindow) {
+    return cycleWindowWidthDirection(metawindow, CycleWindowSizesDirection.BACKWARDS);
+}
+
+function cycleWindowWidthDirection(metaWindow, direction) {
     let frame = metaWindow.get_frame_rect();
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     workArea.x += space.monitor.x;
 
+    let findFn = direction === CycleWindowSizesDirection.FORWARD ? Lib.findNext : Lib.findPrev;
+
     // 10px slack to avoid locking up windows that only resize in increments > 1px
-    let targetWidth = Math.min(Lib.findNext(frame.width, getCycleWindowWidths(metaWindow), sizeSlack), workArea.width);
+    let targetWidth = Math.min(
+        findFn(frame.width, getCycleWindowWidths(metaWindow), sizeSlack),
+        workArea.width
+    );
+
     let targetX = frame.x;
 
     if (Scratch.isScratchWindow(metaWindow)) {
@@ -3802,20 +3818,30 @@ function cycleWindowWidth(metaWindow) {
     metaWindow.move_resize_frame(true, targetX, frame.y, targetWidth, frame.height);
 }
 
-function cycleWindowHeight(metaWindow) {
+function cycleWindowHeight(metawindow) {
+    return cycleWindowHeightDirection(metawindow, CycleWindowSizesDirection.FORWARD);
+}
+
+function cycleWindowHeightBackwards(metawindow) {
+    return cycleWindowHeightDirection(metawindow, CycleWindowSizesDirection.BACKWARDS);
+}
+
+function cycleWindowHeightDirection(metaWindow, direction) {
     let steps = Settings.prefs.cycle_height_steps;
     let frame = metaWindow.get_frame_rect();
 
     let space = spaces.spaceOfWindow(metaWindow);
     let i = space.indexOf(metaWindow);
 
+    let findFn = direction === CycleWindowSizesDirection.FORWARD ? Lib.findNext : Lib.findPrev;
+
     function calcTargetHeight(available) {
         let targetHeight;
         if (steps[0] <= 1) { // ratio steps
-            let targetR = Lib.findNext(frame.height / available, steps, sizeSlack / available);
+            let targetR = findFn(frame.height / available, steps, sizeSlack / available);
             targetHeight = Math.floor(targetR * available);
         } else { // pixel steps
-            targetHeight = Lib.findNext(frame.height, steps, sizeSlack);
+            targetHeight = findFn(frame.height, steps, sizeSlack);
         }
         return Math.min(targetHeight, available);
     }

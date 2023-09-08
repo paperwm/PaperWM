@@ -125,7 +125,7 @@
         <default><![CDATA[['<Super>t']]]></default>
         <summary>Take the window, dropping it when finished navigating</summary>
     </key>
-    
+
     <key type="as" name="switch-focus-mode">
       <default><![CDATA[['<Super><Shift>c']]]></default>
       <summary>Switch between Window Focus Modes (e.g. default, center)</summary>
@@ -217,9 +217,19 @@
       <summary>Cycle through useful window widths</summary>
     </key>
 
+    <key type="as" name="cycle-width-backwards">
+      <default><![CDATA[['<Super><Alt>r']]]></default>
+      <summary>Cycle through useful window widths backwards</summary>
+    </key>
+
     <key type="as" name="cycle-height">
         <default><![CDATA[['<Super><Shift>r']]]></default>
         <summary>Cycle through useful window heights</summary>
+    </key>
+
+    <key type="as" name="cycle-height-backwards">
+        <default><![CDATA[['<Super><Alt><Shift>r']]]></default>
+        <summary>Cycle through useful window heights backwards</summary>
     </key>
 
     <key type="as" name="center-horizontally">

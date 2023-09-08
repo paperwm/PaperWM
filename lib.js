@@ -23,6 +23,22 @@ function findNext(cur, values, slack=0) {
     return values[0]; // cycle
 }
 
+function findPrev(cur, values, slack=0) {
+    let i = 0;
+    for (;i < values.length; i++) {
+        let x = values[i];
+        if (x + slack >= cur) {
+            break;
+        }
+    }
+    target_i = i - 1;
+    if (target_i < 0) {
+        target_i = values.length - 1;
+    }
+
+    return values[target_i];
+}
+
 function arrayEqual(a, b) {
     if (a === b)
         return true;
