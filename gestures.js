@@ -190,21 +190,17 @@ function horizontalScroll(actor, event) {
     }
 
     const fingers = event.get_touchpad_gesture_finger_count();
-    const horizontalFingers = gestureHorizontalFingers();
     if (
-        fingers <= 2 ||
-        horizontalFingers !== fingers
+        fingers <= 2 || gestureHorizontalFingers() !== fingers
     ) {
         return Clutter.EVENT_PROPAGATE;
     }
-
-    /**
-     * If gestures are disabled AND doing a 3-finger swipe (gnome default)
-     * AND horizontal fingers are set to 3, then propagate.
-     */
-    if (
-        !gestureEnabled() &&
-        horizontalFingers === 3
+    else if (
+        /**
+         * If gestures are disabled AND doing a 3-finger swipe (gnome default)
+         * AND horizontal fingers are set to 3, then propagate.
+         */
+        !gestureEnabled() && fingers === 3
     ) {
         return Clutter.EVENT_PROPAGATE;
     }
