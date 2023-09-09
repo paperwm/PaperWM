@@ -115,6 +115,15 @@ function enable() {
             }
             return Clutter.EVENT_PROPAGATE;
         case Clutter.TouchpadGesturePhase.BEGIN:
+            // if PaperWM gestures disables (and not horizontal fingers) use gnome default behaviour
+            if (
+                !enabled &&
+                Settings.prefs.gesture_horizontal_fingers !== fingers
+            ) {
+                return Clutter.EVENT_PROPAGATE;
+            }
+
+            // PaperWM 
             time = event.get_time();
             natural = touchpadSettings.get_boolean("natural-scroll") ? 1 : -1;
             direction = undefined;
