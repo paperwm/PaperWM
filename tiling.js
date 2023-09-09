@@ -3847,7 +3847,7 @@ function cycleWindowHeightDirection(metaWindow, direction) {
     }
 
     if (i > -1) {
-        function allocate(column, available) {
+        const allocate = (column, available) => {
             // NB: important to not retrieve the frame size inside allocate. Allocation of
             // metaWindow should stay the same during a potential fixpoint evaluation.
             available -= (column.length - 1) * Settings.prefs.window_gap;
@@ -3859,7 +3859,7 @@ function cycleWindowHeightDirection(metaWindow, direction) {
                     return Math.floor((available - targetHeight) / (column.length - 1));
                 }
             });
-        }
+        };
 
         if (space[i].length > 1) {
             space.layout(false, { customAllocators: { [i]: allocate } });

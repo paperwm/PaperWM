@@ -123,7 +123,7 @@ function enable() {
                 return Clutter.EVENT_PROPAGATE;
             }
 
-            // PaperWM 
+            // PaperWM
             time = event.get_time();
             natural = touchpadSettings.get_boolean("natural-scroll") ? 1 : -1;
             direction = undefined;
