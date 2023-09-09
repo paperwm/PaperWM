@@ -449,11 +449,6 @@
         <summary>Number of fingers for workspace switching. 0:DISABLED 3:THREE_FINGERS 4:FOUR_FINGERS</summary>
     </key>
 
-    <key type="b" name="gesture-overview">
-        <default>true</default>
-        <summary>Enables the overview gesture in PaperWM</summary>
-    </key>
-
     <child name="keybindings" schema="org.gnome.shell.extensions.paperwm.keybindings"/>
     <child name="workspaces" schema="org.gnome.shell.extensions.paperwm.workspacelist"/>
 

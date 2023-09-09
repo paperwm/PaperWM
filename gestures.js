@@ -38,6 +38,12 @@ function enable() {
         schema_id: 'org.gnome.desktop.peripherals.touchpad',
     });
 
+    // monitor gesture-enabled for changes
+    const gsettings = ExtensionUtils.getSettings();
+    signals.connect(gsettings, 'changed::gesture-enabled', () => {
+        gestureEnabled() ? swipeTrackersEnable(false) : swipeTrackersEnable();
+    });
+
     /**
      * Swipetrackers are reset by gnome during overview, once exits overview
      * ensure swipe trackers are reset.
@@ -97,10 +103,8 @@ function enable() {
                 let dir_y = -dy * natural * Settings.prefs.swipe_sensitivity[1];
                 // if not Tiling.inPreview and swipe is UP => propagate event to overview
                 if (!Tiling.inPreview && dir_y > 0) {
-                    // if overview fingers match, enable gnome swipe trackers
-                    if (gestureOverview()) {
-                        swipeTrackersEnable();
-                    }
+                    // enable swipe trackers which enables 3-finger up overview
+                    swipeTrackersEnable();
                     return Clutter.EVENT_PROPAGATE;
                 }
 
@@ -165,10 +169,6 @@ function disable() {
 
 function gestureEnabled() {
     return Settings.prefs.gesture_enabled;
-}
-
-function gestureOverview() {
-    return Settings.prefs.gesture_overview;
 }
 
 function gestureHorizontalFingers() {

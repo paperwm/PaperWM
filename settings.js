@@ -47,7 +47,7 @@ function enable() {
         'cycle-width-steps', 'cycle-height-steps', 'minimap-scale', 'winprops',
         'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon',
         'disable-topbar-styling', 'default-focus-mode', 'gesture-enabled',
-        'gesture-horizontal-fingers', 'gesture-workspace-fingers', 'gesture-overview']
+        'gesture-horizontal-fingers', 'gesture-workspace-fingers']
         .forEach(k => setState(null, k));
     prefs.__defineGetter__("minimum_margin", function () {
         return Math.min(15, this.horizontal_margin);
