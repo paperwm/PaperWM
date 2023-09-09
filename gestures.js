@@ -68,7 +68,7 @@ function enable() {
             return Clutter.EVENT_PROPAGATE;
         }
 
-        const enabled = Settings.prefs.gesture_enabled;
+        const enabled = gestureEnabled();
         if (!enabled) {
             // switch to default swipe trackers
             swipeTrackersEnable();
@@ -98,13 +98,13 @@ function enable() {
                 // if not Tiling.inPreview and swipe is UP => propagate event to overview
                 if (!Tiling.inPreview && dir_y > 0) {
                     // if overview fingers match, enable gnome swipe trackers
-                    if (Settings.prefs.gesture_overview) {
+                    if (gestureOverview()) {
                         swipeTrackersEnable();
                     }
                     return Clutter.EVENT_PROPAGATE;
                 }
 
-                if (Settings.prefs.gesture_workspace_fingers !== fingers) {
+                if (gestureWorkspaceFingers() !== fingers) {
                     return Clutter.EVENT_PROPAGATE;
                 }
 
@@ -118,7 +118,7 @@ function enable() {
             // if PaperWM gestures disables (and not horizontal fingers) use gnome default behaviour
             if (
                 !enabled &&
-                Settings.prefs.gesture_horizontal_fingers !== fingers
+                gestureHorizontalFingers() !== fingers
             ) {
                 return Clutter.EVENT_PROPAGATE;
             }
@@ -152,6 +152,22 @@ function disable() {
     touchpadSettings = null;
 }
 
+function gestureEnabled() {
+    return Settings.prefs.gesture_enabled;
+}
+
+function gestureOverview() {
+    return Settings.prefs.gesture_overview;
+}
+
+function gestureHorizontalFingers() {
+    return Settings.prefs.gesture_horizontal_fingers;
+}
+
+function gestureWorkspaceFingers() {
+    return Settings.prefs.gesture_workspace_fingers;
+}
+
 /**
    Handle scrolling horizontally in a space. The handler is meant to be
    connected from each space.background and bound to the space.
@@ -163,12 +179,25 @@ function horizontalScroll(actor, event) {
     }
 
     const fingers = event.get_touchpad_gesture_finger_count();
+    const horizontalFingers = gestureHorizontalFingers();
     if (
         fingers <= 2 ||
-        Settings.prefs.gesture_horizontal_fingers !== fingers
+        horizontalFingers !== fingers
     ) {
         return Clutter.EVENT_PROPAGATE;
     }
+
+    /**
+     * If gestures are disabled AND doing a 3-finger swipe (gnome default)
+     * AND horizontal fingers are set to 3, then propagate.
+     */
+    if (
+        !gestureEnabled() &&
+        horizontalFingers === 3
+    ) {
+        return Clutter.EVENT_PROPAGATE;
+    }
+
     const phase = event.get_gesture_phase();
     const [dx, dy] = event.get_gesture_motion_delta();
     switch (phase) {
