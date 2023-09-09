@@ -344,17 +344,6 @@ function setupSwipeTrackers() {
 let signals;
 function setupSignals() {
     signals = new Utils.Signals();
-
-    /**
-     * Swipetrackers are reset by gnome during overview, once exits overview
-     * ensure swipe trackers are reset.
-     */
-    signals.connect(Main.overview, 'hidden', () => {
-        swipeTrackers.forEach(t => {
-            t.enabled = false;
-        });
-    });
-
     function scratchInOverview() {
         let onlyScratch = gsettings.get_boolean('only-scratch-in-overview');
         let disableScratch = gsettings.get_boolean('disable-scratch-in-overview');

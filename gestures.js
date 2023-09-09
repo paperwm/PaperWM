@@ -39,6 +39,14 @@ function enable() {
     });
 
     /**
+     * Swipetrackers are reset by gnome during overview, once exits overview
+     * ensure swipe trackers are reset.
+     */
+    signals.connect(Main.overview, 'hidden', () => {
+        swipeTrackersEnable(false);
+    });
+
+    /**
        In order for the space.background actors to get any input we need to hide
        all the window actors from the stage.
 
@@ -67,12 +75,12 @@ function enable() {
         }
 
         const phase = event.get_gesture_phase();
+        const [dx, dy] = event.get_gesture_motion_delta();
         switch (phase) {
         case Clutter.TouchpadGesturePhase.UPDATE:
             if (direction === DIRECTIONS.Horizontal) {
                 return Clutter.EVENT_PROPAGATE;
             }
-            let [dx, dy] = event.get_gesture_motion_delta();
             if (enabled && direction === undefined) {
                 if (Math.abs(dx) < Math.abs(dy)) {
                     vy = 0;
@@ -153,9 +161,9 @@ function horizontalScroll(actor, event) {
         return Clutter.EVENT_PROPAGATE;
     }
     const phase = event.get_gesture_phase();
+    const [dx, dy] = event.get_gesture_motion_delta();
     switch (phase) {
     case Clutter.TouchpadGesturePhase.UPDATE:
-        let [dx, dy] = event.get_gesture_motion_delta();
         if (direction === undefined) {
             this.vx = 0;
             dxs = [];
