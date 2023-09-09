@@ -232,6 +232,32 @@ Setting | Description | Reference
 --------|-------------|----------
 <code>disable&#8209;topbar&#8209;styling</code> | Disables PaperWM's ability to style the Gnome TopBar. | See [Gnome TopBar opacity / styling](#gnome-topbar-opacity--styling).
 
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>gesture&#8209;enabled</code> | Enables / disables PaperWM gestures. Setting this to `false` restores Gnome's default touchpad gestures. | Boolean | true
+
+__Example:__ disabling PaperWM touchpad gestures
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-enabled false
+```
+
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>gesture&#8209;horizontal&#8209;fingers</code> | Sets the number of fingers used for moving the tiling viewport (windows) left/right. | _number_: `0` (disables gesture), `3`, `4`  | `3`
+
+__Example:__ setting swiping left/right to move windows to four-fingers:
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-horizontal-fingers 4
+```
+
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>gesture&#8209;workspace&#8209;fingers</code> | Sets the number of fingers used for PaperWM workspace stack view. | _number_: `0` (disables gesture), `3`, `4`  | `3`
+
+__Example:__ disabling PaperWM workspace stack view gesture:
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-workspace-fingers 0
+```
 Setting | Description | Reference
 --------|-------------|----------
 <code>show&#8209;focus&#8209;mode&#8209;icon</code> | Shows/hides the focus mode icon in TopBar. | See [Hiding the focus mode icon](#hiding-the-focus-mode-icon).
@@ -369,6 +395,41 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
 ```
 
 See `examples/keybindings.js` for more examples.
+
+### Touchpad Gestures  ###
+
+PaperWM implements the following touchpad gestures by default:
+
+Gesture                       | Action              
+------------------------------|------------------------------------------------------
+three-finger swipe up         | Gnome Overview #setting-window-specific-properties
+three-finger swipe down       | PaperWM workspace stack view (see [here](#the-workspace-stack--monitors))
+three-finger swipe left/right | Moves tiling viewport (windows) left / right
+
+PaperWM touchpad gestures behaviour can be modified with the following settings:
+
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>gesture&#8209;enabled</code> | Enables / disables PaperWM gestures. Setting this to `false` restores Gnome's default touchpad gestures. | Boolean | true
+<code>gesture&#8209;horizontal&#8209;fingers</code> | Sets the number of fingers used for moving the tiling viewport (windows) left/right. | _number_: `0` (disables gesture), `3`, `4`  | `3`
+<code>gesture&#8209;workspace&#8209;fingers</code> | Sets the number of fingers used for PaperWM workspace stack view. | _number_: `0` (disables gesture), `3`, `4`  | `3` 
+
+These settings can be changed from a terminal with the following commands
+
+__Example:__ disabling PaperWM touchpad gestures
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-enabled false
+```
+
+__Example:__ setting swiping left/right to move windows to four-fingers:
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-horizontal-fingers 4
+```
+
+__Example:__ disabling PaperWM workspace stack view gesture:
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-workspace-fingers 0
+```
 
 ## Window Position Bar (colored bar segment in Top Bar) ##
 
