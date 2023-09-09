@@ -101,26 +101,47 @@ function enableOverride(obj, name) {
  */
 function setupOverrides() {
     // prepare for PaperWM workspace switching
-    registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch', function (from, to, direction) {
-        if (this._switchData)
-            return;
+    registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch',
+        function (from, to, direction) {
+            if (this._switchData)
+                return;
 
-        let switchData = {};
-        this._switchData = switchData;
-        switchData.movingWindowBin = new Clutter.Actor();
-        switchData.windows = [];
-        switchData.surroundings = {};
-        switchData.gestureActivated = false;
-        switchData.inProgress = false;
+            let switchData = {};
+            this._switchData = switchData;
+            switchData.movingWindowBin = new Clutter.Actor();
+            switchData.windows = [];
+            switchData.surroundings = {};
+            switchData.gestureActivated = false;
+            switchData.inProgress = false;
 
-        switchData.container = new Clutter.Actor();
-    });
+            switchData.container = new Clutter.Actor();
+        });
 
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch',
         // WorkspaceAnimation.WorkspaceAnimationController.animateSwitch
         // Disable the workspace switching animation in Gnome 40+
         function (_from, _to, _direction, onComplete) {
             onComplete();
+        });
+
+    registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, '_prepareWorkspaceSwitch',
+        function (workspaceIndices) {
+            const saved = getSavedPrototype(
+                WorkspaceAnimation.WorkspaceAnimationController,
+                '_prepareWorkspaceSwitch');
+            // hide selection during workspace switch
+            Tiling.spaces.forEach(s => s.hideSelection());
+            saved.call(this, workspaceIndices);
+        });
+
+    registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, '_finishWorkspaceSwitch',
+        function (switchData) {
+            const saved = getSavedPrototype(
+                WorkspaceAnimation.WorkspaceAnimationController,
+                '_finishWorkspaceSwitch');
+            // ensure selection is shown after workspaces swtching
+            Tiling.spaces.forEach(s => s.showSelection());
+            saved.call(this, switchData);
         });
 
     if (Workspace.WindowClone)
