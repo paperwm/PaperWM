@@ -20,18 +20,6 @@ const WindowManager = imports.ui.windowManager;
 const Mainloop = imports.mainloop;
 const Params = imports.misc.params;
 
-// Workspace.WindowClone.getOriginalPosition
-// Get the correct positions of tiled windows when animating to/from the overview
-function getOriginalPosition() {
-    let c = this.metaWindow.clone;
-    let space = Tiling.spaces.spaceOfWindow(this.metaWindow);
-    if (!space || space.indexOf(this.metaWindow) === -1) {
-        return [this._boundingBox.x, this._boundingBox.y];
-    }
-    let [x, y] = [space.monitor.x + space.targetX + c.targetX, space.monitor.y + c.y];
-    return [x, y];
-}
-
 function registerOverrideProp(obj, name, override) {
     if (!obj)
         return;
@@ -106,23 +94,6 @@ function enableOverride(obj, name) {
  * on PaperWM disable.
  */
 function setupOverrides() {
-    // prepare for PaperWM workspace switching
-    registerOverridePrototype(WindowManager.WindowManager, '_prepareWorkspaceSwitch',
-        function (from, to, direction) {
-            if (this._switchData)
-                return;
-
-            let switchData = {};
-            this._switchData = switchData;
-            switchData.movingWindowBin = new Clutter.Actor();
-            switchData.windows = [];
-            switchData.surroundings = {};
-            switchData.gestureActivated = false;
-            switchData.inProgress = false;
-
-            switchData.container = new Clutter.Actor();
-        });
-
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch',
         // WorkspaceAnimation.WorkspaceAnimationController.animateSwitch
         // Disable the workspace switching animation in Gnome 40+
@@ -150,68 +121,10 @@ function setupOverrides() {
             saved.call(this, switchData);
         });
 
-    if (Workspace.WindowClone)
-        registerOverridePrototype(Workspace.WindowClone, 'getOriginalPosition', getOriginalPosition);
-
-    // Workspace.Workspace._realRecalculateWindowPositions
-    // Sort tiled windows in the correct order
-    registerOverridePrototype(Workspace.Workspace, '_realRecalculateWindowPositions',
-        function (flags) {
-            if (this._repositionWindowsId > 0) {
-                Mainloop.source_remove(this._repositionWindowsId);
-                this._repositionWindowsId = 0;
-            }
-
-            let clones = this._windows.slice();
-            if (clones.length === 0) {
-                return;
-            }
-
-            let space = Tiling.spaces.spaceOf(this.metaWorkspace);
-            if (space) {
-                clones.sort((a, b) => {
-                    let aw = a.metaWindow;
-                    let bw = b.metaWindow;
-                    let ia = space.indexOf(aw);
-                    let ib = space.indexOf(bw);
-                    if (ia === -1 && ib === -1) {
-                        return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
-                    }
-                    if (ia === -1) {
-                        return -1;
-                    }
-                    if (ib === -1) {
-                        return 1;
-                    }
-                    return ia - ib;
-                });
-            } else {
-                clones.sort((a, b) => {
-                    return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
-                });
-            }
-
-            if (this._reservedSlot)
-                clones.push(this._reservedSlot);
-
-            this._currentLayout = this._computeLayout(clones);
-            this._updateWindowPositions(flags);
-        });
-
     registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
 
     if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
         registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
-
-    // Work around https://gitlab.gnome.org/GNOME/gnome-shell/issues/1884
-    if (!WindowManager.WindowManager.prototype._removeEffect) {
-        registerOverridePrototype(WindowManager.WindowManager, '_mapWindowOverwrite',
-            function (shellwm, actor) {
-                if (this._mapping.delete(actor)) {
-                    shellwm.completed_map(actor);
-                }
-            });
-    }
 
     // disable swipe gesture trackers
     swipeTrackers.forEach(t => {
