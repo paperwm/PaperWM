@@ -126,7 +126,7 @@ The workspace name is shown in the top left corner replacing the `Activities` bu
 > dconf write /org/gnome/shell/extensions/paperwm/show-workspace-indicator false
 > ``` 
 
-Swiping the trackpad vertically with three fingers lets you navigate the workspace stack (only available in Wayland).
+Swiping down on the trackpad vertically with three fingers will initiate the workspace stack, and then allow you navigate the workspace stack with 3-finger vertical swipes (only available in Wayland).  See the [Touchpad Gestures](#touchpad-gestures) section for more information on gesture support in PaperWM.
 
 There's a single scrollable tiling per workspace. Adding another monitor simply makes it possible to have another workspace visible. The workspace stack is shared among all the monitors, windows being resized vertically as necessary when workspace is displayed on another monitor.
 
