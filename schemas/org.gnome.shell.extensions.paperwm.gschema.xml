@@ -125,7 +125,7 @@
         <default><![CDATA[['<Super>t']]]></default>
         <summary>Take the window, dropping it when finished navigating</summary>
     </key>
-    
+
     <key type="as" name="switch-focus-mode">
       <default><![CDATA[['<Super><Shift>c']]]></default>
       <summary>Switch between Window Focus Modes (e.g. default, center)</summary>
@@ -217,9 +217,19 @@
       <summary>Cycle through useful window widths</summary>
     </key>
 
+    <key type="as" name="cycle-width-backwards">
+      <default><![CDATA[['<Super><Alt>r']]]></default>
+      <summary>Cycle through useful window widths backwards</summary>
+    </key>
+
     <key type="as" name="cycle-height">
         <default><![CDATA[['<Super><Shift>r']]]></default>
         <summary>Cycle through useful window heights</summary>
+    </key>
+
+    <key type="as" name="cycle-height-backwards">
+        <default><![CDATA[['<Super><Alt><Shift>r']]]></default>
+        <summary>Cycle through useful window heights backwards</summary>
     </key>
 
     <key type="as" name="center-horizontally">
@@ -422,6 +432,21 @@
     <key type="as" name="winprops">
         <default><![CDATA[[]]]></default>
         <summary>Array of winprops as (JSON) string objects</summary>
+    </key>
+
+    <key type="b" name="gesture-enabled">
+        <default>true</default>
+        <summary>Enables PaperWM touchpad gestures</summary>
+    </key>
+
+    <key type="i" name="gesture-horizontal-fingers">
+        <default>3</default>
+        <summary>Number of fingers for tiling horizontal swipe. 0:DISABLED 3:THREE_FINGERS 4:FOUR_FINGERS</summary>
+    </key>
+
+    <key type="i" name="gesture-workspace-fingers">
+        <default>3</default>
+        <summary>Number of fingers for workspace switching. 0:DISABLED 3:THREE_FINGERS 4:FOUR_FINGERS</summary>
     </key>
 
     <child name="keybindings" schema="org.gnome.shell.extensions.paperwm.keybindings"/>

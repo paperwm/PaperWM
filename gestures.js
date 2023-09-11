@@ -38,6 +38,20 @@ function enable() {
         schema_id: 'org.gnome.desktop.peripherals.touchpad',
     });
 
+    // monitor gesture-enabled for changes
+    const gsettings = ExtensionUtils.getSettings();
+    signals.connect(gsettings, 'changed::gesture-enabled', () => {
+        gestureEnabled() ? swipeTrackersEnable(false) : swipeTrackersEnable();
+    });
+
+    /**
+     * Swipetrackers are reset by gnome during overview, once exits overview
+     * ensure swipe trackers are reset.
+     */
+    signals.connect(Main.overview, 'hidden', () => {
+        swipeTrackersEnable(false);
+    });
+
     /**
        In order for the space.background actors to get any input we need to hide
        all the window actors from the stage.
@@ -48,26 +62,39 @@ function enable() {
        under the mouse cursor.
      */
     signals.connect(global.stage, 'captured-event', (actor, event) => {
-        if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
-            event.get_touchpad_gesture_finger_count() < 3 ||
-            (Main.actionMode & Shell.ActionMode.OVERVIEW) > 0) {
+        if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE) {
             return Clutter.EVENT_PROPAGATE;
         }
+
+        const fingers = event.get_touchpad_gesture_finger_count();
+        if (
+            fingers <= 2 ||
+            (Main.actionMode & Shell.ActionMode.OVERVIEW) > 0
+        ) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+
+        const enabled = gestureEnabled();
+        if (!enabled) {
+            // switch to default swipe trackers
+            swipeTrackersEnable();
+        }
+
         const phase = event.get_gesture_phase();
+        const [dx, dy] = event.get_gesture_motion_delta();
         switch (phase) {
         case Clutter.TouchpadGesturePhase.UPDATE:
             if (direction === DIRECTIONS.Horizontal) {
                 return Clutter.EVENT_PROPAGATE;
             }
-            let [dx, dy] = event.get_gesture_motion_delta();
-            if (direction === undefined) {
+            if (enabled && direction === undefined) {
                 if (Math.abs(dx) < Math.abs(dy)) {
                     vy = 0;
                     vState = phase;
                     direction = DIRECTIONS.Vertical;
                 }
             }
-            if (direction === DIRECTIONS.Vertical) {
+            if (enabled && direction === DIRECTIONS.Vertical) {
                 // if in overview => propagate event to overview
                 if (Main.overview.visible) {
                     return Clutter.EVENT_PROPAGATE;
@@ -76,17 +103,42 @@ function enable() {
                 let dir_y = -dy * natural * Settings.prefs.swipe_sensitivity[1];
                 // if not Tiling.inPreview and swipe is UP => propagate event to overview
                 if (!Tiling.inPreview && dir_y > 0) {
+                    // enable swipe trackers which enables 3-finger up overview
                     swipeTrackersEnable();
                     return Clutter.EVENT_PROPAGATE;
                 }
 
-                // do PaperWM vertical swipe actions
+                if (gestureWorkspaceFingers() !== fingers) {
+                    return Clutter.EVENT_PROPAGATE;
+                }
+
+                // initiates workspace stack switching
                 swipeTrackersEnable(false);
                 updateVertical(dir_y, event.get_time());
                 return Clutter.EVENT_STOP;
             }
             return Clutter.EVENT_PROPAGATE;
         case Clutter.TouchpadGesturePhase.BEGIN:
+            if (
+                // gestures disabled AND three-fingers ==> gnome default behaviour
+                !enabled && fingers === 3
+            ) {
+                return Clutter.EVENT_PROPAGATE;
+            }
+            else if (
+                // if here horizontal fingers !== 3 ==> allow
+                gestureHorizontalFingers() === fingers
+            ) {
+                // NOOP
+            }
+            else if (
+                // gestures disabled ==> gnome default behaviour
+                !enabled
+            ) {
+                return Clutter.EVENT_PROPAGATE;
+            }
+
+            // PaperWM behaviour
             time = event.get_time();
             natural = touchpadSettings.get_boolean("natural-scroll") ? 1 : -1;
             direction = undefined;
@@ -115,20 +167,48 @@ function disable() {
     touchpadSettings = null;
 }
 
+function gestureEnabled() {
+    return Settings.prefs.gesture_enabled;
+}
+
+function gestureHorizontalFingers() {
+    return Settings.prefs.gesture_horizontal_fingers;
+}
+
+function gestureWorkspaceFingers() {
+    return Settings.prefs.gesture_workspace_fingers;
+}
+
 /**
    Handle scrolling horizontally in a space. The handler is meant to be
    connected from each space.background and bound to the space.
  */
 let start, dxs = [], dts = [];
 function horizontalScroll(actor, event) {
-    if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE ||
-        event.get_touchpad_gesture_finger_count() < 3) {
+    if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE) {
         return Clutter.EVENT_PROPAGATE;
     }
+
+    const fingers = event.get_touchpad_gesture_finger_count();
+    if (
+        fingers <= 2 || gestureHorizontalFingers() !== fingers
+    ) {
+        return Clutter.EVENT_PROPAGATE;
+    }
+    else if (
+        /**
+         * If gestures are disabled AND doing a 3-finger swipe (gnome default)
+         * AND horizontal fingers are set to 3, then propagate.
+         */
+        !gestureEnabled() && fingers === 3
+    ) {
+        return Clutter.EVENT_PROPAGATE;
+    }
+
     const phase = event.get_gesture_phase();
+    const [dx, dy] = event.get_gesture_motion_delta();
     switch (phase) {
     case Clutter.TouchpadGesturePhase.UPDATE:
-        let [dx, dy] = event.get_gesture_motion_delta();
         if (direction === undefined) {
             this.vx = 0;
             dxs = [];

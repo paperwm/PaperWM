@@ -83,27 +83,29 @@ Swiping the trackpad horizontally with three fingers will scroll the tiling (onl
 
 PaperWM doesn't handle attached modal dialogs very well, so it's best to turn it off in Gnome Tweaks (under Windows).
 
-| Keybindings                                                                                       |                                                        |
-| ------                                                                                            | -------                                                |
-| <kbd>Super</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>.</kbd>                                      | Activate the next or previous window                   |
-| <kbd>Super</kbd><kbd>Left</kbd> or <kbd>Super</kbd><kbd>Right</kbd>                               | Activate the window to the left or right               |
-| <kbd>Super</kbd><kbd>Up</kbd> or <kbd>Super</kbd><kbd>Down</kbd>                                  | Activate the window above or below                     |
-| <kbd>Super</kbd><kbd>Home</kbd> or <kbd>Super</kbd><kbd>End</kbd>                                 | Activate the first or last window                      |
-| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>.</kbd>        | Move the current window to the left or right           |
-| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Left</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Right</kbd> | Move the current window to the left or right           |
-| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Up</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Down</kbd>    | Move the current window up or down                     |
-| <kbd>Super</kbd><kbd>t</kbd>                                                                      | Take the window, placing it when finished navigating   |
-| <kbd>Super</kbd><kbd>Tab</kbd> or <kbd>Alt</kbd><kbd>Tab</kbd>                                    | Cycle through the most recently used windows           |
-| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> or <kbd>Alt</kbd><kbd>Shift</kbd><kbd>Tab</kbd>    | Cycle backwards through the most recently used windows |
-| <kbd>Super</kbd><kbd>C</kbd>                                                                      | Center the active window horizontally                  |
-| <kbd>Super</kbd><kbd>R</kbd>                                                                      | Resize the window (cycles through useful widths)       |
-| <kbd>Super</kbd><kbd>Shift</kbd><kbd>R</kbd>                                                      | Resize the window (cycles through useful heights)      |
-| <kbd>Super</kbd><kbd>F</kbd>                                                                      | Maximize the width of a window                         |
-| <kbd>Super</kbd><kbd>Shift</kbd><kbd>F</kbd>                                                      | Toggle fullscreen                                      |
-| <kbd>Super</kbd><kbd>Return</kbd> or <kbd>Super</kbd><kbd>N</kbd>                                 | Create a new window from the active application        |
-| <kbd>Super</kbd><kbd>Backspace</kbd>                                                              | Close the active window                                |
-| <kbd>Super</kbd><kbd>I</kbd>                                                                      | Absorb the window to the right into the active column  |
-| <kbd>Super</kbd><kbd>O</kbd>                                                                      | Expel the bottom window out to the right               |
+| Keybindings                                                                                       |                                                             |
+| ------                                                                                            | -------                                                     |
+| <kbd>Super</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>.</kbd>                                      | Activate the next or previous window                        |
+| <kbd>Super</kbd><kbd>Left</kbd> or <kbd>Super</kbd><kbd>Right</kbd>                               | Activate the window to the left or right                    |
+| <kbd>Super</kbd><kbd>Up</kbd> or <kbd>Super</kbd><kbd>Down</kbd>                                  | Activate the window above or below                          |
+| <kbd>Super</kbd><kbd>Home</kbd> or <kbd>Super</kbd><kbd>End</kbd>                                 | Activate the first or last window                           |
+| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>.</kbd>        | Move the current window to the left or right                |
+| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Left</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Right</kbd> | Move the current window to the left or right                |
+| <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Up</kbd> or <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Down</kbd>    | Move the current window up or down                          |
+| <kbd>Super</kbd><kbd>t</kbd>                                                                      | Take the window, placing it when finished navigating        |
+| <kbd>Super</kbd><kbd>Tab</kbd> or <kbd>Alt</kbd><kbd>Tab</kbd>                                    | Cycle through the most recently used windows                |
+| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> or <kbd>Alt</kbd><kbd>Shift</kbd><kbd>Tab</kbd>    | Cycle backwards through the most recently used windows      |
+| <kbd>Super</kbd><kbd>C</kbd>                                                                      | Center the active window horizontally                       |
+| <kbd>Super</kbd><kbd>R</kbd>                                                                      | Resize the window (cycles through useful widths)            |
+| <kbd>Super</kbd><kbd>Alt</kbd><kbd>R</kbd>                                                        | Resize the window (cycles backwards through useful widths)  |
+| <kbd>Super</kbd><kbd>Shift</kbd><kbd>R</kbd>                                                      | Resize the window (cycles through useful heights)           |
+| <kbd>Super</kbd><kbd>Shift</kbd><kbd>Alt</kbd><kbd>R</kbd>                                        | Resize the window (cycles backwards through useful heights) |
+| <kbd>Super</kbd><kbd>F</kbd>                                                                      | Maximize the width of a window                              |
+| <kbd>Super</kbd><kbd>Shift</kbd><kbd>F</kbd>                                                      | Toggle fullscreen                                           |
+| <kbd>Super</kbd><kbd>Return</kbd> or <kbd>Super</kbd><kbd>N</kbd>                                 | Create a new window from the active application             |
+| <kbd>Super</kbd><kbd>Backspace</kbd>                                                              | Close the active window                                     |
+| <kbd>Super</kbd><kbd>I</kbd>                                                                      | Absorb the window to the right into the active column       |
+| <kbd>Super</kbd><kbd>O</kbd>                                                                      | Expel the bottom window out to the right                    |
 
 
 ### The workspace stack & monitors ###
@@ -116,9 +118,7 @@ Pressing <kbd>Super</kbd><kbd>Page_Down</kbd> and <kbd>Super</kbd><kbd>Page_Up</
 
 ![Sequential workspace navigation](https://github.com/paperwm/media/blob/master/sequence.png)
 
-The workspace name is shown in the top left corner replacing the `Activities` button adding a few enhancements. Scrolling on the name will let you browse the workspace stack just like <kbd>Super</kbd><kbd>Above_Tab</kbd>. Left clicking on the name opens Gnome overview, while right clicking the name lets you access and change the workspace name and the background color:
-
-![The workspace menu](https://github.com/paperwm/media/blob/master/menu.png)
+The workspace name is shown in the top left corner replacing the `Activities` button adding a few enhancements. Scrolling on the name will let you browse the workspace stack just like <kbd>Super</kbd><kbd>Above_Tab</kbd>. Left clicking on the name opens Gnome overview, while right clicking the name lets you access and change the workspace name.
 
 > If you prefer to use another workspace indicator (or prefer none at all), you can hide this workspace name element from Gnome topbar by executing the following command from a terminal:
 > 
@@ -126,7 +126,7 @@ The workspace name is shown in the top left corner replacing the `Activities` bu
 > dconf write /org/gnome/shell/extensions/paperwm/show-workspace-indicator false
 > ``` 
 
-Swiping the trackpad vertically with three fingers lets you navigate the workspace stack (only available in Wayland).
+Swiping down on the trackpad vertically with three fingers will initiate the workspace stack, and then allow you navigate the workspace stack with 3-finger vertical swipes (only available in Wayland).  See the [Touchpad Gestures](#touchpad-gestures) section for more information on gesture support in PaperWM.
 
 There's a single scrollable tiling per workspace. Adding another monitor simply makes it possible to have another workspace visible. The workspace stack is shared among all the monitors, windows being resized vertically as necessary when workspace is displayed on another monitor.
 
@@ -230,6 +230,32 @@ Setting | Description | Reference
 --------|-------------|----------
 <code>disable&#8209;topbar&#8209;styling</code> | Disables PaperWM's ability to style the Gnome TopBar. | See [Gnome TopBar opacity / styling](#gnome-topbar-opacity--styling).
 
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>gesture&#8209;enabled</code> | Enables / disables PaperWM gestures. Setting this to `false` restores Gnome's default touchpad gestures. | Boolean | true
+
+__Example:__ disabling PaperWM touchpad gestures
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-enabled false
+```
+
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>gesture&#8209;horizontal&#8209;fingers</code> | Sets the number of fingers used for moving the tiling viewport (windows) left/right. | _number_: `0` (disables gesture), `3`, `4`  | `3`
+
+__Example:__ setting swiping left/right to move windows to four-fingers:
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-horizontal-fingers 4
+```
+
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>gesture&#8209;workspace&#8209;fingers</code> | Sets the number of fingers used for PaperWM workspace stack view. | _number_: `0` (disables gesture), `3`, `4`  | `3`
+
+__Example:__ disabling PaperWM workspace stack view gesture:
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-workspace-fingers 0
+```
 Setting | Description | Reference
 --------|-------------|----------
 <code>show&#8209;focus&#8209;mode&#8209;icon</code> | Shows/hides the focus mode icon in TopBar. | See [Hiding the focus mode icon](#hiding-the-focus-mode-icon).
@@ -367,6 +393,41 @@ Keybindings.bindkey("<Super>j", "my-favorite-width",
 ```
 
 See `examples/keybindings.js` for more examples.
+
+### Touchpad Gestures  ###
+
+PaperWM implements the following touchpad gestures by default:
+
+Gesture                       | Action              
+------------------------------|------------------------------------------------------
+three-finger swipe up         | Gnome Overview #setting-window-specific-properties
+three-finger swipe down       | PaperWM workspace stack view (see [here](#the-workspace-stack--monitors))
+three-finger swipe left/right | Moves tiling viewport (windows) left / right
+
+PaperWM touchpad gestures behaviour can be modified with the following settings:
+
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>gesture&#8209;enabled</code> | Enables / disables PaperWM gestures. Setting this to `false` restores Gnome's default touchpad gestures. | Boolean | true
+<code>gesture&#8209;horizontal&#8209;fingers</code> | Sets the number of fingers used for moving the tiling viewport (windows) left/right. | _number_: `0` (disables gesture), `3`, `4`  | `3`
+<code>gesture&#8209;workspace&#8209;fingers</code> | Sets the number of fingers used for PaperWM workspace stack view. | _number_: `0` (disables gesture), `3`, `4`  | `3` 
+
+These settings can be changed from a terminal with the following commands
+
+__Example:__ disabling PaperWM touchpad gestures
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-enabled false
+```
+
+__Example:__ setting swiping left/right to move windows to four-fingers:
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-horizontal-fingers 4
+```
+
+__Example:__ disabling PaperWM workspace stack view gesture:
+```
+dconf write /org/gnome/shell/extensions/paperwm/gesture-workspace-fingers 0
+```
 
 ## Window Position Bar (colored bar segment in Top Bar) ##
 

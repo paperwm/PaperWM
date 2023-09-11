@@ -39,6 +39,8 @@ var inPreview = PreviewMode.NONE; // export
 // DEFAULT mode is normal/original PaperWM window focus behaviour
 var FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
 
+var CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1};
+
 /**
    Scrolled and tiled per monitor workspace.
 
@@ -266,7 +268,7 @@ var Space = class Space extends Array {
     }
 
     /**
-     * Activates this space. Safer alternative to space.workspace.activate_with_focus.  also allows
+     * Activates this space. Safer alternative to space.workspace.activate_with_focus. Also allows
      * setting animation on workspaceSwitch.
      * @param {Boolean} animate
      */
@@ -2039,7 +2041,8 @@ var Spaces = class Spaces extends Map {
             metaWindow.change_workspace(toSpace.workspace);
         }
 
-        if (inPreview === PreviewMode.NONE && toSpace.monitor === fromSpace.monitor) {
+        if (inPreview === PreviewMode.NONE &&
+            toSpace.monitor === fromSpace.monitor) {
             // Only start an animation if we're moving between workspaces on the
             // same monitor
             this._initWorkspaceSequence();
@@ -2053,7 +2056,11 @@ var Spaces = class Spaces extends Map {
         let monitor = toSpace.monitor;
         this.setMonitors(monitor, toSpace, true);
 
-        this.animateToSpace(toSpace, fromSpace, animate || this._space_activate_animate,
+        let doAnimate = animate || this._space_activate_animate;
+        this.animateToSpace(
+            toSpace,
+            fromSpace,
+            doAnimate,
             () => this.setSpaceTopbarElementsVisible());
 
         toSpace.monitor.clickOverlay.deactivate();
@@ -3772,14 +3779,28 @@ function getCycleWindowWidths(metaWindow) {
     return steps;
 }
 
-function cycleWindowWidth(metaWindow) {
+function cycleWindowWidth(metawindow) {
+    return cycleWindowWidthDirection(metawindow, CycleWindowSizesDirection.FORWARD);
+}
+
+function cycleWindowWidthBackwards(metawindow) {
+    return cycleWindowWidthDirection(metawindow, CycleWindowSizesDirection.BACKWARDS);
+}
+
+function cycleWindowWidthDirection(metaWindow, direction) {
     let frame = metaWindow.get_frame_rect();
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     workArea.x += space.monitor.x;
 
+    let findFn = direction === CycleWindowSizesDirection.FORWARD ? Lib.findNext : Lib.findPrev;
+
     // 10px slack to avoid locking up windows that only resize in increments > 1px
-    let targetWidth = Math.min(Lib.findNext(frame.width, getCycleWindowWidths(metaWindow), sizeSlack), workArea.width);
+    let targetWidth = Math.min(
+        findFn(frame.width, getCycleWindowWidths(metaWindow), sizeSlack),
+        workArea.width
+    );
+
     let targetX = frame.x;
 
     if (Scratch.isScratchWindow(metaWindow)) {
@@ -3797,26 +3818,36 @@ function cycleWindowWidth(metaWindow) {
     metaWindow.move_resize_frame(true, targetX, frame.y, targetWidth, frame.height);
 }
 
-function cycleWindowHeight(metaWindow) {
+function cycleWindowHeight(metawindow) {
+    return cycleWindowHeightDirection(metawindow, CycleWindowSizesDirection.FORWARD);
+}
+
+function cycleWindowHeightBackwards(metawindow) {
+    return cycleWindowHeightDirection(metawindow, CycleWindowSizesDirection.BACKWARDS);
+}
+
+function cycleWindowHeightDirection(metaWindow, direction) {
     let steps = Settings.prefs.cycle_height_steps;
     let frame = metaWindow.get_frame_rect();
 
     let space = spaces.spaceOfWindow(metaWindow);
     let i = space.indexOf(metaWindow);
 
+    let findFn = direction === CycleWindowSizesDirection.FORWARD ? Lib.findNext : Lib.findPrev;
+
     function calcTargetHeight(available) {
         let targetHeight;
         if (steps[0] <= 1) { // ratio steps
-            let targetR = Lib.findNext(frame.height / available, steps, sizeSlack / available);
+            let targetR = findFn(frame.height / available, steps, sizeSlack / available);
             targetHeight = Math.floor(targetR * available);
         } else { // pixel steps
-            targetHeight = Lib.findNext(frame.height, steps, sizeSlack);
+            targetHeight = findFn(frame.height, steps, sizeSlack);
         }
         return Math.min(targetHeight, available);
     }
 
     if (i > -1) {
-        function allocate(column, available) {
+        const allocate = (column, available) => {
             // NB: important to not retrieve the frame size inside allocate. Allocation of
             // metaWindow should stay the same during a potential fixpoint evaluation.
             available -= (column.length - 1) * Settings.prefs.window_gap;
@@ -3828,7 +3859,7 @@ function cycleWindowHeight(metaWindow) {
                     return Math.floor((available - targetHeight) / (column.length - 1));
                 }
             });
-        }
+        };
 
         if (space[i].length > 1) {
             space.layout(false, { customAllocators: { [i]: allocate } });
