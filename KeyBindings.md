@@ -2,7 +2,7 @@
 
 ## Scrollable window tilling ##
 
-| Window Keybings             |                                         |
+| Window Keybindings             |                                         |
 | ------                                                                                            | -------                                                |
 | <kbd>Super</kbd><kbd>,</kbd> or <kbd>Super</kbd><kbd>.</kbd>                                      | Activate the next or previous window                   |
 | <kbd>Super</kbd><kbd>Left</kbd> or <kbd>Super</kbd><kbd>Right</kbd>                               | Activate the window to the left or right               |
