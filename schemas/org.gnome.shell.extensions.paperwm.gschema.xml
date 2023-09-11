@@ -434,6 +434,21 @@
         <summary>Array of winprops as (JSON) string objects</summary>
     </key>
 
+    <key type="b" name="gesture-enabled">
+        <default>true</default>
+        <summary>Enables PaperWM touchpad gestures</summary>
+    </key>
+
+    <key type="i" name="gesture-horizontal-fingers">
+        <default>3</default>
+        <summary>Number of fingers for tiling horizontal swipe. 0:DISABLED 3:THREE_FINGERS 4:FOUR_FINGERS</summary>
+    </key>
+
+    <key type="i" name="gesture-workspace-fingers">
+        <default>3</default>
+        <summary>Number of fingers for workspace switching. 0:DISABLED 3:THREE_FINGERS 4:FOUR_FINGERS</summary>
+    </key>
+
     <child name="keybindings" schema="org.gnome.shell.extensions.paperwm.keybindings"/>
     <child name="workspaces" schema="org.gnome.shell.extensions.paperwm.workspacelist"/>
 

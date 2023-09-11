@@ -268,7 +268,7 @@ var Space = class Space extends Array {
     }
 
     /**
-     * Activates this space. Safer alternative to space.workspace.activate_with_focus.  also allows
+     * Activates this space. Safer alternative to space.workspace.activate_with_focus. Also allows
      * setting animation on workspaceSwitch.
      * @param {Boolean} animate
      */
@@ -2041,7 +2041,8 @@ var Spaces = class Spaces extends Map {
             metaWindow.change_workspace(toSpace.workspace);
         }
 
-        if (inPreview === PreviewMode.NONE && toSpace.monitor === fromSpace.monitor) {
+        if (inPreview === PreviewMode.NONE &&
+            toSpace.monitor === fromSpace.monitor) {
             // Only start an animation if we're moving between workspaces on the
             // same monitor
             this._initWorkspaceSequence();
@@ -2055,7 +2056,11 @@ var Spaces = class Spaces extends Map {
         let monitor = toSpace.monitor;
         this.setMonitors(monitor, toSpace, true);
 
-        this.animateToSpace(toSpace, fromSpace, animate || this._space_activate_animate,
+        let doAnimate = animate || this._space_activate_animate;
+        this.animateToSpace(
+            toSpace,
+            fromSpace,
+            doAnimate,
             () => this.setSpaceTopbarElementsVisible());
 
         toSpace.monitor.clickOverlay.deactivate();
@@ -3842,7 +3847,7 @@ function cycleWindowHeightDirection(metaWindow, direction) {
     }
 
     if (i > -1) {
-        function allocate(column, available) {
+        const allocate = (column, available) => {
             // NB: important to not retrieve the frame size inside allocate. Allocation of
             // metaWindow should stay the same during a potential fixpoint evaluation.
             available -= (column.length - 1) * Settings.prefs.window_gap;
@@ -3854,7 +3859,7 @@ function cycleWindowHeightDirection(metaWindow, direction) {
                     return Math.floor((available - targetHeight) / (column.length - 1));
                 }
             });
-        }
+        };
 
         if (space[i].length > 1) {
             space.layout(false, { customAllocators: { [i]: allocate } });

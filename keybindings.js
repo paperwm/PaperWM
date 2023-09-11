@@ -192,6 +192,7 @@ function setupActions() {
         dynamic_function_ref("cycleWindowHeight",
             Tiling),
         Meta.KeyBindingFlags.PER_WINDOW);
+
     registerPaperAction("cycle-height-backwards",
         dynamic_function_ref("cycleWindowHeightBackwards",
             Tiling),
