@@ -1,5 +1,5 @@
 const ExtensionUtils = imports.misc.extensionUtils;
-const { Gio, Gtk, GLib } = imports.gi;
+const { Gio, GLib } = imports.gi;
 
 /**
     Settings utility shared between the running extension and the preference UI.
@@ -80,28 +80,6 @@ function disable() {
 // / Keybindings
 
 /**
- * Depending on your gnome version, Gtk.accelerator_parse() can return a 2 value arrary
- * or a 3 value array.  This method handles both return results.
- */
-function accelerator_parse(keystr) {
-    let ok, key, mask;
-    let result = Gtk.accelerator_parse(keystr);
-    if (result.length === 3) {
-        [ok, key, mask] = result;
-    }
-    else {
-        [key, mask] = result;
-        if (key) {
-            ok = true;
-        }
-    }
-
-    console.log(keystr, ok, key, mask);
-
-    return [ok, key, mask];
-}
-
-/**
  * Returns the GDK mask value for a keystr (keybind string representation).
  * Refer to:
  * https://gitlab.gnome.org/GNOME/gtk/-/blob/4.13.0/gdk/gdkenums.h?ref_type=tags#L115
@@ -125,6 +103,7 @@ function accelerator_mask(keystr) {
             result |= GDK_SHIFT_MASK;
             break;
         case '<control>':
+        case '<primary>':
             result |= GDK_CONTROL_MASK;
             break;
         case '<alt>':

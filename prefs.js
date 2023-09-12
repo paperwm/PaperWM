@@ -3,7 +3,7 @@ const Extension = ExtensionUtils.getCurrentExtension();
 const Settings = Extension.imports.settings;
 const Workspace = Extension.imports.workspace;
 const { Gio, GLib, GObject, Gtk, Gdk } = imports.gi;
-const { KeybindingsPane } = Extension.imports.prefsKeybinding;
+const { KeybindingsPane, accelerator_parse } = Extension.imports.prefsKeybinding;
 const { WinpropsPane } = Extension.imports.winpropsPane;
 
 let _ = s => s;
@@ -678,7 +678,7 @@ function parseAccelerator(accelerator) {
     if (accelerator.match(/Above_Tab/)) {
         accelerator = accelerator.replace('Above_Tab', 'grave');
     }
-    let [ok, key, mods] = Settings.accelerator_parse(accelerator);
+    let [ok, key, mods] = accelerator_parse(accelerator);
     // log(`PaperWM: parseAccelerator(${accelerator}) -> [${key}, ${mods}]`);
 
     return [key, mods];
