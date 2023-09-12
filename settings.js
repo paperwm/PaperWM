@@ -95,7 +95,7 @@ let GDK_HYPER_MASK    = 1 << 27;
 let GDK_META_MASK     = 1 << 28;
 function accelerator_mask(keystr) {
     // need to extact all mods from keystr
-    const mods = keystr.match(/<.*?>/);
+    const mods = accelerator_mods(keystr);
     let result = 0;
     for (let mod of mods) {
         switch (mod.toLowerCase()) {
@@ -103,6 +103,7 @@ function accelerator_mask(keystr) {
             result |= GDK_SHIFT_MASK;
             break;
         case '<control>':
+        case '<ctrl>':
         case '<primary>':
             result |= GDK_CONTROL_MASK;
             break;
@@ -124,6 +125,14 @@ function accelerator_mask(keystr) {
 }
 
 /**
+ * Returns array of mods for a keystr, e.g. ['<Control>', '<Shift>', '<Alt>'].
+ * @param {String} keystr
+ */
+function accelerator_mods(keystr) {
+    return keystr.match(/<.*?>/g) ?? [];
+}
+
+/**
  * Two keystrings can represent the same key combination.
  * Attempt to normalise keystr by sections.
  */
@@ -133,13 +142,20 @@ function keystrToKeycombo(keystr) {
         keystr = keystr.replace('Above_Tab', 'grave');
     }
 
-    // separate into sections
-    const split = keystr.split(/[<>]/)
-        .filter(v => v !== '')
-        .map(v => v.toLowerCase())
-        .sort();
+    // get mask for this keystr
+    const mask = accelerator_mask(keystr);
+    const mods = accelerator_mods(keystr);
 
-    return split.join('|');
+    // remove mods from keystr
+    let result = keystr;
+    mods.forEach(m => {
+        result = result.replace(m, '');
+    });
+    result = result.trim().toLowerCase();
+
+    // combine mask with remaining key
+    // console.log(`${keystr} : ${mask}|${result}`);
+    return `${mask}|${result}`;
 }
 
 function generateKeycomboMap(settings) {
