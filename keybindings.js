@@ -1,6 +1,5 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
-const ExtensionModule = Extension.imports.extension;
 const Settings = Extension.imports.settings;
 const Utils = Extension.imports.utils;
 const Tiling = Extension.imports.tiling;
@@ -8,13 +7,11 @@ const Navigator = Extension.imports.navigator;
 const App = Extension.imports.app;
 const Scratch = Extension.imports.scratch;
 const LiveAltTab = Extension.imports.liveAltTab;
-const keystrToKeycombo = Extension.imports.settings.keystrToKeycombo;
 
 const { Clutter, Meta, Shell } = imports.gi;
 const Seat = Clutter.get_default_backend().get_default_seat();
 const Main = imports.ui.main;
 const display = global.display;
-
 
 let KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
@@ -313,78 +310,6 @@ function registerAction(actionName, handler, options) {
     return action;
 }
 
-/**
- * Bind a key to an action (possibly creating a new action)
- */
-function bindkey(keystr, actionName = null, handler = null, options = {}) {
-    Utils.assert(!options.settings,
-        "Can only bind schemaless actions - change action's settings instead",
-        actionName);
-
-    let action = actionName && actions.find(a => a.name === actionName);
-    let keycombo = keystrToKeycombo(keystr);
-
-    if (!action) {
-        action = registerAction(actionName, handler, options);
-    } else {
-        let boundAction = keycomboMap[keycombo];
-        if (boundAction && boundAction !== action) {
-            console.debug("Rebinding", keystr, "to", actionName, "from", boundAction.name);
-            disableAction(boundAction);
-        }
-
-        disableAction(action);
-
-        action.handler = handler;
-        action.options = impliedOptions(options);
-    }
-
-    action.keystr = keystr;
-    action.keycombo = keycombo;
-
-    if (enableAction(action) === Meta.KeyBindingAction.NONE) {
-        // Keybinding failed: try to supply a useful error message
-        let message;
-        let boundAction = keycomboMap[keycombo];
-        if (boundAction) {
-            message = `${keystr} already bound to paperwm action: ${boundAction.name}`;
-        } else {
-            let boundId = getBoundActionId(keystr);
-            if (boundId !== Meta.KeyBindingAction.NONE) {
-                let builtInAction =
-                    Object.entries(Meta.KeyBindingAction).find(([name, id]) => id === boundId);
-                if (builtInAction) {
-                    message = `${keystr} already bound to built-in action: ${builtInAction[0]}`;
-                } else {
-                    message = `${keystr} already bound to unknown action with id: ${boundId}`;
-                }
-            }
-        }
-
-        if (!message) {
-            message = "Usually caused by the binding already being taken, but could not identify which action";
-        }
-
-        ExtensionModule.errorNotification(
-            "PaperWM (user.js): Could not enable keybinding",
-            `Tried to bind ${keystr} to ${actionName}\n${message}`);
-    }
-
-    return action.id;
-}
-
-function unbindkey(actionIdOrKeystr) {
-    let actionId;
-    if (typeof  actionIdOrKeystr === "string") {
-        const action = keycomboMap[keystrToKeycombo(actionIdOrKeystr)];
-        actionId = action && action.id;
-    } else {
-        actionId = actionIdOrKeystr;
-    }
-
-    disableAction(actionIdMap[actionId]);
-}
-
 function devirtualizeMask(gdkVirtualMask) {
     const keymap = Seat.get_keymap();
     let [success, rawMask] = keymap.map_virtual_modifiers(gdkVirtualMask);
@@ -410,15 +335,6 @@ function openNavigatorHandler(actionName, keystr) {
         return Navigator.preview_navigate(
             metaWindow, null, { screen, display, binding });
     };
-}
-
-function getBoundActionId(keystr) {
-    let [dontcare, keycodes, mask] = Settings.accelerator_parse(keystr);
-    if (keycodes.length > 1) {
-        throw new Error(`Multiple keycodes ${keycodes} ${keystr}`);
-    }
-    const rawMask = devirtualizeMask(mask);
-    return display.get_keybinding_action(keycodes[0], rawMask);
 }
 
 function handleAccelerator(display, actionId, deviceId, timestamp) {

@@ -99,6 +99,8 @@ function accelerator_parse(keystr) {
         }
     }
 
+    console.log(keystr, ok, key, mask);
+
     return [ok, key, mask];
 }
 
@@ -119,28 +121,6 @@ function keystrToKeycombo(keystr) {
     if (aboveTab)
         key = META_KEY_ABOVE_TAB;
     return `${key}|${mask}`; // Since js doesn't have a mapable tuple type
-}
-
-function keycomboToKeystr(combo) {
-    let [mutterKey, mods] = combo.split('|').map(s => Number.parseInt(s));
-    let key = mutterKey;
-    if (mutterKey === META_KEY_ABOVE_TAB)
-        key = 97; // a
-    let keystr = Gtk.accelerator_name(key, mods);
-    if (mutterKey === META_KEY_ABOVE_TAB)
-        keystr = keystr.replace(/a$/, 'Above_Tab');
-    return keystr;
-}
-
-function keycomboToKeylab(combo) {
-    let [mutterKey, mods] = combo.split('|').map(s => Number.parseInt(s));
-    let key = mutterKey;
-    if (mutterKey === META_KEY_ABOVE_TAB)
-        key = 97; // a
-    let keylab = Gtk.accelerator_get_label(key, mods);
-    if (mutterKey === META_KEY_ABOVE_TAB)
-        keylab = keylab.replace(/a$/, 'Above_Tab');
-    return keylab;
 }
 
 function generateKeycomboMap(settings) {

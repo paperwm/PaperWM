@@ -18,6 +18,8 @@ const COLUMN_WARNING     = 5;
 const COLUMN_RESET       = 6;
 const COLUMN_TOOLTIP     = 7;
 
+// This is the value mutter uses for the keyvalue of above_tab
+let META_KEY_ABOVE_TAB = 0x2f7259c9;
 
 function range(n) {
     let r = [];
@@ -760,7 +762,7 @@ function annotateKeybindings(model, settings) {
         let conflict = warning(id, combo);
         let tooltip = null;
         if (conflict.length > 0) {
-            let keystr = Settings.keycomboToKeylab(combo);
+            let keystr = keycomboToKeylab(combo);
             tooltip = `${keystr} overrides ${conflict[0].conflicts} in ${conflict[0].settings.path}`;
             model.set_value(iter, COLUMN_TOOLTIP,
                 GLib.markup_escape_text(tooltip, -1));
@@ -771,6 +773,17 @@ function annotateKeybindings(model, settings) {
 
         return false;
     });
+}
+
+function keycomboToKeylab(combo) {
+    let [mutterKey, mods] = combo.split('|').map(s => Number.parseInt(s));
+    let key = mutterKey;
+    if (mutterKey === META_KEY_ABOVE_TAB)
+        key = 97; // a
+    let keylab = Gtk.accelerator_get_label(key, mods);
+    if (mutterKey === META_KEY_ABOVE_TAB)
+        keylab = keylab.replace(/a$/, 'Above_Tab');
+    return keylab;
 }
 
 function createFileChooserButton(settings, key, iconName, symbolicIconName, properties) {
