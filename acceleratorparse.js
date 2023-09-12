@@ -1,12 +1,3 @@
-let keycodeMap;
-function enable() {
-    initKeycodeMap();
-}
-
-function disable() {
-    keycodeMap = null;
-}
-
 /**
  * Provides replacement for Gtk.accelerator_parse.
  * @param {String} keystr
@@ -24,13 +15,17 @@ function accelerator_parse(keystr) {
 
     // now lookup key in map
     let ok = true;
-    const lookup = keycodeMap().get(key);
-    if (!lookup) {
+    const mapped = keycodeMap.get(key);
+    if (mapped) {
+        key = mapped;
+    }
+    else {
         ok = false;
         key = 0;
         mask = 0;
     }
 
+    // console.log(keystr, key, mask);
     return [ok, key, mask];
 }
 
@@ -40,32 +35,6 @@ function accelerator_parse(keystr) {
  */
 function accelerator_mods(keystr) {
     return keystr.match(/<.*?>/g) ?? [];
-}
-
-/**
- * Two keystrings can represent the same key combination.
- * Attempt to normalise keystr by sections.
- */
-function keystrToKeycombo(keystr) {
-    // use 'grave' instead of 'Above_Tab' (just normalising on one)
-    if (keystr.match(/Above_Tab/)) {
-        keystr = keystr.replace('Above_Tab', 'grave');
-    }
-
-    // get mask for this keystr
-    const mask = accelerator_mask(keystr);
-    const mods = accelerator_mods(keystr);
-
-    // remove mods from keystr
-    let result = keystr;
-    mods.forEach(m => {
-        result = result.replace(m, '');
-    });
-    result = result.trim().toLowerCase();
-
-    // combine mask with remaining key
-    // console.log(`${keystr} : ${mask}|${result}`);
-    return `${mask}|${result}`;
 }
 
 /**
@@ -113,6 +82,15 @@ function accelerator_mask(keystr) {
     return result;
 }
 
+function destroyKeycodeMap() {
+    keycodeMap = null;
+}
+
+/**
+ * Replicates Gdk full keyset.
+ * https://gitlab.gnome.org/GNOME/gtk/-/blob/4.13.0/gdk/gdkkeysyms.h?ref_type=tags
+ */
+let keycodeMap;
 function initKeycodeMap() {
     const map = new Map();
     map.set('VoidSymbol', 0xffffff);
