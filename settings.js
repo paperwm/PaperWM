@@ -102,6 +102,49 @@ function accelerator_parse(keystr) {
 }
 
 /**
+ * Returns the GDK mask value for a keystr (keybind string representation).
+ * Refer to:
+ * https://gitlab.gnome.org/GNOME/gtk/-/blob/4.13.0/gdk/gdkenums.h?ref_type=tags#L115
+ * https://gitlab.gnome.org/GNOME/gtk/-/blob/4.13.0/gtk/gtkaccelgroup.c#L571
+ * @param {String} keystr
+ */
+// GDK keystr mask values.
+let GDK_SHIFT_MASK    = 1 << 0;
+let GDK_CONTROL_MASK  = 1 << 2;
+let GDK_ALT_MASK      = 1 << 3;
+let GDK_SUPER_MASK    = 1 << 26;
+let GDK_HYPER_MASK    = 1 << 27;
+let GDK_META_MASK     = 1 << 28;
+function accelerator_mask(keystr) {
+    // need to extact all mods from keystr
+    const mods = keystr.match(/<.*?>/);
+    let result = 0;
+    for (let mod of mods) {
+        switch (mod.toLowerCase()) {
+        case '<shift>':
+            result |= GDK_SHIFT_MASK;
+            break;
+        case '<control>':
+            result |= GDK_CONTROL_MASK;
+            break;
+        case '<alt>':
+            result |= GDK_ALT_MASK;
+            break;
+        case '<super>':
+            result |= GDK_SUPER_MASK;
+            break;
+        case '<hyper>':
+            result |= GDK_HYPER_MASK;
+            break;
+        case '<meta>':
+            result |= GDK_META_MASK;
+        }
+    }
+
+    return result;
+}
+
+/**
  * Two keystrings can represent the same key combination.
  * Attempt to normalise keystr by sections.
  */
