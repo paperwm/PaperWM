@@ -10,9 +10,6 @@ const { Gio, Gtk, GLib } = imports.gi;
 let KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 let RESTORE_KEYBINDS_KEY = 'restore-keybinds';
 
-// This is the value mutter uses for the keyvalue of above_tab
-let META_KEY_ABOVE_TAB = 0x2f7259c9;
-
 function setState($, key) {
     let value = gsettings.get_value(key);
     let name = key.replace(/-/g, '_');
@@ -105,22 +102,22 @@ function accelerator_parse(keystr) {
 }
 
 /**
- * Two keystrings can represent the same key combination
+ * Two keystrings can represent the same key combination.
+ * Attempt to normalise keystr by sections.
  */
 function keystrToKeycombo(keystr) {
-    // Above_Tab is a fake keysymbol provided by mutter
-    let aboveTab = false;
-    if (keystr.match(/Above_Tab/) || keystr.match(/grave/)) {
-        // Gtk bails out if provided with an unknown keysymbol
-        keystr = keystr.replace('Above_Tab', 'a');
-        aboveTab = true;
+    // use 'grave' instead of 'Above_Tab' (just normalising on one)
+    if (keystr.match(/Above_Tab/)) {
+        keystr = keystr.replace('Above_Tab', 'grave');
     }
 
-    let [ok, key, mask] = accelerator_parse(keystr);
+    // separate into sections
+    const split = keystr.split(/[<>]/)
+        .filter(v => v !== '')
+        .map(v => v.toLowerCase())
+        .sort();
 
-    if (aboveTab)
-        key = META_KEY_ABOVE_TAB;
-    return `${key}|${mask}`; // Since js doesn't have a mapable tuple type
+    return split.join('|');
 }
 
 function generateKeycomboMap(settings) {
@@ -131,8 +128,6 @@ function generateKeycomboMap(settings) {
             continue;
 
         for (let combo of value.deep_unpack().map(keystrToKeycombo)) {
-            if (combo === '0|0')
-                continue;
             if (map[combo]) {
                 map[combo].push(name);
             } else {
