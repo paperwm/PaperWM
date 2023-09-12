@@ -320,12 +320,13 @@ function devirtualizeMask(gdkVirtualMask) {
 
 function rawMaskOfKeystr(keystr) {
     let [dontcare, keycodes, mask] = Settings.accelerator_parse(keystr);
+    const test = Settings.accelerator_mask(keystr);
+    console.log(`actual:${mask} vs. test:${test}`);
     return devirtualizeMask(mask);
 }
 
 function openNavigatorHandler(actionName, keystr) {
     const mask = rawMaskOfKeystr(keystr) & 0xff;
-
     const binding = {
         get_name: () => actionName,
         get_mask: () => mask,
