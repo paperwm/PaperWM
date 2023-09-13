@@ -134,12 +134,30 @@ function setupOverrides() {
     registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
     registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', computeLayout40);
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
-        let metaWindow = win.meta_window || win;
-        if (gsettings.get_boolean('only-scratch-in-overview'))
-            return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
-        if (gsettings.get_boolean('disable-scratch-in-overview'))
-            return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+        const metaWindow = win.meta_window ?? win;
+        if (!metaWindow) {
+            return !win.skip_taskbar;
+        }
+
+        if (Scratch.isScratchWindow(metaWindow)) {
+            if (gsettings.get_boolean('only-scratch-in-overview')) {
+                return true;
+            }
+
+            if (gsettings.get_boolean('disable-scratch-in-overview')) {
+                return false;
+            }
+        }
+
+        // if here then not scratch
+        if (gsettings.get_boolean('only-scratch-in-overview')) {
+            return false;
+        }
+        else {
+            return true;
+        }
     });
+
     registerOverridePrototype(Workspace.Workspace, '_isMyWindow', function(window) {
         const space = Tiling.spaces.spaceOf(this.metaWorkspace);
         const onSpace = space.indexOf(window) >= 0;
@@ -284,7 +302,7 @@ function setupSwipeTrackers() {
 let signals;
 function setupSignals() {
     signals = new Utils.Signals();
-    function scratchInOverview() {
+    let scratchInOverview = () => {
         let onlyScratch = gsettings.get_boolean('only-scratch-in-overview');
         let disableScratch = gsettings.get_boolean('disable-scratch-in-overview');
         if (onlyScratch || disableScratch) {
@@ -292,7 +310,7 @@ function setupSignals() {
         } else {
             disableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
         }
-    }
+    };
     signals.connect(gsettings, 'changed::only-scratch-in-overview', scratchInOverview);
     signals.connect(gsettings, 'changed::disable-scratch-in-overview', scratchInOverview);
     scratchInOverview();
