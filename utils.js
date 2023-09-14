@@ -9,7 +9,6 @@ const Display = global.display;
 
 var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number); // exported
 
-
 let warpRipple;
 function enable() {
     warpRipple = new Ripples.Ripples(0.5, 0.5, 'ripple-pointer-location');
