@@ -11,13 +11,12 @@ const Utils = Extension.imports.utils;
 const Tiling = Extension.imports.tiling;
 const Scratch = Extension.imports.scratch;
 
-const { Meta, Gio, Clutter, Shell } = imports.gi;
+const { Meta, Gio, Shell } = imports.gi;
 const Main = imports.ui.main;
 const Workspace = imports.ui.workspace;
 const WorkspaceThumbnail = imports.ui.workspaceThumbnail;
 const WorkspaceAnimation = imports.ui.workspaceAnimation;
 const WindowManager = imports.ui.windowManager;
-const Mainloop = imports.mainloop;
 const Params = imports.misc.params;
 
 function registerOverrideProp(obj, name, override) {
@@ -103,9 +102,7 @@ function setupOverrides() {
 
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, '_prepareWorkspaceSwitch',
         function (workspaceIndices) {
-            const saved = getSavedPrototype(
-                WorkspaceAnimation.WorkspaceAnimationController,
-                '_prepareWorkspaceSwitch');
+            const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController, '_prepareWorkspaceSwitch');
             // hide selection during workspace switch
             Tiling.spaces.forEach(s => s.hideSelection());
             saved.call(this, workspaceIndices);
@@ -113,9 +110,7 @@ function setupOverrides() {
 
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, '_finishWorkspaceSwitch',
         function (switchData) {
-            const saved = getSavedPrototype(
-                WorkspaceAnimation.WorkspaceAnimationController,
-                '_finishWorkspaceSwitch');
+            const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController, '_finishWorkspaceSwitch');
             // ensure selection is shown after workspaces swtching
             Tiling.spaces.forEach(s => s.showSelection());
             saved.call(this, switchData);
@@ -134,13 +129,42 @@ function setupOverrides() {
     registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
     registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', computeLayout40);
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
-        let metaWindow = win.meta_window || win;
-        if (gsettings.get_boolean('only-scratch-in-overview'))
-            return Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
-        if (gsettings.get_boolean('disable-scratch-in-overview'))
-            return !Scratch.isScratchWindow(metaWindow) && !metaWindow.skip_taskbar;
+        win = win.meta_window ?? win; // should be metawindow, but get if not
+        // upstream (gnome value result - whta it would have done)
+        const saved = getSavedPrototype(Workspace.Workspace, '_isOverviewWindow');
+        const upstreamValue = saved?.call(this, win) ?? !win.skip_taskbar;
+
+        if (Scratch.isScratchWindow(win)) {
+            if (gsettings.get_boolean('only-scratch-in-overview')) {
+                return upstreamValue;
+            }
+
+            if (gsettings.get_boolean('disable-scratch-in-overview')) {
+                return false;
+            }
+        }
+
+        // if here then not scratch
+        if (gsettings.get_boolean('only-scratch-in-overview')) {
+            return false;
+        }
+
+        return upstreamValue;
     });
+
+    const checkScratch = (metaWindow, metaWorkspace) => {
+        if (Scratch.isScratchWindow(metaWindow)) {
+            // check workspace match
+            return metaWorkspace === metaWindow?.get_workspace();
+        }
+
+        return false;
+    };
     registerOverridePrototype(Workspace.Workspace, '_isMyWindow', function(window) {
+        if (checkScratch(window, this.metaWorkspace)) {
+            return true;
+        }
+
         const space = Tiling.spaces.spaceOf(this.metaWorkspace);
         const onSpace = space.indexOf(window) >= 0;
         const onMonitor = this._monitor === space.monitor;
@@ -148,6 +172,10 @@ function setupOverrides() {
     });
     registerOverridePrototype(WorkspaceThumbnail.WorkspaceThumbnail, '_isMyWindow', function(actor) {
         const window = actor.meta_window;
+        if (checkScratch(window, this.metaWorkspace)) {
+            return true;
+        }
+
         const space = Tiling.spaces.spaceOf(this.metaWorkspace);
         const onSpace = space.indexOf(window) >= 0;
         const onMonitor = this.monitorIndex === space.monitor.index;
@@ -281,23 +309,6 @@ function setupSwipeTrackers() {
     ].filter(t => typeof t !== 'undefined');
 }
 
-let signals;
-function setupSignals() {
-    signals = new Utils.Signals();
-    function scratchInOverview() {
-        let onlyScratch = gsettings.get_boolean('only-scratch-in-overview');
-        let disableScratch = gsettings.get_boolean('disable-scratch-in-overview');
-        if (onlyScratch || disableScratch) {
-            enableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
-        } else {
-            disableOverride(Workspace.Workspace.prototype, '_isOverviewWindow');
-        }
-    }
-    signals.connect(gsettings, 'changed::only-scratch-in-overview', scratchInOverview);
-    signals.connect(gsettings, 'changed::disable-scratch-in-overview', scratchInOverview);
-    scratchInOverview();
-}
-
 let actions;
 function setupActions() {
     /*
@@ -314,17 +325,17 @@ function setupActions() {
     actions.forEach(a => global.stage.remove_action(a));
 }
 
-let savedProps;
+let savedProps, signals;
 let gsettings, mutterSettings;
 function enable() {
     savedProps = new Map();
     gsettings = ExtensionUtils.getSettings();
     mutterSettings = new Gio.Settings({ schema_id: 'org.gnome.mutter' });
+    signals = new Utils.Signals();
     setupSwipeTrackers();
     setupOverrides();
     enableOverrides();
     setupRuntimeDisables();
-    setupSignals();
     setupActions();
 }
 
