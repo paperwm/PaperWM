@@ -172,7 +172,7 @@ function setupOverrides() {
     });
     registerOverridePrototype(WorkspaceThumbnail.WorkspaceThumbnail, '_isMyWindow', function(actor) {
         const window = actor.meta_window;
-        if (checkScratch(actor, this.metaWorkspace)) {
+        if (checkScratch(window, this.metaWorkspace)) {
             return true;
         }
 
