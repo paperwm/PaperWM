@@ -40,7 +40,7 @@ function getConflictSettings() {
 var prefs;
 let gsettings, _overriddingConflicts;
 function enable() {
-    initAcceleratorParse();
+    AcceleratorParse.initKeycodeMap();
     gsettings = ExtensionUtils.getSettings();
     _overriddingConflicts = false;
     prefs = {};
@@ -85,9 +85,6 @@ function disable() {
 }
 
 // / Keybindings
-function initAcceleratorParse() {
-    AcceleratorParse.initKeycodeMap();
-}
 
 function accelerator_parse(keystr) {
     return AcceleratorParse.accelerator_parse(keystr);

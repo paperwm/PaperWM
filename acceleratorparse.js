@@ -45,12 +45,12 @@ function accelerator_mods(keystr) {
  * @param {String} keystr
  */
 // GDK keystr mask values.
-let GDK_SHIFT_MASK    = 1 << 0;
-let GDK_CONTROL_MASK  = 1 << 2;
-let GDK_ALT_MASK      = 1 << 3;
-let GDK_SUPER_MASK    = 1 << 26;
-let GDK_HYPER_MASK    = 1 << 27;
-let GDK_META_MASK     = 1 << 28;
+const GDK_SHIFT_MASK    = 1 << 0;
+const GDK_CONTROL_MASK  = 1 << 2;
+const GDK_ALT_MASK      = 1 << 3;
+const GDK_SUPER_MASK    = 1 << 26;
+const GDK_HYPER_MASK    = 1 << 27;
+const GDK_META_MASK     = 1 << 28;
 function accelerator_mask(keystr) {
     // need to extact all mods from keystr
     const mods = accelerator_mods(keystr);
