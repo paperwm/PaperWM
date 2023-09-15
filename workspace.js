@@ -6,8 +6,8 @@ const { Gio, GLib } = imports.gi;
 /**
  * Workspace related utility functions used by other modules.
  */
-let WORKSPACE_LIST_KEY = 'org.gnome.shell.extensions.paperwm.workspacelist';
-let WORKSPACE_KEY = 'org.gnome.shell.extensions.paperwm.workspace';
+const WORKSPACE_LIST_KEY = 'org.gnome.shell.extensions.paperwm.workspacelist';
+const WORKSPACE_KEY = 'org.gnome.shell.extensions.paperwm.workspace';
 let workspaceSettingsCache;
 
 let schemaSource, workspaceList;

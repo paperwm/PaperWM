@@ -1,6 +1,7 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Settings = Extension.imports.settings;
+const AcceleratorParse = Extension.imports.acceleratorparse;
 const Workspace = Extension.imports.workspace;
 const { Gio, GLib, GObject, Gtk, Gdk } = imports.gi;
 const { KeybindingsPane } = Extension.imports.prefsKeybinding;
@@ -678,7 +679,7 @@ function parseAccelerator(accelerator) {
     if (accelerator.match(/Above_Tab/)) {
         accelerator = accelerator.replace('Above_Tab', 'grave');
     }
-    let [ok, key, mods] = Settings.accelerator_parse(accelerator);
+    let [ok, key, mods] = AcceleratorParse.accelerator_parse(accelerator);
     // log(`PaperWM: parseAccelerator(${accelerator}) -> [${key}, ${mods}]`);
 
     return [key, mods];
@@ -836,8 +837,10 @@ function syncStringSetting(settings, key, callback) {
  * (not when initialising the extension on login).
  */
 function init() {
-    Settings.initAcceleratorParse();
-    Workspace.enable();
+
+}
+
+function fillPreferencesWindow(window) {
     const provider = new Gtk.CssProvider();
     provider.load_from_path(`${Extension.path}/resources/prefs.css`);
     Gtk.StyleContext.add_provider_for_display(
@@ -845,9 +848,15 @@ function init() {
         provider,
         Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
     );
-}
 
-function fillPreferencesWindow(window) {
+    Workspace.enable();
+    AcceleratorParse.initKeycodeMap();
+    // cleanup on prefs window close request
+    window.connect('close-request', () => {
+        Workspace.disable();
+        AcceleratorParse.destroyKeycodeMap();
+    });
+
     let selectedWorkspace = null;
     try {
         const tempFile = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace');
