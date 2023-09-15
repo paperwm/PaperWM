@@ -1,5 +1,7 @@
 const ExtensionUtils = imports.misc.extensionUtils;
-const { Gio, Gtk, GLib } = imports.gi;
+const Extension = ExtensionUtils.getCurrentExtension();
+const AcceleratorParse = Extension.imports.acceleratorparse;
+const { Gio, GLib } = imports.gi;
 
 /**
     Settings utility shared between the running extension and the preference UI.
@@ -38,6 +40,7 @@ function getConflictSettings() {
 var prefs;
 let gsettings, _overriddingConflicts;
 function enable() {
+    initAcceleratorParse();
     gsettings = ExtensionUtils.getSettings();
     _overriddingConflicts = false;
     prefs = {};
@@ -74,6 +77,7 @@ function enable() {
 }
 
 function disable() {
+    AcceleratorParse.destroyKeycodeMap();
     gsettings = null;
     _overriddingConflicts = null;
     prefs = null;
@@ -81,25 +85,12 @@ function disable() {
 }
 
 // / Keybindings
+function initAcceleratorParse() {
+    AcceleratorParse.initKeycodeMap();
+}
 
-/**
- * Depending on your gnome version, Gtk.accelerator_parse() can return a 2 value arrary
- * or a 3 value array.  This method handles both return results.
- */
 function accelerator_parse(keystr) {
-    let ok, key, mask;
-    let result = Gtk.accelerator_parse(keystr);
-    if (result.length === 3) {
-        [ok, key, mask] = result;
-    }
-    else {
-        [key, mask] = result;
-        if (key) {
-            ok = true;
-        }
-    }
-
-    return [ok, key, mask];
+    return AcceleratorParse.accelerator_parse(keystr);
 }
 
 /**
@@ -109,7 +100,6 @@ function keystrToKeycombo(keystr) {
     // Above_Tab is a fake keysymbol provided by mutter
     let aboveTab = false;
     if (keystr.match(/Above_Tab/) || keystr.match(/grave/)) {
-        // Gtk bails out if provided with an unknown keysymbol
         keystr = keystr.replace('Above_Tab', 'a');
         aboveTab = true;
     }
@@ -119,28 +109,6 @@ function keystrToKeycombo(keystr) {
     if (aboveTab)
         key = META_KEY_ABOVE_TAB;
     return `${key}|${mask}`; // Since js doesn't have a mapable tuple type
-}
-
-function keycomboToKeystr(combo) {
-    let [mutterKey, mods] = combo.split('|').map(s => Number.parseInt(s));
-    let key = mutterKey;
-    if (mutterKey === META_KEY_ABOVE_TAB)
-        key = 97; // a
-    let keystr = Gtk.accelerator_name(key, mods);
-    if (mutterKey === META_KEY_ABOVE_TAB)
-        keystr = keystr.replace(/a$/, 'Above_Tab');
-    return keystr;
-}
-
-function keycomboToKeylab(combo) {
-    let [mutterKey, mods] = combo.split('|').map(s => Number.parseInt(s));
-    let key = mutterKey;
-    if (mutterKey === META_KEY_ABOVE_TAB)
-        key = 97; // a
-    let keylab = Gtk.accelerator_get_label(key, mods);
-    if (mutterKey === META_KEY_ABOVE_TAB)
-        keylab = keylab.replace(/a$/, 'Above_Tab');
-    return keylab;
 }
 
 function generateKeycomboMap(settings) {
