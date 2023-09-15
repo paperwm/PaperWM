@@ -1,14 +1,13 @@
+import * as ExtensionModule from './extension.js';
+import * as Patches from './patches.js';
+import * as Tiling from './tiling.js';
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
+import Shell from 'gi://Shell';
+
 /*
   Application functionality, like global new window actions etc.
  */
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const ExtensionModule = Extension.imports.extension;
-const Patches = Extension.imports.patches;
-const Tiling = Extension.imports.tiling;
-const GLib = imports.gi.GLib;
-const Gio = imports.gi.Gio;
-const Shell = imports.gi.Shell;
 
 let Tracker = Shell.WindowTracker.get_default();
 let CouldNotLaunch = Symbol();
