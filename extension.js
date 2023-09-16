@@ -62,14 +62,22 @@ export default class PaperWM extends Extension {
         this.enableUserStylesheet();
 
         // run enable method (with extension argument on all modules)
-        this.modules.forEach(m => m.enable(this));
+        this.modules.forEach(m => {
+            if (m['enable']) {
+                m.enable(this);
+            }
+        });
     }
 
     disable() {
         console.log('#PaperWM disabled');
         this.prepareForDisable();
         this.run('disable', true);
-        [...this.modules].reverse().forEach(m => m.disable());
+        [...this.modules].reverse().forEach(m => {
+            if (m['disable']) {
+                m.disable();
+            }
+        });
 
         this.disableUserStylesheet();
     }
