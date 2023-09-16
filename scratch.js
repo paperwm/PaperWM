@@ -7,8 +7,8 @@ import * as WindowMenu from 'resource:///org/gnome/shell/ui/windowMenu.js';
 import { Settings, Utils, Tiling, Topbar } from './imports.js';
 import { Easer } from './utils.js';
 
-let float, scratchFrame; // symbols used for expando properties on metawindow
 let originalBuildMenu;
+let float, scratchFrame; // symbols used for expando properties on metawindow
 export function enable() {
     originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
     float = Symbol();
