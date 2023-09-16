@@ -12,3 +12,4 @@ export * as Tiling from './tiling.js';
 export * as Topbar from './topbar.js';
 export * as Patches from './patches.js';
 export * as App from './app.js';
+export * as Lib from './lib.js';

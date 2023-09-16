@@ -1,28 +1,36 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Lib = Extension.imports.lib;
-const { GLib, Clutter, Meta, St, GdkPixbuf, Cogl, Gio } = imports.gi;
-const Main = imports.ui.main;
-const Ripples = imports.ui.ripples;
-const Mainloop = imports.mainloop;
-const Display = global.display;
+import Clutter from 'gi://Clutter';
+import Cogl from 'gi://Cogl';
+import GdkPixbuf from 'gi://GdkPixbuf';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import Meta from 'gi://Meta';
+import St from 'gi://St';
 
-var version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number); // exported
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as Ripples from 'resource:///org/gnome/shell/ui/ripples.js';
+
+import Lib from './imports.js';
+
+const Display = global.display;
+export let version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
 
 let warpRipple;
-function enable() {
+export function enable() {
     warpRipple = new Ripples.Ripples(0.5, 0.5, 'ripple-pointer-location');
     warpRipple.addTo(Main.uiGroup);
 }
 
-function disable() {
+export function disable() {
     warpRipple?.destroy();
     warpRipple = null;
+    debug_all = null;
+    debug_filter = null;
+    markNewClonesSignalId = null;
 }
 
 let debug_all = false; // Turn off by default
 let debug_filter = { '#paperwm': true, '#stacktrace': true };
-function debug() {
+export function debug() {
     let keyword = arguments[0];
     let filter = debug_filter[keyword];
     if (filter === false)
@@ -31,20 +39,20 @@ function debug() {
         console.debug(Array.prototype.join.call(arguments, " | "));
 }
 
-function assert(condition, message, ...dump) {
+export function assert(condition, message, ...dump) {
     if (!condition) {
         throw new Error(`${message}\n`, dump);
     }
 }
 
-function withTimer(message, fn) {
+export function withTimer(message, fn) {
     let start = GLib.get_monotonic_time();
     let ret = fn();
     let stop = GLib.get_monotonic_time();
     console.debug(`${message} ${((stop - start) / 1000).toFixed(1)}ms`);
 }
 
-function print_stacktrace(error) {
+export function print_stacktrace(error) {
     let trace;
     if (!error) {
         trace = new Error().stack.split("\n");
@@ -64,18 +72,18 @@ function print_stacktrace(error) {
  * Pretty prints args using JSON.stringify.
  * @param  {...any} arugs
  */
-function prettyPrintToLog(...args) {
+export function prettyPrintToLog(...args) {
     console.log(args.map(v => JSON.stringify(v, null), 2));
 }
 
-function framestr(rect) {
+export function framestr(rect) {
     return `[ x:${rect.x}, y:${rect.y} w:${rect.width} h:${rect.height} ]`;
 }
 
 /**
  * Returns a human-readable enum value representation
  */
-function ppEnumValue(value, genum) {
+export function ppEnumValue(value, genum) {
     let entry = Object.entries(genum).find(([k, v]) => v === value);
     if (entry) {
         return `${entry[0]} (${entry[1]})`;
@@ -84,7 +92,7 @@ function ppEnumValue(value, genum) {
     }
 }
 
-function ppModiferState(state) {
+export function ppModiferState(state) {
     let mods = [];
     for (let [mod, mask] of Object.entries(Clutter.ModifierType)) {
         if (mask & state) {
@@ -99,19 +107,19 @@ function ppModiferState(state) {
  * redefine the function without re-registering all signal handler, keybindings,
  * etc. (this is like a function symbol in lisp)
  */
-function dynamic_function_ref(handler_name, owner_obj) {
+export function dynamic_function_ref(handler_name, owner_obj) {
     owner_obj = owner_obj || window;
     return function() {
         owner_obj[handler_name].apply(this, arguments);
     };
 }
 
-function isPointInsideActor(actor, x, y) {
+export function isPointInsideActor(actor, x, y) {
     return (actor.x <= x && x <= actor.x + actor.width) &&
         (actor.y <= y && y <= actor.y + actor.height);
 }
 
-function setBackgroundImage(actor, resource_path) {
+export function setBackgroundImage(actor, resource_path) {
     // resource://{resource_path}
     let image = new Clutter.Image();
 
@@ -133,7 +141,7 @@ function setBackgroundImage(actor, resource_path) {
 /**
  * Visualize the frame and buffer bounding boxes of a meta window
  */
-function toggleWindowBoxes(metaWindow) {
+export function toggleWindowBoxes(metaWindow) {
     metaWindow = metaWindow || Display.focus_window;
 
     if (metaWindow._paperDebugBoxes) {
@@ -144,11 +152,11 @@ function toggleWindowBoxes(metaWindow) {
         return [];
     }
 
-    let frame = metaWindow.get_frame_rect();
-    let inputFrame = metaWindow.get_buffer_rect();
-    let actor = metaWindow.get_compositor_private();
+    const frame = metaWindow.get_frame_rect();
+    const inputFrame = metaWindow.get_buffer_rect();
+    const actor = metaWindow.get_compositor_private();
 
-    makeFrameBox = function({ x, y, width, height }, color) {
+    const makeFrameBox = ({ x, y, width, height }, color)  => {
         let frameBox = new St.Widget();
         frameBox.set_position(x, y);
         frameBox.set_size(width, height);
@@ -173,7 +181,7 @@ function toggleWindowBoxes(metaWindow) {
 }
 
 let markNewClonesSignalId = null;
-function toggleCloneMarks() {
+export function toggleCloneMarks() {
     // NB: doesn't clean up signal on disable
 
     function markCloneOf(metaWindow) {
@@ -205,7 +213,7 @@ function toggleCloneMarks() {
     }
 }
 
-function isInRect(x, y, r) {
+export function isInRect(x, y, r) {
     return r.x <= x && x < r.x + r.width &&
         r.y <= y && y < r.y + r.height;
 }
@@ -213,7 +221,7 @@ function isInRect(x, y, r) {
 /**
  * Returns monitor a pointer co-ordinates.
  */
-function monitorAtPoint(gx, gy) {
+export function monitorAtPoint(gx, gy) {
     for (let monitor of Main.layoutManager.monitors) {
         if (isInRect(gx, gy, monitor))
             return monitor;
@@ -224,7 +232,7 @@ function monitorAtPoint(gx, gy) {
 /**
  * Returns the monitor current pointer coordinates.
  */
-function monitorAtCurrentPoint() {
+export function monitorAtCurrentPoint() {
     let [gx, gy, $] = global.get_pointer();
     return monitorAtPoint(gx, gy);
 }
@@ -232,7 +240,7 @@ function monitorAtCurrentPoint() {
 /**
  * Warps pointer to the center of a monitor.
  */
-function warpPointerToMonitor(monitor, center = false) {
+export function warpPointerToMonitor(monitor, center = false) {
     // no need to warp if already on this monitor
     let currMonitor = monitorAtCurrentPoint();
     if (currMonitor === monitor) {
@@ -259,7 +267,7 @@ function warpPointerToMonitor(monitor, center = false) {
 /**
  * Warps pointer to x, y coordinates.
  */
-function warpPointer(x, y) {
+export function warpPointer(x, y) {
     let backend = Clutter.get_default_backend();
     let seat = backend.get_default_seat();
     seat.warp_pointer(x, y);
@@ -269,12 +277,12 @@ function warpPointer(x, y) {
 /**
  * Return current modifiers state (or'ed Clutter.ModifierType.*)
  */
-function getModiferState() {
+export function getModiferState() {
     let [x, y, mods] = global.get_pointer();
     return mods;
 }
 
-function monitorOfPoint(x, y) {
+export function monitorOfPoint(x, y) {
     // get_monitor_index_for_rect "helpfully" returns the primary monitor index for out of bounds rects..
     for (let monitor of Main.layoutManager.monitors) {
         if ((monitor.x <= x && x <= monitor.x + monitor.width) &&
@@ -287,7 +295,7 @@ function monitorOfPoint(x, y) {
     return null;
 }
 
-function mkFmt({ nameOnly } = { nameOnly: false }) {
+export function mkFmt({ nameOnly } = { nameOnly: false }) {
     function defaultFmt(actor, prefix = "") {
         const fmtNum = num => num.toFixed(0);
         let extra = [
@@ -313,7 +321,7 @@ function mkFmt({ nameOnly } = { nameOnly: false }) {
     return defaultFmt;
 }
 
-function printActorTree(node, fmt = mkFmt(), options = {}, state = null) {
+export function printActorTree(node, fmt = mkFmt(), options = {}, state = null) {
     state = Object.assign({}, state || { level: 0, actorPrefix: "" });
     const defaultOptions = {
         limit: 9999,
@@ -361,11 +369,11 @@ function printActorTree(node, fmt = mkFmt(), options = {}, state = null) {
     }
 }
 
-function isMetaWindow(obj) {
+export function isMetaWindow(obj) {
     return obj && obj.window_type && obj.get_compositor_private;
 }
 
-function shortTrace(skip = 0) {
+export function shortTrace(skip = 0) {
     let trace = new Error().stack.split("\n").map(s => {
         let words = s.split(/[@/]/);
         let cols = s.split(":");
@@ -379,7 +387,7 @@ function shortTrace(skip = 0) {
     return trace.slice(skip + 1, skip + 5);
 }
 
-function actor_raise(actor, above) {
+export function actor_raise(actor, above) {
     const parent = actor.get_parent();
     if (!parent) {
         return;
@@ -389,7 +397,7 @@ function actor_raise(actor, above) {
     parent.set_child_above_sibling(actor, above);
 }
 
-function actor_reparent(actor, newParent) {
+export function actor_reparent(actor, newParent) {
     const parent = actor.get_parent();
     if (parent) {
         parent.remove_child(actor);
@@ -400,7 +408,7 @@ function actor_reparent(actor, newParent) {
 /**
  * Backwards compatible later_add function.
  */
-function later_add(...args) {
+export function later_add(...args) {
     // Gnome 44+ uses global.compositor.get_laters()
     if (global.compositor?.get_laters) {
         global.compositor.get_laters().add(...args);
@@ -414,7 +422,7 @@ function later_add(...args) {
 /**
  * Backwards compatible Display.grab_accelerator function.
  */
-function grab_accelerator(keystr, keyBindingFlags = Meta.KeyBindingFlags.NONE) {
+export function grab_accelerator(keystr, keyBindingFlags = Meta.KeyBindingFlags.NONE) {
     if (Display.grab_accelerator.length > 1) {
         return Display.grab_accelerator(keystr, keyBindingFlags);
     } else  {
@@ -425,15 +433,15 @@ function grab_accelerator(keystr, keyBindingFlags = Meta.KeyBindingFlags.NONE) {
 /**
  * Convenience method for removing timeout source(s) from Mainloop.
  */
-function timeout_remove(...timeouts) {
+export function timeout_remove(...timeouts) {
     timeouts.forEach(t => {
         if (t) {
-            Mainloop.source_remove(t);
+            GLib.source_remove(t);
         }
     });
 }
 
-var Signals = class Signals extends Map {
+export class Signals extends Map {
     static get [Symbol.species]() { return Map; }
 
     _getOrCreateSignals(object) {
@@ -483,14 +491,14 @@ var Signals = class Signals extends Map {
             this.delete(object);
         }
     }
-};
+}
 
 /**
  * Note the name 'Tweener' used previously was just a legacy name, we're actually using
  * Widget.ease here.  This was renamed to avoid confusion with the deprecated `Tweener`
  * module.
  */
-var easer = {
+export let Easer = {
     addEase(actor, params) {
         if (params.time) {
             params.duration = params.time * 1000;
@@ -510,7 +518,7 @@ var easer = {
     },
 };
 
-var DisplayConfig = class DisplayConfig {
+export class DisplayConfig {
     static get proxyWrapper() {
         return Gio.DBusProxy.makeProxyWrapper('<node>\
         <interface name="org.gnome.Mutter.DisplayConfig">\
@@ -586,4 +594,4 @@ var DisplayConfig = class DisplayConfig {
     get gnomeMonitors() {
         return Main.layoutManager.monitors;
     }
-};
+}
