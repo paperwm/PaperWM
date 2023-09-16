@@ -1,4 +1,4 @@
-export * as ExtensionModule from './extension.js';
+export * as AcceleratorParse from './acceleratorparse.js';
 export * as Utils from './utils.js';
 export * as Settings from './settings.js';
 export * as Gestures from './gestures.js';
