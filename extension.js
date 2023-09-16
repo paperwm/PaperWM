@@ -4,8 +4,12 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
-import * as Navigator from './navigator.js';
 import * as Util from 'resource:///org/gnome/shell/misc/util.js';
+
+import {
+    Utils, Settings, Gestures, Keybindings, LiveAltTab, Navigator,
+    Stackoverlay, Scratch, Workspace, Tiling, Topbar, Patches, App
+} from './imports.js';
 
 import { Extension, dir } from 'resource:///org/gnome/shell/extensions/extension.js';
 
@@ -40,14 +44,15 @@ import { Extension, dir } from 'resource:///org/gnome/shell/extensions/extension
         - several modules import settings, so settings should be before them;
           - settings.js should not depend on other paperwm modules;
  */
-const modules = [
-    'utils', 'settings',
-    'gestures', 'keybindings', 'liveAltTab', 'navigator', 'stackoverlay', 'scratch',
-    'workspace', 'tiling', 'topbar', // these have `enable` dependency order
-    'patches', 'app', // these have `enable` dependency order
-];
 
 export default class PaperWM extends Extension {
+    modules = [
+        Utils, Settings,
+        Gestures, Keybindings, LiveAltTab, Navigator, Stackoverlay, Scratch,
+        Workspace, Tiling, Topbar,
+        Patches, App,
+    ];
+
     #firstEnable = true;
     #userStylesheet = null;
 
@@ -56,10 +61,10 @@ export default class PaperWM extends Extension {
     */
     run(method, reverse = false) {
         // reverse order an array (useful for controlling execution order)
-        let arr = reverse ? [...modules].reverse() : modules;
-        for (let name of arr) {
+        let arr = reverse ? [...this.modules].reverse() : this.modules;
+        for (let module of arr) {
         // Bail if there's an error in our own modules
-            if (!this.safeCall(name, method)) {
+            if (!this.safeCall(module, method)) {
                 return false;
             }
         }
@@ -83,20 +88,17 @@ export default class PaperWM extends Extension {
         return true;
     }
 
-    safeCall(name, method) {
+    safeCall(module, method) {
         try {
-            let module = Extension.imports[name];
             if (module && module[method]) {
-                console.debug("#paperwm", `${method} ${name}`);
+                module[method]();
             }
-            module && module[method] && module[method].call(module, errorNotification);
             return true;
         } catch (e) {
-            console.error("#paperwm", `${name} failed ${method}`);
-            console.error(`JS ERROR: ${e}\n${e.stack}`);
+            console.error(new Error(`#paperwm failed ${method}`));
             this.errorNotification(
                 "PaperWM",
-                `Error occured in ${name} @${method}:\n\n${e.message}`,
+                `Error occured in @${method}:\n\n${e.message}`,
                 e.stack);
             return false;
         }
@@ -114,18 +116,6 @@ export default class PaperWM extends Extension {
         }
     }
 
-    /**
- * Prepares PaperWM for disable across modules.
- */
-    prepareForDisable() {
-    /**
-     * Finish any navigation (e.g. workspace switch view).
-     * Can put PaperWM in a breakable state of lock/disable
-     * while navigating.
-     */
-        Navigator.finishNavigation();
-    }
-
     disable() {
         console.log('#PaperWM disabled');
         this.prepareForDisable();
@@ -133,6 +123,19 @@ export default class PaperWM extends Extension {
 
         this.disableUserStylesheet();
         this.safeCall('user', 'disable');
+    }
+
+
+    /**
+     * Prepares PaperWM for disable across modules.
+     */
+    prepareForDisable() {
+        /**
+         * Finish any navigation (e.g. workspace switch view).
+         * Can put PaperWM in a breakable state of lock/disable
+         * while navigating.
+         */
+        Navigator.finishNavigation();
     }
 
     getConfigDir() {

@@ -2,7 +2,7 @@
  * Provides replacement for Gtk.accelerator_parse.
  * @param {String} keystr
  */
-function accelerator_parse(keystr) {
+export function accelerator_parse(keystr) {
     let mask = accelerator_mask(keystr);
     const mods = accelerator_mods(keystr);
 
@@ -33,7 +33,7 @@ function accelerator_parse(keystr) {
  * Returns array of mods for a keystr, e.g. ['<Control>', '<Shift>', '<Alt>'].
  * @param {String} keystr
  */
-function accelerator_mods(keystr) {
+export function accelerator_mods(keystr) {
     return keystr.match(/<.*?>/g) ?? [];
 }
 
@@ -51,7 +51,7 @@ const GDK_ALT_MASK      = 1 << 3;
 const GDK_SUPER_MASK    = 1 << 26;
 const GDK_HYPER_MASK    = 1 << 27;
 const GDK_META_MASK     = 1 << 28;
-function accelerator_mask(keystr) {
+export function accelerator_mask(keystr) {
     // need to extact all mods from keystr
     const mods = accelerator_mods(keystr);
     let result = 0;
@@ -82,7 +82,7 @@ function accelerator_mask(keystr) {
     return result;
 }
 
-function destroyKeycodeMap() {
+export function destroyKeycodeMap() {
     keycodeMap = null;
 }
 
@@ -91,7 +91,7 @@ function destroyKeycodeMap() {
  * https://gitlab.gnome.org/GNOME/gtk/-/blob/4.13.0/gdk/gdkkeysyms.h?ref_type=tags
  */
 let keycodeMap;
-function initKeycodeMap() {
+export function initKeycodeMap() {
     const map = new Map();
     map.set('VoidSymbol', 0xffffff);
     map.set('BackSpace', 0xff08);
