@@ -53,78 +53,26 @@ export default class PaperWM extends Extension {
         Patches, App,
     ];
 
-    #firstEnable = true;
     #userStylesheet = null;
-
-    /**
-     Tell the modules to run enable or disable.
-    */
-    run(method, reverse = false) {
-        // reverse order an array (useful for controlling execution order)
-        let arr = reverse ? [...this.modules].reverse() : this.modules;
-        for (let module of arr) {
-        // Bail if there's an error in our own modules
-            if (!this.safeCall(module, method)) {
-                return false;
-            }
-        }
-
-        /*
-        // run 'user.js' methods (if it exists)
-        if (this.hasUserConfigFile()) {
-        // if enable method, call 'init' for backwards compat and then enable
-            if (method === 'enable') {
-                if (this.#firstEnable) {
-                    this.safeCall('user', 'init');
-                }
-                this.safeCall('user', 'enable');
-            }
-            else {
-                this.safeCall('user', method);
-            }
-        }
-        */
-
-        return true;
-    }
-
-    safeCall(module, method) {
-        try {
-            if (module && module[method]) {
-                module[method]();
-            }
-            return true;
-        } catch (e) {
-            console.error(new Error(`#paperwm failed ${method}`));
-            this.errorNotification(
-                "PaperWM",
-                `Error occured in @${method}:\n\n${e.message}`,
-                e.stack);
-            return false;
-        }
-    }
 
     enable() {
         console.log(`#PaperWM enabled`);
 
-        // 45 SearchPath doesn't exist in 45...
-        // this.enableUserConfig();
+        this.enableUserConfig();
         this.enableUserStylesheet();
 
-        if (this.run('enable')) {
-            this.#firstEnable = false;
-        }
+        // run enable method (with extension argument on all modules)
+        this.modules.forEach(m => m.enable(this));
     }
 
     disable() {
         console.log('#PaperWM disabled');
         this.prepareForDisable();
         this.run('disable', true);
+        [...this.modules].reverse().forEach(m => m.disable());
 
         this.disableUserStylesheet();
-        this.safeCall('user', 'disable');
     }
-
 
     /**
      * Prepares PaperWM for disable across modules.
@@ -171,12 +119,6 @@ export default class PaperWM extends Extension {
         }
     }
 
-    /* TODO: figure out something here
-    fmuellner:
-    > you can't
-    > as I said, it's part of gjs legacy imports
-    > you'll have to do something like const userMod = await import(${this.getConfigDir()}/user.js)
-
     installConfig() {
         const configDir = this.getConfigDir();
         // if user config folder doesn't exist, create it
@@ -188,28 +130,33 @@ export default class PaperWM extends Extension {
         const user = dir.get_child("config/user.js");
         user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
     }
-    */
 
-    /*
     enableUserConfig() {
         if (!this.configDirExists()) {
             try {
                 this.installConfig();
 
                 const configDir = this.getConfigDir().get_path();
-                const notification = this.notify("PaperWM", `Installed user configuration in ${configDir}`);
+                const notification = this.notify("PaperWM", `Created user configuration folder: ${configDir}`);
                 notification.connect('activated', () => {
                     Util.spawn(["nautilus", configDir]);
                     notification.destroy();
                 });
             } catch (e) {
-                this.errorNotification("PaperWM", `Failed to install user config: ${e.message}`, e.stack);
+                this.errorNotification("PaperWM", `Failed create user configuration folder: ${e.message}`, e.stack);
                 console.error("PaperWM", "User config install failed", e.message);
             }
         }
 
         this.updateUserConfigMetadata();
 
+        /* TODO: figure out something here
+        fmuellner:
+        > you can't
+        > as I said, it's part of gjs legacy imports
+        > you'll have to do something like const userMod = await import(${this.getConfigDir()}/user.js)
+        */
+        /*
         // add to searchpath if user has config file and action user.js
         if (this.hasUserConfigFile()) {
             let SearchPath = Extension.imports.searchPath;
@@ -218,8 +165,8 @@ export default class PaperWM extends Extension {
                 SearchPath.push(path);
             }
         }
+        */
     }
-    */
 
     /**
      * Reloads user.css styles (if user.css present in ~/.config/paperwm).

@@ -39,7 +39,7 @@ var inPreview = PreviewMode.NONE; // export
 // DEFAULT mode is normal/original PaperWM window focus behaviour
 var FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
 
-var CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1};
+var CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1 };
 
 /**
    Scrolled and tiled per monitor workspace.
@@ -1461,9 +1461,9 @@ border-radius: ${borderWidth}px;
                 }
             });
 
-        this.signals.connect(
-            this.background, 'captured-event',
-            Gestures.horizontalScroll.bind(this));
+        this.signals.connect(this.background, 'captured-event', (actor, event) => {
+            Gestures.horizontalScroll(this, actor, event);
+        });
     }
 
     setMonitor(monitor, animate = false) {
@@ -2825,7 +2825,7 @@ let displayConfig;
 let saveState;
 let startupTimeoutId, timerId;
 var inGrab; // exported
-function enable(errorNotification) {
+function enable(extension) {
     inGrab = false;
 
     displayConfig = new Utils.DisplayConfig();
@@ -2872,12 +2872,7 @@ function enable(errorNotification) {
         try {
             spaces.init();
         } catch (e) {
-            console.error('#paperwm startup failed');
-            console.error(`JS ERROR: ${e}\n${e.stack}`);
-            errorNotification(
-                "PaperWM",
-                `Error occured in paperwm startup:\n\n${e.message}`,
-                e.stack);
+            console.error(new Error('#paperwm startup failed'));
         }
 
         // Fix the stack overlay
