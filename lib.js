@@ -8,7 +8,7 @@
    Cycle to first value if no larger value is found.
    `values` should be sorted in ascending order.
  */
-function findNext(cur, values, slack=0) {
+export function findNext(cur, values, slack = 0) {
     for (let i = 0; i < values.length; i++) {
         let x = values[i];
         if (cur < x) {
@@ -23,7 +23,7 @@ function findNext(cur, values, slack=0) {
     return values[0]; // cycle
 }
 
-function findPrev(cur, values, slack=0) {
+export function findPrev(cur, values, slack = 0) {
     let i = 0;
     for (;i < values.length; i++) {
         let x = values[i];
@@ -31,7 +31,7 @@ function findPrev(cur, values, slack=0) {
             break;
         }
     }
-    target_i = i - 1;
+    let target_i = i - 1;
     if (target_i < 0) {
         target_i = values.length - 1;
     }
@@ -39,7 +39,7 @@ function findPrev(cur, values, slack=0) {
     return values[target_i];
 }
 
-function arrayEqual(a, b) {
+export function arrayEqual(a, b) {
     if (a === b)
         return true;
     if (!a || !b)
@@ -54,21 +54,21 @@ function arrayEqual(a, b) {
 }
 
 /** Is the floating point numbers equal enough */
-function eq(a, b, epsilon=0.00000001) {
-    return Math.abs(a-b) < epsilon;
+export function eq(a, b, epsilon = 0.00000001) {
+    return Math.abs(a - b) < epsilon;
 }
 
-function swap(array, i, j) {
+export function swap(array, i, j) {
     let temp = array[i];
     array[i] = array[j];
     array[j] = temp;
 }
 
-function in_bounds(array, i) {
+export function in_bounds(array, i) {
     return i >= 0 && i < array.length;
 }
 
-function indent(level, str) {
+export function indent(level, str) {
     let blank = "";
     for (let i = 0; i < level; i++) {
         blank += "  ";
@@ -76,11 +76,11 @@ function indent(level, str) {
     return blank + str;
 }
 
-function sum(array) {
+export function sum(array) {
     return array.reduce((a, b) => a + b, 0);
 }
 
-function zip(...as) {
+export function zip(...as) {
     let r = [];
     let minLength = Math.min(...as.map(x => x.length));
     for (let i = 0; i < minLength; i++) {
