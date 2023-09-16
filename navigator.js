@@ -13,7 +13,7 @@ import { Utils, Tiling, Keybindings, TopBar, Scratch, Minimap } from './imports.
   `SwitcherPopup.SwitcherPopup` when we really should just take full control.
  */
 
-const { Signals } = imports;
+const { signals: Signals } = imports;
 const display = global.display;
 
 export let navigating; // exported
