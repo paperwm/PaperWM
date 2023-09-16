@@ -1,9 +1,6 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Utils = Extension.imports.utils;
-const Tiling = Extension.imports.tiling;
+import St from 'gi://St';
 
-const St = imports.gi.St;
+import { Utils, Tiling } from './imports.js';
 
 let fitProportionally = Tiling.fitProportionally;
 let prefs = {
@@ -13,7 +10,7 @@ let prefs = {
 
 let virtStage = null;
 
-function repl() {
+export function repl() {
     if (virtStage) {
         virtStage.destroy();
     }
@@ -31,7 +28,7 @@ function repl() {
         width: monitorWidth * 3,
     });
 
-    let monitorStyle = `background-color: blue;`
+    let monitorStyle = `background-color: blue;`;
     let monitor = new St.Widget({
         name: "monitor0",
         style: monitorStyle,
@@ -53,10 +50,10 @@ function repl() {
         y: panel.height,
         width: monitor.width,
         height: monitor.height - panel.height,
-    }
+    };
 
-    let tilingStyle = `background-color: rgba(190, 190, 0, 0.3);`
-    let tilingContainer = new St.Widget({name: "tiling", style: tilingStyle});
+    let tilingStyle = `background-color: rgba(190, 190, 0, 0.3);`;
+    let tilingContainer = new St.Widget({ name: "tiling", style: tilingStyle });
 
     global.stage.add_actor(virtStage);
     virtStage.x = 3000;
@@ -79,9 +76,9 @@ function repl() {
         tilingContainer.x = space_.targetX * scale;
     }
 
-    sync()
+    sync();
 
-    Utils.printActorTree(virtStage, Utils.mkFmt({nameOnly: true}));
+    Utils.printActorTree(virtStage, Utils.mkFmt({ nameOnly: true }));
 
     movecolumntoviewportposition(tilingContainer, monitor, columns[1][0], 30);
 
@@ -95,7 +92,7 @@ function repl() {
     w_m: window position (relative to monitor)
     w_t: window position (relative to tiling)
  */
-function t_s(m_s, w_m, w_t) {
+export function t_s(m_s, w_m, w_t) {
     return w_m - w_t + m_s;
 }
 
@@ -103,11 +100,11 @@ function t_s(m_s, w_m, w_t) {
    Calculates the tiling position such that column `k` is positioned at `x`
    relative to the viewport (or workArea?)
  */
-function movecolumntoviewportposition(tilingActor, viewport, window, x) {
+export function movecolumntoviewportposition(tilingActor, viewport, window, x) {
     tilingActor.x = t_s(viewport.x, x, window.x);
 }
 
-function renderAndView(container, columns) {
+export function renderAndView(container, columns) {
     for (let child of container.get_children()) {
         child.destroy();
     }
@@ -115,7 +112,7 @@ function renderAndView(container, columns) {
     render(columns, container);
 }
 
-function fromSpace(space, scale = 1) {
+export function fromSpace(space, scale = 1) {
     return space.map(
         col => col.map(
             metaWindow => {
@@ -126,11 +123,11 @@ function fromSpace(space, scale = 1) {
                 };
             }
         )
-    )
+    );
 }
 
 /** Render a dummy view of the windows */
-function render(columns, tiling) {
+export function render(columns, tiling) {
     const windowStyle = `border: black solid 1px; background-color: red`;
 
     function createWindowActor(window) {
@@ -151,7 +148,7 @@ function render(columns, tiling) {
     }
 }
 
-function allocateDefault(column, availableHeight, preAllocatedWindow) {
+export function allocateDefault(column, availableHeight, preAllocatedWindow) {
     if (column.length === 1) {
         return [availableHeight];
     } else {
@@ -159,9 +156,9 @@ function allocateDefault(column, availableHeight, preAllocatedWindow) {
         const gap = prefs.window_gap;
         const minHeight = 15;
 
-        function heightOf(window) {
+        const heightOf = window => {
             return window.height;
-        }
+        };
 
         const k = preAllocatedWindow && column.indexOf(preAllocatedWindow);
         const selectedHeight = preAllocatedWindow && heightOf(preAllocatedWindow);
@@ -195,12 +192,12 @@ function allocateDefault(column, availableHeight, preAllocatedWindow) {
     }
 }
 
-function allocateEqualHeight(column, available) {
+export function allocateEqualHeight(column, available) {
     available -= (column.length - 1) * prefs.window_gap;
     return column.map(_ => Math.floor(available / column.length));
 }
 
-function layoutGrabColumn(column, x, y0, targetWidth, availableHeight, grabWindow) {
+export function layoutGrabColumn(column, x, y0, targetWidth, availableHeight, grabWindow) {
     function mosh(windows, height, y0) {
         let targetHeights = fitProportionally(
             windows.map(mw => mw.rect.height),
@@ -212,7 +209,7 @@ function layoutGrabColumn(column, x, y0, targetWidth, availableHeight, grabWindo
 
     const k = column.indexOf(grabWindow);
     if (k < 0) {
-        throw new Error("Anchor doesn't exist in column " + grabWindow.title);
+        throw new Error(`Anchor doesn't exist in column ${grabWindow.title}`);
     }
 
     const gap = prefs.window_gap;
@@ -224,13 +221,13 @@ function layoutGrabColumn(column, x, y0, targetWidth, availableHeight, grabWindo
     const H2 = availableHeight - (yGrabRel + f.height - y0) - gap - (column.length - k - 2) * gap;
     k > 0 && mosh(column.slice(0, k), H1, y0);
     let y = mosh(column.slice(k, k + 1), f.height, yGrabRel);
-    k+1 < column.length && mosh(column.slice(k + 1), H2, y);
+    k + 1 < column.length && mosh(column.slice(k + 1), H2, y);
 
     return targetWidth;
 }
 
 
-function layoutColumnSimple(windows, x, y0, targetWidth, targetHeights, time) {
+export function layoutColumnSimple(windows, x, y0, targetWidth, targetHeights, time) {
     let y = y0;
 
     for (let i = 0; i < windows.length; i++) {
@@ -251,19 +248,19 @@ function layoutColumnSimple(windows, x, y0, targetWidth, targetHeights, time) {
 /**
    Mutates columns
  */
-function layout(columns, workArea, prefs, options = {}) {
+export function layout(columns, workArea, prefs, options = {}) {
     let gap = prefs.window_gap;
     let availableHeight = workArea.height;
 
-    let {inGrab, selectedWindow} = options;
+    let { inGrab, selectedWindow } = options;
     let selectedIndex = -1;
 
     if (selectedWindow) {
         selectedIndex = columns.findIndex(col => col.includes(selectedWindow));
     }
 
-    let y0 = workArea.y
-    let x = 0
+    let y0 = workArea.y;
+    let x = 0;
 
     for (let i = 0; i < columns.length; i++) {
         let column = columns[i];

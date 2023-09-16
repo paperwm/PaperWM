@@ -1,7 +1,7 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Lib = Extension.imports.lib;
-const { Gio, GLib } = imports.gi;
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+
+import Lib from './imports.js';
 
 /**
  * Workspace related utility functions used by other modules.
@@ -11,11 +11,11 @@ const WORKSPACE_KEY = 'org.gnome.shell.extensions.paperwm.workspace';
 let workspaceSettingsCache;
 
 let schemaSource, workspaceList;
-function enable() {
+export function enable(extension) {
     workspaceSettingsCache = {};
 
     schemaSource = Gio.SettingsSchemaSource.new_from_directory(
-        GLib.build_filenamev([Extension.path, "schemas"]),
+        GLib.build_filenamev([extension.path, "schemas"]),
         Gio.SettingsSchemaSource.get_default(),
         false
     );
@@ -25,17 +25,17 @@ function enable() {
     });
 }
 
-function disable() {
+export function disable() {
     workspaceSettingsCache = null;
     schemaSource = null;
     workspaceList = null;
 }
 
-function getSchemaSource() {
+export function getSchemaSource() {
     return schemaSource;
 }
 
-function getWorkspaceName(settings, index) {
+export function getWorkspaceName(settings, index) {
     let name = settings.get_string('name') ?? `Workspace ${index + 1}`;
     if (!name || name === '') {
         name = `Workspace ${index + 1}`;
@@ -43,18 +43,18 @@ function getWorkspaceName(settings, index) {
     return name;
 }
 
-function getWorkspaceList() {
+export function getWorkspaceList() {
     return workspaceList;
 }
 
 /**
  * Returns list of ordered workspace UUIDs.
  */
-function getListUUID() {
+export function getListUUID() {
     return getWorkspaceList().get_strv('list');
 }
 
-function getWorkspaceSettings(index) {
+export function getWorkspaceSettings(index) {
     let list = getListUUID();
     for (let uuid of list) {
         let settings = getWorkspaceSettingsByUUID(uuid);
@@ -65,7 +65,7 @@ function getWorkspaceSettings(index) {
     return getNewWorkspaceSettings(index);
 }
 
-function getNewWorkspaceSettings(index) {
+export function getNewWorkspaceSettings(index) {
     let uuid = GLib.uuid_string_random();
     let settings = getWorkspaceSettingsByUUID(uuid);
     let list = getListUUID();
@@ -75,7 +75,7 @@ function getNewWorkspaceSettings(index) {
     return [uuid, settings];
 }
 
-function getWorkspaceSettingsByUUID(uuid) {
+export function getWorkspaceSettingsByUUID(uuid) {
     if (!workspaceSettingsCache[uuid]) {
         let settings = new Gio.Settings({
             settings_schema: getSchemaSource().lookup(WORKSPACE_KEY, true),
@@ -87,7 +87,7 @@ function getWorkspaceSettingsByUUID(uuid) {
 }
 
 /** Returns [[uuid, settings, name], ...] (Only used for debugging/development atm.) */
-function findWorkspaceSettingsByName(regex) {
+export function findWorkspaceSettingsByName(regex) {
     let list = getListUUID();
     let settings = list.map(getWorkspaceSettingsByUUID);
     return Lib.zip(list, settings, settings.map(s => s.get_string('name')))
@@ -95,7 +95,7 @@ function findWorkspaceSettingsByName(regex) {
 }
 
 /** Only used for debugging/development atm. */
-function deleteWorkspaceSettingsByName(regex, dryrun = true) {
+export function deleteWorkspaceSettingsByName(regex, dryrun = true) {
     let out = "";
     function rprint(...args) { console.debug(...args); out += `${args.join(" ")}\n`; }
     let n = global.workspace_manager.get_n_workspaces();
@@ -114,7 +114,7 @@ function deleteWorkspaceSettingsByName(regex, dryrun = true) {
 }
 
 /** Only used for debugging/development atm. */
-function deleteWorkspaceSettings(uuid) {
+export function deleteWorkspaceSettings(uuid) {
     // NB! Does not check if the settings is currently in use. Does not reindex subsequent settings.
     let list = getListUUID();
     let i = list.indexOf(uuid);
@@ -129,7 +129,7 @@ function deleteWorkspaceSettings(uuid) {
 }
 
 // Useful for debugging
-function printWorkspaceSettings() {
+export function printWorkspaceSettings() {
     let list = getListUUID();
     let settings = list.map(getWorkspaceSettingsByUUID);
     let zipped = Lib.zip(list, settings);
