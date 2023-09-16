@@ -6,7 +6,8 @@ import Shell from 'gi://Shell';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import { Patches, Settings, Tiling, Utils, Lib, Easer, Navigator } from './imports.js';
+import { Patches, Settings, Tiling, Utils, Lib, Navigator } from './imports.js';
+import { Easer } from './utils.js';
 
 const DIRECTIONS = {
     Horizontal: true,

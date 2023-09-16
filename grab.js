@@ -6,7 +6,8 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import { Settings, Utils, Tiling, Navigator, Scratch, Easer } from './imports.js';
+import { Settings, Utils, Tiling, Navigator, Scratch } from './imports.js';
+import { Easer } from './utils.js';
 
 /**
  * Returns a virtual pointer (i.e. mouse) device that can be used to

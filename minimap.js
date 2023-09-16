@@ -1,16 +1,13 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Settings = Extension.imports.settings;
-const Utils = Extension.imports.utils;
-const Lib = Extension.imports.lib;
-const Easer = Extension.imports.utils.easer;
+import Clutter from 'gi://Clutter';
+import St from 'gi://St';
+import Pango from 'gi://Pango';
 
-const Clutter = imports.gi.Clutter;
-const Main = imports.ui.main;
-const St = imports.gi.St;
-const Pango = imports.gi.Pango;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-function calcOffset(metaWindow) {
+import { Settings, Utils, Lib } from './imports.js';
+import { Easer } from './utils.js';
+
+export function calcOffset(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
     let frame = metaWindow.get_frame_rect();
     let x_offset = frame.x - buffer.x;
@@ -18,39 +15,39 @@ function calcOffset(metaWindow) {
     return [x_offset, y_offset];
 }
 
-var Minimap = class Minimap extends Array {
+export class Minimap extends Array {
     constructor(space, monitor) {
         super();
         this.space = space;
         this.monitor = monitor;
         let actor = new St.Widget({
             name: 'minimap',
-            style_class: 'paperwm-minimap switcher-list'
+            style_class: 'paperwm-minimap switcher-list',
         });
         this.actor = actor;
-        actor.height = space.height*0.20;
+        actor.height = space.height * 0.20;
 
         let highlight = new St.Widget({
             name: 'minimap-selection',
-            style_class: 'paperwm-minimap-selection item-box'
+            style_class: 'paperwm-minimap-selection item-box',
         });
         highlight.add_style_pseudo_class('selected');
         this.highlight = highlight;
-        let label = new St.Label({style_class: 'paperwm-minimap-label'});
+        let label = new St.Label({ style_class: 'paperwm-minimap-label' });
         label.clutter_text.ellipsize = Pango.EllipsizeMode.END;
         this.label = label;
 
-        let clip = new St.Widget({name: 'container-clip'});
+        let clip = new St.Widget({ name: 'container-clip' });
         this.clip = clip;
-        let container = new St.Widget({name: 'minimap-container'});
+        let container = new St.Widget({ name: 'minimap-container' });
         this.container = container;
-        container.height = Math.round(space.height*Settings.prefs.minimap_scale) - Settings.prefs.window_gap;
+        container.height = Math.round(space.height * Settings.prefs.minimap_scale) - Settings.prefs.window_gap;
 
         actor.add_actor(highlight);
         actor.add_actor(label);
         actor.add_actor(clip);
         clip.add_actor(container);
-        clip.set_position(12 + Settings.prefs.window_gap, 12 + Math.round(1.5*Settings.prefs.window_gap));
+        clip.set_position(12 + Settings.prefs.window_gap, 12 + Math.round(1.5 * Settings.prefs.window_gap));
         highlight.y = clip.y - 10;
         Main.uiGroup.add_actor(this.actor);
         this.actor.opacity = 0;
@@ -70,8 +67,8 @@ var Minimap = class Minimap extends Array {
     static get [Symbol.species]() { return Array; }
 
     reset() {
-        this.splice(0,this.length).forEach(c => c.forEach(x => x.destroy()))
-        this.createClones()
+        this.splice(0, this.length).forEach(c => c.forEach(x => x.destroy()));
+        this.createClones();
         this.layout();
     }
 
@@ -127,7 +124,7 @@ var Minimap = class Minimap extends Array {
         Easer.addEase(this.actor,
             {
                 opacity: 0, time, mode: Clutter.AnimationMode.EASE_OUT_EXPO,
-                onComplete: () => this.actor.hide()
+                onComplete: () => this.actor.hide(),
             });
     }
 
@@ -142,7 +139,7 @@ var Minimap = class Minimap extends Array {
         let clone = new Clutter.Clone({ source: windowActor });
         let container = new Clutter.Actor({
             // layout_manager: new WindowCloneLayout(this),
-            name: "window-clone-container"
+            name: "window-clone-container",
         });
         clone.meta_window = mw;
         container.clone = clone;
@@ -159,10 +156,10 @@ var Minimap = class Minimap extends Array {
         let buffer = meta_window.get_buffer_rect();
         let frame = meta_window.get_frame_rect();
         let scale = Settings.prefs.minimap_scale;
-        clone.set_size(buffer.width*scale, buffer.height*scale - Settings.prefs.window_gap);
-        clone.set_position(((buffer.x - frame.x)*scale),
-                           (buffer.y - frame.y)*scale);
-        container.set_size(frame.width*scale, frame.height*scale);
+        clone.set_size(buffer.width * scale, buffer.height * scale - Settings.prefs.window_gap);
+        clone.set_position((buffer.x - frame.x) * scale,
+            (buffer.y - frame.y) * scale);
+        container.set_size(frame.width * scale, frame.height * scale);
     }
 
     layout() {
@@ -182,13 +179,13 @@ var Minimap = class Minimap extends Array {
         }
 
         this.clip.width = Math.min(this.container.width,
-                                   this.monitor.width - this.clip.x*2 - 24);
-        this.actor.width = this.clip.width + this.clip.x*2;
+            this.monitor.width - this.clip.x * 2 - 24);
+        this.actor.width = this.clip.width + this.clip.x * 2;
         this.clip.set_clip(0, 0, this.clip.width, this.clip.height);
         this.label.set_style(`max-width: ${this.clip.width}px;`);
         this.actor.set_position(
-            this.monitor.x + Math.floor((this.monitor.width - this.actor.width)/2),
-            this.monitor.y + Math.floor((this.monitor.height - this.actor.height)/2));
+            this.monitor.x + Math.floor((this.monitor.width - this.actor.width) / 2),
+            this.monitor.y + Math.floor((this.monitor.height - this.actor.height) / 2));
         this.select();
     }
 
@@ -214,12 +211,12 @@ var Minimap = class Minimap extends Array {
 
         if (selected.x + selected.width + container.x > clip.width) {
             // Align right edge of selected with the clip
-            container.x = clip.width - (selected.x + selected.width)
+            container.x = clip.width - (selected.x + selected.width);
             container.x -= 500; // margin
         }
         if (selected.x + container.x < 0) {
             // Align left edge of selected with the clip
-            container.x = -selected.x
+            container.x = -selected.x;
             container.x += 500; // margin
         }
 
@@ -231,14 +228,14 @@ var Minimap = class Minimap extends Array {
 
         let gap = Settings.prefs.window_gap;
         highlight.x = Math.round(
-            clip.x + container.x + selected.x - gap/2);
+            clip.x + container.x + selected.x - gap / 2);
         highlight.y = Math.round(
             clip.y + selected.y - Settings.prefs.window_gap);
         highlight.set_size(Math.round(selected.width + gap),
-                           Math.round(Math.min(selected.height, this.clip.height + gap) + gap));
+            Math.round(Math.min(selected.height, this.clip.height + gap) + gap));
 
-        let x = highlight.x
-            + (highlight.width - label.width)/2;
+        let x = highlight.x +
+            (highlight.width - label.width) / 2;
         if (x + label.width > clip.x + clip.width)
             x = clip.x + clip.width - label.width + 5;
         if (x < 0)
@@ -257,7 +254,7 @@ var Minimap = class Minimap extends Array {
         this.destroyed = true;
         this.signals.destroy();
         this.signals = null;
-        this.splice(0,this.length);
+        this.splice(0, this.length);
         this.actor.destroy();
         this.actor = null;
     }
