@@ -1,17 +1,25 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Settings = Extension.imports.settings;
-const Utils = Extension.imports.utils;
-const Keybindings = Extension.imports.keybindings;
-const Tiling = Extension.imports.tiling;
-const Scratch = Extension.imports.scratch;
-const Easer = Extension.imports.utils.easer;
+import Clutter from 'gi://Clutter';
+import Meta from 'gi://Meta';
+import Gio from 'gi://Gio';
+import GObject from 'gi://GObject';
 
-const { Clutter, Meta, Gio, GObject } = imports.gi;
-const Main = imports.ui.main;
-const AltTab = imports.ui.altTab;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as AltTab from 'resource:///org/gnome/shell/ui/altTab.js';
 
-var LiveAltTab = GObject.registerClass(
+import { Settings, Utils, Keybindings, Tiling, Scratch, Easer } from './imports.js';
+
+let switcherSettings;
+export function enable() {
+    switcherSettings = new Gio.Settings({
+        schema_id: 'org.gnome.shell.window-switcher',
+    });
+}
+
+export function disable() {
+    switcherSettings = null;
+}
+
+export const LiveAltTab = GObject.registerClass(
     class LiveAltTab extends AltTab.WindowSwitcherPopup {
         _init(reverse) {
             this.reverse = reverse;
@@ -29,9 +37,9 @@ var LiveAltTab = GObject.registerClass(
 
             if (Scratch.isScratchWindow(global.display.focus_window)) {
                 // Access scratch windows in mru order with shift-super-tab
-                return scratch.concat(this.reverse ? tabList.reverse() : tabList);
+                return scratch.concat(reverse ? tabList.reverse() : tabList);
             } else {
-                return tabList.concat(this.reverse ? scratch.reverse() : scratch);
+                return tabList.concat(reverse ? scratch.reverse() : scratch);
             }
         }
 
@@ -157,18 +165,7 @@ var LiveAltTab = GObject.registerClass(
         }
     });
 
-function liveAltTab(meta_window, space, { display, screen, binding }) {
+export function liveAltTab(meta_window, space, { display, screen, binding }) {
     let tabPopup = new LiveAltTab(binding.is_reversed());
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
-}
-
-let switcherSettings;
-function enable() {
-    switcherSettings = new Gio.Settings({
-        schema_id: 'org.gnome.shell.window-switcher',
-    });
-}
-
-function disable() {
-    switcherSettings = null;
 }
