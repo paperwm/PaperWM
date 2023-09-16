@@ -1,28 +1,24 @@
+import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
+import Meta from 'gi://Meta';
+
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+
+import { Utils, Tiling, Keybindings, TopBar, Scratch, Minimap } from './imports.js';
+
 /**
   Navigation and previewing functionality.
 
   This is a somewhat messy tangle of functionality relying on
   `SwitcherPopup.SwitcherPopup` when we really should just take full control.
  */
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Utils = Extension.imports.utils;
-const Tiling = Extension.imports.tiling;
-const Keybindings = Extension.imports.keybindings;
-const TopBar = Extension.imports.topbar;
-const Scratch = Extension.imports.scratch;
-const Minimap = Extension.imports.minimap;
 
-const { Meta, Clutter } = imports.gi;
-const Main = imports.ui.main;
-const Mainloop = imports.mainloop;
-const Signals = imports.signals;
-
+const { Signals } = imports;
 const display = global.display;
 
-var navigating; // exported
+export let navigating; // exported
 let grab, dispatcher, signals;
-function enable() {
+export function enable() {
     navigating = false;
 
     /**
@@ -38,19 +34,21 @@ function enable() {
     });
 }
 
-function disable() {
+export function disable() {
     navigating = false;
     grab = null;
     dispatcher = null;
     signals.destroy();
     signals = null;
+    index = null;
 }
 
-function dec2bin(dec) {
+export function dec2bin(dec) {
     return (dec >>> 0).toString(2);
 }
 
-const modMask = Clutter.ModifierType.SUPER_MASK |
+const modMask =
+    Clutter.ModifierType.SUPER_MASK |
     Clutter.ModifierType.HYPER_MASK |
     Clutter.ModifierType.META_MASK |
     Clutter.ModifierType.CONTROL_MASK |
@@ -59,8 +57,7 @@ const modMask = Clutter.ModifierType.SUPER_MASK |
     Clutter.ModifierType.MOD3_MASK |
     Clutter.ModifierType.MOD4_MASK |
     Clutter.ModifierType.MOD5_MASK;
-
-function getModLock(mods) {
+export function getModLock(mods) {
     return mods & modMask;
 }
 
@@ -136,7 +133,8 @@ class ActionDispatcher {
 
     _resetNoModsTimeout() {
         Utils.timeout_remove(this._noModsTimeoutId);
-        this._noModsTimeoutId = Mainloop.timeout_add(
+        this._noModsTimeoutId = GLib.timeout_add(
+            GLib.PRIORITY_DEFAULT,
             0, () => {
                 this._finish(global.get_current_time());
                 this._noModsTimeoutId = null;
@@ -156,7 +154,7 @@ class ActionDispatcher {
         // visual destruction on key-press and signal to the release handler
         // that we should destroy the dispactcher too
         // https://github.com/paperwm/PaperWM/issues/70
-        if (keysym == Clutter.KEY_Escape) {
+        if (keysym === Clutter.KEY_Escape) {
             this._destroy = true;
             getNavigator().accept();
             getNavigator().destroy();
@@ -177,7 +175,7 @@ class ActionDispatcher {
             let [x, y, mods] = global.get_pointer();
             let state = mods & this._modifierMask;
 
-            if (state == 0)
+            if (state === 0)
                 this._finish(event.get_time());
         } else {
             this._resetNoModsTimeout();
@@ -192,7 +190,7 @@ class ActionDispatcher {
         let metaWindow = space.selectedWindow;
         const nav = getNavigator();
 
-        if (mutterActionId == Meta.KeyBindingAction.MINIMIZE) {
+        if (mutterActionId === Meta.KeyBindingAction.MINIMIZE) {
             metaWindow.minimize();
         } else if (action && action.options.activeInNavigator) {
             // action is performed while navigator is open (e.g. switch-left)
@@ -206,7 +204,7 @@ class ActionDispatcher {
             action.handler(metaWindow, space, { navigator: this.navigator });
             if (space !== Tiling.spaces.selectedSpace) {
                 this.navigator.minimaps.forEach(m => typeof m === 'number'
-                    ? Mainloop.source_remove(m) : m.hide());
+                    ? GLib.source_remove(m) : m.hide());
             }
             if (Tiling.inGrab && !Tiling.inGrab.dnd && Tiling.inGrab.window) {
                 Tiling.inGrab.beginDnD();
@@ -215,7 +213,7 @@ class ActionDispatcher {
             // closes navigator and action is performed afterwards
             // (e.g. switch-monitor-left)
             this._resetNoModsTimeout();
-            this._doActionTimeout = Mainloop.timeout_add(0, () => {
+            this._doActionTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 0, () => {
                 action.handler(metaWindow, space);
                 this._doActionTimeout = null;
                 return false; // on return false destroys timeout
@@ -262,7 +260,7 @@ class ActionDispatcher {
 }
 
 let index = 0;
-var navigator; // exported
+export let navigator;
 class NavigatorClass {
     constructor() {
         Utils.debug("#navigator", "nav created");
@@ -291,7 +289,7 @@ class NavigatorClass {
     _showMinimap(space) {
         let minimap = this.minimaps.get(space);
         if (!minimap) {
-            let minimapId = Mainloop.timeout_add(200, () => {
+            let minimapId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
                 minimap = new Minimap.Minimap(space, this.monitor);
                 space.startAnimate();
                 minimap.show(false);
@@ -318,7 +316,7 @@ class NavigatorClass {
     destroy(space, focus) {
         this.minimaps.forEach(m => {
             if (typeof  m === 'number') {
-                Mainloop.source_remove(m);
+                GLib.source_remove(m);
             }
             else {
                 m.destroy();
@@ -413,10 +411,10 @@ class NavigatorClass {
         navigator = false;
     }
 }
-var Navigator = NavigatorClass;
+export let Navigator = NavigatorClass;
 Signals.addSignalMethods(Navigator.prototype);
 
-function getNavigator() {
+export function getNavigator() {
     if (navigator)
         return navigator;
 
@@ -428,7 +426,7 @@ function getNavigator() {
  * Finishes navigation if navigator exists.
  * Useful to call before disabling other modules.
  */
-function finishNavigation() {
+export function finishNavigation() {
     if (navigator) {
         navigator.finish();
     }
@@ -439,7 +437,7 @@ function finishNavigation() {
  * @param {import('@gi-types/clutter10').GrabState} mode
  * @returns {ActionDispatcher}
  */
-function getActionDispatcher(mode) {
+export function getActionDispatcher(mode) {
     if (dispatcher) {
         dispatcher.mode |= mode;
         return dispatcher;
@@ -452,7 +450,7 @@ function getActionDispatcher(mode) {
  *
  * @param {import('@gi-types/clutter10').GrabState} mode
  */
-function dismissDispatcher(mode) {
+export function dismissDispatcher(mode) {
     if (!dispatcher) {
         return;
     }
@@ -463,7 +461,7 @@ function dismissDispatcher(mode) {
     }
 }
 
-function preview_navigate(meta_window, space, { display, screen, binding }) {
+export function preview_navigate(meta_window, space, { display, screen, binding }) {
     let tabPopup = getActionDispatcher(Clutter.GrabState.KEYBOARD);
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
