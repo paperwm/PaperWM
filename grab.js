@@ -1,15 +1,12 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Settings = Extension.imports.settings;
-const Utils = Extension.imports.utils;
-const Tiling = Extension.imports.tiling;
-const Navigator = Extension.imports.navigator;
-const Scratch = Extension.imports.scratch;
-const Easer = Extension.imports.utils.easer;
+import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
+import Graphene from 'gi://Graphene';
+import Meta from 'gi://Meta';
+import St from 'gi://St';
 
-const { Meta, Clutter, St, Graphene } = imports.gi;
-const Main = imports.ui.main;
-const Mainloop = imports.mainloop;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+
+import { Settings, Utils, Tiling, Navigator, Scratch, Easer } from './imports.js';
 
 /**
  * Returns a virtual pointer (i.e. mouse) device that can be used to
@@ -18,7 +15,7 @@ const Mainloop = imports.mainloop;
  * @returns Clutter.VirtualInputDevice
 */
 let virtualPointer;
-function getVirtualPointer() {
+export function getVirtualPointer() {
     if (!virtualPointer) {
         virtualPointer = Clutter.get_default_backend()
             .get_default_seat()
@@ -28,7 +25,7 @@ function getVirtualPointer() {
     return virtualPointer;
 }
 
-var MoveGrab = class MoveGrab {
+export class MoveGrab {
     constructor(metaWindow, type, space) {
         this.window = metaWindow;
         this.type = type;
@@ -111,7 +108,7 @@ var MoveGrab = class MoveGrab {
         this.dnd = true;
         Utils.debug("#grab", "begin DnD");
         Navigator.getNavigator().minimaps.forEach(m => typeof m === 'number'
-            ? Mainloop.source_remove(m) : m.hide());
+            ? GLib.source_remove(m) : m.hide());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
         let metaWindow = this.window;
         let clone = metaWindow.clone;
@@ -422,7 +419,9 @@ var MoveGrab = class MoveGrab {
                 clone.set_scale(1, 1);
                 clone.set_pivot_point(0, 0);
 
-                params.onStopped = () => { actor.set_pivot_point(0, 0); };
+                params.onStopped = () => {
+                    actor.set_pivot_point(0, 0);
+                };
                 Easer.addEase(actor, params);
             }
 
@@ -538,15 +537,17 @@ var MoveGrab = class MoveGrab {
                 time: Settings.prefs.animation_time,
                 [zone.originProp]: zone.center,
                 [zone.sizeProp]: 0,
-                onComplete: () => { zone.actor.destroy(); this.zoneActors.delete(zone.actor); },
+                onComplete: () => { zone.actor.destroy();
+                    this.zoneActors.delete(zone.actor);
+                },
             });
         }
 
         this.dndTarget = null;
     }
-};
+}
 
-var ResizeGrab = class ResizeGrab {
+export class ResizeGrab {
     constructor(metaWindow, type) {
         this.window = metaWindow;
         this.signals = new Utils.Signals();
@@ -574,4 +575,4 @@ var ResizeGrab = class ResizeGrab {
         this.window = null;
         this.space.layout();
     }
-};
+}
