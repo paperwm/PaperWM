@@ -1,28 +1,29 @@
-/*
-  Functionality related to the top bar, often called the statusbar.
- */
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const ExtensionModule = Extension.imports.extension;
-const Settings = Extension.imports.settings;
-const Utils = Extension.imports.utils;
-const Tiling = Extension.imports.tiling;
-const Navigator = Extension.imports.navigator;
-const Scratch = Extension.imports.scratch;
-const Easer = Extension.imports.utils.easer;
+import { Settings, Utils, Tiling, Navigator, Scratch } from './imports.js';
+import { Easer } from './utils.js';
 
-const { Clutter, St, Graphene, GLib, Meta, Gio, GObject } = imports.gi;
-const { panelMenu, popupMenu } = imports.ui;
-const Main = imports.ui.main;
-const Path = Extension.path;
+import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import Graphene from 'gi://Graphene';
+import Meta from 'gi://Meta';
+import St from 'gi://St';
+
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as panelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as popupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 const workspaceManager = global.workspace_manager;
 const display = global.display;
 
-var panelBox = Main.layoutManager.panelBox; // exported
+/*
+  Functionality related to the top bar, often called the statusbar.
+ */
+
+export let panelBox = Main.layoutManager.panelBox;
 
 // From https://developer.gnome.org/hig-book/unstable/design-color.html.en
-let colors = [
+const colors = [
     '#9DB8D2', '#7590AE', '#4B6983', '#314E6C',
     '#EAE8E3', '#BAB5AB', '#807D74', '#565248',
     '#C5D2C8', '#83A67F', '#5D7555', '#445632',
@@ -33,7 +34,100 @@ let colors = [
     '#46A046', '#267726', '#ffffff', '#000000',
 ];
 
-function createButton(icon_name, accessible_name) {
+export let menu, focusButton;
+let path, openPrefs, orginalActivitiesText, screenSignals, signals, gsettings;
+export function enable (extension) {
+    path = extension.path;
+    openPrefs = () => extension.openPreferences();
+    gsettings = extension.getSettings();
+
+    let label = Main.panel.statusArea.activities.first_child;
+    orginalActivitiesText = label.text;
+    screenSignals = [];
+    signals = new Utils.Signals();
+
+    Main.panel.statusArea.activities.hide();
+
+    menu = new WorkspaceMenu();
+    focusButton = new FocusButton();
+
+    Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
+    Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');
+
+    Tiling.spaces.forEach(s => {
+        s.workspaceLabel.clutter_text.set_font_description(menu.label.clutter_text.font_description);
+    });
+    fixWorkspaceIndicator();
+    fixFocusModeIcon();
+    fixStyle();
+
+    screenSignals.push(
+        workspaceManager.connect_after('workspace-switched',
+            (workspaceManager, from, to) => updateWorkspaceIndicator(to)));
+
+    signals.connect(Main.overview, 'showing', fixTopBar);
+    signals.connect(Main.overview, 'hidden', () => {
+        if (Tiling.spaces.selectedSpace.showTopBar)
+            return;
+        fixTopBar();
+    });
+
+    signals.connect(gsettings, 'changed::disable-topbar-styling', (settings, key) => {
+        const status = Settings.prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
+        Main.notify(
+            `PaperWM: TopBar styling has been ${status}`,
+            `A restart of Gnome is required! (e.g. logout then login again)`);
+    });
+
+    signals.connect(gsettings, 'changed::show-window-position-bar', (settings, key) => {
+        const spaces = Tiling.spaces;
+        spaces.setSpaceTopbarElementsVisible();
+        spaces.forEach(s => s.layout(false));
+        spaces.showWindowPositionBarChanged();
+    });
+
+    signals.connect(gsettings, 'changed::show-workspace-indicator', (settings, key) => {
+        fixWorkspaceIndicator();
+    });
+
+    signals.connect(gsettings, 'changed::show-focus-mode-icon', (settings, key) => {
+        fixFocusModeIcon();
+    });
+
+    signals.connect(panelBox, 'show', () => {
+        fixTopBar();
+    });
+    signals.connect(panelBox, 'hide', () => {
+        fixTopBar();
+    });
+    /**
+     * Set clear-style when hiding overview.
+     */
+    signals.connect(Main.overview, 'hiding', () => {
+        fixStyle();
+    });
+}
+
+export function disable() {
+    signals.destroy();
+    signals = null;
+    focusButton.destroy();
+    focusButton = null;
+    menu.destroy();
+    menu = null;
+    Main.panel.statusArea.activities.show();
+    // remove PaperWM style classes names for Main.panel
+    removeStyles();
+
+    screenSignals.forEach(id => workspaceManager.disconnect(id));
+    screenSignals = [];
+    panelBox.scale_y = 1;
+    path = null;
+    openPrefs = null;
+    gsettings = null;
+}
+
+export function createButton(icon_name, accessible_name) {
     return new St.Button({
         reactive: true,
         can_focus: true,
@@ -44,7 +138,7 @@ function createButton(icon_name, accessible_name) {
     });
 }
 
-function popupMenuEntryHelper(text) {
+export function popupMenuEntryHelper(text) {
     this.label = new St.Entry({
         text,
         // While not a search entry, this looks much better
@@ -81,7 +175,7 @@ function popupMenuEntryHelper(text) {
 }
 
 // registerClass, breaking our somewhat lame registerClass polyfill.
-var PopupMenuEntry = GObject.registerClass(
+export const PopupMenuEntry = GObject.registerClass(
     class PopupMenuEntry extends popupMenu.PopupBaseMenuItem {
         _init(text) {
             super._init({
@@ -161,7 +255,7 @@ class ColorEntry {
 /**
  * FocusMode icon class.
  */
-var FocusIcon = GObject.registerClass(
+export const FocusIcon = GObject.registerClass(
     class FocusIcon extends St.Icon {
         _init(properties = {}, tooltip_parent, tooltip_x_point = 0) {
             super._init(properties);
@@ -172,8 +266,8 @@ var FocusIcon = GObject.registerClass(
             this.tooltip_x_point = tooltip_x_point;
 
             // read in focus icons from resources folder
-            this.gIconDefault = Gio.icon_new_for_string(`${Path}/resources/focus-mode-default-symbolic.svg`);
-            this.gIconCenter = Gio.icon_new_for_string(`${Path}/resources/focus-mode-center-symbolic.svg`);
+            this.gIconDefault = Gio.icon_new_for_string(`${path}/resources/focus-mode-default-symbolic.svg`);
+            this.gIconCenter = Gio.icon_new_for_string(`${path}/resources/focus-mode-center-symbolic.svg`);
 
             this._initToolTip();
             this.setMode();
@@ -266,7 +360,7 @@ Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
     }
 );
 
-var FocusButton = GObject.registerClass(
+export const FocusButton = GObject.registerClass(
     class FocusButton extends panelMenu.Button {
         _init() {
             super._init(0.0, 'FocusMode');
@@ -292,7 +386,7 @@ var FocusButton = GObject.registerClass(
         }
 
         _onClicked(actor, event) {
-            if (Tiling.inPreview != Tiling.PreviewMode.NONE || Main.overview.visible) {
+            if (Tiling.inPreview !== Tiling.PreviewMode.NONE || Main.overview.visible) {
                 return Clutter.EVENT_PROPAGATE;
             }
 
@@ -364,7 +458,7 @@ var WorkspaceMenu = GObject.registerClass(
                 let wi = workspaceManager.get_active_workspace_index();
                 let temp_file = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace');
                 temp_file.replace_contents(wi.toString(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null);
-                ExtensionUtils.openPrefs();
+                openPrefs();
             });
 
             // this.iconBox = new St.BoxLayout();
@@ -398,8 +492,8 @@ var WorkspaceMenu = GObject.registerClass(
 
             let type = event.type();
 
-            if (type == Clutter.EventType.TOUCH_END ||
-                type == Clutter.EventType.BUTTON_RELEASE) {
+            if (type === Clutter.EventType.TOUCH_END ||
+                type === Clutter.EventType.BUTTON_RELEASE) {
                 if (Navigator.navigating) {
                     Navigator.getNavigator().finish();
                 } else {
@@ -584,99 +678,11 @@ var WorkspaceMenu = GObject.registerClass(
         }
     });
 
-var menu, focusButton; // exported
-let orginalActivitiesText, screenSignals, signals, gsettings;
-function enable () {
-    gsettings = ExtensionUtils.getSettings();
-    let label = Main.panel.statusArea.activities.first_child;
-    orginalActivitiesText = label.text;
-    screenSignals = [];
-    signals = new Utils.Signals();
-
-    Main.panel.statusArea.activities.hide();
-
-    menu = new WorkspaceMenu();
-    focusButton = new FocusButton();
-
-    Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
-    Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');
-
-    Tiling.spaces.forEach(s => {
-        s.workspaceLabel.clutter_text.set_font_description(menu.label.clutter_text.font_description);
-    });
-    fixWorkspaceIndicator();
-    fixFocusModeIcon();
-    fixStyle();
-
-    screenSignals.push(
-        workspaceManager.connect_after('workspace-switched',
-            (workspaceManager, from, to) => updateWorkspaceIndicator(to)));
-
-    signals.connect(Main.overview, 'showing', fixTopBar);
-    signals.connect(Main.overview, 'hidden', () => {
-        if (Tiling.spaces.selectedSpace.showTopBar)
-            return;
-        fixTopBar();
-    });
-
-    signals.connect(gsettings, 'changed::disable-topbar-styling', (settings, key) => {
-        const status = Settings.prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
-        ExtensionModule.notify(
-            `PaperWM: TopBar styling has been ${status}`,
-            `A restart of Gnome is required! (e.g. logout then login again)`);
-    });
-
-    signals.connect(gsettings, 'changed::show-window-position-bar', (settings, key) => {
-        const spaces = Tiling.spaces;
-        spaces.setSpaceTopbarElementsVisible();
-        spaces.forEach(s => s.layout(false));
-        spaces.showWindowPositionBarChanged();
-    });
-
-    signals.connect(gsettings, 'changed::show-workspace-indicator', (settings, key) => {
-        fixWorkspaceIndicator();
-    });
-
-    signals.connect(gsettings, 'changed::show-focus-mode-icon', (settings, key) => {
-        fixFocusModeIcon();
-    });
-
-    signals.connect(panelBox, 'show', () => {
-        fixTopBar();
-    });
-    signals.connect(panelBox, 'hide', () => {
-        fixTopBar();
-    });
-    /**
-     * Set clear-style when hiding overview.
-     */
-    signals.connect(Main.overview, 'hiding', () => {
-        fixStyle();
-    });
-}
-
-function disable() {
-    signals.destroy();
-    signals = null;
-    focusButton.destroy();
-    focusButton = null;
-    menu.destroy();
-    menu = null;
-    Main.panel.statusArea.activities.show();
-    // remove PaperWM style classes names for Main.panel
-    removeStyles();
-
-    screenSignals.forEach(id => workspaceManager.disconnect(id));
-    screenSignals = [];
-    panelBox.scale_y = 1;
-    gsettings = null;
-}
-
-function panelMonitor() {
+export function panelMonitor() {
     return Main.layoutManager.primaryMonitor;
 }
 
-function setNoBackgroundStyle() {
+export function setNoBackgroundStyle() {
     if (Settings.prefs.disable_topbar_styling) {
         return;
     }
@@ -684,7 +690,7 @@ function setNoBackgroundStyle() {
     Main.panel.add_style_class_name('topbar-no-background');
 }
 
-function setTransparentStyle() {
+export function setTransparentStyle() {
     if (Settings.prefs.disable_topbar_styling) {
         return;
     }
@@ -692,7 +698,7 @@ function setTransparentStyle() {
     Main.panel.add_style_class_name('topbar-transparent-background');
 }
 
-function removeStyles() {
+export function removeStyles() {
     ['topbar-no-background', 'topbar-transparent-background'].forEach(s => {
         Main.panel.remove_style_class_name(s);
     });
@@ -701,11 +707,11 @@ function removeStyles() {
 /**
  * Applies correct style based on whether we use the windowPositionBar or not.
  */
-function fixStyle() {
+export function fixStyle() {
     Settings.prefs.show_window_position_bar ? setNoBackgroundStyle() : setTransparentStyle();
 }
 
-function fixTopBar() {
+export function fixTopBar() {
     let space = Tiling?.spaces?.monitors?.get(panelMonitor()) ?? false;
     if (!space)
         return;
@@ -731,12 +737,12 @@ function fixTopBar() {
     }
 }
 
-function fixWorkspaceIndicator() {
+export function fixWorkspaceIndicator() {
     Settings.prefs.show_workspace_indicator ? menu.show() : menu.hide();
     Tiling.spaces.forEach(s => s.showWorkspaceIndicator());
 }
 
-function fixFocusModeIcon() {
+export function fixFocusModeIcon() {
     Settings.prefs.show_focus_mode_icon ? focusButton.show() : focusButton.hide();
     Tiling.spaces.forEach(s => s.showFocusModeIcon());
 }
@@ -745,7 +751,7 @@ function fixFocusModeIcon() {
    Override the activities label with the workspace name.
    let workspaceIndex = 0
 */
-function updateWorkspaceIndicator(index) {
+export function updateWorkspaceIndicator(index) {
     let spaces = Tiling.spaces;
     let space = spaces?.spaceOf(workspaceManager.get_workspace_by_index(index));
     if (space && space.monitor === panelMonitor()) {
@@ -759,11 +765,11 @@ function updateWorkspaceIndicator(index) {
 /**
  * Refreshes topbar workspace indicator.
  */
-function refreshWorkspaceIndicator() {
+export function refreshWorkspaceIndicator() {
     let panelSpace = Tiling.spaces.monitors.get(panelMonitor());
     updateWorkspaceIndicator(panelSpace.index);
 }
 
-function setWorkspaceName (name) {
+export function setWorkspaceName (name) {
     menu && menu.setName(name);
 }
