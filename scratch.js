@@ -1,4 +1,5 @@
 import Meta from 'gi://Meta';
+import Mtk from 'gi://Mtk';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
@@ -101,7 +102,7 @@ export function makeScratch(metaWindow) {
             let vDisplacement = 30;
             let [x, y] = windowPositionSeen;  // The window could be non-placable so can't use frame
 
-            targetFrame = new Meta.Rectangle({
+            targetFrame = new Mtk.Rectangle({
                 x, y: y + vDisplacement,
                 width: f.width,
                 height: Math.min(f.height - vDisplacement, Math.floor(f.height * 0.9)),

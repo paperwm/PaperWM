@@ -1785,12 +1785,12 @@ export const Spaces = class Spaces extends Map {
             this.addSpace(workspace);
         }
         this.signals.connect(workspaceManager, 'notify::n-workspaces',
-            Utils.dynamic_function_ref('workspacesChanged', this).bind(this));
+            () => this.workspacesChanged());
 
         if (workspaceManager.reorder_workspace) {
             // Compatibility: only in recent gnome-shell versions
             this.signals.connect(workspaceManager, 'workspaces-reordered',
-                Utils.dynamic_function_ref('workspacesChanged', this).bind(this));
+                () => this.workspacesChanged());
         }
 
         let OVERRIDE_SCHEMA;
@@ -2868,11 +2868,15 @@ export function registerWindow(metaWindow) {
     metaWindow.clone = clone;
     metaWindow.clone.cloneActor = cloneActor;
 
-    signals.connect(metaWindow, "focus", focus_wrapper);
+    signals.connect(metaWindow, "focus", (metaWindow, user_data) => {
+        focus_handler(metaWindow, user_data);
+    });
     signals.connect(metaWindow, 'size-changed', allocateClone);
     // Note: runs before gnome-shell's minimize handling code
     signals.connect(metaWindow, 'notify::fullscreen', Topbar.fixTopBar);
-    signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
+    signals.connect(metaWindow, 'notify::minimized', metaWindow => {
+        minimizeHandler(metaWindow);
+    });
     signals.connect(actor, 'show', actor => {
         showHandler(actor);
     });
@@ -3058,7 +3062,7 @@ export function add_filter(meta_window) {
    Handle windows leaving workspaces.
  */
 export function remove_handler(workspace, meta_window) {
-    console.debug("window-removed", meta_window, meta_window.title, workspace.index());
+    console.debug("window-removed", meta_window.title, workspace.index());
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
     // Not sure if we can check directly if _this_ window had focus when closed.
@@ -3080,7 +3084,7 @@ export function remove_handler(workspace, meta_window) {
    Handle windows entering workspaces.
 */
 export function add_handler(ws, metaWindow) {
-    console.debug("window-added", metaWindow, metaWindow.title, metaWindow.window_type, ws.index(), metaWindow.on_all_workspaces);
+    console.debug("window-added", metaWindow.title, metaWindow.window_type, ws.index(), metaWindow.on_all_workspaces);
 
     // Do not handle grabbed windows
     if (inGrab && inGrab.window === metaWindow)
@@ -3581,7 +3585,6 @@ export function focus_handler(metaWindow, user_data) {
 
     Topbar.fixTopBar();
 }
-export const focus_wrapper = Utils.dynamic_function_ref('focus_handler', this);
 
 /**
    Push all minimized windows to the scratch layer
@@ -3592,7 +3595,6 @@ export function minimizeHandler(metaWindow) {
         Scratch.makeScratch(metaWindow);
     }
 }
-export const minimizeWrapper = Utils.dynamic_function_ref('minimizeHandler', this);
 
 /**
   `WindowActor::show` handling

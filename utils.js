@@ -63,8 +63,8 @@ export function framestr(rect) {
  * etc. (this is like a function symbol in lisp)
  */
 export function dynamic_function_ref(handler_name, owner_obj) {
-    owner_obj = owner_obj || window;
     return function() {
+        console.debug("dynamic_function_ref name", handler_name);
         owner_obj[handler_name].apply(this, arguments);
     };
 }
