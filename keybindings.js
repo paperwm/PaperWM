@@ -457,11 +457,7 @@ export function handleAccelerator(display, actionId, deviceId, timestamp) {
     if (action) {
         console.debug("#keybindings", "Schemaless keybinding activated",
             actionId, action.name);
-        if (global.screen) {
-            action.keyHandler(display, null, display.focus_window);
-        } else {
-            action.keyHandler(display, display.focus_window);
-        }
+        action.keyHandler(display, display.focus_window);
     }
 }
 

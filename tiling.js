@@ -1513,10 +1513,7 @@ border-radius: ${borderWidth}px;
         }
 
         let monitor = this.monitor;
-        let backgroundParams = global.screen
-            ? { meta_screen: global.screen }
-            : { meta_display: display };
-
+        let backgroundParams = { meta_display: display };
         let metaBackground = new Meta.Background(backgroundParams);
         // gnome-shell 3.38
         if (Meta.BackgroundActor.prototype.set_background) {
@@ -1787,18 +1784,10 @@ export const Spaces = class Spaces extends Map {
         this.signals.connect(workspaceManager, 'notify::n-workspaces',
             () => this.workspacesChanged());
 
-        if (workspaceManager.reorder_workspace) {
-            // Compatibility: only in recent gnome-shell versions
-            this.signals.connect(workspaceManager, 'workspaces-reordered',
-                () => this.workspacesChanged());
-        }
+        this.signals.connect(workspaceManager, 'workspaces-reordered',
+            () => this.workspacesChanged());
 
-        let OVERRIDE_SCHEMA;
-        if (global.screen) {
-            OVERRIDE_SCHEMA = 'org.gnome.shell.overrides';
-        } else { // 3.30 now uses per desktop settings, instead of ad-hoc overrides
-            OVERRIDE_SCHEMA = 'org.gnome.mutter';
-        }
+        const OVERRIDE_SCHEMA = 'org.gnome.mutter';
         this.overrideSettings = new Gio.Settings({ schema_id: OVERRIDE_SCHEMA });
     }
 

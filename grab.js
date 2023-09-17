@@ -89,8 +89,7 @@ export class MoveGrab {
 
         this.signals.connect(this.actor, "button-release-event", this.end.bind(this));
         this.signals.connect(this.actor, "motion-event", this.motion.bind(this));
-        this.signals.connect(
-            global.screen || global.display, "window-entered-monitor",
+        this.signals.connect(global.display, "window-entered-monitor",
             this.beginDnD.bind(this)
         );
 
