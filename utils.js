@@ -24,33 +24,13 @@ export function enable() {
 export function disable() {
     warpRipple?.destroy();
     warpRipple = null;
-    debug_all = null;
-    debug_filter = null;
     markNewClonesSignalId = null;
-}
-
-let debug_all = false; // Turn off by default
-let debug_filter = { '#paperwm': true, '#stacktrace': true };
-export function debug() {
-    let keyword = arguments[0];
-    let filter = debug_filter[keyword];
-    if (filter === false)
-        return;
-    if (debug_all || filter === true)
-        console.debug(Array.prototype.join.call(arguments, " | "));
 }
 
 export function assert(condition, message, ...dump) {
     if (!condition) {
         throw new Error(`${message}\n`, dump);
     }
-}
-
-export function withTimer(message, fn) {
-    let start = GLib.get_monotonic_time();
-    let ret = fn();
-    let stop = GLib.get_monotonic_time();
-    console.debug(`${message} ${((stop - start) / 1000).toFixed(1)}ms`);
 }
 
 export function print_stacktrace(error) {
@@ -62,10 +42,6 @@ export function print_stacktrace(error) {
     } else {
         trace = error.stack.split("\n");
     }
-    // Remove some uninteresting frames
-    let filtered = trace.filter(frame => {
-        return frame !== "wrapper@resource:///org/gnome/gjs/modules/lang.js:178";
-    });
     console.error(`JS ERROR: ${error}\n ${trace.join('\n')}`);
 }
 
@@ -79,28 +55,6 @@ export function prettyPrintToLog(...args) {
 
 export function framestr(rect) {
     return `[ x:${rect.x}, y:${rect.y} w:${rect.width} h:${rect.height} ]`;
-}
-
-/**
- * Returns a human-readable enum value representation
- */
-export function ppEnumValue(value, genum) {
-    let entry = Object.entries(genum).find(([k, v]) => v === value);
-    if (entry) {
-        return `${entry[0]} (${entry[1]})`;
-    } else {
-        return `<not-found> (${value})`;
-    }
-}
-
-export function ppModiferState(state) {
-    let mods = [];
-    for (let [mod, mask] of Object.entries(Clutter.ModifierType)) {
-        if (mask & state) {
-            mods.push(mod);
-        }
-    }
-    return mods.join(", ");
 }
 
 /**
