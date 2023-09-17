@@ -141,7 +141,7 @@ export const LiveAltTab = GObject.registerClass(
 
         _onDestroy() {
             super._onDestroy();
-            Utils.debug('#preview', 'onDestroy', this.was_accepted);
+            console.debug('#preview', 'onDestroy', this.was_accepted);
             Easer.addEase(this.fog, {
                 time: Settings.prefs.animation_time,
                 opacity: 0,

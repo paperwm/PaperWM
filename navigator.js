@@ -71,14 +71,14 @@ class ActionDispatcher {
     mode;
 
     constructor() {
-        Utils.debug("#dispatch", "created");
+        console.debug("#dispatch", "created");
         this.signals = new Utils.Signals();
         this.actor = Tiling.spaces.spaceContainer;
         this.actor.set_flags(Clutter.ActorFlags.REACTIVE);
         this.navigator = getNavigator();
 
         if (grab) {
-            Utils.debug("#dispatch", "already in grab");
+            console.debug("#dispatch", "already in grab");
             return;
         }
 
@@ -107,7 +107,7 @@ class ActionDispatcher {
                 // Check for built-in actions
                 actionId = Meta.prefs_get_keybinding_action(binding);
             } catch (e) {
-                Utils.debug("Couldn't resolve action name");
+                console.debug("Couldn't resolve action name");
                 return false;
             }
         }
@@ -247,7 +247,7 @@ class ActionDispatcher {
                 grab = null;
             }
         } catch (e) {
-            Utils.debug("Failed to release grab: ", e);
+            console.debug("Failed to release grab: ", e);
         }
 
         this.actor.unset_flags(Clutter.ActorFlags.REACTIVE);
@@ -263,7 +263,7 @@ let index = 0;
 export let navigator;
 class NavigatorClass {
     constructor() {
-        Utils.debug("#navigator", "nav created");
+        console.debug("#navigator", "nav created");
         navigating = true;
 
         this.was_accepted = false;

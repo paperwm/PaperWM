@@ -42,7 +42,7 @@ export class MoveGrab {
     }
 
     begin({ center } = {}) {
-        Utils.debug("#grab", "begin");
+        console.debug("#grab", "begin");
 
         this.center = center;
         if (this.grabbed)
@@ -107,7 +107,7 @@ export class MoveGrab {
             return;
         this.center = center;
         this.dnd = true;
-        Utils.debug("#grab", "begin DnD");
+        console.debug("#grab", "begin DnD");
         Navigator.getNavigator().minimaps.forEach(m => typeof m === 'number'
             ? GLib.source_remove(m) : m.hide());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
@@ -349,7 +349,7 @@ export class MoveGrab {
     }
 
     end() {
-        Utils.debug("#grab", "end");
+        console.debug("#grab", "end");
         this.signals.destroy();
         this.signals = null;
 

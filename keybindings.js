@@ -455,7 +455,7 @@ export function getBoundActionId(keystr) {
 export function handleAccelerator(display, actionId, deviceId, timestamp) {
     const action = actionIdMap[actionId];
     if (action) {
-        Utils.debug("#keybindings", "Schemaless keybinding activated",
+        console.debug("#keybindings", "Schemaless keybinding activated",
             actionId, action.name);
         if (global.screen) {
             action.keyHandler(display, null, display.focus_window);

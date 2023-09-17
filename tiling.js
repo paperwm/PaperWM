@@ -12,7 +12,7 @@ import {
     Settings, Utils, Lib, Workspace, Gestures, Navigator, Grab, Topbar,
     Scratch, Stackoverlay
 } from './imports.js';
-import { debug, Easer } from './utils.js';
+import { Easer } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
 
 const { signals: Signals } = imports;
@@ -2049,7 +2049,7 @@ var Spaces = class Spaces extends Map {
             let workspace = workspaceManager.get_workspace_by_index(i);
             workspaces[workspace] = true;
             if (this.spaceOf(workspace) === undefined) {
-                debug('workspace added', workspace);
+                console.debug('workspace added', workspace);
                 this.addSpace(workspace);
             }
         }
@@ -2057,7 +2057,7 @@ var Spaces = class Spaces extends Map {
         let nextUnusedWorkspaceIndex = nWorkspaces;
         for (let [workspace, space] of this) {
             if (workspaces[space.workspace] !== true) {
-                debug('workspace removed', space.workspace);
+                console.debug('workspace removed', space.workspace);
                 this.removeSpace(space);
 
                 // Maps in javascript (and thus Spaces) remember insertion order
@@ -2713,7 +2713,7 @@ var Spaces = class Spaces extends Map {
 
         metaWindow.unmapped = true;
 
-        debug('window-created', metaWindow.title);
+        console.debug('window-created', metaWindow.title);
         let actor = metaWindow.get_compositor_private();
         animateWindow(metaWindow);
 
@@ -2865,7 +2865,9 @@ export function registerWindow(metaWindow) {
     // Note: runs before gnome-shell's minimize handling code
     signals.connect(metaWindow, 'notify::fullscreen', Topbar.fixTopBar);
     signals.connect(metaWindow, 'notify::minimized', minimizeWrapper);
-    signals.connect(actor, 'show', showWrapper);
+    signals.connect(actor, 'show', actor => {
+        showHandler(actor);
+    });
     signals.connect(actor, 'destroy', destroyHandler);
 
     return true;
@@ -3048,7 +3050,7 @@ export function add_filter(meta_window) {
    Handle windows leaving workspaces.
  */
 export function remove_handler(workspace, meta_window) {
-    debug("window-removed", meta_window, meta_window.title, workspace.index());
+    console.debug("window-removed", meta_window, meta_window.title, workspace.index());
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
     // Not sure if we can check directly if _this_ window had focus when closed.
@@ -3070,7 +3072,7 @@ export function remove_handler(workspace, meta_window) {
    Handle windows entering workspaces.
 */
 export function add_handler(ws, metaWindow) {
-    debug("window-added", metaWindow, metaWindow.title, metaWindow.window_type, ws.index(), metaWindow.on_all_workspaces);
+    console.debug("window-added", metaWindow, metaWindow.title, metaWindow.window_type, ws.index(), metaWindow.on_all_workspaces);
 
     // Do not handle grabbed windows
     if (inGrab && inGrab.window === metaWindow)
@@ -3132,7 +3134,7 @@ export function insertWindow(metaWindow, { existing }) {
                 Settings.winprops.splice(Settings.winprops.indexOf(winprop), 1);
             }
             if (winprop.scratch_layer) {
-                debug("#winprops", `Move ${metaWindow.title} to scratch`);
+                console.debug("#winprops", `Move ${metaWindow.title} to scratch`);
                 addToScratch = true;
             }
             if (winprop.focus) {
@@ -3309,7 +3311,7 @@ export function ensureViewport(meta_window, space, options = {}) {
     if (index === -1 || space.length === 0)
         return undefined;
 
-    debug('Moving', meta_window.title);
+    console.debug('Moving', meta_window.title);
 
     if (space.selectedWindow.fullscreen &&
         !meta_window.fullscreen) {
@@ -3577,7 +3579,7 @@ export const focus_wrapper = Utils.dynamic_function_ref('focus_handler', this);
    Push all minimized windows to the scratch layer
  */
 export function minimizeHandler(metaWindow) {
-    debug('minimized', metaWindow.title);
+    console.debug('minimized', metaWindow.title);
     if (metaWindow.minimized) {
         Scratch.makeScratch(metaWindow);
     }
@@ -3610,7 +3612,6 @@ export function showHandler(actor) {
         animateWindow(metaWindow);
     }
 }
-export const showWrapper = Utils.dynamic_function_ref('showHandler', this);
 
 export function showWindow(metaWindow) {
     let actor = metaWindow.get_compositor_private();
