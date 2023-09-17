@@ -11,7 +11,7 @@ import {
     Stackoverlay, Scratch, Workspace, Tiling, Topbar, Patches, App
 } from './imports.js';
 
-import { Extension, dir } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
 /**
    The currently used modules
@@ -72,7 +72,6 @@ export default class PaperWM extends Extension {
     disable() {
         console.log('#PaperWM disabled');
         this.prepareForDisable();
-        this.run('disable', true);
         [...this.modules].reverse().forEach(m => {
             if (m['disable']) {
                 m.disable();
@@ -120,7 +119,7 @@ export default class PaperWM extends Extension {
 
         try {
             const configDir = this.getConfigDir();
-            const metadata = dir.get_child("metadata.json");
+            const metadata = this.dir.get_child("metadata.json");
             metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.OVERWRITE, null, null);
         } catch (error) {
             console.error('PaperWM', `could not update user config metadata.json: ${error}`);
@@ -135,7 +134,7 @@ export default class PaperWM extends Extension {
         }
 
         // Copy the user.js template to the config directory
-        const user = dir.get_child("config/user.js");
+        const user = this.dir.get_child("config/user.js");
         user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
     }
 

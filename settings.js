@@ -1,7 +1,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-import AcceleratorParse from './imports.js';
+import { AcceleratorParse } from './imports.js';
 
 /**
     Settings utility shared between the running extension and the preference UI.

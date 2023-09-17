@@ -4,7 +4,7 @@ import Meta from 'gi://Meta';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import { Utils, Tiling, Keybindings, TopBar, Scratch, Minimap } from './imports.js';
+import { Utils, Tiling, Keybindings, Topbar, Scratch, Minimap } from './imports.js';
 
 /**
   Navigation and previewing functionality.
@@ -100,7 +100,7 @@ class ActionDispatcher {
     show(backward, binding, mask) {
         this._modifierMask = getModLock(mask);
         this.navigator = getNavigator();
-        TopBar.fixTopBar();
+        Topbar.fixTopBar();
         let actionId = Keybindings.idOf(binding);
         if (actionId === Meta.KeyBindingAction.NONE) {
             try {
@@ -280,7 +280,7 @@ class NavigatorClass {
         this.monitor.clickOverlay.hide();
         this.minimaps = new Map();
 
-        TopBar.fixTopBar();
+        Topbar.fixTopBar();
 
         Scratch.animateWindows();
         this.space.startAnimate();
@@ -402,7 +402,7 @@ class NavigatorClass {
         if (!Tiling.inGrab)
             Scratch.showWindows();
 
-        TopBar.fixTopBar();
+        Topbar.fixTopBar();
 
         Main.wm._blockAnimations = this._block;
         this.space.moveDone();

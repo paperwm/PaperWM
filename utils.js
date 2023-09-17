@@ -8,11 +8,12 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Ripples from 'resource:///org/gnome/shell/ui/ripples.js';
+import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 
-import Lib from './imports.js';
+import { Lib } from './imports.js';
 
 const Display = global.display;
-export let version = imports.misc.config.PACKAGE_VERSION.split('.').map(Number);
+export let version = Config.PACKAGE_VERSION.split('.').map(Number);
 
 let warpRipple;
 export function enable() {

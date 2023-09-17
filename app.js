@@ -2,7 +2,9 @@ import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import Shell from 'gi://Shell';
 
-import { ExtensionModule, Patches, Tiling } from './imports.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+
+import { Patches, Tiling } from './imports.js';
 
 /*
   Application functionality, like global new window actions etc.
@@ -176,7 +178,7 @@ export function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir = 
             success = GLib.spawn_async(workingDir, cmdArgs, GLib.get_environ(), GLib.SpawnFlags.SEARCH_PATH, null);
         }
         if (!success) {
-            ExtensionModule.notify(
+            Main.notify(
                 `Failed to run custom spawn handler for ${app.id}`,
                 `Attempted to run '${commandline}'`);
         }

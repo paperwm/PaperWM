@@ -1,6 +1,3 @@
-import { Settings, Utils, Tiling, Navigator, Scratch } from './imports.js';
-import { Easer } from './utils.js';
-
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -12,6 +9,9 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as panelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as popupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+
+import { Settings, Utils, Tiling, Navigator, Scratch } from './imports.js';
+import { Easer } from './utils.js';
 
 const workspaceManager = global.workspace_manager;
 const display = global.display;

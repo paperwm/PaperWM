@@ -8,9 +8,12 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import { Settings, Utils, Lib, Workspace, Gestures, Navigator, Grab, Topbar, Scratch, Stackoverlay } from './imports.js';
+import {
+    Settings, Utils, Lib, Workspace, Gestures, Navigator, Grab, Topbar,
+    Scratch, Stackoverlay
+} from './imports.js';
 import { debug, Easer } from './utils.js';
-import { ClickOverlay } from './stackoverlay';
+import { ClickOverlay } from './stackoverlay.js';
 
 const { signals: Signals } = imports;
 const workspaceManager = global.workspace_manager;

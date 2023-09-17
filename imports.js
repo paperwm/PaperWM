@@ -13,3 +13,6 @@ export * as Topbar from './topbar.js';
 export * as Patches from './patches.js';
 export * as App from './app.js';
 export * as Lib from './lib.js';
+export * as Minimap from './minimap.js';
+export * as Grab from './grab.js';
+

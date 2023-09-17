@@ -1,7 +1,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-import Lib from './imports.js';
+import { Lib } from './imports.js';
 
 /**
  * Workspace related utility functions used by other modules.
