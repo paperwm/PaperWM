@@ -57,18 +57,6 @@ export function framestr(rect) {
     return `[ x:${rect.x}, y:${rect.y} w:${rect.width} h:${rect.height} ]`;
 }
 
-/**
- * Look up the function by name at call time. This makes it convenient to
- * redefine the function without re-registering all signal handler, keybindings,
- * etc. (this is like a function symbol in lisp)
- */
-export function dynamic_function_ref(handler_name, owner_obj) {
-    return function() {
-        console.debug("dynamic_function_ref name", handler_name);
-        owner_obj[handler_name].apply(this, arguments);
-    };
-}
-
 export function isPointInsideActor(actor, x, y) {
     return (actor.x <= x && x <= actor.x + actor.width) &&
         (actor.y <= y && y <= actor.y + actor.height);
@@ -326,20 +314,6 @@ export function printActorTree(node, fmt = mkFmt(), options = {}, state = null) 
 
 export function isMetaWindow(obj) {
     return obj && obj.window_type && obj.get_compositor_private;
-}
-
-export function shortTrace(skip = 0) {
-    let trace = new Error().stack.split("\n").map(s => {
-        let words = s.split(/[@/]/);
-        let cols = s.split(":");
-        let ln = parseInt(cols[2]);
-        if (ln === null)
-            ln = "?";
-
-        return [words[0], ln];
-    });
-    trace = trace.filter(([f, ln]) => f !== "dynamic_function_ref").map(([f, ln]) => f === "" ? "?" : `${f}:${ln}`);
-    return trace.slice(skip + 1, skip + 5);
 }
 
 export function actor_raise(actor, above) {

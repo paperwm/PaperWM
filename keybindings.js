@@ -90,8 +90,7 @@ export function setupActions(settings) {
     keycomboMap = {}; // keycombo   -> action
 
     /* Initialize keybindings */
-    let dynamic_function_ref = Utils.dynamic_function_ref;
-    let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
+    let liveAltTab = LiveAltTab.liveAltTab;
 
     registerAction('live-alt-tab',
         liveAltTab, { settings });
@@ -173,89 +172,72 @@ export function setupActions(settings) {
         (mw, space) => space.swap(Meta.MotionDirection.DOWN));
 
     registerPaperAction("toggle-scratch-window",
-        dynamic_function_ref("toggleScratchWindow",
-            Scratch));
+        Scratch.toggleScratchWindow);
 
     registerPaperAction("toggle-scratch-layer",
-        dynamic_function_ref("toggleScratch",
-            Scratch));
+        Scratch.toggleScratch);
 
     registerPaperAction("toggle-scratch",
-        dynamic_function_ref("toggle",
-            Scratch),
+        Scratch.toggle,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("switch-focus-mode",
-        dynamic_function_ref("switchToNextFocusMode",
-            Tiling));
+        Tiling.switchToNextFocusMode);
 
     registerPaperAction("resize-h-inc",
-        dynamic_function_ref("resizeHInc",
-            Tiling),
+        Tiling.resizeHInc,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-h-dec",
-        dynamic_function_ref("resizeHDec",
-            Tiling),
+        Tiling.resizeHDec,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-w-inc",
-        dynamic_function_ref("resizeWInc",
-            Tiling),
+        Tiling.resizeWInc,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-w-dec",
-        dynamic_function_ref("resizeWDec",
-            Tiling),
+        Tiling.resizeWDec,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-width",
-        dynamic_function_ref("cycleWindowWidth",
-            Tiling),
+        Tiling.cycleWindowWidth,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-width-backwards",
-        dynamic_function_ref("cycleWindowWidthBackwards",
-            Tiling),
+        Tiling.cycleWindowWidthBackwards,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-height",
-        dynamic_function_ref("cycleWindowHeight",
-            Tiling),
+        Tiling.cycleWindowHeight,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-height-backwards",
-        dynamic_function_ref("cycleWindowHeightBackwards",
-            Tiling),
+        Tiling.cycleWindowHeightBackwards,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("center-horizontally",
-        dynamic_function_ref("centerWindowHorizontally",
-            Tiling),
+        Tiling.centerWindowHorizontally,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('new-window',
-        dynamic_function_ref('duplicateWindow', App),
+        App.duplicateWindow,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('close-window',
-        metaWindow =>
-            metaWindow.delete(global.get_current_time()),
+        metaWindow => metaWindow.delete(global.get_current_time()),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('slurp-in',
-        dynamic_function_ref('slurp',
-            Tiling),
+        Tiling.slurp,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('barf-out',
-        dynamic_function_ref('barf',
-            Tiling),
+        Tiling.barf,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('toggle-maximize-width',
-        dynamic_function_ref("toggleMaximizeHorizontally",
-            Tiling),
+        Tiling.toggleMaximizeHorizontally,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('paper-toggle-fullscreen',
