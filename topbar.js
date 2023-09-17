@@ -401,7 +401,7 @@ export const FocusButton = GObject.registerClass(
     }
 );
 
-var WorkspaceMenu = GObject.registerClass(
+export const WorkspaceMenu = GObject.registerClass(
     class WorkspaceMenu extends panelMenu.Button {
         _init() {
             super._init(0.5, 'Workspace', false);

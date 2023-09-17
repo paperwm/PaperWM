@@ -90,7 +90,7 @@ let gsettings, backgroundSettings, interfaceSettings;
 let displayConfig;
 let saveState;
 let startupTimeoutId, timerId;
-var inGrab; // exported
+export let inGrab;
 export function enable(extension) {
     inGrab = false;
 
@@ -202,6 +202,14 @@ export function disable () {
     backgroundGroup = null;
     backgroundSettings = null;
     interfaceSettings = null;
+}
+
+/**
+ * Exported inGrab is read-only from other modules.
+ * This method allows other modules to change inGrab.
+ */
+export function setInGrab(value) {
+    inGrab = value;
 }
 
 export class Space extends Array {
@@ -1745,7 +1753,7 @@ border-radius: ${borderWidth}px;
 Signals.addSignalMethods(Space.prototype);
 
 // static object
-var StackPositions = {
+export const StackPositions = {
     top: 0.01,
     up: 0.035,
     selected: 0.1,
@@ -1756,7 +1764,7 @@ var StackPositions = {
 /**
    A `Map` to store all `Spaces`'s, indexed by the corresponding workspace.
 */
-var Spaces = class Spaces extends Map {
+export const Spaces = class Spaces extends Map {
     // Fix for eg. space.map, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Species
     static get [Symbol.species]() { return Map; }
     constructor() {

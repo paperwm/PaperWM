@@ -55,7 +55,7 @@ export function enable(extension) {
         'gesture-horizontal-fingers', 'gesture-workspace-fingers']
         .forEach(k => setState(null, k));
     prefs.__defineGetter__("minimum_margin", () => {
-        return Math.min(15, this.horizontal_margin);
+        return Math.min(15, prefs.horizontal_margin);
     });
     gsettings.connect('changed', setState);
 
