@@ -290,9 +290,9 @@ const Keybinding = GObject.registerClass({
         changed: {},
     },
 }, class Keybinding extends GObject.Object {
-    _init(params = {}) {
+    _init(params = {}, settings) {
         super._init(params);
-        this._settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
+        this._settings = settings;
         this._description = _(this._settings.settings_schema.get_key(this.action).get_summary());
 
         this._combos = new Gio.ListStore();
@@ -471,10 +471,11 @@ export const KeybindingsModel = GObject.registerClass({
         });
 
         this._actionToBinding = new Map();
-        this._settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
-        GLib.idle_add(0, () => {
-            this.load();
-        });
+    }
+
+    setSettings(settings) {
+        this._settings = settings;
+        this.load();
     }
 
     vfunc_get_item_type() {
@@ -512,7 +513,7 @@ export const KeybindingsModel = GObject.registerClass({
                 const binding = new Keybinding({
                     section,
                     action,
-                });
+                }, this._settings);
                 bindings.push(binding);
                 this._actionToBinding.set(action, binding);
             }
@@ -970,8 +971,11 @@ export const KeybindingsPane = GObject.registerClass({
 }, class KeybindingsPane extends Gtk.Box {
     _init(params = {}) {
         super._init(params);
+    }
 
-        this._bindings = new KeybindingsModel();
+    init(extension) {
+        this._settings = extension.getSettings(KEYBINDINGS_KEY);
+        this._model = new KeybindingsModel();
 
         this._filter = new Gtk.StringFilter({
             expression: Gtk.PropertyExpression.new(Keybinding.$gtype, null, 'description'),
@@ -980,7 +984,7 @@ export const KeybindingsPane = GObject.registerClass({
         });
 
         const filteredBindings = new Gtk.FilterListModel({
-            model: this._bindings,
+            model: this._model,
             filter: this._filter,
         });
 
@@ -988,6 +992,9 @@ export const KeybindingsPane = GObject.registerClass({
         this._listbox.set_header_func((row, before, data) => this._onSetHeader(row, before, data));
 
         this._expandedRow = null;
+
+        // send settings to model (which processes and creates rows)
+        this._model.setSettings(this._settings);
     }
 
     _createHeader(row, before) {
@@ -1008,14 +1015,14 @@ export const KeybindingsPane = GObject.registerClass({
     }
 
     _createRow(keybinding) {
-        const row = new KeybindingsRow({ keybindings: this._bindings, keybinding });
+        const row = new KeybindingsRow({ keybindings: this._model, keybinding });
         row.connect('notify::expanded', row => this._onRowExpanded(row));
         row.connect('collision-activated', (_, binding) => this._onCollisionActivated(binding));
         return row;
     }
 
     _onCollisionActivated(keybinding) {
-        const [found, pos] = this._bindings.find(keybinding);
+        const [found, pos] = this._model.find(keybinding);
         if (found) {
             const row = this._listbox.get_row_at_index(pos);
             row.activate();

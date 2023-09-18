@@ -31,6 +31,8 @@ const META_KEY_ABOVE_TAB = 0x2f7259c9;
 
 export default class MyExtensionPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
+        window.set_default_size(-1, -1);
+
         const provider = new Gtk.CssProvider();
         provider.load_from_path(`${this.path}/resources/prefs.css`);
         Gtk.StyleContext.add_provider_for_display(
@@ -338,7 +340,13 @@ class SettingsWidget {
 
         workspaceCombo.set_active(selectedWorkspace);
 
+        // Keybindings
+
+        let keybindingsPane = this.builder.get_object('keybindings_pane');
+        keybindingsPane.init(extension);
+
         // Winprops
+
         let winprops = this._settings.get_value('winprops').deep_unpack()
             .map(p => JSON.parse(p));
         // sort a little nicer
