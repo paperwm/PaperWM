@@ -43,14 +43,14 @@ import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
      Notes of ordering:
         - several modules import settings, so settings should be before them;
           - settings.js should not depend on other paperwm modules;
+        - Settings should be before Patches (for reverse order disable);
  */
 
 export default class PaperWM extends Extension {
     modules = [
-        Utils, Settings,
+        Utils, Settings, Patches,
         Gestures, Keybindings, LiveAltTab, Navigator, Stackoverlay, Scratch,
-        Workspace, Tiling, Topbar,
-        Patches, App,
+        Workspace, Tiling, Topbar, App,
     ];
 
     #userStylesheet = null;

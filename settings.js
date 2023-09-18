@@ -15,28 +15,6 @@ const RESTORE_KEYBINDS_KEY = 'restore-keybinds';
 // This is the value mutter uses for the keyvalue of above_tab
 const META_KEY_ABOVE_TAB = 0x2f7259c9;
 
-export function setState($, key) {
-    let value = gsettings.get_value(key);
-    let name = key.replace(/-/g, '_');
-    prefs[name] = value.deep_unpack();
-}
-
-export let conflictSettings; // exported
-export function getConflictSettings() {
-    if (!conflictSettings) {
-        // Schemas that may contain conflicting keybindings
-        // It's possible to inject or remove settings here on `user.init`.
-        conflictSettings = [
-            new Gio.Settings({ schema_id: 'org.gnome.mutter.keybindings' }),
-            new Gio.Settings({ schema_id: 'org.gnome.mutter.wayland.keybindings' }),
-            new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings" }),
-            new Gio.Settings({ schema_id: "org.gnome.shell.keybindings" }),
-        ];
-    }
-
-    return conflictSettings;
-}
-
 export let prefs;
 let gsettings, keybindSettings, _overriddingConflicts;
 export function enable(extension) {
@@ -84,6 +62,28 @@ export function disable() {
     _overriddingConflicts = null;
     prefs = null;
     conflictSettings = null;
+}
+
+export function setState($, key) {
+    let value = gsettings.get_value(key);
+    let name = key.replace(/-/g, '_');
+    prefs[name] = value.deep_unpack();
+}
+
+export let conflictSettings; // exported
+export function getConflictSettings() {
+    if (!conflictSettings) {
+        // Schemas that may contain conflicting keybindings
+        // It's possible to inject or remove settings here on `user.init`.
+        conflictSettings = [
+            new Gio.Settings({ schema_id: 'org.gnome.mutter.keybindings' }),
+            new Gio.Settings({ schema_id: 'org.gnome.mutter.wayland.keybindings' }),
+            new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings" }),
+            new Gio.Settings({ schema_id: "org.gnome.shell.keybindings" }),
+        ];
+    }
+
+    return conflictSettings;
 }
 
 // / Keybindings
