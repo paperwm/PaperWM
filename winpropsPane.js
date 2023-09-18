@@ -1,17 +1,10 @@
-'use strict';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import Gtk from 'gi://Gtk';
 
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
-const Gtk = imports.gi.Gtk;
-
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Settings = Extension.imports.settings;
-
-var WinpropsPane = GObject.registerClass({
+export const WinpropsPane = GObject.registerClass({
     GTypeName: 'WinpropsPane',
-    Template: Extension.dir.get_child('WinpropsPane.ui').get_uri(),
+    Template: GLib.uri_resolve_relative(import.meta.url, './WinpropsPane.ui', GLib.UriFlags.NONE),
     InternalChildren: [
         'search',
         'listbox',
@@ -20,7 +13,7 @@ var WinpropsPane = GObject.registerClass({
     ],
     Signals: {
         'changed': {},
-    }
+    },
 }, class WinpropsPane extends Gtk.Box {
     _init(params = {}) {
         super._init(params);
@@ -67,17 +60,19 @@ var WinpropsPane = GObject.registerClass({
     }
 
     _createRow(winprop) {
-        let wp = winprop ?? {wm_class:''};
-        const row = new WinpropsRow({winprop : wp});
+        let wp = winprop ?? { wm_class: '' };
+        const row = new WinpropsRow({ winprop: wp });
         this.rows.push(row);
-        row.connect('notify::expanded', (row) => this._onRowExpanded(row));
-        row.connect('row-deleted', (row) => this._removeRow(row));
+        row.connect('notify::expanded', row => this._onRowExpanded(row));
+        row.connect('row-deleted', row => this._removeRow(row));
         row.connect('changed', () => this.emit('changed'));
         return row;
     }
 
     _onRowActivated(list, row) {
-        if (!row.is_focus()) return;
+        if (!row.is_focus()) {
+            return;
+        }
         row.expanded = !row.expanded;
     }
 
@@ -93,9 +88,9 @@ var WinpropsPane = GObject.registerClass({
     }
 });
 
-var WinpropsRow = GObject.registerClass({
+export const WinpropsRow = GObject.registerClass({
     GTypeName: 'WinpropsRow',
-    Template: Extension.dir.get_child('WinpropsRow.ui').get_uri(),
+    Template: GLib.uri_resolve_relative(import.meta.url, './WinpropsRow.ui', GLib.UriFlags.NONE),
     InternalChildren: [
         'header',
         'descLabel',
@@ -113,7 +108,7 @@ var WinpropsRow = GObject.registerClass({
             'winprop',
             'winprop',
             'Winprop',
-            GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY,
+            GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT_ONLY
         ),
         expanded: GObject.ParamSpec.boolean(
             'expanded',
@@ -126,14 +121,14 @@ var WinpropsRow = GObject.registerClass({
     Signals: {
         'changed': {},
         'row-deleted': {},
-    }
+    },
 }, class WinpropsRow extends Gtk.ListBoxRow {
     _init(params = {}) {
-        super._init(params);        
+        super._init(params);
 
         // description label
         this._setDescLabel();
-        
+
         // set the values to current state and connect to 'changed' signal
         this._wmClass.set_text(this.winprop.wm_class ?? '');
         this._wmClass.connect('changed', () => {
@@ -148,7 +143,7 @@ var WinpropsRow = GObject.registerClass({
         this._title.connect('changed', () => {
             this.checkHasWmClassOrTitle();
             this.winprop.title = this._title.get_text();
-            this._setDescLabel();            
+            this._setDescLabel();
             this.emit('changed');
         });
 
@@ -161,7 +156,7 @@ var WinpropsRow = GObject.registerClass({
             this._preferredWidth.set_sensitive(!isActive);
 
             this.emit('changed');
-        })
+        });
 
         this._preferredWidth.set_text(this.winprop.preferredWidth ?? '');
         // if scratchLayer is active then users can't edit preferredWidth
@@ -174,7 +169,7 @@ var WinpropsRow = GObject.registerClass({
                 let digits = (value.match(/\d+/) ?? [null])[0];
                 let isPercent = /^.*%$/.test(value);
                 let isPixel = /^.*px$/.test(value);
-                
+
                 // check had valid number
                 if (!digits) {
                     this._setError(this._preferredWidth);
@@ -288,10 +283,9 @@ var WinpropsRow = GObject.registerClass({
         // if wmClass, use that, otherwise use title (fallback)
         if (this.winprop.wm_class) {
             this._descLabel.label = this.winprop.wm_class;
-        } 
+        }
         else if (this.winprop.title) {
             this._descLabel.label = this.winprop.title;
-            return;
         }
     }
 

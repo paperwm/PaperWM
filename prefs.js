@@ -1,13 +1,20 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Settings = Extension.imports.settings;
-const AcceleratorParse = Extension.imports.acceleratorparse;
-const Workspace = Extension.imports.workspace;
-const { Gio, GLib, GObject, Gtk, Gdk } = imports.gi;
-const { KeybindingsPane } = Extension.imports.prefsKeybinding;
-const { WinpropsPane } = Extension.imports.winpropsPane;
+import Gdk from 'gi://Gdk';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import Gtk from 'gi://Gtk';
 
-let _ = s => s;
+import {
+    ExtensionPreferences
+} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+
+import * as Settings from './settings.js';
+import * as AcceleratorParse from './acceleratorparse.js';
+import * as Workspace from './workspace.js';
+import * as KeybindingsPane from './prefsKeybinding.js';
+import * as WinpropsPane from './winpropsPane.js';
+
+const _ = s => s;
 
 // TreeStore model
 const COLUMN_ID          = 0;
@@ -20,7 +27,47 @@ const COLUMN_RESET       = 6;
 const COLUMN_TOOLTIP     = 7;
 
 // This is the value mutter uses for the keyvalue of above_tab
-let META_KEY_ABOVE_TAB = 0x2f7259c9;
+const META_KEY_ABOVE_TAB = 0x2f7259c9;
+
+export default class MyExtensionPreferences extends ExtensionPreferences {
+    fillPreferencesWindow(window) {
+        const provider = new Gtk.CssProvider();
+        provider.load_from_path(`${this.path}/resources/prefs.css`);
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        );
+
+        Workspace.enable(this);
+        AcceleratorParse.initKeycodeMap();
+        // cleanup on prefs window close request
+        window.connect('close-request', () => {
+            Workspace.disable();
+            AcceleratorParse.destroyKeycodeMap();
+        });
+
+        let selectedWorkspace = null;
+        try {
+            const tempFile = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace');
+            [, contents] = tempFile.load_contents(null);
+            const decoder = new TextDecoder('utf-8');
+            const contentsString = decoder.decode(contents);
+            let workspaceN = parseInt(contentsString);
+            if (!isNaN(workspaceN)) {
+                selectedWorkspace = workspaceN;
+            }
+            tempFile.delete(null);
+        } catch (e) { }
+
+        let selectedTab = selectedWorkspace !== null ? 1 : 0;
+        new SettingsWidget(
+            this,
+            window,
+            selectedTab,
+            selectedWorkspace || 0);
+    }
+}
 
 function range(n) {
     let r = [];
@@ -44,15 +91,16 @@ function getOk(okValue) {
     }
 }
 
-var SettingsWidget = class SettingsWidget {
+class SettingsWidget {
     /**
        selectedWorkspace: index of initially selected workspace in workspace settings tab
        selectedTab: index of initially shown tab
      */
-    constructor(prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
-        let wmSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.wm.preferences' });
-        this._settings = ExtensionUtils.getSettings();
-        this.builder = Gtk.Builder.new_from_file(`${Extension.path}/Settings.ui`);
+    constructor(extension, prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
+        this.extension = extension;
+        this._settings = extension.getSettings();
+        const wmSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.wm.preferences' });
+        this.builder = Gtk.Builder.new_from_file(`${extension.path}/Settings.ui`);
         this.window = prefsWindow;
 
         const pages = [
@@ -321,7 +369,7 @@ var SettingsWidget = class SettingsWidget {
 
         // About
         let versionLabel = this.builder.get_object('extension_version');
-        let version = Extension.metadata.version?.toString() ?? '?';
+        let version = this.extension.metadata.version?.toString() ?? '?';
         versionLabel.set_text(version);
     }
 
@@ -377,7 +425,7 @@ var SettingsWidget = class SettingsWidget {
         let clearDirectory = new Gtk.Button({
             icon_name: 'edit-clear-symbolic',
             tooltip_text: 'Clear workspace directory',
-            sensitive: settings.get_string('directory') != '',
+            sensitive: settings.get_string('directory') !== '',
         });
         directoryBox.append(directoryChooser);
         directoryBox.append(clearDirectory);
@@ -451,7 +499,7 @@ var SettingsWidget = class SettingsWidget {
     getWorkspaceName(settings, index) {
         return Workspace.getWorkspaceName(settings, index);
     }
-};
+}
 
 function createRow(text, widget, signal, handler) {
     let margin = 12;
@@ -830,46 +878,4 @@ function syncStringSetting(settings, key, callback) {
         callback(settings.get_string(key));
     });
     callback(settings.get_string(key));
-}
-
-/**
- * This init() is called when opening PaperWM settings/pref panes
- * (not when initialising the extension on login).
- */
-function init() {
-
-}
-
-function fillPreferencesWindow(window) {
-    const provider = new Gtk.CssProvider();
-    provider.load_from_path(`${Extension.path}/resources/prefs.css`);
-    Gtk.StyleContext.add_provider_for_display(
-        Gdk.Display.get_default(),
-        provider,
-        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-    );
-
-    Workspace.enable();
-    AcceleratorParse.initKeycodeMap();
-    // cleanup on prefs window close request
-    window.connect('close-request', () => {
-        Workspace.disable();
-        AcceleratorParse.destroyKeycodeMap();
-    });
-
-    let selectedWorkspace = null;
-    try {
-        const tempFile = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace');
-        [, contents] = tempFile.load_contents(null);
-        const decoder = new TextDecoder('utf-8');
-        const contentsString = decoder.decode(contents);
-        let workspaceN = parseInt(contentsString);
-        if (!isNaN(workspaceN)) {
-            selectedWorkspace = workspaceN;
-        }
-        tempFile.delete(null);
-    } catch (e) { }
-
-    let selectedTab = selectedWorkspace !== null ? 1 : 0;
-    new SettingsWidget(window, selectedTab, selectedWorkspace || 0);
 }
