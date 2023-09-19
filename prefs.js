@@ -7,7 +7,6 @@ import {
     ExtensionPreferences
 } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-import * as AcceleratorParse from './acceleratorparse.js';
 import { WorkspaceSettings } from './workspace.js';
 import * as KeybindingsPane from './prefsKeybinding.js';
 import * as WinpropsPane from './winpropsPane.js';
@@ -23,12 +22,6 @@ export default class PaperWMPrefs extends ExtensionPreferences {
             provider,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         );
-
-        AcceleratorParse.initKeycodeMap();
-        // cleanup on prefs window close request
-        window.connect('close-request', () => {
-            AcceleratorParse.destroyKeycodeMap();
-        });
 
         let selectedWorkspace = null;
         try {

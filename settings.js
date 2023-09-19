@@ -1,7 +1,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-import * as AcceleratorParse from './acceleratorparse.js';
+import { AcceleratorParse } from './acceleratorparse.js';
 
 /**
     Settings utility shared between the running extension and the preference UI.
@@ -17,11 +17,12 @@ const META_KEY_ABOVE_TAB = 0x2f7259c9;
 
 export let prefs;
 let gsettings, keybindSettings, _overriddingConflicts;
+let acceleratorParse;
 export function enable(extension) {
     gsettings = extension.getSettings();
     keybindSettings = extension.getSettings(KEYBINDINGS_KEY);
 
-    AcceleratorParse.initKeycodeMap();
+    acceleratorParse = new AcceleratorParse();
     _overriddingConflicts = false;
     prefs = {};
     ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
@@ -57,8 +58,8 @@ export function enable(extension) {
 }
 
 export function disable() {
-    AcceleratorParse.destroyKeycodeMap();
     gsettings = null;
+    acceleratorParse = null;
     _overriddingConflicts = null;
     prefs = null;
     conflictSettings = null;
@@ -89,7 +90,7 @@ export function getConflictSettings() {
 // / Keybindings
 
 export function accelerator_parse(keystr) {
-    return AcceleratorParse.accelerator_parse(keystr);
+    return acceleratorParse.accelerator_parse(keystr);
 }
 
 /**

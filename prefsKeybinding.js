@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 
-import * as Settings from './settings.js';
+import { AcceleratorParse } from './acceleratorparse.js';
 
 const _ = s => s;
 
@@ -189,15 +189,16 @@ const Combo = GObject.registerClass({
         ),
     },
 }, class Combo extends GObject.Object {
-    _init(params) {
+    _init(params, acceleratorParse) {
         super._init(params);
+        this.acceleratorParse = acceleratorParse;
     }
 
     get keycode() {
         if (this.disabled) {
             return 0;
         } else if (!this._keycode) {
-            let [ok, key, mask] = Settings.accelerator_parse(this.keystr);
+            let [ok, key, mask] = this.acceleratorParse.accelerator_parse(this.keystr);
 
             if (ok && key.length) {
                 return key;
@@ -290,9 +291,10 @@ const Keybinding = GObject.registerClass({
         changed: {},
     },
 }, class Keybinding extends GObject.Object {
-    _init(params = {}, settings) {
+    _init(params = {}, settings, acceleratorParse) {
         super._init(params);
         this._settings = settings;
+        this.acceleratorParse = acceleratorParse;
         this._description = _(this._settings.settings_schema.get_key(this.action).get_summary());
 
         this._combos = new Gio.ListStore();
@@ -368,7 +370,7 @@ const Keybinding = GObject.registerClass({
             return;
         this.combos.remove(pos);
         if (this.combos.get_n_items() === 0)
-            this.combos.append(new Combo());
+            this.combos.append(new Combo({}, this.acceleratorParse));
         this._store();
     }
 
@@ -410,14 +412,14 @@ const Keybinding = GObject.registerClass({
             .map(this._translateAboveTab)
             .map(keystr => {
                 if (keystr !== '')
-                    return Settings.accelerator_parse(keystr);
+                    return this.acceleratorParse.accelerator_parse(keystr);
                 else
                     return [true, 0, 0];
             })
-            .map(([, keyval, mods]) => new Combo({ keyval, mods }));
+            .map(([, keyval, mods]) => new Combo({ keyval, mods }, this.acceleratorParse));
 
         if (combos.length === 0) {
-            combos.push(new Combo());
+            combos.push(new Combo({}, this.acceleratorParse));
         }
 
         this.combos.splice(0, this.combos.get_n_items(), combos);
@@ -456,9 +458,9 @@ export const KeybindingsModel = GObject.registerClass({
         },
     },
 }, class KeybindingsModel extends GObject.Object {
-    _init(params = {}) {
+    _init(params = {}, acceleratorParse) {
         super._init(params);
-
+        this.acceleratorParse = acceleratorParse;
         this._model = Gio.ListStore.new(Keybinding.$gtype);
         this._model.connect('items-changed', (_, position, removed, added) => {
             this.items_changed(position, removed, added);
@@ -473,7 +475,7 @@ export const KeybindingsModel = GObject.registerClass({
         this._actionToBinding = new Map();
     }
 
-    setSettings(settings) {
+    init(settings) {
         this._settings = settings;
         this.load();
     }
@@ -513,7 +515,7 @@ export const KeybindingsModel = GObject.registerClass({
                 const binding = new Keybinding({
                     section,
                     action,
-                }, this._settings);
+                }, this._settings, this.acceleratorParse);
                 bindings.push(binding);
                 this._actionToBinding.set(action, binding);
             }
@@ -730,14 +732,15 @@ const ComboRow = GObject.registerClass({
 
         // Backspace deletes
         if (!isModifier && modmask === 0 && keyvalLower === Gdk.KEY_BackSpace) {
-            this._updateKeybinding(new Combo());
+            this._updateKeybinding(new Combo({}, this.acceleratorParse));
             return Gdk.EVENT_STOP;
         }
 
         // Remove CapsLock
         modmask &= ~Gdk.ModifierType.LOCK_MASK;
 
-        this._updateKeybinding(new Combo({ keycode, keyval: keyvalLower, mods: modmask }));
+        this._updateKeybinding(new Combo({ keycode, keyval: keyvalLower, mods: modmask },
+            this.acceleratorParse));
 
         return Gdk.EVENT_STOP;
     }
@@ -838,9 +841,9 @@ const KeybindingsRow = GObject.registerClass({
         },
     },
 }, class KeybindingsRow extends Gtk.ListBoxRow {
-    _init(params = {}) {
+    _init(params = {}, acceleratorParse) {
         super._init(params);
-
+        this.acceleratorParse = acceleratorParse;
         this._actionGroup = new Gio.SimpleActionGroup();
         this.insert_action_group('keybinding', this._actionGroup);
 
@@ -853,7 +856,8 @@ const KeybindingsRow = GObject.registerClass({
         this._actionGroup.add_action(action);
 
         action = new Gio.SimpleAction({ name: 'add' });
-        action.connect('activate', () => this.keybinding.add(new Combo({ placeholder: true })));
+        action.connect('activate', () => this.keybinding.add(new Combo({ placeholder: true },
+            this.acceleratorParse)));
         this._actionGroup.add_action(action);
 
         const gesture = Gtk.GestureClick.new();
@@ -975,7 +979,8 @@ export const KeybindingsPane = GObject.registerClass({
 
     init(extension) {
         this._settings = extension.getSettings(KEYBINDINGS_KEY);
-        this._model = new KeybindingsModel();
+        this.acceleratorParse = new AcceleratorParse();
+        this._model = new KeybindingsModel({}, this.acceleratorParse);
 
         this._filter = new Gtk.StringFilter({
             expression: Gtk.PropertyExpression.new(Keybinding.$gtype, null, 'description'),
@@ -994,7 +999,7 @@ export const KeybindingsPane = GObject.registerClass({
         this._expandedRow = null;
 
         // send settings to model (which processes and creates rows)
-        this._model.setSettings(this._settings);
+        this._model.init(this._settings);
     }
 
     _createHeader(row, before) {
@@ -1015,7 +1020,7 @@ export const KeybindingsPane = GObject.registerClass({
     }
 
     _createRow(keybinding) {
-        const row = new KeybindingsRow({ keybindings: this._model, keybinding });
+        const row = new KeybindingsRow({ keybindings: this._model, keybinding }, this.acceleratorParse);
         row.connect('notify::expanded', row => this._onRowExpanded(row));
         row.connect('collision-activated', (_, binding) => this._onCollisionActivated(binding));
         return row;
