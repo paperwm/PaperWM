@@ -9,11 +9,11 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {
-    Settings, Utils, Lib, Workspace, Gestures, Navigator, Grab, Topbar,
-    Scratch, Stackoverlay
+    Settings, Utils, Lib, Gestures, Navigator, Grab, Topbar, Scratch, Stackoverlay
 } from './imports.js';
 import { Easer } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
+import { WorkspaceSettings } from './workspace.js';
 
 const { signals: Signals } = imports;
 const workspaceManager = global.workspace_manager;
@@ -90,6 +90,7 @@ let gsettings, backgroundSettings, interfaceSettings;
 let displayConfig;
 let saveState;
 let startupTimeoutId, timerId;
+let workspaceSettings;
 export let inGrab;
 export function enable(extension) {
     inGrab = false;
@@ -133,6 +134,7 @@ export function enable(extension) {
 
     backgroundGroup = Main.layoutManager._backgroundGroup;
 
+    workspaceSettings = new WorkspaceSettings(extension);
     spaces = new Spaces();
     let initWorkspaces = () => {
         try {
@@ -202,6 +204,7 @@ export function disable () {
     backgroundGroup = null;
     backgroundSettings = null;
     interfaceSettings = null;
+    workspaceSettings = null;
 }
 
 /**
@@ -296,7 +299,7 @@ export class Space extends Array {
                 monitor = prevMonitor;
         }
 
-        this.setSettings(Workspace.getWorkspaceSettings(this.index));
+        this.setSettings(workspaceSettings.getWorkspaceSettings(this.index));
         actor.set_pivot_point(0.5, 0);
 
         this.selectedWindow = null;
@@ -1342,7 +1345,7 @@ border-radius: ${borderWidth}px;
         } else {
             this.workspaceLabel.hide();
         }
-        let name = Workspace.getWorkspaceName(this.settings, this.index);
+        let name = workspaceSettings.getWorkspaceName(this.settings, this.index);
         Meta.prefs_change_workspace_name(this.index, name);
         this.workspaceLabel.text = name;
         this.name = name;
@@ -4239,7 +4242,7 @@ export function rotated(list, dir = 1) {
 
 export function cycleWorkspaceSettings(dir = 1) {
     let n = workspaceManager.get_n_workspaces();
-    let N = Workspace.getWorkspaceList().get_strv('list').length;
+    let N = workspaceSettings.getWorkspaceList().get_strv('list').length;
     let space = spaces.selectedSpace;
     let wsI = space.index;
 
@@ -4247,11 +4250,11 @@ export function cycleWorkspaceSettings(dir = 1) {
     // x a b c   <-- settings
     // a b c x   <-- rotated settings
 
-    let uuids = Workspace.getWorkspaceList().get_strv('list');
+    let uuids = workspaceSettings.getWorkspaceList().get_strv('list');
     // Work on tuples of [uuid, settings] since we need to uuid association
     // in the last step
     let settings = uuids.map(
-        uuid => [uuid, Workspace.getWorkspaceSettingsByUUID(uuid)]
+        uuid => [uuid, workspaceSettings.getWorkspaceSettingsByUUID(uuid)]
     );
     settings.sort((a, b) => a[1].get_int('index') - b[1].get_int('index'));
 

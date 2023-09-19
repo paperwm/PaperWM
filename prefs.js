@@ -8,17 +8,13 @@ import {
 } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 import * as AcceleratorParse from './acceleratorparse.js';
-import * as Workspace from './workspace.js';
+import { WorkspaceSettings } from './workspace.js';
 import * as KeybindingsPane from './prefsKeybinding.js';
 import * as WinpropsPane from './winpropsPane.js';
 
 const _ = s => s;
 
-export class Prefs {
-
-}
-
-export default class MyExtensionPreferences extends ExtensionPreferences {
+export default class PaperWMPrefs extends ExtensionPreferences {
     fillPreferencesWindow(window) {
         const provider = new Gtk.CssProvider();
         provider.load_from_path(`${this.path}/resources/prefs.css`);
@@ -28,11 +24,9 @@ export default class MyExtensionPreferences extends ExtensionPreferences {
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         );
 
-        Workspace.enable(this);
         AcceleratorParse.initKeycodeMap();
         // cleanup on prefs window close request
         window.connect('close-request', () => {
-            Workspace.disable();
             AcceleratorParse.destroyKeycodeMap();
         });
 
@@ -67,6 +61,7 @@ class SettingsWidget {
     constructor(extension, prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
         this.extension = extension;
         this._settings = extension.getSettings();
+        this.workspaceSettings = new WorkspaceSettings(extension);
         const wmSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.wm.preferences' });
         this.builder = Gtk.Builder.new_from_file(`${extension.path}/Settings.ui`);
         this.window = prefsWindow;
@@ -251,14 +246,14 @@ class SettingsWidget {
 
         const workspaceCombo = this.builder.get_object('workspace_combo_text');
         const workspaceStack = this.builder.get_object('workspace_stack');
-        const nWorkspaces = Workspace.getWorkspaceList().get_strv('list').length;
+        const nWorkspaces = this.workspaceSettings.getWorkspaceList().get_strv('list').length;
 
         // Note: For some reason we can't set the visible child of the workspace
         //       stack at construction time.. (!)
         //       Ensure the initially selected workspace is added to the stack
         //       first as a workaround.
         let wsIndices = this.range(nWorkspaces);
-        let wsSettingsByIndex = wsIndices.map(i => Workspace.getWorkspaceSettings(i)[1]);
+        let wsSettingsByIndex = wsIndices.map(i => this.workspaceSettings.getWorkspaceSettings(i)[1]);
         let wsIndicesSelectedFirst =
             this.swapArrayElements(wsIndices.slice(), 0, selectedWorkspace);
 
@@ -485,7 +480,7 @@ class SettingsWidget {
     }
 
     getWorkspaceName(settings, index) {
-        return Workspace.getWorkspaceName(settings, index);
+        return this.workspaceSettings.getWorkspaceName(settings, index);
     }
 
     createRow(text, widget) {
