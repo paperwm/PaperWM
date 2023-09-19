@@ -31,8 +31,6 @@ const META_KEY_ABOVE_TAB = 0x2f7259c9;
 
 export default class MyExtensionPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
-        window.set_default_size(-1, -1);
-
         const provider = new Gtk.CssProvider();
         provider.load_from_path(`${this.path}/resources/prefs.css`);
         Gtk.StyleContext.add_provider_for_display(
@@ -63,6 +61,7 @@ export default class MyExtensionPreferences extends ExtensionPreferences {
         } catch (e) { }
 
         let selectedTab = selectedWorkspace !== null ? 1 : 0;
+        window.set_size_request(626, 700);
         new SettingsWidget(
             this,
             window,
