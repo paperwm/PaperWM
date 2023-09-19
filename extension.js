@@ -105,6 +105,10 @@ export default class PaperWM extends Extension {
         return this.getConfigDir().get_child("user.js").query_exists(null);
     }
 
+    hasUserStyleFile() {
+        return this.getConfigDir().get_child("user.css").query_exists(null);
+    }
+
     /**
      * Update the metadata.json in user config dir to always keep it up to date.
      * We copy metadata.json to the config directory so gnome-shell-mode
@@ -112,17 +116,26 @@ export default class PaperWM extends Extension {
      * that trips up the importer: Extension.imports.<complete> in
      * gnome-shell-mode crashes gnome-shell..)
      */
-    updateUserConfigMetadata() {
+    updateUserConfigFiles() {
         if (!this.configDirExists()) {
             return;
         }
+        const configDir = this.getConfigDir();
 
         try {
-            const configDir = this.getConfigDir();
             const metadata = this.dir.get_child("metadata.json");
             metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.OVERWRITE, null, null);
         } catch (error) {
             console.error('PaperWM', `could not update user config metadata.json: ${error}`);
+        }
+
+        if (!this.hasUserStyleFile()) {
+            try {
+                const user = this.dir.get_child("config/user.css");
+                user.copy(configDir.get_child("user.css"), Gio.FileCopyFlags.NONE, null, null);
+            } catch (error) {
+                console.error('PaperWM', `could not update user config metadata.json: ${error}`);
+            }
         }
     }
 
@@ -132,10 +145,6 @@ export default class PaperWM extends Extension {
         if (!this.configDirExists()) {
             configDir.make_directory_with_parents(null);
         }
-
-        // Copy the user.js template to the config directory
-        const user = this.dir.get_child("config/user.js");
-        user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
     }
 
     enableUserConfig() {
@@ -155,7 +164,7 @@ export default class PaperWM extends Extension {
             }
         }
 
-        this.updateUserConfigMetadata();
+        this.updateUserConfigFiles();
 
         /* TODO: figure out something here
         fmuellner:

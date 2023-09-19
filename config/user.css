@@ -1,6 +1,14 @@
 /*
-NOTE: please update `./config/users.css` with any new styles added here.
-*/
+Users may override the default PaperWM styles to suit their preferences.
+Added custom styling in this `user.css` file.
+
+`Disable` and then `enable` PaperWM extension to apply these styles 
+(users do NOT need to logout / login).
+
+DEFAULT STYLES ARE PROVIDED BELOW FOR REFERENCE:
+/*
+
+/*
 .topbar-no-background {
     background-color: rgba(0, 0, 0, 0);
 }
@@ -44,7 +52,6 @@ NOTE: please update `./config/users.css` with any new styles added here.
 }
 
 .paperwm-selection {
-    /* matches border radius of default gnome windows */
     border-radius: 12px 12px 0px 0px;
 }
 
@@ -57,6 +64,8 @@ NOTE: please update `./config/users.css` with any new styles added here.
 }
 
 .paperwm-window-position-bar {
-    border: 0; /* disable border to calm it down a bit */
+    border: 0;
     border-radius: 1px;
 }
+
+*/
