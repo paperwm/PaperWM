@@ -54,7 +54,7 @@
                 <property name="hexpand">True</property>
                 <property name="margin_start">36</property>
                 <property name="margin_end">36</property>
-                <property name="margin_top">12</property>
+                <property name="margin_top">16</property>
                 <property name="margin_bottom">36</property>
                 <property name="width_request">480</property>
                 <property name="show_separators">True</property>
