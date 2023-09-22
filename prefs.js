@@ -871,5 +871,6 @@ function fillPreferencesWindow(window) {
     } catch (e) { }
 
     let selectedTab = selectedWorkspace !== null ? 1 : 0;
+    window.set_size_request(626, 700);
     new SettingsWidget(window, selectedTab, selectedWorkspace || 0);
 }

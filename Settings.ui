@@ -61,663 +61,674 @@
     <property name="icon-name">text-x-generic-symbolic</property>
     <property name="title" translatable="yes">General</property>
     <child>
-      <object class="GtkBox" id="general">
-        <property name="halign">center</property>
-        <property name="margin_start">36</property>
-        <property name="margin_end">36</property>
-        <property name="margin_top">36</property>
-        <property name="margin_bottom">36</property>
-        <property name="orientation">vertical</property>
-        <property name="spacing">12</property>
-        <property name="width_request">480</property>
+      <object class="GtkScrolledWindow" id="scrolledWindow">
+        <property name="hscrollbar_policy">never</property>
         <child>
-          <object class="GtkLabel">
-            <property name="halign">start</property>
-            <property name="hexpand">True</property>
-            <property name="label" translatable="yes">Gaps and margins</property>
-            <attributes>
-              <attribute name="weight" value="bold" />
-            </attributes>
-          </object>
-        </child>
-        <child>
-          <object class="GtkListBox">
+          <object class="GtkViewport">
             <property name="focusable">False</property>
-            <property name="selection_mode">none</property>
-            <property name="margin-bottom">24</property>
-            <style>
-              <class name="frame" />
-            </style>
+            <property name="vexpand">True</property>
             <child>
-              <object class="GtkListBoxRow" id="general_row">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
+              <object class="GtkBox" id="general">
+                <property name="halign">center</property>
+                <property name="margin_start">36</property>
+                <property name="margin_end">36</property>
+                <property name="margin_top">16</property>
+                <property name="margin_bottom">36</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">12</property>
+                <property name="width_request">480</property>
                 <child>
-                  <object class="GtkGrid" id="workspace_grid2">
-                    <property name="focusable">False</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="column_spacing">32</property>
-                    <child>
-                      <object class="GtkLabel" id="workspace_label2">
-                        <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Gap between windows</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="window_gap_spin">
-                        <property name="width_chars">2</property>
-                        <property name="max_width_chars">2</property>
-                        <property name="adjustment">window_gap</property>
-                        <property name="snap_to_ticks">1</property>
-                        <property name="numeric">1</property>
-                        <property name="update_policy">if-valid</property>
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
+                  <object class="GtkLabel">
+                    <property name="halign">start</property>
+                    <property name="hexpand">True</property>
+                    <property name="label" translatable="yes">Gaps and margins</property>
+                    <attributes>
+                      <attribute name="weight" value="bold" />
+                    </attributes>
                   </object>
                 </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow" id="general_row1">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
+                <child>
+                  <object class="GtkListBox">
+                    <property name="focusable">False</property>
+                    <property name="selection_mode">none</property>
+                    <property name="margin-bottom">16</property>
+                    <style>
+                      <class name="frame" />
+                    </style>
+                    <child>
+                      <object class="GtkListBoxRow" id="general_row">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
+                        <child>
+                          <object class="GtkGrid" id="workspace_grid2">
+                            <property name="focusable">False</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel" id="workspace_label2">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Gap between windows</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="window_gap_spin">
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="adjustment">window_gap</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow" id="general_row1">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
 
-                <child>
-                  <object class="GtkGrid" id="workspace_grid1">
-                    <property name="focusable">False</property>
-                    <property name="tooltip_text" translatable="yes">The minimum margin to the left and right monitor edge</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="column_spacing">32</property>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Horizontal margin</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="hmargin_spinner">
-                        <property name="width_chars">2</property>
-                        <property name="max_width_chars">2</property>
-                        <property name="text" translatable="yes">0</property>
-                        <property name="adjustment">horizontal_margin</property>
-                        <property name="snap_to_ticks">1</property>
-                        <property name="numeric">1</property>
-                        <property name="update_policy">if-valid</property>
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow" id="general_row2">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
-                <child>
-                  <object class="GtkGrid" id="workspace_grid5">
-                    <property name="focusable">False</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="column_spacing">32</property>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Top margin</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="top_margin_spinner">
-                        <property name="width_chars">2</property>
-                        <property name="max_width_chars">2</property>
-                        <property name="text" translatable="yes">0</property>
-                        <property name="adjustment">vertical_margin</property>
-                        <property name="snap_to_ticks">1</property>
-                        <property name="numeric">1</property>
-                        <property name="update_policy">if-valid</property>
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow" id="general_row_3">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
-                <child>
-                  <object class="GtkGrid" id="workspace_grid6">
-                    <property name="focusable">False</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="column_spacing">32</property>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Bottom margin</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="bottom_margin_spinner">
-                        <property name="width_chars">2</property>
-                        <property name="max_width_chars">2</property>
-                        <property name="text" translatable="yes">0</property>
-                        <property name="adjustment">vertical_margin_bottom</property>
-                        <property name="snap_to_ticks">1</property>
-                        <property name="numeric">1</property>
-                        <property name="update_policy">if-valid</property>
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
-                <property name="tooltip_text" translatable="yes">Semicolon separated values of "useful window widths" that will be cycled through. Values types can be either percentage (of available screen width), e.g. "50%" or pixel values, e.g. "500px". Mixed value types are not supported.</property>
-                <child>
-                  <object class="GtkGrid" id="workspace_grid3">
-                    <property name="focusable">False</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="column_spacing">32</property>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Useful window widths</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkGrid">
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
                         <child>
-                          <object class="GtkButton" id="cycle_widths_reset_button">
-                            <property name="margin_end">8</property>
-                            <property name="label">reset</property>
-                            <property name="tooltip_text" translatable="yes">Resets width values to the default PaperWM width values</property>
+                          <object class="GtkGrid" id="workspace_grid1">
+                            <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">The minimum margin to the left and right monitor edge</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Horizontal margin</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="hmargin_spinner">
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="text" translatable="yes">0</property>
+                                <property name="adjustment">horizontal_margin</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
                           </object>
                         </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow" id="general_row2">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
                         <child>
-                          <object class="GtkEntry" id="cycle_widths_entry">
-                            <property name="width_chars">24</property>
-                            <property name="max_width_chars">24</property>
-                            <layout>
-                              <property name="column">2</property>
-                              <property name="row">0</property>
-                            </layout>
+                          <object class="GtkGrid" id="workspace_grid5">
+                            <property name="focusable">False</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Top margin</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="top_margin_spinner">
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="text" translatable="yes">0</property>
+                                <property name="adjustment">vertical_margin</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
                           </object>
                         </child>
-                        </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
-                <property name="tooltip_text" translatable="yes">Semicolon separated values of "useful window heights" that will be cycled through. Values types can be either percentage (of available screen width), e.g. "50%" or pixel values, e.g. "500px". Mixed value types are not supported.</property>
-                <child>
-                  <object class="GtkGrid" id="workspace_grid12">
-                    <property name="focusable">False</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="column_spacing">32</property>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Useful window heights</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkGrid">
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
                         <child>
-                          <object class="GtkButton" id="cycle_heights_reset_button">
-                            <property name="margin_end">8</property>
-                            <property name="label">reset</property>
-                            <property name="tooltip_text" translatable="yes">Resets height values to the default PaperWM height values</property>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Bottom margin</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="bottom_margin_spinner">
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="text" translatable="yes">0</property>
+                                <property name="adjustment">vertical_margin_bottom</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
                           </object>
                         </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
+                        <property name="tooltip_text" translatable="yes">Semicolon separated values of "useful window widths" that will be cycled through. Values types can be either percentage (of available screen width), e.g. "50%" or pixel values, e.g. "500px". Mixed value types are not supported.</property>
                         <child>
-                          <object class="GtkEntry" id="cycle_heights_entry">
-                            <property name="width_chars">24</property>
-                            <property name="max_width_chars">24</property>
-                            <layout>
-                              <property name="column">1</property>
-                              <property name="row">0</property>
-                            </layout>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Useful window widths</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkGrid">
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                                <child>
+                                  <object class="GtkButton" id="cycle_widths_reset_button">
+                                    <property name="margin_end">8</property>
+                                    <property name="label">reset</property>
+                                    <property name="tooltip_text" translatable="yes">Resets width values to the default PaperWM width values</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkEntry" id="cycle_widths_entry">
+                                    <property name="width_chars">24</property>
+                                    <property name="max_width_chars">24</property>
+                                    <layout>
+                                      <property name="column">2</property>
+                                      <property name="row">0</property>
+                                    </layout>
+                                  </object>
+                                </child>
+                                </object>
+                            </child>
                           </object>
                         </child>
-                        </object>
+                      </object>
                     </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkLabel">
-            <property name="halign">start</property>
-            <property name="hexpand">True</property>
-            <property name="label" translatable="yes">Three-finger swipes</property>
-            <attributes>
-              <attribute name="weight" value="bold" />
-            </attributes>
-          </object>
-        </child>
-        <child>
-          <object class="GtkListBox">
-            <property name="focusable">False</property>
-            <property name="selection_mode">none</property>
-            <property name="margin-bottom">24</property>
-            <style>
-              <class name="frame" />
-            </style>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
-                <child>
-                  <object class="GtkGrid" id="workspace_grid7">
-                    <property name="focusable">False</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="row_spacing">12</property>
-                    <property name="column_spacing">32</property>
                     <child>
-                      <object class="GtkLabel" id="workspace_label1">
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
                         <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Horizontal sensitivity</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="horizontal-sensitivity">
-                        <property name="can_focus">True</property>
-                        <property name="editable">True</property>
-                        <property name="width_chars">2</property>
-                        <property name="max_width_chars">2</property>
-                        <property name="text" translatable="yes">0</property>
-                        <property name="adjustment">horizontal-sensitivity-adjustment</property>
-                        <property name="digits">1</property>
-                        <property name="snap_to_ticks">1</property>
-                        <property name="numeric">1</property>
-                        <property name="update_policy">if-valid</property>
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="workspace_label3">
-                        <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Horizontal friction</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">1</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="horizontal-friction">
-                        <property name="width_chars">2</property>
-                        <property name="max_width_chars">2</property>
-                        <property name="text" translatable="yes">0,0</property>
-                        <property name="adjustment">horizontal-friction-adjustment</property>
-                        <property name="digits">1</property>
-                        <property name="snap_to_ticks">1</property>
-                        <property name="numeric">1</property>
-                        <property name="update_policy">if-valid</property>
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">1</property>
-                        </layout>
+                        <property name="tooltip_text" translatable="yes">Semicolon separated values of "useful window heights" that will be cycled through. Values types can be either percentage (of available screen width), e.g. "50%" or pixel values, e.g. "500px". Mixed value types are not supported.</property>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Useful window heights</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkGrid">
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                                <child>
+                                  <object class="GtkButton" id="cycle_heights_reset_button">
+                                    <property name="margin_end">8</property>
+                                    <property name="label">reset</property>
+                                    <property name="tooltip_text" translatable="yes">Resets height values to the default PaperWM height values</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkEntry" id="cycle_heights_entry">
+                                    <property name="width_chars">24</property>
+                                    <property name="max_width_chars">24</property>
+                                    <layout>
+                                      <property name="column">1</property>
+                                      <property name="row">0</property>
+                                    </layout>
+                                  </object>
+                                </child>
+                                </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
                   </object>
                 </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
                 <child>
-                  <object class="GtkGrid">
+                  <object class="GtkLabel">
+                    <property name="halign">start</property>
+                    <property name="hexpand">True</property>
+                    <property name="label" translatable="yes">Three-finger swipes</property>
+                    <attributes>
+                      <attribute name="weight" value="bold" />
+                    </attributes>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkListBox">
                     <property name="focusable">False</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="row_spacing">12</property>
-                    <property name="column_spacing">32</property>
+                    <property name="selection_mode">none</property>
+                    <property name="margin-bottom">16</property>
+                    <style>
+                      <class name="frame" />
+                    </style>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
                         <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Vertical sensitivity</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
+                        <child>
+                          <object class="GtkGrid" id="workspace_grid7">
+                            <property name="focusable">False</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="row_spacing">12</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel" id="workspace_label1">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Horizontal sensitivity</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="horizontal-sensitivity">
+                                <property name="can_focus">True</property>
+                                <property name="editable">True</property>
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="text" translatable="yes">0</property>
+                                <property name="adjustment">horizontal-sensitivity-adjustment</property>
+                                <property name="digits">1</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="workspace_label3">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Horizontal friction</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">1</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="horizontal-friction">
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="text" translatable="yes">0,0</property>
+                                <property name="adjustment">horizontal-friction-adjustment</property>
+                                <property name="digits">1</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">1</property>
+                                </layout>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkSpinButton" id="vertical-sensitivity">
-                        <property name="width_chars">2</property>
-                        <property name="max_width_chars">2</property>
-                        <property name="text" translatable="yes">0</property>
-                        <property name="adjustment">vertical-sensitivity-adjustment</property>
-                        <property name="digits">1</property>
-                        <property name="snap_to_ticks">1</property>
-                        <property name="numeric">1</property>
-                        <property name="update_policy">if-valid</property>
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
                         <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Vertical friction</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">1</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="vertical-friction">
-                        <property name="width_chars">2</property>
-                        <property name="max_width_chars">2</property>
-                        <property name="text" translatable="yes">0,0</property>
-                        <property name="adjustment">vertical-friction-adjustment</property>
-                        <property name="digits">1</property>
-                        <property name="snap_to_ticks">1</property>
-                        <property name="numeric">1</property>
-                        <property name="update_policy">if-valid</property>
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">1</property>
-                        </layout>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="row_spacing">12</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Vertical sensitivity</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="vertical-sensitivity">
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="text" translatable="yes">0</property>
+                                <property name="adjustment">vertical-sensitivity-adjustment</property>
+                                <property name="digits">1</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Vertical friction</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">1</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="vertical-friction">
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="text" translatable="yes">0,0</property>
+                                <property name="adjustment">vertical-friction-adjustment</property>
+                                <property name="digits">1</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">1</property>
+                                </layout>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
                   </object>
                 </child>
-              </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkLabel">
-            <property name="halign">start</property>
-            <property name="hexpand">True</property>
-            <property name="label" translatable="yes">Settings</property>
-            <attributes>
-              <attribute name="weight" value="bold" />
-            </attributes>
-          </object>
-        </child>
-        <child>
-          <object class="GtkListBox">
-            <property name="focusable">False</property>
-            <property name="selection_mode">none</property>
-            <style>
-              <class name="frame" />
-            </style>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
                 <child>
-                  <object class="GtkGrid">
-                    <property name="focusable">False</property>
-                    <property name="tooltip_text" translatable="yes">Sets the duration of PaperWM animated transitions (e.g. switching windows, workspaces etc.). Lower values result in faster transitions.</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="column_spacing">32</property>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Animation / transition time (seconds)</property>
-                        <property name="use_markup">1</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="animation_time_spin">
-                        <property name="width_chars">3</property>
-                        <property name="max_width_chars">3</property>
-                        <property name="adjustment">animation_time_adjustment</property>
-                        <property name="numeric">1</property>
-                        <property name="digits">2</property>
-                        <property name="snap_to_ticks">1</property>
-                        <property name="update_policy">if-valid</property>
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
+                  <object class="GtkLabel">
+                    <property name="halign">start</property>
+                    <property name="hexpand">True</property>
+                    <property name="label" translatable="yes">Settings</property>
+                    <attributes>
+                      <attribute name="weight" value="bold" />
+                    </attributes>
                   </object>
                 </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
                 <child>
-                  <object class="GtkGrid">
+                  <object class="GtkListBox">
                     <property name="focusable">False</property>
-                    <property name="tooltip_text" translatable="yes">This setting controls the "size" of mini-map tiles as compared to their actual window size (e.g. "15" corresponds to a mini-map tile size being approximately 15% of the actual window size)</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="column_spacing">32</property>
+                    <property name="selection_mode">none</property>
+                    <style>
+                      <class name="frame" />
+                    </style>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
                         <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Mini-map scale &lt;i&gt;(0 hides Mini-map)&lt;/i&gt;</property>
-                        <property name="use_markup">1</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">Sets the duration of PaperWM animated transitions (e.g. switching windows, workspaces etc.). Lower values result in faster transitions.</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Animation / transition time (seconds)</property>
+                                <property name="use_markup">1</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="animation_time_spin">
+                                <property name="width_chars">3</property>
+                                <property name="max_width_chars">3</property>
+                                <property name="adjustment">animation_time_adjustment</property>
+                                <property name="numeric">1</property>
+                                <property name="digits">2</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkSpinButton" id="minimap_scale_spin">
-                        <property name="width_chars">2</property>
-                        <property name="max_width_chars">2</property>
-                        <property name="adjustment">minimap_scale</property>
-                        <property name="snap_to_ticks">1</property>
-                        <property name="numeric">1</property>
-                        <property name="update_policy">if-valid</property>
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
-                <child>
-                  <object class="GtkGrid">
-                    <property name="focusable">False</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="column_spacing">32</property>
-                    <child>
-                      <object class="GtkLabel" id="scratch_in_overview_label">
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
                         <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Show scratch windows in overview</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">This setting controls the "size" of mini-map tiles as compared to their actual window size (e.g. "15" corresponds to a mini-map tile size being approximately 15% of the actual window size)</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Mini-map scale &lt;i&gt;(0 hides Mini-map)&lt;/i&gt;</property>
+                                <property name="use_markup">1</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="minimap_scale_spin">
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="adjustment">minimap_scale</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkComboBoxText" id="scratch-in-overview">
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
                         <property name="focusable">False</property>
-                        <property name="hexpand">0</property>
-                        <items>
-                          <item id="always" translatable="yes">Always</item>
-                          <item id="only" translatable="yes">Only</item>
-                          <item id="never" translatable="yes">Never</item>
-                        </items>
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel" id="scratch_in_overview_label">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Show scratch windows in overview</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="scratch-in-overview">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">0</property>
+                                <items>
+                                  <item id="always" translatable="yes">Always</item>
+                                  <item id="only" translatable="yes">Only</item>
+                                  <item id="never" translatable="yes">Never</item>
+                                </items>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkListBoxRow">
-                <property name="activatable">False</property>
-                <property name="focusable">False</property>
-                <child>
-                  <object class="GtkGrid">
-                    <property name="focusable">False</property>
-                    <property name="margin_start">12</property>
-                    <property name="margin_end">12</property>
-                    <property name="margin_top">6</property>
-                    <property name="margin_bottom">6</property>
-                    <property name="column_spacing">32</property>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
                         <property name="focusable">False</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Enable Window Position Bar</property>
-                        <property name="xalign">0</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSwitch" id="show-window-position-bar">
-                        <layout>
-                          <property name="column">1</property>
-                          <property name="row">0</property>
-                        </layout>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Enable Window Position Bar</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSwitch" id="show-window-position-bar">
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
                   </object>
@@ -738,7 +749,7 @@
         <property name="halign">center</property>
         <property name="margin_start">36</property>
         <property name="margin_end">36</property>
-        <property name="margin_top">36</property>
+        <property name="margin_top">16</property>
         <property name="margin_bottom">36</property>
         <property name="orientation">vertical</property>
         <property name="spacing">12</property>
@@ -757,7 +768,7 @@
           <object class="GtkListBox">
             <property name="focusable">False</property>
             <property name="selection_mode">none</property>
-            <property name="margin_bottom">24</property>
+            <property name="margin_bottom">16</property>
             <style>
               <class name="frame" />
             </style>
