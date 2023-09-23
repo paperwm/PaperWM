@@ -354,8 +354,6 @@ export function setupActions() {
     actions.forEach(a => global.stage.remove_action(a));
 }
 
-
-
 export function sortWindows(a, b) {
     let aw = a.metaWindow;
     let bw = b.metaWindow;
