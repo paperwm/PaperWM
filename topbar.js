@@ -35,9 +35,8 @@ const colors = [
 ];
 
 export let menu, focusButton;
-let path, openPrefs, screenSignals, signals, gsettings;
+let openPrefs, screenSignals, signals, gsettings;
 export function enable (extension) {
-    path = extension.path;
     openPrefs = () => extension.openPreferences();
     gsettings = extension.getSettings();
 
@@ -121,7 +120,6 @@ export function disable() {
     screenSignals.forEach(id => workspaceManager.disconnect(id));
     screenSignals = [];
     panelBox.scale_y = 1;
-    path = null;
     openPrefs = null;
     gsettings = null;
 }
@@ -276,8 +274,9 @@ export const FocusIcon = GObject.registerClass(
             this.tooltip_x_point = tooltip_x_point;
 
             // read in focus icons from resources folder
-            this.gIconDefault = Gio.icon_new_for_string(`${path}/resources/focus-mode-default-symbolic.svg`);
-            this.gIconCenter = Gio.icon_new_for_string(`${path}/resources/focus-mode-center-symbolic.svg`);
+            const pather = relativePath => GLib.uri_resolve_relative(import.meta.url, relativePath, GLib.UriFlags.NONE);
+            this.gIconDefault = Gio.icon_new_for_string(pather('./resources/focus-mode-default-symbolic.svg'));
+            this.gIconCenter = Gio.icon_new_for_string(pather('./resources/focus-mode-center-symbolic.svg'));
 
             this._initToolTip();
             this.setMode();
