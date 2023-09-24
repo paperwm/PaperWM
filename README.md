@@ -277,15 +277,9 @@ Setting | Description | Reference
 --------|-------------|----------
 <code>show&#8209;workspace&#8209;indicator</code>| Shows/hides the workspace indicator element in Topbar. | See [The workspace stack & monitors](#the-workspace-stack--monitors).
 
-Setting | Description | Input Type | Default value
---------|-------------|------------|--------------
-<code>use&#8209;workspace&#8209;name</code> | Use PaperWM workspace name in workspace indicator in the TopBar.  Setting to false uses the gnome default name (i.e. `Activities`). | _Boolean_ | `true`
-
-_Note: this does not disable the workspace indicator, but simply makes it looks like default gnome `Activities` button.  To show/hide the workspace indicator element use setting_ `show-workspace-indicator`.
-
 __Example:__
 ```
-dconf write /org/gnome/shell/extensions/paperwm/use-workspace-name false
+dconf write /org/gnome/shell/extensions/paperwm/show-workspace-indicator false
 ```
 
 Setting | Description | Input Type | Default value

@@ -26,8 +26,8 @@ export function enable(extension) {
     _overriddingConflicts = false;
     prefs = {};
     ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
-        'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
-        'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
+        'workspace-colors', 'default-background', 'animation-time', 'pressure-barrier',
+        'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
         'cycle-width-steps', 'cycle-height-steps', 'minimap-scale', 'winprops',
         'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon',
         'disable-topbar-styling', 'default-focus-mode', 'gesture-enabled',

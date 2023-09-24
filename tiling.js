@@ -1242,8 +1242,6 @@ export class Space extends Array {
         this.updateName();
         this.updateShowTopBar();
         this.signals.connect(this.settings, 'changed::name', this.updateName.bind(this));
-        this.signals.connect(gsettings, 'changed::use-workspace-name',
-            this.updateName.bind(this));
         this.signals.connect(this.settings, 'changed::color',
             this.updateColor.bind(this));
         this.signals.connect(this.settings, 'changed::background',
@@ -1340,11 +1338,6 @@ border-radius: ${borderWidth}px;
     }
 
     updateName() {
-        if (Settings.prefs.use_workspace_name) {
-            this.workspaceLabel.show();
-        } else {
-            this.workspaceLabel.hide();
-        }
         let name = workspaceSettings.getWorkspaceName(this.settings, this.index);
         Meta.prefs_change_workspace_name(this.index, name);
         this.workspaceLabel.text = name;

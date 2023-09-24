@@ -59,7 +59,6 @@ export function enable (extension) {
     fixWorkspaceIndicator();
     fixFocusModeIcon();
     fixStyle();
-    showWorkspaceMenu(Settings.prefs.use_workspace_name);
 
     screenSignals.push(
         workspaceManager.connect_after('workspace-switched',
@@ -84,10 +83,6 @@ export function enable (extension) {
         spaces.setSpaceTopbarElementsVisible();
         spaces.forEach(s => s.layout(false));
         spaces.showWindowPositionBarChanged();
-    });
-
-    signals.connect(gsettings, 'changed::use-workspace-name', (settings, key) => {
-        showWorkspaceMenu(Settings.prefs.use_workspace_name);
     });
 
     signals.connect(gsettings, 'changed::show-workspace-indicator', (settings, key) => {
