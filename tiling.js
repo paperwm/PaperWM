@@ -2154,7 +2154,7 @@ export const Spaces = class Spaces extends Map {
             toSpace.monitor === fromSpace.monitor) {
             // Only start an animation if we're moving between workspaces on the
             // same monitor
-            this._initWorkspaceSequence();
+            this.initWorkspaceSequence();
         } else {
             this.selectedSpace.setMonitor(this.selectedSpace.monitor);
         }
@@ -2251,7 +2251,7 @@ export const Spaces = class Spaces extends Map {
         });
     }
 
-    _initWorkspaceSequence() {
+    initWorkspaceSequence() {
         if (inPreview) {
             return;
         }
@@ -2283,7 +2283,7 @@ export const Spaces = class Spaces extends Map {
         let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
 
         if (!inPreview) {
-            this._initWorkspaceSequence();
+            this.initWorkspaceSequence();
         }
 
         let from = monitorSpaces.indexOf(this.selectedSpace);
@@ -2292,7 +2292,7 @@ export const Spaces = class Spaces extends Map {
 
         if (move && this.selectedSpace.selectedWindow) {
             const navigator = Navigator.getNavigator();
-            if (navigator._moving == null ||
+            if (navigator._moving === null ||
                 (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
@@ -2330,7 +2330,7 @@ export const Spaces = class Spaces extends Map {
             let space_y;
             if (to === 0) {
                 space_y = padding + (space.height + padding) * (i - to) * scale;
-            } else if (to == last) {
+            } else if (to === last) {
                 space_y = (center * 2 - padding) + (space.height + padding) * (i - to) * scale;
             } else {
                 space_y = center + (space.height + padding) * (i - to) * scale;

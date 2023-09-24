@@ -528,7 +528,7 @@ export const WorkspaceMenu = GObject.registerClass(
                 if (!this._navigator) {
                     this.state = 'SCROLL';
                     this._navigator = Navigator.getNavigator();
-                    Tiling.spaces.initWorkspaceStack();
+                    Tiling.spaces.initWorkspaceSequence();
                     this._enterbox = new Clutter.Actor({ reactive: true });
                     Main.uiGroup.add_actor(this._enterbox);
                     this._enterbox.set_position(panelBox.x, panelBox.y + panelBox.height + 20);
@@ -551,10 +551,10 @@ export const WorkspaceMenu = GObject.registerClass(
                 }
 
                 if (direction === Clutter.ScrollDirection.DOWN) {
-                    Tiling.spaces.selectStackSpace(Meta.MotionDirection.DOWN);
+                    Tiling.spaces.selectSequenceSpace(Meta.MotionDirection.DOWN);
                 }
                 if (direction === Clutter.ScrollDirection.UP) {
-                    Tiling.spaces.selectStackSpace(Meta.MotionDirection.UP);
+                    Tiling.spaces.selectSequenceSpace(Meta.MotionDirection.UP);
                 }
             }
 
@@ -586,7 +586,7 @@ export const WorkspaceMenu = GObject.registerClass(
                 ) {
                     dy = 0;
                     v = 0.1;
-                    spaces.selectStackSpace(Meta.MotionDirection.UP, false, mode);
+                    spaces.selectSequenceSpace(Meta.MotionDirection.UP);
                     this.selected = spaces.selectedSpace;
                     Easer.removeEase(this.selected.actor);
                     Easer.addEase(this.selected.actor,
@@ -598,7 +598,7 @@ export const WorkspaceMenu = GObject.registerClass(
                 ) {
                     dy = 0;
                     v = 0.1;
-                    spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, mode);
+                    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN);
                     this.selected = spaces.selectedSpace;
                     Easer.removeEase(this.selected.actor);
                     Easer.addEase(this.selected.actor,
@@ -639,11 +639,11 @@ export const WorkspaceMenu = GObject.registerClass(
                         this._navigator.finish();
                         return;
                     } else if (y > downEdge) {
-                        spaces.selectStackSpace(Meta.MotionDirection.DOWN, false, mode);
+                        spaces.selectSequenceSpace(Meta.MotionDirection.DOWN);
                         this.selected = spaces.selectedSpace;
                     } else {
-                        spaces.selectStackSpace(Meta.MotionDirection.DOWN);
-                        spaces.selectStackSpace(Meta.MotionDirection.UP);
+                        spaces.selectSequenceSpace(Meta.MotionDirection.DOWN);
+                        spaces.selectSequenceSpace(Meta.MotionDirection.UP);
                     }
                 } else {
                     this.time = t;
