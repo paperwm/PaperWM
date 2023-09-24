@@ -750,8 +750,15 @@ export function fixTopBar() {
 }
 
 export function fixWorkspaceIndicator() {
-    Settings.prefs.show_workspace_indicator ? menu.show() : menu.hide();
-    Tiling.spaces.forEach(s => s.showWorkspaceIndicator());
+    const show = Settings.prefs.show_workspace_indicator;
+    if (show) {
+        Main.panel.statusArea.activities.hide();
+        menu.show();
+    }
+    else {
+        menu.hide();
+        Main.panel.statusArea.activities.show();
+    }
 }
 
 export function fixFocusModeIcon() {
