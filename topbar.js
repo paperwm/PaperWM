@@ -35,14 +35,12 @@ const colors = [
 ];
 
 export let menu, focusButton;
-let path, openPrefs, orginalActivitiesText, screenSignals, signals, gsettings;
+let path, openPrefs, screenSignals, signals, gsettings;
 export function enable (extension) {
     path = extension.path;
     openPrefs = () => extension.openPreferences();
     gsettings = extension.getSettings();
 
-    let label = Main.panel.statusArea.activities.first_child;
-    orginalActivitiesText = label.text;
     screenSignals = [];
     signals = new Utils.Signals();
 
@@ -51,15 +49,17 @@ export function enable (extension) {
     menu = new WorkspaceMenu();
     focusButton = new FocusButton();
 
-    Main.panel.addToStatusArea('WorkspaceMenu', menu, 0, 'left');
-    Main.panel.addToStatusArea('FocusButton', focusButton, 1, 'left');
+    Main.panel.addToStatusArea('WorkspaceMenu', menu, 1, 'left');
+    Main.panel.addToStatusArea('FocusButton', focusButton, 2, 'left');
 
     Tiling.spaces.forEach(s => {
         s.workspaceLabel.clutter_text.set_font_description(menu.label.clutter_text.font_description);
     });
+
     fixWorkspaceIndicator();
     fixFocusModeIcon();
     fixStyle();
+    showWorkspaceMenu(Settings.prefs.use_workspace_name);
 
     screenSignals.push(
         workspaceManager.connect_after('workspace-switched',
@@ -84,6 +84,10 @@ export function enable (extension) {
         spaces.setSpaceTopbarElementsVisible();
         spaces.forEach(s => s.layout(false));
         spaces.showWindowPositionBarChanged();
+    });
+
+    signals.connect(gsettings, 'changed::use-workspace-name', (settings, key) => {
+        showWorkspaceMenu(Settings.prefs.use_workspace_name);
     });
 
     signals.connect(gsettings, 'changed::show-workspace-indicator', (settings, key) => {
@@ -125,6 +129,17 @@ export function disable() {
     path = null;
     openPrefs = null;
     gsettings = null;
+}
+
+export function showWorkspaceMenu(show = false) {
+    if (show) {
+        Main.panel.statusArea.activities.hide();
+        menu.show();
+    }
+    else {
+        menu.hide();
+        Main.panel.statusArea.activities.show();
+    }
 }
 
 export function createButton(icon_name, accessible_name) {
@@ -671,10 +686,7 @@ export const WorkspaceMenu = GObject.registerClass(
         }
 
         setName(name) {
-            if (Settings.prefs.use_workspace_name)
-                this.label.text = name;
-            else
-                this.label.text = orginalActivitiesText;
+            this.label.text = name;
         }
     });
 
