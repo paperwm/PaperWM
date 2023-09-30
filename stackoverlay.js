@@ -360,10 +360,7 @@ export class StackOverlay {
         Tiling.animateWindow(this.target);
 
         // set clone parameters
-        let scale = Settings.prefs.minimap_scale;
-        if (scale <= 0) {
-            scale = 0.15; // original default minimap scale
-        }
+        const scale = Settings.prefs.edge_preview_scale;
         clone.opacity = 255 * 0.95;
 
         clone.set_scale(scale, scale);

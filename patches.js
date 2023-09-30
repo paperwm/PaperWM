@@ -263,7 +263,7 @@ export function setupOverrides() {
             THUMBNAIL_ONLY: 1,
             APP_ICON_ONLY: 2,
             BOTH: 3,
-        };ss
+        };
         const APP_ICON_SIZE = 96;
         const APP_ICON_SIZE_SMALL = 48;
 
@@ -289,10 +289,10 @@ export function setupOverrides() {
 
         let size;
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        const mscale = Settings.prefs.minimap_scale;
+        const scale = Settings.prefs.window_switcher_preview_scale;
         // scale size based on PaperWM's minimap-scale
-        if (mscale > 0) {
-            size = Math.round(this.monitor.height * mscale);
+        if (scale > 0) {
+            size = Math.round(this.monitor.height * scale);
         } else {
             size = WINDOW_PREVIEW_SIZE;
         }

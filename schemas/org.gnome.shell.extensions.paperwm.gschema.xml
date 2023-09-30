@@ -336,6 +336,16 @@
       <summary>Scale of mini mini-map tiles compared to their actual window size.</summary>
     </key>
 
+    <key type="d" name="edge-preview-scale">
+      <default>0.15</default>
+      <summary>Scale of window previews at tiling edge. Scale is percent of actual window size.</summary>
+    </key>
+
+    <key type="d" name="window-switcher-preview-scale">
+      <default>0.15</default>
+      <summary>Scale of window switch previewse.  Scale is percent of actual window size</summary>
+    </key>
+
     <key type="b" name="only-scratch-in-overview">
         <default>false</default>
         <summary>Limit window previews in the overview to scratch windows</summary>
