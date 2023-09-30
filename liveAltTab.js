@@ -11,10 +11,41 @@ const { Clutter, Meta, Gio, GObject } = imports.gi;
 const Main = imports.ui.main;
 const AltTab = imports.ui.altTab;
 
+let switcherSettings, origPreviewSize;
+function enable() {
+    switcherSettings = new Gio.Settings({
+        schema_id: 'org.gnome.shell.window-switcher',
+    });
+
+    // save previous gnome alttab preview size for restoring
+    origPreviewSize = AltTab['WINDOW_PREVIEW_SIZE'];
+}
+
+function disable() {
+    switcherSettings = null;
+    setAltTabPreviewSize(origPreviewSize);
+    origPreviewSize = null;
+}
+
+function liveAltTab(meta_window, space, { display, screen, binding }) {
+    let tabPopup = new LiveAltTab(binding.is_reversed());
+    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
+}
+
+function setAltTabPreviewSize(size) {
+    AltTab['WINDOW_PREVIEW_SIZE'] = size;
+}
+
 var LiveAltTab = GObject.registerClass(
     class LiveAltTab extends AltTab.WindowSwitcherPopup {
         _init(reverse) {
             this.reverse = reverse;
+            this.space = Tiling.spaces.selectedSpace;
+            this.monitor = Tiling.spaces.selectedSpace.monitor;
+
+            // update
+            const mscale = Settings.prefs.minimap_scale;
+            setAltTabPreviewSize(Math.round(this.monitor.height * mscale));
             super._init();
         }
 
@@ -36,11 +67,8 @@ var LiveAltTab = GObject.registerClass(
         }
 
         _initialSelection(backward, actionName) {
-            this.space = Tiling.spaces.selectedSpace;
             this.space.startAnimate();
-
-            let monitor = Tiling.spaces.selectedSpace.monitor;
-            let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
+            let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
             let fog = new Clutter.Actor({
                 x: workArea.x, y: workArea.y,
                 width: workArea.width, height: workArea.height,
@@ -156,19 +184,3 @@ var LiveAltTab = GObject.registerClass(
             actor.set_scale(1, 1);
         }
     });
-
-function liveAltTab(meta_window, space, { display, screen, binding }) {
-    let tabPopup = new LiveAltTab(binding.is_reversed());
-    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
-}
-
-let switcherSettings;
-function enable() {
-    switcherSettings = new Gio.Settings({
-        schema_id: 'org.gnome.shell.window-switcher',
-    });
-}
-
-function disable() {
-    switcherSettings = null;
-}
