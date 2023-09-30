@@ -196,6 +196,12 @@ var SettingsWidget = class SettingsWidget {
             this._settings.set_double('edge-preview-scale', edgePreviewScale.get_value() / 100.0);
         });
 
+        const windowSwitcherPreviewScale = this.builder.get_object('window_switcher_preview_scale_spin');
+        windowSwitcherPreviewScale.set_value(this._settings.get_double('window-switcher-preview-scale') * 100.0);
+        windowSwitcherPreviewScale.connect('value-changed', () => {
+            this._settings.set_double('window-switcher-preview-scale', windowSwitcherPreviewScale.get_value() / 100.0);
+        });
+
         const scratchOverview = this.builder.get_object('scratch-in-overview');
         if (this._settings.get_boolean('only-scratch-in-overview'))
             scratchOverview.set_active_id('only');
