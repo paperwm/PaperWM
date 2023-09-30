@@ -184,13 +184,25 @@ var SettingsWidget = class SettingsWidget {
             this._settings.set_double('animation-time', animationTime.get_value());
         });
 
-        let minimapScale = this.builder.get_object('minimap_scale_spin');
+        const minimapScale = this.builder.get_object('minimap_scale_spin');
         minimapScale.set_value(this._settings.get_double('minimap-scale') * 100.0);
         minimapScale.connect('value-changed', () => {
             this._settings.set_double('minimap-scale', minimapScale.get_value() / 100.0);
         });
 
-        let scratchOverview = this.builder.get_object('scratch-in-overview');
+        const edgePreviewScale = this.builder.get_object('edge_scale_spin');
+        edgePreviewScale.set_value(this._settings.get_double('edge-preview-scale') * 100.0);
+        edgePreviewScale.connect('value-changed', () => {
+            this._settings.set_double('edge-preview-scale', edgePreviewScale.get_value() / 100.0);
+        });
+
+        const windowSwitcherPreviewScale = this.builder.get_object('window_switcher_preview_scale_spin');
+        windowSwitcherPreviewScale.set_value(this._settings.get_double('window-switcher-preview-scale') * 100.0);
+        windowSwitcherPreviewScale.connect('value-changed', () => {
+            this._settings.set_double('window-switcher-preview-scale', windowSwitcherPreviewScale.get_value() / 100.0);
+        });
+
+        const scratchOverview = this.builder.get_object('scratch-in-overview');
         if (this._settings.get_boolean('only-scratch-in-overview'))
             scratchOverview.set_active_id('only');
         else if (this._settings.get_boolean('disable-scratch-in-overview'))
@@ -211,7 +223,7 @@ var SettingsWidget = class SettingsWidget {
             }
         });
 
-        let enableWindowPositionBar = this.builder.get_object('show-window-position-bar');
+        const enableWindowPositionBar = this.builder.get_object('show-window-position-bar');
         enableWindowPositionBar.active = this._settings.get_boolean('show-window-position-bar');
         enableWindowPositionBar.connect('state-set', (obj, state) => {
             this._settings.set_boolean('show-window-position-bar', state);

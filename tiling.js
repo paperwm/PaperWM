@@ -39,7 +39,7 @@ var inPreview = PreviewMode.NONE; // export
 // DEFAULT mode is normal/original PaperWM window focus behaviour
 var FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
 
-var CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1};
+var CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1 };
 
 /**
    Scrolled and tiled per monitor workspace.
@@ -3078,8 +3078,6 @@ function remove_handler(workspace, meta_window) {
    Handle windows entering workspaces.
 */
 function add_handler(ws, metaWindow) {
-    debug("window-added", metaWindow, metaWindow.title, metaWindow.window_type, ws.index(), metaWindow.on_all_workspaces);
-
     // Do not handle grabbed windows
     if (inGrab && inGrab.window === metaWindow)
         return;
@@ -3111,9 +3109,10 @@ function insertWindow(metaWindow, { existing }) {
         return;
     }
 
-    let actor = metaWindow.get_compositor_private();
+    const actor = metaWindow.get_compositor_private();
+    const space = spaces.spaceOfWindow(metaWindow);
 
-    let connectSizeChanged = tiled => {
+    const connectSizeChanged = tiled => {
         if (tiled)
             animateWindow(metaWindow);
         actor.opacity = 255;
@@ -3122,8 +3121,10 @@ function insertWindow(metaWindow, { existing }) {
     };
 
     if (!existing) {
-        // Note: Can't trust global.display.focus_window to determine currently focused window.
-        //       The mru is more flexible. (global.display.focus_window does not always agree with mru[0])
+        /**
+         * Note: Can't trust global.display.focus_window to determine currently focused window.
+         * The mru is more flexible. (global.display.focus_window does not always agree with mru[0]).
+         */
         let mru = display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
         let focusWindow = mru[0];
 
@@ -3131,7 +3132,11 @@ function insertWindow(metaWindow, { existing }) {
             focusWindow = mru[1];
         }
 
-        let scratchIsFocused = Scratch.isScratchWindow(focusWindow);
+        // Scratch if have scratch windows on this space and focused window is also scratch
+        let scratchIsFocused =
+            Scratch.getScratchWindows().length > 0 &&
+            space === spaces.spaceOfWindow(focusWindow) &&
+            Scratch.isScratchWindow(focusWindow);
         let addToScratch = scratchIsFocused;
 
         let winprop = Settings.find_winprop(metaWindow);
@@ -3173,7 +3178,6 @@ function insertWindow(metaWindow, { existing }) {
         return;
     }
 
-    let space = spaces.spaceOfWindow(metaWindow);
     if (!add_filter(metaWindow)) {
         connectSizeChanged();
         space.addFloating(metaWindow);

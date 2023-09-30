@@ -16,6 +16,7 @@ const Main = imports.ui.main;
 const Workspace = imports.ui.workspace;
 const WorkspaceThumbnail = imports.ui.workspaceThumbnail;
 const WorkspaceAnimation = imports.ui.workspaceAnimation;
+const WindowPreview = imports.ui.windowPreview;
 const WindowManager = imports.ui.windowManager;
 const Params = imports.misc.params;
 
@@ -180,6 +181,22 @@ function setupOverrides() {
         const onSpace = space.indexOf(window) >= 0;
         const onMonitor = this.monitorIndex === space.monitor.index;
         return onSpace && onMonitor;
+    });
+
+    /**
+     * Resolve issue where window that is set to minimise-on-close should be removed
+     * from tiling (stick) before closing.  See https://github.com/paperwm/PaperWM/issues/608.
+     */
+    registerOverridePrototype(WindowPreview.WindowPreview, '_deleteAll', function() {
+        const windows = this.window_container.layout_manager.get_windows();
+
+        // Delete all windows, starting from the bottom-most (most-modal) one
+        for (const window of windows.reverse()) {
+            window.stick();
+            window.delete(global.get_current_time());
+        }
+
+        this._closeRequested = true;
     });
 
     /**
