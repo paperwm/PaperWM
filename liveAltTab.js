@@ -44,9 +44,9 @@ var LiveAltTab = GObject.registerClass(
             this.monitor = Tiling.spaces.selectedSpace.monitor;
 
             // set preview size based on minimap (or default is no minimiap)
-            const mscale = Settings.prefs.minimap_scale;
-            if (mscale > 0) {
-                setAltTabPreviewSize(Math.round(this.monitor.height * mscale));
+            const sscale = Settings.prefs.window_switcher_preview_scale;
+            if (sscale > 0) {
+                setAltTabPreviewSize(Math.round(this.monitor.height * sscale));
             } else {
                 setAltTabPreviewSize(origPreviewSize);
             }
