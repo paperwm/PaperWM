@@ -361,6 +361,9 @@ var StackOverlay = class StackOverlay {
 
         // set clone parameters
         let scale = Settings.prefs.minimap_scale;
+        if (scale <= 0) {
+            scale = 0.15; // original default minimap scale
+        }
         clone.opacity = 255 * 0.95;
 
         clone.set_scale(scale, scale);
