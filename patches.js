@@ -1,16 +1,19 @@
-import Meta from 'gi://Meta';
+import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
+import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
+import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Workspace from 'resource:///org/gnome/shell/ui/workspace.js';
 import * as WorkspaceThumbnail from 'resource:///org/gnome/shell/ui/workspaceThumbnail.js';
 import * as WorkspaceAnimation from 'resource:///org/gnome/shell/ui/workspaceAnimation.js';
+import * as AltTab from 'resource:///org/gnome/shell/ui/altTab.js';
 import * as WindowManager from 'resource:///org/gnome/shell/ui/windowManager.js';
 import * as WindowPreview from 'resource:///org/gnome/shell/ui/windowPreview.js';
 import * as Params from 'resource:///org/gnome/shell/misc/params.js';
 
-import { Utils, Tiling, Scratch } from './imports.js';
+import { Utils, Tiling, Scratch, Settings } from './imports.js';
 
 /**
   Some of Gnome Shell's default behavior is really sub-optimal when using
@@ -246,6 +249,74 @@ export function setupOverrides() {
             this._shouldShow = shouldShow;
             this.notify('should-show');
         });
+
+    /**
+     * Provides ability to set AltTab window preview sizes (which is a little harder in 45+).
+     * https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/altTab.js#L1002
+     */
+    registerOverridePrototype(AltTab.WindowIcon, '_init', function(window, mode) {
+        const saved = getSavedPrototype(AltTab.WindowIcon, '_init');
+        saved.call(this, window, mode);
+        
+        const WINDOW_PREVIEW_SIZE = 128;
+        const AppIconMode = {
+            THUMBNAIL_ONLY: 1,
+            APP_ICON_ONLY: 2,
+            BOTH: 3,
+        };ss
+        const APP_ICON_SIZE = 96;
+        const APP_ICON_SIZE_SMALL = 48;
+
+        let mutterWindow = this.window.get_compositor_private();
+
+        this._icon.destroy_all_children();
+
+        this.monitor = Tiling.spaces.selectedSpace.monitor;
+        let _createWindowClone = (window, size) => {
+            let [width, height] = window.get_size();
+            let scale = Math.min(1.0, size / width, size / height);         
+            return new Clutter.Clone({
+                source: window,
+                width: width * scale,
+                height: height * scale,
+                x_align: Clutter.ActorAlign.CENTER,
+                y_align: Clutter.ActorAlign.CENTER,
+                // usual hack for the usual bug in ClutterBinLayout...
+                x_expand: true,
+                y_expand: true,
+            });
+        }
+
+        let size;
+        let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        const mscale = Settings.prefs.minimap_scale;
+        // scale size based on PaperWM's minimap-scale
+        if (mscale > 0) {
+            size = Math.round(this.monitor.height * mscale);
+        } else {
+            size = WINDOW_PREVIEW_SIZE;
+        }
+        switch (mode) {
+        case AppIconMode.THUMBNAIL_ONLY:
+            this._icon.add_actor(_createWindowClone(mutterWindow, size * scaleFactor));
+            break;
+
+        case AppIconMode.BOTH:
+            this._icon.add_actor(_createWindowClone(mutterWindow, size * scaleFactor));
+
+            if (this.app) {
+                this._icon.add_actor(
+                    this._createAppIcon(this.app, APP_ICON_SIZE_SMALL));
+            }
+            break;
+
+        case AppIconMode.APP_ICON_ONLY:
+            size = APP_ICON_SIZE;
+            this._icon.add_actor(this._createAppIcon(this.app, size));
+        }
+
+        this._icon.set_size(size * scaleFactor, size * scaleFactor);
+    });
 }
 
 /**

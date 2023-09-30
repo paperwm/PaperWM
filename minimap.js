@@ -258,4 +258,4 @@ export class Minimap extends Array {
         this.actor.destroy();
         this.actor = null;
     }
-}
+};

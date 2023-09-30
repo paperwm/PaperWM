@@ -6,7 +6,7 @@ import GObject from 'gi://GObject';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as AltTab from 'resource:///org/gnome/shell/ui/altTab.js';
 
-import { Settings, Utils, Keybindings, Tiling, Scratch } from './imports.js';
+import { Settings, Keybindings, Tiling, Scratch } from './imports.js';
 import { Easer } from './utils.js';
 
 let switcherSettings;
@@ -20,10 +20,17 @@ export function disable() {
     switcherSettings = null;
 }
 
+export function liveAltTab(meta_window, space, { display, screen, binding }) {
+    let tabPopup = new LiveAltTab(binding.is_reversed());
+    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
+}
+
 export const LiveAltTab = GObject.registerClass(
     class LiveAltTab extends AltTab.WindowSwitcherPopup {
         _init(reverse) {
             this.reverse = reverse;
+            this.space = Tiling.spaces.selectedSpace;
+            this.monitor = Tiling.spaces.selectedSpace.monitor;
             super._init();
         }
 
@@ -45,11 +52,8 @@ export const LiveAltTab = GObject.registerClass(
         }
 
         _initialSelection(backward, actionName) {
-            this.space = Tiling.spaces.selectedSpace;
             this.space.startAnimate();
-
-            let monitor = Tiling.spaces.selectedSpace.monitor;
-            let workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
+            let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
             let fog = new Clutter.Actor({
                 x: workArea.x, y: workArea.y,
                 width: workArea.width, height: workArea.height,
@@ -164,9 +168,4 @@ export const LiveAltTab = GObject.registerClass(
             }
             actor.set_scale(1, 1);
         }
-    });
-
-export function liveAltTab(meta_window, space, { display, screen, binding }) {
-    let tabPopup = new LiveAltTab(binding.is_reversed());
-    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
-}
+    });  
