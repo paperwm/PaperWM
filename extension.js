@@ -1,10 +1,17 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Navigator = Extension.imports.navigator;
-const { Gio, GLib, St } = imports.gi;
-const Util = imports.misc.util;
-const MessageTray = imports.ui.messageTray;
-const Main = imports.ui.main;
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import St from 'gi://St';
+
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
+import * as Util from 'resource:///org/gnome/shell/misc/util.js';
+
+import {
+    Utils, Settings, Gestures, Keybindings, LiveAltTab, Navigator,
+    Stackoverlay, Scratch, Workspace, Tiling, Topbar, Patches, App
+} from './imports.js';
+
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
 /**
    The currently used modules
@@ -36,219 +43,196 @@ const Main = imports.ui.main;
      Notes of ordering:
         - several modules import settings, so settings should be before them;
           - settings.js should not depend on other paperwm modules;
+        - Settings should be before Patches (for reverse order disable);
  */
-const modules = [
-    'utils', 'settings',
-    'gestures', 'keybindings', 'liveAltTab', 'navigator', 'stackoverlay', 'scratch',
-    'workspace', 'tiling', 'topbar', // these have `enable` dependency order
-    'patches', 'app', // these have `enable` dependency order
-];
 
-/**
-  Tell the modules to run enable or disable.
- */
-function run(method, reverse = false) {
-    // reverse order an array (useful for controlling execution order)
-    let arr = reverse ? [...modules].reverse() : modules;
-    for (let name of arr) {
-        // Bail if there's an error in our own modules
-        if (!safeCall(name, method)) {
-            return false;
-        }
-    }
+export default class PaperWM extends Extension {
+    modules = [
+        Utils, Settings, Patches,
+        Gestures, Keybindings, LiveAltTab, Navigator, Stackoverlay, Scratch,
+        Workspace, Tiling, Topbar, App,
+    ];
 
-    // run 'user.js' methods (if it exists)
-    if (hasUserConfigFile()) {
-        // if enable method, call 'init' for backwards compat and then enable
-        if (method === 'enable') {
-            if (firstEnable) {
-                safeCall('user', 'init');
+    #userStylesheet = null;
+
+    enable() {
+        console.log(`#PaperWM enabled`);
+
+        this.enableUserConfig();
+        this.enableUserStylesheet();
+
+        // run enable method (with extension argument on all modules)
+        this.modules.forEach(m => {
+            if (m['enable']) {
+                m.enable(this);
             }
-            safeCall('user', 'enable');
-        }
-        else {
-            safeCall('user', method);
-        }
+        });
     }
 
-    return true;
-}
+    disable() {
+        console.log('#PaperWM disabled');
+        this.prepareForDisable();
+        [...this.modules].reverse().forEach(m => {
+            if (m['disable']) {
+                m.disable();
+            }
+        });
 
-function safeCall(name, method) {
-    try {
-        let module = Extension.imports[name];
-        if (module && module[method]) {
-            console.debug("#paperwm", `${method} ${name}`);
-        }
-        module && module[method] && module[method].call(module, errorNotification);
-        return true;
-    } catch (e) {
-        console.error("#paperwm", `${name} failed ${method}`);
-        console.error(`JS ERROR: ${e}\n${e.stack}`);
-        errorNotification(
-            "PaperWM",
-            `Error occured in ${name} @${method}:\n\n${e.message}`,
-            e.stack);
-        return false;
+        this.disableUserStylesheet();
     }
-}
 
-let firstEnable = true;
-function enable() {
-    console.log(`#PaperWM enabled`);
-
-    enableUserConfig();
-    enableUserStylesheet();
-
-    if (run('enable')) {
-        firstEnable = false;
-    }
-}
-
-/**
- * Prepares PaperWM for disable across modules.
- */
-function prepareForDisable() {
     /**
-     * Finish any navigation (e.g. workspace switch view).
-     * Can put PaperWM in a breakable state of lock/disable
-     * while navigating.
+     * Prepares PaperWM for disable across modules.
      */
-    Navigator.finishNavigation();
-}
-
-function disable() {
-    console.log('#PaperWM disabled');
-    prepareForDisable();
-    run('disable', true);
-
-    disableUserStylesheet();
-    safeCall('user', 'disable');
-}
-
-function getConfigDir() {
-    return Gio.file_new_for_path(`${GLib.get_user_config_dir()}/paperwm`);
-}
-
-function configDirExists() {
-    return getConfigDir().query_exists(null);
-}
-
-function hasUserConfigFile() {
-    return getConfigDir().get_child("user.js").query_exists(null);
-}
-
-/**
- * Update the metadata.json in user config dir to always keep it up to date.
- * We copy metadata.json to the config directory so gnome-shell-mode
- * knows which extension the files belong to (ideally we'd symlink, but
- * that trips up the importer: Extension.imports.<complete> in
- * gnome-shell-mode crashes gnome-shell..)
- */
-function updateUserConfigMetadata() {
-    if (!configDirExists()) {
-        return;
+    prepareForDisable() {
+        /**
+         * Finish any navigation (e.g. workspace switch view).
+         * Can put PaperWM in a breakable state of lock/disable
+         * while navigating.
+         */
+        Navigator.finishNavigation();
     }
 
-    try {
-        const configDir = getConfigDir();
-        const metadata = Extension.dir.get_child("metadata.json");
-        metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.OVERWRITE, null, null);
-    } catch (error) {
-        console.error('PaperWM', `could not update user config metadata.json: ${error}`);
-    }
-}
-
-function installConfig() {
-    const configDir = getConfigDir();
-    // if user config folder doesn't exist, create it
-    if (!configDirExists()) {
-        configDir.make_directory_with_parents(null);
+    getConfigDir() {
+        return Gio.file_new_for_path(`${GLib.get_user_config_dir()}/paperwm`);
     }
 
-    // Copy the user.js template to the config directory
-    const user = Extension.dir.get_child("config/user.js");
-    user.copy(configDir.get_child("user.js"), Gio.FileCopyFlags.NONE, null, null);
-}
+    configDirExists() {
+        return this.getConfigDir().query_exists(null);
+    }
 
-function enableUserConfig() {
-    if (!configDirExists()) {
+    hasUserConfigFile() {
+        return this.getConfigDir().get_child("user.js").query_exists(null);
+    }
+
+    hasUserStyleFile() {
+        return this.getConfigDir().get_child("user.css").query_exists(null);
+    }
+
+    /**
+     * Update the metadata.json in user config dir to always keep it up to date.
+     * We copy metadata.json to the config directory so gnome-shell-mode
+     * knows which extension the files belong to (ideally we'd symlink, but
+     * that trips up the importer: Extension.imports.<complete> in
+     * gnome-shell-mode crashes gnome-shell..)
+     */
+    updateUserConfigFiles() {
+        if (!this.configDirExists()) {
+            return;
+        }
+        const configDir = this.getConfigDir();
+
         try {
-            installConfig();
+            const metadata = this.dir.get_child("metadata.json");
+            metadata.copy(configDir.get_child("metadata.json"), Gio.FileCopyFlags.OVERWRITE, null, null);
+        } catch (error) {
+            console.error('PaperWM', `could not update user config metadata.json: ${error}`);
+        }
 
-            const configDir = getConfigDir().get_path();
-            const notification = notify("PaperWM", `Installed user configuration in ${configDir}`);
-            notification.connect('activated', () => {
-                Util.spawn(["nautilus", configDir]);
-                notification.destroy();
-            });
-        } catch (e) {
-            errorNotification("PaperWM", `Failed to install user config: ${e.message}`, e.stack);
-            console.error("PaperWM", "User config install failed", e.message);
+        if (!this.hasUserStyleFile()) {
+            try {
+                const user = this.dir.get_child("config/user.css");
+                user.copy(configDir.get_child("user.css"), Gio.FileCopyFlags.NONE, null, null);
+            } catch (error) {
+                console.error('PaperWM', `could not update user config metadata.json: ${error}`);
+            }
         }
     }
 
-    updateUserConfigMetadata();
-
-    // add to searchpath if user has config file and action user.js
-    if (hasUserConfigFile()) {
-        let SearchPath = Extension.imports.searchPath;
-        let path = getConfigDir().get_path();
-        if (!SearchPath.includes(path)) {
-            SearchPath.push(path);
+    installConfig() {
+        const configDir = this.getConfigDir();
+        // if user config folder doesn't exist, create it
+        if (!this.configDirExists()) {
+            configDir.make_directory_with_parents(null);
         }
     }
-}
 
-/**
- * Reloads user.css styles (if user.css present in ~/.config/paperwm).
- */
-let userStylesheet;
-function enableUserStylesheet() {
-    userStylesheet = getConfigDir().get_child("user.css");
-    if (userStylesheet.query_exists(null)) {
+    enableUserConfig() {
+        if (!this.configDirExists()) {
+            try {
+                this.installConfig();
+
+                const configDir = this.getConfigDir().get_path();
+                const notification = this.notify("PaperWM", `Created user configuration folder: ${configDir}`);
+                notification.connect('activated', () => {
+                    Util.spawn(["nautilus", configDir]);
+                    notification.destroy();
+                });
+            } catch (e) {
+                this.errorNotification("PaperWM", `Failed create user configuration folder: ${e.message}`, e.stack);
+                console.error("PaperWM", "User config install failed", e.message);
+            }
+        }
+
+        this.updateUserConfigFiles();
+
+        /* TODO: figure out something here
+        fmuellner:
+        > you can't
+        > as I said, it's part of gjs legacy imports
+        > you'll have to do something like const userMod = await import(${this.getConfigDir()}/user.js)
+        */
+        /*
+        // add to searchpath if user has config file and action user.js
+        if (this.hasUserConfigFile()) {
+            let SearchPath = Extension.imports.searchPath;
+            let path = this.getConfigDir().get_path();
+            if (!SearchPath.includes(path)) {
+                SearchPath.push(path);
+            }
+        }
+        */
+    }
+
+    /**
+     * Reloads user.css styles (if user.css present in ~/.config/paperwm).
+     */
+    enableUserStylesheet() {
+        this.#userStylesheet = this.getConfigDir().get_child("user.css");
+        if (this.#userStylesheet.query_exists(null)) {
+            let themeContext = St.ThemeContext.get_for_stage(global.stage);
+            themeContext.get_theme().load_stylesheet(this.#userStylesheet);
+        }
+    }
+
+    /**
+     * Unloads user.css styles (if user.css present in ~/.config/paperwm).
+     */
+    disableUserStylesheet() {
         let themeContext = St.ThemeContext.get_for_stage(global.stage);
-        themeContext.get_theme().load_stylesheet(userStylesheet);
+        themeContext.get_theme().unload_stylesheet(this.#userStylesheet);
+        this.#userStylesheet = null;
     }
-}
 
-/**
- * Unloads user.css styles (if user.css present in ~/.config/paperwm).
- */
-function disableUserStylesheet() {
-    let themeContext = St.ThemeContext.get_for_stage(global.stage);
-    themeContext.get_theme().unload_stylesheet(userStylesheet);
-    userStylesheet = null;
-}
+    /**
+     * Our own version of imports.ui.main.notify allowing more control over the
+     * notification
+     */
+    notify(msg, details, params) {
+        let source = new MessageTray.SystemNotificationSource();
+        // note-to-self: the source is automatically destroyed when all its
+        // notifications are removed.
+        Main.messageTray.add(source);
+        let notification = new MessageTray.Notification(source, msg, details, params);
+        notification.setResident(true); // Usually more annoying that the notification disappear than not
+        source.showNotification(notification);
+        return notification;
+    }
 
-/**
- * Our own version of imports.ui.main.notify allowing more control over the
- * notification
- */
-function notify(msg, details, params) {
-    let source = new MessageTray.SystemNotificationSource();
-    // note-to-self: the source is automatically destroyed when all its
-    // notifications are removed.
-    Main.messageTray.add(source);
-    let notification = new MessageTray.Notification(source, msg, details, params);
-    notification.setResident(true); // Usually more annoying that the notification disappear than not
-    source.showNotification(notification);
-    return notification;
-}
+    spawnPager(content) {
+        const quoted = GLib.shell_quote(content);
+        Util.spawn(["sh", "-c", `echo -En ${quoted} | gedit --new-window -`]);
+    }
 
-function spawnPager(content) {
-    const quoted = GLib.shell_quote(content);
-    Util.spawn(["sh", "-c", `echo -En ${quoted} | gedit --new-window -`]);
-}
-
-/**
- * Show an notification opening a the full message in dedicated window upon
- * activation
- */
-function errorNotification(title, message, fullMessage) {
-    const notification = notify(title, message);
-    notification.connect('activated', () => {
-        spawnPager([title, message, "", fullMessage].join("\n"));
-        notification.destroy();
-    });
+    /**
+     * Show an notification opening a the full message in dedicated window upon
+     * activation
+     */
+    errorNotification(title, message, fullMessage) {
+        const notification = this.notify(title, message);
+        notification.connect('activated', () => {
+            this.spawnPager([title, message, "", fullMessage].join("\n"));
+            notification.destroy();
+        });
+    }
 }

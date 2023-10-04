@@ -356,11 +356,6 @@
         <summary>Don't show scratch windows in the overview</summary>
     </key>
 
-    <key type="b" name="use-workspace-name">
-        <default>true</default>
-        <summary>Replace the Activities text with the current workspace name</summary>
-    </key>
-
     <key type="b" name="pressure-barrier">
         <default>false</default>
         <summary>Enable pressure barriers at the monitor edges</summary>

@@ -1,56 +1,36 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Settings = Extension.imports.settings;
-const Utils = Extension.imports.utils;
-const Keybindings = Extension.imports.keybindings;
-const Tiling = Extension.imports.tiling;
-const Scratch = Extension.imports.scratch;
-const Easer = Extension.imports.utils.easer;
+import Clutter from 'gi://Clutter';
+import Meta from 'gi://Meta';
+import Gio from 'gi://Gio';
+import GObject from 'gi://GObject';
 
-const { Clutter, Meta, Gio, GObject } = imports.gi;
-const Main = imports.ui.main;
-const AltTab = imports.ui.altTab;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as AltTab from 'resource:///org/gnome/shell/ui/altTab.js';
 
-let switcherSettings, origPreviewSize;
-function enable() {
+import { Settings, Keybindings, Tiling, Scratch } from './imports.js';
+import { Easer } from './utils.js';
+
+let switcherSettings;
+export function enable() {
     switcherSettings = new Gio.Settings({
         schema_id: 'org.gnome.shell.window-switcher',
     });
-
-    // save previous gnome alttab preview size for restoring
-    origPreviewSize = AltTab['WINDOW_PREVIEW_SIZE'];
 }
 
-function disable() {
+export function disable() {
     switcherSettings = null;
-    setAltTabPreviewSize(origPreviewSize);
-    origPreviewSize = null;
 }
 
-function liveAltTab(meta_window, space, { display, screen, binding }) {
+export function liveAltTab(meta_window, space, { display, screen, binding }) {
     let tabPopup = new LiveAltTab(binding.is_reversed());
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
 
-function setAltTabPreviewSize(size) {
-    AltTab['WINDOW_PREVIEW_SIZE'] = size;
-}
-
-var LiveAltTab = GObject.registerClass(
+export const LiveAltTab = GObject.registerClass(
     class LiveAltTab extends AltTab.WindowSwitcherPopup {
         _init(reverse) {
             this.reverse = reverse;
             this.space = Tiling.spaces.selectedSpace;
             this.monitor = Tiling.spaces.selectedSpace.monitor;
-
-            // set preview size based on minimap (or default is no minimiap)
-            const sscale = Settings.prefs.window_switcher_preview_scale;
-            if (sscale > 0) {
-                setAltTabPreviewSize(Math.round(this.monitor.height * sscale));
-            } else {
-                setAltTabPreviewSize(origPreviewSize);
-            }
-
             super._init();
         }
 
@@ -65,9 +45,9 @@ var LiveAltTab = GObject.registerClass(
 
             if (Scratch.isScratchWindow(global.display.focus_window)) {
                 // Access scratch windows in mru order with shift-super-tab
-                return scratch.concat(this.reverse ? tabList.reverse() : tabList);
+                return scratch.concat(reverse ? tabList.reverse() : tabList);
             } else {
-                return tabList.concat(this.reverse ? scratch.reverse() : scratch);
+                return tabList.concat(reverse ? scratch.reverse() : scratch);
             }
         }
 
@@ -165,7 +145,7 @@ var LiveAltTab = GObject.registerClass(
 
         _onDestroy() {
             super._onDestroy();
-            Utils.debug('#preview', 'onDestroy', this.was_accepted);
+            console.debug('#preview', 'onDestroy', this.was_accepted);
             Easer.addEase(this.fog, {
                 time: Settings.prefs.animation_time,
                 opacity: 0,
@@ -188,4 +168,4 @@ var LiveAltTab = GObject.registerClass(
             }
             actor.set_scale(1, 1);
         }
-    });
+    });  

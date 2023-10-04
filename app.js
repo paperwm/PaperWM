@@ -1,21 +1,21 @@
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
+import Shell from 'gi://Shell';
+
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+
+import { Patches, Tiling } from './imports.js';
+
 /*
   Application functionality, like global new window actions etc.
  */
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const ExtensionModule = Extension.imports.extension;
-const Patches = Extension.imports.patches;
-const Tiling = Extension.imports.tiling;
-const GLib = imports.gi.GLib;
-const Gio = imports.gi.Gio;
-const Shell = imports.gi.Shell;
 
 let Tracker = Shell.WindowTracker.get_default();
 let CouldNotLaunch = Symbol();
 
 // Lookup table for custom handlers, keys being the app id
-var customHandlers, customSpawnHandlers;
-function enable() {
+export let customHandlers, customSpawnHandlers;
+export function enable() {
     customHandlers = { 'org.gnome.Terminal.desktop': newGnomeTerminal };
     customSpawnHandlers = {
         'com.gexperts.Tilix.desktop': mkCommandLineSpawner('tilix --working-directory %d'),
@@ -68,12 +68,12 @@ function enable() {
     );
 }
 
-function disable() {
+export function disable() {
     customHandlers = null;
     customSpawnHandlers = null;
 }
 
-function launchFromWorkspaceDir(app, workspace = null) {
+export function launchFromWorkspaceDir(app, workspace = null) {
     if (typeof  app === 'string') {
         app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
     }
@@ -98,7 +98,7 @@ function launchFromWorkspaceDir(app, workspace = null) {
     GLib.spawn_async(dir, cmdArgs, GLib.get_environ(), GLib.SpawnFlags.SEARCH_PATH, null);
 }
 
-function newGnomeTerminal(metaWindow, app) {
+export function newGnomeTerminal(metaWindow, app) {
     /* Note: this action activation is _not_ bound to the window - instead it
        relies on the window being active when called.
 
@@ -108,7 +108,7 @@ function newGnomeTerminal(metaWindow, app) {
         "win.new-terminal", new GLib.Variant("(ss)", ["window", "current"]));
 }
 
-function duplicateWindow(metaWindow) {
+export function duplicateWindow(metaWindow) {
     metaWindow = metaWindow || global.display.focus_window;
     let app = Tracker.get_window_app(metaWindow);
 
@@ -125,7 +125,7 @@ function duplicateWindow(metaWindow) {
     return true;
 }
 
-function trySpawnWindow(app, workspace) {
+export function trySpawnWindow(app, workspace) {
     if (typeof  app === 'string') {
         app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
     }
@@ -138,7 +138,7 @@ function trySpawnWindow(app, workspace) {
     }
 }
 
-function spawnWindow(app, workspace) {
+export function spawnWindow(app, workspace) {
     if (typeof  app === 'string') {
         app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
     }
@@ -150,7 +150,7 @@ function spawnWindow(app, workspace) {
     }
 }
 
-function getWorkspaceDirectory(workspace = null) {
+export function getWorkspaceDirectory(workspace = null) {
     let space  = workspace ? Tiling.spaces.get(workspace) : Tiling.spaces.selectedSpace;
 
     let dir = space.settings.get_string("directory");
@@ -160,7 +160,7 @@ function getWorkspaceDirectory(workspace = null) {
     return dir;
 }
 
-function expandCommandline(commandline, workspace) {
+export function expandCommandline(commandline, workspace) {
     let dir = getWorkspaceDirectory(workspace);
 
     commandline = commandline.replace(/%d/g, () => GLib.shell_quote(dir));
@@ -168,7 +168,7 @@ function expandCommandline(commandline, workspace) {
     return commandline;
 }
 
-function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir = false) {
+export function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir = false) {
     return (app, space) => {
         let workspace = space.workspace;
         let commandline = expandCommandline(commandlineTemplate, workspace);
@@ -178,7 +178,7 @@ function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir = false) 
             success = GLib.spawn_async(workingDir, cmdArgs, GLib.get_environ(), GLib.SpawnFlags.SEARCH_PATH, null);
         }
         if (!success) {
-            ExtensionModule.notify(
+            Main.notify(
                 `Failed to run custom spawn handler for ${app.id}`,
                 `Attempted to run '${commandline}'`);
         }

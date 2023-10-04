@@ -1,34 +1,26 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Patches = Extension.imports.patches;
-const Settings = Extension.imports.settings;
-const Tiling = Extension.imports.tiling;
-const Utils = Extension.imports.utils;
-const Lib = Extension.imports.lib;
-const Easer = Extension.imports.utils.easer;
-const Navigator = Extension.imports.navigator;
+import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
 
-const { Meta, Gio, Shell, Clutter } = imports.gi;
-const Main = imports.ui.main;
-const Mainloop = imports.mainloop;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+
+import { Patches, Settings, Tiling, Utils, Lib, Navigator } from './imports.js';
+import { Easer } from './utils.js';
 
 const DIRECTIONS = {
     Horizontal: true,
     Vertical: false,
 };
 
-let vy;
-let time;
-let vState;
-let navigator;
-let direction;
-let signals;
+let vy, time, vState, navigator, direction, signals;
 // 1 is natural scrolling, -1 is unnatural
 let natural = 1;
-var gliding = false; // exported
+export let gliding = false; // exported
 
 let touchpadSettings;
-function enable() {
+export function enable(extension) {
     signals = new Utils.Signals();
     // Touchpad swipes only works in Wayland
     if (!Meta.is_wayland_compositor())
@@ -39,7 +31,7 @@ function enable() {
     });
 
     // monitor gesture-enabled for changes
-    const gsettings = ExtensionUtils.getSettings();
+    const gsettings = extension.getSettings();
     signals.connect(gsettings, 'changed::gesture-enabled', () => {
         gestureEnabled() ? swipeTrackersEnable(false) : swipeTrackersEnable();
     });
@@ -159,7 +151,7 @@ function enable() {
     });
 }
 
-function disable() {
+export function disable() {
     signals.destroy();
     signals = null;
     Utils.timeout_remove(endVerticalTimeout);
@@ -167,15 +159,15 @@ function disable() {
     touchpadSettings = null;
 }
 
-function gestureEnabled() {
+export function gestureEnabled() {
     return Settings.prefs.gesture_enabled;
 }
 
-function gestureHorizontalFingers() {
+export function gestureHorizontalFingers() {
     return Settings.prefs.gesture_horizontal_fingers;
 }
 
-function gestureWorkspaceFingers() {
+export function gestureWorkspaceFingers() {
     return Settings.prefs.gesture_workspace_fingers;
 }
 
@@ -184,7 +176,7 @@ function gestureWorkspaceFingers() {
    connected from each space.background and bound to the space.
  */
 let start, dxs = [], dts = [];
-function horizontalScroll(actor, event) {
+export function horizontalScroll(space, actor, event) {
     if (event.type() !== Clutter.EventType.TOUCHPAD_SWIPE) {
         return Clutter.EVENT_PROPAGATE;
     }
@@ -210,26 +202,26 @@ function horizontalScroll(actor, event) {
     switch (phase) {
     case Clutter.TouchpadGesturePhase.UPDATE:
         if (direction === undefined) {
-            this.vx = 0;
+            space.vx = 0;
             dxs = [];
             dts = [];
-            this.hState = phase;
-            start = this.targetX;
-            Easer.removeEase(this.cloneContainer);
+            space.hState = phase;
+            start = space.targetX;
+            Easer.removeEase(space.cloneContainer);
             direction = DIRECTIONS.Horizontal;
         }
-        return update(this, -dx * natural * Settings.prefs.swipe_sensitivity[0], event.get_time());
+        return update(space, -dx * natural * Settings.prefs.swipe_sensitivity[0], event.get_time());
     case Clutter.TouchpadGesturePhase.CANCEL:
     case Clutter.TouchpadGesturePhase.END:
-        this.hState = phase;
-        done(this, event);
+        space.hState = phase;
+        done(space, event);
         dxs = [];
         dts = [];
         return Clutter.EVENT_STOP;
     }
 }
 
-function update(space, dx, t) {
+export function update(space, dx, t) {
     dxs.push(dx);
     dts.push(t);
 
@@ -260,7 +252,7 @@ function update(space, dx, t) {
     return Clutter.EVENT_STOP;
 }
 
-function done(space) {
+export function done(space) {
     if (!Number.isFinite(space.vx) || space.length === 0) {
         navigator.finish();
         space.hState = -1;
@@ -336,7 +328,7 @@ function done(space) {
 }
 
 
-function findTargetWindow(space, direction) {
+export function findTargetWindow(space, direction) {
     let selected = space.selectedWindow?.clone;
     if (!selected) {
         return;
@@ -399,7 +391,7 @@ function findTargetWindow(space, direction) {
 }
 
 let transition = 'easeOutQuad';
-function updateVertical(dy, t) {
+export function updateVertical(dy, t) {
     // if here then initiate workspace stack (for tiling inPreview show)
     if (!Tiling.inPreview) {
         Tiling.spaces.initWorkspaceStack();
@@ -451,7 +443,7 @@ function updateVertical(dy, t) {
 }
 
 let endVerticalTimeout;
-function endVertical() {
+export function endVertical() {
     let test = vy > 0 ? () => vy < 0 : () => vy > 0;
     let glide = () => {
         if (vState < Clutter.TouchpadGesturePhase.END) {
@@ -491,7 +483,7 @@ function endVertical() {
      * function - which returns false (thus destroying this timeout)
      * when user gesture fininshes, a space is selected, etc.
      */
-    endVerticalTimeout = Mainloop.timeout_add(16, glide, 0);
+    endVerticalTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 16, glide);
 }
 
 /**
@@ -499,7 +491,7 @@ function endVertical() {
  * default 3 finger swipe actions.
  * @param {Boolean} option
  */
-function swipeTrackersEnable(option) {
+export function swipeTrackersEnable(option) {
     let enable = option ?? true;
     Patches.swipeTrackers.forEach(t => t.enabled = enable);
 }

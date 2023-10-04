@@ -1,17 +1,14 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Settings = Extension.imports.settings;
-const Utils = Extension.imports.utils;
-const Grab = Extension.imports.grab;
-const Tiling = Extension.imports.tiling;
-const Navigator = Extension.imports.navigator;
+import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
+import St from 'gi://St';
 
-const { Clutter, Shell, Meta, St } = imports.gi;
-const Main = imports.ui.main;
-const Mainloop = imports.mainloop;
-const Layout = imports.ui.layout;
-const PointerWatcher = imports.ui.pointerWatcher;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as Layout from 'resource:///org/gnome/shell/ui/layout.js';
+import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
 
+import { Settings, Utils, Tiling, Navigator } from './imports.js';
 
 /*
   The stack overlay decorates the top stacked window with its icon and
@@ -47,8 +44,12 @@ const PointerWatcher = imports.ui.pointerWatcher;
   restack loops)
 */
 
-let pointerWatch;
-function disable() {
+let gsettings, pointerWatch;
+export function enable(extension) {
+    gsettings = extension.getSettings();
+}
+
+export function disable() {
     disableMultimonitorDragDropSupport();
 }
 
@@ -56,7 +57,7 @@ function disable() {
  * Checks for multiple monitors and if so, then enables multimonitor
  * drag/drop support in PaperWM.
  */
-function multimonitorDragDropSupport() {
+export function multimonitorDragDropSupport() {
     // if only one monitor, return
     if (Tiling.spaces.monitors?.size > 1) {
         enableMultimonitorDragDropSupport();
@@ -66,7 +67,7 @@ function multimonitorDragDropSupport() {
     }
 }
 
-function enableMultimonitorDragDropSupport() {
+export function enableMultimonitorDragDropSupport() {
     pointerWatch = PointerWatcher.getPointerWatcher().addWatch(100,
         () => {
             Tiling.spaces?.clickOverlays?.forEach(c => {
@@ -76,13 +77,13 @@ function enableMultimonitorDragDropSupport() {
     console.debug('paperwm multimonitor drag/drop support is ENABLED');
 }
 
-function disableMultimonitorDragDropSupport() {
+export function disableMultimonitorDragDropSupport() {
     pointerWatch?.remove();
     pointerWatch = null;
     console.debug('paperwm multimonitor drag/drop support is DISABLED');
 }
 
-function createAppIcon(metaWindow, size) {
+export function createAppIcon(metaWindow, size) {
     let tracker = Shell.WindowTracker.get_default();
     let app = tracker.get_window_app(metaWindow);
     let appIcon = app ? app.create_icon_texture(size)
@@ -96,7 +97,7 @@ function createAppIcon(metaWindow, size) {
     return appIcon;
 }
 
-var ClickOverlay = class ClickOverlay {
+export class ClickOverlay {
     constructor(monitor, onlyOnPrimary) {
         this.monitor = monitor;
         this.onlyOnPrimary = onlyOnPrimary;
@@ -253,9 +254,9 @@ var ClickOverlay = class ClickOverlay {
         Main.layoutManager.untrackChrome(this.enterMonitor);
         this.enterMonitor.destroy();
     }
-};
+}
 
-var StackOverlay = class StackOverlay {
+export class StackOverlay {
     constructor(direction, monitor) {
         this._direction = direction;
 
@@ -281,7 +282,7 @@ var StackOverlay = class StackOverlay {
             Main.activateWindow(this.target);
             // remove/cleanup the previous preview
             this.removePreview();
-            this.triggerPreviewTimeout = Mainloop.timeout_add(200, () => {
+            this.triggerPreviewTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
                 // if pointer is still at edge (within 2px), trigger preview
                 let [x, y, mask] = global.get_pointer();
                 if (x <= 2 || x >= this.monitor.width - 2) {
@@ -292,7 +293,6 @@ var StackOverlay = class StackOverlay {
             });
         });
 
-        let gsettings = ExtensionUtils.getSettings();
         this.signals.connect(overlay, 'enter-event', this.triggerPreview.bind(this));
         this.signals.connect(overlay, 'leave-event', this.removePreview.bind(this));
         this.signals.connect(gsettings, 'changed::pressure-barrier',
@@ -312,7 +312,7 @@ var StackOverlay = class StackOverlay {
             return;
         if (!this.target)
             return;
-        this._previewId = Mainloop.timeout_add(100, () => {
+        this._previewId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
             delete this._previewId;
             this.removePreview();
             this.showPreview();
@@ -332,11 +332,11 @@ var StackOverlay = class StackOverlay {
 
     removePreview() {
         if ("_previewId" in this) {
-            Mainloop.source_remove(this._previewId);
+            GLib.source_remove(this._previewId);
             delete this._previewId;
         }
         if ("_removeId" in this) {
-            Mainloop.source_remove(this._removeId);
+            GLib.source_remove(this._removeId);
             delete this._removeId;
         }
 
@@ -412,9 +412,9 @@ var StackOverlay = class StackOverlay {
             this.pressureBarrier._reset();
             this.pressureBarrier._isTriggered = false;
             if (this._removeBarrierTimeoutId) {
-                Mainloop.source_remove(this._removeBarrierTimeoutId);
+                GLib.source_remove(this._removeBarrierTimeoutId);
             }
-            this._removeBarrierTimeoutId = Mainloop.timeout_add(100, () => {
+            this._removeBarrierTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
                 this.removeBarrier();
                 this._removeBarrierTimeoutId = null;
                 return false;
@@ -534,4 +534,4 @@ var StackOverlay = class StackOverlay {
     getWorkArea() {
         return Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
     }
-};
+}

@@ -1,16 +1,13 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Settings = Extension.imports.settings;
-const Utils = Extension.imports.utils;
-const Lib = Extension.imports.lib;
-const Easer = Extension.imports.utils.easer;
+import Clutter from 'gi://Clutter';
+import St from 'gi://St';
+import Pango from 'gi://Pango';
 
-const Clutter = imports.gi.Clutter;
-const Main = imports.ui.main;
-const St = imports.gi.St;
-const Pango = imports.gi.Pango;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-function calcOffset(metaWindow) {
+import { Settings, Utils, Lib } from './imports.js';
+import { Easer } from './utils.js';
+
+export function calcOffset(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
     let frame = metaWindow.get_frame_rect();
     let x_offset = frame.x - buffer.x;
@@ -18,7 +15,7 @@ function calcOffset(metaWindow) {
     return [x_offset, y_offset];
 }
 
-var Minimap = class Minimap extends Array {
+export class Minimap extends Array {
     constructor(space, monitor) {
         super();
         this.space = space;
@@ -44,7 +41,6 @@ var Minimap = class Minimap extends Array {
         this.clip = clip;
         let container = new St.Widget({ name: 'minimap-container' });
         this.container = container;
-        container.height = Math.round(space.height * Settings.prefs.minimap_scale) - Settings.prefs.window_gap;
 
         actor.add_actor(highlight);
         actor.add_actor(label);
@@ -149,7 +145,6 @@ var Minimap = class Minimap extends Array {
         container.meta_window = mw;
         container.add_actor(clone);
         this.container.add_actor(container);
-        this._allocateClone(container);
         return container;
     }
 
@@ -160,8 +155,7 @@ var Minimap = class Minimap extends Array {
         let frame = meta_window.get_frame_rect();
         let scale = Settings.prefs.minimap_scale;
         clone.set_size(buffer.width * scale, buffer.height * scale - Settings.prefs.window_gap);
-        clone.set_position((buffer.x - frame.x) * scale,
-            (buffer.y - frame.y) * scale);
+        clone.set_position((buffer.x - frame.x) * scale, (buffer.y - frame.y) * scale);
         container.set_size(frame.width * scale, frame.height * scale);
     }
 
@@ -237,18 +231,14 @@ var Minimap = class Minimap extends Array {
         highlight.set_size(Math.round(selected.width + gap),
             Math.round(Math.min(selected.height, this.clip.height + gap) + gap));
 
-        let x = highlight.x +
-            (highlight.width - label.width) / 2;
+        let x = highlight.x + (highlight.width - label.width) / 2;
         if (x + label.width > clip.x + clip.width)
             x = clip.x + clip.width - label.width + 5;
         if (x < 0)
             x = clip.x - 5;
 
-        label.set_position(
-            Math.round(x),
-            clip.y + Math.round(clip.height + 20));
-
-        this.actor.height = this.label.y + this.label.height + 12;
+        label.set_position(Math.round(x), this.clip.y + this.clip.height + 8);
+        this.actor.height = this.clip.y + this.clip.height + 40;
     }
 
     destroy() {

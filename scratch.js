@@ -1,15 +1,38 @@
-const Extension = imports.misc.extensionUtils.getCurrentExtension();
-const Meta = imports.gi.Meta;
-const Main = imports.ui.main;
-const PopupMenu = imports.ui.popupMenu;
-const WindowMenu = imports.ui.windowMenu;
+import Meta from 'gi://Meta';
+import Mtk from 'gi://Mtk';
 
-const Settings = Extension.imports.settings;
-const utils = Extension.imports.utils;
-const Easer = Extension.imports.utils.easer;
-const Tiling = Extension.imports.tiling;
-const TopBar = Extension.imports.topbar;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as WindowMenu from 'resource:///org/gnome/shell/ui/windowMenu.js';
+
+import { Settings, Utils, Tiling, Topbar } from './imports.js';
+import { Easer } from './utils.js';
+
+let originalBuildMenu;
 let float, scratchFrame; // symbols used for expando properties on metawindow
+export function enable() {
+    originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
+    float = Symbol();
+    scratchFrame = Symbol();
+    WindowMenu.WindowMenu.prototype._buildMenu =
+        function (window) {
+            let item;
+            item = this.addAction(_('Scratch'), () => {
+                toggle(window);
+            });
+            if (isScratchWindow(window))
+                item.setOrnament(PopupMenu.Ornament.CHECK);
+
+            originalBuildMenu.call(this, window);
+        };
+}
+
+export function disable() {
+    WindowMenu.WindowMenu.prototype._buildMenu = originalBuildMenu;
+    originalBuildMenu = null;
+    float = null;
+    scratchFrame = null;
+}
 
 /**
    Tween window to "frame-coordinate" (targetX, targetY).
@@ -18,7 +41,7 @@ let float, scratchFrame; // symbols used for expando properties on metawindow
    The actual window actor (not clone) is tweened to ensure it's on top of the
    other windows/clones (clones if the space animates)
  */
-function easeScratch(metaWindow, targetX, targetY, tweenParams = {}) {
+export function easeScratch(metaWindow, targetX, targetY, tweenParams = {}) {
     let f = metaWindow.get_frame_rect();
     let b = metaWindow.get_buffer_rect();
     let dx = f.x - b.x;
@@ -39,7 +62,7 @@ function easeScratch(metaWindow, targetX, targetY, tweenParams = {}) {
         }));
 }
 
-function makeScratch(metaWindow) {
+export function makeScratch(metaWindow) {
     let fromNonScratch = !metaWindow[float];
     let fromTiling = false;
     // Relevant when called while navigating. Use the position the user actually sees.
@@ -69,7 +92,7 @@ function makeScratch(metaWindow) {
 
         if (metaWindow[scratchFrame]) {
             let sf = metaWindow[scratchFrame];
-            if (utils.monitorOfPoint(sf.x, sf.y) === Tiling.focusMonitor()) {
+            if (Utils.monitorOfPoint(sf.x, sf.y) === Tiling.focusMonitor()) {
                 targetFrame = sf;
             }
         }
@@ -79,7 +102,7 @@ function makeScratch(metaWindow) {
             let vDisplacement = 30;
             let [x, y] = windowPositionSeen;  // The window could be non-placable so can't use frame
 
-            targetFrame = new Meta.Rectangle({
+            targetFrame = new Mtk.Rectangle({
                 x, y: y + vDisplacement,
                 width: f.width,
                 height: Math.min(f.height - vDisplacement, Math.floor(f.height * 0.9)),
@@ -108,7 +131,7 @@ function makeScratch(metaWindow) {
         monitor.clickOverlay.hide();
 }
 
-function unmakeScratch(metaWindow) {
+export function unmakeScratch(metaWindow) {
     if (!metaWindow[scratchFrame])
         metaWindow[scratchFrame] = metaWindow.get_frame_rect();
     metaWindow[float] = false;
@@ -116,7 +139,7 @@ function unmakeScratch(metaWindow) {
     metaWindow.unstick();
 }
 
-function toggle(metaWindow) {
+export function toggle(metaWindow) {
     if (isScratchWindow(metaWindow)) {
         unmakeScratch(metaWindow);
     } else {
@@ -129,28 +152,28 @@ function toggle(metaWindow) {
     }
 }
 
-function isScratchWindow(metaWindow) {
+export function isScratchWindow(metaWindow) {
     return metaWindow && metaWindow[float];
 }
 
 /** Return scratch windows in MRU order */
-function getScratchWindows() {
+export function getScratchWindows() {
     return global.display.get_tab_list(Meta.TabList.NORMAL, null)
         .filter(isScratchWindow);
 }
 
-function isScratchActive() {
+export function isScratchActive() {
     return getScratchWindows().some(metaWindow => !metaWindow.minimized);
 }
 
-function toggleScratch() {
+export function toggleScratch() {
     if (isScratchActive())
         hide();
     else
         show();
 }
 
-function toggleScratchWindow() {
+export function toggleScratchWindow() {
     let focus = global.display.focus_window;
     if (isScratchWindow(focus))
         hide();
@@ -158,7 +181,7 @@ function toggleScratchWindow() {
         show(true);
 }
 
-function show(top) {
+export function show(top) {
     let windows = getScratchWindows();
     if (windows.length === 0) {
         return;
@@ -166,7 +189,7 @@ function show(top) {
     if (top)
         windows = windows.slice(0, 1);
 
-    TopBar.fixTopBar();
+    Topbar.fixTopBar();
 
     windows.slice().reverse()
         .map(function(meta_window) {
@@ -181,14 +204,14 @@ function show(top) {
         monitor.clickOverlay.hide();
 }
 
-function hide() {
+export function hide() {
     let windows = getScratchWindows();
     windows.map(function(meta_window) {
         meta_window.minimize();
     });
 }
 
-function animateWindows() {
+export function animateWindows() {
     let ws = getScratchWindows().filter(w => !w.minimized);
     ws = global.display.sort_windows_by_stacking(ws);
     for (let w of ws) {
@@ -201,32 +224,7 @@ function animateWindows() {
     }
 }
 
-function showWindows() {
+export function showWindows() {
     let ws = getScratchWindows().filter(w => !w.minimized);
     ws.forEach(Tiling.showWindow);
-}
-
-let originalBuildMenu;
-function enable() {
-    originalBuildMenu = WindowMenu.WindowMenu.prototype._buildMenu;
-    float = Symbol();
-    scratchFrame = Symbol();
-    WindowMenu.WindowMenu.prototype._buildMenu =
-        function (window) {
-            let item;
-            item = this.addAction(_('Scratch'), () => {
-                toggle(window);
-            });
-            if (isScratchWindow(window))
-                item.setOrnament(PopupMenu.Ornament.CHECK);
-
-            originalBuildMenu.call(this, window);
-        };
-}
-
-function disable() {
-    WindowMenu.WindowMenu.prototype._buildMenu = originalBuildMenu;
-    originalBuildMenu = null;
-    float = null;
-    scratchFrame = null;
 }
