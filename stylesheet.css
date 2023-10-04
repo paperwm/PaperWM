@@ -1,7 +1,7 @@
 /*
 NOTE: please update `./config/users.css` with any new styles added here.
 */
-.topbar-no-background {
+.background-clear {
     background-color: rgba(0, 0, 0, 0);
 }
 

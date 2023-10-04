@@ -693,7 +693,7 @@ export function setNoBackgroundStyle() {
         return;
     }
     removeStyles();
-    Main.panel.add_style_class_name('topbar-no-background');
+    Main.panel.add_style_class_name('background-clear');
 }
 
 export function setTransparentStyle() {
@@ -705,7 +705,7 @@ export function setTransparentStyle() {
 }
 
 export function removeStyles() {
-    ['topbar-no-background', 'topbar-transparent-background'].forEach(s => {
+    ['background-clear', 'topbar-transparent-background'].forEach(s => {
         Main.panel.remove_style_class_name(s);
     });
 }
