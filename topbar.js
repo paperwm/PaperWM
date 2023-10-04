@@ -681,7 +681,7 @@ function setNoBackgroundStyle() {
         return;
     }
     removeStyles();
-    Main.panel.add_style_class_name('topbar-no-background');
+    Main.panel.add_style_class_name('background-clear');
 }
 
 function setTransparentStyle() {
@@ -693,7 +693,7 @@ function setTransparentStyle() {
 }
 
 function removeStyles() {
-    ['topbar-no-background', 'topbar-transparent-background'].forEach(s => {
+    ['background-clear', 'topbar-transparent-background'].forEach(s => {
         Main.panel.remove_style_class_name(s);
     });
 }
