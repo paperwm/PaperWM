@@ -3113,9 +3113,9 @@ function insertWindow(metaWindow, { existing }) {
     const space = spaces.spaceOfWindow(metaWindow);
 
     const connectSizeChanged = tiled => {
-        if (tiled)
+        if (tiled) {
             animateWindow(metaWindow);
-        actor.opacity = 255;
+        }
         metaWindow.unmapped && signals.connect(metaWindow, 'size-changed', resizeHandler);
         delete metaWindow.unmapped;
     };
@@ -3220,15 +3220,10 @@ function insertWindow(metaWindow, { existing }) {
     space.layout();
 
     if (!existing) {
-        actor.opacity = 0;
-        actor.visible = false;
         clone.x = clone.targetX;
         clone.y = clone.targetY;
-        clone.set_scale(0, 1);
         space.hideSelection();
         Easer.addEase(clone, {
-            scale_x: 1,
-            scale_y: 1,
             time: Settings.prefs.animation_time,
             onStopped: () => {
                 connectSizeChanged(true);
@@ -3608,9 +3603,7 @@ function showHandler(actor) {
     if (!metaWindow.clone.get_parent() && !metaWindow.unmapped)
         return;
 
-    // HACK: use opacity instead of hidden on new windows
     if (metaWindow.unmapped) {
-        actor.opacity = 0;
         return;
     }
 
