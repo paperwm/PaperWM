@@ -3222,15 +3222,8 @@ function insertWindow(metaWindow, { existing }) {
     if (!existing) {
         clone.x = clone.targetX;
         clone.y = clone.targetY;
-        space.hideSelection();
-        Easer.addEase(clone, {
-            time: Settings.prefs.animation_time,
-            onStopped: () => {
-                connectSizeChanged(true);
-                space.layout();
-                space.showSelection();
-            },
-        });
+        connectSizeChanged(true);
+        space.layout();
     } else {
         animateWindow(metaWindow);
     }
