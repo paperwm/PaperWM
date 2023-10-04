@@ -1,46 +1,78 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const ExtensionModule = Extension.imports.extension;
-const Settings = Extension.imports.settings;
-const Utils = Extension.imports.utils;
-const Tiling = Extension.imports.tiling;
-const Navigator = Extension.imports.navigator;
-const App = Extension.imports.app;
-const Scratch = Extension.imports.scratch;
-const LiveAltTab = Extension.imports.liveAltTab;
-const keystrToKeycombo = Extension.imports.settings.keystrToKeycombo;
+import Clutter from 'gi://Clutter';
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
 
-const { Clutter, Meta, Shell } = imports.gi;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+
+import {
+    Settings, Utils, Tiling, Navigator,
+    App, Scratch, LiveAltTab
+} from './imports.js';
+
 const Seat = Clutter.get_default_backend().get_default_seat();
-const Main = imports.ui.main;
 const display = global.display;
 
+const KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 
-let KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
+let keybindSettings;
+export function enable(extension) {
+    // restore previous keybinds (in case failed to restore last time, e.g. gnome crash etc)
+    Settings.updateOverrides();
 
-function registerPaperAction(actionName, handler, flags) {
-    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
+    keybindSettings = extension.getSettings(KEYBINDINGS_KEY);
+    setupActions(keybindSettings);
+    signals.connect(display, 'accelerator-activated', (display, actionId, deviceId, timestamp) => {
+        handleAccelerator(display, actionId, deviceId, timestamp);
+    });
+    actions.forEach(enableAction);
+    Settings.overrideConflicts();
+
+    let schemas = [...Settings.getConflictSettings(), extension.getSettings(KEYBINDINGS_KEY)];
+    schemas.forEach(schema => {
+        signals.connect(schema, 'changed', (settings, key) => {
+            const numConflicts = Settings.conflictKeyChanged(settings, key);
+            if (numConflicts > 0) {
+                Main.notify(
+                    `PaperWM: overriding '${key}' keybind`,
+                    `this Gnome Keybind will be restored when PaperWM is disabled`);
+            }
+        });
+    });
+}
+
+export function disable() {
+    signals.destroy();
+    signals = null;
+    actions.forEach(disableAction);
+    Settings.restoreConflicts();
+
+    keybindSettings = null;
+    actions = null;
+    nameMap = null;
+    actionIdMap = null;
+    keycomboMap = null;
+}
+
+export function registerPaperAction(actionName, handler, flags) {
     registerAction(
         actionName,
         handler,
-        { settings, mutterFlags: flags, activeInNavigator: true });
+        { settings: keybindSettings, mutterFlags: flags, activeInNavigator: true });
 }
 
-function registerNavigatorAction(name, handler) {
-    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
+export function registerNavigatorAction(name, handler) {
     registerAction(
         name,
         handler,
-        { settings, opensNavigator: true });
+        { settings: keybindSettings, opensNavigator: true });
 }
 
-function registerMinimapAction(name, handler) {
-    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
+export function registerMinimapAction(name, handler) {
     registerAction(
         name,
         handler,
         {
-            settings,
+            settings: keybindSettings,
             opensNavigator: true,
             opensMinimap: true,
             mutterFlags: Meta.KeyBindingFlags.PER_WINDOW,
@@ -50,7 +82,7 @@ function registerMinimapAction(name, handler) {
 
 
 let signals, actions, nameMap, actionIdMap, keycomboMap;
-function setupActions() {
+export function setupActions(settings) {
     signals = new Utils.Signals();
     actions = [];
     nameMap = {};     // mutter keybinding action name -> action
@@ -58,10 +90,8 @@ function setupActions() {
     keycomboMap = {}; // keycombo   -> action
 
     /* Initialize keybindings */
-    let dynamic_function_ref = Utils.dynamic_function_ref;
-    let liveAltTab = dynamic_function_ref('liveAltTab', LiveAltTab);
+    let liveAltTab = LiveAltTab.liveAltTab;
 
-    let settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
     registerAction('live-alt-tab',
         liveAltTab, { settings });
     registerAction('live-alt-tab-backward',
@@ -142,89 +172,72 @@ function setupActions() {
         (mw, space) => space.swap(Meta.MotionDirection.DOWN));
 
     registerPaperAction("toggle-scratch-window",
-        dynamic_function_ref("toggleScratchWindow",
-            Scratch));
+        Scratch.toggleScratchWindow);
 
     registerPaperAction("toggle-scratch-layer",
-        dynamic_function_ref("toggleScratch",
-            Scratch));
+        Scratch.toggleScratch);
 
     registerPaperAction("toggle-scratch",
-        dynamic_function_ref("toggle",
-            Scratch),
+        Scratch.toggle,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("switch-focus-mode",
-        dynamic_function_ref("switchToNextFocusMode",
-            Tiling));
+        Tiling.switchToNextFocusMode);
 
     registerPaperAction("resize-h-inc",
-        dynamic_function_ref("resizeHInc",
-            Tiling),
+        Tiling.resizeHInc,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-h-dec",
-        dynamic_function_ref("resizeHDec",
-            Tiling),
+        Tiling.resizeHDec,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-w-inc",
-        dynamic_function_ref("resizeWInc",
-            Tiling),
+        Tiling.resizeWInc,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("resize-w-dec",
-        dynamic_function_ref("resizeWDec",
-            Tiling),
+        Tiling.resizeWDec,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-width",
-        dynamic_function_ref("cycleWindowWidth",
-            Tiling),
+        Tiling.cycleWindowWidth,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-width-backwards",
-        dynamic_function_ref("cycleWindowWidthBackwards",
-            Tiling),
+        Tiling.cycleWindowWidthBackwards,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-height",
-        dynamic_function_ref("cycleWindowHeight",
-            Tiling),
+        Tiling.cycleWindowHeight,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("cycle-height-backwards",
-        dynamic_function_ref("cycleWindowHeightBackwards",
-            Tiling),
+        Tiling.cycleWindowHeightBackwards,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction("center-horizontally",
-        dynamic_function_ref("centerWindowHorizontally",
-            Tiling),
+        Tiling.centerWindowHorizontally,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('new-window',
-        dynamic_function_ref('duplicateWindow', App),
+        App.duplicateWindow,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('close-window',
-        metaWindow =>
-            metaWindow.delete(global.get_current_time()),
+        metaWindow => metaWindow.delete(global.get_current_time()),
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('slurp-in',
-        dynamic_function_ref('slurp',
-            Tiling),
+        Tiling.slurp,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('barf-out',
-        dynamic_function_ref('barf',
-            Tiling),
+        Tiling.barf,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('toggle-maximize-width',
-        dynamic_function_ref("toggleMaximizeHorizontally",
-            Tiling),
+        Tiling.toggleMaximizeHorizontally,
         Meta.KeyBindingFlags.PER_WINDOW);
 
     registerPaperAction('paper-toggle-fullscreen',
@@ -236,8 +249,8 @@ function setupActions() {
         }, Meta.KeyBindingFlags.PER_WINDOW);
 }
 
-function idOf(mutterName) {
-    let action = this.byMutterName(mutterName);
+export function idOf(mutterName) {
+    let action = byMutterName(mutterName);
     if (action) {
         return action.id;
     } else {
@@ -245,19 +258,19 @@ function idOf(mutterName) {
     }
 }
 
-function byMutterName(name) {
+export function byMutterName(name) {
     return nameMap[name];
 }
 
-function byId(mutterId) {
+export function byId(mutterId) {
     return actionIdMap[mutterId];
 }
 
-function asKeyHandler(actionHandler) {
+export function asKeyHandler(actionHandler) {
     return (display, mw, binding) => actionHandler(mw, Tiling.spaces.selectedSpace, { display, binding });
 }
 
-function impliedOptions(options) {
+export function impliedOptions(options) {
     options = options = Object.assign({ mutterFlags: Meta.KeyBindingFlags.NONE }, options);
 
     if (options.opensMinimap)
@@ -278,7 +291,7 @@ function impliedOptions(options) {
  *   ...
  * }
  */
-function registerAction(actionName, handler, options) {
+export function registerAction(actionName, handler, options) {
     options = impliedOptions(options);
 
     let {
@@ -316,13 +329,13 @@ function registerAction(actionName, handler, options) {
 /**
  * Bind a key to an action (possibly creating a new action)
  */
-function bindkey(keystr, actionName = null, handler = null, options = {}) {
+export function bindkey(keystr, actionName = null, handler = null, options = {}) {
     Utils.assert(!options.settings,
         "Can only bind schemaless actions - change action's settings instead",
         actionName);
 
     let action = actionName && actions.find(a => a.name === actionName);
-    let keycombo = keystrToKeycombo(keystr);
+    let keycombo = Settings.keystrToKeycombo(keystr);
 
     if (!action) {
         action = registerAction(actionName, handler, options);
@@ -365,7 +378,7 @@ function bindkey(keystr, actionName = null, handler = null, options = {}) {
             message = "Usually caused by the binding already being taken, but could not identify which action";
         }
 
-        ExtensionModule.errorNotification(
+        Main.notify(
             "PaperWM (user.js): Could not enable keybinding",
             `Tried to bind ${keystr} to ${actionName}\n${message}`);
     }
@@ -373,10 +386,10 @@ function bindkey(keystr, actionName = null, handler = null, options = {}) {
     return action.id;
 }
 
-function unbindkey(actionIdOrKeystr) {
+export function unbindkey(actionIdOrKeystr) {
     let actionId;
     if (typeof  actionIdOrKeystr === "string") {
-        const action = keycomboMap[keystrToKeycombo(actionIdOrKeystr)];
+        const action = keycomboMap[Settings.keystrToKeycombo(actionIdOrKeystr)];
         actionId = action && action.id;
     } else {
         actionId = actionIdOrKeystr;
@@ -385,7 +398,7 @@ function unbindkey(actionIdOrKeystr) {
     disableAction(actionIdMap[actionId]);
 }
 
-function devirtualizeMask(gdkVirtualMask) {
+export function devirtualizeMask(gdkVirtualMask) {
     const keymap = Seat.get_keymap();
     let [success, rawMask] = keymap.map_virtual_modifiers(gdkVirtualMask);
     if (!success)
@@ -393,12 +406,12 @@ function devirtualizeMask(gdkVirtualMask) {
     return rawMask;
 }
 
-function rawMaskOfKeystr(keystr) {
+export function rawMaskOfKeystr(keystr) {
     let [dontcare, keycodes, mask] = Settings.accelerator_parse(keystr);
     return devirtualizeMask(mask);
 }
 
-function openNavigatorHandler(actionName, keystr) {
+export function openNavigatorHandler(actionName, keystr) {
     const mask = rawMaskOfKeystr(keystr) & 0xff;
 
     const binding = {
@@ -412,7 +425,7 @@ function openNavigatorHandler(actionName, keystr) {
     };
 }
 
-function getBoundActionId(keystr) {
+export function getBoundActionId(keystr) {
     let [dontcare, keycodes, mask] = Settings.accelerator_parse(keystr);
     if (keycodes.length > 1) {
         throw new Error(`Multiple keycodes ${keycodes} ${keystr}`);
@@ -421,20 +434,16 @@ function getBoundActionId(keystr) {
     return display.get_keybinding_action(keycodes[0], rawMask);
 }
 
-function handleAccelerator(display, actionId, deviceId, timestamp) {
+export function handleAccelerator(display, actionId, deviceId, timestamp) {
     const action = actionIdMap[actionId];
     if (action) {
-        Utils.debug("#keybindings", "Schemaless keybinding activated",
+        console.debug("#keybindings", "Schemaless keybinding activated",
             actionId, action.name);
-        if (global.screen) {
-            action.keyHandler(display, null, display.focus_window);
-        } else {
-            action.keyHandler(display, display.focus_window);
-        }
+        action.keyHandler(display, display.focus_window);
     }
 }
 
-function disableAction(action) {
+export function disableAction(action) {
     if (action.id === Meta.KeyBindingAction.NONE) {
         return;
     }
@@ -456,7 +465,7 @@ function disableAction(action) {
     }
 }
 
-function enableAction(action) {
+export function enableAction(action) {
     if (action.id !== Meta.KeyBindingAction.NONE)
         return action.id; // Already enabled (happens on enable right after init)
 
@@ -505,41 +514,4 @@ function enableAction(action) {
 
         return action.id;
     }
-}
-
-function enable() {
-    // restore previous keybinds (in case failed to restore last time, e.g. gnome crash etc)
-    Settings.updateOverrides();
-
-    setupActions();
-    signals.connect(display,
-        'accelerator-activated',
-        Utils.dynamic_function_ref(handleAccelerator.name, this)
-    );
-    actions.forEach(enableAction);
-    Settings.overrideConflicts();
-
-    let schemas = [...Settings.getConflictSettings(), ExtensionUtils.getSettings(KEYBINDINGS_KEY)];
-    schemas.forEach(schema => {
-        signals.connect(schema, 'changed', (settings, key) => {
-            const numConflicts = Settings.conflictKeyChanged(settings, key);
-            if (numConflicts > 0) {
-                Main.notify(
-                    `PaperWM: overriding '${key}' keybind`,
-                    `this Gnome Keybind will be restored when PaperWM is disabled`);
-            }
-        });
-    });
-}
-
-function disable() {
-    signals.destroy();
-    signals = null;
-    actions.forEach(disableAction);
-    Settings.restoreConflicts();
-
-    actions = null;
-    nameMap = null;
-    actionIdMap = null;
-    keycomboMap = null;
 }

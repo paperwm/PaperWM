@@ -1,12 +1,16 @@
 # PaperWM #
 
+> ### ⚠️ PaperWM [`develop`](https://github.com/paperwm/PaperWM/tree/develop) and [`release`](https://github.com/paperwm/PaperWM/tree/release) branches are now on Gnome 45.
+> 
+> ### If you're using Gnome 42-44, please install via [extensions.gnome.org](https://extensions.gnome.org/extension/6099/paperwm/) OR use the [`gnome-44`](https://github.com/paperwm/PaperWM/tree/gnome-44) branch (see the [Installation](#installation) section for more information).
+
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://paperwm.zulipchat.com)
 
 PaperWM is a [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension which provides scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
-Supports Gnome Shell from 3.28 to 44 on X11 and wayland.
+Can be installed on Gnome Shells from 3.28 to 45 on X11 and wayland.
 
-_While PaperWM can be installed on a wide range of Gnome versions, new features aren't generally backported to versions NOT targeted for current support (see [Installation](#installation) section).  Fixes may be backported on request (please submit a [new issue](https://github.com/paperwm/PaperWM/issues/new/choose) if you've identified a recent fix that should be backported and you can help with testing)._
+_While PaperWM can be installed on a wide range of Gnome versions, new features aren't generally backported to previous versions.  Fixes may be backported on request (please submit a [new issue](https://github.com/paperwm/PaperWM/issues/new/choose) if you've identified a recent fix that should be backported and you can help with testing)._
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
@@ -22,7 +26,8 @@ We often hang out on [zulip](https://paperwm.zulipchat.com).
 
 Clone the repo and check out the branch supporting the Gnome Shell version you're running.
 
-- 42-44 (targeted for current support): https://github.com/paperwm/PaperWM/tree/release
+- 45 (current Gnome Shell release): https://github.com/paperwm/PaperWM/tree/release
+- 42-44: https://github.com/paperwm/PaperWM/tree/gnome-44
 - 40-41: https://github.com/paperwm/PaperWM/tree/gnome-40
 - 3.28-3.38: https://github.com/paperwm/PaperWM/tree/gnome-3.38
 
@@ -59,7 +64,7 @@ Users are enouraged to submit [issues](https://github.com/paperwm/PaperWM/issues
 
 Most functionality is available using a mouse, eg. activating a window at the edge of the monitor by clicking on it. In wayland its possible to navigate with 3-finger swipes on the trackpad. But the primary focus is making an environment which works well with a keyboard.
 
-All keybindings start with the <kbd>Super</kbd> modifier. On most keyboards it's the Windows key, on mac keyboards it's the Command key. It's possible to modify the keyboard layout so that <kbd>Super</kbd> is switched with <kbd>Alt</kbd> making all the keybindings easier to reach. This can be done through Gnome Tweaks under `Keybard & Mouse` ⟶ `Additional Layout Options` ⟶ `Alt/Win key behavior` ⟶ `Left Alt is swapped with Left Win`.
+Most keybindings start with the <kbd>Super</kbd> modifier (by default), which is usually the Windows key, or on mac keyboards it's the Command key. It's possible to modify the keyboard layout so that <kbd>Super</kbd> is switched with <kbd>Alt</kbd> making all the keybindings easier to reach. This can be done through Gnome Tweaks under `Keybard & Mouse` ⟶ `Additional Layout Options` ⟶ `Alt/Win key behavior` ⟶ `Left Alt is swapped with Left Win`.
 
 Most keybindings will grab the keyboard while <kbd>Super</kbd> is held down, only switching focus when <kbd>Super</kbd> is released. <kbd>Escape</kbd> will abort the navigation taking you back to the previously active window.
 
@@ -172,6 +177,10 @@ When the tiling is active <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> selects
 
 ## User configuration & development ##
 
+> ### ⚠️ Gnome 45 removed the ability to add external module files to the search path of extensions.  Hence, modifications to PaperWM via `user.js` is [not currently available in Gnome 45](https://github.com/paperwm/PaperWM/issues/576#issuecomment-1721315729).
+>
+> `user.js` functionality is still available in PaperWM for previous Gnome shell versions.
+
 A default user configuration, `user.js`, is created in `~/.config/paperwm/` with three functions `init`, `enable` and `disable`. `init` will run only once on startup, `enable` and `disable` will be run whenever extensions are being told to disable and enable themselves.
 
 You can also supply a custom `user.css` in `~/.config/paperwm/`. This user stylesheet can override the default styles of paperwm (e.g. from `~/.local/share/gnome-shell/extensions/paperwm@paperwm-redux.github.com/user.css` or `/usr/share/gnome-shell/extensions/paperwm@paperwm-redux.github.com/user.css`), gnome or even other extensions. The same rules as for CSS in the browser apply (i.e. CSS rules are additive). 
@@ -268,15 +277,9 @@ Setting | Description | Reference
 --------|-------------|----------
 <code>show&#8209;workspace&#8209;indicator</code>| Shows/hides the workspace indicator element in Topbar. | See [The workspace stack & monitors](#the-workspace-stack--monitors).
 
-Setting | Description | Input Type | Default value
---------|-------------|------------|--------------
-<code>use&#8209;workspace&#8209;name</code> | Use PaperWM workspace name in workspace indicator in the TopBar.  Setting to false uses the gnome default name (i.e. `Activities`). | _Boolean_ | `true`
-
-_Note: this does not disable the workspace indicator, but simply makes it looks like default gnome `Activities` button.  To show/hide the workspace indicator element use setting_ `show-workspace-indicator`.
-
 __Example:__
 ```
-dconf write /org/gnome/shell/extensions/paperwm/use-workspace-name false
+dconf write /org/gnome/shell/extensions/paperwm/show-workspace-indicator false
 ```
 
 Setting | Description | Input Type | Default value
@@ -300,32 +303,6 @@ https://user-images.githubusercontent.com/30424662/211422647-79e64d56-5dbb-4054-
 
 The `wm_class` or `title` of a window can be found by using looking glass: <kbd>Alt</kbd><kbd>F2</kbd> `lg` <kbd>Return</kbd> Go to the "Windows" section at the top right and find the window. X11 users can also use the `xprop` command line tool (`title` is referred as `WM_NAME` in `xprop`). The match of `wm_class` and `title` are with an OR condition; and in addition to a plain string matching, a constructed [`RegExp()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/RegExp) can be used to utilise regex matching.  For example, e.g. `/.*terminal.*/i` would match on any value that contains the word "terminal" (case-insensitive).
 
-
-
-Alternatively, you can also define winprops in the `user.js` configuration file.  Below is a few examples of setting window properties for _Spotify_ and _Alacritty_.  The below examples are best placed in the `init` part of `user.js`:
-
-```javascript
-    Tiling.defwinprop({
-        wm_class: "Spotify",
-        title: "Window Title",
-        scratch_layer: true,
-    });
-
-    Tiling.defwinprop({
-        wm_class: "firefox",
-        preferredWidth: "900px",
-    });
-
-    Tiling.defwinprop({
-        wm_class: /alacritty/i,
-        preferredWidth: "50%",
-    });
-```
-
-_Note<sup>1</sup>: `Winprops` defined in the PaperWM extension settings take precedence over `Winprops` defined using the `user.js` method._
-
-_Note<sup>2</sup>: if you use the `user.js` method you will need to restart Gnome shell to have them take effect._
-
 ### Setting a default window property rule
 
 You can use the functionality defined in the [setting window specific properities](#setting-window-specific-properties) section to define a `default` window property rule that will be applied to all windows NOT matched by a more specific window property rule.
@@ -337,6 +314,8 @@ You do this by using the special "match all" operator `*` as an input for `wm_cl
 This special operator is at a lower precedence, so more specific properties that match a window will always take precedence and be applied.
 
 ### New Window Handlers
+
+> #### ⚠️ Gnome 45 removed the ability to add external module files to the search path of extensions.  Hence, the below `user.js` functionality is not currently available in Gnome 45.
 
 If opening a new application window with <kbd>Super</kbd><kbd>Return</kbd> isn't doing exactly what you want, you can create custom functions to suit your needs. For example, you might want new emacs windows to open the current buffer by default, or have new terminals inherit the current directory.  To implement this, you can modify `user.js` as below (see [User configuration & development](#user-configuration--development) section):
 
@@ -374,6 +353,8 @@ app.action_group.list_actions();
 Due to limitations in the mutter keybinding API we need to steal some built in Gnome Shell actions by default. Eg. the builtin action `switch-group` with the default <kbd>Super</kbd><kbd>Above_Tab</kbd> keybinding is overridden to cycle through recently used workspaces. If an overridden action has several keybindings they will unfortunately all activate the override, so for instance because <kbd>Alt</kbd><kbd>Above_Tab</kbd> is also bound to `switch-group` it will be overridden by default. If you want to avoid this, eg. you want <kbd>Alt</kbd><kbd>Tab</kbd> and <kbd>Alt</kbd><kbd>Above_Tab</kbd> to use the builtin behavior simply remove the conflicts (ie. <kbd>Super</kbd><kbd>Tab</kbd> and <kbd>Super</kbd><kbd>Above_Tab</kbd> and their <kbd>Shift</kbd> variants) from `/org/gnome/desktop/wm/keybindings/switch-group` (no restarts required).
 
 #### User defined keybindings
+
+> #### ⚠️ Gnome 45 removed the ability to add external module files to the search path of extensions.  Hence, the below `user.js` and `examples/keybindings.js` functionality is not currently available in Gnome 45.
 
 `Extension.imports.keybindings.bindkey(keystr, name, handler, options)`
 
@@ -508,7 +489,7 @@ There's a few Gnome Shell settings which works poorly with PaperWM. Namely
 - `edge-tiling`: We don't support the native half tiled windows
 - `attach-modal-dialogs`: Attached modal dialogs can cause visual glitching
 
-PaperWM manages these settings (disables them) during runtime.  It will then restore these settings to their prior values (before PaperWM was enabled).
+PaperWM manages these settings (disables them) during runtime.  It will then restore these settings to their prior values when PaperWM is disabled.
 
 ## Recommended extensions ##
 

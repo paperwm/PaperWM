@@ -1,16 +1,11 @@
-'use strict';
+import Gdk from 'gi://Gdk';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import Gtk from 'gi://Gtk';
 
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
-const Gtk = imports.gi.Gtk;
-const Gdk = imports.gi.Gdk;
+import { AcceleratorParse } from './acceleratorparse.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Settings = Extension.imports.settings;
-
-// TODO gettext translations
 const _ = s => s;
 
 const KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
@@ -103,7 +98,7 @@ const forbiddenKeyvals = [
 ];
 
 function isValidBinding(combo) {
-    if ((combo.mods == 0 || combo.mods == Gdk.ModifierType.SHIFT_MASK) && combo.keycode != 0) {
+    if ((combo.mods === 0 || combo.mods === Gdk.ModifierType.SHIFT_MASK) && combo.keycode !== 0) {
         const keyval = combo.keyval;
         if ((keyval >= Gdk.KEY_a && keyval <= Gdk.KEY_z) ||
             (keyval >= Gdk.KEY_A && keyval <= Gdk.KEY_Z) ||
@@ -115,7 +110,7 @@ function isValidBinding(combo) {
             (keyval >= Gdk.KEY_hebrew_doublelowline && keyval <= Gdk.KEY_hebrew_taf) ||
             (keyval >= Gdk.KEY_Thai_kokai && keyval <= Gdk.KEY_Thai_lekkao) ||
             (keyval >= Gdk.KEY_Hangul_Kiyeog && keyval <= Gdk.KEY_Hangul_J_YeorinHieuh) ||
-            (keyval == Gdk.KEY_space && combo.mods == 0) ||
+            (keyval === Gdk.KEY_space && combo.mods === 0) ||
             forbiddenKeyvals.includes(keyval)) {
             return false;
         }
@@ -123,7 +118,7 @@ function isValidBinding(combo) {
 
     // Allow Tab in addition to accelerators allowed by GTK
     if (!Gtk.accelerator_valid(combo.keyval, combo.mods) &&
-        (combo.keyval != Gdk.KEY_Tab || combo.mods == 0)) {
+        (combo.keyval !== Gdk.KEY_Tab || combo.mods === 0)) {
         return false;
     }
 
@@ -131,7 +126,7 @@ function isValidBinding(combo) {
 }
 
 function isEmptyBinding(combo) {
-    return combo.keyval == 0 && combo.mods == 0 && combo.keycode == 0;
+    return combo.keyval === 0 && combo.mods === 0 && combo.keycode === 0;
 }
 
 const Combo = GObject.registerClass({
@@ -194,15 +189,16 @@ const Combo = GObject.registerClass({
         ),
     },
 }, class Combo extends GObject.Object {
-    _init(params) {
+    _init(params, acceleratorParse) {
         super._init(params);
+        this.acceleratorParse = acceleratorParse;
     }
 
     get keycode() {
         if (this.disabled) {
             return 0;
         } else if (!this._keycode) {
-            let [ok, key, mask] = Settings.accelerator_parse(this.keystr);
+            let [ok, key, mask] = this.acceleratorParse.accelerator_parse(this.keystr);
 
             if (ok && key.length) {
                 return key;
@@ -295,9 +291,10 @@ const Keybinding = GObject.registerClass({
         changed: {},
     },
 }, class Keybinding extends GObject.Object {
-    _init(params = {}) {
+    _init(params = {}, settings, acceleratorParse) {
         super._init(params);
-        this._settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
+        this._settings = settings;
+        this.acceleratorParse = acceleratorParse;
         this._description = _(this._settings.settings_schema.get_key(this.action).get_summary());
 
         this._combos = new Gio.ListStore();
@@ -320,7 +317,7 @@ const Keybinding = GObject.registerClass({
               .map(c => c.label);
 
         let label = '';
-        if (labels.length == 0) {
+        if (labels.length === 0) {
             label = _('Disabled');
         } else {
             label = labels.join(', ');
@@ -338,7 +335,7 @@ const Keybinding = GObject.registerClass({
     }
 
     get modified() {
-        return this._settings.get_user_value(this.action) != null;
+        return this._settings.get_user_value(this.action) !== null;
     }
 
     get enabled() {
@@ -372,8 +369,8 @@ const Keybinding = GObject.registerClass({
         if (!found)
             return;
         this.combos.remove(pos);
-        if (this.combos.get_n_items() == 0)
-            this.combos.append(new Combo());
+        if (this.combos.get_n_items() === 0)
+            this.combos.append(new Combo({}, this.acceleratorParse));
         this._store();
     }
 
@@ -402,7 +399,7 @@ const Keybinding = GObject.registerClass({
 
     find(combo) {
         const pos = [...this.combos].findIndex(c => c.keystr === combo.keystr);
-        if (pos == -1) {
+        if (pos === -1) {
             return [false];
         } else {
             return [true, pos];
@@ -414,15 +411,15 @@ const Keybinding = GObject.registerClass({
         let combos = keystrs
             .map(this._translateAboveTab)
             .map(keystr => {
-                if (keystr != '')
-                    return Settings.accelerator_parse(keystr);
+                if (keystr !== '')
+                    return this.acceleratorParse.accelerator_parse(keystr);
                 else
                     return [true, 0, 0];
             })
-            .map(([, keyval, mods]) => new Combo({ keyval, mods }));
+            .map(([, keyval, mods]) => new Combo({ keyval, mods }, this.acceleratorParse));
 
-        if (combos.length == 0) {
-            combos.push(new Combo());
+        if (combos.length === 0) {
+            combos.push(new Combo({}, this.acceleratorParse));
         }
 
         this.combos.splice(0, this.combos.get_n_items(), combos);
@@ -432,7 +429,7 @@ const Keybinding = GObject.registerClass({
         let filtered = [...this.combos]
             .filter(c => !isEmptyBinding(c))
             .map(c => c.keystr);
-        if (filtered.length == 0) {
+        if (filtered.length === 0) {
             filtered = [''];
         }
         this._settings.set_strv(this.action, filtered);
@@ -452,7 +449,7 @@ const Keybinding = GObject.registerClass({
     }
 });
 
-var KeybindingsModel = GObject.registerClass({
+export const KeybindingsModel = GObject.registerClass({
     GTypeName: 'KeybindingsModel',
     Implements: [Gio.ListModel],
     Signals: {
@@ -461,9 +458,9 @@ var KeybindingsModel = GObject.registerClass({
         },
     },
 }, class KeybindingsModel extends GObject.Object {
-    _init(params = {}) {
+    _init(params = {}, acceleratorParse) {
         super._init(params);
-
+        this.acceleratorParse = acceleratorParse;
         this._model = Gio.ListStore.new(Keybinding.$gtype);
         this._model.connect('items-changed', (_, position, removed, added) => {
             this.items_changed(position, removed, added);
@@ -476,8 +473,11 @@ var KeybindingsModel = GObject.registerClass({
         });
 
         this._actionToBinding = new Map();
-        this._settings = ExtensionUtils.getSettings(KEYBINDINGS_KEY);
-        GLib.idle_add(0, () => { this.load(); });
+    }
+
+    init(settings) {
+        this._settings = settings;
+        this.load();
     }
 
     vfunc_get_item_type() {
@@ -515,7 +515,7 @@ var KeybindingsModel = GObject.registerClass({
                 const binding = new Keybinding({
                     section,
                     action,
-                });
+                }, this._settings, this.acceleratorParse);
                 bindings.push(binding);
                 this._actionToBinding.set(action, binding);
             }
@@ -563,7 +563,7 @@ var KeybindingsModel = GObject.registerClass({
 
 const ComboRow = GObject.registerClass({
     GTypeName: 'ComboRow',
-    Template: Extension.dir.get_child('KeybindingsComboRow.ui').get_uri(),
+    Template: GLib.uri_resolve_relative(import.meta.url, './KeybindingsComboRow.ui', GLib.UriFlags.NONE),
     InternalChildren: [
         'stack',
         'shortcutPage',
@@ -633,7 +633,7 @@ const ComboRow = GObject.registerClass({
     }
 
     set combo(value) {
-        if (value && this._combo && this._combo.keystr == value.keystr)
+        if (value && this._combo && this._combo.keystr === value.keystr)
             return;
         this._combo = value;
         this.notify('combo');
@@ -704,16 +704,16 @@ const ComboRow = GObject.registerClass({
         let keyvalLower = Gdk.keyval_to_lower(keyval);
 
         // Normalize <Tab>
-        if (keyvalLower == Gdk.KEY_ISO_Left_Tab) {
+        if (keyvalLower === Gdk.KEY_ISO_Left_Tab) {
             keyvalLower = Gdk.KEY_Tab;
         }
 
         // Put Shift back if it changed the case of the key
-        if (keyvalLower != keyval) {
+        if (keyvalLower !== keyval) {
             modmask |= Gdk.ModifierType.SHIFT_MASK;
         }
 
-        if (keyvalLower == Gdk.KEY_Sys_Req && (modmask & Gdk.ModifierType.ALT_MASK) != 0) {
+        if (keyvalLower === Gdk.KEY_Sys_Req && (modmask & Gdk.ModifierType.ALT_MASK) !== 0) {
             // Don't allow SysRq as a keybinding, but allow Alt+Print
             keyvalLower = Gdk.KEY_Print;
         }
@@ -722,7 +722,7 @@ const ComboRow = GObject.registerClass({
         const isModifier = event.is_modifier();
 
         // Escape cancels
-        if (!isModifier && modmask == 0 && keyvalLower == Gdk.KEY_Escape) {
+        if (!isModifier && modmask === 0 && keyvalLower === Gdk.KEY_Escape) {
             this.editing = false;
             if (this.combo.placeholder) {
                 this.keybinding.remove(this.combo);
@@ -731,15 +731,16 @@ const ComboRow = GObject.registerClass({
         }
 
         // Backspace deletes
-        if (!isModifier && modmask == 0 && keyvalLower == Gdk.KEY_BackSpace) {
-            this._updateKeybinding(new Combo());
+        if (!isModifier && modmask === 0 && keyvalLower === Gdk.KEY_BackSpace) {
+            this._updateKeybinding(new Combo({}, this.acceleratorParse));
             return Gdk.EVENT_STOP;
         }
 
         // Remove CapsLock
         modmask &= ~Gdk.ModifierType.LOCK_MASK;
 
-        this._updateKeybinding(new Combo({ keycode, keyval: keyvalLower, mods: modmask }));
+        this._updateKeybinding(new Combo({ keycode, keyval: keyvalLower, mods: modmask },
+            this.acceleratorParse));
 
         return Gdk.EVENT_STOP;
     }
@@ -768,7 +769,9 @@ const ComboRow = GObject.registerClass({
     }
 
     _updateState() {
-        if (!this._stack) { return; }
+        if (!this._stack) {
+            return;
+        }
 
         if (this.editing) {
             this.add_css_class('editing');
@@ -794,7 +797,7 @@ const ComboRow = GObject.registerClass({
 
 const KeybindingsRow = GObject.registerClass({
     GTypeName: 'KeybindingsRow',
-    Template: Extension.dir.get_child('KeybindingsRow.ui').get_uri(),
+    Template: GLib.uri_resolve_relative(import.meta.url, './KeybindingsRow.ui', GLib.UriFlags.NONE),
     InternalChildren: [
         'header',
         'descLabel',
@@ -838,9 +841,9 @@ const KeybindingsRow = GObject.registerClass({
         },
     },
 }, class KeybindingsRow extends Gtk.ListBoxRow {
-    _init(params = {}) {
+    _init(params = {}, acceleratorParse) {
         super._init(params);
-
+        this.acceleratorParse = acceleratorParse;
         this._actionGroup = new Gio.SimpleActionGroup();
         this.insert_action_group('keybinding', this._actionGroup);
 
@@ -853,7 +856,8 @@ const KeybindingsRow = GObject.registerClass({
         this._actionGroup.add_action(action);
 
         action = new Gio.SimpleAction({ name: 'add' });
-        action.connect('activate', () => this.keybinding.add(new Combo({ placeholder: true })));
+        action.connect('activate', () => this.keybinding.add(new Combo({ placeholder: true },
+            this.acceleratorParse)));
         this._actionGroup.add_action(action);
 
         const gesture = Gtk.GestureClick.new();
@@ -895,7 +899,7 @@ const KeybindingsRow = GObject.registerClass({
     }
 
     get collisions() {
-        if (this._collisions == undefined) {
+        if (this._collisions === undefined) {
             this._collisions = new Map();
         }
         return this._collisions;
@@ -961,9 +965,9 @@ const KeybindingsRow = GObject.registerClass({
     }
 });
 
-var KeybindingsPane = GObject.registerClass({
+export const KeybindingsPane = GObject.registerClass({
     GTypeName: 'KeybindingsPane',
-    Template: Extension.dir.get_child('KeybindingsPane.ui').get_uri(),
+    Template: GLib.uri_resolve_relative(import.meta.url, './KeybindingsPane.ui', GLib.UriFlags.NONE),
     InternalChildren: [
         'search',
         'listbox',
@@ -971,8 +975,12 @@ var KeybindingsPane = GObject.registerClass({
 }, class KeybindingsPane extends Gtk.Box {
     _init(params = {}) {
         super._init(params);
+    }
 
-        this._bindings = new KeybindingsModel();
+    init(extension) {
+        this._settings = extension.getSettings(KEYBINDINGS_KEY);
+        this.acceleratorParse = new AcceleratorParse();
+        this._model = new KeybindingsModel({}, this.acceleratorParse);
 
         this._filter = new Gtk.StringFilter({
             expression: Gtk.PropertyExpression.new(Keybinding.$gtype, null, 'description'),
@@ -981,7 +989,7 @@ var KeybindingsPane = GObject.registerClass({
         });
 
         const filteredBindings = new Gtk.FilterListModel({
-            model: this._bindings,
+            model: this._model,
             filter: this._filter,
         });
 
@@ -989,6 +997,9 @@ var KeybindingsPane = GObject.registerClass({
         this._listbox.set_header_func((row, before, data) => this._onSetHeader(row, before, data));
 
         this._expandedRow = null;
+
+        // send settings to model (which processes and creates rows)
+        this._model.init(this._settings);
     }
 
     _createHeader(row, before) {
@@ -1009,14 +1020,14 @@ var KeybindingsPane = GObject.registerClass({
     }
 
     _createRow(keybinding) {
-        const row = new KeybindingsRow({ keybindings: this._bindings, keybinding });
+        const row = new KeybindingsRow({ keybindings: this._model, keybinding }, this.acceleratorParse);
         row.connect('notify::expanded', row => this._onRowExpanded(row));
         row.connect('collision-activated', (_, binding) => this._onCollisionActivated(binding));
         return row;
     }
 
     _onCollisionActivated(keybinding) {
-        const [found, pos] = this._bindings.find(keybinding);
+        const [found, pos] = this._model.find(keybinding);
         if (found) {
             const row = this._listbox.get_row_at_index(pos);
             row.activate();
@@ -1045,7 +1056,7 @@ var KeybindingsPane = GObject.registerClass({
 
     _onSetHeader(row, before, data) {
         const header = row.get_header();
-        if (!before || before.keybinding.section != row.keybinding.section) {
+        if (!before || before.keybinding.section !== row.keybinding.section) {
             if (!header || header instanceof Gtk.Separator) {
                 row.set_header(this._createHeader(row, before));
             }

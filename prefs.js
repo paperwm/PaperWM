@@ -1,58 +1,62 @@
-const ExtensionUtils = imports.misc.extensionUtils;
-const Extension = ExtensionUtils.getCurrentExtension();
-const Settings = Extension.imports.settings;
-const AcceleratorParse = Extension.imports.acceleratorparse;
-const Workspace = Extension.imports.workspace;
-const { Gio, GLib, GObject, Gtk, Gdk } = imports.gi;
-const { KeybindingsPane } = Extension.imports.prefsKeybinding;
-const { WinpropsPane } = Extension.imports.winpropsPane;
+import Gdk from 'gi://Gdk';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import Gtk from 'gi://Gtk';
 
-let _ = s => s;
+import {
+    ExtensionPreferences
+} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-// TreeStore model
-const COLUMN_ID          = 0;
-const COLUMN_INDEX       = 1;
-const COLUMN_DESCRIPTION = 2;
-const COLUMN_KEY         = 3;
-const COLUMN_MODS        = 4;
-const COLUMN_WARNING     = 5;
-const COLUMN_RESET       = 6;
-const COLUMN_TOOLTIP     = 7;
+import { WorkspaceSettings } from './workspace.js';
+import * as KeybindingsPane from './prefsKeybinding.js';
+import * as WinpropsPane from './winpropsPane.js';
 
-// This is the value mutter uses for the keyvalue of above_tab
-let META_KEY_ABOVE_TAB = 0x2f7259c9;
+const _ = s => s;
 
-function range(n) {
-    let r = [];
-    for (let i = 0; i < n; i++)
-        r.push(i);
-    return r;
-}
+export default class PaperWMPrefs extends ExtensionPreferences {
+    fillPreferencesWindow(window) {
+        const provider = new Gtk.CssProvider();
+        provider.load_from_path(`${this.path}/resources/prefs.css`);
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        );
 
-function swapArrayElements(array, i, j) {
-    let iVal = array[i];
-    array[i] = array[j];
-    array[j] = iVal;
-    return array;
-}
+        let selectedWorkspace = null;
+        try {
+            const tempFile = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace');
+            let [, contents] = tempFile.load_contents(null);
+            const decoder = new TextDecoder('utf-8');
+            const contentsString = decoder.decode(contents);
+            let workspaceN = parseInt(contentsString);
+            if (!isNaN(workspaceN)) {
+                selectedWorkspace = workspaceN;
+            }
+            tempFile.delete(null);
+        } catch (e) { }
 
-function getOk(okValue) {
-    if (okValue[0]) {
-        return okValue[1];
-    } else {
-        return null;
+        let selectedTab = selectedWorkspace !== null ? 1 : 0;
+        window.set_size_request(626, 700);
+        new SettingsWidget(
+            this,
+            window,
+            selectedTab,
+            selectedWorkspace || 0);
     }
 }
 
-var SettingsWidget = class SettingsWidget {
+class SettingsWidget {
     /**
        selectedWorkspace: index of initially selected workspace in workspace settings tab
        selectedTab: index of initially shown tab
      */
-    constructor(prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
-        let wmSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.wm.preferences' });
-        this._settings = ExtensionUtils.getSettings();
-        this.builder = Gtk.Builder.new_from_file(`${Extension.path}/Settings.ui`);
+    constructor(extension, prefsWindow, selectedPage = 0, selectedWorkspace = 0) {
+        this.extension = extension;
+        this._settings = extension.getSettings();
+        this.workspaceSettings = new WorkspaceSettings(extension);
+        const wmSettings = new Gio.Settings({ schema_id: 'org.gnome.desktop.wm.preferences' });
+        this.builder = Gtk.Builder.new_from_file(`${extension.path}/Settings.ui`);
         this.window = prefsWindow;
 
         const pages = [
@@ -229,6 +233,12 @@ var SettingsWidget = class SettingsWidget {
             this._settings.set_boolean('show-window-position-bar', state);
         });
 
+        const enableGnomePill = this.builder.get_object('use-gnome-pill');
+        enableGnomePill.active = !this._settings.get_boolean('show-workspace-indicator');
+        enableGnomePill.connect('state-set', (obj, state) => {
+            this._settings.set_boolean('show-workspace-indicator', !state);
+        });
+
         // Workspaces
 
         const defaultBackgroundSwitch = this.builder.get_object('use-default-background');
@@ -247,16 +257,16 @@ var SettingsWidget = class SettingsWidget {
 
         const workspaceCombo = this.builder.get_object('workspace_combo_text');
         const workspaceStack = this.builder.get_object('workspace_stack');
-        const nWorkspaces = Workspace.getWorkspaceList().get_strv('list').length;
+        const nWorkspaces = this.workspaceSettings.getWorkspaceList().get_strv('list').length;
 
         // Note: For some reason we can't set the visible child of the workspace
         //       stack at construction time.. (!)
         //       Ensure the initially selected workspace is added to the stack
         //       first as a workaround.
-        let wsIndices = range(nWorkspaces);
-        let wsSettingsByIndex = wsIndices.map(i => Workspace.getWorkspaceSettings(i)[1]);
+        let wsIndices = this.range(nWorkspaces);
+        let wsSettingsByIndex = wsIndices.map(i => this.workspaceSettings.getWorkspaceSettings(i)[1]);
         let wsIndicesSelectedFirst =
-            swapArrayElements(wsIndices.slice(), 0, selectedWorkspace);
+            this.swapArrayElements(wsIndices.slice(), 0, selectedWorkspace);
 
         for (let i of wsIndicesSelectedFirst) {
             let view = this.createWorkspacePage(wsSettingsByIndex[i], i);
@@ -302,7 +312,13 @@ var SettingsWidget = class SettingsWidget {
 
         workspaceCombo.set_active(selectedWorkspace);
 
+        // Keybindings
+
+        let keybindingsPane = this.builder.get_object('keybindings_pane');
+        keybindingsPane.init(extension);
+
         // Winprops
+
         let winprops = this._settings.get_value('winprops').deep_unpack()
             .map(p => JSON.parse(p));
         // sort a little nicer
@@ -333,8 +349,22 @@ var SettingsWidget = class SettingsWidget {
 
         // About
         let versionLabel = this.builder.get_object('extension_version');
-        let version = Extension.metadata.version?.toString() ?? '?';
+        let version = this.extension.metadata.version?.toString() ?? '?';
         versionLabel.set_text(version);
+    }
+
+    range(n) {
+        let r = [];
+        for (let i = 0; i < n; i++)
+            r.push(i);
+        return r;
+    }
+
+    swapArrayElements(array, i, j) {
+        let iVal = array[i];
+        array[i] = array[j];
+        array[j] = iVal;
+        return array;
     }
 
     createWorkspacePage(settings, index) {
@@ -348,7 +378,7 @@ var SettingsWidget = class SettingsWidget {
         // Background
 
         let backgroundBox = new Gtk.Box({ spacing: 16 });
-        let background = createFileChooserButton(
+        let background = this.createFileChooserButton(
             settings,
             'background',
             'image-x-generic',
@@ -373,7 +403,7 @@ var SettingsWidget = class SettingsWidget {
         let hideTopBarSwitch = new Gtk.Switch({ active: !settings.get_boolean('show-top-bar') });
 
         let directoryBox = new Gtk.Box({ spacing: 16 });
-        let directoryChooser = createFileChooserButton(
+        let directoryChooser = this.createFileChooserButton(
             settings,
             'directory',
             'folder',
@@ -389,16 +419,16 @@ var SettingsWidget = class SettingsWidget {
         let clearDirectory = new Gtk.Button({
             icon_name: 'edit-clear-symbolic',
             tooltip_text: 'Clear workspace directory',
-            sensitive: settings.get_string('directory') != '',
+            sensitive: settings.get_string('directory') !== '',
         });
         directoryBox.append(directoryChooser);
         directoryBox.append(clearDirectory);
 
-        list.append(createRow('Name', nameEntry));
-        list.append(createRow('Color', colorButton));
-        list.append(createRow('Background', backgroundBox));
-        list.append(createRow('Hide top bar', hideTopBarSwitch));
-        list.append(createRow('Directory', directoryBox));
+        list.append(this.createRow('Name', nameEntry));
+        list.append(this.createRow('Color', colorButton));
+        list.append(this.createRow('Background', backgroundBox));
+        list.append(this.createRow('Hide top bar', hideTopBarSwitch));
+        list.append(this.createRow('Directory', directoryBox));
 
         let rgba = new Gdk.RGBA();
         let color = settings.get_string('color');
@@ -461,428 +491,68 @@ var SettingsWidget = class SettingsWidget {
     }
 
     getWorkspaceName(settings, index) {
-        return Workspace.getWorkspaceName(settings, index);
+        return this.workspaceSettings.getWorkspaceName(settings, index);
     }
-};
 
-function createRow(text, widget, signal, handler) {
-    let margin = 12;
-    let box = new Gtk.Box({
-        margin_start: margin, margin_end: margin,
-        margin_top: margin / 2, margin_bottom: margin / 2,
-        orientation: Gtk.Orientation.HORIZONTAL,
-    });
-    let label = new Gtk.Label({
-        label: text, hexpand: true, xalign: 0,
-    });
-
-    box.append(label);
-    box.append(widget);
-
-    return box;
-}
-
-function createKeybindingSection(settings, searchEntry) {
-    let model = new Gtk.ListStore();
-}
-
-function createKeybindingWidget(settings, searchEntry) {
-    let model = new Gtk.TreeStore();
-    let filteredModel = new Gtk.TreeModelFilter({ child_model: model });
-    filteredModel.set_visible_func(
-        (model, iter) => {
-            let desc = model.get_value(iter, COLUMN_DESCRIPTION);
-
-            if (getOk(model.iter_parent(iter)) || desc === null) {
-                return true;
-            }
-
-            let query = searchEntry.get_chars(0, -1).toLowerCase().split(" ");
-            let descLc = desc.toLowerCase();
-
-            return query.every(word => descLc.indexOf(word) > -1);
-        }
-    );
-
-    model.set_column_types(
-        [
-            // GObject.TYPE_BOOLEAN, // COLUMN_VISIBLE
-            GObject.TYPE_STRING,  // COLUMN_ID
-            GObject.TYPE_INT,     // COLUMN_INDEX
-            GObject.TYPE_STRING,  // COLUMN_DESCRIPTION
-            GObject.TYPE_INT,     // COLUMN_KEY
-            GObject.TYPE_INT,     // COLUMN_MODS
-            GObject.TYPE_BOOLEAN, // COLUMN_WARNING
-            GObject.TYPE_BOOLEAN, // COLUMN_RESET
-            GObject.TYPE_STRING,  // COLUMN_TOOLTIP
-        ]);
-
-    let treeView = new Gtk.TreeView();
-    treeView.set_enable_search(false);
-    treeView.model = filteredModel;
-    treeView.headers_visible = false;
-    treeView.margin_start = 12;
-    treeView.margin_end = 12;
-    treeView.search_column = COLUMN_DESCRIPTION;
-    treeView.tooltip_column = COLUMN_TOOLTIP;
-
-    let descriptionRenderer = new Gtk.CellRendererText();
-    let descriptionColumn = new Gtk.TreeViewColumn();
-    descriptionColumn.expand = true;
-    descriptionColumn.pack_start(descriptionRenderer, true);
-    descriptionColumn.add_attribute(descriptionRenderer, "text", COLUMN_DESCRIPTION);
-
-    treeView.append_column(descriptionColumn);
-
-    let warningRenderer = new Gtk.CellRendererPixbuf();
-    warningRenderer.mode = Gtk.CellRendererMode.INERT;
-    warningRenderer.stock_id = 'gtk-dialog-warning';
-    let warningColumn = new Gtk.TreeViewColumn();
-    warningColumn.pack_start(warningRenderer, true);
-    warningColumn.add_attribute(warningRenderer, "visible", COLUMN_WARNING);
-
-    treeView.append_column(warningColumn);
-
-    let accelRenderer = new Gtk.CellRendererAccel();
-    accelRenderer.accel_mode = Gtk.CellRendererAccelMode.GTK;
-    accelRenderer.editable = true;
-
-    accelRenderer.connect("accel-edited",
-        (accelRenderer, path, key, mods, hwCode) => {
-            let iter = getOk(filteredModel.get_iter_from_string(path));
-            if (!iter)
-                return;
-
-            iter = filteredModel.convert_iter_to_child_iter(iter);
-
-            // Update the UI.
-            model.set(iter, [COLUMN_KEY, COLUMN_MODS], [key, mods]);
-
-            // Update the stored setting.
-            let id = model.get_value(iter, COLUMN_ID);
-            let index = model.get_value(iter, COLUMN_INDEX);
-            let accelString = Gtk.accelerator_name(key, mods);
-
-            let accels = settings.get_strv(id);
-
-            if (index === -1) {
-                accels.push(accelString);
-            } else {
-                accels[index] = accelString;
-            }
-            settings.set_strv(id, accels);
-
-            let newEmptyRow = null, parent;
-            if (index === -1) {
-                model.set_value(iter, COLUMN_INDEX, accels.length - 1);
-                model.set_value(iter, COLUMN_DESCRIPTION, "...");
-
-                let parent = getOk(model.iter_parent(iter));
-                newEmptyRow = model.insert_after(parent, iter);
-            } else if (index === 0 && !model.iter_has_child(iter)) {
-                newEmptyRow = model.insert(iter, -1);
-            }
-
-            if (newEmptyRow) {
-                model.set(newEmptyRow, ...transpose([
-                    [COLUMN_ID, id],
-                    [COLUMN_INDEX, -1],
-                    [COLUMN_DESCRIPTION, "New binding"],
-                    [COLUMN_KEY, 0],
-                    [COLUMN_MODS, 0],
-                ]));
-            }
-
-            annotateKeybindings(model, settings);
+    createRow(text, widget) {
+        let margin = 12;
+        let box = new Gtk.Box({
+            margin_start: margin, margin_end: margin,
+            margin_top: margin / 2, margin_bottom: margin / 2,
+            orientation: Gtk.Orientation.HORIZONTAL,
+        });
+        let label = new Gtk.Label({
+            label: text, hexpand: true, xalign: 0,
         });
 
-    accelRenderer.connect("accel-cleared",
-        (accelRenderer, path) => {
-            let iter = getOk(filteredModel.get_iter_from_string(path));
-            if (!iter)
-                return;
+        box.append(label);
+        box.append(widget);
 
-            iter = filteredModel.convert_iter_to_child_iter(iter);
+        return box;
+    }
 
-            let index = model.get_value(iter, COLUMN_INDEX);
-
-            // Update the UI.
-            model.set(iter, [COLUMN_KEY, COLUMN_MODS], [0, 0]);
-
-            if (index === -1) {
-                // Clearing the empty row
-                return;
-            }
-
-            let id = model.get_value(iter, COLUMN_ID);
-            let accels = settings.get_strv(id);
-            accels.splice(index, 1);
-
-            let parent, nextSibling;
-            // Simply rebuild the model for this action
-            if (index === 0) {
-                parent = iter.copy();
-            } else {
-                parent = getOk(model.iter_parent(iter));
-            }
-            nextSibling = parent.copy();
-
-            if (!model.iter_next(nextSibling))
-                nextSibling = null;
-
-            model.remove(parent);
-
-            // Update the stored setting.
-            settings.set_strv(id, accels);
-
-            let recreated = addKeybinding(model, settings, id, nextSibling);
-            let selection = treeView.get_selection();
-            selection.select_iter(recreated);
-
-            annotateKeybindings(model, settings);
+    createFileChooserButton(settings, key, iconName, symbolicIconName, properties) {
+        const buttonIcon = Gtk.Image.new_from_icon_name(iconName);
+        const buttonLabel = new Gtk.Label();
+        const buttonBox = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            spacing: 8,
         });
 
-    let accelColumn = new Gtk.TreeViewColumn();
-    accelColumn.pack_end(accelRenderer, false);
-    accelColumn.add_attribute(accelRenderer, "accel-key", COLUMN_KEY);
-    accelColumn.add_attribute(accelRenderer, "accel-mods", COLUMN_MODS);
-
-    treeView.append_column(accelColumn);
-
-    let resetRenderer = new Gtk.CellRendererToggle();
-    resetRenderer.mode = Gtk.CellRendererMode.ACTIVATABLE;
-    let resetColumn = new Gtk.TreeViewColumn();
-    resetColumn.clickable = true;
-    resetColumn.pack_start(resetRenderer, true);
-    resetColumn.add_attribute(resetRenderer, "visible", COLUMN_RESET);
-
-    resetRenderer.connect('toggled', (renderer, path) => {
-        let iter = getOk(filteredModel.get_iter_from_string(path));
-        if (!iter)
-            return;
-        iter = filteredModel.convert_iter_to_child_iter(iter);
-
-        let id = model.get_value(iter, COLUMN_ID);
-        if (settings.get_user_value(id)) {
-            settings.reset(id);
-            model.set_value(iter, COLUMN_RESET, false);
+        buttonBox.append(buttonIcon);
+        buttonBox.append(buttonLabel);
+        if (symbolicIconName) {
+            buttonBox.append(new Gtk.Image({ icon_name: symbolicIconName, margin_start: 8 }));
         }
 
-        let parent = getOk(model.iter_parent(iter)) || iter.copy();
-        let nextSibling = parent.copy();
-        if (!model.iter_next(nextSibling))
-            nextSibling = null;
+        const button = new Gtk.Button({ child: buttonBox });
 
-        model.remove(parent);
-
-        let recreated = addKeybinding(model, settings, id, nextSibling);
-        let selection = treeView.get_selection();
-        selection.select_iter(recreated);
-
-        annotateKeybindings(model, settings);
-    });
-
-    treeView.append_column(resetColumn);
-
-    return treeView;
-}
-
-function parseAccelerator(accelerator) {
-    if (accelerator.match(/Above_Tab/)) {
-        accelerator = accelerator.replace('Above_Tab', 'grave');
-    }
-    let [ok, key, mods] = AcceleratorParse.accelerator_parse(accelerator);
-    // log(`PaperWM: parseAccelerator(${accelerator}) -> [${key}, ${mods}]`);
-
-    return [key, mods];
-}
-
-function transpose(colValPairs) {
-    let colKeys = [], values = [];
-    colValPairs.forEach(([k, v]) => {
-        colKeys.push(k);
-        values.push(v);
-    });
-    return [colKeys, values];
-}
-
-function addKeybinding(model, settings, id, position = null) {
-    let accels = settings.get_strv(id);
-
-    let schema = settings.settings_schema;
-    let schemaKey = schema.get_key(id);
-    let description = _(schemaKey.get_summary());
-
-    let accelerator = accels.length > 0 ? accels[0] : null;
-    // Add a row for the keybinding.
-    let [key, mods] = accelerator ? parseAccelerator(accelerator) : [0, 0];
-    let row = model.insert_before(null, position);
-    model.set(row, ...transpose([
-        [COLUMN_ID, id],
-        [COLUMN_INDEX, 0],
-        [COLUMN_DESCRIPTION, description],
-        [COLUMN_KEY, key],
-        [COLUMN_MODS, mods],
-    ]));
-
-    // Add one subrow for each additional keybinding
-    accels.slice(1).forEach((accelerator, i) => {
-        let [key, mods] = parseAccelerator(accelerator);
-        let subrow = model.insert(row, 0);
-        model.set(subrow, ...transpose([
-            [COLUMN_ID, id],
-            [COLUMN_INDEX, i + 1],
-            [COLUMN_DESCRIPTION, "..."],
-            [COLUMN_KEY, key],
-            [COLUMN_MODS, mods],
-        ]));
-    });
-
-    if (accels.length !== 0) {
-        // Add an empty row used for adding new bindings
-        let emptyRow = model.append(row);
-        model.set(emptyRow, ...transpose([
-            [COLUMN_ID, id],
-            [COLUMN_INDEX, -1],
-            [COLUMN_DESCRIPTION, "New binding"],
-            [COLUMN_KEY, 0],
-            [COLUMN_MODS, 0],
-        ]));
-    }
-
-    return row;
-}
-
-function annotateKeybindings(model, settings) {
-    let conflicts = Settings.findConflicts();
-    let warning = (id, c) => {
-        return conflicts.filter(({ name, combo }) => name === id && combo === c);
-    };
-
-    model.foreach((model, path, iter) => {
-        let id = model.get_value(iter, COLUMN_ID);
-        if (model.iter_depth(iter) === 0) {
-            let reset = !!settings.get_user_value(id);
-            model.set_value(iter, COLUMN_RESET, reset);
-        }
-
-        let accels = settings.get_strv(id);
-        let index = model.get_value(iter, COLUMN_INDEX);
-        if (index === -1 || accels.length === 0)
-            return true;
-        let combo = Settings.keystrToKeycombo(accels[index]);
-
-        let conflict = warning(id, combo);
-        let tooltip = null;
-        if (conflict.length > 0) {
-            let keystr = keycomboToKeylab(combo);
-            tooltip = `${keystr} overrides ${conflict[0].conflicts} in ${conflict[0].settings.path}`;
-            model.set_value(iter, COLUMN_TOOLTIP,
-                GLib.markup_escape_text(tooltip, -1));
-            model.set_value(iter, COLUMN_WARNING, true);
-        } else {
-            model.set_value(iter, COLUMN_WARNING, false);
-        }
-
-        return false;
-    });
-}
-
-function keycomboToKeylab(combo) {
-    let [mutterKey, mods] = combo.split('|').map(s => Number.parseInt(s));
-    let key = mutterKey;
-    if (mutterKey === META_KEY_ABOVE_TAB)
-        key = 97; // a
-    let keylab = Gtk.accelerator_get_label(key, mods);
-    if (mutterKey === META_KEY_ABOVE_TAB)
-        keylab = keylab.replace(/a$/, 'Above_Tab');
-    return keylab;
-}
-
-function createFileChooserButton(settings, key, iconName, symbolicIconName, properties) {
-    const buttonIcon = Gtk.Image.new_from_icon_name(iconName);
-    const buttonLabel = new Gtk.Label();
-    const buttonBox = new Gtk.Box({
-        orientation: Gtk.Orientation.HORIZONTAL,
-        spacing: 8,
-    });
-
-    buttonBox.append(buttonIcon);
-    buttonBox.append(buttonLabel);
-    if (symbolicIconName) {
-        buttonBox.append(new Gtk.Image({ icon_name: symbolicIconName, margin_start: 8 }));
-    }
-
-    const button = new Gtk.Button({ child: buttonBox });
-
-    syncStringSetting(settings, key, path => {
-        buttonIcon.visible = path !== '';
-        buttonLabel.label = path === '' ? '(None)' : GLib.filename_display_basename(path);
-    });
-    button.connect('clicked', () => {
-        const chooser = new Gtk.FileChooserDialog(properties);
-        let path = settings.get_string(key);
-        if (path !== '')
-            chooser.set_file(Gio.File.new_for_path(path));
-        chooser.add_button('Open', Gtk.ResponseType.OK);
-        chooser.add_button('Cancel', Gtk.ResponseType.CANCEL);
-        chooser.connect('response', (dialog, response) => {
-            if (response === Gtk.ResponseType.OK) {
-                settings.set_string(key, chooser.get_file().get_path());
-            }
-            chooser.destroy();
+        this.syncStringSetting(settings, key, path => {
+            buttonIcon.visible = path !== '';
+            buttonLabel.label = path === '' ? '(None)' : GLib.filename_display_basename(path);
         });
-        chooser.show();
-    });
-    return button;
-}
+        button.connect('clicked', () => {
+            const chooser = new Gtk.FileChooserDialog(properties);
+            let path = settings.get_string(key);
+            if (path !== '')
+                chooser.set_file(Gio.File.new_for_path(path));
+            chooser.add_button('Open', Gtk.ResponseType.OK);
+            chooser.add_button('Cancel', Gtk.ResponseType.CANCEL);
+            chooser.connect('response', (dialog, response) => {
+                if (response === Gtk.ResponseType.OK) {
+                    settings.set_string(key, chooser.get_file().get_path());
+                }
+                chooser.destroy();
+            });
+            chooser.show();
+        });
+        return button;
+    }
 
-function syncStringSetting(settings, key, callback) {
-    settings.connect(`changed::${key}`, () => {
+    syncStringSetting(settings, key, callback) {
+        settings.connect(`changed::${key}`, () => {
+            callback(settings.get_string(key));
+        });
         callback(settings.get_string(key));
-    });
-    callback(settings.get_string(key));
-}
-
-/**
- * This init() is called when opening PaperWM settings/pref panes
- * (not when initialising the extension on login).
- */
-function init() {
-
-}
-
-function fillPreferencesWindow(window) {
-    const provider = new Gtk.CssProvider();
-    provider.load_from_path(`${Extension.path}/resources/prefs.css`);
-    Gtk.StyleContext.add_provider_for_display(
-        Gdk.Display.get_default(),
-        provider,
-        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-    );
-
-    Workspace.enable();
-    AcceleratorParse.initKeycodeMap();
-    // cleanup on prefs window close request
-    window.connect('close-request', () => {
-        Workspace.disable();
-        AcceleratorParse.destroyKeycodeMap();
-    });
-
-    let selectedWorkspace = null;
-    try {
-        const tempFile = Gio.File.new_for_path(GLib.get_tmp_dir()).get_child('paperwm.workspace');
-        [, contents] = tempFile.load_contents(null);
-        const decoder = new TextDecoder('utf-8');
-        const contentsString = decoder.decode(contents);
-        let workspaceN = parseInt(contentsString);
-        if (!isNaN(workspaceN)) {
-            selectedWorkspace = workspaceN;
-        }
-        tempFile.delete(null);
-    } catch (e) { }
-
-    let selectedTab = selectedWorkspace !== null ? 1 : 0;
-    window.set_size_request(626, 700);
-    new SettingsWidget(window, selectedTab, selectedWorkspace || 0);
+    }
 }

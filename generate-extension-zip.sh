@@ -7,6 +7,7 @@ zip -r paperwm@paperwm.github.com.zip \
 	stylesheet.css \
 	*.js \
 	config/user.js \
+	config/user.css \
 	*.ui \
 	LICENSE \
 	schemas/gschemas.compiled \
