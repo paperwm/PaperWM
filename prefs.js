@@ -233,6 +233,12 @@ class SettingsWidget {
             this._settings.set_boolean('show-window-position-bar', state);
         });
 
+        const enableGnomePill = this.builder.get_object('use-gnome-pill');
+        enableGnomePill.active = !this._settings.get_boolean('show-workspace-indicator');
+        enableGnomePill.connect('state-set', (obj, state) => {
+            this._settings.set_boolean('show-workspace-indicator', !state);
+        });
+
         // Workspaces
 
         const defaultBackgroundSwitch = this.builder.get_object('use-default-background');
