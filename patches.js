@@ -52,13 +52,13 @@ export function disable() {
     actions = null;
 }
 
-export function registerOverrideProp(obj, name, override) {
+export function registerOverrideProp(obj, name, override, warn = true) {
     if (!obj)
         return;
 
     // check if prop exists
     const exists = obj?.[name];
-    if (!exists) {
+    if (!exists && warn) {
         console.log(`#PaperWM: attempt to override prop for '${name}' failed: is null or undefined`);
     }
 
@@ -164,7 +164,7 @@ export function setupOverrides() {
 
     // disable swipe gesture trackers
     swipeTrackers.forEach(t => {
-        registerOverrideProp(t, "enabled", false);
+        registerOverrideProp(t, "enabled", false, false);
     });
 
     registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
