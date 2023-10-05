@@ -52,9 +52,15 @@ export function disable() {
     actions = null;
 }
 
-export function registerOverrideProp(obj, name, override) {
+export function registerOverrideProp(obj, name, override, warn = true) {
     if (!obj)
         return;
+
+    // check if prop exists
+    const exists = obj?.[name];
+    if (!exists && warn) {
+        console.log(`#PaperWM: attempt to override prop for '${name}' failed: is null or undefined`);
+    }
 
     let saved = getSavedProp(obj, name) ?? obj[name];
     let props = savedProps.get(obj);
@@ -72,10 +78,10 @@ export function registerOverridePrototype(obj, name, override) {
     if (!obj)
         return;
 
-    // check if method for prototype exists - throwing warning if not
+    // check if method for prototype exists
     const exists = obj?.prototype?.[name];
     if (!exists) {
-        console.warn(`#PaperWM: attempt to override prototype for '${name}' failed: is null or undefined`);
+        console.log(`#PaperWM: attempt to override prototype for '${name}' failed: is null or undefined`);
     }
 
     registerOverrideProp(obj.prototype, name, override);
@@ -135,7 +141,7 @@ export function setupOverrides() {
 
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, '_prepareWorkspaceSwitch',
         function (workspaceIndices) {
-            const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController, 
+            const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController,
                 '_prepareWorkspaceSwitch');
             // hide selection during workspace switch
             Tiling.spaces.forEach(s => s.hideSelection());
@@ -144,21 +150,21 @@ export function setupOverrides() {
 
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, '_finishWorkspaceSwitch',
         function (switchData) {
-            const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController, 
+            const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController,
                 '_finishWorkspaceSwitch');
             // ensure selection is shown after workspaces swtching
             Tiling.spaces.forEach(s => s.showSelection());
             saved.call(this, switchData);
         });
 
-    registerOverridePrototype(WindowManager.WorkspaceTracker, '_checkWorkspaces', _checkWorkspaces);
+    registerOverrideProp(Main.wm._workspaceTracker, '_checkWorkspaces', _checkWorkspaces);
 
     if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
         registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
 
     // disable swipe gesture trackers
     swipeTrackers.forEach(t => {
-        registerOverrideProp(t, "enabled", false);
+        registerOverrideProp(t, "enabled", false, false);
     });
 
     registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
@@ -232,7 +238,7 @@ export function setupOverrides() {
 
         this._closeRequested = true;
     });
- 
+
     /**
      * Always show workspace thumbnails in overview if more than one workspace.
      * See original function at:
@@ -257,7 +263,7 @@ export function setupOverrides() {
     registerOverridePrototype(AltTab.WindowIcon, '_init', function(window, mode) {
         const saved = getSavedPrototype(AltTab.WindowIcon, '_init');
         saved.call(this, window, mode);
-        
+
         const WINDOW_PREVIEW_SIZE = 128;
         const AppIconMode = {
             THUMBNAIL_ONLY: 1,
@@ -274,7 +280,7 @@ export function setupOverrides() {
         this.monitor = Tiling.spaces.selectedSpace.monitor;
         let _createWindowClone = (window, size) => {
             let [width, height] = window.get_size();
-            let scale = Math.min(1.0, size / width, size / height);         
+            let scale = Math.min(1.0, size / width, size / height);
             return new Clutter.Clone({
                 source: window,
                 width: width * scale,
@@ -285,7 +291,7 @@ export function setupOverrides() {
                 x_expand: true,
                 y_expand: true,
             });
-        }
+        };
 
         let size;
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
