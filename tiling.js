@@ -409,11 +409,9 @@ var Space = class Space extends Array {
             // When resize is synchronous, ie. for X11 windows
             let nf = mw.get_frame_rect();
             if (nf.width !== targetWidth && nf.width !== f.width) {
-                // console.debug("  Width did not obey", "new", nf.width, "old", f.width, "target", targetWidth, mw.title)
                 widthChanged = true;
             }
             if (nf.height !== targetHeight && nf.height !== f.height) {
-                // console.debug("  Height did not obey", "new", nf.height, "old", f.height, "target", targetHeight, mw.title);
                 heightChanged = true;
                 targetHeight = nf.height; // Use actually height for layout
             }
@@ -1933,7 +1931,6 @@ var Spaces = class Spaces extends Map {
             let workspace = workspaceManager.get_workspace_by_index(i);
             workspaces[workspace] = true;
             if (this.spaceOf(workspace) === undefined) {
-                debug('workspace added', workspace);
                 this.addSpace(workspace);
             }
         }
@@ -1941,7 +1938,6 @@ var Spaces = class Spaces extends Map {
         let nextUnusedWorkspaceIndex = nWorkspaces;
         for (let [workspace, space] of this) {
             if (workspaces[space.workspace] !== true) {
-                debug('workspace removed', space.workspace);
                 this.removeSpace(space);
 
                 // Maps in javascript (and thus Spaces) remember insertion order
@@ -3464,7 +3460,7 @@ function grabBegin(metaWindow, type) {
     case Meta.GrabOp.KEYBOARD_RESIZING_S:
     case Meta.GrabOp.KEYBOARD_RESIZING_SE:
     case Meta.GrabOp.KEYBOARD_RESIZING_W:
-        inGrab = new Grab.ResizeGrab(metaWindow, type);
+        // NO OP
         break;
     }
 }
