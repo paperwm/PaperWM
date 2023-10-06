@@ -361,11 +361,6 @@
         <summary>Replace the Activities text with the current workspace name</summary>
     </key>
 
-    <key type="b" name="pressure-barrier">
-        <default>false</default>
-        <summary>Enable pressure barriers at the monitor edges</summary>
-    </key>
-
     <key type="ad" name="swipe-sensitivity">
         <default><![CDATA[[2.0, 2.0]]]></default>
         <summary>Swipe sensitivity in [x, y] coordinates</summary>

@@ -326,7 +326,7 @@ class NavigatorClass {
         });
 
         if (Tiling.inGrab && !Tiling.inGrab.dnd) {
-            Tiling.inGrab.beginDnD();
+            Tiling.inGrab?.beginDnD();
         }
 
         if (Main.panel.statusArea.appMenu)
