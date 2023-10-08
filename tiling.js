@@ -3500,7 +3500,6 @@ export function getDefaultFocusMode() {
 
 // `MetaWindow::focus` handling
 export function focus_handler(metaWindow, user_data) {
-    console.debug("focus:", metaWindow.title, Utils.framestr(metaWindow.get_frame_rect()));
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
         Scratch.makeScratch(metaWindow);
@@ -3646,7 +3645,6 @@ export function toggleMaximizeHorizontally(metaWindow) {
     let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
     let reqWidth = maxWidthPrc * workArea.width - Settings.prefs.minimum_margin * 2;
-    
 
     // Some windows only resize in increments > 1px so we can't rely on a precise width
     // Hopefully this heuristic is good enough

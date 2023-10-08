@@ -204,7 +204,7 @@ class ActionDispatcher {
             action.handler(metaWindow, space, { navigator: this.navigator });
             if (space !== Tiling.spaces.selectedSpace) {
                 this.navigator.minimaps.forEach(m => typeof m === 'number'
-                    ? GLib.source_remove(m) : m.hide());
+                    ? Utils.timeout_remove(m) : m.hide());
             }
             if (Tiling.inGrab && !Tiling.inGrab.dnd && Tiling.inGrab.window) {
                 Tiling.inGrab.beginDnD();
@@ -316,7 +316,7 @@ class NavigatorClass {
     destroy(space, focus) {
         this.minimaps.forEach(m => {
             if (typeof  m === 'number') {
-                GLib.source_remove(m);
+                Utils.timeout_remove(m);
             }
             else {
                 m.destroy();

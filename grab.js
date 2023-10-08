@@ -1,5 +1,4 @@
 import Clutter from 'gi://Clutter';
-import GLib from 'gi://GLib';
 import Graphene from 'gi://Graphene';
 import Meta from 'gi://Meta';
 import St from 'gi://St';
@@ -108,7 +107,7 @@ export class MoveGrab {
         this.dnd = true;
         console.debug("#grab", "begin DnD");
         Navigator.getNavigator().minimaps.forEach(m => typeof m === 'number'
-            ? GLib.source_remove(m) : m.hide());
+            ? Utils.timeout_remove(m) : m.hide());
         global.display.set_cursor(Meta.Cursor.MOVE_OR_RESIZE_WINDOW);
         let metaWindow = this.window;
         let clone = metaWindow.clone;
