@@ -388,7 +388,7 @@
 
     <key type="d" name="maximize-width-percent">
       <default>1.00</default>
-      <summary>Percent of work area width the horizontal window maximise function will use.</summary>
+      <summary>Percent of workspace width the horizontal window maximise function (Super+F) will use.</summary>
     </key>
 
     <key type="as" name="workspace-colors">
