@@ -3637,10 +3637,16 @@ export function toggleMaximizeHorizontally(metaWindow) {
         return;
     }
 
+    let maxWidthPrc = Settings.prefs.maximize_width_percent;
+    // add some sane limits to width percents: 0.5 <= x <= 1.0
+    maxWidthPrc = Math.max(0.5, maxWidthPrc);
+    maxWidthPrc = Math.min(1.0, maxWidthPrc);
+
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
-    let reqWidth = workArea.width - Settings.prefs.minimum_margin * 2;
+    let reqWidth = maxWidthPrc * workArea.width - Settings.prefs.minimum_margin * 2;
+    
 
     // Some windows only resize in increments > 1px so we can't rely on a precise width
     // Hopefully this heuristic is good enough
@@ -3656,7 +3662,7 @@ export function toggleMaximizeHorizontally(metaWindow) {
     } else {
         let x = workArea.x + space.monitor.x + Settings.prefs.minimum_margin;
         metaWindow.unmaximizedRect = frame;
-        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - Settings.prefs.minimum_margin * 2, frame.height);
+        metaWindow.move_resize_frame(true, x, frame.y, reqWidth, frame.height);
     }
 }
 
