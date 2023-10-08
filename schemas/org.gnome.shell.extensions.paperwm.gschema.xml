@@ -386,6 +386,11 @@
         <summary>cycle-height cycles through these heights. value &lt; 1 is interpreted as a ratio of the monitor height. Mixed ratios and pixel values not allowed.</summary>
     </key>
 
+    <key type="d" name="maximize-width-percent">
+      <default>1.00</default>
+      <summary>Percent of work area width the horizontal window maximise function will use.</summary>
+    </key>
+
     <key type="as" name="workspace-colors">
       <default><![CDATA[['#314E6C', '#565248', '#445632', '#663822',
        '#494066', '#826647', '#4B6983', '#807D74', '#5D7555', '#884631',
