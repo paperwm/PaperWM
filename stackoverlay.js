@@ -332,11 +332,11 @@ export class StackOverlay {
 
     removePreview() {
         if ("_previewId" in this) {
-            GLib.source_remove(this._previewId);
+            Utils.timeout_remove(this._previewId);
             delete this._previewId;
         }
         if ("_removeId" in this) {
-            GLib.source_remove(this._removeId);
+            Utils.timeout_remove(this._removeId);
             delete this._removeId;
         }
 
@@ -412,7 +412,7 @@ export class StackOverlay {
             this.pressureBarrier._reset();
             this.pressureBarrier._isTriggered = false;
             if (this._removeBarrierTimeoutId) {
-                GLib.source_remove(this._removeBarrierTimeoutId);
+                Utils.timeout_remove(this._removeBarrierTimeoutId);
             }
             this._removeBarrierTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
                 this.removeBarrier();

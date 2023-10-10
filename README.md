@@ -213,7 +213,7 @@ _Note: experimental, incomplete or deprecated settings may not be listed below._
 
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
-<code>animation&#8209;time</code> | Changes PaperWM animation speed.  Lower values means faster animations. | _number_ (should be >= 0) | 0.25 
+<code>animation&#8209;time</code> | Changes PaperWM animation speed.  Lower values means faster animations. | _number_ `>=` 0 | 0.25
 
 __Example:__ speeding up animations
 ```
@@ -265,6 +265,16 @@ __Example:__ disabling PaperWM workspace stack view gesture:
 ```
 dconf write /org/gnome/shell/extensions/paperwm/gesture-workspace-fingers 0
 ```
+
+Setting | Description | Input Type | Default value
+--------|-------------|------------|--------------
+<code>maximize&#8209;width&#8209;percent</code> | Sets the percentage of workspace width the `window maximize horizontally` function (default keybind `Super+F`) uses. | `0.5` <= _number_ <= `1.0`  | `1.0`
+
+__Example:__ set `maximize window width` to 95% of workspace with:
+```
+dconf write /org/gnome/shell/extensions/paperwm/maximize-width-percent 0.95
+```
+
 Setting | Description | Reference
 --------|-------------|----------
 <code>show&#8209;focus&#8209;mode&#8209;icon</code> | Shows/hides the focus mode icon in TopBar. | See [Hiding the focus mode icon](#hiding-the-focus-mode-icon).

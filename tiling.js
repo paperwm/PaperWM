@@ -2042,7 +2042,6 @@ export const Spaces = class Spaces extends Map {
             let workspace = workspaceManager.get_workspace_by_index(i);
             workspaces[workspace] = true;
             if (this.spaceOf(workspace) === undefined) {
-                console.debug('workspace added', workspace);
                 this.addSpace(workspace);
             }
         }
@@ -2050,7 +2049,6 @@ export const Spaces = class Spaces extends Map {
         let nextUnusedWorkspaceIndex = nWorkspaces;
         for (let [workspace, space] of this) {
             if (workspaces[space.workspace] !== true) {
-                console.debug('workspace removed', space.workspace);
                 this.removeSpace(space);
 
                 // Maps in javascript (and thus Spaces) remember insertion order
@@ -2706,7 +2704,7 @@ export const Spaces = class Spaces extends Map {
 
         metaWindow.unmapped = true;
 
-        console.debug('window-created', metaWindow.title);
+        console.debug('window-created', metaWindow?.title);
         let actor = metaWindow.get_compositor_private();
         animateWindow(metaWindow);
 
@@ -3047,7 +3045,6 @@ export function add_filter(meta_window) {
    Handle windows leaving workspaces.
  */
 export function remove_handler(workspace, meta_window) {
-    console.debug("window-removed", meta_window.title, workspace.index());
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
     // Not sure if we can check directly if _this_ window had focus when closed.
@@ -3068,7 +3065,7 @@ export function remove_handler(workspace, meta_window) {
 /**
    Handle windows entering workspaces.
 */
-function add_handler(ws, metaWindow) {
+export function add_handler(ws, metaWindow) {
     // Do not handle grabbed windows
     if (inGrab && inGrab.window === metaWindow)
         return;
@@ -3136,7 +3133,7 @@ export function insertWindow(metaWindow, { existing }) {
                 Settings.winprops.splice(Settings.winprops.indexOf(winprop), 1);
             }
             if (winprop.scratch_layer) {
-                console.debug("#winprops", `Move ${metaWindow.title} to scratch`);
+                console.debug("#winprops", `Move ${metaWindow?.title} to scratch`);
                 addToScratch = true;
             }
             if (winprop.focus) {
@@ -3300,8 +3297,6 @@ export function ensureViewport(meta_window, space, options = {}) {
     if (index === -1 || space.length === 0)
         return undefined;
 
-    console.debug('Moving', meta_window.title);
-
     if (space.selectedWindow.fullscreen &&
         !meta_window.fullscreen) {
         animateDown(space.selectedWindow);
@@ -3365,6 +3360,8 @@ export function updateSelection(space, metaWindow) {
     Utils.actor_reparent(space.selection, clone);
     clone.set_child_below_sibling(space.selection, cloneActor);
     allocateClone(metaWindow);
+    // ensure window is properly activated
+    Main.activateWindow(metaWindow);
 }
 
 /**
@@ -3500,7 +3497,7 @@ export function getDefaultFocusMode() {
 
 // `MetaWindow::focus` handling
 export function focus_handler(metaWindow, user_data) {
-    console.debug("focus:", metaWindow.title, Utils.framestr(metaWindow.get_frame_rect()));
+    console.debug("focus:", metaWindow?.title);
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
         Scratch.makeScratch(metaWindow);
@@ -3567,7 +3564,7 @@ export function focus_handler(metaWindow, user_data) {
    Push all minimized windows to the scratch layer
  */
 export function minimizeHandler(metaWindow) {
-    console.debug('minimized', metaWindow.title);
+    console.debug('minimized', metaWindow?.title);
     if (metaWindow.minimized) {
         Scratch.makeScratch(metaWindow);
     }
@@ -3637,10 +3634,15 @@ export function toggleMaximizeHorizontally(metaWindow) {
         return;
     }
 
+    let maxWidthPrc = Settings.prefs.maximize_width_percent;
+    // add some sane limits to width percents: 0.5 <= x <= 1.0
+    maxWidthPrc = Math.max(0.5, maxWidthPrc);
+    maxWidthPrc = Math.min(1.0, maxWidthPrc);
+
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
-    let reqWidth = workArea.width - Settings.prefs.minimum_margin * 2;
+    let reqWidth = maxWidthPrc * workArea.width - Settings.prefs.minimum_margin * 2;
 
     // Some windows only resize in increments > 1px so we can't rely on a precise width
     // Hopefully this heuristic is good enough
@@ -3656,7 +3658,7 @@ export function toggleMaximizeHorizontally(metaWindow) {
     } else {
         let x = workArea.x + space.monitor.x + Settings.prefs.minimum_margin;
         metaWindow.unmaximizedRect = frame;
-        metaWindow.move_resize_frame(true, x, frame.y, workArea.width - Settings.prefs.minimum_margin * 2, frame.height);
+        metaWindow.move_resize_frame(true, x, frame.y, reqWidth, frame.height);
     }
 }
 
