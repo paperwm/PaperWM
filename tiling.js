@@ -1933,7 +1933,6 @@ var Spaces = class Spaces extends Map {
             let workspace = workspaceManager.get_workspace_by_index(i);
             workspaces[workspace] = true;
             if (this.spaceOf(workspace) === undefined) {
-                debug('workspace added', workspace);
                 this.addSpace(workspace);
             }
         }
@@ -1941,7 +1940,6 @@ var Spaces = class Spaces extends Map {
         let nextUnusedWorkspaceIndex = nWorkspaces;
         for (let [workspace, space] of this) {
             if (workspaces[space.workspace] !== true) {
-                debug('workspace removed', space.workspace);
                 this.removeSpace(space);
 
                 // Maps in javascript (and thus Spaces) remember insertion order
@@ -2597,7 +2595,7 @@ var Spaces = class Spaces extends Map {
 
         metaWindow.unmapped = true;
 
-        debug('window-created', metaWindow.title);
+        console.debug('window-created', metaWindow?.title);
         let actor = metaWindow.get_compositor_private();
         animateWindow(metaWindow);
 
@@ -3056,7 +3054,6 @@ function add_filter(meta_window) {
    Handle windows leaving workspaces.
  */
 function remove_handler(workspace, meta_window) {
-    debug("window-removed", meta_window, meta_window.title, workspace.index());
     // Note: If `meta_window` was closed and had focus at the time, the next
     // window has already received the `focus` signal at this point.
     // Not sure if we can check directly if _this_ window had focus when closed.
@@ -3145,7 +3142,7 @@ function insertWindow(metaWindow, { existing }) {
                 Settings.winprops.splice(Settings.winprops.indexOf(winprop), 1);
             }
             if (winprop.scratch_layer) {
-                debug("#winprops", `Move ${metaWindow.title} to scratch`);
+                console.debug("#winprops", `Move ${metaWindow?.title} to scratch`);
                 addToScratch = true;
             }
             if (winprop.focus) {
@@ -3309,8 +3306,6 @@ function ensureViewport(meta_window, space, options = {}) {
     if (index === -1 || space.length === 0)
         return undefined;
 
-    debug('Moving', meta_window.title);
-
     if (space.selectedWindow.fullscreen &&
         !meta_window.fullscreen) {
         animateDown(space.selectedWindow);
@@ -3374,6 +3369,8 @@ function updateSelection(space, metaWindow) {
     Utils.actor_reparent(space.selection, clone);
     clone.set_child_below_sibling(space.selection, cloneActor);
     allocateClone(metaWindow);
+    // ensure window is properly activated
+    Main.activateWindow(metaWindow);
 }
 
 /**
@@ -3509,7 +3506,7 @@ function getDefaultFocusMode() {
 
 // `MetaWindow::focus` handling
 function focus_handler(metaWindow, user_data) {
-    console.debug("focus:", metaWindow.title, Utils.framestr(metaWindow.get_frame_rect()));
+    console.debug("focus:", metaWindow?.title);
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
         Scratch.makeScratch(metaWindow);
@@ -3577,7 +3574,7 @@ var focus_wrapper = Utils.dynamic_function_ref('focus_handler', this);
    Push all minimized windows to the scratch layer
  */
 function minimizeHandler(metaWindow) {
-    debug('minimized', metaWindow.title);
+    console.debug('minimized', metaWindow?.title);
     if (metaWindow.minimized) {
         Scratch.makeScratch(metaWindow);
     }
