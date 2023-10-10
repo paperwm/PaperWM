@@ -2282,6 +2282,7 @@ export const Spaces = class Spaces extends Map {
             Main.panel.statusArea.appMenu.container.hide();
         }
 
+        this.setSpaceTopbarElementsVisible(true);
         this._animateToSpaceOrdered(this.selectedSpace, false);
 
         let selected = this.selectedSpace.selectedWindow;
@@ -2346,7 +2347,6 @@ export const Spaces = class Spaces extends Map {
         const scale = 0.825;
         const padding_percentage = 4;
         let last = monitorSpaces.length - 1;
-        this.setSpaceTopbarElementsVisible(true);
         monitorSpaces.forEach((space, i) => {
             let padding = (space.height * scale / 100) * padding_percentage;
             let center = (space.height - (space.height * scale)) / 2;
@@ -2389,6 +2389,7 @@ export const Spaces = class Spaces extends Map {
         let monitor = space.monitor;
         this.selectedSpace = space;
 
+        this.setSpaceTopbarElementsVisible(true);
         let cloneParent = space.clip.get_parent();
         mru.forEach((space, i) => {
             space.startAnimate();
@@ -2504,7 +2505,6 @@ export const Spaces = class Spaces extends Map {
             Topbar.updateWorkspaceIndicator(newSpace.index);
         }
 
-        this.setSpaceTopbarElementsVisible(true);
         mru.forEach((space, i) => {
             let actor = space.actor;
             let h, onComplete = () => {};
