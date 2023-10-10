@@ -3,6 +3,8 @@ import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
+import GLib from 'gi://GLib';
+
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Workspace from 'resource:///org/gnome/shell/ui/workspace.js';
@@ -24,6 +26,7 @@ import { Utils, Tiling, Scratch, Settings } from './imports.js';
 
 let savedProps, signals;
 let gsettings, mutterSettings;
+let pillSwipeTimer;
 export function enable(extension) {
     savedProps = new Map();
     gsettings = extension.getSettings();
@@ -49,6 +52,7 @@ export function disable() {
     swipeTrackers = null;
     gsettings = null;
     mutterSettings = null;
+    pillSwipeTimer = null;
     actions = null;
 }
 
@@ -144,6 +148,13 @@ export function setupOverrides() {
                 const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch');
                 saved.call(this, _from, _to, _direction, onComplete);
             }
+
+            // ensure swipeTrackers are disabled after this
+            pillSwipeTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+                swipeTrackers.forEach(t => t.enabled = false);
+                pillSwipeTimer = null;
+                return false; // on return false destroys timeout
+            });
         });
 
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, '_prepareWorkspaceSwitch',
