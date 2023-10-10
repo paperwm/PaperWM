@@ -1469,10 +1469,15 @@ border-radius: ${borderWidth}px;
         // get positions of topbar elements to replicate positions in spaces
         const vertex = new Graphene.Point3D({ x: 0, y: 0 });
         const labelPosition = Topbar.menu.label.apply_relative_transform_to_point(Main.panel, vertex);
-        const focusPosition = Topbar.focusButton.apply_relative_transform_to_point(Main.panel, vertex);
-
         this.workspaceLabel.set_position(labelPosition.x, labelPosition.y);
-        this.focusModeIcon.set_position(focusPosition.x, focusPosition.y);
+
+        if (Settings.prefs.show_workspace_indicator) {
+            const focusPosition = Topbar.focusButton.apply_relative_transform_to_point(Main.panel, vertex);
+            this.focusModeIcon.set_position(focusPosition.x, focusPosition.y);
+        } else {
+            // using gnome pill, set focus icon at first position
+            this.focusModeIcon.set_position(0, 0);
+        }
     }
 
     /**
