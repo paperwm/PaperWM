@@ -2285,10 +2285,6 @@ export const Spaces = class Spaces extends Map {
         let currentSpace = this.activeSpace;
         let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
 
-        if (!inPreview) {
-            this.initWorkspaceSequence();
-        }
-
         let from = monitorSpaces.indexOf(this.selectedSpace);
         let newSpace = this.selectedSpace;
         let to = from;
@@ -2303,10 +2299,12 @@ export const Spaces = class Spaces extends Map {
             }
         }
 
-        if (direction === Meta.MotionDirection.DOWN)
+        if (direction === Meta.MotionDirection.DOWN) {
             to = from + 1;
-        else
+        }
+        else {
             to = from - 1;
+        }
 
         if (to < 0 || to >= monitorSpaces.length) {
             return;
@@ -2314,6 +2312,10 @@ export const Spaces = class Spaces extends Map {
 
         if (to === from && Easer.isEasing(newSpace.actor)) {
             return;
+        }
+
+        if (!inPreview) {
+            this.initWorkspaceSequence();
         }
 
         newSpace = monitorSpaces[to];
