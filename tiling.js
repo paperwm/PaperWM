@@ -389,9 +389,9 @@ export class Space extends Array {
      * @param {Boolean} animate
      */
     activate(animate = false) {
-        spaces._space_activate_animate = animate;
+        spaces.space_activate_animate = animate;
         this.workspace.activate(global.get_current_time());
-        spaces._space_activate_animate = false; // switch to default
+        spaces.space_activate_animate = false; // switch to default
     }
 
     /**
@@ -400,14 +400,14 @@ export class Space extends Array {
      * @param {Boolean} animate
      */
     activateWithFocus(metaWindow, animate = false) {
-        spaces._space_activate_animate = animate;
+        spaces.space_activate_animate = animate;
         if (metaWindow) {
             this.workspace.activate_with_focus(metaWindow, global.get_current_time());
         }
         else {
             this.workspace.activate(global.get_current_time());
         }
-        spaces._space_activate_animate = false; // switch to default
+        spaces.space_activate_animate = false; // switch to default
     }
 
     show() {
@@ -2168,7 +2168,7 @@ export const Spaces = class Spaces extends Map {
         let monitor = toSpace.monitor;
         this.setMonitors(monitor, toSpace, true);
 
-        let doAnimate = animate || this._space_activate_animate;
+        let doAnimate = animate || this.space_activate_animate;
         this.animateToSpace(
             toSpace,
             fromSpace,

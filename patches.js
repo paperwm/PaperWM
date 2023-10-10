@@ -136,13 +136,19 @@ export function setupOverrides() {
         // WorkspaceAnimation.WorkspaceAnimationController.animateSwitch
         // Disable the workspace switching animation in Gnome 40+
         function (_from, _to, _direction, onComplete) {
-            onComplete();
+            // if using PaperWM workspace switch animation, just do complete here
+            if (Tiling.spaces.space_activate_animate) {
+                onComplete();
+            }
+            else {
+                const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch');
+                saved.call(this, _from, _to, _direction, onComplete);
+            }
         });
 
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, '_prepareWorkspaceSwitch',
         function (workspaceIndices) {
-            const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController,
-                '_prepareWorkspaceSwitch');
+            const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController, '_prepareWorkspaceSwitch');
             // hide selection during workspace switch
             Tiling.spaces.forEach(s => s.hideSelection());
             saved.call(this, workspaceIndices);
