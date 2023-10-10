@@ -329,7 +329,7 @@ function bindkey(keystr, actionName = null, handler = null, options = {}) {
     } else {
         let boundAction = keycomboMap[keycombo];
         if (boundAction && boundAction !== action) {
-            console.debug("Rebinding", keystr, "to", actionName, "from", boundAction.name);
+            console.debug("Rebinding", keystr, "to", actionName, "from", boundAction?.name);
             disableAction(boundAction);
         }
 
