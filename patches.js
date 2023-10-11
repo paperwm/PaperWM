@@ -52,6 +52,7 @@ export function disable() {
     swipeTrackers = null;
     gsettings = null;
     mutterSettings = null;
+    Utils.timeout_remove(pillSwipeTimer);
     pillSwipeTimer = null;
     actions = null;
 }
