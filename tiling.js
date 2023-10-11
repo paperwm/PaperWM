@@ -1860,6 +1860,12 @@ export const Spaces = class Spaces extends Map {
     monitorsChanged() {
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
         this.monitors = new Map();
+
+        // can be called async (after delay) on disable - use activeSpace as check
+        if (!this.activeSpace) {
+            return;
+        }
+
         this.activeSpace.getWindows().forEach(w => {
             animateWindow(w);
         });
