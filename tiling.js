@@ -1494,6 +1494,11 @@ border-radius: ${borderWidth}px;
     showWorkspaceIndicator(show = true) {
         this.updateName();
         if (show && Settings.prefs.show_workspace_indicator) {
+            // if already shown then do nothing
+            if (this.workspaceIndicator.is_visible()) {
+                return;
+            }
+
             Utils.actor_raise(this.workspaceIndicator);
             this.workspaceIndicator.opacity = 0;
             this.workspaceIndicator.show();
@@ -1502,6 +1507,11 @@ border-radius: ${borderWidth}px;
                 time: Settings.prefs.animation_time,
             });
         } else {
+            // if already shown then do nothing
+            if (!this.workspaceIndicator.is_visible()) {
+                return;
+            }
+
             Easer.addEase(this.workspaceIndicator, {
                 opacity: 0,
                 time: Settings.prefs.animation_time,
@@ -1516,6 +1526,11 @@ border-radius: ${borderWidth}px;
      */
     showFocusModeIcon(show = true) {
         if (show && Settings.prefs.show_focus_mode_icon) {
+            // if already shown then do nothing
+            if (this.focusModeIcon.is_visible()) {
+                return;
+            }
+
             Utils.actor_raise(this.focusModeIcon);
             this.focusModeIcon.opacity = 0;
             this.focusModeIcon.show();
@@ -1524,6 +1539,10 @@ border-radius: ${borderWidth}px;
                 time: Settings.prefs.animation_time,
             });
         } else {
+            // if already hidden then do nothing
+            if (!this.focusModeIcon.is_visible()) {
+                return;
+            }
             Easer.addEase(this.focusModeIcon, {
                 opacity: 0,
                 time: Settings.prefs.animation_time,
