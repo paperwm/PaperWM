@@ -133,7 +133,7 @@ function setupOverrides() {
         // Disable the workspace switching animation in Gnome 40+
         function (_from, _to, _direction, onComplete) {
             // if using PaperWM workspace switch animation, just do complete here
-            if (Tiling.inPreview || Tiling.spaces.space_activate_animate) {
+            if (Tiling.inPreview || !Tiling.spaces.space_defaultAnimation) {
                 onComplete();
             }
             else {

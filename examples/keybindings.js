@@ -116,7 +116,7 @@ function cycleMonitor(binding = "<Super>d") {
         let nextMonitor = monitors[nextMonitorI];
         let nextSpace = Tiling.spaces.monitors.get(nextMonitor);
         if (nextSpace) {
-            nextSpace.activate();
+            nextSpace.activate(false, false);
         }
     });
 }

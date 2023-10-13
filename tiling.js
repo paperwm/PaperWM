@@ -261,10 +261,14 @@ var Space = class Space extends Array {
      * setting animation on workspaceSwitch.
      * @param {Boolean} animate
      */
-    activate(animate = false) {
-        spaces.space_activate_animate = animate;
+    activate(defaultAnimation = true, paperwmAnimation = false) {
+        spaces.space_defaultAnimation = defaultAnimation;
+        spaces.space_paperwmAnimation = paperwmAnimation;
+
         this.workspace.activate(global.get_current_time());
-        spaces.space_activate_animate = false; // switch to default
+
+        spaces.space_defaultAnimation = true;
+        spaces.space_paperwmAnimation = false; // switch to default
     }
 
     /**
@@ -272,15 +276,18 @@ var Space = class Space extends Array {
      * setting animation on workspaceSwitch.
      * @param {Boolean} animate
      */
-    activateWithFocus(metaWindow, animate = false) {
-        spaces.space_activate_animate = animate;
+    activateWithFocus(metaWindow, defaultAnimation = true, paperwmAnimation = false) {
+        spaces.space_defaultAnimation = defaultAnimation;
+        spaces.space_paperwmAnimation = paperwmAnimation;
+
         if (metaWindow) {
             this.workspace.activate_with_focus(metaWindow, global.get_current_time());
         }
         else {
             this.workspace.activate(global.get_current_time());
         }
-        spaces.space_activate_animate = false; // switch to default
+        spaces.space_defaultAnimation = true;
+        spaces.space_paperwmAnimation = false; // switch to default
     }
 
     show() {
@@ -1367,6 +1374,11 @@ border-radius: ${borderWidth}px;
     showWorkspaceIndicator(show = true) {
         this.updateName();
         if (show && Settings.prefs.show_workspace_indicator) {
+            // if already shown then do nothing
+            if (this.workspaceIndicator.is_visible()) {
+                return;
+            }
+
             Utils.actor_raise(this.workspaceIndicator);
             this.workspaceIndicator.opacity = 0;
             this.workspaceIndicator.show();
@@ -1375,6 +1387,11 @@ border-radius: ${borderWidth}px;
                 time: Settings.prefs.animation_time,
             });
         } else {
+            // if already shown then do nothing
+            if (!this.workspaceIndicator.is_visible()) {
+                return;
+            }
+
             Easer.addEase(this.workspaceIndicator, {
                 opacity: 0,
                 time: Settings.prefs.animation_time,
@@ -1389,6 +1406,11 @@ border-radius: ${borderWidth}px;
      */
     showFocusModeIcon(show = true) {
         if (show && Settings.prefs.show_focus_mode_icon) {
+            // if already shown then do nothing
+            if (this.focusModeIcon.is_visible()) {
+                return;
+            }
+
             Utils.actor_raise(this.focusModeIcon);
             this.focusModeIcon.opacity = 0;
             this.focusModeIcon.show();
@@ -1397,6 +1419,10 @@ border-radius: ${borderWidth}px;
                 time: Settings.prefs.animation_time,
             });
         } else {
+            // if already hidden then do nothing
+            if (!this.focusModeIcon.is_visible()) {
+                return;
+            }
             Easer.addEase(this.focusModeIcon, {
                 opacity: 0,
                 time: Settings.prefs.animation_time,
@@ -1675,6 +1701,8 @@ var Spaces = class Spaces extends Map {
         let spaceContainer = new Clutter.Actor({ name: 'spaceContainer' });
         spaceContainer.hide();
         this.spaceContainer = spaceContainer;
+        this.space_defaultAnimation = true;
+        this.space_paperwmAnimation = false;
 
         backgroundGroup.add_child(this.spaceContainer);
 
@@ -1789,7 +1817,7 @@ var Spaces = class Spaces extends Map {
              */
             let recent = this.mru().filter(s => !monitorGoneSpaces.includes(s));
             let activeSpace = recent?.[0] ?? this.monitors.get(primary);
-            activeSpace.activate();
+            activeSpace.activate(false, false);
 
             this.selectedSpace = activeSpace;
             this.setMonitors(activeSpace.monitor, activeSpace);
@@ -2018,12 +2046,12 @@ var Spaces = class Spaces extends Map {
                 metaWindow.foreach_transient(t => {
                     space.addFloating(t);
                 });
-                space.activateWithFocus(focus);
+                space.activateWithFocus(focus, false, false);
             } else {
                 metaWindow.move_to_monitor(newMonitor.index);
             }
         } else {
-            space.activate();
+            space.activate(false, false);
         }
     }
 
@@ -2084,7 +2112,7 @@ var Spaces = class Spaces extends Map {
         this.setMonitors(monitor, toSpace, true);
 
         this.setSpaceTopbarElementsVisible();
-        let doAnimate = animate || this.space_activate_animate;
+        let doAnimate = animate || this.space_paperwmAnimation;
         this.animateToSpace(
             toSpace,
             fromSpace,
