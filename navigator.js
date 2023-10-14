@@ -308,14 +308,16 @@ class NavigatorClass {
         this.was_accepted = true;
     }
 
-    finish(space, focus) {
-        if (grab)
+    finish(force = false) {
+        if (!force && grab) {
             return;
+        }
+
         this.accept();
-        this.destroy(space, focus);
+        this.destroy();
     }
 
-    destroy(space, focus) {
+    destroy() {
         this.minimaps.forEach(m => {
             if (typeof  m === 'number') {
                 Mainloop.source_remove(m);
@@ -336,10 +338,11 @@ class NavigatorClass {
         navigating = false;
 
         if (force) {
-            this.space.monitor.clickOverlay.hide();
+            this?.space?.monitor?.clickOverlay.hide();
         }
 
-        this.space = space || Tiling.spaces.selectedSpace;
+        let space = Tiling.spaces.selectedSpace;
+        this.space = space;
 
         let from = this.from;
         let selected = this.space.selectedWindow;
@@ -382,11 +385,9 @@ class NavigatorClass {
             : this.space.selectedWindow;
 
         let curFocus = display.focus_window;
-        if (force && curFocus && curFocus.is_on_all_workspaces())
+        if (force && curFocus && curFocus.is_on_all_workspaces()) {
             selected = curFocus;
-
-        if (focus)
-            selected = focus;
+        }
 
         if (selected && !Tiling.inGrab) {
             let hasFocus = selected && selected.has_focus();
@@ -428,9 +429,9 @@ function getNavigator() {
  * Finishes navigation if navigator exists.
  * Useful to call before disabling other modules.
  */
-function finishNavigation() {
+function finishNavigation(force = false) {
     if (navigator) {
-        navigator.finish();
+        navigator.finish(force);
     }
 }
 
@@ -446,6 +447,13 @@ function getActionDispatcher(mode) {
     }
     dispatcher = new ActionDispatcher();
     return getActionDispatcher(mode);
+}
+
+/**
+ * Fishes current dispatcher (if any).
+ */
+function finishDispatching() {
+    dispatcher?._finish(global.get_current_time());
 }
 
 /**
