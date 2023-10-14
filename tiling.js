@@ -2227,7 +2227,7 @@ export const Spaces = class Spaces extends Map {
             fromSpace,
             doAnimate);
 
-        toSpace.monitor.clickOverlay.deactivate();
+        toSpace.monitor?.clickOverlay.deactivate();
 
         for (let monitor of Main.layoutManager.monitors) {
             if (monitor === toSpace.monitor)
