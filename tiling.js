@@ -3419,9 +3419,11 @@ export function updateSelection(space, metaWindow) {
     clone.set_child_below_sibling(space.selection, cloneActor);
     allocateClone(metaWindow);
 
-    // ensure window is properly activated
+    // ensure window is properly activated (if not activated)
     if (space === spaces.activeSpace) {
-        Main.activateWindow(metaWindow);
+        if (metaWindow !== display.focus_windoww) {
+            Main.activateWindow(metaWindow);
+        }
     }
 }
 
