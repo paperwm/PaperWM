@@ -2067,7 +2067,7 @@ var Spaces = class Spaces extends Map {
             doAnimate,
             () => this.setSpaceTopbarElementsVisible());
 
-        toSpace.monitor.clickOverlay.deactivate();
+        toSpace.monitor?.clickOverlay.deactivate();
 
         for (let monitor of Main.layoutManager.monitors) {
             if (monitor === toSpace.monitor)
