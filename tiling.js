@@ -2705,6 +2705,14 @@ export const Spaces = class Spaces extends Map {
         return [...this.values()].find(s => uuid === s.uuid);
     }
 
+    get selectedSpace() {
+        return this._selectedSpace ?? this.activeSpace;
+    }
+
+    set selectedSpace(space) {
+        this._selectedSpace = space;
+    }
+
     /**
      * Returns the currently active space.
      */
