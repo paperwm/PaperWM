@@ -2227,7 +2227,7 @@ export const Spaces = class Spaces extends Map {
             fromSpace,
             doAnimate);
 
-        toSpace.monitor.clickOverlay.deactivate();
+        toSpace.monitor?.clickOverlay.deactivate();
 
         for (let monitor of Main.layoutManager.monitors) {
             if (monitor === toSpace.monitor)
@@ -2703,6 +2703,14 @@ export const Spaces = class Spaces extends Map {
      */
     spaceOfUuid(uuid) {
         return [...this.values()].find(s => uuid === s.uuid);
+    }
+
+    get selectedSpace() {
+        return this._selectedSpace ?? this.activeSpace;
+    }
+
+    set selectedSpace(space) {
+        this._selectedSpace = space;
     }
 
     /**
@@ -3419,9 +3427,11 @@ export function updateSelection(space, metaWindow) {
     clone.set_child_below_sibling(space.selection, cloneActor);
     allocateClone(metaWindow);
 
-    // ensure window is properly activated
+    // ensure window is properly activated (if not activated)
     if (space === spaces.activeSpace) {
-        Main.activateWindow(metaWindow);
+        if (metaWindow !== display.focus_windoww) {
+            Main.activateWindow(metaWindow);
+        }
     }
 }
 
