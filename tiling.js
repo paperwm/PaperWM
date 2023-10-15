@@ -3478,7 +3478,7 @@ function grabBegin(metaWindow, type) {
     case Meta.GrabOp.KEYBOARD_RESIZING_S:
     case Meta.GrabOp.KEYBOARD_RESIZING_SE:
     case Meta.GrabOp.KEYBOARD_RESIZING_W:
-        // NO OP
+        inGrab = new Grab.ResizeGrab();
         break;
     }
 }

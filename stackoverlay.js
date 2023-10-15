@@ -3,13 +3,13 @@ const Extension = ExtensionUtils.getCurrentExtension();
 const Settings = Extension.imports.settings;
 const Utils = Extension.imports.utils;
 const Grab = Extension.imports.grab;
+const Scratch = Extension.imports.scratch;
 const Tiling = Extension.imports.tiling;
 const Navigator = Extension.imports.navigator;
 
 const { Clutter, Shell, Meta, St } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
-const Layout = imports.ui.layout;
 const PointerWatcher = imports.ui.pointerWatcher;
 
 /*
@@ -168,7 +168,7 @@ var ClickOverlay = class ClickOverlay {
     }
 
     monitorActiveCheck() {
-        // if clickoverlay not active, then nothing to do
+        // if clickoverlay not active (space is already selected), then nothing to do
         if (!this.active) {
             return;
         }
@@ -184,6 +184,19 @@ var ClickOverlay = class ClickOverlay {
     }
 
     select() {
+        // if clickoverlay not active (space is already selected), then nothing to do
+        if (!this.active) {
+            return;
+        }
+
+        // check if in the midst of a window resize action
+        if (Tiling.inGrab && Tiling.inGrab instanceof Grab.ResizeGrab) {
+            const window = global.display?.focus_window;
+            if (window) {
+                Scratch.makeScratch(window);
+            }
+        }
+
         /**
          * stop navigation before activating workspace. Avoids an issue
          * in multimonitors where workspaces can get snapped to another monitor.

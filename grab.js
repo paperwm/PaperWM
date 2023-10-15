@@ -545,3 +545,12 @@ var MoveGrab = class MoveGrab {
         this.dndTarget = null;
     }
 };
+
+/**
+ * Resize grab class currently used to identify window grab type.
+ */
+var ResizeGrab = class ResizeGrab {
+    end() {
+
+    }
+};
