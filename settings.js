@@ -46,11 +46,11 @@ function enable() {
     prefs = {};
     ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
         'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
-        'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
-        'cycle-width-steps', 'cycle-height-steps', 'maximize-width-percent', 'minimap-scale', 
-        'edge-preview-scale', 'window-switcher-preview-scale', 'winprops', 
-        'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon', 
-        'disable-topbar-styling', 'default-focus-mode', 'gesture-enabled', 
+        'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction', 'cycle-width-steps',
+        'cycle-height-steps', 'maximize-width-percent', 'minimap-scale',
+        'edge-preview-scale', 'window-switcher-preview-scale', 'winprops',
+        'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon',
+        'disable-topbar-styling', 'default-focus-mode', 'gesture-enabled',
         'gesture-horizontal-fingers', 'gesture-workspace-fingers']
         .forEach(k => setState(null, k));
     prefs.__defineGetter__("minimum_margin", function () {

@@ -1726,7 +1726,7 @@ var Spaces = class Spaces extends Map {
     monitorsChanged() {
         this.onlyOnPrimary = this.overrideSettings.get_boolean('workspaces-only-on-primary');
         this.monitors = new Map();
-        
+
         // can be called async (after delay) on disable - use activeSpace as check
         if (!this.activeSpace) {
             return;
@@ -2065,7 +2065,7 @@ var Spaces = class Spaces extends Map {
             doAnimate,
             () => this.setSpaceTopbarElementsVisible());
 
-        toSpace.monitor.clickOverlay.deactivate();
+        toSpace.monitor?.clickOverlay.deactivate();
 
         for (let monitor of Main.layoutManager.monitors) {
             if (monitor === toSpace.monitor)
@@ -2540,6 +2540,14 @@ var Spaces = class Spaces extends Map {
      */
     spaceOfUuid(uuid) {
         return [...this.values()].find(s => uuid === s.uuid);
+    }
+
+    get selectedSpace() {
+        return this._selectedSpace ?? this.activeSpace;
+    }
+
+    set selectedSpace(space) {
+        this._selectedSpace = space;
     }
 
     /**
@@ -3374,9 +3382,11 @@ function updateSelection(space, metaWindow) {
     clone.set_child_below_sibling(space.selection, cloneActor);
     allocateClone(metaWindow);
 
-    // ensure window is properly activated
+    // ensure window is properly activated (if not activated)
     if (space === spaces.activeSpace) {
-        Main.activateWindow(metaWindow);
+        if (metaWindow !== display.focus_windoww) {
+            Main.activateWindow(metaWindow);
+        }
     }
 }
 
@@ -3662,7 +3672,7 @@ function toggleMaximizeHorizontally(metaWindow) {
     let workArea = space.workArea();
     let frame = metaWindow.get_frame_rect();
     let reqWidth = maxWidthPrc * workArea.width - Settings.prefs.minimum_margin * 2;
-    
+
 
     // Some windows only resize in increments > 1px so we can't rely on a precise width
     // Hopefully this heuristic is good enough
