@@ -3373,8 +3373,11 @@ function updateSelection(space, metaWindow) {
     Utils.actor_reparent(space.selection, clone);
     clone.set_child_below_sibling(space.selection, cloneActor);
     allocateClone(metaWindow);
+
     // ensure window is properly activated
-    Main.activateWindow(metaWindow);
+    if (space === spaces.activeSpace) {
+        Main.activateWindow(metaWindow);
+    }
 }
 
 /**
