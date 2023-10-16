@@ -13,6 +13,7 @@ const Scratch = Extension.imports.scratch;
 
 const { Meta, Gio, Shell } = imports.gi;
 const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
 const Workspace = imports.ui.workspace;
 const WorkspaceThumbnail = imports.ui.workspaceThumbnail;
 const WorkspaceAnimation = imports.ui.workspaceAnimation;
@@ -20,7 +21,40 @@ const WindowPreview = imports.ui.windowPreview;
 const WindowManager = imports.ui.windowManager;
 const Params = imports.misc.params;
 
-function registerOverrideProp(obj, name, override) {
+let savedProps, signals;
+let gsettings, mutterSettings;
+let pillSwipeTimer;
+function enable() {
+    savedProps = new Map();
+    gsettings = ExtensionUtils.getSettings();
+    mutterSettings = new Gio.Settings({ schema_id: 'org.gnome.mutter' });
+    signals = new Utils.Signals();
+    setupSwipeTrackers();
+    setupOverrides();
+    enableOverrides();
+    setupRuntimeDisables();
+    setupActions();
+}
+
+function disable() {
+    disableOverrides();
+    restoreRuntimeDisables();
+    actions.forEach(a => global.stage.add_action(a));
+    actions = null;
+
+    signals.destroy();
+    signals = null;
+
+    savedProps = null;
+    swipeTrackers = null;
+    gsettings = null;
+    mutterSettings = null;
+    Utils.timeout_remove(pillSwipeTimer);
+    pillSwipeTimer = null;
+    actions = null;
+}
+
+function registerOverrideProp(obj, name, override, warn = true) {
     if (!obj)
         return;
 
@@ -98,7 +132,21 @@ function setupOverrides() {
         // WorkspaceAnimation.WorkspaceAnimationController.animateSwitch
         // Disable the workspace switching animation in Gnome 40+
         function (_from, _to, _direction, onComplete) {
-            onComplete();
+            // if using PaperWM workspace switch animation, just do complete here
+            if (Tiling.inPreview || !Tiling.spaces.space_defaultAnimation) {
+                onComplete();
+            }
+            else {
+                const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch');
+                saved.call(this, _from, _to, _direction, onComplete);
+            }
+
+            // ensure swipeTrackers are disabled after this
+            pillSwipeTimer = Mainloop.timeout_add(500, () => {
+                swipeTrackers.forEach(t => t.enabled = false);
+                pillSwipeTimer = null;
+                return false; // on return false destroys timeout
+            });
         });
 
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, '_prepareWorkspaceSwitch',
@@ -340,36 +388,6 @@ function setupActions() {
         }
     });
     actions.forEach(a => global.stage.remove_action(a));
-}
-
-let savedProps, signals;
-let gsettings, mutterSettings;
-function enable() {
-    savedProps = new Map();
-    gsettings = ExtensionUtils.getSettings();
-    mutterSettings = new Gio.Settings({ schema_id: 'org.gnome.mutter' });
-    signals = new Utils.Signals();
-    setupSwipeTrackers();
-    setupOverrides();
-    enableOverrides();
-    setupRuntimeDisables();
-    setupActions();
-}
-
-function disable() {
-    disableOverrides();
-    restoreRuntimeDisables();
-    actions.forEach(a => global.stage.add_action(a));
-    actions = null;
-
-    signals.destroy();
-    signals = null;
-
-    savedProps = null;
-    swipeTrackers = null;
-    gsettings = null;
-    mutterSettings = null;
-    actions = null;
 }
 
 function sortWindows(a, b) {
