@@ -614,7 +614,7 @@ function enable () {
 
     signals.connect(Main.overview, 'showing', fixTopBar);
     signals.connect(Main.overview, 'hidden', () => {
-        if (Tiling.spaces.selectedSpace.showTopBar)
+        if (Tiling.spaces?.selectedSpace?.showTopBar)
             return;
         fixTopBar();
     });

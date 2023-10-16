@@ -2,7 +2,6 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Settings = Extension.imports.settings;
 const Utils = Extension.imports.utils;
-const Grab = Extension.imports.grab;
 const Tiling = Extension.imports.tiling;
 const Navigator = Extension.imports.navigator;
 
@@ -169,7 +168,7 @@ var ClickOverlay = class ClickOverlay {
     }
 
     monitorActiveCheck() {
-        // if clickoverlay not active, then nothing to do
+        // if clickoverlay not active (space is already selected), then nothing to do
         if (!this.active) {
             return;
         }
@@ -185,11 +184,17 @@ var ClickOverlay = class ClickOverlay {
     }
 
     select() {
+        // if clickoverlay not active (space is already selected), then nothing to do
+        if (!this.active) {
+            return;
+        }
+
         /**
          * stop navigation before activating workspace. Avoids an issue
          * in multimonitors where workspaces can get snapped to another monitor.
          */
-        Navigator.finishNavigation();
+        Navigator.finishDispatching();
+        Navigator.finishNavigation(true);
         this.deactivate();
         let selected = this.space.selectedWindow;
         this.space.activateWithFocus(selected, false, false);
