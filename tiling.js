@@ -2820,6 +2820,10 @@ function registerWindow(metaWindow) {
 }
 
 function allocateClone(metaWindow) {
+    if (!metaWindow?.clone) {
+        return;
+    }
+
     let frame = metaWindow.get_frame_rect();
     let buffer = metaWindow.get_buffer_rect();
     // Adjust the clone's origin to the north-west, so it will line up
