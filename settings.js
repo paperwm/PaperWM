@@ -46,8 +46,8 @@ function enable() {
     prefs = {};
     ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
         'workspace-colors', 'default-background', 'animation-time', 'use-workspace-name',
-        'pressure-barrier', 'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction',
-        'cycle-width-steps', 'cycle-height-steps', 'maximize-width-percent', 'minimap-scale',
+        'default-show-top-bar', 'swipe-sensitivity', 'swipe-friction', 'cycle-width-steps',
+        'cycle-height-steps', 'maximize-width-percent', 'minimap-scale',
         'edge-preview-scale', 'window-switcher-preview-scale', 'winprops',
         'show-workspace-indicator', 'show-window-position-bar', 'show-focus-mode-icon',
         'disable-topbar-styling', 'default-focus-mode', 'gesture-enabled',

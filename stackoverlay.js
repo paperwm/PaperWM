@@ -2,15 +2,15 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Extension = ExtensionUtils.getCurrentExtension();
 const Settings = Extension.imports.settings;
 const Utils = Extension.imports.utils;
+const Grab = Extension.imports.grab;
+const Scratch = Extension.imports.scratch;
 const Tiling = Extension.imports.tiling;
 const Navigator = Extension.imports.navigator;
 
 const { Clutter, Shell, Meta, St } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
-const Layout = imports.ui.layout;
 const PointerWatcher = imports.ui.pointerWatcher;
-
 
 /*
   The stack overlay decorates the top stacked window with its icon and
@@ -189,6 +189,14 @@ var ClickOverlay = class ClickOverlay {
             return;
         }
 
+        // check if in the midst of a window resize action
+        if (Tiling.inGrab && Tiling.inGrab instanceof Grab.ResizeGrab) {
+            const window = global.display?.focus_window;
+            if (window) {
+                Scratch.makeScratch(window);
+            }
+        }
+
         /**
          * stop navigation before activating workspace. Avoids an issue
          * in multimonitors where workspaces can get snapped to another monitor.
@@ -253,8 +261,8 @@ var ClickOverlay = class ClickOverlay {
                 overlay.clone = null;
             }
             actor.destroy();
-            overlay.removeBarrier();
         }
+
         Main.layoutManager.untrackChrome(this.enterMonitor);
         this.enterMonitor.destroy();
     }
@@ -300,10 +308,6 @@ var StackOverlay = class StackOverlay {
         let gsettings = ExtensionUtils.getSettings();
         this.signals.connect(overlay, 'enter-event', this.triggerPreview.bind(this));
         this.signals.connect(overlay, 'leave-event', this.removePreview.bind(this));
-        this.signals.connect(gsettings, 'changed::pressure-barrier',
-            this.updateBarrier.bind(this, true));
-
-        this.updateBarrier();
 
         global.window_group.add_child(overlay);
         Main.layoutManager.trackChrome(overlay);
@@ -392,69 +396,12 @@ var StackOverlay = class StackOverlay {
         clone.set_position(x, y);
     }
 
-    removeBarrier() {
-        if (this.barrier) {
-            if (this.pressureBarrier)
-                this.pressureBarrier.removeBarrier(this.barrier);
-            this.barrier.destroy();
-            this.pressureBarrier.destroy();
-            this.barrier = null;
-        }
-        this._removeBarrierTimeoutId = null;
-    }
-
-    updateBarrier(force) {
-        if (force)
-            this.removeBarrier();
-
-        if (this.barrier || !Settings.prefs.pressure_barrier)
-            return;
-
-        this.pressureBarrier = new Layout.PressureBarrier(100, 0.25 * 1000, Shell.ActionMode.NORMAL);
-        // Show the overlay on fullscreen windows when applying pressure to the edge
-        // The above leave-event handler will take care of hiding the overlay
-        this.pressureBarrier.connect('trigger', () => {
-            this.pressureBarrier._reset();
-            this.pressureBarrier._isTriggered = false;
-            if (this._removeBarrierTimeoutId) {
-                Mainloop.source_remove(this._removeBarrierTimeoutId);
-            }
-            this._removeBarrierTimeoutId = Mainloop.timeout_add(100, () => {
-                this.removeBarrier();
-                this._removeBarrierTimeoutId = null;
-                return false;
-            });
-            overlay.show();
-        });
-
-        const overlay = this.overlay;
-        let workArea = this.getWorkArea();
-        let monitor = this.monitor;
-        let x1, directions;
-        if (this._direction === Meta.MotionDirection.LEFT) {
-            x1 = monitor.x;
-            directions = Meta.BarrierDirection.POSITIVE_X;
-        } else {
-            x1 = monitor.x + monitor.width - 1;
-            directions = Meta.BarrierDirection.NEGATIVE_X;
-        }
-        this.barrier = new Meta.Barrier({
-            display: global.display,
-            x1, x2: x1,
-            y1: workArea.y + 1,
-            y2: workArea.y + workArea.height - 1,
-            directions,
-        });
-        this.pressureBarrier.addBarrier(this.barrier);
-    }
-
     setTarget(space, index) {
         this.removePreview();
 
         let bail = () => {
             this.target = null;
             this.overlay.width = 0;
-            this.removeBarrier();
             return false;
         };
 
@@ -513,21 +460,17 @@ var StackOverlay = class StackOverlay {
             overlay.hide();
         else
             overlay.show();
-        this.updateBarrier();
 
         return true;
     }
 
     destroy() {
-        Utils.timeout_remove(this._removeBarrierTimeoutId);
-        this._removeBarrierTimeoutId = null;
         Utils.timeout_remove(this.triggerPreviewTimeout);
         this.triggerPreviewTimeout = null;
 
         this.signals.destroy();
         this.signals = null;
         this.removePreview();
-        this.removeBarrier();
         Main.layoutManager.untrackChrome(this.overlay);
         this.overlay.destroy();
     }
