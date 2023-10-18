@@ -342,6 +342,7 @@
                             <child>
                               <object class="GtkLabel">
                                 <property name="focusable">False</property>
+                                <property name="tooltip_text" translatable="yes">Enables PaperWM's Window Position Bar (colored bar overlay on the Gnome topbar)</property>
                                 <property name="hexpand">1</property>
                                 <property name="label" translatable="yes">Enable Window Position Bar</property>
                                 <property name="xalign">0</property>

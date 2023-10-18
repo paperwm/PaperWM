@@ -416,11 +416,9 @@ var Space = class Space extends Array {
             // When resize is synchronous, ie. for X11 windows
             let nf = mw.get_frame_rect();
             if (nf.width !== targetWidth && nf.width !== f.width) {
-                // console.debug("  Width did not obey", "new", nf.width, "old", f.width, "target", targetWidth, mw.title)
                 widthChanged = true;
             }
             if (nf.height !== targetHeight && nf.height !== f.height) {
-                // console.debug("  Height did not obey", "new", nf.height, "old", f.height, "target", targetHeight, mw.title);
                 heightChanged = true;
                 targetHeight = nf.height; // Use actually height for layout
             }
@@ -3532,7 +3530,7 @@ function grabBegin(metaWindow, type) {
     case Meta.GrabOp.KEYBOARD_RESIZING_S:
     case Meta.GrabOp.KEYBOARD_RESIZING_SE:
     case Meta.GrabOp.KEYBOARD_RESIZING_W:
-        inGrab = new Grab.ResizeGrab(metaWindow, type);
+        inGrab = new Grab.ResizeGrab();
         break;
     }
 }
