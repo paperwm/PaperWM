@@ -544,32 +544,11 @@ export class MoveGrab {
     }
 }
 
+/**
+ * Resize grab class currently used to identify window grab type.
+ */
 export class ResizeGrab {
-    constructor(metaWindow, type) {
-        this.window = metaWindow;
-        this.signals = new Utils.Signals();
-
-        this.space = Tiling.spaces.spaceOfWindow(metaWindow);
-        if (this.space.indexOf(metaWindow) === -1)
-            return;
-
-        this.scrollAnchor = metaWindow.clone.targetX + this.space.monitor.x;
-
-        this.signals.connect(metaWindow, 'size-changed', () => {
-            metaWindow._targetWidth = null;
-            metaWindow._targetHeight = null;
-            let frame = metaWindow.get_frame_rect();
-
-            this.space.targetX = frame.x - this.scrollAnchor;
-            this.space.cloneContainer.x = this.space.targetX;
-            this.space.layout(false);
-        });
-    }
-
     end() {
-        this.signals.destroy();
-        this.signals = null;
-        this.window = null;
-        this.space.layout();
+
     }
 }

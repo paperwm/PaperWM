@@ -543,11 +543,9 @@ export class Space extends Array {
             // When resize is synchronous, ie. for X11 windows
             let nf = mw.get_frame_rect();
             if (nf.width !== targetWidth && nf.width !== f.width) {
-                // console.debug("  Width did not obey", "new", nf.width, "old", f.width, "target", targetWidth, mw.title)
                 widthChanged = true;
             }
             if (nf.height !== targetHeight && nf.height !== f.height) {
-                // console.debug("  Height did not obey", "new", nf.height, "old", f.height, "target", targetHeight, mw.title);
                 heightChanged = true;
                 targetHeight = nf.height; // Use actually height for layout
             }
@@ -2935,6 +2933,10 @@ export function registerWindow(metaWindow) {
 }
 
 export function allocateClone(metaWindow) {
+    if (!metaWindow?.clone) {
+        return;
+    }
+
     let frame = metaWindow.get_frame_rect();
     let buffer = metaWindow.get_buffer_rect();
     // Adjust the clone's origin to the north-west, so it will line up
@@ -3523,7 +3525,7 @@ export function grabBegin(metaWindow, type) {
     case Meta.GrabOp.KEYBOARD_RESIZING_S:
     case Meta.GrabOp.KEYBOARD_RESIZING_SE:
     case Meta.GrabOp.KEYBOARD_RESIZING_W:
-        inGrab = new Grab.ResizeGrab(metaWindow, type);
+        inGrab = new Grab.ResizeGrab();
         break;
     }
 }
