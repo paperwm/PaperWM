@@ -428,9 +428,16 @@ export class Signals extends Map {
  * module.
  */
 export let Easer = {
+    /**
+     * Safer time setting to essentiall disable easer animation.
+     * Setting to 0 can have some side-effects and cause race
+     * conditions.
+     */
+    ANIMATION_INSTANT_TIME: 0.0001,
+
     addEase(actor, params) {
         if (params.time) {
-            params.duration = params.time * 1000;
+            params.duration = this._safeTime(params.time) * 1000;
             delete params.time;
         }
         if (!params.mode)
@@ -438,12 +445,23 @@ export let Easer = {
         actor.ease(params);
     },
 
+    /**
+     * Returns a safe animation time to avoid timing
+     * race conditions etc.
+     */
+    _safeTime(time) {
+        return Math.max(time, this.ANIMATION_INSTANT_TIME);
+    },
+
     removeEase(actor) {
         actor.remove_all_transitions();
     },
 
     isEasing(actor) {
-        return actor.get_transition('x') || actor.get_transition('y') || actor.get_transition('scale-x') || actor.get_transition('scale-x');
+        return actor.get_transition('x') ||
+        actor.get_transition('y') ||
+        actor.get_transition('scale-x') ||
+        actor.get_transition('scale-x');
     },
 };
 
