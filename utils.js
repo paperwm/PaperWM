@@ -523,7 +523,7 @@ var easer = {
      */
     _safeDuration(time, instant) {
         let duration = Math.max(time, this.ANIMATION_SAFE_TIME);
-        if (instant) {
+        if (instant === true) {
             duration = this.ANIMATION_INSTANT_TIME;
         }
 
