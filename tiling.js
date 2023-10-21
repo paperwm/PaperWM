@@ -3479,7 +3479,8 @@ function move_to(space, metaWindow, { x, force, animate }) {
     Easer.addEase(space.cloneContainer,
         {
             x: target,
-            time: animate ? Settings.prefs.animation_time : Easer.ANIMATION_INSTANT_TIME,
+            time: Settings.prefs.animation_time,
+            instant: !animate,
             onComplete: () => space.moveDone(),
         });
 
