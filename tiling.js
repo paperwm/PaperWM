@@ -2156,8 +2156,25 @@ var Spaces = class Spaces extends Map {
         for (let i = 0; i < nWorkspaces; i++) {
             let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
             if (space.monitor === monitor ||
-                (space.length === 0 && this.monitors.get(space.monitor) !== space))
+                (space.length === 0 && this.monitors.get(space.monitor) !== space)) {
+                // include workspace if it is the current one
+                // or if it is empty and not active on another monitor
                 out.push(space);
+            }
+        }
+        return out;
+    }
+
+    _getOrderedSpacesFromAllMonitors(monitor) {
+        let nWorkspaces = workspaceManager.n_workspaces;
+        let out = [];
+        for (let i = 0; i < nWorkspaces; i++) {
+            let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
+            if (this.monitors.get(space.monitor) !== space || space.monitor == monitor) {
+                // include workspace if it is the current one
+                // or if it is not active on another monitor
+                out.push(space);
+            }
         }
         return out;
     }
@@ -2230,14 +2247,19 @@ var Spaces = class Spaces extends Map {
         }
     }
 
-    selectSequenceSpace(direction, move) {
+    selectSequenceSpace(direction, move, fromAllMonitors=false) {
         // if in stack preview do not run sequence preview
         if (inPreview === PreviewMode.STACK) {
             return;
         }
 
         let currentSpace = this.activeSpace;
-        let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
+        var monitorSpaces;
+        if (fromAllMonitors) {
+            monitorSpaces = this._getOrderedSpacesFromAllMonitors(currentSpace.monitor);
+        } else {
+            monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
+        }
 
         let from = monitorSpaces.indexOf(this.selectedSpace);
         let newSpace = this.selectedSpace;
@@ -2284,6 +2306,10 @@ var Spaces = class Spaces extends Map {
         const padding_percentage = 4;
         let last = monitorSpaces.length - 1;
         monitorSpaces.forEach((space, i) => {
+            // need to set monitor here so it shows up during selection, when it
+            // was previously on another monitor
+            space.setMonitor(currentSpace.monitor);
+
             let padding = (space.height * scale / 100) * padding_percentage;
             let center = (space.height - (space.height * scale)) / 2;
             let space_y;
@@ -4298,12 +4324,12 @@ function movePreviousSpaceBackwards(mw, space) {
     spaces.selectStackSpace(Meta.MotionDirection.UP, true);
 }
 
-function selectDownSpace(mw, space) {
-    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN);
+export function selectDownSpace(mw, space, fromAllMonitors) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN, false, fromAllMonitors);
 }
 
-function selectUpSpace(mw, space) {
-    spaces.selectSequenceSpace(Meta.MotionDirection.UP);
+export function selectUpSpace(mw, space, fromAllMonitors) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.UP, false, fromAllMonitors);
 }
 
 function moveDownSpace(mw, space) {
