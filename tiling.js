@@ -2170,7 +2170,7 @@ var Spaces = class Spaces extends Map {
         let out = [];
         for (let i = 0; i < nWorkspaces; i++) {
             let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
-            if (this.monitors.get(space.monitor) !== space || space.monitor == monitor) {
+            if (this.monitors.get(space.monitor) !== space || space.monitor === monitor) {
                 // include workspace if it is the current one
                 // or if it is not active on another monitor
                 out.push(space);
