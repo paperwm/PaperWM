@@ -1893,7 +1893,6 @@ export const Spaces = class Spaces extends Map {
         this.forEach(space => space.init());
 
         // Bind to visible workspace when starting up
-        signals.disconnect(Main.panel);
         signals.connect(Main.panel, "captured-event", Gestures.horizontalTouchScroll.bind(this.activeSpace));
 
         this.stack = this.mru();
