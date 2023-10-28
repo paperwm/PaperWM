@@ -1315,16 +1315,18 @@ border-radius: ${borderWidth}px;
      * sets these elements' visibility when not needed.
      * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible = false, changeTopBarStyle = true) {
+    setSpaceTopbarElementsVisible(visible = false, options = {}) {
+        const changeTopBarStyle = options?.changeTopBarStyle ?? true;
+        const force = options?.force ?? false;
         const setVisible = v => {
             if (v) {
                 this.updateSpaceIconPositions();
-                this.showWorkspaceIndicator(true);
-                this.showFocusModeIcon(true);
+                this.showWorkspaceIndicator(true, force);
+                this.showFocusModeIcon(true, force);
             }
             else {
-                this.showWorkspaceIndicator(false);
-                this.showFocusModeIcon(false);
+                this.showWorkspaceIndicator(false, force);
+                this.showFocusModeIcon(false, force);
             }
         };
 
@@ -1383,11 +1385,11 @@ border-radius: ${borderWidth}px;
      * Shows the workspace indicator space element.
      * @param {boolean} show
      */
-    showWorkspaceIndicator(show = true) {
+    showWorkspaceIndicator(show = true, force = false) {
         this.updateName();
         if (show && Settings.prefs.show_workspace_indicator) {
             // if already shown then do nothing
-            if (this.workspaceIndicator.is_visible()) {
+            if (!force && this.workspaceIndicator.is_visible()) {
                 return;
             }
 
@@ -1400,7 +1402,7 @@ border-radius: ${borderWidth}px;
             });
         } else {
             // if already shown then do nothing
-            if (!this.workspaceIndicator.is_visible()) {
+            if (!force && !this.workspaceIndicator.is_visible()) {
                 return;
             }
 
@@ -1416,10 +1418,10 @@ border-radius: ${borderWidth}px;
      * Shows the focusModeIcon space element.
      * @param {boolean} show
      */
-    showFocusModeIcon(show = true) {
+    showFocusModeIcon(show = true, force = false) {
         if (show && Settings.prefs.show_focus_mode_icon) {
             // if already shown then do nothing
-            if (this.focusModeIcon.is_visible()) {
+            if (!force && this.focusModeIcon.is_visible()) {
                 return;
             }
 
@@ -1432,7 +1434,7 @@ border-radius: ${borderWidth}px;
             });
         } else {
             // if already hidden then do nothing
-            if (!this.focusModeIcon.is_visible()) {
+            if (!force && !this.focusModeIcon.is_visible()) {
                 return;
             }
             Easer.addEase(this.focusModeIcon, {
@@ -2087,6 +2089,9 @@ var Spaces = class Spaces extends Map {
         navFinish();
         // final switch with warp
         this.switchMonitor(direction);
+
+        // ensure after swapping that the space elements are shown correctly
+        this.setSpaceTopbarElementsVisible(true, { force: true });
     }
 
     switchWorkspace(wm, fromIndex, toIndex, animate = false) {
@@ -2145,9 +2150,9 @@ var Spaces = class Spaces extends Map {
      * See Space.setSpaceTopbarElementsVisible function for what this does.
      * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible = false, changeTopBarStyle = true) {
+    setSpaceTopbarElementsVisible(visible = false, options = {}) {
         this.forEach(s => {
-            s.setSpaceTopbarElementsVisible(visible, changeTopBarStyle);
+            s.setSpaceTopbarElementsVisible(visible, options);
         });
     }
 
