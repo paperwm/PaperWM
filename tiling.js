@@ -3283,15 +3283,24 @@ function insertWindow(metaWindow, { existing }) {
         toggleMaximizeHorizontally(metaWindow);
     }
 
+    /**
+     * If window is new, then setup and ensure is in view
+     * after actor is shown on stage.
+     */
     if (!existing) {
         clone.x = clone.targetX;
         clone.y = clone.targetY;
+        // this layout will implement any preferredWidth winprops
         space.layout();
         connectSizeChanged(true);
-    } else {
-        space.layout();
-        animateWindow(metaWindow);
+        signals.connectOneShot(actor, 'show', () => {
+            ensureViewport(metaWindow, space);
+        });
+        return;
     }
+
+    space.layout();
+    animateWindow(metaWindow);
 
     if (metaWindow === display.focus_window) {
         focus_handler(metaWindow);
