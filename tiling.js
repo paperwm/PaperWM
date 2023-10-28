@@ -1319,42 +1319,49 @@ border-radius: ${borderWidth}px;
      * @param {boolean} visible
      */
     setSpaceTopbarElementsVisible(visible = false, changeTopBarStyle = true) {
-        // if windowPositionBar shown, we want the topbar style to be transparent if visible
-        if (Settings.prefs.show_window_position_bar) {
-            if (changeTopBarStyle) {
-                if (visible && this.hasTopBar) {
-                    TopBar.setTransparentStyle();
-                }
-                else {
-                    TopBar.setNoBackgroundStyle();
-                }
+        const setVisible = v => {
+            if (v) {
+                this.updateSpaceIconPositions();
+                this.showWorkspaceIndicator(true);
+                this.showFocusModeIcon(true);
             }
-
-            // if on different monitor then override to show elements
-            if (!this.hasTopBar) {
-                visible = true;
+            else {
+                this.showWorkspaceIndicator(false);
+                this.showFocusModeIcon(false);
             }
+        };
 
-            // don't show elements on spaces with actual TopBar (unless inPreview)
-            if (this.hasTopBar && !inPreview) {
-                visible = false;
+        // if windowPositionBar is disabled ==> don't show elements
+        if (!Settings.prefs.show_window_position_bar) {
+            setVisible(false);
+            return;
+        }
+
+        if (changeTopBarStyle) {
+            if (visible && this.hasTopBar) {
+                TopBar.setTransparentStyle();
             }
-
-            // if current window is fullscreen, don't show
-            if (this?.selectedWindow?.fullscreen) {
-                visible = false;
+            else {
+                TopBar.setNoBackgroundStyle();
             }
         }
 
-        if (visible) {
-            this.updateSpaceIconPositions();
-            this.showWorkspaceIndicator(true);
-            this.showFocusModeIcon(true);
+        // if on different monitor then override to show elements
+        if (!this.hasTopBar) {
+            visible = true;
         }
-        else {
-            this.showWorkspaceIndicator(false);
-            this.showFocusModeIcon(false);
+
+        // don't show elements on spaces with actual TopBar (unless inPreview)
+        if (this.hasTopBar && !inPreview) {
+            visible = false;
         }
+
+        // if current window is fullscreen, don't show
+        if (this?.selectedWindow?.fullscreen) {
+            visible = false;
+        }
+
+        setVisible(visible);
     }
 
     /**
