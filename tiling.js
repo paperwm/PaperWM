@@ -140,7 +140,7 @@ export function enable(extension) {
         try {
             spaces.init();
         } catch (e) {
-            console.error(new Error('#paperwm startup failed'));
+            console.error(e);
         }
 
         // Fix the stack overlay
@@ -582,10 +582,7 @@ export class Space extends Array {
         this._inLayout = true;
         this.startAnimate();
 
-        let time = animate ? Settings.prefs.animation_time : 0;
-        if (window.instant) {
-            time = 0;
-        }
+        let time = Settings.prefs.animation_time;
         let gap = Settings.prefs.window_gap;
         let x = 0;
         let selectedIndex = this.selectedIndex();
@@ -688,14 +685,14 @@ export class Space extends Array {
         this.emit('layout', this);
     }
 
-    queueLayout() {
+    queueLayout(animate = true) {
         if (this._layoutQueued)
             return;
 
         this._layoutQueued = true;
         Utils.later_add(Meta.LaterType.RESIZE, () => {
             this._layoutQueued = false;
-            this.layout();
+            this.layout(animate);
         });
     }
 
@@ -2973,7 +2970,7 @@ export function resizeHandler(metaWindow) {
     if (inGrab && inGrab.window === metaWindow)
         return;
 
-    let f = metaWindow.get_frame_rect();
+    const f = metaWindow.get_frame_rect();
     let needLayout = false;
     if (metaWindow._targetWidth !== f.width || metaWindow._targetHeight !== f.height) {
         needLayout = true;
@@ -2981,22 +2978,29 @@ export function resizeHandler(metaWindow) {
     metaWindow._targetWidth = null;
     metaWindow._targetHeight = null;
 
-    let space = spaces.spaceOfWindow(metaWindow);
+    const space = spaces.spaceOfWindow(metaWindow);
     if (space.indexOf(metaWindow) === -1)
         return;
 
-    let selected = metaWindow === space.selectedWindow;
+    const selected = metaWindow === space.selectedWindow;
+    let animate = true;
+
+    // if window is fullscreened, then don't animate background space.container animation etc.
+    if (metaWindow?.fullscreen) {
+        animate = false;
+    }
 
     if (!space._inLayout && needLayout) {
         // Restore window position when eg. exiting fullscreen
         if (!Navigator.navigating && selected) {
             move_to(space, metaWindow, {
                 x: metaWindow.get_frame_rect().x - space.monitor.x,
+                animate,
             });
         }
 
         // Resizing from within a size-changed signal is troube (#73). Queue instead.
-        space.queueLayout();
+        space.queueLayout(animate);
     }
 }
 
@@ -3084,6 +3088,16 @@ class SaveState {
  */
 export function focusMonitor() {
     return spaces?.activeSpace?.monitor;
+}
+
+/**
+ * Convenience method to run a callback method when an actor is shown the stage.
+ * Uses a `connectOneShot` signal.
+ * @param actor
+ * @param callback
+ */
+function callbackOnActorShow(actor, callback) {
+    signals.connectOneShot(actor, 'show', callback);
 }
 
 /**
@@ -3269,24 +3283,33 @@ export function insertWindow(metaWindow, { existing }) {
         return;
 
     metaWindow.unmake_above();
-    if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
+    if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
         metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
         toggleMaximizeHorizontally(metaWindow);
     }
-    space.layout();
 
+    /**
+     * If window is new, then setup and ensure is in view
+     * after actor is shown on stage.
+     */
     if (!existing) {
         clone.x = clone.targetX;
         clone.y = clone.targetY;
-        connectSizeChanged(true);
+        // this layout will implement any preferredWidth winprops
         space.layout();
-    } else {
-        animateWindow(metaWindow);
+        connectSizeChanged(true);
+        callbackOnActorShow(actor, () => {
+            ensureViewport(metaWindow, space);
+        });
+        return;
     }
+
+    space.layout();
+    animateWindow(metaWindow);
 
     if (metaWindow === display.focus_window) {
         focus_handler(metaWindow);
-    } else if (space.workspace === workspaceManager.get_active_workspace()) {
+    } else if (space === spaces.activeSpace) {
         Main.activateWindow(metaWindow);
     } else {
         ensureViewport(space.selectedWindow, space);
@@ -3441,7 +3464,8 @@ export function updateSelection(space, metaWindow) {
  * Move the column containing @meta_window to x, y and propagate the change
  * in @space. Coordinates are relative to monitor and y is optional.
  */
-export function move_to(space, metaWindow, { x, y, force, instant }) {
+export function move_to(space, metaWindow, { x, force, animate }) {
+    animate = animate ?? true;
     if (space.indexOf(metaWindow) === -1)
         return;
 
@@ -3466,7 +3490,8 @@ export function move_to(space, metaWindow, { x, y, force, instant }) {
         {
             x: target,
             time: Settings.prefs.animation_time,
-            onComplete: space.moveDone.bind(space),
+            instant: !animate,
+            onComplete: () => space.moveDone(),
         });
 
     space.fixOverlays(metaWindow);
@@ -3949,8 +3974,8 @@ export function activateLastWindow(mw, space) {
  * programmatically before it's rendered, see
  * https://github.com/paperwm/PaperWM/issues/448 for details).
  */
-export function activateWindowAfterRendered(actor, mw) {
-    signals.connectOneShot(actor, 'show', () => {
+function activateWindowAfterRendered(actor, mw) {
+    callbackOnActorShow(actor, () => {
         Main.activateWindow(mw);
     });
 }
@@ -3980,7 +4005,6 @@ export function centerWindowHorizontally(metaWindow) {
     } else {
         move_to(space, metaWindow, {
             x: targetX,
-            onComplete: () => space.moveDone(),
         });
     }
 }
