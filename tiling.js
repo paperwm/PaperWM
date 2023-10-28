@@ -3278,18 +3278,18 @@ function insertWindow(metaWindow, { existing }) {
         return;
 
     metaWindow.unmake_above();
-    if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
+    if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
         metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
         toggleMaximizeHorizontally(metaWindow);
     }
-    space.layout();
 
     if (!existing) {
         clone.x = clone.targetX;
         clone.y = clone.targetY;
-        connectSizeChanged(true);
         space.layout();
+        connectSizeChanged(true);
     } else {
+        space.layout();
         animateWindow(metaWindow);
     }
 
