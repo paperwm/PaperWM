@@ -3305,6 +3305,11 @@ function insertWindow(metaWindow, { existing }) {
         connectSizeChanged(true);
         callbackOnActorShow(actor, () => {
             ensureViewport(metaWindow, space);
+
+            // if only one window on space, then centre it
+            if (space.getWindows().length === 1) {
+                centerWindowHorizontally(metaWindow);
+            }
         });
         return;
     }
