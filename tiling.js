@@ -1630,11 +1630,15 @@ border-radius: ${borderWidth}px;
         });
     }
 
-    setMonitor(monitor, animate = false) {
+    setMonitor(monitor, animate = false, options = {}) {
+        const commit = options?.commit ?? true;
+
         // Remake the background when we move monitors. The size/scale will be
         // incorrect when using fractional scaling.
         if (monitor !== this.monitor) {
-            this.monitor = monitor;
+            if (commit) {
+                this.monitor = monitor;
+            }
             this.createBackground();
             this.updateBackground();
             this.updateColor();
@@ -1673,8 +1677,7 @@ border-radius: ${borderWidth}px;
         background.set_size(this.width, this.height);
 
         this.cloneClip.set_size(monitor.width, monitor.height);
-        this.cloneClip.set_clip(0, 0,
-            this.width, this.height);
+        this.cloneClip.set_clip(0, 0, this.width, this.height);
         // transforms break if there's no height
         this.cloneContainer.height = this.monitor.height;
 
@@ -2343,14 +2346,14 @@ export const Spaces = class Spaces extends Map {
         }
     }
 
-    selectSequenceSpace(direction, move, fromAllMonitors=false) {
+    selectSequenceSpace(direction, move, fromAllMonitors = false) {
         // if in stack preview do not run sequence preview
         if (inPreview === PreviewMode.STACK) {
             return;
         }
 
         let currentSpace = this.activeSpace;
-        var monitorSpaces;
+        let monitorSpaces;
         if (fromAllMonitors) {
             monitorSpaces = this._getOrderedSpacesFromAllMonitors(currentSpace.monitor);
         } else {
@@ -2363,7 +2366,7 @@ export const Spaces = class Spaces extends Map {
 
         if (move && this.selectedSpace.selectedWindow) {
             const navigator = Navigator.getNavigator();
-            if (navigator._moving == null ||
+            if (navigator._moving === null ||
                 (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
@@ -2404,7 +2407,7 @@ export const Spaces = class Spaces extends Map {
         monitorSpaces.forEach((space, i) => {
             // need to set monitor here so it shows up during selection, when it
             // was previously on another monitor
-            space.setMonitor(currentSpace.monitor);
+            space.setMonitor(currentSpace.monitor, false, { commit: false });
 
             let padding = (space.height * scale / 100) * padding_percentage;
             let center = (space.height - (space.height * scale)) / 2;
