@@ -1893,7 +1893,7 @@ export const Spaces = class Spaces extends Map {
         this.forEach(space => space.init());
 
         // Bind to visible workspace when starting up
-        signals.connect(Main.panel, "captured-event", Gestures.horizontalTouchScroll.bind(this.activeSpace));
+        this.touchSignal = signals.connect(Main.panel, "captured-event", Gestures.horizontalTouchScroll.bind(this.activeSpace));
 
         this.stack = this.mru();
     }
@@ -2260,8 +2260,8 @@ export const Spaces = class Spaces extends Map {
         }
 
         // Update panel to handle target workspace
-        signals.disconnect(Main.panel);
-        signals.connect(Main.panel, "captured-event", Gestures.horizontalTouchScroll.bind(toSpace));
+        signals.disconnect(Main.panel, this.touchSignal);
+        this.touchSignal = signals.connect(Main.panel, "captured-event", Gestures.horizontalTouchScroll.bind(toSpace));
 
         inPreview = PreviewMode.NONE;
     }
