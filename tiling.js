@@ -3295,7 +3295,7 @@ function insertWindow(metaWindow, { existing }) {
 
     if (metaWindow === display.focus_window) {
         focus_handler(metaWindow);
-    } else if (space.workspace === workspaceManager.get_active_workspace()) {
+    } else if (space === spaces.activeSpace) {
         Main.activateWindow(metaWindow);
     } else {
         ensureViewport(space.selectedWindow, space);
