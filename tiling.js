@@ -241,6 +241,11 @@ var Space = class Space extends Array {
             setFocusMode(getDefaultFocusMode(), this);
         });
 
+        // update space elements when in/out of fullscreen
+        this.signals.connect(global.display, 'in-fullscreen-changed', () => {
+            this.setSpaceTopbarElementsVisible(true);
+        });
+
         const settings = ExtensionUtils.getSettings();
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
         this.signals.connect(settings, 'changed::default-background', this.updateBackground.bind(this));
