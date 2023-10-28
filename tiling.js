@@ -3096,6 +3096,16 @@ function focusMonitor() {
 }
 
 /**
+ * Convenience method to run a callback method when an actor is shown the stage.
+ * Uses a `connectOneShot` signal.
+ * @param actor
+ * @param callback
+ */
+function callbackOnActorShow(actor, callback) {
+    signals.connectOneShot(actor, 'show', callback);
+}
+
+/**
    Types of windows which never should be tiled.
  */
 function add_filter(meta_window) {
@@ -3278,24 +3288,33 @@ function insertWindow(metaWindow, { existing }) {
         return;
 
     metaWindow.unmake_above();
-    if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
+    if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
         metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
         toggleMaximizeHorizontally(metaWindow);
     }
-    space.layout();
 
+    /**
+     * If window is new, then setup and ensure is in view
+     * after actor is shown on stage.
+     */
     if (!existing) {
         clone.x = clone.targetX;
         clone.y = clone.targetY;
-        connectSizeChanged(true);
+        // this layout will implement any preferredWidth winprops
         space.layout();
-    } else {
-        animateWindow(metaWindow);
+        connectSizeChanged(true);
+        callbackOnActorShow(actor, () => {
+            ensureViewport(metaWindow, space);
+        });
+        return;
     }
+
+    space.layout();
+    animateWindow(metaWindow);
 
     if (metaWindow === display.focus_window) {
         focus_handler(metaWindow);
-    } else if (space.workspace === workspaceManager.get_active_workspace()) {
+    } else if (space === spaces.activeSpace) {
         Main.activateWindow(metaWindow);
     } else {
         ensureViewport(space.selectedWindow, space);
@@ -3963,7 +3982,7 @@ function activateLastWindow(mw, space) {
  * https://github.com/paperwm/PaperWM/issues/448 for details).
  */
 function activateWindowAfterRendered(actor, mw) {
-    signals.connectOneShot(actor, 'show', () => {
+    callbackOnActorShow(actor, () => {
         Main.activateWindow(mw);
     });
 }
