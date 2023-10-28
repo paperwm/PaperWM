@@ -1334,6 +1334,11 @@ border-radius: ${borderWidth}px;
             if (this.hasTopBar && !inPreview) {
                 visible = false;
             }
+
+            // if current window is fullscreen, don't show
+            if (this?.selectedWindow?.fullscreen) {
+                visible = false;
+            }
         }
 
         if (visible) {
