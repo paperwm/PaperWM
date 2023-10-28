@@ -2886,17 +2886,21 @@ function resizeHandler(metaWindow) {
 
     const selected = metaWindow === space.selectedWindow;
     let animate = true;
+    let x;
 
     // if window is fullscreened, then don't animate background space.container animation etc.
     if (metaWindow?.fullscreen) {
         animate = false;
+        x = 0;
+    } else {
+        x = metaWindow.get_frame_rect().x - space.monitor.x;
     }
 
     if (!space._inLayout && needLayout) {
         // Restore window position when eg. exiting fullscreen
         if (!Navigator.navigating && selected) {
             move_to(space, metaWindow, {
-                x: metaWindow.get_frame_rect().x - space.monitor.x,
+                x,
                 animate,
             });
         }
