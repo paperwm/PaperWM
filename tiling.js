@@ -369,6 +369,11 @@ export class Space extends Array {
             setFocusMode(getDefaultFocusMode(), this);
         });
 
+        // update space elements when in/out of fullscreen
+        this.signals.connect(global.display, 'in-fullscreen-changed', () => {
+            this.setSpaceTopbarElementsVisible(true);
+        });
+
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
         this.signals.connect(gsettings, 'changed::default-background', this.updateBackground.bind(this));
         this.signals.connect(gsettings, 'changed::use-default-background', this.updateBackground.bind(this));
@@ -1430,38 +1435,52 @@ border-radius: ${borderWidth}px;
      * sets these elements' visibility when not needed.
      * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible = false, changeTopBarStyle = true) {
-        // if windowPositionBar shown, we want the topbar style to be transparent if visible
-        if (Settings.prefs.show_window_position_bar) {
-            if (changeTopBarStyle) {
-                if (visible && this.hasTopBar) {
-                    Topbar.setTransparentStyle();
-                }
-                else {
-                    Topbar.setNoBackgroundStyle();
-                }
+    setSpaceTopbarElementsVisible(visible = false, options = {}) {
+        const changeTopBarStyle = options?.changeTopBarStyle ?? true;
+        const force = options?.force ?? false;
+        const setVisible = v => {
+            if (v) {
+                this.updateSpaceIconPositions();
+                this.showWorkspaceIndicator(true, force);
+                this.showFocusModeIcon(true, force);
             }
-
-            // if on different monitor then override to show elements
-            if (!this.hasTopBar) {
-                visible = true;
+            else {
+                this.showWorkspaceIndicator(false, force);
+                this.showFocusModeIcon(false, force);
             }
+        };
 
-            // don't show elements on spaces with actual Topbar (unless inPreview)
-            if (this.hasTopBar && !inPreview) {
-                visible = false;
+        // if windowPositionBar is disabled ==> don't show elements
+        if (!Settings.prefs.show_window_position_bar) {
+            setVisible(false);
+            return;
+        }
+
+        if (changeTopBarStyle) {
+            if (visible && this.hasTopBar) {
+                Topbar.setTransparentStyle();
+            }
+            else {
+                Topbar.setNoBackgroundStyle();
             }
         }
 
-        if (visible) {
-            this.updateSpaceIconPositions();
-            this.showWorkspaceIndicator(true);
-            this.showFocusModeIcon(true);
+        // if on different monitor then override to show elements
+        if (!this.hasTopBar) {
+            visible = true;
         }
-        else {
-            this.showWorkspaceIndicator(false);
-            this.showFocusModeIcon(false);
+
+        // don't show elements on spaces with actual TopBar (unless inPreview)
+        if (this.hasTopBar && !inPreview) {
+            visible = false;
         }
+
+        // if current window is fullscreen, don't show
+        if (this?.selectedWindow?.fullscreen) {
+            visible = false;
+        }
+
+        setVisible(visible);
     }
 
     /**
@@ -1486,11 +1505,11 @@ border-radius: ${borderWidth}px;
      * Shows the workspace indicator space element.
      * @param {boolean} show
      */
-    showWorkspaceIndicator(show = true) {
+    showWorkspaceIndicator(show = true, force = false) {
         this.updateName();
         if (show && Settings.prefs.show_workspace_indicator) {
             // if already shown then do nothing
-            if (this.workspaceIndicator.is_visible()) {
+            if (!force && this.workspaceIndicator.is_visible()) {
                 return;
             }
 
@@ -1503,7 +1522,7 @@ border-radius: ${borderWidth}px;
             });
         } else {
             // if already shown then do nothing
-            if (!this.workspaceIndicator.is_visible()) {
+            if (!force && !this.workspaceIndicator.is_visible()) {
                 return;
             }
 
@@ -1519,10 +1538,10 @@ border-radius: ${borderWidth}px;
      * Shows the focusModeIcon space element.
      * @param {boolean} show
      */
-    showFocusModeIcon(show = true) {
+    showFocusModeIcon(show = true, force = false) {
         if (show && Settings.prefs.show_focus_mode_icon) {
             // if already shown then do nothing
-            if (this.focusModeIcon.is_visible()) {
+            if (!force && this.focusModeIcon.is_visible()) {
                 return;
             }
 
@@ -1535,7 +1554,7 @@ border-radius: ${borderWidth}px;
             });
         } else {
             // if already hidden then do nothing
-            if (!this.focusModeIcon.is_visible()) {
+            if (!force && !this.focusModeIcon.is_visible()) {
                 return;
             }
             Easer.addEase(this.focusModeIcon, {
@@ -2179,6 +2198,9 @@ export const Spaces = class Spaces extends Map {
         navFinish();
         // final switch with warp
         this.switchMonitor(direction);
+
+        // ensure after swapping that the space elements are shown correctly
+        this.setSpaceTopbarElementsVisible(true, { force: true });
     }
 
     switchWorkspace(wm, fromIndex, toIndex, animate = false) {
@@ -2237,9 +2259,9 @@ export const Spaces = class Spaces extends Map {
      * See Space.setSpaceTopbarElementsVisible function for what this does.
      * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible = false, changeTopBarStyle = true) {
+    setSpaceTopbarElementsVisible(visible = false, options = {}) {
         this.forEach(s => {
-            s.setSpaceTopbarElementsVisible(visible, changeTopBarStyle);
+            s.setSpaceTopbarElementsVisible(visible, options);
         });
     }
 
@@ -2984,17 +3006,21 @@ export function resizeHandler(metaWindow) {
 
     const selected = metaWindow === space.selectedWindow;
     let animate = true;
+    let x;
 
     // if window is fullscreened, then don't animate background space.container animation etc.
     if (metaWindow?.fullscreen) {
         animate = false;
+        x = 0;
+    } else {
+        x = metaWindow.get_frame_rect().x - space.monitor.x;
     }
 
     if (!space._inLayout && needLayout) {
         // Restore window position when eg. exiting fullscreen
         if (!Navigator.navigating && selected) {
             move_to(space, metaWindow, {
-                x: metaWindow.get_frame_rect().x - space.monitor.x,
+                x,
                 animate,
             });
         }
