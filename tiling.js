@@ -3096,6 +3096,16 @@ function focusMonitor() {
 }
 
 /**
+ * Convenience method to run a callback method when an actor is shown the stage.
+ * Uses a `connectOneShot` signal.
+ * @param actor
+ * @param callback
+ */
+function callbackOnActorShow(actor, callback) {
+    signals.connectOneShot(actor, 'show', callback);
+}
+
+/**
    Types of windows which never should be tiled.
  */
 function add_filter(meta_window) {
@@ -3293,7 +3303,7 @@ function insertWindow(metaWindow, { existing }) {
         // this layout will implement any preferredWidth winprops
         space.layout();
         connectSizeChanged(true);
-        signals.connectOneShot(actor, 'show', () => {
+        callbackOnActorShow(actor, () => {
             ensureViewport(metaWindow, space);
         });
         return;
@@ -3972,7 +3982,7 @@ function activateLastWindow(mw, space) {
  * https://github.com/paperwm/PaperWM/issues/448 for details).
  */
 function activateWindowAfterRendered(actor, mw) {
-    signals.connectOneShot(actor, 'show', () => {
+    callbackOnActorShow(actor, () => {
         Main.activateWindow(mw);
     });
 }
