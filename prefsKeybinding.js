@@ -58,6 +58,8 @@ const actions = {
         'move-previous-workspace-backward',
         'switch-up-workspace',
         'switch-down-workspace',
+        'switch-up-workspace-from-all-monitors',
+        'switch-down-workspace-from-all-monitors',
         'move-up-workspace',
         'move-down-workspace',
     ],
