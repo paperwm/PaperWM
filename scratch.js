@@ -217,7 +217,7 @@ export function animateWindows() {
     for (let w of ws) {
         let parent = w.clone.get_parent();
         parent && parent.remove_child(w.clone);
-        Main.uiGroup.insert_child_below(w.clone, Main.layoutManager.panelBox);
+        Main.uiGroup.insert_child_above(w.clone, global.window_group);
         let f = w.get_frame_rect();
         w.clone.set_position(f.x, f.y);
         Tiling.animateWindow(w);

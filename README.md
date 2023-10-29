@@ -82,7 +82,7 @@ Activating a window will ensure it's fully visible, scrolling the tiling if nece
 
 Pressing <kbd>Super</kbd><kbd>I</kbd> will move the window to the right below the active window, tiling them vertically in a column. <kbd>Super</kbd><kbd>O</kbd> will do the opposite, pushing the bottom window out of the current column.
 
-Swiping the trackpad horizontally with three fingers will scroll the tiling (only available in Wayland).
+Swiping the trackpad horizontally with three fingers (only available in Wayland) or swiping the panel horizontally on a touch screen will scroll the tiling.
 
 <kbd>Alt</kbd><kbd>Tab</kbd> is of course also available.
 
@@ -123,13 +123,17 @@ Pressing <kbd>Super</kbd><kbd>Page_Down</kbd> and <kbd>Super</kbd><kbd>Page_Up</
 
 ![Sequential workspace navigation](https://github.com/paperwm/media/blob/master/sequence.png)
 
+By default <kbd>Super</kbd><kbd>Page_Down</kbd> and <kbd>Super</kbd><kbd>Page_Down</kbd> are bound to the keybindings "Switch to workspace below/above (**ws from current monitor**)". That means using the keybindings you can select all workspaces that were previously shown on the current monitor and all empty once.
+
+Alternatively you can change these keybindings to "Switch to workspace below/above (**ws from all monitors**)" in the settings. That way you can switch to **all** workspaces (that are not currently shown on another monitor). Depending on your workflow this might feel more natural.
+
 The workspace name is shown in the top left corner replacing the `Activities` button adding a few enhancements. Scrolling on the name will let you browse the workspace stack just like <kbd>Super</kbd><kbd>Above_Tab</kbd>. Left clicking on the name opens Gnome overview, while right clicking the name lets you access and change the workspace name.
 
 > If you prefer to use another workspace indicator (or prefer none at all), you can hide this workspace name element from Gnome topbar by executing the following command from a terminal:
-> 
+>
 > ```
 > dconf write /org/gnome/shell/extensions/paperwm/show-workspace-indicator false
-> ``` 
+> ```
 
 Swiping down on the trackpad vertically with three fingers will initiate the workspace stack, and then allow you navigate the workspace stack with 3-finger vertical swipes (only available in Wayland).  See the [Touchpad Gestures](#touchpad-gestures) section for more information on gesture support in PaperWM.
 
@@ -143,7 +147,8 @@ PaperWM currently works best using the workspaces span monitors preference, this
 | <kbd>Super</kbd><kbd>Shift</kbd><kbd>Above_Tab</kbd>                   | Cycle backwards through the most recently used workspaces                         |
 | <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Above_Tab</kbd>                    | Cycle through the most recently used, taking the active window with you           |
 | <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Above_Tab</kbd>    | Cycle backwards through the most recently used, taking the active window with you |
-| <kbd>Super</kbd><kbd>Page_Down</kbd>/<kbd>Page_Up</kbd>                | Cycle sequentially through workspaces                                             |
+| <kbd>Super</kbd><kbd>Page_Down</kbd>/<kbd>Page_Up</kbd>                | Cycle sequentially through workspaces (from current monitor only)                 |
+| *no default keybinding*                                                | Cycle sequentially through workspaces (from all monitors)                         |
 | <kbd>Super</kbd><kbd>Ctrl</kbd><kbd>Page_Down</kbd>/<kbd>Page_Up</kbd> | Cycle sequentially through workspaces, taking the active window with you          |
 
 

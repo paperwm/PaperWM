@@ -38,12 +38,22 @@
 
     <key type="as" name="switch-down-workspace">
       <default><![CDATA[['<Super>Page_Down']]]></default>
-      <summary>Switch to workspace below</summary>
+      <summary>Switch to workspace below (ws only from current monitor)</summary>
     </key>
 
     <key type="as" name="switch-up-workspace">
       <default><![CDATA[['<Super>Page_Up']]]></default>
-      <summary>Switch to workspace above</summary>
+      <summary>Switch to workspace above (ws only from current monitor)</summary>
+    </key>
+
+    <key type="as" name="switch-down-workspace-from-all-monitors">
+      <default><![CDATA[[]]]></default>
+      <summary>Switch to workspace below (ws from all monitors)</summary>
+    </key>
+
+    <key type="as" name="switch-up-workspace-from-all-monitors">
+      <default><![CDATA[[]]]></default>
+      <summary>Switch to workspace above (ws from all monitors)</summary>
     </key>
 
     <key type="as" name="move-down-workspace">

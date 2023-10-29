@@ -518,8 +518,6 @@ export class Space extends Array {
                 else {
                     console.warn("invalid preferredWidth unit:", `'${prop.unit}'`, "(should be 'px' or '%')");
                 }
-
-                delete mw.preferredWidth;
             }
 
             if (resizable) {
@@ -1646,11 +1644,15 @@ border-radius: ${borderWidth}px;
         });
     }
 
-    setMonitor(monitor, animate = false) {
+    setMonitor(monitor, animate = false, options = {}) {
+        const commit = options?.commit ?? true;
+
         // Remake the background when we move monitors. The size/scale will be
         // incorrect when using fractional scaling.
         if (monitor !== this.monitor) {
-            this.monitor = monitor;
+            if (commit) {
+                this.monitor = monitor;
+            }
             this.createBackground();
             this.updateBackground();
             this.updateColor();
@@ -1689,8 +1691,7 @@ border-radius: ${borderWidth}px;
         background.set_size(this.width, this.height);
 
         this.cloneClip.set_size(monitor.width, monitor.height);
-        this.cloneClip.set_clip(0, 0,
-            this.width, this.height);
+        this.cloneClip.set_clip(0, 0, this.width, this.height);
         // transforms break if there's no height
         this.cloneContainer.height = this.monitor.height;
 
@@ -1888,6 +1889,10 @@ export const Spaces = class Spaces extends Map {
 
         // Initialize spaces _after_ monitors are set up
         this.forEach(space => space.init());
+
+        // Bind to visible workspace when starting up
+        this.touchSignal = signals.connect(Main.panel, "captured-event", Gestures.horizontalTouchScroll.bind(this.activeSpace));
+
         this.stack = this.mru();
     }
 
@@ -2252,6 +2257,10 @@ export const Spaces = class Spaces extends Map {
             monitor.clickOverlay.activate();
         }
 
+        // Update panel to handle target workspace
+        signals.disconnect(Main.panel, this.touchSignal);
+        this.touchSignal = signals.connect(Main.panel, "captured-event", Gestures.horizontalTouchScroll.bind(toSpace));
+
         inPreview = PreviewMode.NONE;
     }
 
@@ -2271,8 +2280,25 @@ export const Spaces = class Spaces extends Map {
         for (let i = 0; i < nWorkspaces; i++) {
             let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
             if (space.monitor === monitor ||
-                (space.length === 0 && this.monitors.get(space.monitor) !== space))
+                (space.length === 0 && this.monitors.get(space.monitor) !== space)) {
+                // include workspace if it is the current one
+                // or if it is empty and not active on another monitor
                 out.push(space);
+            }
+        }
+        return out;
+    }
+
+    _getOrderedSpacesFromAllMonitors(monitor) {
+        let nWorkspaces = workspaceManager.n_workspaces;
+        let out = [];
+        for (let i = 0; i < nWorkspaces; i++) {
+            let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
+            if (this.monitors.get(space.monitor) !== space || space.monitor === monitor) {
+                // include workspace if it is the current one
+                // or if it is not active on another monitor
+                out.push(space);
+            }
         }
         return out;
     }
@@ -2345,14 +2371,19 @@ export const Spaces = class Spaces extends Map {
         }
     }
 
-    selectSequenceSpace(direction, move) {
+    selectSequenceSpace(direction, move, fromAllMonitors = false) {
         // if in stack preview do not run sequence preview
         if (inPreview === PreviewMode.STACK) {
             return;
         }
 
         let currentSpace = this.activeSpace;
-        let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
+        let monitorSpaces;
+        if (fromAllMonitors) {
+            monitorSpaces = this._getOrderedSpacesFromAllMonitors(currentSpace.monitor);
+        } else {
+            monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
+        }
 
         let from = monitorSpaces.indexOf(this.selectedSpace);
         let newSpace = this.selectedSpace;
@@ -2360,7 +2391,7 @@ export const Spaces = class Spaces extends Map {
 
         if (move && this.selectedSpace.selectedWindow) {
             const navigator = Navigator.getNavigator();
-            if (navigator._moving == null ||
+            if (navigator._moving === null ||
                 (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
@@ -2399,6 +2430,10 @@ export const Spaces = class Spaces extends Map {
         const padding_percentage = 4;
         let last = monitorSpaces.length - 1;
         monitorSpaces.forEach((space, i) => {
+            // need to set monitor here so it shows up during selection, when it
+            // was previously on another monitor
+            space.setMonitor(currentSpace.monitor, false, { commit: false });
+
             let padding = (space.height * scale / 100) * padding_percentage;
             let center = (space.height - (space.height * scale)) / 2;
             let space_y;
@@ -3314,6 +3349,9 @@ export function insertWindow(metaWindow, { existing }) {
         toggleMaximizeHorizontally(metaWindow);
     }
 
+    // run a simple layout in pre-prepare layout
+    space.layout(false);
+
     /**
      * If window is new, then setup and ensure is in view
      * after actor is shown on stage.
@@ -3321,10 +3359,11 @@ export function insertWindow(metaWindow, { existing }) {
     if (!existing) {
         clone.x = clone.targetX;
         clone.y = clone.targetY;
-        // this layout will implement any preferredWidth winprops
         space.layout();
         connectSizeChanged(true);
         callbackOnActorShow(actor, () => {
+            // after shown, remove preferred width winprop
+            delete metaWindow.preferredWidth;
             ensureViewport(metaWindow, space);
 
             // if only one window on space, then centre it
@@ -3332,11 +3371,11 @@ export function insertWindow(metaWindow, { existing }) {
                 centerWindowHorizontally(metaWindow);
             }
         });
-        return;
     }
-
-    space.layout();
-    animateWindow(metaWindow);
+    else {
+        space.layout();
+        animateWindow(metaWindow);
+    }
 
     if (metaWindow === display.focus_window) {
         focus_handler(metaWindow);
@@ -4254,12 +4293,12 @@ export function movePreviousSpaceBackwards(mw, space) {
     spaces.selectStackSpace(Meta.MotionDirection.UP, true);
 }
 
-export function selectDownSpace(mw, space) {
-    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN);
+export function selectDownSpace(mw, space, fromAllMonitors) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN, false, fromAllMonitors);
 }
 
-export function selectUpSpace(mw, space) {
-    spaces.selectSequenceSpace(Meta.MotionDirection.UP);
+export function selectUpSpace(mw, space, fromAllMonitors) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.UP, false, fromAllMonitors);
 }
 
 export function moveDownSpace(mw, space) {

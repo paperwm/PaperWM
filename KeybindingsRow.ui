@@ -28,8 +28,7 @@
                 <property name="ellipsize">end</property>
                 <property name="halign">start</property>
                 <property name="lines">1</property>
-                <property name="wrap">True</property>
-                <property name="wrap-mode">word-char</property>
+                <property name="wrap">False</property>
                 <property name="xalign">0</property>
               </object>
             </child>
