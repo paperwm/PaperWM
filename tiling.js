@@ -518,8 +518,6 @@ export class Space extends Array {
                 else {
                     console.warn("invalid preferredWidth unit:", `'${prop.unit}'`, "(should be 'px' or '%')");
                 }
-
-                delete mw.preferredWidth;
             }
 
             if (resizable) {
@@ -3351,6 +3349,9 @@ export function insertWindow(metaWindow, { existing }) {
         toggleMaximizeHorizontally(metaWindow);
     }
 
+    // run a simple layout in pre-prepare layout
+    space.layout(false);
+
     /**
      * If window is new, then setup and ensure is in view
      * after actor is shown on stage.
@@ -3358,10 +3359,11 @@ export function insertWindow(metaWindow, { existing }) {
     if (!existing) {
         clone.x = clone.targetX;
         clone.y = clone.targetY;
-        // this layout will implement any preferredWidth winprops
         space.layout();
         connectSizeChanged(true);
         callbackOnActorShow(actor, () => {
+            // after shown, remove preferred width winprop
+            delete metaWindow.preferredWidth;
             ensureViewport(metaWindow, space);
 
             // if only one window on space, then centre it
@@ -3369,11 +3371,11 @@ export function insertWindow(metaWindow, { existing }) {
                 centerWindowHorizontally(metaWindow);
             }
         });
-        return;
     }
-
-    space.layout();
-    animateWindow(metaWindow);
+    else {
+        space.layout();
+        animateWindow(metaWindow);
+    }
 
     if (metaWindow === display.focus_window) {
         focus_handler(metaWindow);
