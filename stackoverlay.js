@@ -322,12 +322,6 @@ export class StackOverlay {
         this.setTarget(null);
     }
 
-    touchTriggerPreview() {
-        if (event.type() === Clutter.EventType.TOUCH_BEGIN)
-            return triggerPreview();
-        return Clutter.EVENT_PROPAGATE;
-    }
-
     triggerPreview() {
         if ("_previewId" in this)
             return;
