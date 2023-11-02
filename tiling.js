@@ -17,7 +17,8 @@ const { Clutter, St, Graphene, Meta, Gio, GDesktopEnums } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const Signals = imports.signals;
-const debug = Extension.imports.utils.debug;
+const Background = imports.ui.background;
+
 
 const workspaceManager = global.workspace_manager;
 const display = global.display;
@@ -1199,8 +1200,6 @@ border-radius: ${borderWidth}px;
     updateBackground() {
         let path = this.settings.get_string('background') || Settings.prefs.default_background;
         let useDefault = gsettings.get_boolean('use-default-background');
-        const BackgroundStyle = GDesktopEnums.BackgroundStyle;
-        let style = BackgroundStyle.ZOOM;
         if (!path && useDefault) {
             if (interfaceSettings.get_string("color-scheme") === "default") {
                 path = backgroundSettings.get_string("picture-uri");
@@ -1210,11 +1209,9 @@ border-radius: ${borderWidth}px;
         }
 
         let file = Gio.File.new_for_commandline_arg(path);
-        if (path === '' || !file.query_exists(null)) {
-            file = Gio.File.new_for_uri('resource:///org/gnome/shell/theme/noise-texture.png');
-            style = BackgroundStyle.WALLPAPER;
-        }
-        this.metaBackground.set_file(file, style);
+
+        // now update PaperWM background content with metabackground
+        this.metaBackground._loadFile(file);
     }
 
     updateName() {
@@ -1450,29 +1447,26 @@ border-radius: ${borderWidth}px;
         }
 
         let monitor = this.monitor;
-        let backgroundParams = global.screen
-            ? { meta_screen: global.screen }
-            : { meta_display: display };
 
-        let metaBackground = new Meta.Background(backgroundParams);
-        // gnome-shell 3.38
-        if (Meta.BackgroundActor.prototype.set_background) {
-            backgroundParams.background = metaBackground;
-        }
+        this.metaBackground = new Background.Background({
+            monitorIndex: this.monitor.index,
+            layoutManager: Main.layoutManager,
+            settings: backgroundSettings,
+            file: null,
+            style: GDesktopEnums.BackgroundStyle.ZOOM,
+        });
+
         this.background = new Meta.BackgroundActor(
             Object.assign({
                 name: "background",
                 monitor: monitor.index,
                 reactive: true, // Disable the background menu
-            }, backgroundParams)
+            }, { meta_display: display })
         );
 
-        if (this.background.content) {
-            this.background.content.set({
-                background: metaBackground,
-            });
-        }
-        this.metaBackground = metaBackground;
+        this.background.content.set({
+            background: this.metaBackground,
+        });
 
         this.actor.insert_child_below(this.background, null);
 
