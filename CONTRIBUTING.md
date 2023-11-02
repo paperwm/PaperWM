@@ -1,10 +1,10 @@
 # History / Admins
 
-PaperWM was originally written by @hedning and @olejorgenb. However, they became busy with other things and stepped away from active development. They may return some day, and you might see them around every couple months, but don't ping them and expect a response.
+PaperWM was originally written by [@hedning] and [@olejorgenb]. However, they became busy with other things and stepped away from active development. They may return some day, and you might see them around every couple months, but don't ping them and expect a response.
 
-@smichel17 [joined](https://github.com/paperwm/PaperWM/issues/407) to facilitate transitioning PaperWM to a community project. Unfortunately, he's *also* too busy (and doesn't know Gnome Shell's code base well enough) to take over development directly. So, his role is basically to be a trustworthy person (he hopes!) to manage adding more maintainers. Including writing this document (👋).
+[@smichel17] [joined](https://github.com/paperwm/PaperWM/issues/407) to facilitate transitioning PaperWM to a community project. Unfortunately, he's *also* too busy (and doesn't know Gnome Shell's code base well enough) to take over development directly. So, his role is basically to be a trustworthy person (he hopes!) to manage adding more maintainers. Including writing this document (👋).
 
-@jitaa jumped in to help with development in late 2022, having discovered PaperWM around that time. He came from i3wm and quickly fell in love with PaperWM and the concept of scrollable tiling window managers. He's a PaperWM maintainer focused on fixing issues, and developing & implementing requested features that'll make PaperWM a reliable daily driver loved by its users.
+[@jtaala] jumped in to help with development in late 2022, having discovered PaperWM around that time. He came from i3wm and quickly fell in love with PaperWM and the concept of scrollable tiling window managers. He's a PaperWM maintainer focused on fixing issues, and developing & implementing requested features that'll make PaperWM a reliable daily driver loved by its users.
 
 ## Community Transition
 
@@ -27,7 +27,12 @@ To balance those issues, the plan is something like this (details may change):
 
 ### Governance
 
-If it's not clear who will make a decision, it's @smichel17's decision.
+If it's not clear who will make a decision, it's [@smichel17]'s decision.
 My goal is to make as few decisions this way as possible.
 
 Over time we'll add more to this section, as we figure out how we want to work.
+
+[@hedning]: https://github.com/hedning
+[@olejorgenb]: https://github.com/olejorgenb
+[@smichel17]: https://github.com/smichel17
+[@jtaala]: https://github.com/jtaala
