@@ -1,7 +1,7 @@
 import Clutter from 'gi://Clutter';
 import GDesktopEnums from 'gi://GDesktopEnums';
-import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import Graphene from 'gi://Graphene';
 import Meta from 'gi://Meta';
 import St from 'gi://St';
@@ -9,7 +9,7 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {
-    Settings, Utils, Lib, Gestures, Navigator, Grab, Topbar, Scratch, Stackoverlay
+    Settings, Utils, Lib, Gestures, Navigator, Grab, Topbar, Scratch, Stackoverlay, Background
 } from './imports.js';
 import { Easer } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
