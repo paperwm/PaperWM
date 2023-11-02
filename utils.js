@@ -506,9 +506,10 @@ var easer = {
     ANIMATION_INSTANT_TIME: 0.0001,
 
     addEase(actor, params) {
-        let time = params.time ?? this.ANIMATION_SAFE_TIME;
-        params.duration = this._safeDuration(time, params.instant);
-        delete params.time;
+        if (params.time) {
+            params.duration = this._safeDuration(params.time, params.instant);
+            delete params.time;
+        }
 
         if (!params.mode) {
             params.mode = Clutter.AnimationMode.EASE_IN_OUT_QUAD;
