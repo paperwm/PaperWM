@@ -119,6 +119,12 @@ export class ClickOverlay {
         this._lastPointer = [];
         this._lastPointerTimeout = null;
 
+        this.signals.connect(enterMonitor, 'touch-event', () => {
+            if (Tiling.inPreview)
+                return;
+            this.select();
+        });
+
         this.signals.connect(enterMonitor, 'enter-event', () => {
             if (Tiling.inPreview)
                 return;
