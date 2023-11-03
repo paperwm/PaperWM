@@ -1209,7 +1209,7 @@ border-radius: ${borderWidth}px;
         }
 
         // destroy old background
-        this.metaBackground.destroy();
+        this.metaBackground?.destroy();
         this.metaBackground = null;
 
         this.metaBackground = new Background.Background({
