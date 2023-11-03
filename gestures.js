@@ -221,6 +221,11 @@ export function horizontalScroll(space, actor, event) {
     }
 }
 
+/**
+   Handle scrolling horizontally using a touchscreen. This handler is meant to
+   be connected to the global Panel and recreated every time the active space
+   is changed.
+ */
 let walk = 0;
 let sdx = null;
 export function horizontalTouchScroll(actor, event) {
@@ -249,6 +254,11 @@ export function horizontalTouchScroll(actor, event) {
         sdx = myx;
         walk += Math.abs(dx);
 
+        /**
+         * Here, we ignore the friction setting and reduce the reported time
+         * scale, because the distances involved on a touch screen would make
+         * the flick motion as understood by the trackpad handler impractical.
+         */
         update(this, -dx, event.get_time() * .75);
         return Clutter.EVENT_PROPAGATE;
     case Clutter.EventType.TOUCH_CANCEL:
