@@ -1194,7 +1194,7 @@ var Space = class Space extends Array {
 border: ${borderWidth}px ${this.color};
 border-radius: ${borderWidth}px;
 `);
-        this.metaBackground.set_color(Clutter.color_from_string(color)[1]);
+        this.metaBackground?.set_color(Clutter.color_from_string(color)[1]);
     }
 
     updateBackground() {
