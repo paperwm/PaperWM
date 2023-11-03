@@ -1208,10 +1208,21 @@ border-radius: ${borderWidth}px;
             }
         }
 
-        let file = Gio.File.new_for_commandline_arg(path);
+        // destroy old background
+        this.metaBackground.destroy();
+        this.metaBackground = null;
 
-        // now update PaperWM background content with metabackground
-        this.metaBackground._loadFile(file);
+        this.metaBackground = new Background.Background({
+            monitorIndex: this.monitor.index,
+            layoutManager: Main.layoutManager,
+            settings: backgroundSettings,
+            file: Gio.File.new_for_commandline_arg(path),
+            style: GDesktopEnums.BackgroundStyle.ZOOM,
+        });
+
+        this.background.content.set({
+            background: this.metaBackground,
+        });
     }
 
     updateName() {
@@ -1448,14 +1459,6 @@ border-radius: ${borderWidth}px;
 
         let monitor = this.monitor;
 
-        this.metaBackground = new Background.Background({
-            monitorIndex: this.monitor.index,
-            layoutManager: Main.layoutManager,
-            settings: backgroundSettings,
-            file: null,
-            style: GDesktopEnums.BackgroundStyle.ZOOM,
-        });
-
         this.background = new Meta.BackgroundActor(
             Object.assign({
                 name: "background",
@@ -1463,10 +1466,6 @@ border-radius: ${borderWidth}px;
                 reactive: true, // Disable the background menu
             }, { meta_display: display })
         );
-
-        this.background.content.set({
-            background: this.metaBackground,
-        });
 
         this.actor.insert_child_below(this.background, null);
 
