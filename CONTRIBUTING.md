@@ -4,7 +4,7 @@ PaperWM was originally written by [@hedning] and [@olejorgenb]. However, they be
 
 [@smichel17] [joined](https://github.com/paperwm/PaperWM/issues/407) to facilitate transitioning PaperWM to a community project. Unfortunately, he's *also* too busy (and doesn't know Gnome Shell's code base well enough) to take over development directly. So, his role is basically to be a trustworthy person (he hopes!) to manage adding more maintainers. Including writing this document (👋).
 
-[@jtaala] jumped in to help with development in late 2022, having discovered PaperWM around that time. He came from i3wm and quickly fell in love with PaperWM and the concept of scrollable tiling window managers. He's a PaperWM maintainer focused on fixing issues, and developing & implementing requested features that'll make PaperWM a reliable daily driver loved by its users.
+[@jtaala] stepped into PaperWM development in late 2022, having discovered PaperWM around that time. He came from i3wm and quickly fell in love with PaperWM and the concept of scrollable tiling window managers. Jay's a PaperWM maintainer and currently leading its development. He's focused on keeping PaperWM up to date (including releases and maintaining/submitting PaperWM's [EGO](https://extensions.gnome.org/extension/6099/paperwm/) versions), fixing issues, developing & implementing requested features, and just trying to make PaperWM a reliable window manager that stays awesome and is loved by its users.
 
 ## Community Transition
 
@@ -22,7 +22,7 @@ To balance those issues, the plan is something like this (details may change):
 - Give out write access to the repo fairly easily. If someone makes a number of small contributions, or 1-2 large contributions, invite them as a Collaborator.
 - Require all contributions to be via PR. That way it's difficult for anyone to sneak changes in without others noticing.
 - Protect branches\*. Require 2 Collaborators to approve a PR before it's merged (so one person can't unilaterally push changes).
-    - \*`develop`, `master`, and any branch referenced in the README. Also all tags.
+    - \*[`develop`](https://github.com/paperwm/PaperWM/tree/develop), [`release`](https://github.com/paperwm/PaperWM/tree/release), and any branch referenced in the README. Also all tags.
     - If there are not enough active maintainers, maybe relax the 2-person requirement.
 
 ### Governance
