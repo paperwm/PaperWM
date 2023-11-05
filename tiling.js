@@ -234,7 +234,9 @@ var Space = class Space extends Array {
             // warp pointer to monitor that is active
             Utils.warpPointerToMonitor(this.monitor);
             Utils.later_add(Meta.LaterType.IDLE, () => {
-                ensureViewport(display.focus_window, this, { moveto: true, force: true });
+                this.moveDone(() => {
+                    ensureViewport(display.focus_window, this, { moveto: true, force: true });
+                });
             });
         });
 
