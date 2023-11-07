@@ -96,7 +96,7 @@ export function addSchemaToConflictSettings(schemaId) {
         conflictSettings.push(new Gio.Settings({ schema_id: schemaId }));
     }
     catch (e) {
-        console.error(e);
+        console.warn(`Invalid schema_id '${schemaId}': could not add to keybind conflict checks`);
     }
 }
 
