@@ -76,16 +76,28 @@ export let conflictSettings; // exported
 export function getConflictSettings() {
     if (!conflictSettings) {
         // Schemas that may contain conflicting keybindings
-        // It's possible to inject or remove settings here on `user.init`.
-        conflictSettings = [
-            new Gio.Settings({ schema_id: 'org.gnome.mutter.keybindings' }),
-            new Gio.Settings({ schema_id: 'org.gnome.mutter.wayland.keybindings' }),
-            new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings" }),
-            new Gio.Settings({ schema_id: "org.gnome.shell.keybindings" }),
-        ];
+        conflictSettings = [];
+        addSchemaToConflictSettings('org.gnome.mutter.keybindings');
+        addSchemaToConflictSettings('org.gnome.mutter.wayland.keybindings');
+        addSchemaToConflictSettings('org.gnome.desktop.wm.keybindings');
+        addSchemaToConflictSettings('org.gnome.shell.keybindings');
+        addSchemaToConflictSettings('org.gnome.settings-daemon.plugins.media-keys');
     }
 
     return conflictSettings;
+}
+
+/**
+ * Adds a Gio.Settings object to conflictSettings.  Fails gracefully.
+ * @param {Gio.Settings} schemaId
+ */
+export function addSchemaToConflictSettings(schemaId) {
+    try {
+        conflictSettings.push(new Gio.Settings({ schema_id: schemaId }));
+    }
+    catch (e) {
+        console.warn(`Invalid schema_id '${schemaId}': could not add to keybind conflict checks`);
+    }
 }
 
 // / Keybindings
