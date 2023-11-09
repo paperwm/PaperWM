@@ -3327,23 +3327,30 @@ function insertWindow(metaWindow, { existing }) {
         clone.x = clone.targetX;
         clone.y = clone.targetY;
         space.layout();
+
+        // run focus and resize to ensure new window is correctly shown
+        focus_handler(metaWindow);
+        resizeHandler(metaWindow);
         connectSizeChanged(true);
+
+        // remove winprop props after window shown
         callbackOnActorShow(actor, () => {
-            // after shown, remove preferred width winprop
             delete metaWindow.preferredWidth;
-            ensureViewport(metaWindow, space);
+
+            Main.activateWindow(metaWindow);
+            ensureViewport(space.selectedWindow, space);
 
             // if only one window on space, then centre it
             if (space.getWindows().length === 1) {
                 centerWindowHorizontally(metaWindow);
             }
         });
-    }
-    else {
-        space.layout();
-        animateWindow(metaWindow);
+
+        return;
     }
 
+    space.layout();
+    animateWindow(metaWindow);
     if (metaWindow === display.focus_window) {
         focus_handler(metaWindow);
     } else if (space === spaces.activeSpace) {
