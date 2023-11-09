@@ -3319,6 +3319,13 @@ function insertWindow(metaWindow, { existing }) {
     // run a simple layout in pre-prepare layout
     space.layout(false);
 
+    // if only one window on space, then centre it
+    const centre = () => {
+        if (space.getWindows().length === 1) {
+            centerWindowHorizontally(metaWindow);
+        }
+    };
+
     /**
      * If window is new, then setup and ensure is in view
      * after actor is shown on stage.
@@ -3340,10 +3347,7 @@ function insertWindow(metaWindow, { existing }) {
             Main.activateWindow(metaWindow);
             ensureViewport(space.selectedWindow, space);
 
-            // if only one window on space, then centre it
-            if (space.getWindows().length === 1) {
-                centerWindowHorizontally(metaWindow);
-            }
+            centre();
         });
 
         return;
@@ -3358,6 +3362,8 @@ function insertWindow(metaWindow, { existing }) {
     } else {
         ensureViewport(space.selectedWindow, space);
     }
+
+    centre();
 }
 
 function animateDown(metaWindow) {
