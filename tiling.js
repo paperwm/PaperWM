@@ -40,7 +40,11 @@ var inPreview = PreviewMode.NONE; // export
 // DEFAULT mode is normal/original PaperWM window focus behaviour
 var FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
 
+// window sizing direction
 var CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1 };
+
+// position to open window at (e.g. to the right of current window)
+var OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
 
 /**
    Scrolled and tiled per monitor workspace.
@@ -3302,12 +3306,7 @@ function insertWindow(metaWindow, { existing }) {
     }
     ok && clone.set_position(x, y);
 
-    let index = -1; // (-1 -> at beginning)
-    if (space.selectedWindow) {
-        index = space.indexOf(space.selectedWindow);
-    }
-    index++;
-    if (!space.addWindow(metaWindow, index))
+    if (!space.addWindow(metaWindow, getOpenWindowPositionIndex(space)))
         return;
 
     metaWindow.unmake_above();
@@ -3364,6 +3363,32 @@ function insertWindow(metaWindow, { existing }) {
     }
 
     centre();
+}
+
+/**
+ * Gets the window index to add a new window in the space:
+ * { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
+ */
+function getOpenWindowPositionIndex(space) {
+    let index = -1; // init (-1 -> at beginning)
+    if (space?.selectedWindow) {
+        index = space.indexOf(space.selectedWindow);
+    }
+
+    const pos = Settings.prefs.open_window_position;
+    console.log(`new window position: ${pos}`);
+    switch (pos) {
+    case OpenWindowPositions.LEFT:
+        return index;
+    case OpenWindowPositions.START:
+        return 0;
+    case OpenWindowPositions.END:
+        // get number of columns in space
+        return space.length + 1;
+
+    default:
+        return index + 1;
+    }
 }
 
 function animateDown(metaWindow) {
