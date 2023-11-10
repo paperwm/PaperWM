@@ -3376,7 +3376,6 @@ function getOpenWindowPositionIndex(space) {
     }
 
     const pos = Settings.prefs.open_window_position;
-    console.log(`new window position: ${pos}`);
     switch (pos) {
     case OpenWindowPositions.LEFT:
         return index;

@@ -202,6 +202,42 @@ var SettingsWidget = class SettingsWidget {
             this._settings.set_double('window-switcher-preview-scale', windowSwitcherPreviewScale.get_value() / 100.0);
         });
 
+        const openWindowPosition = this.builder.get_object('open-window-position');
+        // OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
+        const owpos = this._settings.get_int('open-window-position');
+        switch (owpos) {
+        case 1:
+            openWindowPosition.set_active_id('left');
+            break;
+        case 2:
+            openWindowPosition.set_active_id('start');
+            break;
+        case 3:
+            openWindowPosition.set_active_id('end');
+            break;
+        default:
+            openWindowPosition.set_active_id('right');
+            break;
+        }
+
+        // OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
+        openWindowPosition.connect('changed', obj => {
+            switch (obj.get_active_id()) {
+            case 'left':
+                this._settings.set_int('open-window-position', 1);
+                break;
+            case 'start':
+                this._settings.set_int('open-window-position', 2);
+                break;
+            case 'end':
+                this._settings.set_int('open-window-position', 3);
+                break;
+            default:
+                this._settings.set_int('open-window-position', 0);
+                break;
+            }
+        });
+
         const scratchOverview = this.builder.get_object('scratch-in-overview');
         if (this._settings.get_boolean('only-scratch-in-overview'))
             scratchOverview.set_active_id('only');
