@@ -32,7 +32,7 @@ export function enable(extension) {
         'window-switcher-preview-scale', 'winprops', 'show-workspace-indicator',
         'show-window-position-bar', 'show-focus-mode-icon', 'disable-topbar-styling',
         'default-focus-mode', 'gesture-enabled', 'gesture-horizontal-fingers',
-        'gesture-workspace-fingers']
+        'gesture-workspace-fingers', 'open-window-position']
         .forEach(k => setState(null, k));
     prefs.__defineGetter__("minimum_margin", () => {
         return Math.min(15, prefs.horizontal_margin);
