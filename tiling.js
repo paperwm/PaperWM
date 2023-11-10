@@ -2244,7 +2244,7 @@ var Spaces = class Spaces extends Map {
 
         if (move && this.selectedSpace.selectedWindow) {
             const navigator = Navigator.getNavigator();
-            if (navigator._moving == null ||
+            if (!navigator._moving ||
                 (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
@@ -3319,6 +3319,13 @@ function insertWindow(metaWindow, { existing }) {
     // run a simple layout in pre-prepare layout
     space.layout(false);
 
+    // if only one window on space, then centre it
+    const centre = () => {
+        if (space.getWindows().length === 1) {
+            centerWindowHorizontally(metaWindow);
+        }
+    };
+
     /**
      * If window is new, then setup and ensure is in view
      * after actor is shown on stage.
@@ -3327,23 +3334,27 @@ function insertWindow(metaWindow, { existing }) {
         clone.x = clone.targetX;
         clone.y = clone.targetY;
         space.layout();
+
+        // run focus and resize to ensure new window is correctly shown
+        focus_handler(metaWindow);
+        resizeHandler(metaWindow);
         connectSizeChanged(true);
+
+        // remove winprop props after window shown
         callbackOnActorShow(actor, () => {
-            // after shown, remove preferred width winprop
             delete metaWindow.preferredWidth;
-            ensureViewport(metaWindow, space);
 
-            // if only one window on space, then centre it
-            if (space.getWindows().length === 1) {
-                centerWindowHorizontally(metaWindow);
-            }
+            Main.activateWindow(metaWindow);
+            ensureViewport(space.selectedWindow, space);
+
+            centre();
         });
-    }
-    else {
-        space.layout();
-        animateWindow(metaWindow);
+
+        return;
     }
 
+    space.layout();
+    animateWindow(metaWindow);
     if (metaWindow === display.focus_window) {
         focus_handler(metaWindow);
     } else if (space === spaces.activeSpace) {
@@ -3351,6 +3362,8 @@ function insertWindow(metaWindow, { existing }) {
     } else {
         ensureViewport(space.selectedWindow, space);
     }
+
+    centre();
 }
 
 function animateDown(metaWindow) {
