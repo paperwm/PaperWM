@@ -15,6 +15,9 @@ let RESTORE_KEYBINDS_KEY = 'restore-keybinds';
 // This is the value mutter uses for the keyvalue of above_tab
 let META_KEY_ABOVE_TAB = 0x2f7259c9;
 
+// position to open window at (e.g. to the right of current window)
+var OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 }; // export
+
 function setState($, key) {
     let value = gsettings.get_value(key);
     let name = key.replace(/-/g, '_');

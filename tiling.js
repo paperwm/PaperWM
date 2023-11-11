@@ -43,9 +43,6 @@ var FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
 // window sizing direction
 var CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1 };
 
-// position to open window at (e.g. to the right of current window)
-var OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
-
 /**
    Scrolled and tiled per monitor workspace.
 
@@ -3377,11 +3374,11 @@ function getOpenWindowPositionIndex(space) {
 
     const pos = Settings.prefs.open_window_position;
     switch (pos) {
-    case OpenWindowPositions.LEFT:
+    case Settings.OpenWindowPositions.LEFT:
         return index;
-    case OpenWindowPositions.START:
+    case Settings.OpenWindowPositions.START:
         return 0;
-    case OpenWindowPositions.END:
+    case Settings.OpenWindowPositions.END:
         // get number of columns in space
         return space.length + 1;
 
