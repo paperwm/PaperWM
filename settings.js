@@ -15,6 +15,9 @@ const RESTORE_KEYBINDS_KEY = 'restore-keybinds';
 // This is the value mutter uses for the keyvalue of above_tab
 const META_KEY_ABOVE_TAB = 0x2f7259c9;
 
+// position to open window at (e.g. to the right of current window)
+export const OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
+
 export let prefs;
 let gsettings, keybindSettings, _overriddingConflicts;
 let acceleratorParse;

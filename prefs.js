@@ -7,6 +7,7 @@ import {
     ExtensionPreferences
 } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
+import * as Settings from './settings.js';
 import { WorkspaceSettings } from './workspace.js';
 import * as KeybindingsPane from './prefsKeybinding.js';
 import * as WinpropsPane from './winpropsPane.js';
@@ -207,38 +208,34 @@ class SettingsWidget {
         });
 
         const openWindowPosition = this.builder.get_object('open-window-position');
-        // OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
         const owpos = this._settings.get_int('open-window-position');
         switch (owpos) {
-        case 1:
+        case Settings.OpenWindowPositions.LEFT:
             openWindowPosition.set_active_id('left');
             break;
-        case 2:
+        case Settings.OpenWindowPositions.START:
             openWindowPosition.set_active_id('start');
             break;
-        case 3:
+        case Settings.OpenWindowPositions.END:
             openWindowPosition.set_active_id('end');
             break;
         default:
             openWindowPosition.set_active_id('right');
-            break;
         }
 
-        // OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
         openWindowPosition.connect('changed', obj => {
             switch (obj.get_active_id()) {
             case 'left':
-                this._settings.set_int('open-window-position', 1);
+                this._settings.set_int('open-window-position', Settings.OpenWindowPositions.LEFT);
                 break;
             case 'start':
-                this._settings.set_int('open-window-position', 2);
+                this._settings.set_int('open-window-position', Settings.OpenWindowPositions.START);
                 break;
             case 'end':
-                this._settings.set_int('open-window-position', 3);
+                this._settings.set_int('open-window-position', Settings.OpenWindowPositions.END);
                 break;
             default:
-                this._settings.set_int('open-window-position', 0);
-                break;
+                this._settings.set_int('open-window-position', Settings.OpenWindowPositions.RIGHT);
             }
         });
 
