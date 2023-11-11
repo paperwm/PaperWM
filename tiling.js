@@ -40,6 +40,7 @@ var inPreview = PreviewMode.NONE; // export
 // DEFAULT mode is normal/original PaperWM window focus behaviour
 var FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
 
+// window sizing direction
 var CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1 };
 
 /**
@@ -3302,12 +3303,7 @@ function insertWindow(metaWindow, { existing }) {
     }
     ok && clone.set_position(x, y);
 
-    let index = -1; // (-1 -> at beginning)
-    if (space.selectedWindow) {
-        index = space.indexOf(space.selectedWindow);
-    }
-    index++;
-    if (!space.addWindow(metaWindow, index))
+    if (!space.addWindow(metaWindow, getOpenWindowPositionIndex(space)))
         return;
 
     metaWindow.unmake_above();
@@ -3364,6 +3360,31 @@ function insertWindow(metaWindow, { existing }) {
     }
 
     centre();
+}
+
+/**
+ * Gets the window index to add a new window in the space:
+ * { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
+ */
+function getOpenWindowPositionIndex(space) {
+    let index = -1; // init (-1 -> at beginning)
+    if (space?.selectedWindow) {
+        index = space.indexOf(space.selectedWindow);
+    }
+
+    const pos = Settings.prefs.open_window_position;
+    switch (pos) {
+    case Settings.OpenWindowPositions.LEFT:
+        return index;
+    case Settings.OpenWindowPositions.START:
+        return 0;
+    case Settings.OpenWindowPositions.END:
+        // get number of columns in space
+        return space.length + 1;
+
+    default:
+        return index + 1;
+    }
 }
 
 function animateDown(metaWindow) {
