@@ -15,6 +15,9 @@ const RESTORE_KEYBINDS_KEY = 'restore-keybinds';
 // This is the value mutter uses for the keyvalue of above_tab
 const META_KEY_ABOVE_TAB = 0x2f7259c9;
 
+// position to open window at (e.g. to the right of current window)
+export const OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
+
 export let prefs;
 let gsettings, keybindSettings, _overriddingConflicts;
 let acceleratorParse;
@@ -32,7 +35,7 @@ export function enable(extension) {
         'window-switcher-preview-scale', 'winprops', 'show-workspace-indicator',
         'show-window-position-bar', 'show-focus-mode-icon', 'disable-topbar-styling',
         'default-focus-mode', 'gesture-enabled', 'gesture-horizontal-fingers',
-        'gesture-workspace-fingers']
+        'gesture-workspace-fingers', 'open-window-position']
         .forEach(k => setState(null, k));
     prefs.__defineGetter__("minimum_margin", () => {
         return Math.min(15, prefs.horizontal_margin);
