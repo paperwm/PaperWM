@@ -4283,7 +4283,7 @@ export function slurp(metaWindow) {
     }
 
     space.layout(true, {
-        customAllocators: { [to]: allocateEqualHeight, ensure: true },
+        customAllocators: { [to]: allocateEqualHeight, ensure: false },
     });
 }
 
@@ -4304,7 +4304,7 @@ export function barf(metaWindow) {
     space.splice(index + 1, 0, [bottom]);
 
     space.layout(true, {
-        customAllocators: { [index]: allocateEqualHeight, lockx: true },
+        customAllocators: { [index]: allocateEqualHeight, ensure: false },
     });
 }
 
