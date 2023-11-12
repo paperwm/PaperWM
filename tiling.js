@@ -671,7 +671,7 @@ export class Space extends Array {
         let width = Math.max(1, x - gap);
         this.cloneContainer.width = width;
 
-        if (auto && animate && !lockx) {
+        if (auto && animate) {
             if (width < workArea.width) {
                 this.targetX = min + Math.round((workArea.width - width) / 2);
             } else if (this.targetX + width < min + workArea.width) {
