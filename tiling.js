@@ -584,6 +584,11 @@ export class Space extends Array {
             return;
         if (this._inLayout)
             return;
+
+        // option properties
+        let lockx = options?.lockx ?? false;
+        let allocators = options?.customAllocators;
+
         this._inLayout = true;
         this.startAnimate();
 
@@ -631,7 +636,7 @@ export class Space extends Array {
             targetWidth = Math.min(targetWidth, workArea.width - 2 * Settings.prefs.minimum_margin);
 
             let resultingWidth, relayout;
-            let allocator = options.customAllocators && options.customAllocators[i];
+            let allocator = allocators && allocators[i];
             if (inGrab && column.includes(inGrab.window) && !allocator) {
                 [resultingWidth, relayout] =
                     this.layoutGrabColumn(column, x, y0, targetWidth, availableHeight, time,
@@ -666,7 +671,7 @@ export class Space extends Array {
         let width = Math.max(1, x - gap);
         this.cloneContainer.width = width;
 
-        if (auto && animate) {
+        if (auto && animate && !lockx) {
             if (width < workArea.width) {
                 this.targetX = min + Math.round((workArea.width - width) / 2);
             } else if (this.targetX + width < min + workArea.width) {
@@ -681,7 +686,7 @@ export class Space extends Array {
                     onComplete: this.moveDone.bind(this),
                 });
         }
-        if (animate) {
+        if (animate && !lockx) {
             ensureViewport(this.selectedWindow, this);
         } else {
             this.moveDone();
@@ -4276,9 +4281,8 @@ export function slurp(metaWindow) {
     }
 
     space.layout(true, {
-        customAllocators: { [to]: allocateEqualHeight },
+        customAllocators: { [to]: allocateEqualHeight, lockx: true },
     });
-    space.emit("full-layout");
 }
 
 export function barf(metaWindow) {
@@ -4298,9 +4302,8 @@ export function barf(metaWindow) {
     space.splice(index + 1, 0, [bottom]);
 
     space.layout(true, {
-        customAllocators: { [index]: allocateEqualHeight },
+        customAllocators: { [index]: allocateEqualHeight, lockx: true },
     });
-    space.emit("full-layout");
 }
 
 export function selectPreviousSpace(mw, space) {
