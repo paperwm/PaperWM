@@ -4327,11 +4327,11 @@ function movePreviousSpaceBackwards(mw, space) {
     spaces.selectStackSpace(Meta.MotionDirection.UP, true);
 }
 
-export function selectDownSpace(mw, space, fromAllMonitors) {
+function selectDownSpace(mw, space, fromAllMonitors) {
     spaces.selectSequenceSpace(Meta.MotionDirection.DOWN, false, fromAllMonitors);
 }
 
-export function selectUpSpace(mw, space, fromAllMonitors) {
+function selectUpSpace(mw, space, fromAllMonitors) {
     spaces.selectSequenceSpace(Meta.MotionDirection.UP, false, fromAllMonitors);
 }
 
