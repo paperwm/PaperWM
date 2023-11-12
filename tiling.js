@@ -4247,7 +4247,6 @@ export function slurp(metaWindow) {
     let index = space.indexOf(metaWindow);
 
     let to, from;
-    let metaWindowToEnsure = space.selectedWindow;
     let metaWindowToSlurp;
 
     if (index + 1 < space.length) {
@@ -4258,7 +4257,6 @@ export function slurp(metaWindow) {
         if (space[index].length > 1)
             return;
         metaWindowToSlurp = metaWindow;
-        metaWindowToEnsure = metaWindowToSlurp;
         to = index - 1;
         from = index;
     }
@@ -4281,7 +4279,6 @@ export function slurp(metaWindow) {
         customAllocators: { [to]: allocateEqualHeight },
     });
     space.emit("full-layout");
-    ensureViewport(metaWindowToEnsure, space, { force: true });
 }
 
 export function barf(metaWindow) {
@@ -4304,7 +4301,6 @@ export function barf(metaWindow) {
         customAllocators: { [index]: allocateEqualHeight },
     });
     space.emit("full-layout");
-    ensureViewport(space.selectedWindow, space, { force: true });
 }
 
 export function selectPreviousSpace(mw, space) {
