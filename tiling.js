@@ -586,7 +586,7 @@ export class Space extends Array {
             return;
 
         // option properties
-        let lockx = options?.lockx ?? false;
+        let ensure = options?.ensure ?? true;
         let allocators = options?.customAllocators;
 
         this._inLayout = true;
@@ -594,7 +594,7 @@ export class Space extends Array {
 
         let time = Settings.prefs.animation_time;
         let gap = Settings.prefs.window_gap;
-        let x = 0;
+        let x = gap; // init (ensures autostart apps in particular start properly gapped)
         let selectedIndex = this.selectedIndex();
         let workArea = this.workArea();
 
@@ -660,8 +660,10 @@ export class Space extends Array {
 
             x += resultingWidth + gap;
         }
-        this._inLayout = false;
+        // final gap add - required to resolve https://github.com/paperwm/PaperWM/issues/684
+        x += gap;
 
+        this._inLayout = false;
         let oldWidth = this.cloneContainer.width;
         let min = workArea.x;
         let auto = (this.targetX + oldWidth >= min + workArea.width && this.targetX <= 0) ||
@@ -686,7 +688,7 @@ export class Space extends Array {
                     onComplete: this.moveDone.bind(this),
                 });
         }
-        if (animate && !lockx) {
+        if (animate && ensure) {
             ensureViewport(this.selectedWindow, this);
         } else {
             this.moveDone();
@@ -4281,7 +4283,7 @@ export function slurp(metaWindow) {
     }
 
     space.layout(true, {
-        customAllocators: { [to]: allocateEqualHeight, lockx: true },
+        customAllocators: { [to]: allocateEqualHeight, ensure: true },
     });
 }
 
