@@ -77,6 +77,41 @@ export function enable(extension) {
         const phase = event.get_gesture_phase();
         const [dx, dy] = event.get_gesture_motion_delta();
         switch (phase) {
+        case Clutter.TouchpadGesturePhase.BEGIN:
+            if (
+                // gestures disabled AND three-fingers ==> gnome default behaviour
+                !enabled && fingers === 3
+            ) {
+                return Clutter.EVENT_PROPAGATE;
+            }
+            else if (
+                // if gesure enabled AND finger 4 AND horizontal finger != 4
+                enabled && fingers === 4 && gestureHorizontalFingers !== 4
+            ) {
+                return Clutter.EVENT_PROPAGATE;
+            }
+            else if (
+                // if horizontal fingers !== 3 ==> allow
+                gestureHorizontalFingers() === fingers
+            ) {
+                // NOOP
+            }
+            else if (
+                // gestures disabled ==> gnome default behaviour
+                !enabled
+            ) {
+                return Clutter.EVENT_PROPAGATE;
+            }
+
+            // PaperWM behaviour
+            time = event.get_time();
+            natural = touchpadSettings.get_boolean("natural-scroll") ? 1 : -1;
+            direction = undefined;
+            navigator = Navigator.getNavigator();
+            navigator.connect('destroy', () => {
+                vState = -1;
+            });
+            return Clutter.EVENT_STOP;
         case Clutter.TouchpadGesturePhase.UPDATE:
             if (direction === DIRECTIONS.Horizontal) {
                 return Clutter.EVENT_PROPAGATE;
@@ -112,35 +147,6 @@ export function enable(extension) {
                 return Clutter.EVENT_STOP;
             }
             return Clutter.EVENT_PROPAGATE;
-        case Clutter.TouchpadGesturePhase.BEGIN:
-            if (
-                // gestures disabled AND three-fingers ==> gnome default behaviour
-                !enabled && fingers === 3
-            ) {
-                return Clutter.EVENT_PROPAGATE;
-            }
-            else if (
-                // if here horizontal fingers !== 3 ==> allow
-                gestureHorizontalFingers() === fingers
-            ) {
-                // NOOP
-            }
-            else if (
-                // gestures disabled ==> gnome default behaviour
-                !enabled
-            ) {
-                return Clutter.EVENT_PROPAGATE;
-            }
-
-            // PaperWM behaviour
-            time = event.get_time();
-            natural = touchpadSettings.get_boolean("natural-scroll") ? 1 : -1;
-            direction = undefined;
-            navigator = Navigator.getNavigator();
-            navigator.connect('destroy', () => {
-                vState = -1;
-            });
-            return Clutter.EVENT_STOP;
         case Clutter.TouchpadGesturePhase.CANCEL:
         case Clutter.TouchpadGesturePhase.END:
             if (direction === DIRECTIONS.Vertical) {
