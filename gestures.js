@@ -78,7 +78,6 @@ export function enable(extension) {
         const [dx, dy] = event.get_gesture_motion_delta();
         switch (phase) {
         case Clutter.TouchpadGesturePhase.BEGIN:
-            console.log('touch begin');
             if (shouldPropagate(fingers)) {
                 return Clutter.EVENT_PROPAGATE;
             }
@@ -157,7 +156,7 @@ function shouldPropagate(fingers) {
     else if (
         fingers === 3 && gestureHorizontalFingers() !== 3
     ) {
-        console.log('horizontal match fingers');
+        console.log('3 finger but not horizontal fingers');
         swipeTrackersEnable();
         return true;
     }
@@ -165,7 +164,7 @@ function shouldPropagate(fingers) {
         // if gesure enabled AND finger 4 AND horizontal finger != 4
         enabled && fingers === 4 && gestureHorizontalFingers() !== 4
     ) {
-        console.log('BEGIN 4 finger but not horizontal');
+        console.log('4 finger but not horizontal fingers');
         return true;
     }
     else {
