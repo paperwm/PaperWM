@@ -78,16 +78,12 @@ export function enable(extension) {
         const [dx, dy] = event.get_gesture_motion_delta();
         switch (phase) {
         case Clutter.TouchpadGesturePhase.BEGIN:
+            console.log('touch begin');
             if (
                 // gestures disabled AND three-fingers ==> gnome default behaviour
                 !enabled && fingers === 3
             ) {
-                return Clutter.EVENT_PROPAGATE;
-            }
-            else if (
-                // if gesure enabled AND finger 4 AND horizontal finger != 4
-                enabled && fingers === 4 && gestureHorizontalFingers !== 4
-            ) {
+                console.log('allow 3 fingers');
                 return Clutter.EVENT_PROPAGATE;
             }
             else if (
@@ -95,11 +91,20 @@ export function enable(extension) {
                 gestureHorizontalFingers() === fingers
             ) {
                 // NOOP
+                console.log('horizontal match fingers');
+            }
+            else if (
+                // if gesure enabled AND finger 4 AND horizontal finger != 4
+                enabled && fingers === 4 && gestureHorizontalFingers !== 4
+            ) {
+                console.log('BEGIN 4 finger but not horizontal');
+                return Clutter.EVENT_PROPAGATE;
             }
             else if (
                 // gestures disabled ==> gnome default behaviour
                 !enabled
             ) {
+                console.log('not enabled');
                 return Clutter.EVENT_PROPAGATE;
             }
 
@@ -116,6 +121,14 @@ export function enable(extension) {
             if (direction === DIRECTIONS.Horizontal) {
                 return Clutter.EVENT_PROPAGATE;
             }
+            else if (
+                // if gesure enabled AND finger 4 AND horizontal finger != 4
+                enabled && fingers === 4 && gestureHorizontalFingers !== 4
+            ) {
+                console.log('UPDATE 4 finger but not horizontal');
+                return Clutter.EVENT_PROPAGATE;
+            }
+
             if (enabled && direction === undefined) {
                 if (Math.abs(dx) < Math.abs(dy)) {
                     vy = 0;
