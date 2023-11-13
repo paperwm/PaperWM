@@ -2211,6 +2211,11 @@ export const Spaces = class Spaces extends Map {
          * see https://github.com/paperwm/PaperWM/issues/682
          */
         if (Gestures.gestureEnabled()) {
+            // if in overview exit -> overview will disable swipetrackers when done
+            if (Main.overview.visible) {
+                return;
+            }
+
             Gestures.swipeTrackersEnable(false);
         }
 
