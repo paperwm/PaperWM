@@ -2212,11 +2212,9 @@ export const Spaces = class Spaces extends Map {
          */
         if (Gestures.gestureEnabled()) {
             // if in overview exit -> overview will disable swipetrackers when done
-            if (Main.overview.visible) {
-                return;
+            if (!Main.overview.visible) {
+                Gestures.swipeTrackersEnable(false);
             }
-
-            Gestures.swipeTrackersEnable(false);
         }
 
         let to = workspaceManager.get_workspace_by_index(toIndex);
