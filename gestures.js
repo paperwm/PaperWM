@@ -79,7 +79,7 @@ export function enable(extension) {
         switch (phase) {
         case Clutter.TouchpadGesturePhase.BEGIN:
             console.log('touch begin');
-            if (propagateChecks(fingers)) {
+            if (shouldPropagate(fingers)) {
                 return Clutter.EVENT_PROPAGATE;
             }
 
@@ -93,10 +93,11 @@ export function enable(extension) {
             });
             return Clutter.EVENT_STOP;
         case Clutter.TouchpadGesturePhase.UPDATE:
-            if (direction === DIRECTIONS.Horizontal) {
+            if (shouldPropagate(fingers)) {
                 return Clutter.EVENT_PROPAGATE;
             }
-            if (propagateChecks(fingers)) {
+
+            if (direction === DIRECTIONS.Horizontal) {
                 return Clutter.EVENT_PROPAGATE;
             }
 
@@ -143,7 +144,7 @@ export function enable(extension) {
     });
 }
 
-function propagateChecks(fingers) {
+function shouldPropagate(fingers) {
     const enabled = gestureEnabled();
     if (
         // gestures disabled ==> gnome default behaviour
