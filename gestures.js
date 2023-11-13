@@ -95,7 +95,7 @@ export function enable(extension) {
             }
             else if (
                 // if gesure enabled AND finger 4 AND horizontal finger != 4
-                enabled && fingers === 4 && gestureHorizontalFingers !== 4
+                enabled && fingers === 4 && gestureHorizontalFingers() !== 4
             ) {
                 console.log('BEGIN 4 finger but not horizontal');
                 return Clutter.EVENT_PROPAGATE;
@@ -123,7 +123,7 @@ export function enable(extension) {
             }
             else if (
                 // if gesure enabled AND finger 4 AND horizontal finger != 4
-                enabled && fingers === 4 && gestureHorizontalFingers !== 4
+                enabled && fingers === 4 && gestureHorizontalFingers() !== 4
             ) {
                 console.log('UPDATE 4 finger but not horizontal');
                 return Clutter.EVENT_PROPAGATE;
