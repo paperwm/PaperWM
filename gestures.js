@@ -79,32 +79,7 @@ export function enable(extension) {
         switch (phase) {
         case Clutter.TouchpadGesturePhase.BEGIN:
             console.log('touch begin');
-            if (
-                // gestures disabled AND three-fingers ==> gnome default behaviour
-                !enabled && fingers === 3
-            ) {
-                console.log('allow 3 fingers');
-                return Clutter.EVENT_PROPAGATE;
-            }
-            else if (
-                // if horizontal fingers !== 3 ==> allow
-                gestureHorizontalFingers() === fingers
-            ) {
-                // NOOP
-                console.log('horizontal match fingers');
-            }
-            else if (
-                // if gesure enabled AND finger 4 AND horizontal finger != 4
-                enabled && fingers === 4 && gestureHorizontalFingers() !== 4
-            ) {
-                console.log('BEGIN 4 finger but not horizontal');
-                return Clutter.EVENT_PROPAGATE;
-            }
-            else if (
-                // gestures disabled ==> gnome default behaviour
-                !enabled
-            ) {
-                console.log('not enabled');
+            if (propagateChecks(fingers)) {
                 return Clutter.EVENT_PROPAGATE;
             }
 
@@ -121,11 +96,7 @@ export function enable(extension) {
             if (direction === DIRECTIONS.Horizontal) {
                 return Clutter.EVENT_PROPAGATE;
             }
-            else if (
-                // if gesure enabled AND finger 4 AND horizontal finger != 4
-                enabled && fingers === 4 && gestureHorizontalFingers() !== 4
-            ) {
-                console.log('UPDATE 4 finger but not horizontal');
+            if (propagateChecks(fingers)) {
                 return Clutter.EVENT_PROPAGATE;
             }
 
@@ -170,6 +141,35 @@ export function enable(extension) {
         }
         return Clutter.EVENT_PROPAGATE;
     });
+}
+
+function propagateChecks(fingers) {
+    const enabled = gestureEnabled();
+    if (
+        // gestures disabled ==> gnome default behaviour
+        !enabled
+    ) {
+        console.log('not enabled');
+        swipeTrackersEnable();
+        return true;
+    }
+    else if (
+        fingers === 3 && gestureHorizontalFingers() !== 3
+    ) {
+        console.log('horizontal match fingers');
+        swipeTrackersEnable();
+        return true;
+    }
+    else if (
+        // if gesure enabled AND finger 4 AND horizontal finger != 4
+        enabled && fingers === 4 && gestureHorizontalFingers() !== 4
+    ) {
+        console.log('BEGIN 4 finger but not horizontal');
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 export function disable() {
