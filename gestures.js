@@ -41,7 +41,9 @@ export function enable(extension) {
      * ensure swipe trackers are reset.
      */
     signals.connect(Main.overview, 'hidden', () => {
-        swipeTrackersEnable(false);
+        if (gestureEnabled()) {
+            swipeTrackersEnable(false);
+        }
     });
 
     /**

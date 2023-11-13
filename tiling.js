@@ -2210,7 +2210,9 @@ export const Spaces = class Spaces extends Map {
          * disable swipetrackers on workspace switch to avoid gesture confusion
          * see https://github.com/paperwm/PaperWM/issues/682
          */
-        Gestures.swipeTrackersEnable(false);
+        if (Gestures.gestureEnabled()) {
+            Gestures.swipeTrackersEnable(false);
+        }
 
         let to = workspaceManager.get_workspace_by_index(toIndex);
         let from = workspaceManager.get_workspace_by_index(fromIndex);
