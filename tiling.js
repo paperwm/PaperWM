@@ -2270,7 +2270,7 @@ var Spaces = class Spaces extends Map {
 
         if (move && this.selectedSpace.selectedWindow) {
             const navigator = Navigator.getNavigator();
-            if (navigator._moving === null ||
+            if (!navigator._moving ||
                 (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
