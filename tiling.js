@@ -584,12 +584,17 @@ export class Space extends Array {
             return;
         if (this._inLayout)
             return;
+
+        // option properties
+        let ensure = options?.ensure ?? true;
+        let allocators = options?.customAllocators;
+
         this._inLayout = true;
         this.startAnimate();
 
         let time = Settings.prefs.animation_time;
         let gap = Settings.prefs.window_gap;
-        let x = 0;
+        let x = gap; // init (ensures autostart apps in particular start properly gapped)
         let selectedIndex = this.selectedIndex();
         let workArea = this.workArea();
 
@@ -631,7 +636,7 @@ export class Space extends Array {
             targetWidth = Math.min(targetWidth, workArea.width - 2 * Settings.prefs.minimum_margin);
 
             let resultingWidth, relayout;
-            let allocator = options.customAllocators && options.customAllocators[i];
+            let allocator = allocators && allocators[i];
             if (inGrab && column.includes(inGrab.window) && !allocator) {
                 [resultingWidth, relayout] =
                     this.layoutGrabColumn(column, x, y0, targetWidth, availableHeight, time,
@@ -655,8 +660,10 @@ export class Space extends Array {
 
             x += resultingWidth + gap;
         }
-        this._inLayout = false;
+        // final gap add - required to resolve https://github.com/paperwm/PaperWM/issues/684
+        x += gap;
 
+        this._inLayout = false;
         let oldWidth = this.cloneContainer.width;
         let min = workArea.x;
         let auto = (this.targetX + oldWidth >= min + workArea.width && this.targetX <= 0) ||
@@ -681,7 +688,7 @@ export class Space extends Array {
                     onComplete: this.moveDone.bind(this),
                 });
         }
-        if (animate) {
+        if (animate && ensure) {
             ensureViewport(this.selectedWindow, this);
         } else {
             this.moveDone();
@@ -4247,7 +4254,6 @@ export function slurp(metaWindow) {
     let index = space.indexOf(metaWindow);
 
     let to, from;
-    let metaWindowToEnsure = space.selectedWindow;
     let metaWindowToSlurp;
 
     if (index + 1 < space.length) {
@@ -4258,7 +4264,6 @@ export function slurp(metaWindow) {
         if (space[index].length > 1)
             return;
         metaWindowToSlurp = metaWindow;
-        metaWindowToEnsure = metaWindowToSlurp;
         to = index - 1;
         from = index;
     }
@@ -4278,10 +4283,8 @@ export function slurp(metaWindow) {
     }
 
     space.layout(true, {
-        customAllocators: { [to]: allocateEqualHeight },
+        customAllocators: { [to]: allocateEqualHeight, ensure: false },
     });
-    space.emit("full-layout");
-    ensureViewport(metaWindowToEnsure, space, { force: true });
 }
 
 export function barf(metaWindow) {
@@ -4301,10 +4304,8 @@ export function barf(metaWindow) {
     space.splice(index + 1, 0, [bottom]);
 
     space.layout(true, {
-        customAllocators: { [index]: allocateEqualHeight },
+        customAllocators: { [index]: allocateEqualHeight, ensure: false },
     });
-    space.emit("full-layout");
-    ensureViewport(space.selectedWindow, space, { force: true });
 }
 
 export function selectPreviousSpace(mw, space) {
