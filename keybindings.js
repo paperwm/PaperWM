@@ -113,8 +113,18 @@ function setupActions() {
     registerNavigatorAction('move-previous-workspace', Tiling.movePreviousSpace);
     registerNavigatorAction('move-previous-workspace-backward', Tiling.movePreviousSpaceBackwards);
 
-    registerNavigatorAction('switch-down-workspace', Tiling.selectDownSpace);
-    registerNavigatorAction('switch-up-workspace', Tiling.selectUpSpace);
+    registerNavigatorAction('switch-down-workspace', (mw, space) => {
+        Tiling.selectDownSpace(mw, space, false);
+    });
+    registerNavigatorAction('switch-up-workspace', (mw, space) => {
+        Tiling.selectUpSpace(mw, space, false);
+    });
+    registerNavigatorAction('switch-down-workspace-from-all-monitors', (mw, space) => {
+        Tiling.selectDownSpace(mw, space, true);
+    });
+    registerNavigatorAction('switch-up-workspace-from-all-monitors', (mw, space) => {
+        Tiling.selectUpSpace(mw, space, true);
+    });
 
     registerNavigatorAction('move-down-workspace', Tiling.moveDownSpace);
     registerNavigatorAction('move-up-workspace', Tiling.moveUpSpace);

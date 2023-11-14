@@ -1523,11 +1523,15 @@ border-radius: ${borderWidth}px;
             Gestures.horizontalScroll.bind(this));
     }
 
-    setMonitor(monitor, animate = false) {
+    setMonitor(monitor, animate = false, options = {}) {
+        const commit = options?.commit ?? true;
+
         // Remake the background when we move monitors. The size/scale will be
         // incorrect when using fractional scaling.
         if (monitor !== this.monitor) {
-            this.monitor = monitor;
+            if (commit) {
+                this.monitor = monitor;
+            }
             this.createBackground();
             this.updateBackground();
             this.updateColor();
@@ -1566,8 +1570,7 @@ border-radius: ${borderWidth}px;
         background.set_size(this.width, this.height);
 
         this.cloneClip.set_size(monitor.width, monitor.height);
-        this.cloneClip.set_clip(0, 0,
-            this.width, this.height);
+        this.cloneClip.set_clip(0, 0, this.width, this.height);
         // transforms break if there's no height
         this.cloneContainer.height = this.monitor.height;
 
@@ -2156,8 +2159,25 @@ var Spaces = class Spaces extends Map {
         for (let i = 0; i < nWorkspaces; i++) {
             let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
             if (space.monitor === monitor ||
-                (space.length === 0 && this.monitors.get(space.monitor) !== space))
+                (space.length === 0 && this.monitors.get(space.monitor) !== space)) {
+                // include workspace if it is the current one
+                // or if it is empty and not active on another monitor
                 out.push(space);
+            }
+        }
+        return out;
+    }
+
+    _getOrderedSpacesFromAllMonitors(monitor) {
+        let nWorkspaces = workspaceManager.n_workspaces;
+        let out = [];
+        for (let i = 0; i < nWorkspaces; i++) {
+            let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
+            if (this.monitors.get(space.monitor) !== space || space.monitor === monitor) {
+                // include workspace if it is the current one
+                // or if it is not active on another monitor
+                out.push(space);
+            }
         }
         return out;
     }
@@ -2230,14 +2250,19 @@ var Spaces = class Spaces extends Map {
         }
     }
 
-    selectSequenceSpace(direction, move) {
+    selectSequenceSpace(direction, move, fromAllMonitors = false) {
         // if in stack preview do not run sequence preview
         if (inPreview === PreviewMode.STACK) {
             return;
         }
 
         let currentSpace = this.activeSpace;
-        let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
+        let monitorSpaces;
+        if (fromAllMonitors) {
+            monitorSpaces = this._getOrderedSpacesFromAllMonitors(currentSpace.monitor);
+        } else {
+            monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
+        }
 
         let from = monitorSpaces.indexOf(this.selectedSpace);
         let newSpace = this.selectedSpace;
@@ -2245,7 +2270,7 @@ var Spaces = class Spaces extends Map {
 
         if (move && this.selectedSpace.selectedWindow) {
             const navigator = Navigator.getNavigator();
-            if (!navigator._moving ||
+            if (navigator._moving === null ||
                 (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
@@ -2284,6 +2309,10 @@ var Spaces = class Spaces extends Map {
         const padding_percentage = 4;
         let last = monitorSpaces.length - 1;
         monitorSpaces.forEach((space, i) => {
+            // need to set monitor here so it shows up during selection, when it
+            // was previously on another monitor
+            space.setMonitor(currentSpace.monitor, false, { commit: false });
+
             let padding = (space.height * scale / 100) * padding_percentage;
             let center = (space.height - (space.height * scale)) / 2;
             let space_y;
@@ -4298,12 +4327,12 @@ function movePreviousSpaceBackwards(mw, space) {
     spaces.selectStackSpace(Meta.MotionDirection.UP, true);
 }
 
-function selectDownSpace(mw, space) {
-    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN);
+function selectDownSpace(mw, space, fromAllMonitors) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN, false, fromAllMonitors);
 }
 
-function selectUpSpace(mw, space) {
-    spaces.selectSequenceSpace(Meta.MotionDirection.UP);
+function selectUpSpace(mw, space, fromAllMonitors) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.UP, false, fromAllMonitors);
 }
 
 function moveDownSpace(mw, space) {
