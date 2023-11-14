@@ -144,10 +144,9 @@ export function enable(extension) {
 }
 
 function shouldPropagate(fingers) {
-    const enabled = gestureEnabled();
     if (
         // gestures disabled ==> gnome default behaviour
-        !enabled
+        !gestureEnabled()
     ) {
         console.log('not enabled');
         swipeTrackersEnable();
@@ -162,7 +161,7 @@ function shouldPropagate(fingers) {
     }
     else if (
         // if gesure enabled AND finger 4 AND horizontal finger != 4
-        enabled && fingers === 4 && gestureHorizontalFingers() !== 4
+        fingers === 4 && gestureHorizontalFingers() !== 4
     ) {
         console.log('4 finger but not horizontal fingers');
         return true;
