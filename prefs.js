@@ -65,6 +65,7 @@ class SettingsWidget {
             this.builder.get_object('workspaces_page'),
             this.builder.get_object('keybindings_page'),
             this.builder.get_object('winprops_page'),
+            this.builder.get_object('advanced_page'),
         ];
 
         pages.forEach(page => prefsWindow.add(page));
@@ -75,7 +76,6 @@ class SettingsWidget {
         this._backgroundFilter.add_pixbuf_formats();
 
         // General
-
         let windowGap = this.builder.get_object('window_gap_spin');
         let gap = this._settings.get_int('window-gap');
         windowGap.set_value(gap);
@@ -273,7 +273,6 @@ class SettingsWidget {
         });
 
         // Workspaces
-
         const defaultBackgroundSwitch = this.builder.get_object('use-default-background');
         defaultBackgroundSwitch.active = this._settings.get_boolean('use-default-background');
         defaultBackgroundSwitch.connect('state-set', (obj, state) => {
@@ -346,12 +345,10 @@ class SettingsWidget {
         workspaceCombo.set_active(selectedWorkspace);
 
         // Keybindings
-
         let keybindingsPane = this.builder.get_object('keybindings_pane');
         keybindingsPane.init(extension);
 
         // Winprops
-
         let winprops = this._settings.get_value('winprops').deep_unpack()
             .map(p => JSON.parse(p));
         // sort a little nicer
@@ -378,6 +375,13 @@ class SettingsWidget {
                 .map(r => JSON.stringify(r.winprop));
 
             this._settings.set_value('winprops', new GLib.Variant('as', rows));
+        });
+
+        // Advanced
+        const gestureEnabled = this.builder.get_object('gesture-enabled');
+        gestureEnabled.active = this._settings.get_boolean('gesture-enabled');
+        gestureEnabled.connect('state-set', (obj, state) => {
+            this._settings.set_boolean('gesture-enabled', state);
         });
 
         // About
