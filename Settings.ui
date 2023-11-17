@@ -1227,6 +1227,90 @@
                         </child>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">Sets the number of fingers used for moving the tiling viewport (windows) left/right.</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Swipe tiling windows &lt;i&gt;(swipe left/right)&lt;/i&gt;</property>
+                                <property name="use_markup">1</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="gesture-horizontal-fingers">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">0</property>
+                                <property name="width-request">106</property>
+                                <items>
+                                  <item id="fingers-disabled" translatable="yes">Disabled</item>
+                                  <item id="three-fingers" translatable="yes">3 Fingers</item>
+                                  <item id="four-fingers" translatable="yes">4 Fingers</item>
+                                </items>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">Sets the number of fingers used for PaperWM workspace stack view.</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">PaperWM workspace switching &lt;i&gt;(swipe down)&lt;/i&gt;</property>
+                                <property name="use_markup">1</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="gesture-workspace-fingers">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">0</property>
+                                <property name="width-request">106</property>
+                                <items>
+                                  <item id="fingers-disabled" translatable="yes">Disabled</item>
+                                  <item id="three-fingers" translatable="yes">3 Fingers</item>
+                                  <item id="four-fingers" translatable="yes">4 Fingers</item>
+                                </items>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
