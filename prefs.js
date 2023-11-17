@@ -378,11 +378,15 @@ class SettingsWidget {
         });
 
         // Advanced
-        const gestureEnabled = this.builder.get_object('gesture-enabled');
-        gestureEnabled.active = this._settings.get_boolean('gesture-enabled');
-        gestureEnabled.connect('state-set', (obj, state) => {
-            this._settings.set_boolean('gesture-enabled', state);
-        });
+        const booleanSetting = key => {
+            const builder = this.builder.get_object(key);
+            builder.active = this._settings.get_boolean(key);
+            builder.connect('state-set', (obj, state) => {
+                this._settings.set_boolean(key, state);
+            });
+        };
+
+        booleanSetting('gesture-enabled');
 
         const gestureFingers = key => {
             const builder = this.builder.get_object(key);
@@ -414,6 +418,35 @@ class SettingsWidget {
 
         gestureFingers('gesture-horizontal-fingers');
         gestureFingers('gesture-workspace-fingers');
+
+        const defaultFocusMode = this.builder.get_object('default-focus-mode');
+        const dfmSetting = this._settings.get_int('default-focus-mode');
+        switch (dfmSetting) {
+        case 1:
+            defaultFocusMode.set_active_id('center');
+            break;
+        default:
+            defaultFocusMode.set_active_id('default');
+        }
+        defaultFocusMode.connect('changed', obj => {
+            switch (obj.get_active_id()) {
+            case 'center':
+                this._settings.set_int('default-focus-mode', 1);
+                break;
+            default:
+                this._settings.set_int('default-focus-mode', 0);
+            }
+        });
+
+        booleanSetting('show-focus-mode-icon');
+        booleanSetting('disable-topbar-styling');
+        booleanSetting('show-workspace-indicator');
+
+        const maxHorizWidth = this.builder.get_object('maximize-width-percent');
+        maxHorizWidth.set_value(this._settings.get_double('maximize-width-percent') * 100.0);
+        maxHorizWidth.connect('value-changed', () => {
+            this._settings.set_double('maximize-width-percent', maxHorizWidth.get_value() / 100.0);
+        });
 
         // About
         let versionLabel = this.builder.get_object('extension_version');
