@@ -384,6 +384,37 @@ class SettingsWidget {
             this._settings.set_boolean('gesture-enabled', state);
         });
 
+        const gestureFingers = key => {
+            const builder = this.builder.get_object(key);
+            const setting = this._settings.get_int(key);
+            switch (setting) {
+            case 3:
+                builder.set_active_id('three-fingers');
+                break;
+            case 4:
+                builder.set_active_id('four-fingers');
+                break;
+            default:
+                builder.set_active_id('fingers-disabled');
+            }
+
+            builder.connect('changed', obj => {
+                switch (obj.get_active_id()) {
+                case 'three-fingers':
+                    this._settings.set_int(key, 3);
+                    break;
+                case 'four-fingers':
+                    this._settings.set_int(key, 4);
+                    break;
+                default:
+                    this._settings.set_int(key, 0);
+                }
+            });
+        };
+
+        gestureFingers('gesture-horizontal-fingers');
+        gestureFingers('gesture-workspace-fingers');
+
         // About
         let versionLabel = this.builder.get_object('extension_version');
         let version = this.extension.metadata.version?.toString() ?? '?';
