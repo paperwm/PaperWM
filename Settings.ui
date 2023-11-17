@@ -1454,7 +1454,7 @@
                         </child>
                       </object>
                     </child>
-                    <child>
+                    <!--<child>
                       <object class="GtkListBoxRow">
                         <property name="activatable">False</property>
                         <property name="focusable">False</property>
@@ -1491,7 +1491,7 @@
                           </object>
                         </child>
                       </object>
-                    </child>
+                    </child>-->
                     <child>
                       <object class="GtkListBoxRow">
                         <property name="activatable">False</property>

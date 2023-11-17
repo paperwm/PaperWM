@@ -412,7 +412,8 @@ class SettingsWidget {
 
         booleanSetState('show-focus-mode-icon');
         booleanSetState('disable-topbar-styling');
-        booleanSetState('show-workspace-indicator');
+        // disabled since opposite of gnome-pill
+        //booleanSetState('show-workspace-indicator');
         setValuePrc('maximize-width-percent', 'maximize-width-percent');
 
         // About
