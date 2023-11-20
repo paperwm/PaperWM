@@ -360,17 +360,9 @@ Focus modes can be toggled by user-settable keybinding (default is `Super`+`Shif
 
 ### Setting the default focus mode
 
-The default focus mode is the standard PaperWM focus mode (i.e. not centered).  This can be changed according to preference by changing the `default-focus-mode` setting via `dconf` or `gsettings`.  
+The default focus mode is the standard PaperWM focus mode (i.e. not centered).  This can be changed according to preference by changing the `Default focus mode` setting PaperWM settings.  
 
-To set the default focus mode to `CENTER`, execute the following from a terminal:
-```
-dconf write /org/gnome/shell/extensions/paperwm/default-focus-mode 1
-```
-
-To undo, or revert to the original PaperWM behaviour, execute the following:
-```
-dconf write /org/gnome/shell/extensions/paperwm/default-focus-mode 0
-```
+<img alt="Default focus mode" src="media/default-focus-mode.png" width="560px">
 
 _Note: changing this setting during a PaperWM session will set all spaces to the new default focus mode._
 
@@ -393,7 +385,7 @@ dconf write /org/gnome/shell/extensions/paperwm/disable-topbar-styling true
 ```
 _Note<sup>1</sup>: you will need to restart Gnome shell after changing this setting, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only)_.
 
-_Note<sup>2</sup>: several PaperWM specific features are dependent on changing the Gnome TopBar to function correctly.  If you choose to disable PaperWM's ability to change the TopBar styles (with the setting above), you may also want to disable the [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar))_.
+_Note<sup>2</sup>: several PaperWM specific features are dependent on changing the Gnome TopBar to function correctly.  If you choose to disable PaperWM's ability to change the TopBar styles (with the setting above), you may also want to disable the [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar)_.
 
 ## Fixed Window Size ##
 
