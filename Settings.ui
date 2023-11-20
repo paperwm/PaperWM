@@ -1374,7 +1374,7 @@
                               <object class="GtkLabel">
                                 <property name="focusable">False</property>
                                 <property name="hexpand">1</property>
-                                <property name="label" translatable="yes">Disable PaperWM TopBar styling</property>
+                                <property name="label" translatable="yes">Enable TopBar styling &lt;i&gt;(required for Window Position Bar)&lt;/i&gt;</property>
                                 <property name="use_markup">1</property>
                                 <property name="xalign">0</property>
                                 <layout>

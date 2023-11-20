@@ -84,6 +84,14 @@ class SettingsWidget {
             });
         };
 
+        const booleanSetStateInverted = key => {
+            const builder = this.builder.get_object(key);
+            builder.active = !this._settings.get_boolean(key);
+            builder.connect('state-set', (obj, state) => {
+                this._settings.set_boolean(key, !state);
+            });
+        };
+
         const setValue = (builderKey, settingKey) => {
             const builder = this.builder.get_object(builderKey);
             const value = this._settings.get_int(settingKey);
@@ -420,7 +428,7 @@ class SettingsWidget {
         });
 
         booleanSetState('show-focus-mode-icon');
-        booleanSetState('disable-topbar-styling');
+        booleanSetStateInverted('disable-topbar-styling');
         // disabled since opposite of gnome-pill
         // booleanSetState('show-workspace-indicator');
         setValuePercent('maximize-width-percent', 'maximize-width-percent');
