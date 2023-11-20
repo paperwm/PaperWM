@@ -96,7 +96,16 @@ class SettingsWidget {
             });
         };
 
-        const setValuePrc = (builderKey, settingKey) => {
+        const setValueDouble = (builderKey, settingKey) => {
+            const builder = this.builder.get_object(builderKey);
+            const value = this._settings.get_double(settingKey);
+            builder.set_value(value);
+            builder.connect('value-changed', () => {
+                this._settings.set_double(settingKey, builder.get_value());
+            });
+        };
+
+        const setValuePercent = (builderKey, settingKey) => {
             const builder = this.builder.get_object(builderKey);
             const value = this._settings.get_double(settingKey);
             builder.set_value(value * 100.0);
@@ -193,10 +202,10 @@ class SettingsWidget {
         vFric.connect('value-changed', fricChanged);
         hFric.connect('value-changed', fricChanged);
 
-        setValue('animation_time_spin', 'animation-time');
-        setValuePrc('minimap_scale_spin', 'minimap-scale');
-        setValuePrc('edge_scale_spin', 'edge-preview-scale');
-        setValuePrc('window_switcher_preview_scale_spin', 'window-switcher-preview-scale');
+        setValueDouble('animation_time_spin', 'animation-time');
+        setValuePercent('minimap_scale_spin', 'minimap-scale');
+        setValuePercent('edge_scale_spin', 'edge-preview-scale');
+        setValuePercent('window_switcher_preview_scale_spin', 'window-switcher-preview-scale');
 
         const openWindowPosition = this.builder.get_object('open-window-position');
         const owpos = this._settings.get_int('open-window-position');
@@ -423,7 +432,7 @@ class SettingsWidget {
         });
         // disabled since opposite of gnome-pill
         // booleanSetState('show-workspace-indicator');
-        setValuePrc('maximize-width-percent', 'maximize-width-percent');
+        setValuePercent('maximize-width-percent', 'maximize-width-percent');
 
         // About
         let versionLabel = this.builder.get_object('extension_version');
