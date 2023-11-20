@@ -76,14 +76,11 @@ class SettingsWidget {
         this._backgroundFilter.add_pixbuf_formats();
 
         // setter methods
-        const booleanSetState = (key, callback) => {
+        const booleanSetState = key => {
             const builder = this.builder.get_object(key);
             builder.active = this._settings.get_boolean(key);
             builder.connect('state-set', (obj, state) => {
                 this._settings.set_boolean(key, state);
-                if (callback) {
-                    callback(state);
-                }
             });
         };
 
@@ -260,7 +257,7 @@ class SettingsWidget {
             }
         });
 
-        booleanSetState('show-window-position-bar', 'show-window-position-bar');
+        booleanSetState('show-window-position-bar');
 
         const enableGnomePill = this.builder.get_object('use-gnome-pill');
         enableGnomePill.active = !this._settings.get_boolean('show-workspace-indicator');
@@ -269,7 +266,7 @@ class SettingsWidget {
         });
 
         // Workspaces
-        booleanSetState('use-default-background', 'use-default-background');
+        booleanSetState('use-default-background');
 
         const backgroundPanelButton = this.builder.get_object('gnome-background-panel');
         backgroundPanelButton.connect('clicked', () => {
@@ -423,13 +420,7 @@ class SettingsWidget {
         });
 
         booleanSetState('show-focus-mode-icon');
-        booleanSetState('disable-topbar-styling', state => {
-            if (state) {
-                ['background-clear', 'topbar-transparent-background'].forEach(s => {
-                    Main.panel.remove_style_class_name(s);
-                });
-            }
-        });
+        booleanSetState('disable-topbar-styling');
         // disabled since opposite of gnome-pill
         // booleanSetState('show-workspace-indicator');
         setValuePercent('maximize-width-percent', 'maximize-width-percent');
