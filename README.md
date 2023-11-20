@@ -330,10 +330,9 @@ three-finger swipe up         | Gnome Overview #setting-window-specific-properti
 three-finger swipe down       | PaperWM workspace stack view (see [here](#the-workspace-stack--monitors))
 three-finger swipe left/right | Moves tiling viewport (windows) left / right
 
-PaperWM touchpad gestures behaviour can be modified via the `advanced` tab in PaperWM settings:
+PaperWM touchpad gesture behaviour can be modified via the `General` tab in PaperWM settings:
 
-![Gesture settings](media/gesture-settings.png)
-
+<img alt="Touchpad gesture settings" src="media/gesture-settings.png" width="560px">
 
 ## Window Position Bar (colored bar segment in Top Bar) ##
 
