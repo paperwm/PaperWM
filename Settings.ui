@@ -935,7 +935,6 @@
                 <child>
                   <object class="GtkGrid" id="workspace_default_background_grid">
                     <property name="focusable">False</property>
-                    <property name="tooltip_text" translatable="yes">Only supports static backgrounds</property>
                     <property name="margin_start">12</property>
                     <property name="margin_end">12</property>
                     <property name="margin_top">12</property>
