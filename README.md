@@ -340,15 +340,13 @@ PaperWM touchpad gesture behaviour can be modified via the `General` tab in Pape
 
 https://user-images.githubusercontent.com/30424662/221416159-464d7512-5174-451b-9035-0ee84f9eb4ec.mp4
 
-The the window position bar can be _disabled_ from `PaperWM extension settings` or via `dconf`, e.g. by executing the following command in a terminal: 
+The window position bar can be _disabled_ from `PaperWM extension settings`:
 
-```
-dconf write /org/gnome/shell/extensions/paperwm/show-window-position-bar false
-```
+<img alt="Window indicator bar" src="media/window-indicator-bar.png" width="560px">
 
 You can style both the coloured position bar and the dimmed "position bar backdrop" by overriding the `paperwm-window-position-bar` and `paperwm-window-position-bar-backdrop` CSS classes respectively (see `user.css` in [User configuration & development](#user-configuration--development) section for more information). The `paperwm-window-position-bar` will also inherit the selection color (same as window borders) from `tile-preview`.
 
-_Note: PaperWM overrides the default Gnome Top Bar style to be completely transparent so that the dimmed `window-position-bar-backdrop` and`window-position-bar` elements are visible._
+_Note: PaperWM overrides the default Gnome Top Bar style to be completely transparent so that the dimmed `window-position-bar-backdrop` and `window-position-bar` elements are visible._
 
 ## Window Focus Mode ##
 
@@ -378,14 +376,11 @@ dconf write /org/gnome/shell/extensions/paperwm/show-focus-mode-icon false
 
 PaperWM by default changes the opacity of the Gnome TopBar.  This styling is used for certain PaperWM features.  However, this styling may conflict with the TopBar styling of other extensions (that you may prefer have style the TopBar instead).
 
-Users can disable PaperWM's ability to change TopBar styling by executing the following command from a terminal:
+Users can disable PaperWM's ability to change TopBar styling from PaperWM settings:
 
-```
-dconf write /org/gnome/shell/extensions/paperwm/disable-topbar-styling true
-```
-_Note<sup>1</sup>: you will need to restart Gnome shell after changing this setting, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only)_.
+<img alt="Enable TopBar Styling" src="media/topbar-styling.png" width="560px">
 
-_Note<sup>2</sup>: several PaperWM specific features are dependent on changing the Gnome TopBar to function correctly.  If you choose to disable PaperWM's ability to change the TopBar styles (with the setting above), you may also want to disable the [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar)_.
+_Note: several PaperWM specific features are dependent on changing the Gnome TopBar to function correctly.  If you choose to disable PaperWM's ability to change the TopBar styles (with the setting above), you may also want to disable the [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar)_.
 
 ## Fixed Window Size ##
 
@@ -411,7 +406,6 @@ PaperWM manages these settings (disables them) during runtime.  It will then res
 
 These extensions are good complements to PaperWM:
 
-- [Vertical Overview](https://github.com/RensAlthuis/vertical-overview) - brings back vertically stacked workspaces
 - [Switcher](https://github.com/daniellandau/switcher) - combined window switcher and launcher
 - [Dash to Dock](https://micheleg.github.io/dash-to-dock/) - a great dock
 
