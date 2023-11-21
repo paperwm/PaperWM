@@ -38,12 +38,22 @@
 
     <key type="as" name="switch-down-workspace">
       <default><![CDATA[['<Super>Page_Down']]]></default>
-      <summary>Switch to workspace below</summary>
+      <summary>Switch to workspace below (ws only from current monitor)</summary>
     </key>
 
     <key type="as" name="switch-up-workspace">
       <default><![CDATA[['<Super>Page_Up']]]></default>
-      <summary>Switch to workspace above</summary>
+      <summary>Switch to workspace above (ws only from current monitor)</summary>
+    </key>
+
+    <key type="as" name="switch-down-workspace-from-all-monitors">
+      <default><![CDATA[[]]]></default>
+      <summary>Switch to workspace below (ws from all monitors)</summary>
+    </key>
+
+    <key type="as" name="switch-up-workspace-from-all-monitors">
+      <default><![CDATA[[]]]></default>
+      <summary>Switch to workspace above (ws from all monitors)</summary>
     </key>
 
     <key type="as" name="move-down-workspace">
@@ -412,6 +422,11 @@
     <key type="i" name="default-focus-mode">
         <default>0</default>
         <summary>Set the default focus mode. 0:DEFAULT 1:CENTER</summary>
+    </key>
+
+    <key type="i" name="open-window-position">
+        <default>0</default>
+        <summary>Sets the position to open a new window (e.g right of current window). RIGHT: 0, LEFT: 1, START: 2, END: 3</summary>
     </key>
 
     <key type="b" name="disable-topbar-styling">

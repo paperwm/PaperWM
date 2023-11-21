@@ -17,7 +17,8 @@ const { Clutter, St, Graphene, Meta, Gio, GDesktopEnums } = imports.gi;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const Signals = imports.signals;
-const debug = Extension.imports.utils.debug;
+const Background = imports.ui.background;
+
 
 const workspaceManager = global.workspace_manager;
 const display = global.display;
@@ -39,6 +40,7 @@ var inPreview = PreviewMode.NONE; // export
 // DEFAULT mode is normal/original PaperWM window focus behaviour
 var FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
 
+// window sizing direction
 var CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1 };
 
 /**
@@ -233,12 +235,19 @@ var Space = class Space extends Array {
             // warp pointer to monitor that is active
             Utils.warpPointerToMonitor(this.monitor);
             Utils.later_add(Meta.LaterType.IDLE, () => {
-                ensureViewport(display.focus_window, this, { moveto: true, force: true });
+                this.moveDone(() => {
+                    ensureViewport(display.focus_window, this, { moveto: true, force: true });
+                });
             });
         });
 
         this.signals.connect(gsettings, 'changed::default-focus-mode', () => {
             setFocusMode(getDefaultFocusMode(), this);
+        });
+
+        // update space elements when in/out of fullscreen
+        this.signals.connect(global.display, 'in-fullscreen-changed', () => {
+            this.setSpaceTopbarElementsVisible(true);
         });
 
         const settings = ExtensionUtils.getSettings();
@@ -386,8 +395,6 @@ var Space = class Space extends Array {
                 else {
                     console.warn("invalid preferredWidth unit:", `'${prop.unit}'`, "(should be 'px' or '%')");
                 }
-
-                delete mw.preferredWidth;
             }
 
             if (resizable) {
@@ -455,10 +462,7 @@ var Space = class Space extends Array {
         this._inLayout = true;
         this.startAnimate();
 
-        let time = animate ? Settings.prefs.animation_time : 0;
-        if (window.instant) {
-            time = 0;
-        }
+        let time = Settings.prefs.animation_time;
         let gap = Settings.prefs.window_gap;
         let x = 0;
         let selectedIndex = this.selectedIndex();
@@ -561,14 +565,14 @@ var Space = class Space extends Array {
         this.emit('layout', this);
     }
 
-    queueLayout() {
+    queueLayout(animate = true) {
         if (this._layoutQueued)
             return;
 
         this._layoutQueued = true;
         Utils.later_add(Meta.LaterType.RESIZE, () => {
             this._layoutQueued = false;
-            this.layout();
+            this.layout(animate);
         });
     }
 
@@ -1193,14 +1197,12 @@ var Space = class Space extends Array {
 border: ${borderWidth}px ${this.color};
 border-radius: ${borderWidth}px;
 `);
-        this.metaBackground.set_color(Clutter.color_from_string(color)[1]);
+        this.metaBackground?.set_color(Clutter.color_from_string(color)[1]);
     }
 
     updateBackground() {
         let path = this.settings.get_string('background') || Settings.prefs.default_background;
         let useDefault = gsettings.get_boolean('use-default-background');
-        const BackgroundStyle = GDesktopEnums.BackgroundStyle;
-        let style = BackgroundStyle.ZOOM;
         if (!path && useDefault) {
             if (interfaceSettings.get_string("color-scheme") === "default") {
                 path = backgroundSettings.get_string("picture-uri");
@@ -1209,12 +1211,21 @@ border-radius: ${borderWidth}px;
             }
         }
 
-        let file = Gio.File.new_for_commandline_arg(path);
-        if (path === '' || !file.query_exists(null)) {
-            file = Gio.File.new_for_uri('resource:///org/gnome/shell/theme/noise-texture.png');
-            style = BackgroundStyle.WALLPAPER;
-        }
-        this.metaBackground.set_file(file, style);
+        // destroy old background
+        this.metaBackground?.destroy();
+        this.metaBackground = null;
+
+        this.metaBackground = new Background.Background({
+            monitorIndex: this.monitor.index,
+            layoutManager: Main.layoutManager,
+            settings: backgroundSettings,
+            file: Gio.File.new_for_commandline_arg(path),
+            style: GDesktopEnums.BackgroundStyle.ZOOM,
+        });
+
+        this.background.content.set({
+            background: this.metaBackground,
+        });
     }
 
     updateName() {
@@ -1313,38 +1324,52 @@ border-radius: ${borderWidth}px;
      * sets these elements' visibility when not needed.
      * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible = false, changeTopBarStyle = true) {
-        // if windowPositionBar shown, we want the topbar style to be transparent if visible
-        if (Settings.prefs.show_window_position_bar) {
-            if (changeTopBarStyle) {
-                if (visible && this.hasTopBar) {
-                    TopBar.setTransparentStyle();
-                }
-                else {
-                    TopBar.setNoBackgroundStyle();
-                }
+    setSpaceTopbarElementsVisible(visible = false, options = {}) {
+        const changeTopBarStyle = options?.changeTopBarStyle ?? true;
+        const force = options?.force ?? false;
+        const setVisible = v => {
+            if (v) {
+                this.updateSpaceIconPositions();
+                this.showWorkspaceIndicator(true, force);
+                this.showFocusModeIcon(true, force);
             }
-
-            // if on different monitor then override to show elements
-            if (!this.hasTopBar) {
-                visible = true;
+            else {
+                this.showWorkspaceIndicator(false, force);
+                this.showFocusModeIcon(false, force);
             }
+        };
 
-            // don't show elements on spaces with actual TopBar (unless inPreview)
-            if (this.hasTopBar && !inPreview) {
-                visible = false;
+        // if windowPositionBar is disabled ==> don't show elements
+        if (!Settings.prefs.show_window_position_bar) {
+            setVisible(false);
+            return;
+        }
+
+        if (changeTopBarStyle) {
+            if (visible && this.hasTopBar) {
+                TopBar.setTransparentStyle();
+            }
+            else {
+                TopBar.setNoBackgroundStyle();
             }
         }
 
-        if (visible) {
-            this.updateSpaceIconPositions();
-            this.showWorkspaceIndicator(true);
-            this.showFocusModeIcon(true);
+        // if on different monitor then override to show elements
+        if (!this.hasTopBar) {
+            visible = true;
         }
-        else {
-            this.showWorkspaceIndicator(false);
-            this.showFocusModeIcon(false);
+
+        // don't show elements on spaces with actual TopBar (unless inPreview)
+        if (this.hasTopBar && !inPreview) {
+            visible = false;
         }
+
+        // if current window is fullscreen, don't show
+        if (this?.selectedWindow?.fullscreen) {
+            visible = false;
+        }
+
+        setVisible(visible);
     }
 
     /**
@@ -1369,11 +1394,11 @@ border-radius: ${borderWidth}px;
      * Shows the workspace indicator space element.
      * @param {boolean} show
      */
-    showWorkspaceIndicator(show = true) {
+    showWorkspaceIndicator(show = true, force = false) {
         this.updateName();
         if (show && Settings.prefs.show_workspace_indicator) {
             // if already shown then do nothing
-            if (this.workspaceIndicator.is_visible()) {
+            if (!force && this.workspaceIndicator.is_visible()) {
                 return;
             }
 
@@ -1386,7 +1411,7 @@ border-radius: ${borderWidth}px;
             });
         } else {
             // if already shown then do nothing
-            if (!this.workspaceIndicator.is_visible()) {
+            if (!force && !this.workspaceIndicator.is_visible()) {
                 return;
             }
 
@@ -1402,10 +1427,10 @@ border-radius: ${borderWidth}px;
      * Shows the focusModeIcon space element.
      * @param {boolean} show
      */
-    showFocusModeIcon(show = true) {
+    showFocusModeIcon(show = true, force = false) {
         if (show && Settings.prefs.show_focus_mode_icon) {
             // if already shown then do nothing
-            if (this.focusModeIcon.is_visible()) {
+            if (!force && this.focusModeIcon.is_visible()) {
                 return;
             }
 
@@ -1418,7 +1443,7 @@ border-radius: ${borderWidth}px;
             });
         } else {
             // if already hidden then do nothing
-            if (!this.focusModeIcon.is_visible()) {
+            if (!force && !this.focusModeIcon.is_visible()) {
                 return;
             }
             Easer.addEase(this.focusModeIcon, {
@@ -1436,29 +1461,14 @@ border-radius: ${borderWidth}px;
         }
 
         let monitor = this.monitor;
-        let backgroundParams = global.screen
-            ? { meta_screen: global.screen }
-            : { meta_display: display };
 
-        let metaBackground = new Meta.Background(backgroundParams);
-        // gnome-shell 3.38
-        if (Meta.BackgroundActor.prototype.set_background) {
-            backgroundParams.background = metaBackground;
-        }
         this.background = new Meta.BackgroundActor(
             Object.assign({
                 name: "background",
                 monitor: monitor.index,
                 reactive: true, // Disable the background menu
-            }, backgroundParams)
+            }, { meta_display: display })
         );
-
-        if (this.background.content) {
-            this.background.content.set({
-                background: metaBackground,
-            });
-        }
-        this.metaBackground = metaBackground;
 
         this.actor.insert_child_below(this.background, null);
 
@@ -1513,11 +1523,15 @@ border-radius: ${borderWidth}px;
             Gestures.horizontalScroll.bind(this));
     }
 
-    setMonitor(monitor, animate = false) {
+    setMonitor(monitor, animate = false, options = {}) {
+        const commit = options?.commit ?? true;
+
         // Remake the background when we move monitors. The size/scale will be
         // incorrect when using fractional scaling.
         if (monitor !== this.monitor) {
-            this.monitor = monitor;
+            if (commit) {
+                this.monitor = monitor;
+            }
             this.createBackground();
             this.updateBackground();
             this.updateColor();
@@ -1556,8 +1570,7 @@ border-radius: ${borderWidth}px;
         background.set_size(this.width, this.height);
 
         this.cloneClip.set_size(monitor.width, monitor.height);
-        this.cloneClip.set_clip(0, 0,
-            this.width, this.height);
+        this.cloneClip.set_clip(0, 0, this.width, this.height);
         // transforms break if there's no height
         this.cloneContainer.height = this.monitor.height;
 
@@ -2073,6 +2086,9 @@ var Spaces = class Spaces extends Map {
         navFinish();
         // final switch with warp
         this.switchMonitor(direction);
+
+        // ensure after swapping that the space elements are shown correctly
+        this.setSpaceTopbarElementsVisible(true, { force: true });
     }
 
     switchWorkspace(wm, fromIndex, toIndex, animate = false) {
@@ -2142,9 +2158,9 @@ var Spaces = class Spaces extends Map {
      * See Space.setSpaceTopbarElementsVisible function for what this does.
      * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible = false, changeTopBarStyle = true) {
+    setSpaceTopbarElementsVisible(visible = false, options = {}) {
         this.forEach(s => {
-            s.setSpaceTopbarElementsVisible(visible, changeTopBarStyle);
+            s.setSpaceTopbarElementsVisible(visible, options);
         });
     }
 
@@ -2154,8 +2170,25 @@ var Spaces = class Spaces extends Map {
         for (let i = 0; i < nWorkspaces; i++) {
             let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
             if (space.monitor === monitor ||
-                (space.length === 0 && this.monitors.get(space.monitor) !== space))
+                (space.length === 0 && this.monitors.get(space.monitor) !== space)) {
+                // include workspace if it is the current one
+                // or if it is empty and not active on another monitor
                 out.push(space);
+            }
+        }
+        return out;
+    }
+
+    _getOrderedSpacesFromAllMonitors(monitor) {
+        let nWorkspaces = workspaceManager.n_workspaces;
+        let out = [];
+        for (let i = 0; i < nWorkspaces; i++) {
+            let space = this.spaceOf(workspaceManager.get_workspace_by_index(i));
+            if (this.monitors.get(space.monitor) !== space || space.monitor === monitor) {
+                // include workspace if it is the current one
+                // or if it is not active on another monitor
+                out.push(space);
+            }
         }
         return out;
     }
@@ -2228,14 +2261,19 @@ var Spaces = class Spaces extends Map {
         }
     }
 
-    selectSequenceSpace(direction, move) {
+    selectSequenceSpace(direction, move, fromAllMonitors = false) {
         // if in stack preview do not run sequence preview
         if (inPreview === PreviewMode.STACK) {
             return;
         }
 
         let currentSpace = this.activeSpace;
-        let monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
+        let monitorSpaces;
+        if (fromAllMonitors) {
+            monitorSpaces = this._getOrderedSpacesFromAllMonitors(currentSpace.monitor);
+        } else {
+            monitorSpaces = this._getOrderedSpaces(currentSpace.monitor);
+        }
 
         let from = monitorSpaces.indexOf(this.selectedSpace);
         let newSpace = this.selectedSpace;
@@ -2243,7 +2281,7 @@ var Spaces = class Spaces extends Map {
 
         if (move && this.selectedSpace.selectedWindow) {
             const navigator = Navigator.getNavigator();
-            if (navigator._moving == null ||
+            if (!navigator._moving ||
                 (Array.isArray(navigator._moving) && navigator._moving.length === 0)) {
                 takeWindow(this.selectedSpace.selectedWindow,
                     this.selectedSpace,
@@ -2282,6 +2320,10 @@ var Spaces = class Spaces extends Map {
         const padding_percentage = 4;
         let last = monitorSpaces.length - 1;
         monitorSpaces.forEach((space, i) => {
+            // need to set monitor here so it shows up during selection, when it
+            // was previously on another monitor
+            space.setMonitor(currentSpace.monitor, false, { commit: false });
+
             let padding = (space.height * scale / 100) * padding_percentage;
             let center = (space.height - (space.height * scale)) / 2;
             let space_y;
@@ -2869,7 +2911,7 @@ function resizeHandler(metaWindow) {
     if (inGrab && inGrab.window === metaWindow)
         return;
 
-    let f = metaWindow.get_frame_rect();
+    const f = metaWindow.get_frame_rect();
     let needLayout = false;
     if (metaWindow._targetWidth !== f.width || metaWindow._targetHeight !== f.height) {
         needLayout = true;
@@ -2877,22 +2919,33 @@ function resizeHandler(metaWindow) {
     metaWindow._targetWidth = null;
     metaWindow._targetHeight = null;
 
-    let space = spaces.spaceOfWindow(metaWindow);
+    const space = spaces.spaceOfWindow(metaWindow);
     if (space.indexOf(metaWindow) === -1)
         return;
 
-    let selected = metaWindow === space.selectedWindow;
+    const selected = metaWindow === space.selectedWindow;
+    let animate = true;
+    let x;
+
+    // if window is fullscreened, then don't animate background space.container animation etc.
+    if (metaWindow?.fullscreen) {
+        animate = false;
+        x = 0;
+    } else {
+        x = metaWindow.get_frame_rect().x - space.monitor.x;
+    }
 
     if (!space._inLayout && needLayout) {
         // Restore window position when eg. exiting fullscreen
         if (!Navigator.navigating && selected) {
             move_to(space, metaWindow, {
-                x: metaWindow.get_frame_rect().x - space.monitor.x,
+                x,
+                animate,
             });
         }
 
         // Resizing from within a size-changed signal is troube (#73). Queue instead.
-        space.queueLayout();
+        space.queueLayout(animate);
     }
 }
 
@@ -3107,6 +3160,16 @@ function focusMonitor() {
 }
 
 /**
+ * Convenience method to run a callback method when an actor is shown the stage.
+ * Uses a `connectOneShot` signal.
+ * @param actor
+ * @param callback
+ */
+function callbackOnActorShow(actor, callback) {
+    signals.connectOneShot(actor, 'show', callback);
+}
+
+/**
    Types of windows which never should be tiled.
  */
 function add_filter(meta_window) {
@@ -3280,36 +3343,87 @@ function insertWindow(metaWindow, { existing }) {
     }
     ok && clone.set_position(x, y);
 
-    let index = -1; // (-1 -> at beginning)
-    if (space.selectedWindow) {
-        index = space.indexOf(space.selectedWindow);
-    }
-    index++;
-    if (!space.addWindow(metaWindow, index))
+    if (!space.addWindow(metaWindow, getOpenWindowPositionIndex(space)))
         return;
 
     metaWindow.unmake_above();
-    if (metaWindow.get_maximized() == Meta.MaximizeFlags.BOTH) {
+    if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
         metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
         toggleMaximizeHorizontally(metaWindow);
     }
-    space.layout();
 
+    // run a simple layout in pre-prepare layout
+    space.layout(false);
+
+    // if only one window on space, then centre it
+    const centre = () => {
+        if (space.getWindows().length === 1) {
+            centerWindowHorizontally(metaWindow);
+        }
+    };
+
+    /**
+     * If window is new, then setup and ensure is in view
+     * after actor is shown on stage.
+     */
     if (!existing) {
         clone.x = clone.targetX;
         clone.y = clone.targetY;
-        connectSizeChanged(true);
         space.layout();
-    } else {
-        animateWindow(metaWindow);
+
+        // run focus and resize to ensure new window is correctly shown
+        focus_handler(metaWindow);
+        resizeHandler(metaWindow);
+        connectSizeChanged(true);
+
+        // remove winprop props after window shown
+        callbackOnActorShow(actor, () => {
+            delete metaWindow.preferredWidth;
+
+            Main.activateWindow(metaWindow);
+            ensureViewport(space.selectedWindow, space);
+
+            centre();
+        });
+
+        return;
     }
 
+    space.layout();
+    animateWindow(metaWindow);
     if (metaWindow === display.focus_window) {
         focus_handler(metaWindow);
-    } else if (space.workspace === workspaceManager.get_active_workspace()) {
+    } else if (space === spaces.activeSpace) {
         Main.activateWindow(metaWindow);
     } else {
         ensureViewport(space.selectedWindow, space);
+    }
+
+    centre();
+}
+
+/**
+ * Gets the window index to add a new window in the space:
+ * { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
+ */
+function getOpenWindowPositionIndex(space) {
+    let index = -1; // init (-1 -> at beginning)
+    if (space?.selectedWindow) {
+        index = space.indexOf(space.selectedWindow);
+    }
+
+    const pos = Settings.prefs.open_window_position;
+    switch (pos) {
+    case Settings.OpenWindowPositions.LEFT:
+        return index;
+    case Settings.OpenWindowPositions.START:
+        return 0;
+    case Settings.OpenWindowPositions.END:
+        // get number of columns in space
+        return space.length + 1;
+
+    default:
+        return index + 1;
     }
 }
 
@@ -3461,7 +3575,8 @@ function updateSelection(space, metaWindow) {
  * Move the column containing @meta_window to x, y and propagate the change
  * in @space. Coordinates are relative to monitor and y is optional.
  */
-function move_to(space, metaWindow, { x, y, force, instant }) {
+function move_to(space, metaWindow, { x, force, animate }) {
+    animate = animate ?? true;
     if (space.indexOf(metaWindow) === -1)
         return;
 
@@ -3486,7 +3601,8 @@ function move_to(space, metaWindow, { x, y, force, instant }) {
         {
             x: target,
             time: Settings.prefs.animation_time,
-            onComplete: space.moveDone.bind(space),
+            instant: !animate,
+            onComplete: () => space.moveDone(),
         });
 
     space.fixOverlays(metaWindow);
@@ -3974,7 +4090,7 @@ function activateLastWindow(mw, space) {
  * https://github.com/paperwm/PaperWM/issues/448 for details).
  */
 function activateWindowAfterRendered(actor, mw) {
-    signals.connectOneShot(actor, 'show', () => {
+    callbackOnActorShow(actor, () => {
         Main.activateWindow(mw);
     });
 }
@@ -4004,7 +4120,6 @@ function centerWindowHorizontally(metaWindow) {
     } else {
         move_to(space, metaWindow, {
             x: targetX,
-            onComplete: () => space.moveDone(),
         });
     }
 }
@@ -4223,12 +4338,12 @@ function movePreviousSpaceBackwards(mw, space) {
     spaces.selectStackSpace(Meta.MotionDirection.UP, true);
 }
 
-function selectDownSpace(mw, space) {
-    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN);
+function selectDownSpace(mw, space, fromAllMonitors) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.DOWN, false, fromAllMonitors);
 }
 
-function selectUpSpace(mw, space) {
-    spaces.selectSequenceSpace(Meta.MotionDirection.UP);
+function selectUpSpace(mw, space, fromAllMonitors) {
+    spaces.selectSequenceSpace(Meta.MotionDirection.UP, false, fromAllMonitors);
 }
 
 function moveDownSpace(mw, space) {

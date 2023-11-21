@@ -491,14 +491,44 @@ var Signals = class Signals extends Map {
  * module.
  */
 var easer = {
+    /**
+     * Safer time setting to essentiall disable easer animation.
+     * Setting to values lower than this can have some side-effects
+     * like "jumpy" three-finger left/right swiping etc.
+     */
+    ANIMATION_SAFE_TIME: 0.03,
+
+    /**
+     * Can set animation to instant time.  Used for to override animation
+     * time to effectively "disable" an animation.  Setting to 0 can have
+     * some side-effects and cause race aconditions
+     */
+    ANIMATION_INSTANT_TIME: 0.0001,
+
     addEase(actor, params) {
         if (params.time) {
-            params.duration = params.time * 1000;
+            params.duration = this._safeDuration(params.time, params.instant);
             delete params.time;
         }
-        if (!params.mode)
+
+        if (!params.mode) {
             params.mode = Clutter.AnimationMode.EASE_IN_OUT_QUAD;
+        }
+
         actor.ease(params);
+    },
+
+    /**
+     * Returns a safe animation time to avoid timing
+     * race conditions etc.
+     */
+    _safeDuration(time, instant) {
+        let duration = Math.max(time, this.ANIMATION_SAFE_TIME);
+        if (instant === true) {
+            duration = this.ANIMATION_INSTANT_TIME;
+        }
+
+        return duration * 1000;
     },
 
     removeEase(actor) {
@@ -506,7 +536,10 @@ var easer = {
     },
 
     isEasing(actor) {
-        return actor.get_transition('x') || actor.get_transition('y') || actor.get_transition('scale-x') || actor.get_transition('scale-x');
+        return actor.get_transition('x') ||
+        actor.get_transition('y') ||
+        actor.get_transition('scale-x') ||
+        actor.get_transition('scale-x');
     },
 };
 

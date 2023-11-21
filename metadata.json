@@ -4,5 +4,6 @@
   "description": "Tiling window manager with a twist",
   "url": "https://github.com/paperwm/PaperWM",
   "settings-schema": "org.gnome.shell.extensions.paperwm",
-  "shell-version": [ "42", "43", "44" ]
+  "shell-version": [ "42", "43", "44" ],
+  "version-name": "44.15.1"
 }
