@@ -49,7 +49,9 @@ function enable() {
      * ensure swipe trackers are reset.
      */
     signals.connect(Main.overview, 'hidden', () => {
-        swipeTrackersEnable(false);
+        if (gestureEnabled()) {
+            swipeTrackersEnable(false);
+        }
     });
 
     /**
@@ -83,10 +85,29 @@ function enable() {
         const phase = event.get_gesture_phase();
         const [dx, dy] = event.get_gesture_motion_delta();
         switch (phase) {
+        case Clutter.TouchpadGesturePhase.BEGIN:
+            if (shouldPropagate(fingers)) {
+                return Clutter.EVENT_PROPAGATE;
+            }
+
+            // PaperWM behaviour
+            time = event.get_time();
+            natural = touchpadSettings.get_boolean("natural-scroll") ? 1 : -1;
+            direction = undefined;
+            navigator = Navigator.getNavigator();
+            navigator.connect('destroy', () => {
+                vState = -1;
+            });
+            return Clutter.EVENT_STOP;
         case Clutter.TouchpadGesturePhase.UPDATE:
+            if (shouldPropagate(fingers)) {
+                return Clutter.EVENT_PROPAGATE;
+            }
+
             if (direction === DIRECTIONS.Horizontal) {
                 return Clutter.EVENT_PROPAGATE;
             }
+
             if (enabled && direction === undefined) {
                 if (Math.abs(dx) < Math.abs(dy)) {
                     vy = 0;
@@ -118,35 +139,6 @@ function enable() {
                 return Clutter.EVENT_STOP;
             }
             return Clutter.EVENT_PROPAGATE;
-        case Clutter.TouchpadGesturePhase.BEGIN:
-            if (
-                // gestures disabled AND three-fingers ==> gnome default behaviour
-                !enabled && fingers === 3
-            ) {
-                return Clutter.EVENT_PROPAGATE;
-            }
-            else if (
-                // if here horizontal fingers !== 3 ==> allow
-                gestureHorizontalFingers() === fingers
-            ) {
-                // NOOP
-            }
-            else if (
-                // gestures disabled ==> gnome default behaviour
-                !enabled
-            ) {
-                return Clutter.EVENT_PROPAGATE;
-            }
-
-            // PaperWM behaviour
-            time = event.get_time();
-            natural = touchpadSettings.get_boolean("natural-scroll") ? 1 : -1;
-            direction = undefined;
-            navigator = Navigator.getNavigator();
-            navigator.connect('destroy', () => {
-                vState = -1;
-            });
-            return Clutter.EVENT_STOP;
         case Clutter.TouchpadGesturePhase.CANCEL:
         case Clutter.TouchpadGesturePhase.END:
             if (direction === DIRECTIONS.Vertical) {
@@ -157,6 +149,33 @@ function enable() {
         }
         return Clutter.EVENT_PROPAGATE;
     });
+}
+
+function shouldPropagate(fingers) {
+    if (
+        // gestures disabled ==> gnome default behaviour
+        !gestureEnabled()
+    ) {
+        swipeTrackersEnable();
+        return true;
+    }
+    else if (
+        fingers === 3 && gestureHorizontalFingers() !== 3
+    ) {
+        swipeTrackersEnable();
+        return true;
+    }
+    else if (
+        // if gesure enabled AND finger 4 AND horizontal finger != 4
+        fingers === 4 &&
+        gestureHorizontalFingers() !== 4 &&
+        gestureWorkspaceFingers() !== 4
+    ) {
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 function disable() {
