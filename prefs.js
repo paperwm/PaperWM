@@ -75,24 +75,17 @@ class SettingsWidget {
         this._backgroundFilter = new Gtk.FileFilter();
         this._backgroundFilter.add_pixbuf_formats();
 
-        // setter methods
-        const booleanSetState = key => {
+        // value-changed methods
+        const booleanStateChanged = (key, inverted = false) => {
             const builder = this.builder.get_object(key);
-            builder.active = this._settings.get_boolean(key);
+            builder.active = inverted
+                ? !this._settings.get_boolean(key) : this._settings.get_boolean(key);
             builder.connect('state-set', (obj, state) => {
-                this._settings.set_boolean(key, state);
+                this._settings.set_boolean(key, inverted ? !state : state);
             });
         };
 
-        const booleanSetStateInverted = key => {
-            const builder = this.builder.get_object(key);
-            builder.active = !this._settings.get_boolean(key);
-            builder.connect('state-set', (obj, state) => {
-                this._settings.set_boolean(key, !state);
-            });
-        };
-
-        const setValue = (builderKey, settingKey) => {
+        const intValueChanged = (builderKey, settingKey) => {
             const builder = this.builder.get_object(builderKey);
             const value = this._settings.get_int(settingKey);
             builder.set_value(value);
@@ -101,7 +94,7 @@ class SettingsWidget {
             });
         };
 
-        const setValueDouble = (builderKey, settingKey) => {
+        const doubleValueChanged = (builderKey, settingKey) => {
             const builder = this.builder.get_object(builderKey);
             const value = this._settings.get_double(settingKey);
             builder.set_value(value);
@@ -110,7 +103,7 @@ class SettingsWidget {
             });
         };
 
-        const setValuePercent = (builderKey, settingKey) => {
+        const percentValueChanged = (builderKey, settingKey) => {
             const builder = this.builder.get_object(builderKey);
             const value = this._settings.get_double(settingKey);
             builder.set_value(value * 100.0);
@@ -120,10 +113,10 @@ class SettingsWidget {
         };
 
         // General
-        setValue('window_gap_spin', 'window-gap');
-        setValue('hmargin_spinner', 'horizontal-margin');
-        setValue('top_margin_spinner', 'vertical-margin');
-        setValue('bottom_margin_spinner', 'vertical-margin-bottom');
+        intValueChanged('window_gap_spin', 'window-gap');
+        intValueChanged('hmargin_spinner', 'horizontal-margin');
+        intValueChanged('top_margin_spinner', 'vertical-margin');
+        intValueChanged('bottom_margin_spinner', 'vertical-margin-bottom');
 
         // processing function for cycle values
         let cycleProcessor = (elementName, settingName, resetElementName) => {
@@ -207,10 +200,10 @@ class SettingsWidget {
         vFric.connect('value-changed', fricChanged);
         hFric.connect('value-changed', fricChanged);
 
-        setValueDouble('animation_time_spin', 'animation-time');
-        setValuePercent('minimap_scale_spin', 'minimap-scale');
-        setValuePercent('edge_scale_spin', 'edge-preview-scale');
-        setValuePercent('window_switcher_preview_scale_spin', 'window-switcher-preview-scale');
+        doubleValueChanged('animation_time_spin', 'animation-time');
+        percentValueChanged('minimap_scale_spin', 'minimap-scale');
+        percentValueChanged('edge_scale_spin', 'edge-preview-scale');
+        percentValueChanged('window_switcher_preview_scale_spin', 'window-switcher-preview-scale');
 
         const openWindowPosition = this.builder.get_object('open-window-position');
         const owpos = this._settings.get_int('open-window-position');
@@ -265,7 +258,7 @@ class SettingsWidget {
             }
         });
 
-        booleanSetState('show-window-position-bar');
+        booleanStateChanged('show-window-position-bar');
 
         const enableGnomePill = this.builder.get_object('use-gnome-pill');
         enableGnomePill.active = !this._settings.get_boolean('show-workspace-indicator');
@@ -274,7 +267,7 @@ class SettingsWidget {
         });
 
         // Workspaces
-        booleanSetState('use-default-background');
+        booleanStateChanged('use-default-background');
 
         const backgroundPanelButton = this.builder.get_object('gnome-background-panel');
         backgroundPanelButton.connect('clicked', () => {
@@ -375,7 +368,7 @@ class SettingsWidget {
         });
 
         // Advanced
-        booleanSetState('gesture-enabled');
+        booleanStateChanged('gesture-enabled');
 
         const gestureFingers = key => {
             const builder = this.builder.get_object(key);
@@ -427,11 +420,11 @@ class SettingsWidget {
             }
         });
 
-        booleanSetState('show-focus-mode-icon');
-        booleanSetStateInverted('disable-topbar-styling');
+        booleanStateChanged('show-focus-mode-icon');
+        booleanStateChanged('disable-topbar-styling', true);
         // disabled since opposite of gnome-pill
         // booleanSetState('show-workspace-indicator');
-        setValuePercent('maximize-width-percent', 'maximize-width-percent');
+        percentValueChanged('maximize-width-percent', 'maximize-width-percent');
 
         // About
         let versionLabel = this.builder.get_object('extension_version');
