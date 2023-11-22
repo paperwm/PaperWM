@@ -731,15 +731,13 @@ export function fixTopBar() {
     let fullscreen = focusIsFloatOrScratch ? focused.fullscreen : selected && selected.fullscreen;
 
     if (normal && !space.showTopBar) {
-        panelBox.scale_y = 0; // Update the workarea to support hide top bar
-        panelBox.hide();
-    }
-    else if (normal && fullscreen) {
-        panelBox.hide();
-    }
-    else {
-        panelBox.scale_y = 1;
-        panelBox.show();
+        // panelBox.scale_y = 0; // Update the workarea to support hide top bar
+        // panelBox.hide();
+    } else if (normal && fullscreen) {
+        // panelBox.hide();
+    } else {
+        // panelBox.scale_y = 1;
+        // panelBox.show();
     }
 }
 
