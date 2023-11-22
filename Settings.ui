@@ -91,7 +91,7 @@
                 <property name="margin_start">36</property>
                 <property name="margin_end">36</property>
                 <property name="margin_top">16</property>
-                <property name="margin_bottom">36</property>
+                <property name="margin_bottom">16</property>
                 <property name="orientation">vertical</property>
                 <property name="spacing">12</property>
                 <property name="width_request">480</property>
@@ -739,7 +739,7 @@
         <property name="margin_start">36</property>
         <property name="margin_end">36</property>
         <property name="margin_top">16</property>
-        <property name="margin_bottom">36</property>
+        <property name="margin_bottom">16</property>
         <property name="orientation">vertical</property>
         <property name="spacing">12</property>
         <property name="width_request">480</property>
@@ -866,6 +866,7 @@
           <object class="GtkListBox">
             <property name="focusable">False</property>
             <property name="selection_mode">none</property>
+            <property name="margin-bottom">16</property>
             <style>
               <class name="frame" />
             </style>
@@ -970,7 +971,7 @@
                 <property name="margin_start">36</property>
                 <property name="margin_end">36</property>
                 <property name="margin_top">16</property>
-                <property name="margin_bottom">36</property>
+                <property name="margin_bottom">16</property>
                 <property name="orientation">vertical</property>
                 <property name="spacing">12</property>
                 <property name="width_request">480</property>
@@ -1424,6 +1425,7 @@
                   <object class="GtkListBox">
                     <property name="focusable">False</property>
                     <property name="selection_mode">none</property>
+                    <property name="margin-bottom">16</property>
                     <style>
                       <class name="frame" />
                     </style>
@@ -1437,7 +1439,7 @@
                             <property name="margin_start">12</property>
                             <property name="margin_end">12</property>
                             <property name="margin_top">6</property>
-                            <property name="margin_bottom">6</property>
+                            <property name="margin_bottom">16</property>
                             <property name="row_spacing">12</property>
                             <property name="column_spacing">32</property>
                             <child>
