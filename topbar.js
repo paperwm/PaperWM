@@ -71,10 +71,12 @@ export function enable (extension) {
     });
 
     signals.connect(gsettings, 'changed::disable-topbar-styling', (settings, key) => {
-        const status = Settings.prefs.disable_topbar_styling ? 'DISABLED' : 'ENABLED';
-        Main.notify(
-            `PaperWM: TopBar styling has been ${status}`,
-            `A restart of Gnome is required! (e.g. logout then login again)`);
+        if (Settings.prefs.disable_topbar_styling) {
+            removeStyles();
+        }
+        else {
+            fixStyle();
+        }
     });
 
     signals.connect(gsettings, 'changed::show-window-position-bar', (settings, key) => {
