@@ -709,6 +709,14 @@ function setupFullscreenAvoiderSupport() {
                 enumerable: true,
             }
         });
+
+    signals.connect(Main.layoutManager.panelBox, "notify::position", () => {
+        try {
+            Tiling.spaces.setSpaceTopbarElementsVisible();
+        } catch (e) {
+            console.error(e);
+        }
+    });
 }
 
 function undoFullscreenAvoiderSupport() {
@@ -725,4 +733,5 @@ function undoFullscreenAvoiderSupport() {
             }
         }
     );
+    signals.disconnect(Main.layoutManager.panelBox);
 }
