@@ -607,8 +607,7 @@ export class Space extends Array {
         // compensate to keep window position bar on all monitors
         if (Settings.prefs.show_window_position_bar) {
             const panelBoxHeight = Topbar.panelBox.height;
-            const monitor = Main.layoutManager.primaryMonitor;
-            if (monitor !== this.monitor) {
+            if (!this.hasTopBar) {
                 workArea.y += panelBoxHeight;
                 workArea.height -= panelBoxHeight;
             }
