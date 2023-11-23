@@ -37,9 +37,11 @@ export function enable(extension) {
     enableOverrides();
     setupRuntimeDisables();
     setupActions();
+    setupFullscreenAvoiderSupport();
 }
 
 export function disable() {
+    undoFullscreenAvoiderSupport();
     disableOverrides();
     restoreRuntimeDisables();
     actions.forEach(a => global.stage.add_action(a));
@@ -672,4 +674,55 @@ export function addWindow(window, metaWindow) {
 
     this._layout = null;
     this.layout_changed();
+}
+
+function setupFullscreenAvoiderSupport() {
+    // Patch monitor objects prototype to check our space for the inFullscreen
+    // property.
+    const monitor1 = Main.layoutManager.monitors[0];
+    Object.defineProperties(
+        Object.getPrototypeOf(monitor1),
+        {
+            inFullscreen: {
+                // NOTE: Needs to be non-arrow function so `this` is bound
+                // correctly on call. This is necessary because we modify the
+                // prototype of multiple objects here.
+                get: function() {
+                    // NOTE: This is wrapped in try-catch because an error here
+                    // makes windows unclickable.
+                    try {
+                        // Find active space for monitor (this)
+                        // NOTE: Indexing spaces.monitors[this] does not work
+                        for (const [monitor, space] of Tiling.spaces.monitors) {
+                            if (monitor.index == this.index) {
+                                return space.hasFullScreenWindow();
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    // should not be reached, just here in case there is an
+                    // error above
+                    console.error(new Error(`Failed to find space for monitor`));
+                    return false;
+                },
+                enumerable: true,
+            }
+        });
+}
+
+function undoFullscreenAvoiderSupport() {
+    const monitor1 = Main.layoutManager.monitors[0];
+    // Reset value to false. This might be incorrect, but will be updated by
+    // gnome again after some time.
+    Object.defineProperties(
+        Object.getPrototypeOf(monitor1),
+        {
+            inFullscreen: {
+                value: false,
+                writable: true,
+                enumerable: true,
+            }
+        }
+    );
 }
