@@ -1312,11 +1312,6 @@ export class Space extends Array {
      * Returns true if this space has the topbar.
      */
     get hasTopBar() {
-        // TODO might not need this, but it is probably faster than below
-        if (this.monitor && this.monitor == Topbar.panelMonitor()) {
-            return true;
-        }
-
         // check if panel position is the same as the window position bar backdrop
         // this is the case then another extension moves the panel
         const [panelBoxX, panelBoxY] = Main.layoutManager.panelBox.get_transformed_position();

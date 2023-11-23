@@ -15,7 +15,7 @@ import * as WindowManager from 'resource:///org/gnome/shell/ui/windowManager.js'
 import * as WindowPreview from 'resource:///org/gnome/shell/ui/windowPreview.js';
 import * as Params from 'resource:///org/gnome/shell/misc/params.js';
 
-import { Utils, Tiling, Scratch, Settings } from './imports.js';
+import { Utils, Tiling, Scratch, Settings, Topbar } from './imports.js';
 
 /**
   Some of Gnome Shell's default behavior is really sub-optimal when using
@@ -712,7 +712,13 @@ function setupFullscreenAvoiderSupport() {
 
     signals.connect(Main.layoutManager.panelBox, "notify::position", () => {
         try {
-            Tiling.spaces.setSpaceTopbarElementsVisible();
+            if (Tiling.spaces) {
+                for (const [_monitor, space] of Tiling.spaces.monitors) {
+                    console.log(`Updating space ${space.name}`);
+                    space.setSpaceTopbarElementsVisible();
+                    Topbar.updateWorkspaceIndicator(space.index);
+                }
+            }
         } catch (e) {
             console.error(e);
         }
