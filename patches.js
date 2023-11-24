@@ -712,7 +712,7 @@ function setupFullscreenAvoiderSupport() {
 
     signals.connect(Main.layoutManager.panelBox, "notify::position", () => {
         try {
-            if (Tiling.spaces) {
+            if (Tiling.spaces.monitors) {
                 for (const [_monitor, space] of Tiling.spaces.monitors) {
                     console.log(`Updating space ${space.name}`);
                     space.setSpaceTopbarElementsVisible();
