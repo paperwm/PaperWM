@@ -693,9 +693,11 @@ function setupFullscreenAvoiderSupport() {
                     try {
                         // Find active space for monitor (this)
                         // NOTE: Indexing spaces.monitors[this] does not work
-                        for (const [monitor, space] of Tiling.spaces.monitors) {
-                            if (monitor.index == this.index) {
-                                return space.hasFullScreenWindow();
+                        if (Tiling.spaces?.monitors) {
+                            for (const [monitor, space] of Tiling.spaces.monitors) {
+                                if (monitor.index == this.index) {
+                                    return space.hasFullScreenWindow();
+                                }
                             }
                         }
                     } catch (e) {
