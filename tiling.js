@@ -2440,10 +2440,7 @@ export const Spaces = class Spaces extends Map {
         newSpace = monitorSpaces[to];
         this.selectedSpace = newSpace;
 
-        // if active (source space) is panelMonitor update indicator
-        if (currentSpace.monitor === Topbar.panelMonitor()) {
-            Topbar.updateWorkspaceIndicator(newSpace.index);
-        }
+        Topbar.updateWorkspaceIndicator(newSpace.index);
 
         const scale = 0.825;
         const padding_percentage = 4;
