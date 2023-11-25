@@ -2276,6 +2276,8 @@ export const Spaces = class Spaces extends Map {
         signals.disconnect(Main.panel, this.touchSignal);
         this.touchSignal = signals.connect(Main.panel, "captured-event", Gestures.horizontalTouchScroll.bind(toSpace));
 
+        Utils.warpPointerToMonitor(monitor);
+
         inPreview = PreviewMode.NONE;
     }
 
