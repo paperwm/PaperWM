@@ -18,8 +18,8 @@ const META_KEY_ABOVE_TAB = 0x2f7259c9;
 // position to open window at (e.g. to the right of current window)
 export const OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
 
-// position to open window at (e.g. to the right of current window)
-export const OverviewEnsureViewportAnimation = { NONE: 0, TRANSLATE: 1, FADE: 2 };
+// Animation used when ensuring viewport on a window
+export const EnsureViewportAnimation = { NONE: 0, TRANSLATE: 1, FADE: 2 };
 
 export let prefs;
 let gsettings, keybindSettings, _overriddingConflicts;
