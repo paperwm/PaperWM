@@ -112,6 +112,20 @@ class SettingsWidget {
             });
         };
 
+        const enumOptionsChanged = (settingKey, optionNumberEnum, defaultOption, defaultNumber) => {
+            const builder = this.builder.get_object(settingKey);
+            const setting = this._settings.get_int(settingKey);
+            const numberOptionEnum = Object.fromEntries(
+                Object.entries(optionNumberEnum).map(a => a.reverse())
+            );
+
+            builder.set_active_id(numberOptionEnum[setting] ?? defaultOption);
+            builder.connect('changed', obj => {
+                const value = optionNumberEnum[obj.get_active_id()] ?? defaultNumber;
+                this._settings.set_int(settingKey, value);
+            });
+        };
+
         const gestureFingersChanged = key => {
             const builder = this.builder.get_object(key);
             const setting = this._settings.get_int(key);
@@ -388,27 +402,34 @@ class SettingsWidget {
 
         // Advanced
         booleanStateChanged('gesture-enabled');
-        gestureFingersChanged('gesture-horizontal-fingers');
-        gestureFingersChanged('gesture-workspace-fingers');
 
-        const defaultFocusMode = this.builder.get_object('default-focus-mode');
-        const dfmSetting = this._settings.get_int('default-focus-mode');
-        switch (dfmSetting) {
-        case 1:
-            defaultFocusMode.set_active_id('center');
-            break;
-        default:
-            defaultFocusMode.set_active_id('default');
-        }
-        defaultFocusMode.connect('changed', obj => {
-            switch (obj.get_active_id()) {
-            case 'center':
-                this._settings.set_int('default-focus-mode', 1);
-                break;
-            default:
-                this._settings.set_int('default-focus-mode', 0);
-            }
-        });
+        const fingerOptions = {
+            'fingers-disabled': 0,
+            'three-fingers': 3,
+            'four-fingers': 4,
+        };
+        const fingerOptionDefault = 'fingers-disabled';
+        const fingerNumberDefault = 0;
+        enumOptionsChanged('gesture-horizontal-fingers', fingerOptions, fingerOptionDefault, fingerNumberDefault);
+        enumOptionsChanged('gesture-workspace-fingers', fingerOptions, fingerOptionDefault, fingerNumberDefault);
+        enumOptionsChanged(
+            'default-focus-mode',
+            {
+                'default': 0,
+                'center': 1,
+            },
+            'default',
+            0);
+
+        enumOptionsChanged(
+            'overview-ensure-viewport-animation',
+            {
+                'none': 0,
+                'translate': 1,
+                'fade': 2,
+            },
+            'translate',
+            1);
 
         booleanStateChanged('show-focus-mode-icon');
         booleanStateChanged('disable-topbar-styling', true);

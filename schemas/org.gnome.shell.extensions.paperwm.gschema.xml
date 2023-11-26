@@ -449,6 +449,11 @@
         <summary>Duration of animations in seconds</summary>
     </key>
 
+    <key type="i" name="overview-ensure-viewport-animation">
+        <default>1</default>
+        <summary>Sets the animation when exiting GNOME overview and ensuring selected window is in view. 0:NONE, 1:TRANSLATE, 2:FADE</summary>
+    </key>
+
     <key type="as" name="winprops">
         <default><![CDATA[[]]]></default>
         <summary>Array of winprops as (JSON) string objects</summary>
