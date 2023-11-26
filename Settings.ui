@@ -1131,7 +1131,7 @@
                               <object class="GtkLabel">
                                 <property name="focusable">False</property>
                                 <property name="hexpand">1</property>
-                                <property name="label" translatable="yes">Gnome overview &lt;i&gt;select window&lt;/i&gt; animation </property>
+                                <property name="label" translatable="yes">Gnome Overview exit &lt;i&gt;select window&lt;/i&gt; animation </property>
                                 <property name="use_markup">1</property>
                                 <property name="xalign">0</property>
                                 <layout>
