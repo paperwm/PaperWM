@@ -1121,7 +1121,7 @@
                         <child>
                           <object class="GtkGrid">
                             <property name="focusable">False</property>
-                            <property name="tooltip_text" translatable="yes">Sets the animation when exiting Gnome overview and ensuring selected window is in view</property>
+                            <property name="tooltip_text" translatable="yes">Sets the animation when exiting GNOME overview and ensuring selected window is in view</property>
                             <property name="margin_start">12</property>
                             <property name="margin_end">12</property>
                             <property name="margin_top">6</property>
