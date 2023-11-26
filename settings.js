@@ -18,6 +18,9 @@ const META_KEY_ABOVE_TAB = 0x2f7259c9;
 // position to open window at (e.g. to the right of current window)
 export const OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
 
+// Animation used when ensuring viewport on a window
+export const EnsureViewportAnimation = { NONE: 0, TRANSLATE: 1, FADE: 2 };
+
 export let prefs;
 let gsettings, keybindSettings, _overriddingConflicts;
 let acceleratorParse;
@@ -35,7 +38,8 @@ export function enable(extension) {
         'window-switcher-preview-scale', 'winprops', 'show-workspace-indicator',
         'show-window-position-bar', 'show-focus-mode-icon', 'disable-topbar-styling',
         'default-focus-mode', 'gesture-enabled', 'gesture-horizontal-fingers',
-        'gesture-workspace-fingers', 'open-window-position']
+        'gesture-workspace-fingers', 'open-window-position',
+        'overview-ensure-viewport-animation']
         .forEach(k => setState(null, k));
     prefs.__defineGetter__("minimum_margin", () => {
         return Math.min(15, prefs.horizontal_margin);
