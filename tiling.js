@@ -3278,12 +3278,7 @@ export function insertWindow(metaWindow, { existing }) {
             focusWindow = mru[1];
         }
 
-        // Scratch if have scratch windows on this space and focused window is also scratch
-        let scratchIsFocused =
-            Scratch.getScratchWindows().length > 0 &&
-            space === spaces.spaceOfWindow(focusWindow) &&
-            Scratch.isScratchWindow(focusWindow);
-        let addToScratch = scratchIsFocused;
+        let addToScratch = false;
 
         let winprop = Settings.find_winprop(metaWindow);
         if (winprop) {
@@ -3305,9 +3300,7 @@ export function insertWindow(metaWindow, { existing }) {
         if (addToScratch) {
             connectSizeChanged();
             Scratch.makeScratch(metaWindow);
-            if (scratchIsFocused) {
-                activateWindowAfterRendered(actor, metaWindow);
-            }
+            activateWindowAfterRendered(actor, metaWindow);
             return;
         }
     }
