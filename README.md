@@ -4,7 +4,7 @@
 > 
 > ### If you're using Gnome 42-44, please install via [extensions.gnome.org](https://extensions.gnome.org/extension/6099/paperwm/) OR use the [`gnome-44`](https://github.com/paperwm/PaperWM/tree/gnome-44) branch (see the [Installation](#installation) section for more information).
 
-[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://paperwm.zulipchat.com)
+[![project chat](https://img.shields.io/badge/PaperWM_Discussions-join_chat-brightgreen)](https://github.com/paperwm/PaperWM/discussions)
 
 PaperWM is a [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension which provides scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
@@ -14,7 +14,7 @@ _While PaperWM can be installed on a wide range of Gnome versions, new features 
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
-We often hang out on [zulip](https://paperwm.zulipchat.com).
+Have questions or comments?  Please ask on our [Github Discussions](https://github.com/paperwm/PaperWM/discussions) board.
 
 ## Installation
 
