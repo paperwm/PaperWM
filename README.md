@@ -159,8 +159,6 @@ PaperWM currently works best using the workspaces span monitors preference, this
 The scratch layer is an escape hatch to a familiar floating layout. This layer is intended to store windows that are globally useful like chat applications and in general serve as the kitchen sink.
 When the scratch layer is active it will float above the tiled windows, when hidden the windows will be minimized.
 
-Opening a window when the scratch layer is active will make it float automatically.
-
 Pressing <kbd>Super</kbd><kbd>Escape</kbd> toggles between showing and hiding the windows in the scratch layer.
 Activating windows in the scratch layer is done using <kbd>Super</kbd><kbd>Tab</kbd>, the floating windows having priority in the list while active.
 When the tiling is active <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> selects the most recently used scratch window.
