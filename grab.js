@@ -406,7 +406,8 @@ export class MoveGrab {
                 Tiling.ensureViewport(metaWindow, space);
 
                 Utils.actor_raise(clone);
-            } else {
+            }
+            else {
                 metaWindow.move_frame(true, clone.x, clone.y);
                 Scratch.makeScratch(metaWindow);
                 this.initialSpace.moveDone();
@@ -420,12 +421,18 @@ export class MoveGrab {
 
                 params.onStopped = () => {
                     actor.set_pivot_point(0, 0);
+                    Easer.addEase(actor, {
+                        onStopped: () => {
+                            Scratch.unmakeScratch(metaWindow);
+                        },
+                    });
                 };
                 Easer.addEase(actor, params);
             }
 
             Navigator.getNavigator().accept();
-        } else if (this.initialSpace.indexOf(metaWindow) !== -1) {
+        }
+        else if (this.initialSpace.indexOf(metaWindow) !== -1) {
             let space = this.initialSpace;
             space.targetX = space.cloneContainer.x;
 
