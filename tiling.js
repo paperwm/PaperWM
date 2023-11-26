@@ -3611,8 +3611,7 @@ export function move_to(space, metaWindow, options = {}) {
     space.targetX = target;
     if (!animate ||
         space.cloneContainer.x === target ||
-        Main.overview.visible ||
-        ensureAnimation === Settings.EnsureViewportAnimation.NONE) {
+        Main.overview.visible) {
         // Do the move immediately, and let the overview take care of animation
         space.cloneContainer.x = target;
         done();
@@ -3621,8 +3620,14 @@ export function move_to(space, metaWindow, options = {}) {
 
     // if here need to animate
     space.startAnimate();
-    if (ensureAnimation === Settings.EnsureViewportAnimation.FADE) {
-        // if target is current just exit
+    if (ensureAnimation === Settings.EnsureViewportAnimation.NONE) {
+        space.cloneContainer.x = target;
+        Easer.addEase(space.cloneContainer, {
+            instant: true,
+            onComplete: () => done(),
+        });
+    }
+    else if (ensureAnimation === Settings.EnsureViewportAnimation.FADE) {
         space.cloneContainer.x = target;
         space.cloneContainer.opacity = 0;
         Easer.addEase(space.cloneContainer, {
