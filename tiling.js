@@ -14,6 +14,7 @@ import {
 import { Easer } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
 import { WorkspaceSettings } from './workspace.js';
+import { OverviewEnsureViewportAnimation } from './settings.js';
 
 const { signals: Signals } = imports;
 const workspaceManager = global.workspace_manager;
@@ -365,7 +366,6 @@ export class Space extends Array {
                     ensureViewport(display.focus_window, this, {
                         moveto: true,
                         force: true,
-                        fade: true,
                     });
                 });
             });
@@ -3506,7 +3506,6 @@ export function ensureViewport(meta_window, space, options = {}) {
     let force = options?.force ?? false;
     let moveto = options?.moveto ?? true;
     let animate = options?.animate ?? true;
-    let fade = options?.fade ?? false;
 
     let index = space.indexOf(meta_window);
     if (index === -1 || space.length === 0)
@@ -3537,7 +3536,7 @@ export function ensureViewport(meta_window, space, options = {}) {
 
     if (moveto) {
         move_to(space, meta_window, {
-            x, force, animate, fade,
+            x, force, animate,
         });
     }
 
@@ -3592,7 +3591,6 @@ export function move_to(space, metaWindow, options = {}) {
     let x = options.x ?? 0;
     let force = options.force ?? false;
     let animate = options.animate ?? true;
-    let fade = options.fade ?? false;
     if (space.indexOf(metaWindow) === -1)
         return;
 
@@ -3611,7 +3609,8 @@ export function move_to(space, metaWindow, options = {}) {
     space.targetX = target;
     if (!animate ||
         space.cloneContainer.x === target ||
-        Main.overview.visible) {
+        Main.overview.visible ||
+        Settings.prefs.overview_ensure_viewport_animation === OverviewEnsureViewportAnimation.NONE) {
         // Do the move immediately, and let the overview take care of animation
         space.cloneContainer.x = target;
         done();
@@ -3620,7 +3619,7 @@ export function move_to(space, metaWindow, options = {}) {
 
     // if here need to animate
     space.startAnimate();
-    if (fade) {
+    if (Settings.prefs.overview_ensure_viewport_animation === OverviewEnsureViewportAnimation.FADE) {
         // if target is current just exit
         space.cloneContainer.x = target;
         space.cloneContainer.opacity = 0;
