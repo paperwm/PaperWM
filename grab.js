@@ -419,10 +419,12 @@ export class MoveGrab {
                 clone.set_scale(1, 1);
                 clone.set_pivot_point(0, 0);
 
-                params.onStopped = () => {
-                    actor.set_pivot_point(0, 0);
+                const halftime = 0.5 * Settings.prefs.animation_time;
+                params.time = halftime;
+                params.onComplete = () => {
                     Easer.addEase(actor, {
-                        onStopped: () => {
+                        time: halftime,
+                        onComplete: () => {
                             Scratch.unmakeScratch(metaWindow);
                         },
                     });
