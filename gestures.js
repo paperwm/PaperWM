@@ -159,7 +159,9 @@ function shouldPropagate(fingers) {
     }
     else if (
         // if gesure enabled AND finger 4 AND horizontal finger != 4
-        fingers === 4 && gestureHorizontalFingers() !== 4
+        fingers === 4 &&
+        gestureHorizontalFingers() !== 4 &&
+        gestureWorkspaceFingers() !== 4
     ) {
         return true;
     }
