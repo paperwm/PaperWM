@@ -101,8 +101,10 @@ export class MoveGrab {
     }
 
     beginDnD({ center } = {}) {
-        if (this.dnd)
+        if (this.dnd) {
             return;
+        }
+
         this.center = center;
         this.dnd = true;
         console.debug("#grab", "begin DnD");
@@ -278,19 +280,20 @@ export class MoveGrab {
             }
         }
 
-        function sameTarget(a, b) {
+        const sameTarget = (a, b) => {
             if (a === b)
                 return true;
             if (!a || !b)
                 return false;
             return a.space === b.space && a.position[0] === b.position[0] && a.position[1] === b.position[1];
-        }
+        };
 
-        // TODO: rename dndTarget to selectedZone ?
         if (!sameTarget(target, this.dndTarget)) {
-            this.dndTarget && this.deactivateDndTarget(this.dndTarget);
-            if (target)
+            // deactivate only if target exists
+            if (target) {
+                this.deactivateDndTarget(this.dndTarget);
                 this.activateDndTarget(target, initial);
+            }
         }
     }
 
