@@ -65,8 +65,6 @@ export function enable (extension) {
 
     signals.connect(Main.overview, 'showing', fixTopBar);
     signals.connect(Main.overview, 'hidden', () => {
-        if (Tiling.spaces.selectedSpace.showTopBar)
-            return;
         fixTopBar();
     });
 
@@ -730,15 +728,23 @@ export function fixTopBar() {
     // check if is currently fullscreened (check focused-floating, focused-scratch, and selected/tiled window)
     let fullscreen = focusIsFloatOrScratch ? focused.fullscreen : selected && selected.fullscreen;
 
-    if (normal && !space.showTopBar) {
-        // panelBox.scale_y = 0; // Update the workarea to support hide top bar
-        // panelBox.hide();
-    } else if (normal && fullscreen) {
-        // panelBox.hide();
-    } else {
-        // panelBox.scale_y = 1;
-        // panelBox.show();
+    if (normal && space.hasTopBar) {
+        if (!space.showTopBar) {
+            panelBox.scale_y = 0; // Update the workarea to support hide top bar
+            panelBox.hide();
+        } else {
+            panelBox.scale_y = 1;
+            panelBox.show();
+        }
     }
+
+    // if (normal && !fullscreen && !space.showTopBar) {
+    //     panelBox.scale_y = 0; // Update the workarea to support hide top bar
+    //     panelBox.hide();
+    // } else {
+    //     panelBox.scale_y = 1;
+    //     panelBox.show();
+    // }
 }
 
 export function fixWorkspaceIndicator() {

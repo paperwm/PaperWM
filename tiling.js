@@ -605,7 +605,7 @@ export class Space extends Array {
         }
 
         // compensate to keep window position bar on all monitors
-        if (Settings.prefs.show_window_position_bar) {
+        if (Settings.prefs.show_window_position_bar && this.showTopBar) {
             const panelBoxHeight = Topbar.panelBox.height;
             if (!this.hasTopBar) {
                 workArea.y += panelBoxHeight;
@@ -1316,6 +1316,11 @@ export class Space extends Array {
         // when an extension moves the panel to another monitor.
         const [panelBoxX, panelBoxY] = Main.layoutManager.panelBox.get_transformed_position();
         // NOTE: this.monitor might be undefined during initialization
+
+        if (inPreview) {
+            // always show topbar in overview
+            return true;
+        }
         return this.monitor && this.monitor.x == panelBoxX && this.monitor.y == panelBoxY;
     }
 
@@ -1378,7 +1383,7 @@ border-radius: ${borderWidth}px;
      * @param {boolean} enable
      */
     enableWindowPositionBar(enable = true) {
-        if (enable) {
+        if (enable && this.showTopBar) {
             [this.windowPositionBarBackdrop, this.windowPositionBar]
                 .forEach(i => this.actor.add_actor(i));
             this.updateWindowPositionBar();
@@ -2266,7 +2271,11 @@ export const Spaces = class Spaces extends Map {
         this.animateToSpace(
             toSpace,
             fromSpace,
-            doAnimate);
+            doAnimate,
+            // do a layout after the animation is complete
+            // (i.e. when everything is at the final position)
+            () => toSpace.layout(),
+        );
 
         toSpace.monitor?.clickOverlay.deactivate();
 

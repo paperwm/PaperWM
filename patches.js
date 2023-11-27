@@ -719,6 +719,7 @@ function setupFullscreenAvoiderSupport() {
                     console.log(`Updating space ${space.name}`);
                     space.setSpaceTopbarElementsVisible();
                     Topbar.updateWorkspaceIndicator(space.index);
+                    Topbar.fixTopBar();
                 }
             }
         } catch (e) {
