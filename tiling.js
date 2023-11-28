@@ -362,7 +362,11 @@ export class Space extends Array {
             Utils.warpPointerToMonitor(this.monitor);
             Utils.later_add(Meta.LaterType.IDLE, () => {
                 this.moveDone(() => {
-                    ensureViewport(display.focus_window, this, { moveto: true, force: true });
+                    ensureViewport(display.focus_window, this, {
+                        moveto: true,
+                        force: true,
+                        ensureAnimation: Settings.prefs.overview_ensure_viewport_animation,
+                    });
                 });
             });
         });
@@ -3278,12 +3282,7 @@ export function insertWindow(metaWindow, { existing }) {
             focusWindow = mru[1];
         }
 
-        // Scratch if have scratch windows on this space and focused window is also scratch
-        let scratchIsFocused =
-            Scratch.getScratchWindows().length > 0 &&
-            space === spaces.spaceOfWindow(focusWindow) &&
-            Scratch.isScratchWindow(focusWindow);
-        let addToScratch = scratchIsFocused;
+        let addToScratch = false;
 
         let winprop = Settings.find_winprop(metaWindow);
         if (winprop) {
@@ -3305,9 +3304,7 @@ export function insertWindow(metaWindow, { existing }) {
         if (addToScratch) {
             connectSizeChanged();
             Scratch.makeScratch(metaWindow);
-            if (scratchIsFocused) {
-                activateWindowAfterRendered(actor, metaWindow);
-            }
+            activateWindowAfterRendered(actor, metaWindow);
             return;
         }
     }
@@ -3501,6 +3498,8 @@ export function ensureViewport(meta_window, space, options = {}) {
     space = space || spaces.spaceOfWindow(meta_window);
     let force = options?.force ?? false;
     let moveto = options?.moveto ?? true;
+    let animate = options?.animate ?? true;
+    let ensureAnimation = options.ensureAnimation ?? Settings.EnsureViewportAnimation.TRANSLATE;
 
     let index = space.indexOf(meta_window);
     if (index === -1 || space.length === 0)
@@ -3531,7 +3530,7 @@ export function ensureViewport(meta_window, space, options = {}) {
 
     if (moveto) {
         move_to(space, meta_window, {
-            x, force,
+            x, force, animate, ensureAnimation,
         });
     }
 
@@ -3582,8 +3581,11 @@ export function updateSelection(space, metaWindow) {
  * Move the column containing @meta_window to x, y and propagate the change
  * in @space. Coordinates are relative to monitor and y is optional.
  */
-export function move_to(space, metaWindow, { x, force, animate }) {
-    animate = animate ?? true;
+export function move_to(space, metaWindow, options = {}) {
+    let x = options.x ?? 0;
+    let force = options.force ?? false;
+    let animate = options.animate ?? true;
+    let ensureAnimation = options.ensureAnimation ?? Settings.EnsureViewportAnimation.TRANSLATE;
     if (space.indexOf(metaWindow) === -1)
         return;
 
@@ -3594,25 +3596,46 @@ export function move_to(space, metaWindow, { x, force, animate }) {
         return;
     }
 
-    space.targetX = target;
+    const done = () => {
+        space.moveDone();
+        space.fixOverlays(metaWindow);
+    };
 
-    if (Main.overview.visible) {
+    space.targetX = target;
+    if (space.cloneContainer.x === target ||
+        Main.overview.visible) {
         // Do the move immediately, and let the overview take care of animation
         space.cloneContainer.x = target;
-        space.moveDone();
+        done();
         return;
     }
 
+    // if here need to animate
     space.startAnimate();
-    Easer.addEase(space.cloneContainer,
-        {
+    if (!animate ||
+        ensureAnimation === Settings.EnsureViewportAnimation.NONE) {
+        space.cloneContainer.x = target;
+        Easer.addEase(space.cloneContainer, {
+            instant: true,
+            onComplete: () => done(),
+        });
+    }
+    else if (ensureAnimation === Settings.EnsureViewportAnimation.FADE) {
+        space.cloneContainer.x = target;
+        space.cloneContainer.opacity = 0;
+        Easer.addEase(space.cloneContainer, {
+            opacity: 255,
+            time: Settings.prefs.animation_time,
+            onComplete: () => done(),
+        });
+    }
+    else {
+        Easer.addEase(space.cloneContainer, {
             x: target,
             time: Settings.prefs.animation_time,
-            instant: !animate,
-            onComplete: () => space.moveDone(),
+            onComplete: () => done(),
         });
-
-    space.fixOverlays(metaWindow);
+    }
 }
 
 export function grabBegin(metaWindow, type) {

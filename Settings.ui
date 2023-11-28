@@ -1114,6 +1114,48 @@
                         </child>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">Sets the animation when exiting GNOME overview and ensuring selected window is in view</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">GNOME overview exit &lt;i&gt;select window&lt;/i&gt; animation </property>
+                                <property name="use_markup">1</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="overview-ensure-viewport-animation">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">0</property>
+                                <property name="width-request">106</property>
+                                <items>
+                                  <item id="none" translatable="yes">None</item>
+                                  <item id="translate" translatable="yes">Translate</item>
+                                  <item id="fade" translatable="yes">Fade</item>
+                                </items>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                   </object>
                 </child>
                 <child>
