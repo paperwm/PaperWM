@@ -243,6 +243,7 @@ export class MoveGrab {
             if (x < colX)
                 continue;
 
+            // vertically tiled
             for (let i = 0; i < column.length + 1; i++) {
                 let clone;
                 if (i < column.length) {
@@ -498,24 +499,26 @@ export class MoveGrab {
     }
 
     activateDndTarget(zone, first) {
-        function mkZoneActor(props) {
+        const mkZoneActor = props => {
             let actor = new St.Widget({ style_class: "tile-preview" });
             actor.x = props.x ?? 0;
             actor.y = props.y ?? 0;
             actor.width = props.width ?? 0;
             actor.height = props.height ?? 0;
             return actor;
-        }
+        };
 
         zone.actor = mkZoneActor({ ...zone.actorParams });
 
         this.dndTarget = zone;
         this.zoneActors.add(zone.actor);
+        const raise = () => Utils.actor_raise(zone.actor);
 
         let params = {
             time: Settings.prefs.animation_time,
             [zone.originProp]: zone.center - zone.marginA,
             [zone.sizeProp]: zone.marginA + zone.marginB,
+            onComplete: raise,
         };
 
         if (first) {
@@ -535,7 +538,7 @@ export class MoveGrab {
         zone.space.cloneContainer.add_child(zone.actor);
         zone.space.selection.hide();
         zone.actor.show();
-        Utils.actor_raise(zone.actor);
+        raise();
         Easer.addEase(zone.actor, params);
     }
 
