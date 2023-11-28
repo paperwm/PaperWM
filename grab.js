@@ -105,8 +105,10 @@ var MoveGrab = class MoveGrab {
     }
 
     beginDnD({ center } = {}) {
-        if (this.dnd)
+        if (this.dnd) {
             return;
+        }
+
         this.center = center;
         this.dnd = true;
         Utils.debug("#grab", "begin DnD");
@@ -245,6 +247,7 @@ var MoveGrab = class MoveGrab {
             if (x < colX)
                 continue;
 
+            // vertically tiled
             for (let i = 0; i < column.length + 1; i++) {
                 let clone;
                 if (i < column.length) {
@@ -282,19 +285,20 @@ var MoveGrab = class MoveGrab {
             }
         }
 
-        function sameTarget(a, b) {
+        const sameTarget = (a, b) => {
             if (a === b)
                 return true;
             if (!a || !b)
                 return false;
             return a.space === b.space && a.position[0] === b.position[0] && a.position[1] === b.position[1];
-        }
+        };
 
-        // TODO: rename dndTarget to selectedZone ?
         if (!sameTarget(target, this.dndTarget)) {
-            this.dndTarget && this.deactivateDndTarget(this.dndTarget);
-            if (target)
+            // deactivate only if target exists
+            if (target) {
+                this.deactivateDndTarget(this.dndTarget);
                 this.activateDndTarget(target, initial);
+            }
         }
     }
 
@@ -410,7 +414,8 @@ var MoveGrab = class MoveGrab {
                 Tiling.ensureViewport(metaWindow, space);
 
                 Utils.actor_raise(clone);
-            } else {
+            }
+            else {
                 metaWindow.move_frame(true, clone.x, clone.y);
                 Scratch.makeScratch(metaWindow);
                 this.initialSpace.moveDone();
@@ -422,12 +427,22 @@ var MoveGrab = class MoveGrab {
                 clone.set_scale(1, 1);
                 clone.set_pivot_point(0, 0);
 
-                params.onStopped = () => { actor.set_pivot_point(0, 0); };
+                const halftime = 0.5 * Settings.prefs.animation_time;
+                params.time = halftime;
+                params.onComplete = () => {
+                    Easer.addEase(actor, {
+                        time: halftime,
+                        onComplete: () => {
+                            Scratch.unmakeScratch(metaWindow);
+                        },
+                    });
+                };
                 Easer.addEase(actor, params);
             }
 
             Navigator.getNavigator().accept();
-        } else if (this.initialSpace.indexOf(metaWindow) !== -1) {
+        }
+        else if (this.initialSpace.indexOf(metaWindow) !== -1) {
             let space = this.initialSpace;
             space.targetX = space.cloneContainer.x;
 
@@ -490,24 +505,26 @@ var MoveGrab = class MoveGrab {
     }
 
     activateDndTarget(zone, first) {
-        function mkZoneActor(props) {
+        const mkZoneActor = props => {
             let actor = new St.Widget({ style_class: "tile-preview" });
             actor.x = props.x ?? 0;
             actor.y = props.y ?? 0;
             actor.width = props.width ?? 0;
             actor.height = props.height ?? 0;
             return actor;
-        }
+        };
 
         zone.actor = mkZoneActor({ ...zone.actorParams });
 
         this.dndTarget = zone;
         this.zoneActors.add(zone.actor);
+        const raise = () => Utils.actor_raise(zone.actor);
 
         let params = {
             time: Settings.prefs.animation_time,
             [zone.originProp]: zone.center - zone.marginA,
             [zone.sizeProp]: zone.marginA + zone.marginB,
+            onComplete: raise,
         };
 
         if (first) {
@@ -527,7 +544,7 @@ var MoveGrab = class MoveGrab {
         zone.space.cloneContainer.add_child(zone.actor);
         zone.space.selection.hide();
         zone.actor.show();
-        Utils.actor_raise(zone.actor);
+        raise();
         Easer.addEase(zone.actor, params);
     }
 
