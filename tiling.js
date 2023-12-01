@@ -377,13 +377,15 @@ export class Space extends Array {
 
         // update space elements when in/out of fullscreen
         this.signals.connect(global.display, 'in-fullscreen-changed', () => {
-            this.setSpaceTopbarElementsVisible(true);
-            const window = display?.focus_window;
-            if (window) {
-                if (!window.fullscreen) {
-                    this.layout(false);
+            const metaWindow = display?.focus_window;
+            if (metaWindow) {
+                if (!metaWindow.fullscreen) {
+                    this.layout();
+                    this.ensureViewport(metaWindow, this);
                 }
             }
+
+            this.setSpaceTopbarElementsVisible(true);
         });
 
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
@@ -3312,6 +3314,14 @@ export function insertWindow(metaWindow, { existing }) {
             Scratch.makeScratch(metaWindow);
             activateWindowAfterRendered(actor, metaWindow);
             return;
+        }
+
+        // address inserting windows that are already fullscreen
+        if (metaWindow.fullscreen) {
+            metaWindow.unmake_fullscreen();
+            callbackOnActorShow(actor, () => {
+                metaWindow.make_fullscreen();
+            });
         }
     }
 
