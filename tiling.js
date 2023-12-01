@@ -378,6 +378,12 @@ export class Space extends Array {
         // update space elements when in/out of fullscreen
         this.signals.connect(global.display, 'in-fullscreen-changed', () => {
             this.setSpaceTopbarElementsVisible(true);
+            const window = display?.focus_window;
+            if (window) {
+                if (!window.fullscreen) {
+                    this.layout(false);
+                }
+            }
         });
 
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
