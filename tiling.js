@@ -1474,7 +1474,7 @@ border-radius: ${borderWidth}px;
         };
 
         // if windowPositionBar is disabled ==> don't show elements
-        if (!Settings.prefs.show_window_position_bar) {
+        if (!Settings.prefs.show_window_position_bar || !this.showTopBar) {
             setVisible(false);
             return;
         }
