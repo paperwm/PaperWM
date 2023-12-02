@@ -1311,18 +1311,12 @@ export class Space extends Array {
      * Returns true if this space has the topbar.
      */
     get hasTopBar() {
-        // Check if panel position is the same as the monitor position (because
-        // it is always at position 0,0 relative to the monitor). This is useful
-        // when an extension moves the panel to another monitor.
-        const [panelBoxX, panelBoxY] = Main.layoutManager.panelBox.get_transformed_position();
-
         if (inPreview) {
             // always show topbar in overview
             return true;
         }
 
-        // NOTE: this.monitor might be undefined during initialization
-        return this.monitor && this.monitor.x == panelBoxX && this.monitor.y == panelBoxY;
+        return Topbar.isOnMonitor(this.monitor);
     }
 
     updateColor() {

@@ -790,3 +790,11 @@ export function refreshWorkspaceIndicator() {
 export function setWorkspaceName (name) {
     menu && menu.setName(name);
 }
+
+export function isOnMonitor(monitor) {
+    // Check if panel position is the same as the monitor position (because
+    // it is always at position 0,0 relative to the monitor). This is useful
+    // when an extension moves the panel to another monitor.
+    const [panelBoxX, panelBoxY] = Main.layoutManager.panelBox.get_transformed_position();
+    return monitor && monitor.x == panelBoxX && monitor.y == panelBoxY;
+}
