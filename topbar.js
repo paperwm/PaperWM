@@ -771,7 +771,7 @@ export function fixFocusModeIcon() {
 export function updateWorkspaceIndicator(index) {
     let spaces = Tiling.spaces;
     let space = spaces?.spaceOf(workspaceManager.get_workspace_by_index(index));
-    if (space && space.hasTopBar) {
+    if (space && isOnMonitor(space.monitor)) {
         setWorkspaceName(space.name);
 
         // also update focus mode

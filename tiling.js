@@ -2444,7 +2444,9 @@ export const Spaces = class Spaces extends Map {
         newSpace = monitorSpaces[to];
         this.selectedSpace = newSpace;
 
-        Topbar.updateWorkspaceIndicator(newSpace.index);
+        if (Topbar.isOnMonitor(currentSpace.monitor)) {
+            Topbar.updateWorkspaceIndicator(newSpace.index);
+        }
 
         const scale = 0.825;
         const padding_percentage = 4;
