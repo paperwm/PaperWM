@@ -1315,12 +1315,13 @@ export class Space extends Array {
         // it is always at position 0,0 relative to the monitor). This is useful
         // when an extension moves the panel to another monitor.
         const [panelBoxX, panelBoxY] = Main.layoutManager.panelBox.get_transformed_position();
-        // NOTE: this.monitor might be undefined during initialization
 
         if (inPreview) {
             // always show topbar in overview
             return true;
         }
+
+        // NOTE: this.monitor might be undefined during initialization
         return this.monitor && this.monitor.x == panelBoxX && this.monitor.y == panelBoxY;
     }
 
@@ -2217,8 +2218,18 @@ export const Spaces = class Spaces extends Map {
         // final switch with warp
         this.switchMonitor(direction);
 
+        let oldSpace = this.monitors.get(monitor);
+        let newMonitor = Main.layoutManager.monitors[i];
+        let newSpace = this.monitors.get(newMonitor);
         // ensure after swapping that the space elements are shown correctly
+        // layout needed to properly fix topbar
+        oldSpace.layout();
+        newSpace.layout();
+        Topbar.fixTopBar();
         this.setSpaceTopbarElementsVisible(true, { force: true });
+        if (oldSpace.hasFullScreenWindow() || newSpace.hasFullScreenWindow()) {
+            global.display.emit("in-fullscreen-changed");
+        }
     }
 
     switchWorkspace(wm, fromIndex, toIndex, animate = false) {
