@@ -1459,7 +1459,7 @@ border-radius: ${borderWidth}px;
      * sets these elements' visibility when not needed.
      * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible = false, options = {}) {
+    setSpaceTopbarElementsVisible(visible = true, options = {}) {
         const force = options?.force ?? false;
         const setVisible = v => {
             if (v) {
@@ -2297,7 +2297,7 @@ export const Spaces = class Spaces extends Map {
      * See Space.setSpaceTopbarElementsVisible function for what this does.
      * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible = false, options = {}) {
+    setSpaceTopbarElementsVisible(visible = true, options = {}) {
         this.forEach(s => {
             s.setSpaceTopbarElementsVisible(visible, options);
         });
