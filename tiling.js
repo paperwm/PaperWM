@@ -1460,7 +1460,6 @@ border-radius: ${borderWidth}px;
      * @param {boolean} visible
      */
     setSpaceTopbarElementsVisible(visible = false, options = {}) {
-        const changeTopBarStyle = options?.changeTopBarStyle ?? true;
         const force = options?.force ?? false;
         const setVisible = v => {
             if (v) {
@@ -1478,15 +1477,6 @@ border-radius: ${borderWidth}px;
         if (!Settings.prefs.show_window_position_bar) {
             setVisible(false);
             return;
-        }
-
-        if (changeTopBarStyle) {
-            if (visible && this.hasTopBar) {
-                Topbar.setTransparentStyle();
-            }
-            else {
-                Topbar.setNoBackgroundStyle();
-            }
         }
 
         // if on different monitor then override to show elements
