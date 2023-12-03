@@ -377,6 +377,7 @@ export class Space extends Array {
 
         // update space elements when in/out of fullscreen
         this.signals.connect(global.display, 'in-fullscreen-changed', () => {
+            this.setSpaceTopbarElementsVisible(true);
             const metaWindow = display?.focus_window;
             if (metaWindow) {
                 if (!metaWindow.fullscreen) {
@@ -384,8 +385,6 @@ export class Space extends Array {
                     this.ensureViewport(metaWindow, this);
                 }
             }
-
-            this.setSpaceTopbarElementsVisible(true);
         });
 
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
@@ -929,7 +928,7 @@ export class Space extends Array {
      * Returns true iff this space has a currently fullscreened window.
      */
     hasFullScreenWindow() {
-        return this.getWindows().some(el => el.fullscreen);
+        return this.getWindows().some(w => w.fullscreen);
     }
 
     swap(direction, metaWindow) {
