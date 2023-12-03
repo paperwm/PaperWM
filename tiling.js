@@ -380,7 +380,7 @@ export class Space extends Array {
             const metaWindow = display?.focus_window;
             if (metaWindow) {
                 if (!metaWindow.fullscreen) {
-                    this.layout();
+                    this.layout(false);
                     this.ensureViewport(metaWindow, this);
                 }
             }
@@ -629,6 +629,13 @@ export class Space extends Array {
         let availableHeight = workArea.height;
         let y0 = workArea.y;
         let fixPointAttempCount = 0;
+
+        this.getWindows()
+        .filter(w => w.fullscreenOnLayout)
+        .forEach(w => {
+            delete w.fullscreenOnLayout;
+            w.make_fullscreen();
+        });
 
         for (let i = 0; i < this.length; i++) {
             let column = this[i];
@@ -3318,10 +3325,8 @@ export function insertWindow(metaWindow, { existing }) {
 
         // address inserting windows that are already fullscreen
         if (metaWindow.fullscreen) {
+            metaWindow.fullscreenOnLayout = true;
             metaWindow.unmake_fullscreen();
-            callbackOnActorShow(actor, () => {
-                metaWindow.make_fullscreen();
-            });
         }
     }
 
