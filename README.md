@@ -407,6 +407,10 @@ These extensions are good complements to PaperWM:
 - [Switcher](https://github.com/daniellandau/switcher) - combined window switcher and launcher
 - [Dash to Dock](https://micheleg.github.io/dash-to-dock/) - a great dock
 
+## Potentially conflicting extensions
+- `Tiling-Assistant`: On Ubuntu, starting from 23.10, this extension is installed and enabled by default under the name `Ubuntu Tilling Assistant`. It has at least two conflicting shortcuts `Super+Left` and `Super+Right` that would lead to strange behaviors. Unadvanced users willing to use PaperWM would benefit from disabling `Ubuntu Tilling Assistant`.
+
+
 ## Prior work ##
 
 A similar idea was apparently tried out a while back: [10/GUI](https://web.archive.org/web/20201123162403/http://10gui.com/)
