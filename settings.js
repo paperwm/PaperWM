@@ -24,22 +24,6 @@ function setState($, key) {
     prefs[name] = value.deep_unpack();
 }
 
-var conflictSettings; // exported
-function getConflictSettings() {
-    if (!conflictSettings) {
-        // Schemas that may contain conflicting keybindings
-        // It's possible to inject or remove settings here on `user.init`.
-        conflictSettings = [
-            new Gio.Settings({ schema_id: 'org.gnome.mutter.keybindings' }),
-            new Gio.Settings({ schema_id: 'org.gnome.mutter.wayland.keybindings' }),
-            new Gio.Settings({ schema_id: "org.gnome.desktop.wm.keybindings" }),
-            new Gio.Settings({ schema_id: "org.gnome.shell.keybindings" }),
-        ];
-    }
-
-    return conflictSettings;
-}
-
 var prefs;
 let gsettings, _overriddingConflicts;
 function enable() {
@@ -86,6 +70,40 @@ function disable() {
     _overriddingConflicts = null;
     prefs = null;
     conflictSettings = null;
+}
+
+var conflictSettings; // exported
+function getConflictSettings() {
+    if (!conflictSettings) {
+        // Schemas that may contain conflicting keybindings
+        conflictSettings = [];
+        addSchemaToConflictSettings('org.gnome.mutter.keybindings');
+        addSchemaToConflictSettings('org.gnome.mutter.wayland.keybindings');
+        addSchemaToConflictSettings('org.gnome.desktop.wm.keybindings');
+        addSchemaToConflictSettings('org.gnome.shell.keybindings');
+
+        // below schemas are checked but may not exist in all distributions
+        addSchemaToConflictSettings('org.gnome.settings-daemon.plugins.media-keys', false);
+        // ubuntu tiling-assistant (enabled by default on Ubuntu 23.10)
+        addSchemaToConflictSettings('org.gnome.shell.extensions.tiling-assistant', false);
+    }
+
+    return conflictSettings;
+}
+
+/**
+ * Adds a Gio.Settings object to conflictSettings.  Fails gracefully.
+ * @param {Gio.Settings} schemaId
+ */
+function addSchemaToConflictSettings(schemaId, warn = true) {
+    try {
+        conflictSettings.push(new Gio.Settings({ schema_id: schemaId }));
+    }
+    catch (e) {
+        if (warn) {
+            console.warn(`Invalid schema_id '${schemaId}': could not add to keybind conflict checks`);
+        }
+    }
 }
 
 // / Keybindings
