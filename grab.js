@@ -85,6 +85,12 @@ export class MoveGrab {
         center && clone.set_pivot_point(0, 0);
 
         this.signals.connect(this.actor, "button-release-event", this.end.bind(this));
+        this.signals.connect(this.actor, "touch-event", (evt) => {
+            if (evt.type() == Clutter.EventType.TOUCH_END)
+                this.end();
+            else if (evt.type() == Clutter.EventType.TOUCH_UPDATE)
+                this.motion(this.actor, evt);
+        });
         this.signals.connect(this.actor, "motion-event", this.motion.bind(this));
         this.signals.connect(global.display, "window-entered-monitor",
             this.beginDnD.bind(this)
