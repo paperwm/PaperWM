@@ -380,7 +380,8 @@ export class Space extends Array {
             this.setSpaceTopbarElementsVisible(true);
             const metaWindow = display?.focus_window;
             if (metaWindow) {
-                if (!metaWindow.fullscreen) {
+                if (metaWindow.fullscreenOnLayout) {
+                    delete metaWindow.fullscreenOnLayout;
                     this.layout(false);
                     this.ensureViewport(metaWindow, this);
                 }
@@ -632,7 +633,6 @@ export class Space extends Array {
         this.getWindows()
         .filter(w => w.fullscreenOnLayout)
         .forEach(w => {
-            delete w.fullscreenOnLayout;
             w.make_fullscreen();
         });
 
