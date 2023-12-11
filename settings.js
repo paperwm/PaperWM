@@ -88,7 +88,11 @@ export function getConflictSettings() {
         addSchemaToConflictSettings('org.gnome.mutter.wayland.keybindings');
         addSchemaToConflictSettings('org.gnome.desktop.wm.keybindings');
         addSchemaToConflictSettings('org.gnome.shell.keybindings');
-        addSchemaToConflictSettings('org.gnome.settings-daemon.plugins.media-keys');
+
+        // below schemas are checked but may not exist in all distributions
+        addSchemaToConflictSettings('org.gnome.settings-daemon.plugins.media-keys', false);
+        // ubuntu tiling-assistant (enabled by default on Ubuntu 23.10)
+        addSchemaToConflictSettings('org.gnome.shell.extensions.tiling-assistant', false);
     }
 
     return conflictSettings;
@@ -98,12 +102,14 @@ export function getConflictSettings() {
  * Adds a Gio.Settings object to conflictSettings.  Fails gracefully.
  * @param {Gio.Settings} schemaId
  */
-export function addSchemaToConflictSettings(schemaId) {
+export function addSchemaToConflictSettings(schemaId, warn = true) {
     try {
         conflictSettings.push(new Gio.Settings({ schema_id: schemaId }));
     }
     catch (e) {
-        console.warn(`Invalid schema_id '${schemaId}': could not add to keybind conflict checks`);
+        if (warn) {
+            console.warn(`Invalid schema_id '${schemaId}': could not add to keybind conflict checks`);
+        }
     }
 }
 
