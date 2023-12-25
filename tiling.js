@@ -109,6 +109,8 @@ export function enable(extension) {
     signals = new Utils.Signals();
     grabSignals = new Utils.Signals();
 
+    global.smap = signals;
+
     let setVerticalMargin = () => {
         let vMargin = gsettings.get_int('vertical-margin');
         let gap = gsettings.get_int('window-gap');
@@ -2970,10 +2972,10 @@ export function registerWindow(metaWindow) {
         return false;
     }
 
-    if (metaWindow.clone) {
+    if (metaWindow.clone || metaWindow?.pwm_registered === true) {
         // Can now happen when setting session-modes to "unlock-dialog" or
         // resetting gnome-shell in-place (e.g. on X11)
-        console.warn("window already registered", metaWindow.title);
+        console.log("window already registered", metaWindow.title);
         return false;
     }
 
@@ -3001,6 +3003,8 @@ export function registerWindow(metaWindow) {
         showHandler(actor);
     });
     signals.connect(actor, 'destroy', destroyHandler);
+
+    metaWindow.pwm_registered = true;
 
     return true;
 }
@@ -3544,6 +3548,9 @@ export function updateSelection(space, metaWindow) {
     if (!metaWindow) {
         return;
     }
+
+    console.error(new Error(`${metaWindow?.title}`));
+
     let clone = metaWindow.clone;
     let cloneActor = clone.cloneActor;
 
