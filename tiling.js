@@ -3324,7 +3324,8 @@ export function insertWindow(metaWindow, { existing }) {
             return;
         }
 
-        // address inserting windows that are already fullscreen
+        // address inserting windows that are already fullscreen: windows will be inserted
+        // as normal (non-fullscreen) and will be fullscreened on layout.
         if (metaWindow.fullscreen) {
             metaWindow.fullscreenOnLayout = true;
             metaWindow.unmake_fullscreen();
