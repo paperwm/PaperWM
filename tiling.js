@@ -790,6 +790,8 @@ export class Space extends Array {
     }
 
     addWindow(metaWindow, index, row) {
+        const previousHasFullScreenWindow = this.hasFullScreenWindow();
+
         if (!this.selectedWindow)
             this.selectedWindow = metaWindow;
         if (this.indexOf(metaWindow) !== -1)
@@ -834,6 +836,16 @@ export class Space extends Array {
             this.targetX = workArea.x + Math.round((workArea.width - this.cloneContainer.width) / 2);
         }
         this.emit('window-added', metaWindow, index, row);
+        if (previousHasFullScreenWindow !== this.hasFullScreenWindow()) {
+            // This means a window started in fullscreen.
+            //
+            // We (re-)emit this signal because the in-fullscreen-changed event
+            // was most likely already triggered before the window was
+            // registered with PaperWM. This mean space.hasFullScreenWindow()
+            // returned a (possibly) wrong value because the space did not know
+            // about the window.
+            global.display.emit("in-fullscreen-changed");
+        }
         return true;
     }
 
