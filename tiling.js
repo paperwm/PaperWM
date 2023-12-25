@@ -378,14 +378,15 @@ export class Space extends Array {
         // update space elements when in/out of fullscreen
         this.signals.connect(global.display, 'in-fullscreen-changed', () => {
             this.setSpaceTopbarElementsVisible(true);
-            const metaWindow = display?.focus_window;
-            if (metaWindow) {
-                if (metaWindow.fullscreenOnLayout) {
-                    delete metaWindow.fullscreenOnLayout;
-                    this.layout(false);
-                    this.ensureViewport(metaWindow, this);
+        });
+
+        // after layout is complete, remove any residual fullscreenOnLayout
+        this.signals.connect(this, "layout", () => {
+            this.getWindows().forEach(w => {
+                if (w.fullscreenOnLayout) {
+                    delete w.fullscreenOnLayout;
                 }
-            }
+            });
         });
 
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
@@ -630,6 +631,7 @@ export class Space extends Array {
         let y0 = workArea.y;
         let fixPointAttempCount = 0;
 
+        // apply fullscreen if windows has fullscreenOnLayout property set
         this.getWindows()
         .filter(w => w.fullscreenOnLayout)
         .forEach(w => {
