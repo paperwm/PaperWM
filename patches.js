@@ -716,10 +716,11 @@ function setupFullscreenAvoiderSupport() {
         try {
             if (Tiling.spaces.monitors) {
                 for (const [_monitor, space] of Tiling.spaces.monitors) {
-                    console.log(`Updating space ${space.name}`);
+                    // console.debug(`Updating space ${space.name}`);
                     space.setSpaceTopbarElementsVisible();
                     Topbar.updateWorkspaceIndicator(space.index);
                     Topbar.fixTopBar();
+                    space.queueLayout(true, {ensure: false});
                 }
             }
         } catch (e) {
