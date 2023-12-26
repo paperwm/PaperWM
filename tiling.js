@@ -380,15 +380,6 @@ export class Space extends Array {
             this.setSpaceTopbarElementsVisible(true);
         });
 
-        // after layout is complete, remove any residual fullscreenOnLayout
-        this.signals.connect(this, "layout", () => {
-            this.getWindows().forEach(w => {
-                if (w.fullscreenOnLayout) {
-                    delete w.fullscreenOnLayout;
-                }
-            });
-        });
-
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
         this.signals.connect(gsettings, 'changed::default-background', this.updateBackground.bind(this));
         this.signals.connect(gsettings, 'changed::use-default-background', this.updateBackground.bind(this));
@@ -714,6 +705,17 @@ export class Space extends Array {
             this.moveDone();
         }
 
+        Utils.later_add(Meta.LaterType.IDLE, () => {
+            console.log(`with idle clear fullscreenOnLayout: ${global.get_current_time()}`);
+            this.getWindows().forEach(w => {
+                if (w.fullscreenOnLayout) {
+                    resizeHandler(w);
+                    delete w.fullscreenOnLayout;
+                }
+            });
+        });
+
+        console.log(`emit layout: ${global.get_current_time()}`);
         this.emit('layout', this);
     }
 
@@ -3054,6 +3056,8 @@ export function destroyHandler(actor) {
 }
 
 export function resizeHandler(metaWindow) {
+    console.log(`resize handler called on ${metaWindow?.title}`);
+
     // if navigator is showing, reset/refresh it after a window has resized
     if (Navigator.navigating) {
         Navigator.getNavigator().minimaps.forEach(m => typeof m !== 'number' && m.reset());
@@ -3279,6 +3283,7 @@ export function insertWindow(metaWindow, { existing }) {
     const space = spaces.spaceOfWindow(metaWindow);
 
     const connectSizeChanged = tiled => {
+        console.log(`resizehandler added ${metaWindow?.title}, tiled: ${tiled}`);
         if (tiled) {
             animateWindow(metaWindow);
         }
@@ -3355,8 +3360,9 @@ export function insertWindow(metaWindow, { existing }) {
         return;
     }
 
-    if (space.indexOf(metaWindow) !== -1)
+    if (space.indexOf(metaWindow) !== -1) {
         return;
+    }
 
     let clone = metaWindow.clone;
     let ok, x, y;
@@ -3594,7 +3600,7 @@ export function updateSelection(space, metaWindow) {
 
     // ensure window is properly activated (if not activated)
     if (space === spaces.activeSpace) {
-        if (metaWindow !== display.focus_windoww) {
+        if (metaWindow !== display.focus_window) {
             Main.activateWindow(metaWindow);
         }
     }
