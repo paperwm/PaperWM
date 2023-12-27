@@ -509,6 +509,10 @@ export class Space extends Array {
             let resizable = !mw.fullscreen &&
                 mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
+            if (mw._fullscreen_width) {
+                targetWidth = mw._fullscreen_width;
+            }
+
             if (mw.preferredWidth) {
                 let prop = mw.preferredWidth;
                 if (prop.value <= 0) {
@@ -590,8 +594,9 @@ export class Space extends Array {
             return;
 
         // option properties
-        let ensure = options?.ensure ?? true;
-        let allocators = options?.customAllocators;
+        const ensure = options?.ensure ?? true;
+        const allocators = options?.customAllocators;
+        const callback = options?.callback;
 
         this._inLayout = true;
         this.startAnimate();
@@ -709,24 +714,34 @@ export class Space extends Array {
             console.log(`with idle clear fullscreenOnLayout: ${global.get_current_time()}`);
             this.getWindows().forEach(w => {
                 if (w.fullscreenOnLayout) {
-                    resizeHandler(w);
                     delete w.fullscreenOnLayout;
                 }
             });
         });
 
         console.log(`emit layout: ${global.get_current_time()}`);
+        if (callback) {
+            callback();
+        }
         this.emit('layout', this);
     }
 
-    queueLayout(animate = true) {
+    queueLayout(animate = true, options = {}) {
         if (this._layoutQueued)
             return;
+
+        const callback = options?.callback;
 
         this._layoutQueued = true;
         Utils.later_add(Meta.LaterType.RESIZE, () => {
             this._layoutQueued = false;
-            this.layout(animate);
+
+            if (callback) {
+                this.layout(animate, { callback });
+            }
+            else {
+                this.layout();
+            }
         });
     }
 
@@ -1910,6 +1925,7 @@ export const Spaces = class Spaces extends Map {
                 // Fixup allocations on reload
                 allocateClone(w);
                 this.signals.connect(w, 'size-changed', resizeHandler);
+                this.signals.connect(w, 'position-changed', positionChangeHandler);
             });
         this._initDone = true;
 
@@ -3011,7 +3027,14 @@ export function registerWindow(metaWindow) {
     });
     signals.connect(metaWindow, 'size-changed', allocateClone);
     // Note: runs before gnome-shell's minimize handling code
-    signals.connect(metaWindow, 'notify::fullscreen', Topbar.fixTopBar);
+    signals.connect(metaWindow, 'notify::fullscreen', () => {
+        /**
+         * Run resizeHandler here since relying only on window resizing
+         * to pick-up fullscreen change is trouble (e.g. windows that start as fullscreen).
+         */
+        resizeHandler(metaWindow);
+        Topbar.fixTopBar();
+    });
     signals.connect(metaWindow, 'notify::minimized', metaWindow => {
         minimizeHandler(metaWindow);
     });
@@ -3055,8 +3078,19 @@ export function destroyHandler(actor) {
     signals.disconnect(actor);
 }
 
+export function positionChangeHandler(metaWindow) {
+    // don't update saved position if fullscreen
+    if (metaWindow.fullscreen || metaWindow?._fullscreen_lock) {
+        return;
+    }
+
+    const f = metaWindow.get_frame_rect();
+    metaWindow._fullscreen_x = f.x;
+    console.log(`_fullscreen_x changed: ${f.x}`);
+}
+
 export function resizeHandler(metaWindow) {
-    console.log(`resize handler called on ${metaWindow?.title}`);
+    console.error(new Error(`resize handler called on ${metaWindow?.title}`));
 
     // if navigator is showing, reset/refresh it after a window has resized
     if (Navigator.navigating) {
@@ -3067,10 +3101,6 @@ export function resizeHandler(metaWindow) {
         return;
 
     const f = metaWindow.get_frame_rect();
-    let needLayout = false;
-    if (metaWindow._targetWidth !== f.width || metaWindow._targetHeight !== f.height) {
-        needLayout = true;
-    }
     metaWindow._targetWidth = null;
     metaWindow._targetHeight = null;
 
@@ -3079,28 +3109,48 @@ export function resizeHandler(metaWindow) {
         return;
 
     const selected = metaWindow === space.selectedWindow;
+    let addCallback = false;
     let animate = true;
     let x;
 
     // if window is fullscreened, then don't animate background space.container animation etc.
-    if (metaWindow?.fullscreen) {
+    if (metaWindow.fullscreen) {
+        metaWindow._fullscreen_lock = true;
+        addCallback = true;
         animate = false;
         x = 0;
-    } else {
-        x = metaWindow.get_frame_rect().x - space.monitor.x;
+    }
+    else {
+        x = metaWindow._fullscreen_x ?? f.x - space.monitor.x;
+        x = Math.max(x, Settings.prefs.horizontal_margin);
+
+        // if pwm fullscreen previously
+        if (metaWindow._fullscreen_lock) {
+            addCallback = true;
+            delete metaWindow._fullscreen_lock;
+        }
+        else {
+            console.error(new Error('_fullscreen_width saved'));
+            metaWindow._fullscreen_width = f.width;
+            console.log(`save _fullscreen_width ${metaWindow?.title}: ${metaWindow?._fullscreen_width}`);
+        }
     }
 
-    if (!space._inLayout && needLayout) {
+    if (!space._inLayout) {
         // Restore window position when eg. exiting fullscreen
-        if (!Navigator.navigating && selected) {
-            move_to(space, metaWindow, {
-                x,
-                animate,
-            });
+        let callback = () => {};
+        if (addCallback && !Navigator.navigating && selected) {
+            callback = () => {
+                console.log(`callback! x:${x}`);
+                move_to(space, metaWindow, {
+                    x,
+                    animate,
+                });
+            };
         }
 
         // Resizing from within a size-changed signal is troube (#73). Queue instead.
-        space.queueLayout(animate);
+        space.queueLayout(animate, { callback });
     }
 }
 
@@ -3287,7 +3337,10 @@ export function insertWindow(metaWindow, { existing }) {
         if (tiled) {
             animateWindow(metaWindow);
         }
-        metaWindow.unmapped && signals.connect(metaWindow, 'size-changed', resizeHandler);
+        if (metaWindow.unmapped) {
+            signals.connect(metaWindow, 'size-changed', resizeHandler);
+            signals.connect(metaWindow, 'position-changed', positionChangeHandler);
+        }
         delete metaWindow.unmapped;
     };
 
