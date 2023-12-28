@@ -10,11 +10,11 @@
     </key>
 
     <key type="as" name="live-alt-tab">
-      <default><![CDATA[['<Super>Tab']]]></default>
+      <default><![CDATA[['<Super>Tab', '<Alt>Tab']]]></default>
       <summary>Switch to previously active window</summary>
     </key>
     <key type="as" name="live-alt-tab-backward">
-      <default><![CDATA[['<Super><Shift>Tab']]]></default>
+      <default><![CDATA[['<Super><Shift>Tab', '<Alt><Shift>Tab']]]></default>
       <summary>Switch to previously active window, backward order</summary>
     </key>
 
@@ -405,7 +405,7 @@
     </key>
 
     <key type="b" name="use-default-background">
-        <default>false</default>
+        <default>true</default>
         <summary>Use the default GNOME Shell background</summary>
     </key>
 
@@ -447,6 +447,11 @@
     <key type="d" name="animation-time">
         <default>0.25</default>
         <summary>Duration of animations in seconds</summary>
+    </key>
+
+    <key type="i" name="overview-ensure-viewport-animation">
+        <default>1</default>
+        <summary>Sets the animation when exiting GNOME overview and ensuring selected window is in view. 0:NONE, 1:TRANSLATE, 2:FADE</summary>
     </key>
 
     <key type="as" name="winprops">

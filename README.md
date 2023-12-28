@@ -4,7 +4,7 @@
 > 
 > ### If you're using Gnome 42-44, please install via [extensions.gnome.org](https://extensions.gnome.org/extension/6099/paperwm/) OR use the [`gnome-44`](https://github.com/paperwm/PaperWM/tree/gnome-44) branch (see the [Installation](#installation) section for more information).
 
-[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://paperwm.zulipchat.com)
+[![project chat](https://img.shields.io/badge/PaperWM_Discussions-join_chat-brightgreen)](https://github.com/paperwm/PaperWM/discussions)
 
 PaperWM is a [Gnome Shell](https://wiki.gnome.org/Projects/GnomeShell) extension which provides scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
@@ -14,7 +14,7 @@ _While PaperWM can be installed on a wide range of Gnome versions, new features 
 
 While technically an [extension](https://wiki.gnome.org/Projects/GnomeShell/Extensions) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
-We often hang out on [zulip](https://paperwm.zulipchat.com).
+Have questions or comments?  Please ask on our [Github Discussions](https://github.com/paperwm/PaperWM/discussions) board.
 
 ## Installation
 
@@ -164,8 +164,6 @@ PaperWM currently works best using the workspaces span monitors preference, this
 The scratch layer is an escape hatch to a familiar floating layout. This layer is intended to store windows that are globally useful like chat applications and in general serve as the kitchen sink.
 When the scratch layer is active it will float above the tiled windows, when hidden the windows will be minimized.
 
-Opening a window when the scratch layer is active will make it float automatically.
-
 Pressing <kbd>Super</kbd><kbd>Escape</kbd> toggles between showing and hiding the windows in the scratch layer.
 Activating windows in the scratch layer is done using <kbd>Super</kbd><kbd>Tab</kbd>, the floating windows having priority in the list while active.
 When the tiling is active <kbd>Super</kbd><kbd>Shift</kbd><kbd>Tab</kbd> selects the most recently used scratch window.
@@ -218,15 +216,6 @@ _Note: experimental, incomplete or deprecated settings may not be listed below._
 
 Setting | Description | Input Type | Default value
 --------|-------------|------------|--------------
-<code>animation&#8209;time</code> | Changes PaperWM animation speed.  Lower values means faster animations. | _number_ `>=` 0 | 0.25
-
-__Example:__ speeding up animations
-```
-dconf write /org/gnome/shell/extensions/paperwm/animation-time 0.15
-```
-
-Setting | Description | Input Type | Default value
---------|-------------|------------|--------------
 <code>default&#8209;background</code>| Sets the (default) background used for PaperWM workspaces.  If set will use this background instead of colors defined in `workspace-colors`. | _absolute path_ | _empty_
 
 _Note: you can override this for individual workspaces in the settings UI._
@@ -234,67 +223,6 @@ _Note: you can override this for individual workspaces in the settings UI._
 __Example:__
 ```
 dconf write /org/gnome/shell/extensions/paperwm/default-background '"/home/user/Wallpaper/mars-sunset-2k.jpg"'
-```
-
-Setting | Description | Reference
---------|-------------|----------
-<code>default&#8209;focus&#8209;mode</code> | Sets default focus mode used in workspaces. | See [Setting the default focus mode](#setting-the-default-focus-mode).
-
-Setting | Description | Reference
---------|-------------|----------
-<code>disable&#8209;topbar&#8209;styling</code> | Disables PaperWM's ability to style the Gnome TopBar. | See [Gnome TopBar opacity / styling](#gnome-topbar-opacity--styling).
-
-Setting | Description | Input Type | Default value
---------|-------------|------------|--------------
-<code>gesture&#8209;enabled</code> | Enables / disables PaperWM gestures. Setting this to `false` restores Gnome's default touchpad gestures. | Boolean | true
-
-__Example:__ disabling PaperWM touchpad gestures
-```
-dconf write /org/gnome/shell/extensions/paperwm/gesture-enabled false
-```
-
-Setting | Description | Input Type | Default value
---------|-------------|------------|--------------
-<code>gesture&#8209;horizontal&#8209;fingers</code> | Sets the number of fingers used for moving the tiling viewport (windows) left/right. | _number_: `0` (disables gesture), `3`, `4`  | `3`
-
-__Example:__ setting swiping left/right to move windows to four-fingers:
-```
-dconf write /org/gnome/shell/extensions/paperwm/gesture-horizontal-fingers 4
-```
-
-Setting | Description | Input Type | Default value
---------|-------------|------------|--------------
-<code>gesture&#8209;workspace&#8209;fingers</code> | Sets the number of fingers used for PaperWM workspace stack view. | _number_: `0` (disables gesture), `3`, `4`  | `3`
-
-__Example:__ disabling PaperWM workspace stack view gesture:
-```
-dconf write /org/gnome/shell/extensions/paperwm/gesture-workspace-fingers 0
-```
-
-Setting | Description | Input Type | Default value
---------|-------------|------------|--------------
-<code>maximize&#8209;width&#8209;percent</code> | Sets the percentage of workspace width the `window maximize horizontally` function (default keybind `Super+F`) uses. | `0.5` <= _number_ <= `1.0`  | `1.0`
-
-__Example:__ set `maximize window width` to 95% of workspace with:
-```
-dconf write /org/gnome/shell/extensions/paperwm/maximize-width-percent 0.95
-```
-
-Setting | Description | Reference
---------|-------------|----------
-<code>show&#8209;focus&#8209;mode&#8209;icon</code> | Shows/hides the focus mode icon in TopBar. | See [Hiding the focus mode icon](#hiding-the-focus-mode-icon).
-
-Setting | Description | Reference
---------|-------------|----------
-<code>show&#8209;window&#8209;position&#8209;bar</code>| Shows/hides the window position indicator bar in Topbar. | See [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar).
-
-Setting | Description | Reference
---------|-------------|----------
-<code>show&#8209;workspace&#8209;indicator</code>| Shows/hides the workspace indicator element in Topbar. | See [The workspace stack & monitors](#the-workspace-stack--monitors).
-
-__Example:__
-```
-dconf write /org/gnome/shell/extensions/paperwm/show-workspace-indicator false
 ```
 
 Setting | Description | Input Type | Default value
@@ -400,30 +328,9 @@ three-finger swipe up         | Gnome Overview #setting-window-specific-properti
 three-finger swipe down       | PaperWM workspace stack view (see [here](#the-workspace-stack--monitors))
 three-finger swipe left/right | Moves tiling viewport (windows) left / right
 
-PaperWM touchpad gestures behaviour can be modified with the following settings:
+PaperWM touchpad gesture behaviour can be modified via the `General` tab in PaperWM settings:
 
-Setting | Description | Input Type | Default value
---------|-------------|------------|--------------
-<code>gesture&#8209;enabled</code> | Enables / disables PaperWM gestures. Setting this to `false` restores Gnome's default touchpad gestures. | Boolean | true
-<code>gesture&#8209;horizontal&#8209;fingers</code> | Sets the number of fingers used for moving the tiling viewport (windows) left/right. | _number_: `0` (disables gesture), `3`, `4`  | `3`
-<code>gesture&#8209;workspace&#8209;fingers</code> | Sets the number of fingers used for PaperWM workspace stack view. | _number_: `0` (disables gesture), `3`, `4`  | `3` 
-
-These settings can be changed from a terminal with the following commands
-
-__Example:__ disabling PaperWM touchpad gestures
-```
-dconf write /org/gnome/shell/extensions/paperwm/gesture-enabled false
-```
-
-__Example:__ setting swiping left/right to move windows to four-fingers:
-```
-dconf write /org/gnome/shell/extensions/paperwm/gesture-horizontal-fingers 4
-```
-
-__Example:__ disabling PaperWM workspace stack view gesture:
-```
-dconf write /org/gnome/shell/extensions/paperwm/gesture-workspace-fingers 0
-```
+<img alt="Touchpad gesture settings" src="media/gesture-settings.png" width="560px">
 
 ## Window Position Bar (colored bar segment in Top Bar) ##
 
@@ -431,15 +338,13 @@ dconf write /org/gnome/shell/extensions/paperwm/gesture-workspace-fingers 0
 
 https://user-images.githubusercontent.com/30424662/221416159-464d7512-5174-451b-9035-0ee84f9eb4ec.mp4
 
-The the window position bar can be _disabled_ from `PaperWM extension settings` or via `dconf`, e.g. by executing the following command in a terminal: 
+The window position bar can be _disabled_ from `PaperWM extension settings`:
 
-```
-dconf write /org/gnome/shell/extensions/paperwm/show-window-position-bar false
-```
+<img alt="Window indicator bar" src="media/window-indicator-bar.png" width="560px">
 
 You can style both the coloured position bar and the dimmed "position bar backdrop" by overriding the `paperwm-window-position-bar` and `paperwm-window-position-bar-backdrop` CSS classes respectively (see `user.css` in [User configuration & development](#user-configuration--development) section for more information). The `paperwm-window-position-bar` will also inherit the selection color (same as window borders) from `tile-preview`.
 
-_Note: PaperWM overrides the default Gnome Top Bar style to be completely transparent so that the dimmed `window-position-bar-backdrop` and`window-position-bar` elements are visible._
+_Note: PaperWM overrides the default Gnome Top Bar style to be completely transparent so that the dimmed `window-position-bar-backdrop` and `window-position-bar` elements are visible._
 
 ## Window Focus Mode ##
 
@@ -451,17 +356,9 @@ Focus modes can be toggled by user-settable keybinding (default is `Super`+`Shif
 
 ### Setting the default focus mode
 
-The default focus mode is the standard PaperWM focus mode (i.e. not centered).  This can be changed according to preference by changing the `default-focus-mode` setting via `dconf` or `gsettings`.  
+The default focus mode is the standard PaperWM focus mode (i.e. not centered).  This can be changed according to preference by changing the `Default focus mode` setting PaperWM settings.  
 
-To set the default focus mode to `CENTER`, execute the following from a terminal:
-```
-dconf write /org/gnome/shell/extensions/paperwm/default-focus-mode 1
-```
-
-To undo, or revert to the original PaperWM behaviour, execute the following:
-```
-dconf write /org/gnome/shell/extensions/paperwm/default-focus-mode 0
-```
+<img alt="Default focus mode" src="media/default-focus-mode.png" width="560px">
 
 _Note: changing this setting during a PaperWM session will set all spaces to the new default focus mode._
 
@@ -477,14 +374,11 @@ dconf write /org/gnome/shell/extensions/paperwm/show-focus-mode-icon false
 
 PaperWM by default changes the opacity of the Gnome TopBar.  This styling is used for certain PaperWM features.  However, this styling may conflict with the TopBar styling of other extensions (that you may prefer have style the TopBar instead).
 
-Users can disable PaperWM's ability to change TopBar styling by executing the following command from a terminal:
+Users can disable PaperWM's ability to change TopBar styling from PaperWM settings:
 
-```
-dconf write /org/gnome/shell/extensions/paperwm/disable-topbar-styling true
-```
-_Note<sup>1</sup>: you will need to restart Gnome shell after changing this setting, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only)_.
+<img alt="Enable TopBar Styling" src="media/topbar-styling.png" width="560px">
 
-_Note<sup>2</sup>: several PaperWM specific features are dependent on changing the Gnome TopBar to function correctly.  If you choose to disable PaperWM's ability to change the TopBar styles (with the setting above), you may also want to disable the [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar))_.
+_Note: several PaperWM specific features are dependent on changing the Gnome TopBar to function correctly.  If you choose to disable PaperWM's ability to change the TopBar styles (with the setting above), you may also want to disable the [Window Position Bar](#window-position-bar-colored-bar-segment-in-top-bar)_.
 
 ## Fixed Window Size ##
 
@@ -510,7 +404,6 @@ PaperWM manages these settings (disables them) during runtime.  It will then res
 
 These extensions are good complements to PaperWM:
 
-- [Vertical Overview](https://github.com/RensAlthuis/vertical-overview) - brings back vertically stacked workspaces
 - [Switcher](https://github.com/daniellandau/switcher) - combined window switcher and launcher
 - [Dash to Dock](https://micheleg.github.io/dash-to-dock/) - a great dock
 

@@ -18,6 +18,9 @@ const META_KEY_ABOVE_TAB = 0x2f7259c9;
 // position to open window at (e.g. to the right of current window)
 export const OpenWindowPositions = { RIGHT: 0, LEFT: 1, START: 2, END: 3 };
 
+// Animation used when ensuring viewport on a window
+export const EnsureViewportAnimation = { NONE: 0, TRANSLATE: 1, FADE: 2 };
+
 export let prefs;
 let gsettings, keybindSettings, _overriddingConflicts;
 let acceleratorParse;
@@ -35,7 +38,8 @@ export function enable(extension) {
         'window-switcher-preview-scale', 'winprops', 'show-workspace-indicator',
         'show-window-position-bar', 'show-focus-mode-icon', 'disable-topbar-styling',
         'default-focus-mode', 'gesture-enabled', 'gesture-horizontal-fingers',
-        'gesture-workspace-fingers', 'open-window-position']
+        'gesture-workspace-fingers', 'open-window-position',
+        'overview-ensure-viewport-animation']
         .forEach(k => setState(null, k));
     prefs.__defineGetter__("minimum_margin", () => {
         return Math.min(15, prefs.horizontal_margin);
@@ -84,7 +88,11 @@ export function getConflictSettings() {
         addSchemaToConflictSettings('org.gnome.mutter.wayland.keybindings');
         addSchemaToConflictSettings('org.gnome.desktop.wm.keybindings');
         addSchemaToConflictSettings('org.gnome.shell.keybindings');
-        addSchemaToConflictSettings('org.gnome.settings-daemon.plugins.media-keys');
+
+        // below schemas are checked but may not exist in all distributions
+        addSchemaToConflictSettings('org.gnome.settings-daemon.plugins.media-keys', false);
+        // ubuntu tiling-assistant (enabled by default on Ubuntu 23.10)
+        addSchemaToConflictSettings('org.gnome.shell.extensions.tiling-assistant', false);
     }
 
     return conflictSettings;
@@ -94,12 +102,14 @@ export function getConflictSettings() {
  * Adds a Gio.Settings object to conflictSettings.  Fails gracefully.
  * @param {Gio.Settings} schemaId
  */
-export function addSchemaToConflictSettings(schemaId) {
+export function addSchemaToConflictSettings(schemaId, warn = true) {
     try {
         conflictSettings.push(new Gio.Settings({ schema_id: schemaId }));
     }
     catch (e) {
-        console.warn(`Invalid schema_id '${schemaId}': could not add to keybind conflict checks`);
+        if (warn) {
+            console.warn(`Invalid schema_id '${schemaId}': could not add to keybind conflict checks`);
+        }
     }
 }
 
