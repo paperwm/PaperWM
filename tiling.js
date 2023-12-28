@@ -509,8 +509,8 @@ export class Space extends Array {
             let resizable = !mw.fullscreen &&
                 mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
-            if (mw._fullscreen_frame) {
-                targetWidth = mw._fullscreen_frame.width;
+            if (mw._fullscreen_frame?.tiledWidth) {
+                targetWidth = mw._fullscreen_frame.tiledWidth;
             }
 
             if (mw.preferredWidth) {
@@ -3125,7 +3125,7 @@ export function resizeHandler(metaWindow) {
         }
         else {
             // save width for later exit-fullscreen restoring
-            saveFullscreenFrame(metaWindow);
+            saveFullscreenFrame(metaWindow, true);
         }
     }
 
@@ -3176,14 +3176,19 @@ export function nonTiledSizeHandler(metaWindow) {
  * after exiting fullscreen mode.
  * @param {MetaWindow} metaWindow
  */
-export function saveFullscreenFrame(metaWindow) {
+export function saveFullscreenFrame(metaWindow, tiled) {
     const f = metaWindow.get_frame_rect();
-    metaWindow._fullscreen_frame = {
-        x: f.x,
-        y: f.y,
-        width: f.width,
-        height: f.height,
-    };
+    const fsf = metaWindow._fullscreen_frame ?? {};
+    metaWindow._fullscreen_frame = fsf;
+    fsf.x = f.x;
+    fsf.y = f.y;
+    fsf.width = f.width;
+    fsf.height = f.height;
+
+    // if from tiled, save tiledWidth for tiling width tracking
+    if (tiled) {
+        fsf.tiledWidth = f.width;
+    }
 }
 
 /**
