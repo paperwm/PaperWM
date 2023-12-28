@@ -711,7 +711,6 @@ export class Space extends Array {
         }
 
         Utils.later_add(Meta.LaterType.IDLE, () => {
-            console.log(`with idle clear fullscreenOnLayout: ${global.get_current_time()}`);
             this.getWindows().forEach(w => {
                 if (w.fullscreenOnLayout) {
                     delete w.fullscreenOnLayout;
@@ -719,10 +718,7 @@ export class Space extends Array {
             });
         });
 
-        console.log(`emit layout: ${global.get_current_time()}`);
-        if (callback) {
-            callback();
-        }
+        callback && callback();
         this.emit('layout', this);
     }
 
@@ -3086,12 +3082,9 @@ export function positionChangeHandler(metaWindow) {
 
     const f = metaWindow.get_frame_rect();
     metaWindow._fullscreen_x = f.x;
-    console.log(`_fullscreen_x changed: ${f.x}`);
 }
 
 export function resizeHandler(metaWindow) {
-    console.error(new Error(`resize handler called on ${metaWindow?.title}`));
-
     // if navigator is showing, reset/refresh it after a window has resized
     if (Navigator.navigating) {
         Navigator.getNavigator().minimaps.forEach(m => typeof m !== 'number' && m.reset());
@@ -3130,9 +3123,8 @@ export function resizeHandler(metaWindow) {
             delete metaWindow._fullscreen_lock;
         }
         else {
-            console.error(new Error('_fullscreen_width saved'));
+            // save width for later exit-fullscreen restoring
             metaWindow._fullscreen_width = f.width;
-            console.log(`save _fullscreen_width ${metaWindow?.title}: ${metaWindow?._fullscreen_width}`);
         }
     }
 
@@ -3141,7 +3133,6 @@ export function resizeHandler(metaWindow) {
         let callback = () => {};
         if (addCallback && !Navigator.navigating && selected) {
             callback = () => {
-                console.log(`callback! x:${x}`);
                 move_to(space, metaWindow, {
                     x,
                     animate,
@@ -3333,7 +3324,6 @@ export function insertWindow(metaWindow, { existing }) {
     const space = spaces.spaceOfWindow(metaWindow);
 
     const connectSizeChanged = tiled => {
-        console.log(`resizehandler added ${metaWindow?.title}, tiled: ${tiled}`);
         if (tiled) {
             animateWindow(metaWindow);
         }
