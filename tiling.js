@@ -509,8 +509,8 @@ export class Space extends Array {
             let resizable = !mw.fullscreen &&
                 mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
-            if (mw._fullscreen_width) {
-                targetWidth = mw._fullscreen_width;
+            if (mw._fullscreen_frame) {
+                targetWidth = mw._fullscreen_frame.width;
             }
 
             if (mw.preferredWidth) {
@@ -3080,8 +3080,7 @@ export function positionChangeHandler(metaWindow) {
         return;
     }
 
-    const f = metaWindow.get_frame_rect();
-    metaWindow._fullscreen_x = f.x;
+    saveFullscreenFrame(metaWindow);
 }
 
 export function resizeHandler(metaWindow) {
@@ -3098,8 +3097,10 @@ export function resizeHandler(metaWindow) {
     metaWindow._targetHeight = null;
 
     const space = spaces.spaceOfWindow(metaWindow);
-    if (space.indexOf(metaWindow) === -1)
+    if (space.indexOf(metaWindow) === -1) {
+        nonTiledSizeHandler(metaWindow);
         return;
+    }
 
     const selected = metaWindow === space.selectedWindow;
     let addCallback = false;
@@ -3114,17 +3115,17 @@ export function resizeHandler(metaWindow) {
         x = 0;
     }
     else {
-        x = metaWindow._fullscreen_x ?? f.x - space.monitor.x;
+        x = metaWindow?._fullscreen_frame?.x ?? f.x - space.monitor.x;
         x = Math.max(x, Settings.prefs.horizontal_margin);
 
         // if pwm fullscreen previously
         if (metaWindow._fullscreen_lock) {
-            addCallback = true;
             delete metaWindow._fullscreen_lock;
+            addCallback = true;
         }
         else {
             // save width for later exit-fullscreen restoring
-            metaWindow._fullscreen_width = f.width;
+            saveFullscreenFrame(metaWindow);
         }
     }
 
@@ -3143,6 +3144,46 @@ export function resizeHandler(metaWindow) {
         // Resizing from within a size-changed signal is troube (#73). Queue instead.
         space.queueLayout(animate, { callback });
     }
+}
+
+/**
+ * ResizeHandler for non-tiled windows
+ * @param {*} metaWindow
+ */
+export function nonTiledSizeHandler(metaWindow) {
+    // if window is fullscreen ==> set lock
+    if (metaWindow.fullscreen) {
+        metaWindow._fullscreen_lock = true;
+        return;
+    }
+
+    // if pwm fullscreen previously
+    if (metaWindow._fullscreen_lock) {
+        delete metaWindow._fullscreen_lock;
+        let fsf = metaWindow._fullscreen_frame;
+        if (fsf) {
+            metaWindow.move_resize_frame(true, fsf.x, fsf.y, fsf.width, fsf.height);
+            delete metaWindow._fullscreen_frame;
+        }
+    }
+    else {
+        saveFullscreenFrame(metaWindow);
+    }
+}
+
+/**
+ * Saves a metaWindow's frame x, y ,width, and height for restoring
+ * after exiting fullscreen mode.
+ * @param {MetaWindow} metaWindow
+ */
+export function saveFullscreenFrame(metaWindow) {
+    const f = metaWindow.get_frame_rect();
+    metaWindow._fullscreen_frame = {
+        x: f.x,
+        y: f.y,
+        width: f.width,
+        height: f.height,
+    };
 }
 
 /**
