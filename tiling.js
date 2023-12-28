@@ -733,18 +733,10 @@ export class Space extends Array {
         if (this._layoutQueued)
             return;
 
-        const callback = options?.callback;
-
         this._layoutQueued = true;
         Utils.later_add(Meta.LaterType.RESIZE, () => {
             this._layoutQueued = false;
-
-            if (callback) {
-                this.layout(animate, { callback });
-            }
-            else {
-                this.layout();
-            }
+            this.layout(animate, options);
         });
     }
 
