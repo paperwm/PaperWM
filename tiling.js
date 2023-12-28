@@ -596,6 +596,7 @@ export class Space extends Array {
         // option properties
         const ensure = options?.ensure ?? true;
         const allocators = options?.customAllocators;
+        const centerIfOne = options?.centerIfOne ?? true;
         const callback = options?.callback;
 
         this._inLayout = true;
@@ -717,6 +718,12 @@ export class Space extends Array {
                 }
             });
         });
+
+        // if only one window on space, then centre it
+        if (centerIfOne && this.getWindows().length === 1) {
+            const mw = this.getWindows()[0];
+            centerWindowHorizontally(mw);
+        }
 
         callback && callback();
         this.emit('layout', this);
@@ -3477,13 +3484,6 @@ export function insertWindow(metaWindow, { existing }) {
     // run a simple layout in pre-prepare layout
     space.layout(false);
 
-    // if only one window on space, then centre it
-    const centre = () => {
-        if (space.getWindows().length === 1) {
-            centerWindowHorizontally(metaWindow);
-        }
-    };
-
     /**
      * If window is new, then setup and ensure is in view
      * after actor is shown on stage.
@@ -3504,8 +3504,6 @@ export function insertWindow(metaWindow, { existing }) {
 
             Main.activateWindow(metaWindow);
             ensureViewport(space.selectedWindow, space);
-
-            centre();
         });
 
         return;
@@ -3520,8 +3518,6 @@ export function insertWindow(metaWindow, { existing }) {
     } else {
         ensureViewport(space.selectedWindow, space);
     }
-
-    centre();
 }
 
 /**
@@ -4249,16 +4245,6 @@ export function centerWindowHorizontally(metaWindow) {
     const workArea = space.workArea();
 
     const targetX = workArea.x + Math.round((workArea.width - frame.width) / 2);
-    const dx = targetX - (metaWindow.clone.targetX + space.targetX);
-
-    let [pointerX, pointerY, mask] = global.get_pointer();
-    let relPointerX = pointerX - monitor.x - space.cloneContainer.x;
-    let relPointerY = pointerY - monitor.y - space.cloneContainer.y;
-    /* don't know why we would want to warp pointer on centering window... disabling
-    if (Utils.isPointInsideActor(metaWindow.clone, relPointerX, relPointerY)) {
-        Utils.warpPointer(pointerX + dx, pointerY);
-    }
-    */
     if (space.indexOf(metaWindow) === -1) {
         metaWindow.move_frame(true, targetX + monitor.x, frame.y);
     } else {
