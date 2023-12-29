@@ -3114,7 +3114,8 @@ export function resizeHandler(metaWindow) {
         x = 0;
     }
     else {
-        x = metaWindow?._fullscreen_frame?.x ?? f.x - space.monitor.x;
+        x = metaWindow?._fullscreen_frame?.x ?? f.x;
+        x -= space.monitor.x;
         x = Math.max(x, Settings.prefs.horizontal_margin);
 
         // if pwm fullscreen previously
@@ -3141,7 +3142,7 @@ export function resizeHandler(metaWindow) {
         }
 
         // Resizing from within a size-changed signal is troube (#73). Queue instead.
-        space.queueLayout(animate, { callback });
+        space.queueLayout(animate, { callback, centerIfOne: false });
     }
 }
 
@@ -3180,7 +3181,7 @@ export function saveFullscreenFrame(metaWindow, tiled) {
     const fsf = metaWindow._fullscreen_frame ?? {};
     metaWindow._fullscreen_frame = fsf;
     // offset by space's monitor.x
-    fsf.x = f.x - spaces.spaceOfWindow(metaWindow)?.monitor?.x ?? 0;
+    fsf.x = f.x;
     fsf.y = f.y;
     fsf.width = f.width;
     fsf.height = f.height;
