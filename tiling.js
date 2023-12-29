@@ -1731,7 +1731,7 @@ border-radius: ${borderWidth}px;
         // transforms break if there's no height
         this.cloneContainer.height = this.monitor.height;
 
-        this.layout();
+        this.layout(true, { centerIfOne: false });
         this.emit('monitor-changed');
     }
 
@@ -3179,7 +3179,8 @@ export function saveFullscreenFrame(metaWindow, tiled) {
     const f = metaWindow.get_frame_rect();
     const fsf = metaWindow._fullscreen_frame ?? {};
     metaWindow._fullscreen_frame = fsf;
-    fsf.x = f.x;
+    // offset by space's monitor.x
+    fsf.x = f.x - spaces.spaceOfWindow(metaWindow)?.monitor?.x ?? 0;
     fsf.y = f.y;
     fsf.width = f.width;
     fsf.height = f.height;
