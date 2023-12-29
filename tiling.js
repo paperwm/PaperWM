@@ -3109,11 +3109,13 @@ export function resizeHandler(metaWindow) {
     // if window is fullscreened, then don't animate background space.container animation etc.
     if (metaWindow.fullscreen) {
         metaWindow._fullscreen_lock = true;
+        space.hideSelection();
         addCallback = true;
         animate = false;
         x = 0;
     }
     else {
+        space.showSelection();
         x = metaWindow?._fullscreen_frame?.x ?? f.x;
         x -= space.monitor.x;
         x = Math.max(x, Settings.prefs.horizontal_margin);
@@ -3859,6 +3861,7 @@ export function focus_handler(metaWindow, user_data) {
     }
 
     let space = spaces.spaceOfWindow(metaWindow);
+    metaWindow.fullscreen ? space.hideSelection() : space.showSelection();
     space.monitor.clickOverlay.show();
 
     /**
