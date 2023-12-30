@@ -2795,6 +2795,15 @@ export const Spaces = class Spaces extends Map {
         return [...this.values()].find(s => uuid === s.uuid);
     }
 
+    spaceWithTopBar() {
+        for (const monitor in this.monitors) {
+            if (this.monitors[monitor].hasTopBar) {
+                return this.monitors[monitor];
+            }
+        }
+        return null;
+    }
+
     get selectedSpace() {
         return this._selectedSpace ?? this.activeSpace;
     }
