@@ -3133,8 +3133,13 @@ export function resizeHandler(metaWindow) {
     let x;
 
     let needLayout = false;
+    // if target width differs ==> layout
+    if (metaWindow._targetWidth !== f.width || metaWindow._targetHeight !== f.height) {
+        needLayout = true;
+    }
+
+    // if saved size differs ==> layout
     if (fsf) {
-        // if is same size as saved (previously) then don't need a layout
         if (fsf.width !== f.width || fsf.height !== f.height) {
             needLayout = true;
         }
