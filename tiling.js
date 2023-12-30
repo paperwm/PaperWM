@@ -1832,6 +1832,7 @@ border-radius: ${borderWidth}px;
     }
 
     destroy() {
+        this.getWindows().forEach(w => removeHandlerFlags(w));
         this.signals.destroy();
         this.signals = null;
         this.background.destroy();
@@ -1916,6 +1917,9 @@ export const Spaces = class Spaces extends Map {
         // Clone and hook up existing windows
         display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(w => {
+                // remove handler flags
+                removeHandlerFlags(w);
+
                 registerWindow(w);
                 // Fixup allocations on reload
                 allocateClone(w);
@@ -3066,20 +3070,21 @@ export function destroyHandler(actor) {
     signals.disconnect(actor);
 }
 
+/**
+ * Removes resize and position handler flags.
+ * @param {MetaWindow} metaWindow
+ */
+export function removeHandlerFlags(metaWindow) {
+    delete metaWindow._resizeHandlerAdded;
+    delete metaWindow._positionHandlerAdded;
+}
+
 export function addPositionHandler(metaWindow) {
     if (metaWindow._positionHandlerAdded) {
         return;
     }
     signals.connect(metaWindow, 'position-changed', positionChangeHandler);
     metaWindow._positionHandlerAdded = true;
-}
-export function positionChangeHandler(metaWindow) {
-    // don't update saved position if fullscreen
-    if (metaWindow.fullscreen || metaWindow?._fullscreen_lock) {
-        return;
-    }
-
-    saveFullscreenFrame(metaWindow);
 }
 
 export function addResizeHandler(metaWindow) {
@@ -3093,6 +3098,16 @@ export function addResizeHandler(metaWindow) {
     });
     metaWindow._resizeHandlerAdded = true;
 }
+
+export function positionChangeHandler(metaWindow) {
+    // don't update saved position if fullscreen
+    if (metaWindow.fullscreen || metaWindow?._fullscreen_lock) {
+        return;
+    }
+
+    saveFullscreenFrame(metaWindow);
+}
+
 export function resizeHandler(metaWindow) {
     // if navigator is showing, reset/refresh it after a window has resized
     if (Navigator.navigating) {
