@@ -1919,8 +1919,8 @@ export const Spaces = class Spaces extends Map {
                 registerWindow(w);
                 // Fixup allocations on reload
                 allocateClone(w);
-                this.signals.connect(w, 'size-changed', resizeHandler);
-                this.signals.connect(w, 'position-changed', positionChangeHandler);
+                addResizeHandler(w);
+                addPositionHandler(w);
             });
         this._initDone = true;
 
@@ -3073,6 +3073,13 @@ export function destroyHandler(actor) {
     signals.disconnect(actor);
 }
 
+export function addPositionHandler(metaWindow) {
+    if (metaWindow._positionHandlerAdded) {
+        return;
+    }
+    signals.connect(metaWindow, 'position-changed', positionChangeHandler);
+    metaWindow._positionHandlerAdded = true;
+}
 export function positionChangeHandler(metaWindow) {
     // don't update saved position if fullscreen
     if (metaWindow.fullscreen || metaWindow?._fullscreen_lock) {
@@ -3082,6 +3089,13 @@ export function positionChangeHandler(metaWindow) {
     saveFullscreenFrame(metaWindow);
 }
 
+export function addResizeHandler(metaWindow) {
+    if (metaWindow._resizeHandlerAdded) {
+        return;
+    }
+    signals.connect(metaWindow, 'size-changed', resizeHandler);
+    metaWindow._resizeHandlerAdded = true;
+}
 export function resizeHandler(metaWindow) {
     // if navigator is showing, reset/refresh it after a window has resized
     if (Navigator.navigating) {
@@ -3376,10 +3390,9 @@ export function insertWindow(metaWindow, { existing }) {
         if (tiled) {
             animateWindow(metaWindow);
         }
-        if (metaWindow.unmapped) {
-            signals.connect(metaWindow, 'size-changed', resizeHandler);
-            signals.connect(metaWindow, 'position-changed', positionChangeHandler);
-        }
+        addResizeHandler(metaWindow);
+        addPositionHandler(metaWindow);
+
         delete metaWindow.unmapped;
     };
 
