@@ -163,6 +163,10 @@ export function enable(extension) {
         });
     };
 
+    signals.connect(global.display, 'workareas-changed', () => {
+        spaces.layout(false, {ensure: false});
+    });
+
     if (Main.layoutManager._startingUp) {
         // Defer workspace initialization until existing windows are accessible.
         // Otherwise we're unable to restore the tiling-order. (when restarting
@@ -700,14 +704,16 @@ export class Space extends Array {
         this.emit('layout', this);
     }
 
-    queueLayout(animate = true) {
+    queueLayout(animate = true, options = {}) {
         if (this._layoutQueued)
             return;
+
+        console.log(new Error(this.name));
 
         this._layoutQueued = true;
         Utils.later_add(Meta.LaterType.RESIZE, () => {
             this._layoutQueued = false;
-            this.layout(animate);
+            this.layout(animate, options);
         });
     }
 
@@ -1908,6 +1914,10 @@ export const Spaces = class Spaces extends Map {
         this.touchSignal = signals.connect(Main.panel, "captured-event", Gestures.horizontalTouchScroll.bind(this.activeSpace));
 
         this.stack = this.mru();
+    }
+
+    layout(animate = true, options = {}) {
+        this.forEach(space => space.layout(animate, options));
     }
 
     /**
