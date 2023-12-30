@@ -3027,7 +3027,9 @@ export function registerWindow(metaWindow) {
          * Run resizeHandler here since relying only on window resizing
          * to pick-up fullscreen change is trouble (e.g. windows that start as fullscreen).
          */
-        resizeHandler(mw, true);
+        Utils.later_add(Meta.LaterType.CHECK_FULLSCREEN, () => {
+            resizeHandler(mw);
+        });
         Topbar.fixTopBar();
     });
     signals.connect(metaWindow, 'notify::minimized', metaWindow => {
@@ -3119,10 +3121,20 @@ export function resizeHandler(metaWindow) {
         return;
     }
 
+    const fsf = metaWindow?._fullscreen_frame;
     const selected = metaWindow === space.selectedWindow;
     let addCallback = false;
     let animate = true;
     let x;
+
+    let needLayout = false;
+    if (fsf) {
+        // if is same size as saved (previously) then don't need a layout
+        if (fsf.width !== f.width || fsf.height !== f.height) {
+            console.log(`different width/height --> layout`);
+            needLayout = true;
+        }
+    }
 
     // if window is fullscreened, then don't animate background space.container animation etc.
     if (metaWindow.fullscreen) {
@@ -3131,6 +3143,12 @@ export function resizeHandler(metaWindow) {
         addCallback = true;
         animate = false;
         x = 0;
+        move_to(space, metaWindow, {
+            x,
+            animate,
+        });
+        console.log(`is fullscreen --> move to`);
+        return;
     }
     else {
         space.showSelection();
@@ -3141,6 +3159,7 @@ export function resizeHandler(metaWindow) {
         // if pwm fullscreen previously
         if (metaWindow._fullscreen_lock) {
             delete metaWindow._fullscreen_lock;
+            needLayout = true;
             addCallback = true;
         }
         else {
@@ -3149,7 +3168,7 @@ export function resizeHandler(metaWindow) {
         }
     }
 
-    if (!space._inLayout) {
+    if (needLayout && !space._inLayout) {
         // Restore window position when eg. exiting fullscreen
         let callback = () => {};
         if (addCallback && !Navigator.navigating && selected) {
