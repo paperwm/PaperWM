@@ -3022,12 +3022,12 @@ export function registerWindow(metaWindow) {
     });
     signals.connect(metaWindow, 'size-changed', allocateClone);
     // Note: runs before gnome-shell's minimize handling code
-    signals.connect(metaWindow, 'notify::fullscreen', () => {
+    signals.connect(metaWindow, 'notify::fullscreen', mw => {
         /**
          * Run resizeHandler here since relying only on window resizing
          * to pick-up fullscreen change is trouble (e.g. windows that start as fullscreen).
          */
-        resizeHandler(metaWindow);
+        resizeHandler(mw, true);
         Topbar.fixTopBar();
     });
     signals.connect(metaWindow, 'notify::minimized', metaWindow => {
@@ -3093,7 +3093,11 @@ export function addResizeHandler(metaWindow) {
     if (metaWindow._resizeHandlerAdded) {
         return;
     }
-    signals.connect(metaWindow, 'size-changed', resizeHandler);
+    signals.connect(metaWindow, 'size-changed', mw => {
+        Utils.later_add(Meta.LaterType.RESIZE, () => {
+            resizeHandler(mw);
+        });
+    });
     metaWindow._resizeHandlerAdded = true;
 }
 export function resizeHandler(metaWindow) {
