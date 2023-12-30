@@ -258,6 +258,7 @@ export function setupActions(settings) {
             else {
                 metaWindow.make_fullscreen();
             }
+            Tiling.resizeHandler(metaWindow);
         }, Meta.KeyBindingFlags.PER_WINDOW);
 }
 

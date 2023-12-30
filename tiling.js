@@ -3022,16 +3022,7 @@ export function registerWindow(metaWindow) {
     });
     signals.connect(metaWindow, 'size-changed', allocateClone);
     // Note: runs before gnome-shell's minimize handling code
-    signals.connect(metaWindow, 'notify::fullscreen', mw => {
-        /**
-         * Run resizeHandler here since relying only on window resizing
-         * to pick-up fullscreen change is trouble (e.g. windows that start as fullscreen).
-         */
-        Utils.later_add(Meta.LaterType.CHECK_FULLSCREEN, () => {
-            resizeHandler(mw);
-        });
-        Topbar.fixTopBar();
-    });
+    signals.connect(metaWindow, 'notify::fullscreen', Topbar.fixTopBar);
     signals.connect(metaWindow, 'notify::minimized', metaWindow => {
         minimizeHandler(metaWindow);
     });
@@ -3136,17 +3127,18 @@ export function resizeHandler(metaWindow) {
         }
     }
 
-    // if window is fullscreened, then don't animate background space.container animation etc.
-    if (metaWindow.fullscreen) {
-        metaWindow._fullscreen_lock = true;
-        space.hideSelection();
-        addCallback = true;
-        animate = false;
-        x = 0;
+    const moveTo = (x, animate) => {
         move_to(space, metaWindow, {
             x,
             animate,
         });
+    };
+
+    // if window is fullscreened, then don't animate background space.container animation etc.
+    if (metaWindow.fullscreen) {
+        metaWindow._fullscreen_lock = true;
+        space.hideSelection();
+        moveTo(0, false);
         console.log(`is fullscreen --> move to`);
         return;
     }
@@ -3170,13 +3162,11 @@ export function resizeHandler(metaWindow) {
 
     if (needLayout && !space._inLayout) {
         // Restore window position when eg. exiting fullscreen
+        console.error(new Error(`do layout on resize`));
         let callback = () => {};
         if (addCallback && !Navigator.navigating && selected) {
             callback = () => {
-                move_to(space, metaWindow, {
-                    x,
-                    animate,
-                });
+                moveTo(x, animate);
             };
         }
 
