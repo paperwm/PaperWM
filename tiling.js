@@ -3115,14 +3115,12 @@ export function resizeHandler(metaWindow) {
     const fsf = metaWindow?._fullscreen_frame;
     const selected = metaWindow === space.selectedWindow;
     let addCallback = false;
-    let animate = true;
     let x;
 
     let needLayout = false;
     if (fsf) {
         // if is same size as saved (previously) then don't need a layout
         if (fsf.width !== f.width || fsf.height !== f.height) {
-            console.log(`different width/height --> layout`);
             needLayout = true;
         }
     }
@@ -3139,7 +3137,6 @@ export function resizeHandler(metaWindow) {
         metaWindow._fullscreen_lock = true;
         space.hideSelection();
         moveTo(0, false);
-        console.log(`is fullscreen --> move to`);
         return;
     }
     else {
@@ -3162,16 +3159,15 @@ export function resizeHandler(metaWindow) {
 
     if (needLayout && !space._inLayout) {
         // Restore window position when eg. exiting fullscreen
-        console.error(new Error(`do layout on resize`));
         let callback = () => {};
         if (addCallback && !Navigator.navigating && selected) {
             callback = () => {
-                moveTo(x, animate);
+                moveTo(x, true);
             };
         }
 
         // Resizing from within a size-changed signal is troube (#73). Queue instead.
-        space.queueLayout(animate, { callback, centerIfOne: false });
+        space.queueLayout(true, { callback, centerIfOne: false });
     }
 }
 
