@@ -628,13 +628,6 @@ export class Space extends Array {
         let y0 = workArea.y;
         let fixPointAttempCount = 0;
 
-        // apply fullscreen if windows has fullscreenOnLayout property set
-        this.getWindows()
-        .filter(w => w.fullscreenOnLayout)
-        .forEach(w => {
-            w.make_fullscreen();
-        });
-
         for (let i = 0; i < this.length; i++) {
             let column = this[i];
             // Actorless windows are trouble. Layout could conceivable run while a window is dying or being born.
@@ -710,14 +703,6 @@ export class Space extends Array {
         } else {
             this.moveDone();
         }
-
-        Utils.later_add(Meta.LaterType.RESIZE, () => {
-            this.getWindows().forEach(w => {
-                if (w.fullscreenOnLayout) {
-                    delete w.fullscreenOnLayout;
-                }
-            });
-        });
 
         // if only one window on space, then centre it
         if (centerIfOne && this.getWindows().length === 1) {
@@ -3462,11 +3447,21 @@ export function insertWindow(metaWindow, { existing }) {
             return;
         }
 
-        // address inserting windows that are already fullscreen: windows will be inserted
-        // as normal (non-fullscreen) and will be fullscreened on layout.
+        /**
+         * Address inserting windows that are already fullscreen: windows will be inserted
+         * as normal (non-fullscreen) and will be fullscreened on layout.
+         * see https://github.com/paperwm/PaperWM/issues/638
+         */
         if (metaWindow.fullscreen) {
-            metaWindow.fullscreenOnLayout = true;
-            metaWindow.unmake_fullscreen();
+            animateWindow(metaWindow);
+            callbackOnActorShow(actor, () => {
+                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
+                    metaWindow.unmake_fullscreen();
+                    showWindow(metaWindow);
+                    metaWindow.make_fullscreen();
+                    return false; // on return false destroys timeout
+                });
+            });
         }
     }
 
