@@ -711,7 +711,7 @@ export class Space extends Array {
             this.moveDone();
         }
 
-        Utils.later_add(Meta.LaterType.IDLE, () => {
+        Utils.later_add(Meta.LaterType.RESIZE, () => {
             this.getWindows().forEach(w => {
                 if (w.fullscreenOnLayout) {
                     delete w.fullscreenOnLayout;
@@ -3156,25 +3156,24 @@ export function resizeHandler(metaWindow) {
     if (metaWindow.fullscreen) {
         metaWindow._fullscreen_lock = true;
         space.hideSelection();
-        moveTo(0, false);
+        space.layout(false, { callback: moveTo(0, false), centerIfOne: false });
         return;
     }
-    else {
-        space.showSelection();
-        x = metaWindow?._fullscreen_frame?.x ?? f.x;
-        x -= space.monitor.x;
-        x = Math.max(x, Settings.prefs.horizontal_margin);
 
-        // if pwm fullscreen previously
-        if (metaWindow._fullscreen_lock) {
-            delete metaWindow._fullscreen_lock;
-            needLayout = true;
-            addCallback = true;
-        }
-        else {
-            // save width for later exit-fullscreen restoring
-            saveFullscreenFrame(metaWindow, true);
-        }
+    space.showSelection();
+    x = metaWindow?._fullscreen_frame?.x ?? f.x;
+    x -= space.monitor.x;
+    x = Math.max(x, Settings.prefs.horizontal_margin);
+
+    // if pwm fullscreen previously
+    if (metaWindow._fullscreen_lock) {
+        delete metaWindow._fullscreen_lock;
+        needLayout = true;
+        addCallback = true;
+    }
+    else {
+        // save width for later exit-fullscreen restoring
+        saveFullscreenFrame(metaWindow, true);
     }
 
     if (needLayout && !space._inLayout) {
