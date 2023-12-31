@@ -89,7 +89,7 @@ let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
 let displayConfig;
 let saveState;
-let startupTimeoutId, timerId;
+let startupTimeoutId, timerId, fullscrenStartTimeout;
 let workspaceSettings;
 export let inGrab;
 export function enable(extension) {
@@ -189,6 +189,8 @@ export function disable () {
     startupTimeoutId = null;
     Utils.timeout_remove(timerId);
     timerId = null;
+    Utils.timeout_remove(fullscrenStartTimeout);
+    fullscrenStartTimeout = null;
 
     grabSignals.destroy();
     grabSignals = null;
@@ -704,7 +706,7 @@ export class Space extends Array {
             this.moveDone();
         }
 
-        // if only one window on space, then centre it
+        // if only one window on space, then center it
         if (centerIfOne && this.getWindows().length === 1) {
             const mw = this.getWindows()[0];
             centerWindowHorizontally(mw);
@@ -3449,16 +3451,17 @@ export function insertWindow(metaWindow, { existing }) {
 
         /**
          * Address inserting windows that are already fullscreen: windows will be inserted
-         * as normal (non-fullscreen) and will be fullscreened on layout.
+         * as normal (non-fullscreen) and will be fullscreened after a timeout on actor show.
          * see https://github.com/paperwm/PaperWM/issues/638
          */
         if (metaWindow.fullscreen) {
             animateWindow(metaWindow);
             callbackOnActorShow(actor, () => {
-                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
+                fullscrenStartTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
                     metaWindow.unmake_fullscreen();
                     showWindow(metaWindow);
                     metaWindow.make_fullscreen();
+                    fullscrenStartTimeout = null;
                     return false; // on return false destroys timeout
                 });
             });
