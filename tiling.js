@@ -1404,36 +1404,10 @@ border-radius: ${borderWidth}px;
         }
     }
 
-    /**
-     * Shows or hides this space's window position bar. Useful for temporarily
-     * hiding the position bar (e.g. for fullscreen mode).
-     * @param {boolean} show
-     */
-    showWindowPositionBar(show = true) {
-        if (show) {
-            [this.windowPositionBarBackdrop, this.windowPositionBar]
-                .forEach(i => i.show());
-        }
-        else {
-            [this.windowPositionBarBackdrop, this.windowPositionBar]
-                .forEach(i => i.hide());
-        }
-    }
-
     updateWindowPositionBar() {
         // if pref show-window-position-bar, exit
         if (!Settings.prefs.show_window_position_bar) {
             return;
-        }
-
-        // space has a fullscreen window, hide window position bar
-        if (this.hasFullScreenWindow()) {
-            this.showWindowPositionBar(false);
-            return;
-        }
-        else {
-            // if here has no fullscreen window, show as per usual
-            this.showWindowPositionBar();
         }
 
         // show space duplicate elements if not primary monitor
@@ -1469,7 +1443,6 @@ border-radius: ${borderWidth}px;
      * @param {boolean} visible
      */
     setSpaceTopbarElementsVisible(visible = false, options = {}) {
-        const changeTopBarStyle = options?.changeTopBarStyle ?? true;
         const force = options?.force ?? false;
         const setVisible = v => {
             if (v) {
@@ -1483,19 +1456,14 @@ border-radius: ${borderWidth}px;
             }
         };
 
+        if (this.hasTopBar && inPreview) {
+            Topbar.setTransparentStyle();
+        }
+
         // if windowPositionBar is disabled ==> don't show elements
         if (!Settings.prefs.show_window_position_bar) {
             setVisible(false);
             return;
-        }
-
-        if (changeTopBarStyle) {
-            if (visible && this.hasTopBar) {
-                Topbar.setTransparentStyle();
-            }
-            else {
-                Topbar.setNoBackgroundStyle();
-            }
         }
 
         // if on different monitor then override to show elements
@@ -2667,8 +2635,11 @@ export const Spaces = class Spaces extends Map {
         inPreview = PreviewMode.NONE;
 
         Topbar.updateWorkspaceIndicator(to.index);
-        this.selectedSpace = to;
+        if (to.hasTopBar) {
+            Topbar.setNoBackgroundStyle();
+        }
 
+        this.selectedSpace = to;
         to.show();
         let selected = to.selectedWindow;
         if (selected)
