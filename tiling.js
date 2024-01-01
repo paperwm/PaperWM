@@ -1393,7 +1393,10 @@ border-radius: ${borderWidth}px;
      * @param {boolean} enable
      */
     enableWindowPositionBar(enable = true) {
-        if (enable) {
+        const add =
+            enable &&
+            Settings.prefs.show_window_position_bar;
+        if (add) {
             [this.windowPositionBarBackdrop, this.windowPositionBar]
                 .forEach(i => this.actor.add_actor(i));
             this.updateWindowPositionBar();
@@ -3138,6 +3141,7 @@ export function resizeHandler(metaWindow) {
 
     // if pwm fullscreen previously
     if (metaWindow._fullscreen_lock) {
+        space.enableWindowPositionBar();
         delete metaWindow._fullscreen_lock;
         needLayout = true;
         addCallback = true;
@@ -3884,7 +3888,14 @@ export function focus_handler(metaWindow, user_data) {
     }
 
     let space = spaces.spaceOfWindow(metaWindow);
-    metaWindow.fullscreen ? space.hideSelection() : space.showSelection();
+    if (metaWindow.fullscreen) {
+        space.enableWindowPositionBar(false);
+        space.hideSelection();
+    }
+    else {
+        space.enableWindowPositionBar();
+        space.showSelection();
+    }
     space.monitor.clickOverlay.show();
 
     /**
