@@ -2200,6 +2200,19 @@ export const Spaces = class Spaces extends Map {
         // final switch with warp
         this.switchMonitor(direction);
 
+        /**
+         * Fullscreen monitor workaround.
+         * see https://github.com/paperwm/PaperWM/issues/638
+         */
+        this.forEach(space => {
+            space.getWindows().filter(w => w.fullscreen).forEach(w => {
+                animateWindow(w);
+                w.unmake_fullscreen();
+                w.make_fullscreen();
+                showWindow(w);
+            });
+        });
+
         // ensure after swapping that the space elements are shown correctly
         this.setSpaceTopbarElementsVisible(true, { force: true });
     }
