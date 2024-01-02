@@ -3340,6 +3340,7 @@ export function remove_handler(workspace, meta_window) {
 
     let space = spaces.spaceOf(workspace);
     space.removeWindow(meta_window);
+    space.enableWindowPositionBar();
 
     let actor = meta_window.get_compositor_private();
     if (!actor) {
