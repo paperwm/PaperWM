@@ -89,7 +89,8 @@ let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
 let displayConfig;
 let saveState;
-let startupTimeoutId, timerId, fullscrenStartTimeout;
+let startupTimeoutId, timerId;
+let fullscrenStartTimeout, fullscreenRelatedTimeout;
 let workspaceSettings;
 export let inGrab;
 export function enable(extension) {
@@ -191,6 +192,8 @@ export function disable () {
     timerId = null;
     Utils.timeout_remove(fullscrenStartTimeout);
     fullscrenStartTimeout = null;
+    Utils.timeout_remove(fullscreenRelatedTimeout);
+    fullscreenRelatedTimeout = null;
 
     grabSignals.destroy();
     grabSignals = null;
@@ -930,6 +933,52 @@ export class Space extends Array {
      */
     hasFullScreenWindow() {
         return this.getWindows().some(w => w.fullscreen);
+    }
+
+    /**
+     * Unfullscreens windows.
+     * @param {MetaWindow} sourceWindow
+     */
+    unfullscreenWindows(sourceWindow) {
+        if (!this.hasFullScreenWindow()) {
+            return;
+        }
+        Navigator.dismissDispatcher(Clutter.GrabState.KEYBOARD);
+        Navigator.getNavigator().finish();
+        this.getWindows()
+                .forEach(w => {
+                    w.unmaximize(Meta.MaximizeFlags.BOTH);
+                    if (w.fullscreen) {
+                        w.unmake_fullscreen();
+                        animateDown(w, {
+                            callback: () => {
+                                // need a delayed timeout here, otherwise window gets stuck in weird state
+                                fullscreenRelatedTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT,
+                                    250,
+                                    () => {
+                                        /**
+                                         * need to resovle to unfullscreened window first
+                                         * (otherwise can get stuck in weird, half unfullscreened state).
+                                         * Last callback to so select the source (calling) window again.
+                                         */
+                                        this.queueLayout(false, {
+                                            callback: () => {
+                                                ensureViewport(w, this, {
+                                                    callback: () => {
+                                                        if (sourceWindow) {
+                                                            ensureViewport(sourceWindow, this);
+                                                        }
+                                                    },
+                                                });
+                                            },
+                                        });
+                                        fullscreenRelatedTimeout = null;
+                                        return false; // stops timeout recurrence
+                                    });
+                            },
+                        });
+                    }
+                });
     }
 
     swap(direction, metaWindow) {
@@ -3569,12 +3618,15 @@ export function getOpenWindowPositionIndex(space) {
     }
 }
 
-export function animateDown(metaWindow) {
+export function animateDown(metaWindow, options = {}) {
     let space = spaces.spaceOfWindow(metaWindow);
     let workArea = space.workArea();
+    let callback = options?.callback ?? function() {};
+
     Easer.addEase(metaWindow.clone, {
         y: workArea.y,
         time: Settings.prefs.animation_time,
+        onComplete: () => callback(),
     });
 }
 
@@ -3636,45 +3688,66 @@ export function ensureViewport(meta_window, space, options = {}) {
     space = space || spaces.spaceOfWindow(meta_window);
     let force = options?.force ?? false;
     let moveto = options?.moveto ?? true;
+    let select = options.select ?? true;
     let animate = options?.animate ?? true;
+    let callback = options?.callback ?? function() {};
+
     let ensureAnimation = options.ensureAnimation ?? Settings.EnsureViewportAnimation.TRANSLATE;
 
     let index = space.indexOf(meta_window);
     if (index === -1 || space.length === 0)
         return undefined;
 
+    let callbacked = false;
     if (space.selectedWindow.fullscreen &&
         !meta_window.fullscreen) {
-        animateDown(space.selectedWindow);
+        callbacked = true;
+        animateDown(space.selectedWindow, callback);
     }
     let x = ensuredX(meta_window, space);
 
-    space.selectedWindow = meta_window;
-    let selected = space.selectedWindow;
-    if (!inPreview && selected.fullscreen) {
-        let y = 0;
-        let ty = selected.clone.get_transition('y');
-        if (!space.isVisible(selected)) {
-            selected.clone.y = y;
-        } else if (!ty || ty.get_interval().final !== y) {
-            Easer.addEase(selected.clone,
-                {
-                    y,
-                    time: Settings.prefs.animation_time,
-                    onComplete: space.moveDone.bind(space),
-                });
+    let selected;
+    if (select) {
+        space.selectedWindow = meta_window;
+        selected = space.selectedWindow;
+        if (!inPreview && selected.fullscreen) {
+            let y = 0;
+            let ty = selected.clone.get_transition('y');
+            if (!space.isVisible(selected)) {
+                selected.clone.y = y;
+            } else if (!ty || ty.get_interval().final !== y) {
+                callbacked = true;
+                Easer.addEase(selected.clone,
+                    {
+                        y,
+                        time: Settings.prefs.animation_time,
+                        onComplete: () => {
+                            space.moveDone();
+                            callback();
+                        },
+                    });
+            }
         }
     }
 
     if (moveto) {
         move_to(space, meta_window, {
-            x, force, animate, ensureAnimation,
+            x,
+            force,
+            animate,
+            ensureAnimation,
+            callback,
         });
     }
 
-    selected.raise();
-    Utils.actor_raise(selected.clone);
-    updateSelection(space, meta_window);
+    if (select && selected) {
+        selected.raise();
+        Utils.actor_raise(selected.clone);
+        updateSelection(space, meta_window);
+    }
+
+    // callback if hasn't been called
+    !callbacked && callback();
     space.emit('select');
 }
 
@@ -3894,6 +3967,8 @@ export function focus_handler(metaWindow, user_data) {
         space.hideSelection();
     }
     else {
+        // unfullscreen others windows on this space
+        space.unfullscreenWindows(metaWindow);
         space.enableWindowPositionBar();
         space.showSelection();
     }
