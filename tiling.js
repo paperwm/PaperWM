@@ -1511,6 +1511,12 @@ border-radius: ${borderWidth}px;
             }
         };
 
+        if (this.hasFullScreenWindow()) {
+            setVisible(false);
+            this.enableWindowPositionBar(false);
+            return;
+        }
+
         if (this.hasTopBar && inPreview) {
             Topbar.setTransparentStyle();
         }
