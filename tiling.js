@@ -1459,7 +1459,7 @@ border-radius: ${borderWidth}px;
             }
         };
 
-        if (this.hasFullScreenWindow()) {
+        if (this.selectedWindow?.fullscreen) {
             setVisible(false);
             this.enableWindowPositionBar(false);
             return;
