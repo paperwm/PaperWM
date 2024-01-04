@@ -616,11 +616,8 @@ export class Space extends Array {
             return;
         }
 
-        if (this.hasFullScreenWindow()) {
-            workArea.y = 0;
-        }
         // compensate to keep window position bar on all monitors
-        else if (Settings.prefs.show_window_position_bar) {
+        if (Settings.prefs.show_window_position_bar) {
             const panelBoxHeight = Topbar.panelBox.height;
             const monitor = Main.layoutManager.primaryMonitor;
             if (monitor !== this.monitor) {
