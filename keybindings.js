@@ -272,6 +272,10 @@ export function byMutterName(name) {
     return nameMap[name];
 }
 
+export function getAllMutterNames() {
+    return Object.keys(nameMap);
+}
+
 export function byId(mutterId) {
     return actionIdMap[mutterId];
 }
