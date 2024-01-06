@@ -100,6 +100,7 @@ export const WinpropsRow = GObject.registerClass({
         'wmClass',
         'title',
         'scratchLayer',
+        'focusOnStart',
         'preferredWidth',
         'deleteButton',
     ],
@@ -155,6 +156,13 @@ export const WinpropsRow = GObject.registerClass({
             // if is active then disable the preferredWidth input
             this._preferredWidth.set_sensitive(!isActive);
 
+            this.emit('changed');
+        });
+
+        this._focusOnStart.set_active(this.winprop.focus ?? false);
+        this._focusOnStart.connect('state-set', () => {
+            let isActive = this._focusOnStart.get_active();
+            this.winprop.focus = isActive;
             this.emit('changed');
         });
 
