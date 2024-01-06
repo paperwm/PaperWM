@@ -1050,6 +1050,9 @@ export class Space extends Array {
 
     rowOf(metaWindow) {
         let column = this[this.indexOf(metaWindow)];
+        if (column === undefined) {
+            return -1;
+        }
         return column.indexOf(metaWindow);
     }
 
