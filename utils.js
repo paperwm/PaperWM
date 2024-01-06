@@ -45,12 +45,32 @@ export function print_stacktrace(error) {
     console.error(`JS ERROR: ${error}\n ${trace.join('\n')}`);
 }
 
+// taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Cyclic_object_value
+function getCircularReplacer() {
+    const ancestors = [];
+    return function (key, value) {
+        if (typeof value !== "object" || value === null) {
+            return value;
+        }
+        // `this` is the object that value is contained in,
+        // i.e., its direct parent.
+        while (ancestors.length > 0 && ancestors.at(-1) !== this) {
+            ancestors.pop();
+        }
+        if (ancestors.includes(value)) {
+            return "[Circular]";
+        }
+        ancestors.push(value);
+        return value;
+    };
+}
+
 /**
  * Pretty prints args using JSON.stringify.
  * @param  {...any} arugs
  */
 export function prettyPrintToLog(...args) {
-    console.log(args.map(v => JSON.stringify(v, null), 2));
+    console.log(args.map(v => JSON.stringify(v, getCircularReplacer()), 2));
 }
 
 export function framestr(rect) {
