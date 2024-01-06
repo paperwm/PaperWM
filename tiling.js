@@ -2858,6 +2858,7 @@ export const Spaces = class Spaces extends Map {
         signals.connectOneShot(actor, 'first-frame', () =>  {
             allocateClone(metaWindow);
             insertWindow(metaWindow, { existing: false });
+            this.emit("window-first-frame", metaWindow);
         });
     }
 
