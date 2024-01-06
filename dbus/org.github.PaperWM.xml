@@ -1,0 +1,52 @@
+<!DOCTYPE node PUBLIC
+    '-//freedesktop//DTD D-BUS Object Introspection 1.0//EN'
+    'http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd'>
+<node>
+    <interface name="org.github.PaperWM">
+        <method name="Eval">
+            <arg type="s" direction="in" name="code"/>
+            <arg type="i" direction="out" name="undoId"/>
+            <arg type="s" direction="out" name="output"/>
+        </method>
+        <method name="UndoEval">
+            <arg type="i" direction="in" name="undoId"/>
+        </method>
+
+        <method name="ListSpaces">
+            <arg type="ao" direction="out" name="spaces"/>
+        </method>
+
+        <method name="ListActions">
+            <arg type="as" direction="out" name="names"/>
+        </method>
+
+        <method name="TriggerAction">
+            <arg type="s" direction="in" name="name"/>
+        </method>
+
+        <signal name="WindowAdded">
+            <!-- Taken from the MetaWindow -->
+            <!-- Strings are empty if undefined -->
+            <arg name="wm_class" type="s" />
+            <arg name="title" type="s" />
+
+            <!-- Taken from PaperWM -->
+            <!-- Ints are -1 if undefined -->
+            <arg name="workspace" type="i" />
+            <arg name="index" type="i" />
+            <arg name="row" type="i" />
+            <arg name="floating" type="b" />
+            <arg name="scratch" type="b" />
+            <arg name="transient" type="b" />
+            <arg name="tiled" type="b" />
+        </signal>
+
+        <signal name="TestSignal">
+            <arg name="type" type="s"/>
+            <arg name="value" type="b"/>
+        </signal>
+
+        <property name="ReadOnlyProperty" type="s" access="read"/>
+        <property name="ReadWriteProperty" type="b" access="readwrite"/>
+    </interface>
+</node>
