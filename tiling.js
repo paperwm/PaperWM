@@ -616,8 +616,15 @@ export class Space extends Array {
             return;
         }
 
+        /**
+         * If current window is fullscreened, then treat workarea as fullscreen (y = 0).
+         * This a "flash of topbar spacing") before consecutive layout call resolves.
+         */
+        if (this.selectedWindow?.fullscreen) {
+            workArea.y = 0;
+        }
         // compensate to keep window position bar on all monitors
-        if (Settings.prefs.show_window_position_bar) {
+        else if (Settings.prefs.show_window_position_bar) {
             const panelBoxHeight = Topbar.panelBox.height;
             const monitor = Main.layoutManager.primaryMonitor;
             if (monitor !== this.monitor) {
@@ -3896,11 +3903,36 @@ export function focus_handler(metaWindow, user_data) {
 
     let space = spaces.spaceOfWindow(metaWindow);
     if (metaWindow.fullscreen) {
+        space.setSpaceTopbarElementsVisible(false);
         space.enableWindowPositionBar(false);
         space.hideSelection();
     }
     else {
-        space.enableWindowPositionBar();
+        /**
+         * For non-topbar spaces, bring down fullscreen windows to mimic
+         * gnome behaviour with a topbar.
+         */
+        if (!space.hasTopBar) {
+            space.getWindows()
+            .filter(w => w.fullscreen)
+            .forEach(w => { w.clone.y = metaWindow.clone.y; });
+        }
+
+        /**
+         * if there then clone.y shouldn't be 0.  This can happen though if a window
+         * is fullscreened when `layout` is called.  In this case, when we focuse on a
+         * window that isn't fullscreen but has clone.y 0 ==> need a layout call.
+         */
+        if (
+            metaWindow.clone.y === 0 &&
+            Settings.prefs.vertical_margin !== 0 &&
+            Settings.prefs.window_gap !== 0
+        ) {
+            space.layout(false);
+        }
+
+        space.setSpaceTopbarElementsVisible(true);
+        space.enableWindowPositionBar(true);
         space.showSelection();
     }
     space.monitor.clickOverlay.show();
