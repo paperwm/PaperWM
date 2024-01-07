@@ -22,7 +22,6 @@ const DBUS_PATH = "/org/github/PaperWM"
 const DBUS_INTERFACE_DIR = "./dbus";
 
 let serviceInstance = null;
-let spaceInstances = null;
 let dbusConnection = null;
 let dbusOwnerId;
 
@@ -55,7 +54,6 @@ export function disable() {
     dbusConnection = null;
     serviceInstance.destroy();
     serviceInstance = null;
-    spaceInstances = null;
 }
 
 /**
@@ -75,13 +73,6 @@ function onBusAcquired(connection, name) {
 
     serviceInstance = new PaperWMService();
     exportDBusObject("org.github.PaperWM", serviceInstance, DBUS_PATH);
-
-    spaceInstances = new Map();
-    for (const key of Tiling.spaces.keys()) {
-        const i = key.index();
-        spaceInstances[i] = new DBusSpace(i);
-        exportDBusObject("org.github.PaperWM.Space", spaceInstances[i], DBUS_PATH + "/spaces/" + i);
-    }
 }
 
 function exportDBusObject(interfaceName, object, dbusPath) {
@@ -112,32 +103,7 @@ function exportDBusObject(interfaceName, object, dbusPath) {
  * @param {string} name - the name being owned
  */
 function onNameAcquired(connection, name) {
-    console.log(`${name}: name acquired`);
-    // TODO maybe use Gio.DBusObjectManager here
-}
-
-class DBusSpace {
-    // NOTE: this._impl is set to the exported DBus service before any of the
-    // methods are called.
-
-    constructor(i) {
-        this.i = i;
-    }
-
-    space() {
-        return Tiling.spaces.spaceOfIndex(this.i);
-    }
-
-    // Properties
-    get Name() {
-        return GLib.Variant.new_string(this.space().name);
-    }
-
-    // Methods
-    Activate() {
-        console.log(`DBusSpace(${this.i}).Activate() invoked`);
-        this.space().activate();
-    }
+    // console.log(`${name}: name acquired`);
 }
 
 
@@ -197,11 +163,20 @@ class PaperWMService {
             GLib.Variant.new_boolean(this.ReadWriteProperty));
     }
 
-    // Methods
+    // Spaces
     ListSpaces() {
-        return spaceInstances.entries().map((index, space) => `/org/github/PaperWM/spaces/${index}`);
+        return [...Tiling.spaces.values()].map(ws => encode_space(ws));
     }
 
+    GetSpace(index) {
+        return encode_space(get_space(index));
+    }
+
+    ActivateSpace(index) {
+        get_space(index).activate();
+    }
+
+    // Actions
     ListActions() {
         return Keybindings.getAllMutterNames();
     }
@@ -267,4 +242,25 @@ class PaperWMService {
         this._impl.emit_signal('TestSignal',
             new GLib.Variant('(sb)', [value, true]));
     }
+}
+
+
+function encode_space(ws) {
+    console.log(typeof ws);
+    console.log(ws.constructor.name);
+    Utils.prettyPrintToLog(ws);
+    const out = {
+        index: ws.index,
+        name: ws.name,
+        // TODO more useful information
+    };
+    return JSON.stringify(out);
+}
+
+function get_space(index) {
+    const ws = Tiling.spaces.spaceOfIndex(index);
+    if (ws === undefined) {
+        throw new Error(`No space with index ${index}`);
+    }
+    return ws;
 }

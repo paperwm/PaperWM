@@ -12,10 +12,21 @@
             <arg type="i" direction="in" name="undoId"/>
         </method>
 
+        <!-- Spaces -->
+        <!-- Spaces are represented as strings of json objects. -->
         <method name="ListSpaces">
-            <arg type="ao" direction="out" name="spaces"/>
+            <arg type="as" direction="out" name="spaces" />
+        </method>
+        <method name="GetSpace">
+            <arg type="i" direction="in" name="index" />
+            <arg type="s" direction="out" name="space" />
         </method>
 
+        <method name="ActivateSpace">
+            <arg type="i" direction="in" name="index" />
+        </method>
+
+        <!-- Actions -->
         <method name="ListActions">
             <arg type="as" direction="out" name="names"/>
         </method>
@@ -24,6 +35,7 @@
             <arg type="s" direction="in" name="name"/>
         </method>
 
+        <!-- Signals -->
         <signal name="WindowAdded">
             <!-- Taken from the MetaWindow -->
             <!-- Strings are empty if undefined -->
@@ -46,6 +58,7 @@
             <arg name="value" type="b"/>
         </signal>
 
+        <!-- Properties -->
         <property name="ReadOnlyProperty" type="s" access="read"/>
         <property name="ReadWriteProperty" type="b" access="readwrite"/>
     </interface>
