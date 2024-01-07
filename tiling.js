@@ -3550,6 +3550,7 @@ export function insertWindow(metaWindow, { existing }) {
 
             Main.activateWindow(metaWindow);
             ensureViewport(space.selectedWindow, space);
+            space.setSpaceTopbarElementsVisible(true);
         });
 
         return;
