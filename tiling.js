@@ -3909,14 +3909,14 @@ export function focus_handler(metaWindow, user_data) {
         space.hideSelection();
     }
     else {
+        let needLayout = false;
         /**
          * For non-topbar spaces, bring down fullscreen windows to mimic
          * gnome behaviour with a topbar.
          */
-        if (!space.hasTopBar) {
-            space.getWindows()
-            .filter(w => w.fullscreen)
-            .forEach(w => { w.clone.y = metaWindow.clone.y; });
+        if (!space.hasTopBar &&
+            space.hasFullScreenWindow()) {
+            needLayout = true;
         }
 
         /**
@@ -3929,6 +3929,10 @@ export function focus_handler(metaWindow, user_data) {
             Settings.prefs.vertical_margin !== 0 &&
             Settings.prefs.window_gap !== 0
         ) {
+            needLayout = true;
+        }
+
+        if (needLayout) {
             space.layout(false);
         }
 
