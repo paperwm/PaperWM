@@ -377,11 +377,6 @@ export class Space extends Array {
             setFocusMode(getDefaultFocusMode(), this);
         });
 
-        // update space elements when in/out of fullscreen
-        this.signals.connect(global.display, 'in-fullscreen-changed', () => {
-            this.setSpaceTopbarElementsVisible(true);
-        });
-
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
         this.signals.connect(gsettings, 'changed::default-background', this.updateBackground.bind(this));
         this.signals.connect(gsettings, 'changed::use-default-background', this.updateBackground.bind(this));
@@ -3022,7 +3017,10 @@ export function registerWindow(metaWindow) {
     });
     signals.connect(metaWindow, 'size-changed', allocateClone);
     // Note: runs before gnome-shell's minimize handling code
-    signals.connect(metaWindow, 'notify::fullscreen', Topbar.fixTopBar);
+    signals.connect(metaWindow, 'notify::fullscreen', () => {
+        Topbar.fixTopBar();
+        spaces.spaceOfWindow(metaWindow)?.setSpaceTopbarElementsVisible(true);
+    });
     signals.connect(metaWindow, 'notify::minimized', metaWindow => {
         minimizeHandler(metaWindow);
     });
