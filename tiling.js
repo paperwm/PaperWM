@@ -622,6 +622,7 @@ export class Space extends Array {
          */
         if (this.selectedWindow?.fullscreen) {
             workArea.y = 0;
+            this.setSpaceTopbarElementsVisible(false);
         }
         // compensate to keep window position bar on all monitors
         else if (Settings.prefs.show_window_position_bar) {
