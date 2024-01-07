@@ -1406,12 +1406,20 @@ border-radius: ${borderWidth}px;
             Settings.prefs.show_window_position_bar;
         if (add) {
             [this.windowPositionBarBackdrop, this.windowPositionBar]
-                .forEach(i => this.actor.add_actor(i));
+                .forEach(i => {
+                    if (!i.get_parent()) {
+                        this.actor.add_child(i);
+                    }
+                });
             this.updateWindowPositionBar();
         }
         else {
             [this.windowPositionBarBackdrop, this.windowPositionBar]
-                .forEach(i => this.actor.remove_actor(i));
+                .forEach(i => {
+                    if (i.get_parent()) {
+                        this.actor.remove_child(i);
+                    }
+                });
         }
     }
 
@@ -3904,8 +3912,8 @@ export function focus_handler(metaWindow, user_data) {
 
     let space = spaces.spaceOfWindow(metaWindow);
     if (metaWindow.fullscreen) {
-        space.setSpaceTopbarElementsVisible(false);
         space.enableWindowPositionBar(false);
+        space.setSpaceTopbarElementsVisible(false);
         space.hideSelection();
     }
     else {
