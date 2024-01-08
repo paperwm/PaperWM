@@ -31,7 +31,8 @@ export function enable(extension) {
     acceleratorParse = new AcceleratorParse();
     _overriddingConflicts = false;
     prefs = {};
-    ['window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
+    [
+        'window-gap', 'vertical-margin', 'vertical-margin-bottom', 'horizontal-margin',
         'workspace-colors', 'default-background', 'animation-time', 'default-show-top-bar',
         'swipe-sensitivity', 'swipe-friction', 'cycle-width-steps', 'cycle-height-steps',
         'maximize-width-percent', 'minimap-scale', 'edge-preview-scale',
