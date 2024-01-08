@@ -69,7 +69,6 @@ export function disable() {
 function onBusAcquired(connection, name) {
     console.log(`${name}: connection acquired`);
     dbusConnection = connection;
-    console.log(connection);
 
     serviceInstance = new PaperWMService();
     exportDBusObject("org.github.PaperWM", serviceInstance, DBUS_PATH);
@@ -106,6 +105,9 @@ function onNameAcquired(connection, name) {
     // console.log(`${name}: name acquired`);
 }
 
+// find window by id
+// global.get_window_actors().find(w => w.get_meta_window().get_id() == the_id)
+
 
 class PaperWMService {
     // NOTE: this._impl is set to the exported DBus service before any of the
@@ -122,18 +124,21 @@ class PaperWMService {
             Tiling.spaces, "window-first-frame",
             (_spaces, metaWindow) => {
                 const space = Tiling.spaces.spaceOfWindow(metaWindow);
-                this._impl.emit_signal('WindowAdded',
-                    new GLib.Variant('(ssiiibbbb)', [
-                        metaWindow.wm_class ?? "",
-                        metaWindow.title ?? "",
-                        space.index ?? -1,
-                        space.indexOf(metaWindow) ?? -1,
-                        space.rowOf(metaWindow) ?? -1,
-                        Tiling.isFloating(metaWindow),
-                        Tiling.isScratch(metaWindow),
-                        Tiling.isTransient(metaWindow),
-                        Tiling.isTiled(metaWindow),
-                    ]));
+                const data = {
+                    wm_class: metaWindow.wm_class,
+                    title: metaWindow.title,
+
+                    workspace_index: space.index,
+                    index: space.indexOf(metaWindow),
+                    row: space.rowOf(metaWindow),
+                    floating: Tiling.isFloating(metaWindow),
+                    scratch: Tiling.isScratch(metaWindow),
+                    transient: Tiling.isTransient(metaWindow),
+                    tiled: Tiling.isTiled(metaWindow),
+                };
+                this._impl.emit_signal(
+                    'WindowAdded',
+                    new GLib.Variant('(s)', [JSON.stringify(data)]));
             }
         );
     }
@@ -143,24 +148,20 @@ class PaperWMService {
     }
 
     // Properties
-    get ReadOnlyProperty() {
-        return GLib.Variant.new_string('a string');
-    }
-
-    get ReadWriteProperty() {
-        if (this._readWriteProperty === undefined)
+    get DebugTrace() {
+        if (this._debugTrace === undefined)
             return false;
 
-        return this._readWriteProperty;
+        return this._debugTrace;
     }
 
-    set ReadWriteProperty(value) {
-        if (this._readWriteProperty === value)
+    set DebugTrace(value) {
+        if (this._debugTrace === value)
             return;
 
-        this._readWriteProperty = value;
-        this._impl.emit_property_changed('ReadWriteProperty',
-            GLib.Variant.new_boolean(this.ReadWriteProperty));
+        this._debugTrace = value;
+        this._impl.emit_property_changed('DebugTrace',
+            GLib.Variant.new_boolean(this.DebugTrace));
     }
 
     // Spaces
@@ -235,12 +236,6 @@ class PaperWMService {
         }
         undoF();
         this.undos[undoId] = null;
-    }
-
-    // Signals
-    emitTestSignal(value) {
-        this._impl.emit_signal('TestSignal',
-            new GLib.Variant('(sb)', [value, true]));
     }
 }
 

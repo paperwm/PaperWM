@@ -37,29 +37,10 @@
 
         <!-- Signals -->
         <signal name="WindowAdded">
-            <!-- Taken from the MetaWindow -->
-            <!-- Strings are empty if undefined -->
-            <arg name="wm_class" type="s" />
-            <arg name="title" type="s" />
-
-            <!-- Taken from PaperWM -->
-            <!-- Ints are -1 if undefined -->
-            <arg name="workspace" type="i" />
-            <arg name="index" type="i" />
-            <arg name="row" type="i" />
-            <arg name="floating" type="b" />
-            <arg name="scratch" type="b" />
-            <arg name="transient" type="b" />
-            <arg name="tiled" type="b" />
-        </signal>
-
-        <signal name="TestSignal">
-            <arg name="type" type="s"/>
-            <arg name="value" type="b"/>
+            <arg name="data" type="s" />
         </signal>
 
         <!-- Properties -->
-        <property name="ReadOnlyProperty" type="s" access="read"/>
-        <property name="ReadWriteProperty" type="b" access="readwrite"/>
+        <property name="DebugTrace" type="b" access="readwrite"/>
     </interface>
 </node>
