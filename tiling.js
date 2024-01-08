@@ -89,7 +89,7 @@ let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
 let displayConfig;
 let saveState;
-let startupTimeoutId, timerId;
+let startupTimeoutId, timerId, fullscrenStartTimeout;
 let workspaceSettings;
 export let inGrab;
 export function enable(extension) {
@@ -189,6 +189,8 @@ export function disable () {
     startupTimeoutId = null;
     Utils.timeout_remove(timerId);
     timerId = null;
+    Utils.timeout_remove(fullscrenStartTimeout);
+    fullscrenStartTimeout = null;
 
     grabSignals.destroy();
     grabSignals = null;
@@ -375,11 +377,6 @@ export class Space extends Array {
             setFocusMode(getDefaultFocusMode(), this);
         });
 
-        // update space elements when in/out of fullscreen
-        this.signals.connect(global.display, 'in-fullscreen-changed', () => {
-            this.setSpaceTopbarElementsVisible(true);
-        });
-
         this.signals.connect(interfaceSettings, "changed::color-scheme", this.updateBackground.bind(this));
         this.signals.connect(gsettings, 'changed::default-background', this.updateBackground.bind(this));
         this.signals.connect(gsettings, 'changed::use-default-background', this.updateBackground.bind(this));
@@ -509,6 +506,10 @@ export class Space extends Array {
             let resizable = !mw.fullscreen &&
                 mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
+            if (mw._fullscreen_frame?.tiledWidth) {
+                targetWidth = mw._fullscreen_frame.tiledWidth;
+            }
+
             if (mw.preferredWidth) {
                 let prop = mw.preferredWidth;
                 if (prop.value <= 0) {
@@ -590,8 +591,10 @@ export class Space extends Array {
             return;
 
         // option properties
-        let ensure = options?.ensure ?? true;
-        let allocators = options?.customAllocators;
+        const ensure = options?.ensure ?? true;
+        const allocators = options?.customAllocators;
+        const centerIfOne = options?.centerIfOne ?? true;
+        const callback = options?.callback;
 
         this._inLayout = true;
         this.startAnimate();
@@ -608,8 +611,16 @@ export class Space extends Array {
             return;
         }
 
+        /**
+         * If current window is fullscreened, then treat workarea as fullscreen (y = 0).
+         * This a "flash of topbar spacing") before consecutive layout call resolves.
+         */
+        if (this.selectedWindow?.fullscreen) {
+            workArea.y = 0;
+            this.setSpaceTopbarElementsVisible(false);
+        }
         // compensate to keep window position bar on all monitors
-        if (Settings.prefs.show_window_position_bar) {
+        else if (Settings.prefs.show_window_position_bar) {
             const panelBoxHeight = Topbar.panelBox.height;
             const monitor = Main.layoutManager.primaryMonitor;
             if (monitor !== this.monitor) {
@@ -698,17 +709,24 @@ export class Space extends Array {
             this.moveDone();
         }
 
+        // if only one window on space, then center it
+        if (centerIfOne && this.getWindows().length === 1) {
+            const mw = this.getWindows()[0];
+            centerWindowHorizontally(mw);
+        }
+
+        callback && callback();
         this.emit('layout', this);
     }
 
-    queueLayout(animate = true) {
+    queueLayout(animate = true, options = {}) {
         if (this._layoutQueued)
             return;
 
         this._layoutQueued = true;
         Utils.later_add(Meta.LaterType.RESIZE, () => {
             this._layoutQueued = false;
-            this.layout(animate);
+            this.layout(animate, options);
         });
     }
 
@@ -914,7 +932,7 @@ export class Space extends Array {
      * Returns true iff this space has a currently fullscreened window.
      */
     hasFullScreenWindow() {
-        return this.getWindows().some(el => el.fullscreen);
+        return this.getWindows().some(w => w.fullscreen);
     }
 
     swap(direction, metaWindow) {
@@ -1378,30 +1396,25 @@ border-radius: ${borderWidth}px;
      * @param {boolean} enable
      */
     enableWindowPositionBar(enable = true) {
-        if (enable) {
+        const add =
+            enable &&
+            Settings.prefs.show_window_position_bar;
+        if (add) {
             [this.windowPositionBarBackdrop, this.windowPositionBar]
-                .forEach(i => this.actor.add_actor(i));
+                .forEach(i => {
+                    if (!i.get_parent()) {
+                        this.actor.add_child(i);
+                    }
+                });
             this.updateWindowPositionBar();
         }
         else {
             [this.windowPositionBarBackdrop, this.windowPositionBar]
-                .forEach(i => this.actor.remove_actor(i));
-        }
-    }
-
-    /**
-     * Shows or hides this space's window position bar. Useful for temporarily
-     * hiding the position bar (e.g. for fullscreen mode).
-     * @param {boolean} show
-     */
-    showWindowPositionBar(show = true) {
-        if (show) {
-            [this.windowPositionBarBackdrop, this.windowPositionBar]
-                .forEach(i => i.show());
-        }
-        else {
-            [this.windowPositionBarBackdrop, this.windowPositionBar]
-                .forEach(i => i.hide());
+                .forEach(i => {
+                    if (i.get_parent()) {
+                        this.actor.remove_child(i);
+                    }
+                });
         }
     }
 
@@ -1409,16 +1422,6 @@ border-radius: ${borderWidth}px;
         // if pref show-window-position-bar, exit
         if (!Settings.prefs.show_window_position_bar) {
             return;
-        }
-
-        // space has a fullscreen window, hide window position bar
-        if (this.hasFullScreenWindow()) {
-            this.showWindowPositionBar(false);
-            return;
-        }
-        else {
-            // if here has no fullscreen window, show as per usual
-            this.showWindowPositionBar();
         }
 
         // show space duplicate elements if not primary monitor
@@ -1454,7 +1457,6 @@ border-radius: ${borderWidth}px;
      * @param {boolean} visible
      */
     setSpaceTopbarElementsVisible(visible = false, options = {}) {
-        const changeTopBarStyle = options?.changeTopBarStyle ?? true;
         const force = options?.force ?? false;
         const setVisible = v => {
             if (v) {
@@ -1468,19 +1470,20 @@ border-radius: ${borderWidth}px;
             }
         };
 
+        if (this.selectedWindow?.fullscreen) {
+            setVisible(false);
+            this.enableWindowPositionBar(false);
+            return;
+        }
+
+        if (this.hasTopBar && inPreview) {
+            Topbar.setTransparentStyle();
+        }
+
         // if windowPositionBar is disabled ==> don't show elements
         if (!Settings.prefs.show_window_position_bar) {
             setVisible(false);
             return;
-        }
-
-        if (changeTopBarStyle) {
-            if (visible && this.hasTopBar) {
-                Topbar.setTransparentStyle();
-            }
-            else {
-                Topbar.setNoBackgroundStyle();
-            }
         }
 
         // if on different monitor then override to show elements
@@ -1703,7 +1706,7 @@ border-radius: ${borderWidth}px;
         // transforms break if there's no height
         this.cloneContainer.height = this.monitor.height;
 
-        this.layout();
+        this.layout(true, { centerIfOne: false });
         this.emit('monitor-changed');
     }
 
@@ -1804,6 +1807,7 @@ border-radius: ${borderWidth}px;
     }
 
     destroy() {
+        this.getWindows().forEach(w => removeHandlerFlags(w));
         this.signals.destroy();
         this.signals = null;
         this.background.destroy();
@@ -1888,10 +1892,14 @@ export const Spaces = class Spaces extends Map {
         // Clone and hook up existing windows
         display.get_tab_list(Meta.TabList.NORMAL_ALL, null)
             .forEach(w => {
+                // remove handler flags
+                removeHandlerFlags(w);
+
                 registerWindow(w);
                 // Fixup allocations on reload
                 allocateClone(w);
-                this.signals.connect(w, 'size-changed', resizeHandler);
+                addResizeHandler(w);
+                addPositionHandler(w);
             });
         this._initDone = true;
 
@@ -2211,6 +2219,19 @@ export const Spaces = class Spaces extends Map {
         navFinish();
         // final switch with warp
         this.switchMonitor(direction);
+
+        /**
+         * Fullscreen monitor workaround.
+         * see https://github.com/paperwm/PaperWM/issues/638
+         */
+        this.forEach(space => {
+            space.getWindows().filter(w => w.fullscreen).forEach(w => {
+                animateWindow(w);
+                w.unmake_fullscreen();
+                w.make_fullscreen();
+                showWindow(w);
+            });
+        });
 
         // ensure after swapping that the space elements are shown correctly
         this.setSpaceTopbarElementsVisible(true, { force: true });
@@ -2647,8 +2668,11 @@ export const Spaces = class Spaces extends Map {
         inPreview = PreviewMode.NONE;
 
         Topbar.updateWorkspaceIndicator(to.index);
-        this.selectedSpace = to;
+        if (to.hasTopBar) {
+            Topbar.setNoBackgroundStyle();
+        }
 
+        this.selectedSpace = to;
         to.show();
         let selected = to.selectedWindow;
         if (selected)
@@ -2993,7 +3017,10 @@ export function registerWindow(metaWindow) {
     });
     signals.connect(metaWindow, 'size-changed', allocateClone);
     // Note: runs before gnome-shell's minimize handling code
-    signals.connect(metaWindow, 'notify::fullscreen', Topbar.fixTopBar);
+    signals.connect(metaWindow, 'notify::fullscreen', () => {
+        Topbar.fixTopBar();
+        spaces.spaceOfWindow(metaWindow)?.setSpaceTopbarElementsVisible(true);
+    });
     signals.connect(metaWindow, 'notify::minimized', metaWindow => {
         minimizeHandler(metaWindow);
     });
@@ -3037,6 +3064,44 @@ export function destroyHandler(actor) {
     signals.disconnect(actor);
 }
 
+/**
+ * Removes resize and position handler flags.
+ * @param {MetaWindow} metaWindow
+ */
+export function removeHandlerFlags(metaWindow) {
+    delete metaWindow._resizeHandlerAdded;
+    delete metaWindow._positionHandlerAdded;
+}
+
+export function addPositionHandler(metaWindow) {
+    if (metaWindow._positionHandlerAdded) {
+        return;
+    }
+    signals.connect(metaWindow, 'position-changed', positionChangeHandler);
+    metaWindow._positionHandlerAdded = true;
+}
+
+export function addResizeHandler(metaWindow) {
+    if (metaWindow._resizeHandlerAdded) {
+        return;
+    }
+    signals.connect(metaWindow, 'size-changed', mw => {
+        Utils.later_add(Meta.LaterType.RESIZE, () => {
+            resizeHandler(mw);
+        });
+    });
+    metaWindow._resizeHandlerAdded = true;
+}
+
+export function positionChangeHandler(metaWindow) {
+    // don't update saved position if fullscreen
+    if (metaWindow.fullscreen || metaWindow?._fullscreen_lock) {
+        return;
+    }
+
+    saveFullscreenFrame(metaWindow);
+}
+
 export function resizeHandler(metaWindow) {
     // if navigator is showing, reset/refresh it after a window has resized
     if (Navigator.navigating) {
@@ -3047,40 +3112,122 @@ export function resizeHandler(metaWindow) {
         return;
 
     const f = metaWindow.get_frame_rect();
-    let needLayout = false;
-    if (metaWindow._targetWidth !== f.width || metaWindow._targetHeight !== f.height) {
-        needLayout = true;
-    }
     metaWindow._targetWidth = null;
     metaWindow._targetHeight = null;
 
     const space = spaces.spaceOfWindow(metaWindow);
-    if (space.indexOf(metaWindow) === -1)
+    if (space.indexOf(metaWindow) === -1) {
+        nonTiledSizeHandler(metaWindow);
         return;
-
-    const selected = metaWindow === space.selectedWindow;
-    let animate = true;
-    let x;
-
-    // if window is fullscreened, then don't animate background space.container animation etc.
-    if (metaWindow?.fullscreen) {
-        animate = false;
-        x = 0;
-    } else {
-        x = metaWindow.get_frame_rect().x - space.monitor.x;
     }
 
-    if (!space._inLayout && needLayout) {
+    const fsf = metaWindow?._fullscreen_frame;
+    const selected = metaWindow === space.selectedWindow;
+    let addCallback = false;
+    let x;
+
+    let needLayout = false;
+    // if target width differs ==> layout
+    if (metaWindow._targetWidth !== f.width || metaWindow._targetHeight !== f.height) {
+        needLayout = true;
+    }
+
+    // if saved size differs ==> layout
+    if (fsf) {
+        if (fsf.width !== f.width || fsf.height !== f.height) {
+            needLayout = true;
+        }
+    }
+
+    const moveTo = (x, animate) => {
+        move_to(space, metaWindow, {
+            x,
+            animate,
+        });
+    };
+
+    // if window is fullscreened, then don't animate background space.container animation etc.
+    if (metaWindow.fullscreen) {
+        metaWindow._fullscreen_lock = true;
+        space.hideSelection();
+        space.layout(false, { callback: moveTo(0, false), centerIfOne: false });
+        return;
+    }
+
+    space.showSelection();
+    x = metaWindow?._fullscreen_frame?.x ?? f.x;
+    x -= space.monitor.x;
+    x = Math.max(x, Settings.prefs.horizontal_margin);
+
+    // if pwm fullscreen previously
+    if (metaWindow._fullscreen_lock) {
+        space.enableWindowPositionBar();
+        delete metaWindow._fullscreen_lock;
+        needLayout = true;
+        addCallback = true;
+    }
+    else {
+        // save width for later exit-fullscreen restoring
+        saveFullscreenFrame(metaWindow, true);
+    }
+
+    if (needLayout && !space._inLayout) {
         // Restore window position when eg. exiting fullscreen
-        if (!Navigator.navigating && selected) {
-            move_to(space, metaWindow, {
-                x,
-                animate,
-            });
+        let callback = () => {};
+        if (addCallback && !Navigator.navigating && selected) {
+            callback = () => {
+                moveTo(x, true);
+            };
         }
 
         // Resizing from within a size-changed signal is troube (#73). Queue instead.
-        space.queueLayout(animate);
+        space.queueLayout(true, { callback, centerIfOne: false });
+    }
+}
+
+/**
+ * ResizeHandler for non-tiled windows
+ * @param {*} metaWindow
+ */
+export function nonTiledSizeHandler(metaWindow) {
+    // if window is fullscreen ==> set lock
+    if (metaWindow.fullscreen) {
+        metaWindow._fullscreen_lock = true;
+        return;
+    }
+
+    // if pwm fullscreen previously
+    if (metaWindow._fullscreen_lock) {
+        delete metaWindow._fullscreen_lock;
+        let fsf = metaWindow._fullscreen_frame;
+        if (fsf) {
+            metaWindow.move_resize_frame(true, fsf.x, fsf.y, fsf.width, fsf.height);
+            delete metaWindow._fullscreen_frame;
+        }
+    }
+    else {
+        saveFullscreenFrame(metaWindow);
+    }
+}
+
+/**
+ * Saves a metaWindow's frame x, y ,width, and height for restoring
+ * after exiting fullscreen mode.
+ * @param {MetaWindow} metaWindow
+ */
+export function saveFullscreenFrame(metaWindow, tiled) {
+    const f = metaWindow.get_frame_rect();
+    const fsf = metaWindow._fullscreen_frame ?? {};
+    metaWindow._fullscreen_frame = fsf;
+    // offset by space's monitor.x
+    fsf.x = f.x;
+    fsf.y = f.y;
+    fsf.width = f.width;
+    fsf.height = f.height;
+
+    // if from tiled, save tiledWidth for tiling width tracking
+    if (tiled) {
+        fsf.tiledWidth = f.width;
     }
 }
 
@@ -3213,6 +3360,7 @@ export function remove_handler(workspace, meta_window) {
 
     let space = spaces.spaceOf(workspace);
     space.removeWindow(meta_window);
+    space.enableWindowPositionBar();
 
     let actor = meta_window.get_compositor_private();
     if (!actor) {
@@ -3266,7 +3414,9 @@ export function insertWindow(metaWindow, { existing }) {
         if (tiled) {
             animateWindow(metaWindow);
         }
-        metaWindow.unmapped && signals.connect(metaWindow, 'size-changed', resizeHandler);
+        addResizeHandler(metaWindow);
+        addPositionHandler(metaWindow);
+
         delete metaWindow.unmapped;
     };
 
@@ -3307,6 +3457,24 @@ export function insertWindow(metaWindow, { existing }) {
             activateWindowAfterRendered(actor, metaWindow);
             return;
         }
+
+        /**
+         * Address inserting windows that are already fullscreen: windows will be inserted
+         * as normal (non-fullscreen) and will be fullscreened after a timeout on actor show.
+         * see https://github.com/paperwm/PaperWM/issues/638
+         */
+        if (metaWindow.fullscreen) {
+            animateWindow(metaWindow);
+            callbackOnActorShow(actor, () => {
+                fullscrenStartTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
+                    metaWindow.unmake_fullscreen();
+                    showWindow(metaWindow);
+                    metaWindow.make_fullscreen();
+                    fullscrenStartTimeout = null;
+                    return false; // on return false destroys timeout
+                });
+            });
+        }
     }
 
     if (metaWindow.is_on_all_workspaces()) {
@@ -3332,8 +3500,9 @@ export function insertWindow(metaWindow, { existing }) {
         return;
     }
 
-    if (space.indexOf(metaWindow) !== -1)
+    if (space.indexOf(metaWindow) !== -1) {
         return;
+    }
 
     let clone = metaWindow.clone;
     let ok, x, y;
@@ -3359,13 +3528,6 @@ export function insertWindow(metaWindow, { existing }) {
     // run a simple layout in pre-prepare layout
     space.layout(false);
 
-    // if only one window on space, then centre it
-    const centre = () => {
-        if (space.getWindows().length === 1) {
-            centerWindowHorizontally(metaWindow);
-        }
-    };
-
     /**
      * If window is new, then setup and ensure is in view
      * after actor is shown on stage.
@@ -3386,8 +3548,7 @@ export function insertWindow(metaWindow, { existing }) {
 
             Main.activateWindow(metaWindow);
             ensureViewport(space.selectedWindow, space);
-
-            centre();
+            space.setSpaceTopbarElementsVisible(true);
         });
 
         return;
@@ -3402,8 +3563,6 @@ export function insertWindow(metaWindow, { existing }) {
     } else {
         ensureViewport(space.selectedWindow, space);
     }
-
-    centre();
 }
 
 /**
@@ -3571,7 +3730,7 @@ export function updateSelection(space, metaWindow) {
 
     // ensure window is properly activated (if not activated)
     if (space === spaces.activeSpace) {
-        if (metaWindow !== display.focus_windoww) {
+        if (metaWindow !== display.focus_window) {
             Main.activateWindow(metaWindow);
         }
     }
@@ -3751,6 +3910,43 @@ export function focus_handler(metaWindow, user_data) {
     }
 
     let space = spaces.spaceOfWindow(metaWindow);
+    if (metaWindow.fullscreen) {
+        space.enableWindowPositionBar(false);
+        space.setSpaceTopbarElementsVisible(false);
+        space.hideSelection();
+    }
+    else {
+        let needLayout = false;
+        /**
+         * For non-topbar spaces, bring down fullscreen windows to mimic
+         * gnome behaviour with a topbar.
+         */
+        if (!space.hasTopBar &&
+            space.hasFullScreenWindow()) {
+            needLayout = true;
+        }
+
+        /**
+         * if there then clone.y shouldn't be 0.  This can happen though if a window
+         * is fullscreened when `layout` is called.  In this case, when we focuse on a
+         * window that isn't fullscreen but has clone.y 0 ==> need a layout call.
+         */
+        if (
+            metaWindow.clone.y === 0 &&
+            Settings.prefs.vertical_margin !== 0 &&
+            Settings.prefs.window_gap !== 0
+        ) {
+            needLayout = true;
+        }
+
+        if (needLayout) {
+            space.layout(false);
+        }
+
+        space.setSpaceTopbarElementsVisible(true);
+        space.enableWindowPositionBar(true);
+        space.showSelection();
+    }
     space.monitor.clickOverlay.show();
 
     /**
@@ -4131,16 +4327,6 @@ export function centerWindowHorizontally(metaWindow) {
     const workArea = space.workArea();
 
     const targetX = workArea.x + Math.round((workArea.width - frame.width) / 2);
-    const dx = targetX - (metaWindow.clone.targetX + space.targetX);
-
-    let [pointerX, pointerY, mask] = global.get_pointer();
-    let relPointerX = pointerX - monitor.x - space.cloneContainer.x;
-    let relPointerY = pointerY - monitor.y - space.cloneContainer.y;
-    /* don't know why we would want to warp pointer on centering window... disabling
-    if (Utils.isPointInsideActor(metaWindow.clone, relPointerX, relPointerY)) {
-        Utils.warpPointer(pointerX + dx, pointerY);
-    }
-    */
     if (space.indexOf(metaWindow) === -1) {
         metaWindow.move_frame(true, targetX + monitor.x, frame.y);
     } else {
