@@ -252,10 +252,13 @@ export function setupActions(settings) {
 
     registerPaperAction('paper-toggle-fullscreen',
         metaWindow => {
-            if (metaWindow.fullscreen)
+            if (metaWindow.fullscreen) {
                 metaWindow.unmake_fullscreen();
-            else
+            }
+            else {
                 metaWindow.make_fullscreen();
+            }
+            Tiling.resizeHandler(metaWindow);
         }, Meta.KeyBindingFlags.PER_WINDOW);
 }
 
