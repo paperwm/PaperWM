@@ -506,10 +506,6 @@ export class Space extends Array {
             let resizable = !mw.fullscreen &&
                 mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
-            if (mw._fullscreen_frame?.tiledWidth) {
-                targetWidth = mw._fullscreen_frame.tiledWidth;
-            }
-
             if (mw.preferredWidth) {
                 let prop = mw.preferredWidth;
                 if (prop.value <= 0) {
@@ -640,14 +636,24 @@ export class Space extends Array {
             if (column.length === 0)
                 continue;
 
-            let selectedInColumn = i === selectedIndex ? this.selectedWindow : null;
+            // selected window in column
+            const selectedInColumn = i === selectedIndex ? this.selectedWindow : null;
 
             let targetWidth;
-            if (i === selectedIndex) {
-                targetWidth = selectedInColumn.get_frame_rect().width;
-            } else {
-                targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
+            if (selectedInColumn) {
+                // if selected window - use tiledWidth or frame.width (fallback)
+                targetWidth =
+                    selectedInColumn?._fullscreen_frame?.tiledWidth ??
+                    selectedInColumn.get_frame_rect().width;
             }
+            else {
+                // otherwise get max of tiledWith or frame.with (fallback)
+                targetWidth = Math.max(...column.map(w => {
+                    return w?._fullscreen_frame?.tiledWidth ?? w.get_frame_rect().width;
+                }));
+            }
+
+            // enforce minimum
             targetWidth = Math.min(targetWidth, workArea.width - 2 * Settings.prefs.minimum_margin);
 
             let resultingWidth, relayout;
@@ -3018,6 +3024,9 @@ export function registerWindow(metaWindow) {
     signals.connect(metaWindow, 'size-changed', allocateClone);
     // Note: runs before gnome-shell's minimize handling code
     signals.connect(metaWindow, 'notify::fullscreen', () => {
+        // if window is in a column, expel it
+        barfThis(metaWindow);
+
         Topbar.fixTopBar();
         spaces.spaceOfWindow(metaWindow)?.setSpaceTopbarElementsVisible(true);
     });
@@ -3196,7 +3205,7 @@ export function nonTiledSizeHandler(metaWindow) {
         return;
     }
 
-    // if pwm fullscreen previously
+    // if here then was previously in fullscreen (and came out of)
     if (metaWindow._fullscreen_lock) {
         delete metaWindow._fullscreen_lock;
         let fsf = metaWindow._fullscreen_frame;
@@ -3894,7 +3903,7 @@ export function getDefaultFocusMode() {
 }
 
 // `MetaWindow::focus` handling
-export function focus_handler(metaWindow, user_data) {
+export function focus_handler(metaWindow) {
     console.debug("focus:", metaWindow?.title);
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
@@ -3918,11 +3927,11 @@ export function focus_handler(metaWindow, user_data) {
     else {
         let needLayout = false;
         /**
-         * For non-topbar spaces, bring down fullscreen windows to mimic
-         * gnome behaviour with a topbar.
+         * If has fullscreen window - when selected non-fullscreen window, do layout:
+         * For non-topbar spaces, Bring down fullscreen windows to mimic gnome behaviour with a topbar,
+         * Also ensures if columns group, then it's windows are correctly proportioned.
          */
-        if (!space.hasTopBar &&
-            space.hasFullScreenWindow()) {
+        if (space.hasFullScreenWindow()) {
             needLayout = true;
         }
 
@@ -4488,8 +4497,14 @@ export function slurp(metaWindow) {
         from = index;
     }
 
+    // slurping fullscreen windows is trouble
     if (!metaWindowToSlurp || space.length < 2) {
         return;
+    }
+
+    // slurping fullscreen windows is trouble, unfullscreen when slurping
+    if (metaWindowToSlurp?.fullscreen) {
+        metaWindowToSlurp.unmake_fullscreen();
     }
 
     space[to].push(metaWindowToSlurp);
@@ -4507,6 +4522,11 @@ export function slurp(metaWindow) {
     });
 }
 
+/**
+ * Barfs the bottom window from a column.
+ * @param {MetaWindow} metaWindow
+ * @returns
+ */
 export function barf(metaWindow) {
     if (!metaWindow)
         return;
@@ -4522,6 +4542,34 @@ export function barf(metaWindow) {
 
     let bottom = column.splice(-1, 1)[0];
     space.splice(index + 1, 0, [bottom]);
+
+    space.layout(true, {
+        customAllocators: { [index]: allocateEqualHeight, ensure: false },
+    });
+}
+
+/**
+ * Barfs (expels) a specific window from a column.
+ * @param {MetaWindow} metaWindow
+ * @returns
+ */
+export function barfThis(metaWindow) {
+    if (!metaWindow)
+        return;
+
+    let space = spaces.spaceOfWindow(metaWindow);
+    let index = space.indexOf(metaWindow);
+    if (index === -1)
+        return;
+
+    let column = space[index];
+    if (column.length < 2)
+        return;
+
+    // remove metawindow from column
+    const indexOfWindow = column.indexOf(metaWindow);
+    column.splice(indexOfWindow, 1);
+    space.splice(index + 1, 0, [metaWindow]);
 
     space.layout(true, {
         customAllocators: { [index]: allocateEqualHeight, ensure: false },
