@@ -506,10 +506,6 @@ export class Space extends Array {
             let resizable = !mw.fullscreen &&
                 mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
-            if (mw._fullscreen_frame?.tiledWidth) {
-                targetWidth = mw._fullscreen_frame.tiledWidth;
-            }
-
             if (mw.preferredWidth) {
                 let prop = mw.preferredWidth;
                 if (prop.value <= 0) {
@@ -640,14 +636,24 @@ export class Space extends Array {
             if (column.length === 0)
                 continue;
 
-            let selectedInColumn = i === selectedIndex ? this.selectedWindow : null;
+            // selected window in column
+            const selectedInColumn = i === selectedIndex ? this.selectedWindow : null;
 
             let targetWidth;
-            if (i === selectedIndex) {
-                targetWidth = selectedInColumn.get_frame_rect().width;
-            } else {
-                targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
+            if (selectedInColumn) {
+                // if selected window - use tiledWidth or frame.width (fallback)
+                targetWidth =
+                    selectedInColumn?._fullscreen_frame?.tiledWidth ??
+                    selectedInColumn.get_frame_rect().width;
             }
+            else {
+                // otherwise get max of tiledWith or frame.with (fallback)
+                targetWidth = Math.max(...column.map(w => {
+                    return w?._fullscreen_frame?.tiledWidth ?? w.get_frame_rect().width;
+                }));
+            }
+
+            // enforce minimum
             targetWidth = Math.min(targetWidth, workArea.width - 2 * Settings.prefs.minimum_margin);
 
             let resultingWidth, relayout;
@@ -3196,7 +3202,7 @@ export function nonTiledSizeHandler(metaWindow) {
         return;
     }
 
-    // if pwm fullscreen previously
+    // if here then was previously in fullscreen (and came out of)
     if (metaWindow._fullscreen_lock) {
         delete metaWindow._fullscreen_lock;
         let fsf = metaWindow._fullscreen_frame;
