@@ -4498,8 +4498,13 @@ export function slurp(metaWindow) {
     }
 
     // slurping fullscreen windows is trouble
-    if (!metaWindowToSlurp || metaWindowToSlurp?.fullscreen || space.length < 2) {
+    if (!metaWindowToSlurp || space.length < 2) {
         return;
+    }
+
+    // slurping fullscreen windows is trouble, unfullscreen when slurping
+    if (metaWindowToSlurp?.fullscreen) {
+        metaWindowToSlurp.unmake_fullscreen();
     }
 
     space[to].push(metaWindowToSlurp);
