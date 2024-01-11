@@ -3903,7 +3903,7 @@ export function getDefaultFocusMode() {
 }
 
 // `MetaWindow::focus` handling
-export function focus_handler(metaWindow, user_data) {
+export function focus_handler(metaWindow) {
     console.debug("focus:", metaWindow?.title);
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
@@ -3927,11 +3927,11 @@ export function focus_handler(metaWindow, user_data) {
     else {
         let needLayout = false;
         /**
-         * For non-topbar spaces, bring down fullscreen windows to mimic
-         * gnome behaviour with a topbar.
+         * If has fullscreen window - when selected non-fullscreen window, do layout:
+         * For non-topbar spaces, Bring down fullscreen windows to mimic gnome behaviour with a topbar,
+         * Also ensures if columns group, then it's windows are correctly proportioned.
          */
-        if (!space.hasTopBar &&
-            space.hasFullScreenWindow()) {
+        if (space.hasFullScreenWindow()) {
             needLayout = true;
         }
 
