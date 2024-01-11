@@ -3024,6 +3024,9 @@ export function registerWindow(metaWindow) {
     signals.connect(metaWindow, 'size-changed', allocateClone);
     // Note: runs before gnome-shell's minimize handling code
     signals.connect(metaWindow, 'notify::fullscreen', () => {
+        // if window is in a column, expel it
+        barfThis(metaWindow);
+
         Topbar.fixTopBar();
         spaces.spaceOfWindow(metaWindow)?.setSpaceTopbarElementsVisible(true);
     });
@@ -4494,7 +4497,8 @@ export function slurp(metaWindow) {
         from = index;
     }
 
-    if (!metaWindowToSlurp || space.length < 2) {
+    // slurping fullscreen windows is trouble
+    if (!metaWindowToSlurp || metaWindowToSlurp?.fullscreen || space.length < 2) {
         return;
     }
 
@@ -4513,6 +4517,11 @@ export function slurp(metaWindow) {
     });
 }
 
+/**
+ * Barfs the bottom window from a column.
+ * @param {MetaWindow} metaWindow
+ * @returns
+ */
 export function barf(metaWindow) {
     if (!metaWindow)
         return;
@@ -4528,6 +4537,34 @@ export function barf(metaWindow) {
 
     let bottom = column.splice(-1, 1)[0];
     space.splice(index + 1, 0, [bottom]);
+
+    space.layout(true, {
+        customAllocators: { [index]: allocateEqualHeight, ensure: false },
+    });
+}
+
+/**
+ * Barfs (expels) a specific window from a column.
+ * @param {MetaWindow} metaWindow
+ * @returns
+ */
+export function barfThis(metaWindow) {
+    if (!metaWindow)
+        return;
+
+    let space = spaces.spaceOfWindow(metaWindow);
+    let index = space.indexOf(metaWindow);
+    if (index === -1)
+        return;
+
+    let column = space[index];
+    if (column.length < 2)
+        return;
+
+    // remove metawindow from column
+    const indexOfWindow = column.indexOf(metaWindow);
+    column.splice(indexOfWindow, 1);
+    space.splice(index + 1, 0, [metaWindow]);
 
     space.layout(true, {
         customAllocators: { [index]: allocateEqualHeight, ensure: false },
