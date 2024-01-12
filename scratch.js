@@ -112,8 +112,16 @@ export function makeScratch(metaWindow) {
         if (!metaWindow.minimized) {
             metaWindow.move_resize_frame(true, f.x, f.y,
                 targetFrame.width, targetFrame.height);
-            easeScratch(metaWindow, targetFrame.x, targetFrame.y,
-                { onComplete: () => delete metaWindow[scratchFrame] });
+            easeScratch(
+                metaWindow,
+                targetFrame.x,
+                targetFrame.y,
+                {
+                    onComplete: () => {
+                        delete metaWindow[scratchFrame];
+                        Main.activateWindow(metaWindow);
+                    },
+                });
         } else {
             // Can't restore the scratch geometry immediately since it distort the minimize animation
             // ASSUMPTION: minimize animation is not disabled and not already done
