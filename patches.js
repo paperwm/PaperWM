@@ -719,7 +719,6 @@ function setupFullscreenAvoiderSupport() {
                     space.setSpaceTopbarElementsVisible();
                     Topbar.updateWorkspaceIndicator(space.index);
                     Topbar.fixTopBar();
-                    space.queueLayout(true, {ensure: false});
                 }
             }
         } catch (e) {
