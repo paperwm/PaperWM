@@ -699,6 +699,11 @@ function setupFullscreenAvoiderSupport() {
                                 }
                             }
                         }
+                        // Check for scratch windows separately since they don't
+                        // belong to a workspace
+                        if (Scratch.getScratchWindows().some(w => w.get_monitor() == this.index && w.fullscreen)) {
+                            return true;
+                        }
                     } catch (e) {
                         console.error(e);
                     }

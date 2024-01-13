@@ -951,11 +951,15 @@ export class Space extends Array {
         return true;
     }
 
+    getFloatingWindows() {
+        return this._floating;
+    }
+
     /**
      * Returns true iff this space has a currently fullscreened window.
      */
     hasFullScreenWindow() {
-        return this.getWindows().some(w => w.fullscreen);
+        return this.getWindows().some(w => w.fullscreen) || this.getFloatingWindows().some(w => w.fullscreen);
     }
 
     swap(direction, metaWindow) {
