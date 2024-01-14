@@ -1955,7 +1955,6 @@ export const Spaces = class Spaces extends Map {
         for (let monitor of monitors) {
             let overlay = new ClickOverlay(monitor, this.onlyOnPrimary);
             monitor.clickOverlay = overlay;
-            overlay.activate();
             this.clickOverlays.push(overlay);
         }
 
@@ -1977,7 +1976,6 @@ export const Spaces = class Spaces extends Map {
             });
 
             this.spaceContainer.show();
-            activeSpace.monitor.clickOverlay.deactivate();
             Topbar.refreshWorkspaceIndicator();
             this.setSpaceTopbarElementsVisible();
             Stackoverlay.multimonitorDragDropSupport();
@@ -2294,14 +2292,6 @@ export const Spaces = class Spaces extends Map {
             toSpace,
             fromSpace,
             doAnimate);
-
-        toSpace.monitor?.clickOverlay.deactivate();
-
-        for (let monitor of Main.layoutManager.monitors) {
-            if (monitor === toSpace.monitor)
-                continue;
-            monitor.clickOverlay.activate();
-        }
 
         // Update panel to handle target workspace
         signals.disconnect(Main.panel, this.touchSignal);

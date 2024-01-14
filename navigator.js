@@ -356,9 +356,6 @@ class NavigatorClass {
         let visible = [];
         for (let monitor of Main.layoutManager.monitors) {
             visible.push(Tiling.spaces.monitors.get(monitor));
-            if (monitor === this.monitor)
-                continue;
-            monitor.clickOverlay.activate();
         }
 
         if (!visible.includes(space) && this.monitor !== this.space.monitor) {

@@ -69,9 +69,31 @@ export function multimonitorDragDropSupport() {
 export function enableMultimonitorDragDropSupport() {
     pointerWatch = PointerWatcher.getPointerWatcher().addWatch(100,
         () => {
-            Tiling.spaces?.clickOverlays?.forEach(c => {
-                c.monitorActiveCheck();
-            });
+            // check if in the midst of a window resize action
+            if (Tiling.inGrab && Tiling.inGrab instanceof Grab.ResizeGrab) {
+                const window = global.display?.focus_window;
+                if (window) {
+                    Scratch.makeScratch(window);
+                }
+            }
+
+            /**
+             * stop navigation before activating workspace. Avoids an issue
+             * in multimonitors where workspaces can get snapped to another monitor.
+             */
+            Navigator.finishDispatching();
+            Navigator.finishNavigation(true);
+
+            const monitor = Utils.monitorAtCurrentPoint();
+            const space = Tiling.spaces.monitors.get(monitor);
+
+            // if space is already active, do nothing
+            if (Tiling.spaces.isActiveSpace(space)) {
+                return;
+            }
+
+            const selected = space?.selectedWindow;
+            space?.activateWithFocus(selected, false, false);
         });
     console.debug('paperwm multimonitor drag/drop support is ENABLED');
 }
@@ -102,139 +124,6 @@ export class ClickOverlay {
         this.onlyOnPrimary = onlyOnPrimary;
         this.left = new StackOverlay(Meta.MotionDirection.LEFT, monitor);
         this.right = new StackOverlay(Meta.MotionDirection.RIGHT, monitor);
-
-        let enterMonitor = new Clutter.Actor({ reactive: true });
-        this.enterMonitor = enterMonitor;
-        enterMonitor.set_position(monitor.x, monitor.y);
-
-        // Uncomment to debug the overlays
-        // enterMonitor.background_color = Clutter.color_from_string('green')[1];
-        // enterMonitor.opacity = 100;
-
-        Main.uiGroup.add_actor(enterMonitor);
-        Main.layoutManager.trackChrome(enterMonitor);
-
-        this.signals = new Utils.Signals();
-
-        this._lastPointer = [];
-        this._lastPointerTimeout = null;
-
-        this.signals.connect(enterMonitor, 'touch-event', () => {
-            if (Tiling.inPreview)
-                return;
-            this.select();
-        });
-
-        this.signals.connect(enterMonitor, 'enter-event', () => {
-            if (Tiling.inPreview)
-                return;
-            this.select();
-        });
-
-        this.signals.connect(enterMonitor, 'button-press-event', () => {
-            if (Tiling.inPreview)
-                return;
-            this.select();
-            return Clutter.EVENT_STOP;
-        });
-
-        this.signals.connect(Main.overview, 'showing', () => {
-            this.deactivate();
-            this.hide();
-        });
-
-        this.signals.connect(Main.overview, 'hidden', () => {
-            this.activate();
-            this.show();
-        });
-
-        /**
-         * Handle grabbed (drag & drop) windows in ClickOverlay.  If a window is
-         * grabbed-dragged-and-dropped on a monitor, then select() on this ClickOverlay
-         * (which deactivates ClickOverlay and immediately activates/selects the dropped window.
-         */
-        this.signals.connect(global.display, 'grab-op-end', (display, mw, type) => {
-            if (this.monitor === this.mouseMonitor) {
-                this.select();
-            }
-        });
-    }
-
-    /**
-     * Returns the space of this ClickOverlay instance.
-     */
-    get space() {
-        return Tiling.spaces.monitors.get(this.monitor);
-    }
-
-    /**
-     * Returns the monitor the mouse is currently on.
-     */
-    get mouseMonitor() {
-        return Utils.monitorAtCurrentPoint();
-    }
-
-    monitorActiveCheck() {
-        // if clickoverlay not active (space is already selected), then nothing to do
-        if (!this.active) {
-            return;
-        }
-
-        if (Main.overview.visible || Tiling.inPreview) {
-            return;
-        }
-
-        // if mouse on me, select
-        if (this.monitor === this.mouseMonitor) {
-            this.select();
-        }
-    }
-
-    select() {
-        // if clickoverlay not active (space is already selected), then nothing to do
-        if (!this.active) {
-            return;
-        }
-
-        // check if in the midst of a window resize action
-        if (Tiling.inGrab && Tiling.inGrab instanceof Grab.ResizeGrab) {
-            const window = global.display?.focus_window;
-            if (window) {
-                Scratch.makeScratch(window);
-            }
-        }
-
-        /**
-         * stop navigation before activating workspace. Avoids an issue
-         * in multimonitors where workspaces can get snapped to another monitor.
-         */
-        Navigator.finishDispatching();
-        Navigator.finishNavigation(true);
-        this.deactivate();
-        let selected = this.space.selectedWindow;
-        this.space.activateWithFocus(selected, false, false);
-    }
-
-    activate() {
-        if (this.onlyOnPrimary || Main.overview.visible)
-            return;
-
-        let spaces = Tiling.spaces;
-        let active = global.workspace_manager.get_active_workspace();
-        let monitor = this.monitor;
-        // Never activate the clickoverlay of the active monitor
-        if (spaces && spaces.monitors.get(monitor) === spaces.get(active))
-            return;
-
-        this.active = true;
-        this.space?.setSelectionInactive();
-        this.enterMonitor.set_position(monitor.x, monitor.y);
-        this.enterMonitor.set_size(monitor.width, monitor.height);
-    }
-
-    deactivate() {
-        this.active = false;
-        this.enterMonitor.set_size(0, 0);
     }
 
     reset() {
@@ -255,10 +144,6 @@ export class ClickOverlay {
     }
 
     destroy() {
-        Utils.timeout_remove(this._lastPointerTimeout);
-        this._lastPointerTimeout = null;
-        this.signals.destroy();
-        this.signals = null;
         for (let overlay of [this.left, this.right]) {
             let actor = overlay.overlay;
             overlay.signals.destroy();
@@ -269,9 +154,6 @@ export class ClickOverlay {
             }
             actor.destroy();
         }
-
-        Main.layoutManager.untrackChrome(this.enterMonitor);
-        this.enterMonitor.destroy();
     }
 }
 
