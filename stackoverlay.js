@@ -43,13 +43,14 @@ import { Settings, Utils, Tiling, Navigator, Grab, Scratch } from './imports.js'
   restack loops)
 */
 
-let pointerWatch;
+let pointerWatch, lastSpace;
 export function enable(extension) {
 
 }
 
 export function disable() {
     disableMultimonitorDragDropSupport();
+    lastSpace = null;
 }
 
 /**
@@ -69,8 +70,19 @@ export function multimonitorDragDropSupport() {
 export function enableMultimonitorDragDropSupport() {
     pointerWatch = PointerWatcher.getPointerWatcher().addWatch(100,
         () => {
+            const monitor = Utils.monitorAtCurrentPoint();
+            const space = Tiling.spaces.monitors.get(monitor);
+
+            // same space
+            if (space === lastSpace) {
+                return;
+            }
+            // update to space
+            lastSpace = space;
+
             // check if in the midst of a window resize action
-            if (Tiling.inGrab && Tiling.inGrab instanceof Grab.ResizeGrab) {
+            if (Tiling.inGrab &&
+                Tiling.inGrab instanceof Grab.ResizeGrab) {
                 const window = global.display?.focus_window;
                 if (window) {
                     Scratch.makeScratch(window);
@@ -83,15 +95,6 @@ export function enableMultimonitorDragDropSupport() {
              */
             Navigator.finishDispatching();
             Navigator.finishNavigation(true);
-
-            const monitor = Utils.monitorAtCurrentPoint();
-            const space = Tiling.spaces.monitors.get(monitor);
-
-            // if space is already active, do nothing
-            if (Tiling.spaces.isActiveSpace(space)) {
-                return;
-            }
-
             const selected = space?.selectedWindow;
             space?.activateWithFocus(selected, false, false);
         });
