@@ -87,14 +87,15 @@ export function enableMultimonitorDragDropSupport() {
                 if (window) {
                     Scratch.makeScratch(window);
                 }
+                return;
             }
 
-            /**
-             * stop navigation before activating workspace. Avoids an issue
-             * in multimonitors where workspaces can get snapped to another monitor.
-             */
-            Navigator.finishDispatching();
-            Navigator.finishNavigation(true);
+            // if drag/grabbing window, do simple activate
+            if (Tiling.inGrab) {
+                space?.activate(false, false);
+                return;
+            }
+
             const selected = space?.selectedWindow;
             space?.activateWithFocus(selected, false, false);
         });
