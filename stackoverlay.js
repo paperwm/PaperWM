@@ -49,25 +49,25 @@ export function enable(extension) {
 }
 
 export function disable() {
-    disableMultimonitorDragDropSupport();
+    disableMultimonitorSupport();
     lastSpace = null;
 }
 
 /**
  * Checks for multiple monitors and if so, then enables multimonitor
- * drag/drop support in PaperWM.
+ * support in PaperWM.
  */
-export function multimonitorDragDropSupport() {
+export function multimonitorSupport() {
     // if only one monitor, return
     if (Tiling.spaces.monitors?.size > 1) {
-        enableMultimonitorDragDropSupport();
+        enableMultimonitorSupport();
     }
     else {
-        disableMultimonitorDragDropSupport();
+        disableMultimonitorSupport();
     }
 }
 
-export function enableMultimonitorDragDropSupport() {
+export function enableMultimonitorSupport() {
     pointerWatch = PointerWatcher.getPointerWatcher().addWatch(100,
         () => {
             const monitor = Utils.monitorAtCurrentPoint();
@@ -99,13 +99,13 @@ export function enableMultimonitorDragDropSupport() {
             const selected = space?.selectedWindow;
             space?.activateWithFocus(selected, false, false);
         });
-    console.debug('paperwm multimonitor drag/drop support is ENABLED');
+    console.debug('paperwm multimonitor support is ENABLED');
 }
 
-export function disableMultimonitorDragDropSupport() {
+export function disableMultimonitorSupport() {
     pointerWatch?.remove();
     pointerWatch = null;
-    console.debug('paperwm multimonitor drag/drop support is DISABLED');
+    console.debug('paperwm multimonitor support is DISABLED');
 }
 
 export function createAppIcon(metaWindow, size) {

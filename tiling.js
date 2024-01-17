@@ -1978,7 +1978,7 @@ export const Spaces = class Spaces extends Map {
             this.spaceContainer.show();
             Topbar.refreshWorkspaceIndicator();
             this.setSpaceTopbarElementsVisible();
-            Stackoverlay.multimonitorDragDropSupport();
+            Stackoverlay.multimonitorSupport();
         };
 
         if (this.onlyOnPrimary) {
