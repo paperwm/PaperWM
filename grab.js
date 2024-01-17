@@ -53,10 +53,6 @@ export class MoveGrab {
         this.dispatcher = new Navigator.getActionDispatcher(Clutter.GrabState.POINTER);
         this.actor = this.dispatcher.actor;
 
-        for (let [monitor, $] of Tiling.spaces.monitors) {
-            monitor.clickOverlay.deactivate();
-        }
-
         let metaWindow = this.window;
         let actor = metaWindow.get_compositor_private();
         let clone = metaWindow.clone;
