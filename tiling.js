@@ -1619,6 +1619,10 @@ border-radius: ${borderWidth}px;
                     return;
                 }
 
+                // update selection on spaces
+                setAllWorkspacesInactive();
+                this.setSelectionActive();
+
                 /**
                  * if user clicks on window, then ensureViewport on that window before exiting
                  */
