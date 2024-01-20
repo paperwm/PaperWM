@@ -1613,7 +1613,7 @@ border-radius: ${borderWidth}px;
         this.signals.connect(this.background, 'button-press-event',
             (actor, event) => {
                 // ensure this space is active if clicked
-                this.activate(false, false);
+                this.activateWithFocus(this.selectedWindow, false, false);
 
                 if (inGrab) {
                     return;

@@ -98,7 +98,7 @@ export function enableMultimonitorSupport() {
 
             // if monitor focus follow mouse ==> activate space on mouse
             if (Settings.prefs.monitor_focus_follows_mouse) {
-                space.activateWithFocus(space?.selectedWindow, false, false);
+                space.activateWithFocus(space.selectedWindow, false, false);
             }
         });
     console.debug('paperwm multimonitor support is ENABLED');
