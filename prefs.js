@@ -126,25 +126,6 @@ class SettingsWidget {
             });
         };
 
-        const gestureFingersChanged = key => {
-            const builder = this.builder.get_object(key);
-            const setting = this._settings.get_int(key);
-            const valueToFingers = {
-                0: 'fingers-disabled',
-                3: 'three-fingers',
-                4: 'four-fingers',
-            };
-            const fingersToValue = Object.fromEntries(
-                Object.entries(valueToFingers).map(a => a.reverse())
-            );
-
-            builder.set_active_id(valueToFingers[setting] ?? 'fingers-disable');
-            builder.connect('changed', obj => {
-                const value = fingersToValue[obj.get_active_id()] ?? 0;
-                this._settings.set_int(key, value);
-            });
-        };
-
         // General
         intValueChanged('window_gap_spin', 'window-gap');
         intValueChanged('hmargin_spinner', 'horizontal-margin');
@@ -298,6 +279,8 @@ class SettingsWidget {
         enableGnomePill.connect('state-set', (obj, state) => {
             this._settings.set_boolean('show-workspace-indicator', !state);
         });
+
+        booleanStateChanged('monitor-focus-follows-mouse');
 
         // Workspaces
         booleanStateChanged('use-default-background');
