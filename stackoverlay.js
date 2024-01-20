@@ -90,14 +90,16 @@ export function enableMultimonitorSupport() {
                 return;
             }
 
-            // if drag/grabbing window, do simple activate
+            // if grab/dragging window
             if (Tiling.inGrab) {
-                space?.activate(false, false);
+                space.activate(false, false);
                 return;
             }
 
-            const selected = space?.selectedWindow;
-            space?.activateWithFocus(selected, false, false);
+            // if monitor focus follow mouse ==> activate space on mouse
+            if (Settings.prefs.monitor_focus_follows_mouse) {
+                space.activateWithFocus(space?.selectedWindow, false, false);
+            }
         });
     console.debug('paperwm multimonitor support is ENABLED');
 }

@@ -1612,6 +1612,9 @@ border-radius: ${borderWidth}px;
 
         this.signals.connect(this.background, 'button-press-event',
             (actor, event) => {
+                // ensure this space is active if clicked
+                this.activate(false, false);
+
                 if (inGrab) {
                     return;
                 }
@@ -1712,7 +1715,6 @@ border-radius: ${borderWidth}px;
         // transforms break if there's no height
         this.cloneContainer.height = this.monitor.height;
 
-        this.layout(true, { centerIfOne: false });
         this.emit('monitor-changed');
     }
 
