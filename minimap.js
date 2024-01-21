@@ -42,13 +42,13 @@ export class Minimap extends Array {
         let container = new St.Widget({ name: 'minimap-container' });
         this.container = container;
 
-        actor.add_actor(highlight);
+        actor.add_child(highlight);
         actor.add_actor(label);
-        actor.add_actor(clip);
-        clip.add_actor(container);
+        actor.add_child(clip);
+        clip.add_child(container);
         clip.set_position(12 + Settings.prefs.window_gap, 12 + Math.round(1.5 * Settings.prefs.window_gap));
         highlight.y = clip.y - 10;
-        Main.uiGroup.add_actor(this.actor);
+        Main.uiGroup.add_child(this.actor);
         this.actor.opacity = 0;
         this.createClones();
 
@@ -143,8 +143,8 @@ export class Minimap extends Array {
         clone.meta_window = mw;
         container.clone = clone;
         container.meta_window = mw;
-        container.add_actor(clone);
-        this.container.add_actor(container);
+        container.add_child(clone);
+        this.container.add_child(container);
         return container;
     }
 

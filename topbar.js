@@ -177,9 +177,9 @@ export function popupMenuEntryHelper(text) {
         this.prevIcon.grab_key_focus();
     });
 
-    this.actor.add_actor(this.prevIcon);
-    this.actor.add_actor(this.label);
-    this.actor.add_actor(this.nextIcon);
+    this.actor.add_child(this.prevIcon);
+    this.actor.add_child(this.label);
+    this.actor.add_child(this.nextIcon);
     this.actor.label_actor = this.label;
     this.label.clutter_text.connect('activate', this.emit.bind(this, 'activate'));
 }
@@ -213,7 +213,7 @@ class Color {
         this.color = color;
         this.actor = new St.Button();
         let icon = new St.Widget();
-        this.actor.add_actor(icon);
+        this.actor.add_child(icon);
         icon.set_style(`background: ${color}`);
         icon.set_size(20, 20);
         icon.set_position(4, 4);
@@ -235,11 +235,11 @@ class ColorEntry {
         let flowbox = new St.Widget();
         let flowLayout = new Clutter.FlowLayout();
         let flow = new St.Widget();
-        flowbox.add_actor(flow);
+        flowbox.add_child(flow);
         flow.layout_manager = flowLayout;
         flow.width = 24 * 16;
         for (let c of colors) {
-            flow.add_actor(new Color(c, this).actor);
+            flow.add_child(new Color(c, this).actor);
         }
 
         this.entry = new PopupMenuEntry(startColor, 'Set color');
@@ -251,8 +251,8 @@ class ColorEntry {
 
         this.entry.button.connect('clicked', this.clicked.bind(this));
 
-        this.actor.add_actor(this.entry.actor);
-        this.actor.add_actor(flowbox);
+        this.actor.add_child(this.entry.actor);
+        this.actor.add_child(flowbox);
     }
 
     clicked() {
@@ -429,7 +429,7 @@ export const WorkspaceMenu = GObject.registerClass(
 
             this.setName(Meta.prefs_get_workspace_name(workspaceManager.get_active_workspace_index()));
 
-            this.add_actor(this.label);
+            this.add_child(this.label);
 
             this.signals = new Utils.Signals();
             this.signals.connect(global.window_manager,
@@ -531,7 +531,7 @@ export const WorkspaceMenu = GObject.registerClass(
                     this._navigator = Navigator.getNavigator();
                     Tiling.spaces.initWorkspaceSequence();
                     this._enterbox = new Clutter.Actor({ reactive: true });
-                    Main.uiGroup.add_actor(this._enterbox);
+                    Main.uiGroup.add_child(this._enterbox);
                     this._enterbox.set_position(panelBox.x, panelBox.y + panelBox.height + 20);
                     this._enterbox.set_size(global.screen_width, global.screen_height);
                     Main.layoutManager.trackChrome(this._enterbox);
