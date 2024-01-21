@@ -117,7 +117,7 @@ export function toggleWindowBoxes(metaWindow) {
         boxes.push(makeFrameBox(actor, "yellow"));
     }
 
-    boxes.forEach(box => global.stage.add_actor(box));
+    boxes.forEach(box => global.stage.add_child(box));
 
     metaWindow._paperDebugBoxes = boxes;
     return boxes;

@@ -321,21 +321,21 @@ export function setupOverrides() {
         }
         switch (mode) {
         case AppIconMode.THUMBNAIL_ONLY:
-            this._icon.add_actor(_createWindowClone(mutterWindow, size * scaleFactor));
+            this._icon.add_child(_createWindowClone(mutterWindow, size * scaleFactor));
             break;
 
         case AppIconMode.BOTH:
-            this._icon.add_actor(_createWindowClone(mutterWindow, size * scaleFactor));
+            this._icon.add_child(_createWindowClone(mutterWindow, size * scaleFactor));
 
             if (this.app) {
-                this._icon.add_actor(
+                this._icon.add_child(
                     this._createAppIcon(this.app, APP_ICON_SIZE_SMALL));
             }
             break;
 
         case AppIconMode.APP_ICON_ONLY:
             size = APP_ICON_SIZE;
-            this._icon.add_actor(this._createAppIcon(this.app, size));
+            this._icon.add_child(this._createAppIcon(this.app, size));
         }
 
         this._icon.set_size(size * scaleFactor, size * scaleFactor);

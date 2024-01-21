@@ -262,7 +262,7 @@ export class StackOverlay {
         clone.opacity = 255 * 0.95;
 
         clone.set_scale(scale, scale);
-        Main.uiGroup.add_actor(clone);
+        Main.uiGroup.add_child(clone);
 
         let monitor = this.monitor;
         let scaleWidth = scale * clone.width;
