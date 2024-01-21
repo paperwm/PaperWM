@@ -372,7 +372,7 @@ export class MoveGrab {
 
             if (dndTarget) {
                 let space = dndTarget.space;
-                space.selection.show();
+                space.showSelection();
 
                 if (Scratch.isScratchWindow(metaWindow))
                     Scratch.unmakeScratch(metaWindow);
@@ -414,6 +414,7 @@ export class MoveGrab {
                 metaWindow.move_frame(true, clone.x, clone.y);
                 Scratch.makeScratch(metaWindow);
                 this.initialSpace.moveDone();
+                this.initialSpace.showSelection();
 
                 actor.set_scale(clone.scale_x, clone.scale_y);
                 actor.opacity = clone.opacity;
@@ -542,7 +543,7 @@ export class MoveGrab {
         }
 
         zone.space.cloneContainer.add_child(zone.actor);
-        zone.space.selection.hide();
+        zone.space.hideSelection();
         zone.actor.show();
         raise();
         Easer.addEase(zone.actor, params);
@@ -550,7 +551,7 @@ export class MoveGrab {
 
     deactivateDndTarget(zone) {
         if (zone) {
-            zone.space.selection.show();
+            zone.space.showSelection();
             Easer.addEase(zone.actor, {
                 time: Settings.prefs.animation_time,
                 [zone.originProp]: zone.center,
