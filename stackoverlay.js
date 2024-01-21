@@ -98,6 +98,7 @@ export function enableMultimonitorSupport() {
 
             // if monitor focus follow mouse ==> activate space on mouse
             if (Settings.prefs.monitor_focus_follows_mouse) {
+                Tiling.setAllWorkspacesInactive();
                 space.activateWithFocus(space.selectedWindow, false, false);
             }
         });
