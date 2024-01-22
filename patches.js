@@ -140,21 +140,47 @@ export function setupOverrides() {
         // WorkspaceAnimation.WorkspaceAnimationController.animateSwitch
         // Disable the workspace switching animation in Gnome 40+
         function (_from, _to, _direction, onComplete) {
-            // if using PaperWM workspace switch animation, just do complete here
-            if (Tiling.inPreview || !Tiling.spaces.space_defaultAnimation) {
+            // ensure swipeTrackers are disabled after this
+            const reset = () => {
+                // gnome windows switch animation time = 250, do that plus a little more
+                pillSwipeTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 300, () => {
+                    swipeTrackers.forEach(t => {
+                        t.enabled = false;
+                    });
+                    pillSwipeTimer = null;
+                    return false; // on return false destroys timeout
+                });
+            };
+
+            if (Tiling.inPreview) {
                 onComplete();
-            }
-            else {
-                const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch');
-                saved.call(this, _from, _to, _direction, onComplete);
+                reset();
+                return;
             }
 
-            // ensure swipeTrackers are disabled after this
-            pillSwipeTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
-                swipeTrackers.forEach(t => t.enabled = false);
-                pillSwipeTimer = null;
-                return false; // on return false destroys timeout
-            });
+            // if using PaperWM workspace switch animation, just do complete here
+            if (!Tiling.spaces.space_defaultAnimation) {
+                onComplete();
+                reset();
+                return;
+            }
+
+            // if switching to a paperwm space that is already shown on a monitor
+            // from / to are workspace indices
+            const toSpace = Tiling.spaces.spaceOfIndex(_to);
+
+            const spaces = Array.from(Tiling.spaces.monitors.values());
+            const toOnMonitor = spaces.some(space => space === toSpace);
+            if (toOnMonitor) {
+                onComplete();
+                reset();
+                return;
+            }
+
+            // standard gnome switch animation
+            const saved = getSavedPrototype(WorkspaceAnimation.WorkspaceAnimationController, 'animateSwitch');
+            saved.call(this, _from, _to, _direction, onComplete);
+            reset();
         });
 
     registerOverridePrototype(WorkspaceAnimation.WorkspaceAnimationController, '_prepareWorkspaceSwitch',
