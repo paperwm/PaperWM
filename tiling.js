@@ -1630,8 +1630,13 @@ border-radius: ${borderWidth}px;
                 Navigator.finishNavigation();
             });
 
-        this.signals.connect(
-            this.background, 'scroll-event',
+        // ensure this space is active if touched
+        this.signals.connect(this.background, 'touch-event',
+            (actor, event) => {
+                this.activateWithFocus(this.selectedWindow, false, false);
+            });
+
+        this.signals.connect(this.background, 'scroll-event',
             (actor, event) => {
                 if (!inGrab && !Navigator.navigating)
                     return;
