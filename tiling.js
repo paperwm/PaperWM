@@ -89,7 +89,7 @@ let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
 let displayConfig;
 let saveState;
-let startupTimeoutId, timerId, fullscrenStartTimeout;
+let startupTimeoutId, timerId, fullscrenStartTimeout, backgroundClickTimout;
 let workspaceSettings;
 export let inGrab;
 export function enable(extension) {
@@ -191,6 +191,8 @@ export function disable () {
     timerId = null;
     Utils.timeout_remove(fullscrenStartTimeout);
     fullscrenStartTimeout = null;
+    Utils.timeout_remove(backgroundClickTimout);
+    backgroundClickTimout = null;
 
     grabSignals.destroy();
     grabSignals = null;
@@ -1631,6 +1633,18 @@ border-radius: ${borderWidth}px;
                 let windowAtPoint = !Gestures.gliding && this.getWindowAtPoint(x, y);
                 if (windowAtPoint) {
                     ensureViewport(windowAtPoint, this);
+                }
+
+                /**
+                 * if not monitor focus follows, then do a virtual click (first click
+                 * activated space).
+                 */
+                if (!Settings.prefs.monitor_focus_follows_mouse) {
+                    backgroundClickTimout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 150, () => {
+                        Utils.clickAtCursorPoint();
+                        backgroundClickTimout = null;
+                        return false;
+                    });
                 }
 
                 spaces.selectedSpace = this;

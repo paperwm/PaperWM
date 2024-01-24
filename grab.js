@@ -8,23 +8,6 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { Settings, Utils, Tiling, Navigator, Scratch } from './imports.js';
 import { Easer } from './utils.js';
 
-/**
- * Returns a virtual pointer (i.e. mouse) device that can be used to
- * "clickout" of a drag operation when `grab_end_op` is unavailable
- * (i.e. as of Gnome 44 where `grab_end_op` was removed).
- * @returns Clutter.VirtualInputDevice
-*/
-let virtualPointer;
-export function getVirtualPointer() {
-    if (!virtualPointer) {
-        virtualPointer = Clutter.get_default_backend()
-            .get_default_seat()
-            .create_virtual_device(Clutter.InputDeviceType.POINTER_DEVICE);
-    }
-
-    return virtualPointer;
-}
-
 export class MoveGrab {
     constructor(metaWindow, type, space) {
         this.window = metaWindow;
@@ -484,16 +467,7 @@ export class MoveGrab {
          */
         Utils.later_add(Meta.LaterType.IDLE, () => {
             if (!global.display.end_grab_op && this.wasTiled) {
-                // move to current cursor position
-                let [x, y, _mods] = global.get_pointer();
-                getVirtualPointer().notify_absolute_motion(
-                    Clutter.get_current_event_time(),
-                    x, y);
-
-                getVirtualPointer().notify_button(Clutter.get_current_event_time(),
-                    Clutter.BUTTON_PRIMARY, Clutter.ButtonState.PRESSED);
-                getVirtualPointer().notify_button(Clutter.get_current_event_time(),
-                    Clutter.BUTTON_PRIMARY, Clutter.ButtonState.RELEASED);
+                Utils.clickAtCursorPoint();
             }
         });
     }
