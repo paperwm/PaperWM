@@ -89,7 +89,7 @@ let signals, backgroundGroup, grabSignals;
 let gsettings, backgroundSettings, interfaceSettings;
 let displayConfig;
 let saveState;
-let startupTimeoutId, timerId, fullscrenStartTimeout;
+let startupTimeoutId, timerId, fullscrenStartTimeout, backgroundClickTimout;
 let workspaceSettings;
 export let inGrab;
 export function enable(extension) {
@@ -191,6 +191,8 @@ export function disable () {
     timerId = null;
     Utils.timeout_remove(fullscrenStartTimeout);
     fullscrenStartTimeout = null;
+    Utils.timeout_remove(backgroundClickTimout);
+    backgroundClickTimout = null;
 
     grabSignals.destroy();
     grabSignals = null;
@@ -268,7 +270,7 @@ export class Space extends Array {
         workspaceIndicator.connect('button-press-event', () => Main.overview.toggle());
         this.workspaceIndicator = workspaceIndicator;
         let workspaceLabel = new St.Label();
-        workspaceIndicator.add_actor(workspaceLabel);
+        workspaceIndicator.add_child(workspaceLabel);
         this.workspaceLabel = workspaceLabel;
         workspaceLabel.hide();
 
@@ -281,15 +283,15 @@ export class Space extends Array {
         clip.space = this;
         cloneContainer.space = this;
 
-        container.add_actor(clip);
-        clip.add_actor(actor);
-        actor.add_actor(workspaceIndicator);
+        container.add_child(clip);
+        clip.add_child(actor);
+        actor.add_child(workspaceIndicator);
         actor.add_child(this.focusModeIcon);
-        actor.add_actor(cloneClip);
-        cloneClip.add_actor(cloneContainer);
+        actor.add_child(cloneClip);
+        cloneClip.add_child(cloneContainer);
 
         this.border = new St.Widget({ name: "border" });
-        this.actor.add_actor(this.border);
+        this.actor.add_child(this.border);
         this.border.hide();
 
         let monitor = Main.layoutManager.primaryMonitor;
@@ -891,10 +893,10 @@ export class Space extends Array {
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
         let clone = metaWindow.clone;
-        this.cloneContainer.remove_actor(clone);
+        this.cloneContainer.remove_child(clone);
         // Don't destroy the selection highlight widget
         if (clone.first_child.name === 'selection')
-            clone.remove_actor(clone.first_child);
+            clone.remove_child(clone.first_child);
         let actor = metaWindow.get_compositor_private();
         if (actor)
             actor.remove_clip();
@@ -930,7 +932,7 @@ export class Space extends Array {
         if (i === -1)
             return false;
         this._floating.splice(i, 1);
-        this.actor.remove_actor(metaWindow.clone);
+        this.actor.remove_child(metaWindow.clone);
         return true;
     }
 
@@ -1313,11 +1315,11 @@ export class Space extends Array {
         let showTopBar = this.getShowTopBarSetting();
 
         // remove window position bar actors
-        this.actor.remove_actor(this.windowPositionBarBackdrop);
-        this.actor.remove_actor(this.windowPositionBar);
+        this.actor.remove_child(this.windowPositionBarBackdrop);
+        this.actor.remove_child(this.windowPositionBar);
         if (showTopBar) {
-            this.actor.add_actor(this.windowPositionBarBackdrop);
-            this.actor.add_actor(this.windowPositionBar);
+            this.actor.add_child(this.windowPositionBarBackdrop);
+            this.actor.add_child(this.windowPositionBar);
         }
 
         this.updateShowTopBar();
@@ -1612,9 +1614,16 @@ border-radius: ${borderWidth}px;
 
         this.signals.connect(this.background, 'button-press-event',
             (actor, event) => {
+                // ensure this space is active if clicked
+                this.activateWithFocus(this.selectedWindow, false, false);
+
                 if (inGrab) {
                     return;
                 }
+
+                // update selection on spaces
+                setAllWorkspacesInactive();
+                this.setSelectionActive();
 
                 /**
                  * if user clicks on window, then ensureViewport on that window before exiting
@@ -1626,12 +1635,29 @@ border-radius: ${borderWidth}px;
                     ensureViewport(windowAtPoint, this);
                 }
 
+                /**
+                 * if not monitor focus follows, then do a virtual click (first click
+                 * activated space).
+                 */
+                if (!Settings.prefs.monitor_focus_follows_mouse) {
+                    backgroundClickTimout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 150, () => {
+                        Utils.clickAtCursorPoint();
+                        backgroundClickTimout = null;
+                        return false;
+                    });
+                }
+
                 spaces.selectedSpace = this;
                 Navigator.finishNavigation();
             });
 
-        this.signals.connect(
-            this.background, 'scroll-event',
+        // ensure this space is active if touched
+        this.signals.connect(this.background, 'touch-event',
+            (actor, event) => {
+                this.activateWithFocus(this.selectedWindow, false, false);
+            });
+
+        this.signals.connect(this.background, 'scroll-event',
             (actor, event) => {
                 if (!inGrab && !Navigator.navigating)
                     return;
@@ -1712,7 +1738,6 @@ border-radius: ${borderWidth}px;
         // transforms break if there's no height
         this.cloneContainer.height = this.monitor.height;
 
-        this.layout(true, { centerIfOne: false });
         this.emit('monitor-changed');
     }
 
@@ -3001,7 +3026,7 @@ export function registerWindow(metaWindow) {
     let cloneActor = new Clutter.Clone({ source: actor });
     let clone = new Clutter.Actor();
 
-    clone.add_actor(cloneActor);
+    clone.add_child(cloneActor);
     clone.targetX = 0;
     clone.meta_window = metaWindow;
 
@@ -4639,7 +4664,7 @@ export function takeWindow(metaWindow, space, { navigator }) {
 
     navigator._moving.push(metaWindow);
     let parent = backgroundGroup;
-    parent.add_actor(metaWindow.clone);
+    parent.add_child(metaWindow.clone);
     let lowest = navigator._moving[navigator._moving.length - 2];
     lowest && parent.set_child_below_sibling(metaWindow.clone, lowest.clone);
     let point = space.cloneContainer.apply_relative_transform_to_point(

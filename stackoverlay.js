@@ -43,14 +43,13 @@ import { Settings, Utils, Tiling, Navigator, Grab, Scratch } from './imports.js'
   restack loops)
 */
 
-let pointerWatch, lastSpace;
+let pointerWatch;
 export function enable(extension) {
 
 }
 
 export function disable() {
     disableMultimonitorSupport();
-    lastSpace = null;
 }
 
 /**
@@ -74,11 +73,9 @@ export function enableMultimonitorSupport() {
             const space = Tiling.spaces.monitors.get(monitor);
 
             // same space
-            if (space === lastSpace) {
+            if (space === Tiling.spaces.activeSpace) {
                 return;
             }
-            // update to space
-            lastSpace = space;
 
             // check if in the midst of a window resize action
             if (Tiling.inGrab &&
@@ -90,14 +87,17 @@ export function enableMultimonitorSupport() {
                 return;
             }
 
-            // if drag/grabbing window, do simple activate
+            // if grab/dragging window
             if (Tiling.inGrab) {
-                space?.activate(false, false);
+                space.activate(false, false);
                 return;
             }
 
-            const selected = space?.selectedWindow;
-            space?.activateWithFocus(selected, false, false);
+            // if monitor focus follow mouse ==> activate space on mouse
+            if (Settings.prefs.monitor_focus_follows_mouse) {
+                Tiling.setAllWorkspacesInactive();
+                space.activateWithFocus(space.selectedWindow, false, false);
+            }
         });
     console.debug('paperwm multimonitor support is ENABLED');
 }
@@ -265,7 +265,7 @@ export class StackOverlay {
         clone.opacity = 255 * 0.95;
 
         clone.set_scale(scale, scale);
-        Main.uiGroup.add_actor(clone);
+        Main.uiGroup.add_child(clone);
 
         let monitor = this.monitor;
         let scaleWidth = scale * clone.width;

@@ -40,7 +40,8 @@ export function enable(extension) {
         'show-window-position-bar', 'show-focus-mode-icon', 'disable-topbar-styling',
         'default-focus-mode', 'gesture-enabled', 'gesture-horizontal-fingers',
         'gesture-workspace-fingers', 'open-window-position',
-        'overview-ensure-viewport-animation']
+        'overview-ensure-viewport-animation', 'monitor-focus-follows-mouse',
+    ]
         .forEach(k => setState(null, k));
     prefs.__defineGetter__("minimum_margin", () => {
         return Math.min(15, prefs.horizontal_margin);

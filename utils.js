@@ -15,7 +15,7 @@ import { Lib } from './imports.js';
 const Display = global.display;
 export let version = Config.PACKAGE_VERSION.split('.').map(Number);
 
-let warpRipple;
+let warpRipple, virtualPointer;
 export function enable() {
     warpRipple = new Ripples.Ripples(0.5, 0.5, 'ripple-pointer-location');
     warpRipple.addTo(Main.uiGroup);
@@ -117,7 +117,7 @@ export function toggleWindowBoxes(metaWindow) {
         boxes.push(makeFrameBox(actor, "yellow"));
     }
 
-    boxes.forEach(box => global.stage.add_actor(box));
+    boxes.forEach(box => global.stage.add_child(box));
 
     metaWindow._paperDebugBoxes = boxes;
     return boxes;
@@ -215,6 +215,38 @@ export function warpPointer(x, y) {
     let seat = backend.get_default_seat();
     seat.warp_pointer(x, y);
     warpRipple.playAnimation(x, y);
+}
+
+/**
+ * Returns a virtual pointer (i.e. mouse) device that can be used to
+ * "clickout" of a drag operation when `grab_end_op` is unavailable
+ * (i.e. as of Gnome 44 where `grab_end_op` was removed).
+ * @returns Clutter.VirtualInputDevice
+*/
+export function getVirtualPointer() {
+    if (!virtualPointer) {
+        virtualPointer = Clutter.get_default_backend()
+            .get_default_seat()
+            .create_virtual_device(Clutter.InputDeviceType.POINTER_DEVICE);
+    }
+
+    return virtualPointer;
+}
+
+/**
+ * Clicks at cursor point (with virtual pointer).
+ */
+export function clickAtCursorPoint() {
+    // move to current cursor position
+    let [x, y, _mods] = global.get_pointer();
+    getVirtualPointer().notify_absolute_motion(
+        Clutter.get_current_event_time(),
+        x, y);
+
+    getVirtualPointer().notify_button(Clutter.get_current_event_time(),
+        Clutter.BUTTON_PRIMARY, Clutter.ButtonState.PRESSED);
+    getVirtualPointer().notify_button(Clutter.get_current_event_time(),
+        Clutter.BUTTON_PRIMARY, Clutter.ButtonState.RELEASED);
 }
 
 /**

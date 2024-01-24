@@ -8,23 +8,6 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { Settings, Utils, Tiling, Navigator, Scratch } from './imports.js';
 import { Easer } from './utils.js';
 
-/**
- * Returns a virtual pointer (i.e. mouse) device that can be used to
- * "clickout" of a drag operation when `grab_end_op` is unavailable
- * (i.e. as of Gnome 44 where `grab_end_op` was removed).
- * @returns Clutter.VirtualInputDevice
-*/
-let virtualPointer;
-export function getVirtualPointer() {
-    if (!virtualPointer) {
-        virtualPointer = Clutter.get_default_backend()
-            .get_default_seat()
-            .create_virtual_device(Clutter.InputDeviceType.POINTER_DEVICE);
-    }
-
-    return virtualPointer;
-}
-
 export class MoveGrab {
     constructor(metaWindow, type, space) {
         this.window = metaWindow;
@@ -38,6 +21,8 @@ export class MoveGrab {
         // save whether this was tiled window at start of grab
         this.wasTiled = !(this.initialSpace.isFloating(metaWindow) ||
             Scratch.isScratchWindow(metaWindow));
+
+        this.dndTargets = [];
     }
 
     begin({ center } = {}) {
@@ -286,11 +271,12 @@ export class MoveGrab {
         };
 
         if (!sameTarget(target, this.dndTarget)) {
-            // deactivate only if target exists
+            // has a new zone target
             if (target) {
-                this.deactivateDndTarget(this.dndTarget);
-                this.activateDndTarget(target, initial);
+                this.dndTargets.push(target);
             }
+            this.dndTarget = null;
+            this.activateDndTarget(target, initial);
         }
     }
 
@@ -369,7 +355,7 @@ export class MoveGrab {
 
             if (dndTarget) {
                 let space = dndTarget.space;
-                space.selection.show();
+                space.showSelection();
 
                 if (Scratch.isScratchWindow(metaWindow))
                     Scratch.unmakeScratch(metaWindow);
@@ -411,6 +397,7 @@ export class MoveGrab {
                 metaWindow.move_frame(true, clone.x, clone.y);
                 Scratch.makeScratch(metaWindow);
                 this.initialSpace.moveDone();
+                this.initialSpace.showSelection();
 
                 actor.set_scale(clone.scale_x, clone.scale_y);
                 actor.opacity = clone.opacity;
@@ -480,21 +467,15 @@ export class MoveGrab {
          */
         Utils.later_add(Meta.LaterType.IDLE, () => {
             if (!global.display.end_grab_op && this.wasTiled) {
-                // move to current cursor position
-                let [x, y, _mods] = global.get_pointer();
-                getVirtualPointer().notify_absolute_motion(
-                    Clutter.get_current_event_time(),
-                    x, y);
-
-                getVirtualPointer().notify_button(Clutter.get_current_event_time(),
-                    Clutter.BUTTON_PRIMARY, Clutter.ButtonState.PRESSED);
-                getVirtualPointer().notify_button(Clutter.get_current_event_time(),
-                    Clutter.BUTTON_PRIMARY, Clutter.ButtonState.RELEASED);
+                Utils.clickAtCursorPoint();
             }
         });
     }
 
     activateDndTarget(zone, first) {
+        if (!zone) {
+            return;
+        }
         const mkZoneActor = props => {
             let actor = new St.Widget({ style_class: "tile-preview" });
             actor.x = props.x ?? 0;
@@ -505,6 +486,10 @@ export class MoveGrab {
         };
 
         zone.actor = mkZoneActor({ ...zone.actorParams });
+
+        // deactivate previous target
+        this.dndTargets.filter(t => t !== zone).forEach(t => this.deactivateDndTarget(t));
+        this.dndTargets = [zone];
 
         this.dndTarget = zone;
         this.zoneActors.add(zone.actor);
@@ -532,7 +517,7 @@ export class MoveGrab {
         }
 
         zone.space.cloneContainer.add_child(zone.actor);
-        zone.space.selection.hide();
+        zone.space.hideSelection();
         zone.actor.show();
         raise();
         Easer.addEase(zone.actor, params);
@@ -540,18 +525,17 @@ export class MoveGrab {
 
     deactivateDndTarget(zone) {
         if (zone) {
-            zone.space.selection.show();
+            zone.space.showSelection();
             Easer.addEase(zone.actor, {
                 time: Settings.prefs.animation_time,
                 [zone.originProp]: zone.center,
                 [zone.sizeProp]: 0,
-                onComplete: () => { zone.actor.destroy();
+                onComplete: () => {
+                    zone.actor.destroy();
                     this.zoneActors.delete(zone.actor);
                 },
             });
         }
-
-        this.dndTarget = null;
     }
 }
 

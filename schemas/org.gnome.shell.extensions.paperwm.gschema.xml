@@ -444,6 +444,11 @@
         <summary>Show the focus mode icon in the topbar</summary>
     </key>
 
+    <key type="b" name="monitor-focus-follows-mouse">
+        <default>true</default>
+        <summary>Sets whether monitor focus / activation follows mouse movement</summary>
+    </key>
+
     <key type="d" name="animation-time">
         <default>0.25</default>
         <summary>Duration of animations in seconds</summary>
