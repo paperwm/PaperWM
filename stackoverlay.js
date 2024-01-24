@@ -43,14 +43,13 @@ import { Settings, Utils, Tiling, Navigator, Grab, Scratch } from './imports.js'
   restack loops)
 */
 
-let pointerWatch, lastSpace;
+let pointerWatch;
 export function enable(extension) {
 
 }
 
 export function disable() {
     disableMultimonitorSupport();
-    lastSpace = null;
 }
 
 /**
@@ -74,11 +73,9 @@ export function enableMultimonitorSupport() {
             const space = Tiling.spaces.monitors.get(monitor);
 
             // same space
-            if (space === lastSpace) {
+            if (space === Tiling.spaces.activeSpace) {
                 return;
             }
-            // update to space
-            lastSpace = space;
 
             // check if in the midst of a window resize action
             if (Tiling.inGrab &&
