@@ -38,6 +38,8 @@ export class MoveGrab {
         // save whether this was tiled window at start of grab
         this.wasTiled = !(this.initialSpace.isFloating(metaWindow) ||
             Scratch.isScratchWindow(metaWindow));
+
+        this.dndTargets = [];
     }
 
     begin({ center } = {}) {
@@ -286,11 +288,12 @@ export class MoveGrab {
         };
 
         if (!sameTarget(target, this.dndTarget)) {
-            // deactivate only if target exists
+            // has a new zone target
             if (target) {
-                this.deactivateDndTarget(this.dndTarget);
-                this.activateDndTarget(target, initial);
+                this.dndTargets.push(target);
             }
+            this.dndTarget = null;
+            this.activateDndTarget(target, initial);
         }
     }
 
@@ -369,7 +372,7 @@ export class MoveGrab {
 
             if (dndTarget) {
                 let space = dndTarget.space;
-                space.selection.show();
+                space.showSelection();
 
                 if (Scratch.isScratchWindow(metaWindow))
                     Scratch.unmakeScratch(metaWindow);
@@ -411,6 +414,7 @@ export class MoveGrab {
                 metaWindow.move_frame(true, clone.x, clone.y);
                 Scratch.makeScratch(metaWindow);
                 this.initialSpace.moveDone();
+                this.initialSpace.showSelection();
 
                 actor.set_scale(clone.scale_x, clone.scale_y);
                 actor.opacity = clone.opacity;
@@ -495,6 +499,9 @@ export class MoveGrab {
     }
 
     activateDndTarget(zone, first) {
+        if (!zone) {
+            return;
+        }
         const mkZoneActor = props => {
             let actor = new St.Widget({ style_class: "tile-preview" });
             actor.x = props.x ?? 0;
@@ -505,6 +512,10 @@ export class MoveGrab {
         };
 
         zone.actor = mkZoneActor({ ...zone.actorParams });
+
+        // deactivate previous target
+        this.dndTargets.filter(t => t !== zone).forEach(t => this.deactivateDndTarget(t));
+        this.dndTargets = [zone];
 
         this.dndTarget = zone;
         this.zoneActors.add(zone.actor);
@@ -532,7 +543,7 @@ export class MoveGrab {
         }
 
         zone.space.cloneContainer.add_child(zone.actor);
-        zone.space.selection.hide();
+        zone.space.hideSelection();
         zone.actor.show();
         raise();
         Easer.addEase(zone.actor, params);
@@ -540,18 +551,17 @@ export class MoveGrab {
 
     deactivateDndTarget(zone) {
         if (zone) {
-            zone.space.selection.show();
+            zone.space.showSelection();
             Easer.addEase(zone.actor, {
                 time: Settings.prefs.animation_time,
                 [zone.originProp]: zone.center,
                 [zone.sizeProp]: 0,
-                onComplete: () => { zone.actor.destroy();
+                onComplete: () => {
+                    zone.actor.destroy();
                     this.zoneActors.delete(zone.actor);
                 },
             });
         }
-
-        this.dndTarget = null;
     }
 }
 
