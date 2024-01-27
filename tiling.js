@@ -159,6 +159,16 @@ export function enable(extension) {
             spaces.forEach(s => {
                 s.setSpaceTopbarElementsVisible();
                 s.updateName();
+
+                /**
+                 * The below resolves https://github.com/paperwm/PaperWM/issues/758.
+                 */
+                const active = spaces.activeSpace;
+                if (active) {
+                    const x = active.cloneContainer.x;
+                    active.viewportMoveToX(0);
+                    active.viewportMoveToX(x);
+                }
             });
         });
     };
