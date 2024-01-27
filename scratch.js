@@ -134,9 +134,7 @@ export function makeScratch(metaWindow) {
         }
     }
 
-    let monitor = Tiling.focusMonitor();
-    if (monitor.clickOverlay)
-        monitor.clickOverlay.hide();
+    Tiling.focusMonitor()?.clickOverlay?.hide();
 }
 
 export function unmakeScratch(metaWindow) {
@@ -208,8 +206,7 @@ export function show(top) {
     windows[0].activate(global.get_current_time());
 
     let monitor = Tiling.focusMonitor();
-    if (monitor.clickOverlay)
-        monitor.clickOverlay.hide();
+    monitor.clickOverlay?.hide();
 }
 
 export function hide() {
