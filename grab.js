@@ -307,8 +307,10 @@ export class MoveGrab {
         let metaWindow = this.window;
         // let [gx, gy] = event.get_coords();
         let [gx, gy, $] = global.get_pointer();
-        if (event.type() == Clutter.EventType.TOUCH_UPDATE)
+        if (event.type() == Clutter.EventType.TOUCH_UPDATE) {
             [gx, gy] = event.get_coords();
+            Clutter.get_default_backend().get_default_seat().warp_pointer(gx, gy);
+        }
         let [dx, dy] = this.pointerOffset;
         let clone = metaWindow.clone;
 
