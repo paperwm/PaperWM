@@ -1394,7 +1394,9 @@ border-radius: ${borderWidth}px;
         });
 
         // after creating new background apply this space's color
-        this.metaBackground.set_color(Clutter.color_from_string(this.color)[1]);
+        if (this.color) {
+            this.metaBackground.set_color(Clutter.color_from_string(this.color)[1]);
+        }
     }
 
     updateName() {
