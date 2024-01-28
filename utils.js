@@ -209,12 +209,14 @@ export function warpPointerToMonitor(monitor, center = false) {
 
 /**
  * Warps pointer to x, y coordinates.
+ * Optionally shows a ripple effect after warp.
  */
-export function warpPointer(x, y) {
-    let backend = Clutter.get_default_backend();
-    let seat = backend.get_default_seat();
+export function warpPointer(x, y, ripple = true) {
+    const seat = Clutter.get_default_backend().get_default_seat();
     seat.warp_pointer(x, y);
-    warpRipple.playAnimation(x, y);
+    if (ripple) {
+        warpRipple.playAnimation(x, y);
+    }
 }
 
 /**
