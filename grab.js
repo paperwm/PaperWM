@@ -311,6 +311,7 @@ export class MoveGrab {
         let [gx, gy, $] = global.get_pointer();
         if (event.type() === Clutter.EventType.TOUCH_UPDATE) {
             [gx, gy] = event.get_coords();
+            // We update global pointer to match touch event
             Utils.warpPointer(gx, gy, false);
         }
         let [dx, dy] = this.pointerOffset;
