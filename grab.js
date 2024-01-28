@@ -86,10 +86,12 @@ export class MoveGrab {
 
         this.signals.connect(this.actor, "button-release-event", this.end.bind(this));
         this.signals.connect(this.actor, "touch-event", (act, evt) => {
-            if (evt.type() == Clutter.EventType.TOUCH_END)
+            if (evt.type() === Clutter.EventType.TOUCH_END) {
                 this.end();
-            else
+            }
+            else {
                 this.motion(act, evt);
+            }
         });
         this.signals.connect(this.actor, "motion-event", this.motion.bind(this));
         this.signals.connect(global.display, "window-entered-monitor",
@@ -307,9 +309,9 @@ export class MoveGrab {
         let metaWindow = this.window;
         // let [gx, gy] = event.get_coords();
         let [gx, gy, $] = global.get_pointer();
-        if (event.type() == Clutter.EventType.TOUCH_UPDATE) {
+        if (event.type() === Clutter.EventType.TOUCH_UPDATE) {
             [gx, gy] = event.get_coords();
-            Clutter.get_default_backend().get_default_seat().warp_pointer(gx, gy);
+            Utils.warpPointer(gx, gy, false);
         }
         let [dx, dy] = this.pointerOffset;
         let clone = metaWindow.clone;
