@@ -163,12 +163,9 @@ export function enable(extension) {
                 /**
                  * The below resolves https://github.com/paperwm/PaperWM/issues/758.
                  */
-                const active = spaces.activeSpace;
-                if (active) {
-                    const x = active.cloneContainer.x;
-                    active.viewportMoveToX(0);
-                    active.viewportMoveToX(x);
-                }
+                const x = s.cloneContainer.x;
+                s.viewportMoveToX(0);
+                s.viewportMoveToX(x);
             });
         });
     };
