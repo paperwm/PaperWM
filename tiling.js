@@ -1291,8 +1291,10 @@ export class Space extends Array {
         this.updateName();
         this.updateShowTopBar();
         this.signals.connect(this.settings, 'changed::name', this.updateName.bind(this));
-        this.signals.connect(this.settings, 'changed::color',
-            this.updateColor.bind(this));
+        this.signals.connect(this.settings, 'changed::color', () => {
+            this.updateColor();
+            this.updateBackground();
+        });
         this.signals.connect(this.settings, 'changed::background',
             this.updateBackground.bind(this));
         this.signals.connect(gsettings, 'changed::default-show-top-bar',
@@ -1362,7 +1364,6 @@ export class Space extends Array {
 border: ${borderWidth}px ${this.color};
 border-radius: ${borderWidth}px;
 `);
-        this.metaBackground?.set_color(Clutter.color_from_string(color)[1]);
     }
 
     updateBackground() {
@@ -1391,6 +1392,9 @@ border-radius: ${borderWidth}px;
         this.background.content.set({
             background: this.metaBackground,
         });
+
+        // after creating new background apply this space's color
+        this.metaBackground.set_color(Clutter.color_from_string(this.color)[1]);
     }
 
     updateName() {
@@ -1683,8 +1687,8 @@ border-radius: ${borderWidth}px;
                 this.monitor = monitor;
             }
             this.createBackground();
-            this.updateBackground();
             this.updateColor();
+            this.updateBackground();
 
             // update width of windowPositonBarBackdrop (to match monitor)
             this.windowPositionBarBackdrop.width = monitor.width;
