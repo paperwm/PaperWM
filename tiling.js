@@ -846,6 +846,15 @@ export class Space extends Array {
         this.signals.connect(metaWindow, 'position-changed', w => {
             if (inGrab)
                 return;
+
+            // guard against recursively calling this method
+            // see https://github.com/paperwm/PaperWM/issues/769
+            if (w.pos_change_time &&
+                w.pos_change_time === global.get_current_time()) {
+                return;
+            }
+            delete w.pos_change_time;
+
             let f = w.get_frame_rect();
             let clone = w.clone;
             let x = this.visibleX(w);
@@ -854,6 +863,7 @@ export class Space extends Array {
             x += this.monitor.x;
             if (f.x !== x || f.y !== y) {
                 try {
+                    w.pos_change_time = global.get_current_time();
                     w.move_frame(true, x, y);
                 }
                 catch (ex) {
