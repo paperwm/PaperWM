@@ -839,9 +839,9 @@ export class Space extends Array {
         }
 
         /*
-         * Fix (still needed is 44) for bug where move_frame sometimes triggers
+         * Fix (still needed in 45) for bug where move_frame sometimes triggers
          * another move back to its original position. Make sure tiled windows are
-         * always positioned correctly.
+         * always positioned correctly (synced with clone position).
          */
         this.signals.connect(metaWindow, 'position-changed', w => {
             if (inGrab)
@@ -851,6 +851,7 @@ export class Space extends Array {
             // see https://github.com/paperwm/PaperWM/issues/769
             if (w.pos_change_time &&
                 w.pos_change_time === global.get_current_time()) {
+                console.warn(`clone/window position-changed recursive call: ${w.title}`);
                 return;
             }
             delete w.pos_change_time;
