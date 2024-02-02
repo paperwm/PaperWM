@@ -191,10 +191,11 @@ export function isInRect(x, y, r) {
  * Retrieves global pointer coordinates taking into account touch screen events.
  */
 export function getPointerCoords() {
-    if (inTouch)
+    if (inTouch) {
         return touchCoords;
-    else
+    } else {
         return global.get_pointer();
+    }
 }
 
 /**

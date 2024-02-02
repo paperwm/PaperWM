@@ -86,8 +86,7 @@ export class MoveGrab {
 
         this.signals.connect(this.actor, "button-release-event", this.end.bind(this));
         this.signals.connect(this.actor, "touch-event", (act, evt) => {
-            if (evt.type() === Clutter.EventType.TOUCH_END
-                || evt.type() === Clutter.EventType.TOUCH_CANCEL) {
+            if (evt.type() === Clutter.EventType.TOUCH_END) {
                 this.end();
             }
             else {
@@ -122,7 +121,7 @@ export class MoveGrab {
         let clone = metaWindow.clone;
         let space = this.initialSpace;
 
-        let [gx, gy, $] = Utils.getPointerCoords();
+        let [gx, gy, $] = global.get_pointer();
         let point = {};
         if (center) {
             point = space.cloneContainer.apply_relative_transform_to_point(
@@ -178,7 +177,7 @@ export class MoveGrab {
     }
 
     spaceMotion(space, background, event) {
-        let [gx, gy, $] = Utils.getPointerCoords();
+        let [gx, gy, $] = global.get_pointer();
         let [sx, sy] = space.globalToScroll(gx, gy, { useTarget: true });
         this.selectDndZone(space, sx, sy);
     }
@@ -309,7 +308,12 @@ export class MoveGrab {
     motion(actor, event) {
         let metaWindow = this.window;
         // let [gx, gy] = event.get_coords();
-        let [gx, gy, $] = Utils.getPointerCoords();
+        let [gx, gy, $] = global.get_pointer();
+        if (event.type() === Clutter.EventType.TOUCH_UPDATE) {
+            [gx, gy] = event.get_coords();
+            // We update global pointer to match touch event
+            Utils.warpPointer(gx, gy, false);
+        }
         let [dx, dy] = this.pointerOffset;
         let clone = metaWindow.clone;
 
@@ -366,7 +370,7 @@ export class MoveGrab {
         let metaWindow = this.window;
         let actor = metaWindow.get_compositor_private();
         let clone = metaWindow.clone;
-        let [gx, gy, $] = Utils.getPointerCoords();
+        let [gx, gy, $] = global.get_pointer();
 
         this.zoneActors.forEach(actor => actor.destroy());
         let params = {
@@ -494,7 +498,7 @@ export class MoveGrab {
         Utils.later_add(Meta.LaterType.IDLE, () => {
             if (!global.display.end_grab_op && this.wasTiled) {
                 // move to current cursor position
-                let [x, y, _mods] = Utils.getPointerCoords();
+                let [x, y, _mods] = global.get_pointer();
                 getVirtualPointer().notify_absolute_motion(
                     Clutter.get_current_event_time(),
                     x, y);
