@@ -849,12 +849,11 @@ export class Space extends Array {
 
             // guard against recursively calling this method
             // see https://github.com/paperwm/PaperWM/issues/769
-            if (w.pos_change_time &&
-                w.pos_change_time === global.get_current_time()) {
+            if (w.pos_mismatch_count &&
+                w.pos_mismatch_count > 1) {
                 console.warn(`clone/window position-changed recursive call: ${w.title}`);
                 return;
             }
-            delete w.pos_change_time;
 
             let f = w.get_frame_rect();
             let clone = w.clone;
@@ -862,9 +861,19 @@ export class Space extends Array {
             let y = this.monitor.y + clone.targetY;
             x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
             x += this.monitor.x;
-            if (f.x !== x || f.y !== y) {
+            if (f.x === x && f.y === y) {
+                delete w.pos_mismatch_count;
+            }
+            else {
+                // mismatch detected
+                // move frame to ensure window position matches clone
                 try {
-                    w.pos_change_time = global.get_current_time();
+                    if (!w.pos_mismatch_count) {
+                        w.pos_mismatch_count = 0;
+                    }
+                    else {
+                        w.pos_mismatch_count += 1;
+                    }
                     w.move_frame(true, x, y);
                 }
                 catch (ex) {
@@ -1842,7 +1851,10 @@ border-radius: ${borderWidth}px;
     }
 
     destroy() {
-        this.getWindows().forEach(w => removeHandlerFlags(w));
+        this.getWindows().forEach(w => {
+            removeHandlerFlags(w);
+            delete w.pos_mismatch_count;
+        });
         this.signals.destroy();
         this.signals = null;
         this.background.destroy();
