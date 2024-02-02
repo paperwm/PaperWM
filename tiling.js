@@ -847,6 +847,20 @@ export class Space extends Array {
             if (inGrab)
                 return;
 
+            let f = w.get_frame_rect();
+            let clone = w.clone;
+            let x = this.visibleX(w);
+            let y = this.monitor.y + clone.targetY;
+            x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
+            x += this.monitor.x;
+
+            // check if mismatch tracking needed, otherwise leave
+            if (f.x === x && f.y === y) {
+                // delete any mismatch counter (e.g. from previous attempt)
+                delete w.pos_mismatch_count;
+                return;
+            }
+
             // guard against recursively calling this method
             // see https://github.com/paperwm/PaperWM/issues/769
             if (w.pos_mismatch_count &&
@@ -855,30 +869,19 @@ export class Space extends Array {
                 return;
             }
 
-            let f = w.get_frame_rect();
-            let clone = w.clone;
-            let x = this.visibleX(w);
-            let y = this.monitor.y + clone.targetY;
-            x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
-            x += this.monitor.x;
-            if (f.x === x && f.y === y) {
-                delete w.pos_mismatch_count;
+            // mismatch detected
+            // move frame to ensure window position matches clone
+            try {
+                if (!w.pos_mismatch_count) {
+                    w.pos_mismatch_count = 0;
+                }
+                else {
+                    w.pos_mismatch_count += 1;
+                }
+                w.move_frame(true, x, y);
             }
-            else {
-                // mismatch detected
-                // move frame to ensure window position matches clone
-                try {
-                    if (!w.pos_mismatch_count) {
-                        w.pos_mismatch_count = 0;
-                    }
-                    else {
-                        w.pos_mismatch_count += 1;
-                    }
-                    w.move_frame(true, x, y);
-                }
-                catch (ex) {
+            catch (ex) {
 
-                }
             }
         });
 
