@@ -20,15 +20,15 @@ jobs:
         with:
           script: |
             github.rest.pulls.update({
-              pull_number = context.pull.number,
-              owner = context.repo.owner,
-              repo = context.repo.repo,
+              pull_number: context.pull.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
 
-              base = "develop"
+              base: "develop"
             });
             github.rest.issues.createComment({
-              issue_number = context.pull.number,
-              owner = context.repo.owner,
-              repo = context.repo.repo,
-              body = "Thanks for your contribution! We don't accept pull requests to the `release` branch. I have rebased your pull request onto `develop`, check for any conflicts."
+              issue_number: context.pull.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "Thanks for your contribution! We don't accept pull requests to the `release` branch. I have rebased your pull request onto `develop`, check for any conflicts."
             });
