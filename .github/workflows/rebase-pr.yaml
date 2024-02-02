@@ -20,14 +20,14 @@ jobs:
         with:
           script: |
             github.rest.pulls.update({
-              pull_number: context.number,
+              pull_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
 
               base: "develop"
             });
             github.rest.issues.createComment({
-              issue_number: context.number,
+              issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: "Thanks for your contribution! We don't accept pull requests to the `release` branch. I have rebased your pull request onto `develop`, check for any conflicts."
