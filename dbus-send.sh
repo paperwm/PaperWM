@@ -1,11 +1,30 @@
 #!/usr/bin/env bash
-#
-# Usage:
-#
 
 set -euo pipefail
 
+script_name=$(basename "${BASH_SOURCE[0]}")
+
+usage() {
+    cat <<EOF
+Usage: ${script_name} [-h|--help] COMMAND [...]
+
+Send dbus messages to PaperWM.
+
+Available commands:
+
+  action ACTION_NAME
+  list-actions
+
+EOF
+}
+
 main() {
+    if [[ $# -eq 0 ]]; then
+        echo "ERROR: Command required." >&2
+        usage
+        exit 1
+    fi
+
     while [[ $# -gt 0 ]]; do
         case "$1" in
             action)
@@ -17,6 +36,15 @@ main() {
                 shift
                 list_actions
                 return
+                ;;
+            -h|--help)
+                usage
+                exit
+                ;;
+            *)
+                echo "ERROR: Unknown command: $1" >&2
+                usage
+                exit 1
                 ;;
         esac
     done
