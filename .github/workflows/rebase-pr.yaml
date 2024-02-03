@@ -1,0 +1,34 @@
+#
+# This workflow catches PRs made to 'release' and rebases them onto 'develop'
+#
+
+name: rebase-pr
+
+on:
+  pull_request:
+    types: [opened]
+    branches:
+      - release
+
+jobs:
+  rebase-pr:
+    name: Rebase pull request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Perform rebase
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.pulls.update({
+              pull_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+
+              base: "develop"
+            });
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "Thanks for your contribution! We don't accept pull requests to the `release` branch. I have rebased your pull request onto `develop`, check for any conflicts."
+            });

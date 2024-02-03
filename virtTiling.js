@@ -55,13 +55,13 @@ export function repl() {
     let tilingStyle = `background-color: rgba(190, 190, 0, 0.3);`;
     let tilingContainer = new St.Widget({ name: "tiling", style: tilingStyle });
 
-    global.stage.add_actor(virtStage);
+    global.stage.add_child(virtStage);
     virtStage.x = 3000;
     virtStage.y = 300;
 
-    virtStage.add_actor(monitor);
-    monitor.add_actor(panel);
-    monitor.add_actor(tilingContainer);
+    virtStage.add_child(monitor);
+    monitor.add_child(panel);
+    monitor.add_child(tilingContainer);
 
     function sync(space_ = space) {
         let columns = layout(
@@ -143,7 +143,7 @@ export function render(columns, tiling) {
     for (let col of columns) {
         for (let window of col) {
             let windowActor = createWindowActor(window);
-            tiling.add_actor(windowActor);
+            tiling.add_child(windowActor);
         }
     }
 }

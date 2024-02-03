@@ -159,6 +159,13 @@ export function enable(extension) {
             spaces.forEach(s => {
                 s.setSpaceTopbarElementsVisible();
                 s.updateName();
+
+                /**
+                 * The below resolves https://github.com/paperwm/PaperWM/issues/758.
+                 */
+                const x = s.cloneContainer.x;
+                s.viewportMoveToX(0);
+                s.viewportMoveToX(x);
             });
         });
     };
@@ -268,7 +275,7 @@ export class Space extends Array {
         workspaceIndicator.connect('button-press-event', () => Main.overview.toggle());
         this.workspaceIndicator = workspaceIndicator;
         let workspaceLabel = new St.Label();
-        workspaceIndicator.add_actor(workspaceLabel);
+        workspaceIndicator.add_child(workspaceLabel);
         this.workspaceLabel = workspaceLabel;
         workspaceLabel.hide();
 
@@ -281,15 +288,15 @@ export class Space extends Array {
         clip.space = this;
         cloneContainer.space = this;
 
-        container.add_actor(clip);
-        clip.add_actor(actor);
-        actor.add_actor(workspaceIndicator);
+        container.add_child(clip);
+        clip.add_child(actor);
+        actor.add_child(workspaceIndicator);
         actor.add_child(this.focusModeIcon);
-        actor.add_actor(cloneClip);
-        cloneClip.add_actor(cloneContainer);
+        actor.add_child(cloneClip);
+        cloneClip.add_child(cloneContainer);
 
         this.border = new St.Widget({ name: "border" });
-        this.actor.add_actor(this.border);
+        this.actor.add_child(this.border);
         this.border.hide();
 
         let monitor = Main.layoutManager.primaryMonitor;
@@ -506,10 +513,6 @@ export class Space extends Array {
             let resizable = !mw.fullscreen &&
                 mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
-            if (mw._fullscreen_frame?.tiledWidth) {
-                targetWidth = mw._fullscreen_frame.tiledWidth;
-            }
-
             if (mw.preferredWidth) {
                 let prop = mw.preferredWidth;
                 if (prop.value <= 0) {
@@ -640,14 +643,24 @@ export class Space extends Array {
             if (column.length === 0)
                 continue;
 
-            let selectedInColumn = i === selectedIndex ? this.selectedWindow : null;
+            // selected window in column
+            const selectedInColumn = i === selectedIndex ? this.selectedWindow : null;
 
             let targetWidth;
-            if (i === selectedIndex) {
-                targetWidth = selectedInColumn.get_frame_rect().width;
-            } else {
-                targetWidth = Math.max(...column.map(w => w.get_frame_rect().width));
+            if (selectedInColumn) {
+                // if selected window - use tiledWidth or frame.width (fallback)
+                targetWidth =
+                    selectedInColumn?._fullscreen_frame?.tiledWidth ??
+                    selectedInColumn.get_frame_rect().width;
             }
+            else {
+                // otherwise get max of tiledWith or frame.with (fallback)
+                targetWidth = Math.max(...column.map(w => {
+                    return w?._fullscreen_frame?.tiledWidth ?? w.get_frame_rect().width;
+                }));
+            }
+
+            // enforce minimum
             targetWidth = Math.min(targetWidth, workArea.width - 2 * Settings.prefs.minimum_margin);
 
             let resultingWidth, relayout;
@@ -885,10 +898,10 @@ export class Space extends Array {
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
 
         let clone = metaWindow.clone;
-        this.cloneContainer.remove_actor(clone);
+        this.cloneContainer.remove_child(clone);
         // Don't destroy the selection highlight widget
         if (clone.first_child.name === 'selection')
-            clone.remove_actor(clone.first_child);
+            clone.remove_child(clone.first_child);
         let actor = metaWindow.get_compositor_private();
         if (actor)
             actor.remove_clip();
@@ -924,7 +937,7 @@ export class Space extends Array {
         if (i === -1)
             return false;
         this._floating.splice(i, 1);
-        this.actor.remove_actor(metaWindow.clone);
+        this.actor.remove_child(metaWindow.clone);
         return true;
     }
 
@@ -1281,8 +1294,10 @@ export class Space extends Array {
         this.updateName();
         this.updateShowTopBar();
         this.signals.connect(this.settings, 'changed::name', this.updateName.bind(this));
-        this.signals.connect(this.settings, 'changed::color',
-            this.updateColor.bind(this));
+        this.signals.connect(this.settings, 'changed::color', () => {
+            this.updateColor();
+            this.updateBackground();
+        });
         this.signals.connect(this.settings, 'changed::background',
             this.updateBackground.bind(this));
         this.signals.connect(gsettings, 'changed::default-show-top-bar',
@@ -1310,11 +1325,11 @@ export class Space extends Array {
         let showTopBar = this.getShowTopBarSetting();
 
         // remove window position bar actors
-        this.actor.remove_actor(this.windowPositionBarBackdrop);
-        this.actor.remove_actor(this.windowPositionBar);
+        this.actor.remove_child(this.windowPositionBarBackdrop);
+        this.actor.remove_child(this.windowPositionBar);
         if (showTopBar) {
-            this.actor.add_actor(this.windowPositionBarBackdrop);
-            this.actor.add_actor(this.windowPositionBar);
+            this.actor.add_child(this.windowPositionBarBackdrop);
+            this.actor.add_child(this.windowPositionBar);
         }
 
         this.updateShowTopBar();
@@ -1352,7 +1367,6 @@ export class Space extends Array {
 border: ${borderWidth}px ${this.color};
 border-radius: ${borderWidth}px;
 `);
-        this.metaBackground?.set_color(Clutter.color_from_string(color)[1]);
     }
 
     updateBackground() {
@@ -1381,6 +1395,11 @@ border-radius: ${borderWidth}px;
         this.background.content.set({
             background: this.metaBackground,
         });
+
+        // after creating new background apply this space's color
+        if (this.color) {
+            this.metaBackground.set_color(Clutter.color_from_string(this.color)[1]);
+        }
     }
 
     updateName() {
@@ -1627,8 +1646,13 @@ border-radius: ${borderWidth}px;
                 Navigator.finishNavigation();
             });
 
-        this.signals.connect(
-            this.background, 'scroll-event',
+        // ensure this space is active if touched
+        this.signals.connect(this.background, 'touch-event',
+            (actor, event) => {
+                this.activateWithFocus(this.selectedWindow, false, false);
+            });
+
+        this.signals.connect(this.background, 'scroll-event',
             (actor, event) => {
                 if (!inGrab && !Navigator.navigating)
                     return;
@@ -1668,8 +1692,8 @@ border-radius: ${borderWidth}px;
                 this.monitor = monitor;
             }
             this.createBackground();
-            this.updateBackground();
             this.updateColor();
+            this.updateBackground();
 
             // update width of windowPositonBarBackdrop (to match monitor)
             this.windowPositionBarBackdrop.width = monitor.width;
@@ -1952,7 +1976,6 @@ export const Spaces = class Spaces extends Map {
         for (let monitor of monitors) {
             let overlay = new ClickOverlay(monitor, this.onlyOnPrimary);
             monitor.clickOverlay = overlay;
-            overlay.activate();
             this.clickOverlays.push(overlay);
         }
 
@@ -1974,10 +1997,9 @@ export const Spaces = class Spaces extends Map {
             });
 
             this.spaceContainer.show();
-            activeSpace.monitor.clickOverlay.deactivate();
             Topbar.refreshWorkspaceIndicator();
             this.setSpaceTopbarElementsVisible();
-            Stackoverlay.multimonitorDragDropSupport();
+            Stackoverlay.multimonitorSupport();
         };
 
         if (this.onlyOnPrimary) {
@@ -2291,14 +2313,6 @@ export const Spaces = class Spaces extends Map {
             toSpace,
             fromSpace,
             doAnimate);
-
-        toSpace.monitor?.clickOverlay.deactivate();
-
-        for (let monitor of Main.layoutManager.monitors) {
-            if (monitor === toSpace.monitor)
-                continue;
-            monitor.clickOverlay.activate();
-        }
 
         // Update panel to handle target workspace
         signals.disconnect(Main.panel, this.touchSignal);
@@ -3009,7 +3023,7 @@ export function registerWindow(metaWindow) {
     let cloneActor = new Clutter.Clone({ source: actor });
     let clone = new Clutter.Actor();
 
-    clone.add_actor(cloneActor);
+    clone.add_child(cloneActor);
     clone.targetX = 0;
     clone.meta_window = metaWindow;
 
@@ -3022,6 +3036,9 @@ export function registerWindow(metaWindow) {
     signals.connect(metaWindow, 'size-changed', allocateClone);
     // Note: runs before gnome-shell's minimize handling code
     signals.connect(metaWindow, 'notify::fullscreen', () => {
+        // if window is in a column, expel it
+        barfThis(metaWindow);
+
         Topbar.fixTopBar();
         spaces.spaceOfWindow(metaWindow)?.setSpaceTopbarElementsVisible(true);
     });
@@ -3200,7 +3217,7 @@ export function nonTiledSizeHandler(metaWindow) {
         return;
     }
 
-    // if pwm fullscreen previously
+    // if here then was previously in fullscreen (and came out of)
     if (metaWindow._fullscreen_lock) {
         delete metaWindow._fullscreen_lock;
         let fsf = metaWindow._fullscreen_frame;
@@ -3898,7 +3915,7 @@ export function getDefaultFocusMode() {
 }
 
 // `MetaWindow::focus` handling
-export function focus_handler(metaWindow, user_data) {
+export function focus_handler(metaWindow) {
     console.debug("focus:", metaWindow?.title);
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
@@ -3922,11 +3939,11 @@ export function focus_handler(metaWindow, user_data) {
     else {
         let needLayout = false;
         /**
-         * For non-topbar spaces, bring down fullscreen windows to mimic
-         * gnome behaviour with a topbar.
+         * If has fullscreen window - when selected non-fullscreen window, do layout:
+         * For non-topbar spaces, Bring down fullscreen windows to mimic gnome behaviour with a topbar,
+         * Also ensures if columns group, then it's windows are correctly proportioned.
          */
-        if (!space.hasTopBar &&
-            space.hasFullScreenWindow()) {
+        if (space.hasFullScreenWindow()) {
             needLayout = true;
         }
 
@@ -4492,8 +4509,14 @@ export function slurp(metaWindow) {
         from = index;
     }
 
+    // slurping fullscreen windows is trouble
     if (!metaWindowToSlurp || space.length < 2) {
         return;
+    }
+
+    // slurping fullscreen windows is trouble, unfullscreen when slurping
+    if (metaWindowToSlurp?.fullscreen) {
+        metaWindowToSlurp.unmake_fullscreen();
     }
 
     space[to].push(metaWindowToSlurp);
@@ -4511,6 +4534,11 @@ export function slurp(metaWindow) {
     });
 }
 
+/**
+ * Barfs the bottom window from a column.
+ * @param {MetaWindow} metaWindow
+ * @returns
+ */
 export function barf(metaWindow) {
     if (!metaWindow)
         return;
@@ -4526,6 +4554,34 @@ export function barf(metaWindow) {
 
     let bottom = column.splice(-1, 1)[0];
     space.splice(index + 1, 0, [bottom]);
+
+    space.layout(true, {
+        customAllocators: { [index]: allocateEqualHeight, ensure: false },
+    });
+}
+
+/**
+ * Barfs (expels) a specific window from a column.
+ * @param {MetaWindow} metaWindow
+ * @returns
+ */
+export function barfThis(metaWindow) {
+    if (!metaWindow)
+        return;
+
+    let space = spaces.spaceOfWindow(metaWindow);
+    let index = space.indexOf(metaWindow);
+    if (index === -1)
+        return;
+
+    let column = space[index];
+    if (column.length < 2)
+        return;
+
+    // remove metawindow from column
+    const indexOfWindow = column.indexOf(metaWindow);
+    column.splice(indexOfWindow, 1);
+    space.splice(index + 1, 0, [metaWindow]);
 
     space.layout(true, {
         customAllocators: { [index]: allocateEqualHeight, ensure: false },
@@ -4605,7 +4661,7 @@ export function takeWindow(metaWindow, space, { navigator }) {
 
     navigator._moving.push(metaWindow);
     let parent = backgroundGroup;
-    parent.add_actor(metaWindow.clone);
+    parent.add_child(metaWindow.clone);
     let lowest = navigator._moving[navigator._moving.length - 2];
     lowest && parent.set_child_below_sibling(metaWindow.clone, lowest.clone);
     let point = space.cloneContainer.apply_relative_transform_to_point(
