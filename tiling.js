@@ -839,26 +839,49 @@ export class Space extends Array {
         }
 
         /*
-         * Fix (still needed is 44) for bug where move_frame sometimes triggers
+         * Fix (still needed in 45) for bug where move_frame sometimes triggers
          * another move back to its original position. Make sure tiled windows are
-         * always positioned correctly.
+         * always positioned correctly (synced with clone position).
          */
         this.signals.connect(metaWindow, 'position-changed', w => {
             if (inGrab)
                 return;
+
             let f = w.get_frame_rect();
             let clone = w.clone;
             let x = this.visibleX(w);
             let y = this.monitor.y + clone.targetY;
             x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
             x += this.monitor.x;
-            if (f.x !== x || f.y !== y) {
-                try {
-                    w.move_frame(true, x, y);
-                }
-                catch (ex) {
 
+            // check if mismatch tracking needed, otherwise leave
+            if (f.x === x && f.y === y) {
+                // delete any mismatch counter (e.g. from previous attempt)
+                delete w.pos_mismatch_count;
+                return;
+            }
+
+            // guard against recursively calling this method
+            // see https://github.com/paperwm/PaperWM/issues/769
+            if (w.pos_mismatch_count &&
+                w.pos_mismatch_count > 1) {
+                console.warn(`clone/window position-changed recursive call: ${w.title}`);
+                return;
+            }
+
+            // mismatch detected
+            // move frame to ensure window position matches clone
+            try {
+                if (!w.pos_mismatch_count) {
+                    w.pos_mismatch_count = 0;
                 }
+                else {
+                    w.pos_mismatch_count += 1;
+                }
+                w.move_frame(true, x, y);
+            }
+            catch (ex) {
+
             }
         });
 
@@ -1831,7 +1854,10 @@ border-radius: ${borderWidth}px;
     }
 
     destroy() {
-        this.getWindows().forEach(w => removeHandlerFlags(w));
+        this.getWindows().forEach(w => {
+            removeHandlerFlags(w);
+            delete w.pos_mismatch_count;
+        });
         this.signals.destroy();
         this.signals = null;
         this.background.destroy();
