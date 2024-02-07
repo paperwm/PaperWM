@@ -1071,6 +1071,80 @@ export class Space extends Array {
         ensureViewport(metaWindow, space);
     }
 
+    switchGlobalLeft() { this.switchGlobal(Meta.MotionDirection.LEFT); }
+    switchGlobalRight() { this.switchGlobal(Meta.MotionDirection.RIGHT); }
+    switchGlobalUp() { this.switchGlobal(Meta.MotionDirection.UP); }
+    switchGlobalDown() { this.switchGlobal(Meta.MotionDirection.DOWN); }
+    switchGlobal(direction) {
+        let space = this;
+        let index = space.selectedIndex();
+        if (index === -1) {
+            return;
+        }
+        let row = space[index].indexOf(space.selectedWindow);
+
+        switch (direction) {
+        case Meta.MotionDirection.RIGHT:
+            index++;
+            break;
+        case Meta.MotionDirection.LEFT:
+            index--;
+        }
+        if (index < 0 || index >= space.length) {
+            let monitor = focusMonitor();
+            let dir = (index < 0)?
+                Meta.DisplayDirection.LEFT : Meta.DisplayDirection.RIGHT;
+            let i = display.get_monitor_neighbor_index(monitor.index, dir);
+            if (i === -1)
+                return;
+
+            let newMonitor = Main.layoutManager.monitors[i];
+            space = spaces.monitors.get(newMonitor);
+            if (dir == Meta.DisplayDirection.LEFT) {
+                index = space.length - 1;
+            } else {
+                index = 0;
+            }
+            if (space[index].length <= row)
+                row = space[index].length - 1;
+            space.activate(false, false);
+        }
+
+        let column = space[index];
+        if (column.length <= row)
+            row = column.length - 1;
+
+        switch (direction) {
+        case Meta.MotionDirection.UP:
+            row--;
+            break;
+        case Meta.MotionDirection.DOWN:
+            row++;
+        }
+        if (row < 0 || row >= column.length) {
+            let monitor = focusMonitor();
+            let dir = (row < 0)?
+                Meta.DisplayDirection.UP : Meta.DisplayDirection.DOWN;
+            let i = display.get_monitor_neighbor_index(monitor.index, dir);
+            if (i === -1)
+                return;
+
+            let newMonitor = Main.layoutManager.monitors[i];
+            space = spaces.monitors.get(newMonitor);
+            if (space.length <= index)
+                index = space.length - 1;
+            if (dir == Meta.DisplayDirection.UP) {
+                row = space[index].length - 1;
+            } else {
+                row = 0;
+            }
+            space.activate(false, false);
+        }
+
+        let metaWindow = space.getWindow(index, row);
+        ensureViewport(metaWindow, space);
+    }
+
     /**
      * Return the x position of the visible element of this window.
      */

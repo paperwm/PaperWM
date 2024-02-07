@@ -167,6 +167,23 @@
         <summary>Switch to the below window</summary>
     </key>
 
+    <key type="as" name="switch-global-right">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the right window (no monitor boundary)</summary>
+    </key>
+    <key type="as" name="switch-global-left">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the left window (no monitor boundary)</summary>
+    </key>
+    <key type="as" name="switch-global-up">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the above window (no monitor boundary)</summary>
+    </key>
+    <key type="as" name="switch-global-down">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the below window (no monitor boundary)</summary>
+    </key>
+
     <key type="as" name="switch-first">
         <default><![CDATA[['<Super>Home']]]></default>
         <summary>Switch to the first window</summary>
