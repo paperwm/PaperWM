@@ -257,9 +257,9 @@
       <summary>Toggle fullscreen</summary>
     </key>
 
-    <key type="as" name="activate-under-mouse">
-        <default><![CDATA[['<Super>a']]]></default>
-        <summary>Activate the window under the mouse</summary>
+    <key type="as" name="activate-window-under-cursor">
+        <default><![CDATA[[]]]></default>
+        <summary>Activate the window under mouse cursor</summary>
     </key>
 
     <key type="as" name="close-window">
