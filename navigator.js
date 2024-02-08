@@ -199,7 +199,7 @@ class ActionDispatcher {
             }
 
             if (!Tiling.inGrab && action.options.opensMinimap) {
-                nav._showMinimap(space);
+                nav.showMinimap(space);
             }
             action.handler(metaWindow, space, { navigator: this.navigator });
             if (space !== Tiling.spaces.selectedSpace) {
@@ -286,7 +286,7 @@ class NavigatorClass {
         this.space.startAnimate();
     }
 
-    _showMinimap(space) {
+    showMinimap(space) {
         let minimap = this.minimaps.get(space);
         if (!minimap) {
             let minimapId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
