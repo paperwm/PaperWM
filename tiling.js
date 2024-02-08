@@ -4387,7 +4387,7 @@ export function activateWindowUnderCursor(metaWindow, space) {
     const [ok, x, y] = space.actor.transform_stage_point(gx, gy);
     const mw = space?.getWindowAtPoint(x, y);
     if (mw) {
-        space.activateWithFocus(mw);
+        space.activateWithFocus(mw, false, false);
     }
 }
 
