@@ -172,6 +172,11 @@ export function setupActions(settings) {
     registerMinimapAction("switch-up", (mw, space) => space.switchUp());
     registerMinimapAction("switch-down", (mw, space) => space.switchDown());
 
+    registerMinimapAction("switch-global-right", (mw, space) => space.switchGlobalRight());
+    registerMinimapAction("switch-global-left", (mw, space) => space.switchGlobalLeft());
+    registerMinimapAction("switch-global-up", (mw, space) => space.switchGlobalUp());
+    registerMinimapAction("switch-global-down", (mw, space) => space.switchGlobalDown());
+
     registerMinimapAction("move-left",
         (mw, space) => space.swap(Meta.MotionDirection.LEFT));
     registerMinimapAction("move-right",
