@@ -1092,15 +1092,15 @@ export class Space extends Array {
         }
         if (index < 0 || index >= space.length) {
             let monitor = focusMonitor();
-            let dir = (index < 0)?
-                Meta.DisplayDirection.LEFT : Meta.DisplayDirection.RIGHT;
+            let dir = index < 0
+                ? Meta.DisplayDirection.LEFT : Meta.DisplayDirection.RIGHT;
             let i = display.get_monitor_neighbor_index(monitor.index, dir);
             if (i === -1)
                 return;
 
             let newMonitor = Main.layoutManager.monitors[i];
             space = spaces.monitors.get(newMonitor);
-            if (dir == Meta.DisplayDirection.LEFT) {
+            if (dir === Meta.DisplayDirection.LEFT) {
                 index = space.length - 1;
             } else {
                 index = 0;
@@ -1108,6 +1108,8 @@ export class Space extends Array {
             if (space[index].length <= row)
                 row = space[index].length - 1;
             space.activate(false, false);
+            Navigator.finishNavigation();
+            Navigator.getNavigator().showMinimap(space);
         }
 
         let column = space[index];
@@ -1123,8 +1125,8 @@ export class Space extends Array {
         }
         if (row < 0 || row >= column.length) {
             let monitor = focusMonitor();
-            let dir = (row < 0)?
-                Meta.DisplayDirection.UP : Meta.DisplayDirection.DOWN;
+            let dir = row < 0
+                ? Meta.DisplayDirection.UP : Meta.DisplayDirection.DOWN;
             let i = display.get_monitor_neighbor_index(monitor.index, dir);
             if (i === -1)
                 return;
@@ -1133,12 +1135,14 @@ export class Space extends Array {
             space = spaces.monitors.get(newMonitor);
             if (space.length <= index)
                 index = space.length - 1;
-            if (dir == Meta.DisplayDirection.UP) {
+            if (dir === Meta.DisplayDirection.UP) {
                 row = space[index].length - 1;
             } else {
                 row = 0;
             }
             space.activate(false, false);
+            Navigator.finishNavigation();
+            Navigator.getNavigator().showMinimap(space);
         }
 
         let metaWindow = space.getWindow(index, row);
