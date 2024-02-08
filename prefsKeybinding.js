@@ -50,6 +50,7 @@ const actions = {
         'cycle-height',
         'cycle-height-backwards',
         'take-window',
+        'activate-under-mouse',
     ],
     workspaces: [
         'previous-workspace',
