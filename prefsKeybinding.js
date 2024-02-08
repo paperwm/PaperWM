@@ -54,6 +54,7 @@ const actions = {
         'cycle-height',
         'cycle-height-backwards',
         'take-window',
+        'activate-window-under-cursor',
     ],
     workspaces: [
         'previous-workspace',

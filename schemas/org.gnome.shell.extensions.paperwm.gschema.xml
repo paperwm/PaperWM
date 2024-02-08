@@ -274,6 +274,11 @@
       <summary>Toggle fullscreen</summary>
     </key>
 
+    <key type="as" name="activate-window-under-cursor">
+        <default><![CDATA[[]]]></default>
+        <summary>Activate the window under mouse cursor</summary>
+    </key>
+
     <key type="as" name="close-window">
       <default><![CDATA[['<Super>BackSpace']]]></default>
       <summary>Close the active window</summary>

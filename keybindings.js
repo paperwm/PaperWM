@@ -196,6 +196,9 @@ export function setupActions(settings) {
         Scratch.toggle,
         Meta.KeyBindingFlags.PER_WINDOW);
 
+    registerPaperAction("activate-window-under-cursor",
+        Tiling.activateWindowUnderCursor);
+
     registerPaperAction("switch-focus-mode",
         Tiling.switchToNextFocusMode);
 
