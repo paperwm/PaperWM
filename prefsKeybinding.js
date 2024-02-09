@@ -27,6 +27,10 @@ const actions = {
         'switch-right',
         'switch-up',
         'switch-down',
+        'switch-global-left',
+        'switch-global-right',
+        'switch-global-up',
+        'switch-global-down',
         'switch-first',
         'switch-last',
         'live-alt-tab',
@@ -50,6 +54,7 @@ const actions = {
         'cycle-height',
         'cycle-height-backwards',
         'take-window',
+        'activate-window-under-cursor',
     ],
     workspaces: [
         'previous-workspace',

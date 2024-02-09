@@ -172,6 +172,11 @@ export function setupActions(settings) {
     registerMinimapAction("switch-up", (mw, space) => space.switchUp());
     registerMinimapAction("switch-down", (mw, space) => space.switchDown());
 
+    registerMinimapAction("switch-global-right", (mw, space) => space.switchGlobalRight());
+    registerMinimapAction("switch-global-left", (mw, space) => space.switchGlobalLeft());
+    registerMinimapAction("switch-global-up", (mw, space) => space.switchGlobalUp());
+    registerMinimapAction("switch-global-down", (mw, space) => space.switchGlobalDown());
+
     registerMinimapAction("move-left",
         (mw, space) => space.swap(Meta.MotionDirection.LEFT));
     registerMinimapAction("move-right",
@@ -190,6 +195,9 @@ export function setupActions(settings) {
     registerPaperAction("toggle-scratch",
         Scratch.toggle,
         Meta.KeyBindingFlags.PER_WINDOW);
+
+    registerPaperAction("activate-window-under-cursor",
+        Tiling.activateWindowUnderCursor);
 
     registerPaperAction("switch-focus-mode",
         Tiling.switchToNextFocusMode);
