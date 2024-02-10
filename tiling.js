@@ -3278,7 +3278,13 @@ export function resizeHandler(metaWindow) {
     space.showSelection();
     x = metaWindow?._fullscreen_frame?.x ?? f.x;
     x -= space.monitor.x;
-    x = Math.max(x, Settings.prefs.horizontal_margin);
+
+    // for non-maximised windows, enforce horizontal margin in restore position
+    if (metaWindow.get_maximized() !== Meta.MaximizeFlags.BOTH &&
+        metaWindow.get_maximized() !== Meta.MaximizeFlags.Horizontal) {
+        x = Math.max(x, Settings.prefs.horizontal_margin);
+    }
+
 
     // if pwm fullscreen previously
     if (metaWindow._fullscreen_lock) {
