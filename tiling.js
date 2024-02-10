@@ -778,8 +778,8 @@ export class Space extends Array {
     isPlaceable(metaWindow) {
         let clone = metaWindow.clone;
         let x = this.visibleX(metaWindow);
-        let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
-        let min = workArea.x - this.monitor.x;
+        let workArea = this.workArea();
+        let min = this.workArea().x;
 
         if (x + clone.width < min + stack_margin ||
             x > min + workArea.width - stack_margin) {
@@ -3215,6 +3215,16 @@ export function addResizeHandler(metaWindow) {
 }
 
 export function positionChangeHandler(metaWindow) {
+    const frame = metaWindow.get_frame_rect();
+    Utils.later_add(Meta.LaterType.RESIZE, () => {
+        metaWindow.move_resize_frame(
+            true,
+            frame.x,
+            frame.y,
+            frame.width,
+            metaWindow._targetHeight ?? frame.height);
+    });
+
     // don't update saved position if fullscreen
     if (metaWindow.fullscreen || metaWindow?._fullscreen_lock) {
         return;
