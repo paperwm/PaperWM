@@ -3215,16 +3215,6 @@ export function addResizeHandler(metaWindow) {
 }
 
 export function positionChangeHandler(metaWindow) {
-    const frame = metaWindow.get_frame_rect();
-    Utils.later_add(Meta.LaterType.RESIZE, () => {
-        metaWindow.move_resize_frame(
-            true,
-            frame.x,
-            frame.y,
-            frame.width,
-            metaWindow._targetHeight ?? frame.height);
-    });
-
     // don't update saved position if fullscreen
     if (metaWindow.fullscreen || metaWindow?._fullscreen_lock) {
         return;

@@ -44,6 +44,7 @@ import { Settings, Utils, Tiling, Navigator, Grab, Scratch } from './imports.js'
 */
 
 let pointerWatch;
+let heightMismatchTimeout;
 export function enable(extension) {
 
 }
@@ -96,12 +97,39 @@ export function enableMultimonitorSupport() {
             const selected = space?.selectedWindow;
             space?.activateWithFocus(selected, false, false);
         });
+
+    // iternate though all spaces and check for mismatches
+    heightMismatchTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+        Tiling.spaces.forEach(space => {
+            space.getWindows().forEach(w => {
+                const f = w.get_frame_rect();
+                if (!w._targetHeight) {
+                    return;
+                }
+                if (w._targetHeight === f.height) {
+                    return;
+                }
+                console.log(`window checked ${w.title} t:${w._targetHeight} f:${f.height}`);
+                w.move_resize_frame(
+                    true,
+                    f.x,
+                    f.y,
+                    f.width,
+                    w._targetHeight);
+            });
+        });
+
+        return true;
+    });
+
     console.debug('paperwm multimonitor support is ENABLED');
 }
 
 export function disableMultimonitorSupport() {
     pointerWatch?.remove();
     pointerWatch = null;
+    Utils.timeout_remove(heightMismatchTimeout);
+    heightMismatchTimeout = null;
     console.debug('paperwm multimonitor support is DISABLED');
 }
 
