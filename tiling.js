@@ -3150,6 +3150,10 @@ export function registerWindow(metaWindow) {
     });
     signals.connect(actor, 'destroy', destroyHandler);
 
+    signals.connect(actor, 'notify::height', actor => {
+        console.log(`actor height changed ${metaWindow.title}`);
+    });
+
     return true;
 }
 
