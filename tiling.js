@@ -3152,6 +3152,7 @@ export function registerWindow(metaWindow) {
 
     signals.connect(actor, 'notify::height', actor => {
         console.log(`actor height changed ${metaWindow.title}`);
+        //windowHeightCheck(metaWindow);
     });
 
     return true;
@@ -3454,7 +3455,7 @@ export function focusMonitor() {
  * @param actor
  * @param callback
  */
-function callbackOnActorShow(actor, callback) {
+export function callbackOnActorShow(actor, callback) {
     signals.connectOneShot(actor, 'show', callback);
 }
 
@@ -3790,6 +3791,9 @@ export function ensureViewport(meta_window, space, options = {}) {
     let moveto = options?.moveto ?? true;
     let animate = options?.animate ?? true;
     let ensureAnimation = options.ensureAnimation ?? Settings.EnsureViewportAnimation.TRANSLATE;
+    let callback = options?.callback;
+
+    console.log(`callback ${callback}`);
 
     let index = space.indexOf(meta_window);
     if (index === -1 || space.length === 0)
@@ -3820,7 +3824,7 @@ export function ensureViewport(meta_window, space, options = {}) {
 
     if (moveto) {
         move_to(space, meta_window, {
-            x, force, animate, ensureAnimation,
+            x, force, animate, ensureAnimation, callback,
         });
     }
 
@@ -3876,6 +3880,10 @@ export function move_to(space, metaWindow, options = {}) {
     let force = options.force ?? false;
     let animate = options.animate ?? true;
     let ensureAnimation = options.ensureAnimation ?? Settings.EnsureViewportAnimation.TRANSLATE;
+    let callback = options?.callback;
+
+    console.log(`callback ${callback}`);
+
     if (space.indexOf(metaWindow) === -1)
         return;
 
@@ -3883,12 +3891,16 @@ export function move_to(space, metaWindow, options = {}) {
     let target = x - clone.targetX;
     if (target === space.targetX && !force) {
         space.moveDone();
+        console.log(`calling callback!`);
+        callback && callback();
         return;
     }
 
     const done = () => {
         space.moveDone();
         space.fixOverlays(metaWindow);
+        console.log(`calling callback!`);
+        callback && callback();
     };
 
     space.targetX = target;
@@ -4121,7 +4133,12 @@ export function focus_handler(metaWindow) {
      * overview, we'll ensure viewport on focused window AFTER overview is
      * hidden.
      */
-    ensureViewport(metaWindow, space, { moveto: !Main.overview.visible });
+    ensureViewport(
+        metaWindow,
+        space, {
+            moveto: !Main.overview.visible,
+            callback: () => windowHeightCheck(metaWindow),
+        }),
 
     Topbar.fixTopBar();
 }
@@ -4442,7 +4459,7 @@ export function activateLastWindow(mw, space) {
  * programmatically before it's rendered, see
  * https://github.com/paperwm/PaperWM/issues/448 for details).
  */
-function activateWindowAfterRendered(actor, mw) {
+export function activateWindowAfterRendered(actor, mw) {
     callbackOnActorShow(actor, () => {
         Main.activateWindow(mw);
     });
@@ -4859,6 +4876,29 @@ export function cycleWorkspaceSettings(dir = 1) {
         unbound[i - n][1].set_int('index', i);
     }
     return space;
+}
+
+export function windowHeightCheck(metaWindow) {
+    if (!metaWindow) {
+        return;
+    }
+    // check window height
+    console.log(`window check: ${metaWindow.title}`);
+    const frame = metaWindow.get_frame_rect();
+    if (metaWindow._targetHeight &&
+         metaWindow._targetHeight !== frame.height) {
+        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+        //Utils.later_add(Meta.LaterType.IDLE, () => {
+            metaWindow.move_resize_frame(
+                true,
+                frame.x,
+                frame.y,
+                frame.width,
+                metaWindow._targetHeight);
+
+            return false;
+        });
+    }
 }
 
 // Backward compatibility

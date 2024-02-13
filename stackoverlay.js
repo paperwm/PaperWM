@@ -99,6 +99,7 @@ export function enableMultimonitorSupport() {
         });
 
     // iternate though all spaces and check for mismatches
+    /*
     heightMismatchTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
         Tiling.spaces.forEach(space => {
             space.getWindows().forEach(w => {
@@ -121,6 +122,7 @@ export function enableMultimonitorSupport() {
 
         return true;
     });
+    */
 
     console.debug('paperwm multimonitor support is ENABLED');
 }
