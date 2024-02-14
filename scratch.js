@@ -84,7 +84,7 @@ export function makeScratch(metaWindow) {
     metaWindow.stick();  // NB! Removes the window from the tiling (synchronously)
 
     if (!metaWindow.minimized)
-        Tiling.showWindow(metaWindow);
+        Tiling.showWindowActor(metaWindow);
 
     if (fromTiling) {
         let f = metaWindow.get_frame_rect();
@@ -225,11 +225,11 @@ export function animateWindows() {
         Main.uiGroup.insert_child_above(w.clone, global.window_group);
         let f = w.get_frame_rect();
         w.clone.set_position(f.x, f.y);
-        Tiling.animateWindow(w);
+        Tiling.showWindowClone(w);
     }
 }
 
 export function showWindows() {
     let ws = getScratchWindows().filter(w => !w.minimized);
-    ws.forEach(Tiling.showWindow);
+    ws.forEach(Tiling.showWindowActor);
 }

@@ -355,7 +355,7 @@ export class Space extends Array {
         setFocusMode(getDefaultFocusMode(), this);
 
         this.getWindows().forEach(w => {
-            animateWindow(w);
+            showWindowClone(w);
         });
 
         this.layout(false);
@@ -1282,10 +1282,10 @@ export class Space extends Array {
             const ch = monitor.height;
             actor.set_clip(x, y, cw, ch);
 
-            showWindow(w);
+            showWindowActor(w);
         });
 
-        this._floating.forEach(showWindow);
+        this._floating.forEach(showWindowActor);
 
         this.fixOverlays();
 
@@ -1322,12 +1322,12 @@ export class Space extends Array {
             actor.remove_clip();
             if (inGrab && inGrab.window === w)
                 return;
-            animateWindow(w);
+            showWindowClone(w);
         });
 
         this._floating.forEach(w => {
             let f = w.get_frame_rect();
-            if (!animateWindow(w))
+            if (!showWindowClone(w))
                 return;
             w.clone.x = f.x - this.monitor.x;
             w.clone.y = f.y - this.monitor.y;
@@ -2058,7 +2058,7 @@ export const Spaces = class Spaces extends Map {
         }
 
         this.activeSpace.getWindows().forEach(w => {
-            animateWindow(w);
+            showWindowClone(w);
         });
 
         this.spaceContainer.set_size(global.screen_width, global.screen_height);
@@ -2229,7 +2229,8 @@ export const Spaces = class Spaces extends Map {
                 metaWindow._targetHeight = null;
                 metaWindow._targetWidth = null;
 
-                if (metaWindow.get_workspace() === workspaceManager.get_active_workspace() && !metaWindow.minimized)
+                if (metaWindow.get_workspace() === workspaceManager.get_active_workspace() &&
+                    !metaWindow.minimized)
                     actor.show();
                 else
                     actor.hide();
@@ -2352,10 +2353,10 @@ export const Spaces = class Spaces extends Map {
          */
         this.forEach(space => {
             space.getWindows().filter(w => w.fullscreen).forEach(w => {
-                animateWindow(w);
+                showWindowClone(w);
                 w.unmake_fullscreen();
                 w.make_fullscreen();
-                showWindow(w);
+                showWindowActor(w);
             });
         });
 
@@ -2985,7 +2986,7 @@ export const Spaces = class Spaces extends Map {
 
         console.debug('window-created', metaWindow?.title);
         let actor = metaWindow.get_compositor_private();
-        animateWindow(metaWindow);
+        showWindowClone(metaWindow);
 
         /*
           We need reliable `window_type`, `wm_class` et. all to handle window insertion correctly.
@@ -3450,7 +3451,7 @@ export function focusMonitor() {
  * @param actor
  * @param callback
  */
-function callbackOnActorShow(actor, callback) {
+export function callbackOnActorShow(actor, callback) {
     signals.connectOneShot(actor, 'show', callback);
 }
 
@@ -3539,7 +3540,7 @@ export function insertWindow(metaWindow, { existing }) {
 
     const connectSizeChanged = tiled => {
         if (tiled) {
-            animateWindow(metaWindow);
+            showWindowClone(metaWindow);
         }
         addResizeHandler(metaWindow);
         addPositionHandler(metaWindow);
@@ -3591,11 +3592,11 @@ export function insertWindow(metaWindow, { existing }) {
          * see https://github.com/paperwm/PaperWM/issues/638
          */
         if (metaWindow.fullscreen) {
-            animateWindow(metaWindow);
+            showWindowClone(metaWindow);
             callbackOnActorShow(actor, () => {
                 fullscrenStartTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
                     metaWindow.unmake_fullscreen();
-                    showWindow(metaWindow);
+                    showWindowActor(metaWindow);
                     metaWindow.make_fullscreen();
                     fullscrenStartTimeout = null;
                     return false; // on return false destroys timeout
@@ -3608,7 +3609,7 @@ export function insertWindow(metaWindow, { existing }) {
         // Only connect the necessary signals and show windows on shared
         // secondary monitors.
         connectSizeChanged();
-        showWindow(metaWindow);
+        showWindowActor(metaWindow);
         return;
     } else if (Scratch.isScratchWindow(metaWindow)) {
         // And make sure scratch windows are stuck
@@ -3621,7 +3622,7 @@ export function insertWindow(metaWindow, { existing }) {
         space.addFloating(metaWindow);
         // Make sure the window is on the correct monitor
         metaWindow.move_to_monitor(space.monitor.index);
-        showWindow(metaWindow);
+        showWindowActor(metaWindow);
         // Make sure the window isn't hidden behind the space (eg. dialogs)
         !existing && metaWindow.make_above();
         return;
@@ -3682,7 +3683,7 @@ export function insertWindow(metaWindow, { existing }) {
     }
 
     space.layout();
-    animateWindow(metaWindow);
+    showWindowClone(metaWindow);
     if (metaWindow === display.focus_window) {
         focus_handler(metaWindow);
     } else if (space === spaces.activeSpace) {
@@ -4153,11 +4154,16 @@ export function showHandler(actor) {
         // The built-in workspace-change animation is running: suppress it
         actor.get_parent() !== global.window_group
     ) {
-        animateWindow(metaWindow);
+        showWindowClone(metaWindow);
     }
 }
 
-export function showWindow(metaWindow) {
+/**
+ * Shows the window actor (actual window). Hides the window clone.
+ * @param {MetaWindow} metaWindow
+ * @returns
+ */
+export function showWindowActor(metaWindow) {
     let actor = metaWindow.get_compositor_private();
     if (!actor)
         return false;
@@ -4169,7 +4175,13 @@ export function showWindow(metaWindow) {
     return true;
 }
 
-export function animateWindow(metaWindow) {
+/**
+ * Shows the window clone.  Hides the window actor.  Used for animation purposes
+ * (we animate using clones and then hide clones and show repositioned window actors).
+ * @param {MetaWindow} metaWindow
+ * @returns
+ */
+export function showWindowClone(metaWindow) {
     let actor = metaWindow.get_compositor_private();
     if (!actor)
         return false;
@@ -4793,7 +4805,7 @@ export function takeWindow(metaWindow, space, { navigator }) {
         (0.1 * space.monitor.width * (1 + navigator._moving.length)));
     let y = Math.round(space.monitor.y + space.monitor.height * 2 / 3) +
         20 * navigator._moving.length;
-    animateWindow(metaWindow);
+    showWindowClone(metaWindow);
     Easer.addEase(metaWindow.clone,
         {
             x, y,

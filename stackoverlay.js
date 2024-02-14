@@ -255,7 +255,7 @@ export class StackOverlay {
 
         // Remove any window clips, and show the metaWindow.clone's
         actor.remove_clip();
-        Tiling.animateWindow(this.target);
+        Tiling.showWindowClone(this.target);
 
         // set clone parameters
         const scale = Settings.prefs.edge_preview_scale;

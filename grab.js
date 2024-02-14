@@ -102,7 +102,7 @@ export class MoveGrab {
         space.startAnimate();
         // Make sure the window actor is visible
         Navigator.getNavigator();
-        Tiling.animateWindow(metaWindow);
+        Tiling.showWindowClone(metaWindow);
         Easer.removeEase(space.cloneContainer);
     }
 
@@ -404,7 +404,6 @@ export class MoveGrab {
                 actor.set_scale(1, 1);
                 actor.set_pivot_point(0, 0);
 
-                // Tiling.animateWindow(metaWindow);
                 params.onStopped = () => {
                     space.moveDone();
                     clone.set_pivot_point(0, 0);
@@ -458,7 +457,7 @@ export class MoveGrab {
             actor.set_scale(1, 1);
             actor.set_pivot_point(0, 0);
 
-            Tiling.animateWindow(metaWindow);
+            Tiling.showWindowClone(metaWindow);
             params.onStopped = () => {
                 space.moveDone();
                 clone.set_pivot_point(0, 0);
