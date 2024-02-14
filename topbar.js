@@ -276,9 +276,19 @@ export const FocusIcon = GObject.registerClass(
             this.tooltip_x_point = tooltip_x_point;
 
             // read in focus icons from resources folder
-            const pather = relativePath => GLib.uri_resolve_relative(import.meta.url, relativePath, GLib.UriFlags.NONE);
-            this.gIconDefault = Gio.icon_new_for_string(pather('./resources/focus-mode-default-symbolic.svg'));
-            this.gIconCenter = Gio.icon_new_for_string(pather('./resources/focus-mode-center-symbolic.svg'));
+            const pather = relativePath => GLib.uri_resolve_relative(
+                import.meta.url,
+                relativePath,
+                GLib.UriFlags.NONE);
+            this.gIconDefault = Gio.icon_new_for_string(
+                pather('./resources/focus-mode-default-symbolic.svg')
+            );
+            this.gIconCenter = Gio.icon_new_for_string(
+                pather('./resources/focus-mode-center-symbolic.svg')
+            );
+            this.gIconZen = Gio.icon_new_for_string(
+                pather('./resources/focus-mode-zen-symbolic.svg')
+            );
 
             this._initToolTip();
             this.setMode();
@@ -333,12 +343,17 @@ export const FocusIcon = GObject.registerClass(
                         `    <i>Window focus mode</i>
 Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
             };
-            if (this.mode === Tiling.FocusModes.DEFAULT) {
+            switch (this.mode) {
+            case Tiling.FocusModes.DEFAULT:
                 markup('#6be67b', 'DEFAULT');
-            }
-            else if (this.mode === Tiling.FocusModes.CENTER) {
+                break;
+            case Tiling.FocusModes.CENTER:
                 markup('#6be6cb', 'CENTER');
-            } else {
+                break;
+            case Tiling.FocusModes.ZEN:
+                markup('#f7ce5b', 'ZEN');
+                break;
+            default:
                 this.tooltip.set_text('');
             }
         }
@@ -350,11 +365,15 @@ Current mode: <span foreground="${color}"><b>${mode}</b></span>`);
         setMode(mode) {
             mode = mode ?? Tiling.FocusModes.DEFAULT;
             this.mode = mode;
-            if (mode === Tiling.FocusModes.DEFAULT) {
+            switch (mode) {
+            case Tiling.FocusModes.DEFAULT:
                 this.gicon = this.gIconDefault;
-            }
-            else if (mode === Tiling.FocusModes.CENTER) {
+                break;
+            case Tiling.FocusModes.CENTER:
                 this.gicon = this.gIconCenter;
+                break;
+            case Tiling.FocusModes.ZEN:
+                this.gicon = this.gIconZen;
             }
             this._updateTooltipText();
             return this;

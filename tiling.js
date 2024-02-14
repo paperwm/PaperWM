@@ -34,7 +34,7 @@ export const PreviewMode = { NONE: 0, STACK: 1, SEQUENTIAL: 2 }; // export
 export let inPreview = PreviewMode.NONE; // export
 
 // DEFAULT mode is normal/original PaperWM window focus behaviour
-export const FocusModes = { DEFAULT: 0, CENTER: 1 }; // export
+export const FocusModes = { DEFAULT: 0, CENTER: 1, ZEN: 2 }; // export
 
 export const CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1 };
 
@@ -3746,7 +3746,7 @@ export function ensuredX(meta_window, space) {
     let min = workArea.x;
     let max = min + workArea.width;
 
-    if (space.focusMode == FocusModes.CENTER) {
+    if (space.focusMode === FocusModes.CENTER) {
         // window switching should centre focus
         x = workArea.x + Math.round(workArea.width / 2 - frame.width / 2);
     } else if (meta_window.fullscreen) {
