@@ -4159,15 +4159,15 @@ export function showHandler(actor) {
 }
 
 /**
- * Shows the window actor (actual window). Hides the window clone.
+ * Shows the window actor (actual window). Optionally hides the window clone.
  * @param {MetaWindow} metaWindow
  * @returns
  */
-export function showWindowActor(metaWindow) {
-    let actor = metaWindow.get_compositor_private();
+export function showWindowActor(metaWindow, hideClone = true) {
+    const actor = metaWindow.get_compositor_private();
     if (!actor)
         return false;
-    if (metaWindow.clone?.cloneActor) {
+    if (hideClone && metaWindow.clone?.cloneActor) {
         metaWindow.clone.cloneActor.hide();
         metaWindow.clone.cloneActor.source = null;
     }
@@ -4176,21 +4176,57 @@ export function showWindowActor(metaWindow) {
 }
 
 /**
- * Shows the window clone.  Hides the window actor.  Used for animation purposes
+ * Shows the window clone.  Optionally dides the window actor.  Used for animation purposes
  * (we animate using clones and then hide clones and show repositioned window actors).
  * @param {MetaWindow} metaWindow
  * @returns
  */
-export function showWindowClone(metaWindow) {
-    let actor = metaWindow.get_compositor_private();
+export function showWindowClone(metaWindow, hideActor = true) {
+    const actor = metaWindow.get_compositor_private();
     if (!actor)
         return false;
     if (metaWindow.clone?.cloneActor) {
         metaWindow.clone.cloneActor.show();
         metaWindow.clone.cloneActor.source = actor;
     }
-    actor.hide();
+    if (hideActor) {
+        actor.hide();
+    }
     return true;
+}
+
+/**
+ * Shows all window actors for a space, except those defined.
+ * @param {Space} space
+ * @param  {...MetaWindow} except
+ */
+export function showWindowActors(space, ...except) {
+    if (!space) {
+        return;
+    }
+
+    // we need to hide actors for all non-focused windows
+    space.getWindows()
+        .filter(w => !except.includes(w))
+        .forEach(w => showWindowActor(w));
+}
+
+/**
+ * Hides all window actors for a space, except those defined.
+ * @param {Space} space
+ * @param  {...MetaWindow} except
+ */
+export function hideWindowActors(space, ...except) {
+    if (!space) {
+        return;
+    }
+
+    // we need to hide actors for all non-focused windows
+    space.getWindows()
+        .filter(w => !except.includes(w))
+        .forEach(w => {
+            w.get_compositor_private()?.hide();
+        });
 }
 
 export function isWindowAnimating(metaWindow) {
@@ -4502,8 +4538,31 @@ export function setFocusMode(mode, space) {
 
     const workArea = space.workArea();
     const selectedWin = space.selectedWindow;
-    // if centre also center selectedWindow
-    if (mode === FocusModes.CENTER) {
+
+    switch (mode) {
+    case FocusModes.DEFAULT:
+        showWindowActors(space);
+        if (space.unfocusXPosition !== null) {
+            // if window is first, move to left edge
+            let position;
+            if (space.indexOf(selectedWin) === 0) {
+                position = 0;
+            }
+            // if windows is last, move to right edge
+            else if (space.indexOf(selectedWin) === space.length - 1) {
+                position = workArea.width;
+            }
+            else {
+                position = space.unfocusXPosition;
+            }
+            // do the move
+            move_to(space, space.selectedWindow, { x: position });
+            ensureViewport(space.selectedWindow, space, { force: true });
+            space.unfocusXPosition = null;
+        }
+        break;
+    case FocusModes.CENTER:
+        showWindowActors(space);
         if (selectedWin) {
             // check it closer to min or max of workArea
             const frame = selectedWin.get_frame_rect();
@@ -4516,26 +4575,9 @@ export function setFocusMode(mode, space) {
             }
             centerWindowHorizontally(selectedWin);
         }
-    }
-
-    // if normal and has saved x position from previous
-    if (mode === FocusModes.DEFAULT && space.unfocusXPosition != null) {
-        // if window is first, move to left edge
-        let position;
-        if (space.indexOf(selectedWin) == 0) {
-            position = 0;
-        }
-        // if windows is last, move to right edge
-        else if (space.indexOf(selectedWin) == space.length - 1) {
-            position = workArea.width;
-        }
-        else {
-            position = space.unfocusXPosition;
-        }
-        // do the move
-        move_to(space, space.selectedWindow, { x: position });
-        ensureViewport(space.selectedWindow, space, { force: true });
-        space.unfocusXPosition = null;
+        break;
+    case FocusModes.ZEN:
+        hideWindowActors(space, space.selectedWindow);
     }
 }
 
