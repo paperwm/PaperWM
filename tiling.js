@@ -3783,14 +3783,17 @@ export function ensuredX(meta_window, space) {
  */
 export function ensureViewport(meta_window, space, options = {}) {
     space = space || spaces.spaceOfWindow(meta_window);
-    let force = options?.force ?? false;
-    let moveto = options?.moveto ?? true;
-    let animate = options?.animate ?? true;
-    let ensureAnimation = options.ensureAnimation ?? Settings.EnsureViewportAnimation.TRANSLATE;
+    const force = options?.force ?? false;
+    const moveto = options?.moveto ?? true;
+    const animate = options?.animate ?? true;
+    const ensureAnimation = options.ensureAnimation ?? Settings.EnsureViewportAnimation.TRANSLATE;
+    const callback = options.callback ?? function() {};
 
     let index = space.indexOf(meta_window);
-    if (index === -1 || space.length === 0)
+    if (index === -1 || space.length === 0) {
+        callback();
         return undefined;
+    }
 
     if (space.selectedWindow.fullscreen &&
         !meta_window.fullscreen) {
@@ -3817,8 +3820,15 @@ export function ensureViewport(meta_window, space, options = {}) {
 
     if (moveto) {
         move_to(space, meta_window, {
-            x, force, animate, ensureAnimation,
+            x,
+            force,
+            animate,
+            ensureAnimation,
+            callback,
         });
+    }
+    else {
+        callback();
     }
 
     selected.raise();
@@ -3869,23 +3879,29 @@ export function updateSelection(space, metaWindow) {
  * in @space. Coordinates are relative to monitor and y is optional.
  */
 export function move_to(space, metaWindow, options = {}) {
-    let x = options.x ?? 0;
-    let force = options.force ?? false;
-    let animate = options.animate ?? true;
-    let ensureAnimation = options.ensureAnimation ?? Settings.EnsureViewportAnimation.TRANSLATE;
-    if (space.indexOf(metaWindow) === -1)
+    const x = options.x ?? 0;
+    const force = options.force ?? false;
+    const animate = options.animate ?? true;
+    const ensureAnimation = options.ensureAnimation ?? Settings.EnsureViewportAnimation.TRANSLATE;
+    const callback = options.callback ?? function() {};
+
+    if (space.indexOf(metaWindow) === -1) {
+        callback();
         return;
+    }
 
     let clone = metaWindow.clone;
     let target = x - clone.targetX;
     if (target === space.targetX && !force) {
         space.moveDone();
+        callback();
         return;
     }
 
     const done = () => {
         space.moveDone();
         space.fixOverlays(metaWindow);
+        callback();
     };
 
     space.targetX = target;
@@ -4023,21 +4039,35 @@ export function getDefaultFocusMode() {
 
 // `MetaWindow::focus` handling
 export function focus_handler(metaWindow) {
+    console.log(`focus called!`);
+    let space = spaces.spaceOfWindow(metaWindow);
+    const callback = () => {
+        console.log(`callback called!`);
+        // if zen mode then hide other windows
+        if (space.focusMode === FocusModes.ZEN) {
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+                hideWindowActors(space, metaWindow);
+                return false;
+            });
+        }
+    };
+
     console.debug("focus:", metaWindow?.title);
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
         Scratch.makeScratch(metaWindow);
         Topbar.fixTopBar();
+        callback();
         return;
     }
 
     // If metaWindow is a transient window, return (after deselecting tiled focus indicators)
     if (isTransient(metaWindow)) {
         setAllWorkspacesInactive();
+        callback();
         return;
     }
 
-    let space = spaces.spaceOfWindow(metaWindow);
     if (metaWindow.fullscreen) {
         space.enableWindowPositionBar(false);
         space.setSpaceTopbarElementsVisible(false);
@@ -4084,8 +4114,10 @@ export function focus_handler(metaWindow) {
      */
     let windows = space.getWindows();
     let around = windows.indexOf(metaWindow);
-    if (around === -1)
+    if (around === -1) {
+        callback();
         return;
+    }
 
     let neighbours = [];
     for (let i = around - 1; i >= 0; i--) {
@@ -4118,7 +4150,10 @@ export function focus_handler(metaWindow) {
      * overview, we'll ensure viewport on focused window AFTER overview is
      * hidden.
      */
-    ensureViewport(metaWindow, space, { moveto: !Main.overview.visible });
+    ensureViewport(metaWindow, space, {
+        moveto: !Main.overview.visible,
+        callback,
+    });
 
     Topbar.fixTopBar();
 }
