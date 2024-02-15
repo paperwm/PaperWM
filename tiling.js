@@ -781,8 +781,7 @@ export class Space extends Array {
         let workArea = Main.layoutManager.getWorkAreaForMonitor(this.monitor.index);
         let min = workArea.x - this.monitor.x;
 
-        if (x + clone.width < min + stack_margin ||
-            x > min + workArea.width - stack_margin) {
+        if (x + clone.width < min + stack_margin || x > min + workArea.width - stack_margin) {
             return false;
         } else {
             // Fullscreen windows are only placeable on the monitor origin
@@ -3150,6 +3149,17 @@ export function registerWindow(metaWindow) {
         showHandler(actor);
     });
     signals.connect(actor, 'destroy', destroyHandler);
+    signals.connect(clone, 'notify::x', () => {
+        const space = spaces.spaceOfWindow(metaWindow);
+        console.log(`x changed on clone actor: ${metaWindow.title}`);
+        if (
+            space?.focusMode === FocusModes.ZEN &&
+            !space.isPlaceable(metaWindow)
+        ) {
+            metaWindow.clone.cloneActor.hide();
+            metaWindow.clone.cloneActor.source = null;
+        }
+    });
 
     return true;
 }
@@ -3165,8 +3175,7 @@ export function allocateClone(metaWindow) {
     // with the frame.
     let clone = metaWindow.clone;
     let cloneActor = clone.cloneActor;
-    cloneActor.set_position(buffer.x - frame.x,
-        buffer.y - frame.y);
+    cloneActor.set_position(buffer.x - frame.x, buffer.y - frame.y);
     cloneActor.set_size(buffer.width, buffer.height);
     clone.set_size(frame.width, frame.height);
 
@@ -3860,8 +3869,10 @@ export function updateSelection(space, metaWindow) {
 
     space.updateWindowPositionBar();
 
-    if (space.selection.get_parent() === clone)
+    if (space.selection.get_parent() === clone) {
         return;
+    }
+
     Utils.actor_reparent(space.selection, clone);
     clone.set_child_below_sibling(space.selection, cloneActor);
     allocateClone(metaWindow);
@@ -3871,6 +3882,12 @@ export function updateSelection(space, metaWindow) {
         if (metaWindow !== display.focus_window) {
             Main.activateWindow(metaWindow);
         }
+    }
+
+
+    // if zen mode, hide other windows when navigator destroy
+    if (space.focusMode === FocusModes.ZEN) {
+        hideWindowActors(space, space.selectedWindow);
     }
 }
 
@@ -4039,15 +4056,12 @@ export function getDefaultFocusMode() {
 
 // `MetaWindow::focus` handling
 export function focus_handler(metaWindow) {
-    console.log(`focus called!`);
-    let space = spaces.spaceOfWindow(metaWindow);
+    const space = spaces.spaceOfWindow(metaWindow);
     const callback = () => {
-        console.log(`callback called!`);
         // if zen mode then hide other windows
         if (space.focusMode === FocusModes.ZEN) {
-            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+            Utils.later_add(Meta.LaterType.IDLE, () => {
                 hideWindowActors(space, metaWindow);
-                return false;
             });
         }
     };
@@ -4128,6 +4142,7 @@ export function focus_handler(metaWindow) {
         }
         space.removeWindow(w);
     }
+
     for (let i = around + 1; i < windows.length; i++) {
         let w = windows[i];
         if (w.get_compositor_private()) {
@@ -4200,12 +4215,23 @@ export function showHandler(actor) {
  */
 export function showWindowActor(metaWindow, hideClone = true) {
     const actor = metaWindow.get_compositor_private();
-    if (!actor)
+    if (!actor) {
         return false;
+    }
+
     if (hideClone && metaWindow.clone?.cloneActor) {
         metaWindow.clone.cloneActor.hide();
         metaWindow.clone.cloneActor.source = null;
     }
+
+    const space = spaces.spaceOfWindow(metaWindow);
+    if (
+        space?.focusMode === FocusModes.ZEN &&
+        space.selectedWindow !== metaWindow
+    ) {
+        return true;
+    }
+
     actor.show();
     return true;
 }
@@ -4218,12 +4244,16 @@ export function showWindowActor(metaWindow, hideClone = true) {
  */
 export function showWindowClone(metaWindow, hideActor = true) {
     const actor = metaWindow.get_compositor_private();
-    if (!actor)
+    if (!actor) {
         return false;
-    if (metaWindow.clone?.cloneActor) {
-        metaWindow.clone.cloneActor.show();
-        metaWindow.clone.cloneActor.source = actor;
     }
+
+    const cloneActor = metaWindow.clone?.cloneActor;
+    if (cloneActor) {
+        cloneActor.show();
+        cloneActor.source = actor;
+    }
+
     if (hideActor) {
         actor.hide();
     }

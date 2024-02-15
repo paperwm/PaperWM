@@ -284,6 +284,19 @@ class NavigatorClass {
 
         Scratch.animateWindows();
         this.space.startAnimate();
+
+        // if zen mode, hide other windows when navigator destroy
+        if (this.space.focusMode === Tiling.FocusModes.ZEN) {
+            this.space.getWindows().forEach(w => {
+                if (
+                    this.space?.focusMode === Tiling.FocusModes.ZEN &&
+                            !this.space.isPlaceable(w)
+                ) {
+                    w.clone.cloneActor.show();
+                    w.clone.cloneActor.source = w.get_compositor_private();
+                }
+            });
+        }
     }
 
     showMinimap(space) {
@@ -407,6 +420,20 @@ class NavigatorClass {
 
         this.emit('destroy', this.was_accepted);
         navigator = false;
+
+        // if zen mode, hide other windows when navigator destroy
+        if (space.focusMode === Tiling.FocusModes.ZEN) {
+            Tiling.hideWindowActors(space, space.selectedWindow);
+            space.getWindows().forEach(w => {
+                if (
+                    space?.focusMode === Tiling.FocusModes.ZEN &&
+                    !space.isPlaceable(w)
+                ) {
+                    w.clone.cloneActor.hide();
+                    w.clone.cloneActor.source = null;
+                }
+            });
+        }
     }
 }
 export let Navigator = NavigatorClass;
