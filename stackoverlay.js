@@ -210,6 +210,10 @@ export class StackOverlay {
             return;
         if (!this.target)
             return;
+        const space = Tiling.spaces.spaceOfWindow(this.target);
+        if (space.zenMode?.isZenMode) {
+            return;
+        }
         this._previewId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
             delete this._previewId;
             this.removePreview();
