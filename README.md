@@ -407,6 +407,12 @@ These extensions are good complements to PaperWM:
 - [Switcher](https://github.com/daniellandau/switcher) - combined window switcher and launcher
 - [Dash to Dock](https://micheleg.github.io/dash-to-dock/) - a great dock
 
+## Incompatible extensions
+
+In most cases it should be enough to disable these extensions.
+
+- [DING (Desktop Icons NG)](https://gitlab.com/rastersoft/desktop-icons-ng) (shipped by default with Ubuntu, creates invisible windows and does not show icons, see #784)
+
 ## Prior work ##
 
 A similar idea was apparently tried out a while back: [10/GUI](https://web.archive.org/web/20201123162403/http://10gui.com/)
