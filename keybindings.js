@@ -161,16 +161,22 @@ export function setupActions(settings) {
 
     registerNavigatorAction('take-window', Tiling.takeWindow);
 
-    registerMinimapAction("switch-next", (mw, space) => space.switchLinear(1));
-    registerMinimapAction("switch-previous", (mw, space) => space.switchLinear(-1));
+    registerMinimapAction("switch-next", (mw, space) => space.switchLinear(1, false));
+    registerMinimapAction("switch-next-loop", (mw, space) => space.switchLinear(1, true));
+    registerMinimapAction("switch-previous", (mw, space) => space.switchLinear(-1, false));
+    registerMinimapAction("switch-previous-loop", (mw, space) => space.switchLinear(-1, true));
 
     registerMinimapAction("switch-first", Tiling.activateFirstWindow);
     registerMinimapAction("switch-last", Tiling.activateLastWindow);
 
-    registerMinimapAction("switch-right", (mw, space) => space.switchRight());
-    registerMinimapAction("switch-left", (mw, space) => space.switchLeft());
-    registerMinimapAction("switch-up", (mw, space) => space.switchUp());
-    registerMinimapAction("switch-down", (mw, space) => space.switchDown());
+    registerMinimapAction("switch-right", (mw, space) => space.switchRight(false));
+    registerMinimapAction("switch-right-loop", (mw, space) => space.switchRight(true));
+    registerMinimapAction("switch-left", (mw, space) => space.switchLeft(false));
+    registerMinimapAction("switch-left-loop", (mw, space) => space.switchLeft(true));
+    registerMinimapAction("switch-up", (mw, space) => space.switchUp(false));
+    registerMinimapAction("switch-up-loop", (mw, space) => space.switchUp(true));
+    registerMinimapAction("switch-down", (mw, space) => space.switchDown(false));
+    registerMinimapAction("switch-down-loop", (mw, space) => space.switchDown(true));
 
     registerMinimapAction("switch-global-right", (mw, space) => space.switchGlobalRight());
     registerMinimapAction("switch-global-left", (mw, space) => space.switchGlobalLeft());

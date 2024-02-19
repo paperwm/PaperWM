@@ -154,26 +154,51 @@
       <default><![CDATA[['<Super>period']]]></default>
       <summary>Switch to the next window</summary>
     </key>
+    <key type="as" name="switch-next-loop">
+      <default><![CDATA[['']]]></default>
+      <summary>Switch to the next window and loop around to the first window</summary>
+    </key>
     <key type="as" name="switch-previous">
       <default><![CDATA[['<Super>comma']]]></default>
       <summary>Switch to the previous window</summary>
+    </key>
+    <key type="as" name="switch-previous-loop">
+      <default><![CDATA[['']]]></default>
+      <summary>Switch to the previous window and loop around to the last window</summary>
     </key>
 
     <key type="as" name="switch-right">
         <default><![CDATA[['<Super>Right']]]></default>
         <summary>Switch to the right window</summary>
     </key>
+    <key type="as" name="switch-right-loop">
+        <default><![CDATA[['']]]></default>
+        <summary>Switch to the right window and loop around to the left-most window</summary>
+    </key>
     <key type="as" name="switch-left">
         <default><![CDATA[['<Super>Left']]]></default>
         <summary>Switch to the left window</summary>
     </key>
+    <key type="as" name="switch-left-loop">
+        <default><![CDATA[['']]]></default>
+        <summary>Switch to the left window and loop around to the right-most window</summary>
+    </key>
+
     <key type="as" name="switch-up">
         <default><![CDATA[['<Super>Up']]]></default>
-        <summary>Switch to the above window</summary>
+        <summary>Switch to the window above</summary>
+    </key>
+    <key type="as" name="switch-up-loop">
+        <default><![CDATA[['']]]></default>
+        <summary>Switch to the window above and loop around to the bottom-most window</summary>
     </key>
     <key type="as" name="switch-down">
         <default><![CDATA[['<Super>Down']]]></default>
-        <summary>Switch to the below window</summary>
+        <summary>Switch to the window below</summary>
+    </key>
+    <key type="as" name="switch-down-loop">
+        <default><![CDATA[['']]]></default>
+        <summary>Switch to the window below and loop back to the top-most window</summary>
     </key>
 
     <key type="as" name="switch-global-right">
