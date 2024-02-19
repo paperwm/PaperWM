@@ -90,12 +90,12 @@ export function setupActions(settings) {
     keycomboMap = {}; // keycombo   -> action
 
     /* Initialize keybindings */
-    let liveAltTab = LiveAltTab.liveAltTab;
+    registerAction('live-alt-tab', LiveAltTab.liveAltTab, { settings });
+    registerAction('live-alt-tab-backward', LiveAltTab.liveAltTab,
+        { settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED });
 
-    registerAction('live-alt-tab',
-        liveAltTab, { settings });
-    registerAction('live-alt-tab-backward',
-        liveAltTab,
+    registerAction('live-alt-tab-scratch', LiveAltTab.liveAltTabScratch, { settings });
+    registerAction('live-alt-tab-scratch-backward', LiveAltTab.liveAltTabScratch,
         { settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED });
 
     registerAction('move-monitor-right', () => {

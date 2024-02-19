@@ -18,6 +18,15 @@
       <summary>Switch to previously active window, backward order</summary>
     </key>
 
+    <key type="as" name="live-alt-tab-scratch">
+        <default><![CDATA[[]]]></default>
+      <summary>Switch to previous scratch window</summary>
+    </key>
+    <key type="as" name="live-alt-tab-scratch-backward">
+        <default><![CDATA[[]]]></default>
+      <summary>Switch to previous scratch window, backward order</summary>
+    </key>
+
     <key type="as" name="previous-workspace">
       <default><![CDATA[['<Super>Above_Tab']]]></default>
       <summary>Switch to previously active workspace</summary>
