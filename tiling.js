@@ -1012,6 +1012,11 @@ export class Space extends Array {
         let row = column.indexOf(this.selectedWindow);
         if (Lib.in_bounds(column, row + dir) === false) {
             index += dir;
+            if (index >= this.length) {
+                index = 0;
+            } else if (index < 0) {
+                index = this.length - 1;
+            }
             if (dir === 1) {
                 if (index < this.length)
                     row = 0;
