@@ -20,11 +20,11 @@
 
     <key type="as" name="live-alt-tab-scratch">
         <default><![CDATA[[]]]></default>
-      <summary>Switch to previous scratch window</summary>
+      <summary>Switch to previously active scratch window</summary>
     </key>
     <key type="as" name="live-alt-tab-scratch-backward">
         <default><![CDATA[[]]]></default>
-      <summary>Switch to previous scratch window, backward order</summary>
+      <summary>Switch to previously active scratch window, backward order</summary>
     </key>
 
     <key type="as" name="previous-workspace">
