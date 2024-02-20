@@ -19,11 +19,11 @@
     </key>
 
     <key type="as" name="live-alt-tab-scratch">
-        <default><![CDATA[[]]]></default>
+        <default><![CDATA[['<Alt><Ctrl>Tab']]]></default>
       <summary>Switch to previously active scratch window</summary>
     </key>
     <key type="as" name="live-alt-tab-scratch-backward">
-        <default><![CDATA[[]]]></default>
+        <default><![CDATA[['<Shift><Alt><Ctrl>Tab']]]></default>
       <summary>Switch to previously active scratch window, backward order</summary>
     </key>
 
