@@ -417,7 +417,7 @@ In most cases it should be enough to disable these extensions.
 - [Space Bar](https://github.com/christopher-l/space-bar) or similar extensions that modify workspace names etc. See #720
 - [Dash to Panel](https://github.com/home-sweet-gnome/dash-to-panel) or similar panels. Works in some configurations and in some not. Is incompatible with PaperWMs window position bar. See #170, #199, #646, #382, #166, #258
 
-See also https://github.com/paperwm/PaperWM/issues?q=is%3Aissue+label%3Aextension-conflict+sort%3Aupdated-desc
+See issues tagged with the [extension-conflict](https://github.com/paperwm/PaperWM/issues?q=is%3Aissue+label%3Aextension-conflict+sort%3Aupdated-desc) label for current and closed issues related to extension conflicts.
 
 In general extensions that do one of the following are problematic when used together with PaperWM (although they might partially work):
 
