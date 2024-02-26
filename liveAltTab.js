@@ -21,14 +21,20 @@ export function disable() {
 }
 
 export function liveAltTab(meta_window, space, { display, screen, binding }) {
-    let tabPopup = new LiveAltTab(binding.is_reversed());
+    let tabPopup = new LiveAltTab(binding.is_reversed(), false);
+    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
+}
+
+export function liveAltTabScratch(meta_window, space, { display, screen, binding }) {
+    let tabPopup = new LiveAltTab(binding.is_reversed(), true);
     tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
 
 export const LiveAltTab = GObject.registerClass(
     class LiveAltTab extends AltTab.WindowSwitcherPopup {
-        _init(reverse) {
+        _init(reverse, scratchOnly) {
             this.reverse = reverse;
+            this.scratchOnly = scratchOnly;
             this.space = Tiling.spaces.selectedSpace;
             this.monitor = Tiling.spaces.selectedSpace.monitor;
             super._init();
@@ -43,7 +49,10 @@ export const LiveAltTab = GObject.registerClass(
 
             let scratch = Scratch.getScratchWindows();
 
-            if (Scratch.isScratchWindow(global.display.focus_window)) {
+            if (this.scratchOnly) {
+                return reverse ? scratch.reverse() : scratch;
+            }
+            else if (Scratch.isScratchWindow(global.display.focus_window)) {
                 // Access scratch windows in mru order with shift-super-tab
                 return scratch.concat(reverse ? tabList.reverse() : tabList);
             } else {
@@ -90,6 +99,12 @@ export const LiveAltTab = GObject.registerClass(
                 mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
                 break;
             case Keybindings.idOf('live-alt-tab-backward'):
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
+                break;
+            case Keybindings.idOf('live-alt-tab-scratch'):
+                mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS;
+                break;
+            case Keybindings.idOf('live-alt-tab-scratch-backward'):
                 mutterActionId = Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD;
                 break;
             }
@@ -168,4 +183,4 @@ export const LiveAltTab = GObject.registerClass(
             }
             actor.set_scale(1, 1);
         }
-    });  
+    });

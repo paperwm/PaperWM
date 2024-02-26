@@ -90,12 +90,12 @@ export function setupActions(settings) {
     keycomboMap = {}; // keycombo   -> action
 
     /* Initialize keybindings */
-    let liveAltTab = LiveAltTab.liveAltTab;
+    registerAction('live-alt-tab', LiveAltTab.liveAltTab, { settings });
+    registerAction('live-alt-tab-backward', LiveAltTab.liveAltTab,
+        { settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED });
 
-    registerAction('live-alt-tab',
-        liveAltTab, { settings });
-    registerAction('live-alt-tab-backward',
-        liveAltTab,
+    registerAction('live-alt-tab-scratch', LiveAltTab.liveAltTabScratch, { settings });
+    registerAction('live-alt-tab-scratch-backward', LiveAltTab.liveAltTabScratch,
         { settings, mutterFlags: Meta.KeyBindingFlags.IS_REVERSED });
 
     registerAction('move-monitor-right', () => {
@@ -161,16 +161,23 @@ export function setupActions(settings) {
 
     registerNavigatorAction('take-window', Tiling.takeWindow);
 
-    registerMinimapAction("switch-next", (mw, space) => space.switchLinear(1));
-    registerMinimapAction("switch-previous", (mw, space) => space.switchLinear(-1));
+    registerMinimapAction("switch-next", (mw, space) => space.switchLinear(1, false));
+    registerMinimapAction("switch-previous", (mw, space) => space.switchLinear(-1, false));
+    registerMinimapAction("switch-next-loop", (mw, space) => space.switchLinear(1, true));
+    registerMinimapAction("switch-previous-loop", (mw, space) => space.switchLinear(-1, true));
+
+    registerMinimapAction("switch-right", (mw, space) => space.switchRight(false));
+    registerMinimapAction("switch-left", (mw, space) => space.switchLeft(false));
+    registerMinimapAction("switch-up", (mw, space) => space.switchUp(false));
+    registerMinimapAction("switch-down", (mw, space) => space.switchDown(false));
+
+    registerMinimapAction("switch-right-loop", (mw, space) => space.switchRight(true));
+    registerMinimapAction("switch-left-loop", (mw, space) => space.switchLeft(true));
+    registerMinimapAction("switch-up-loop", (mw, space) => space.switchUp(true));
+    registerMinimapAction("switch-down-loop", (mw, space) => space.switchDown(true));
 
     registerMinimapAction("switch-first", Tiling.activateFirstWindow);
     registerMinimapAction("switch-last", Tiling.activateLastWindow);
-
-    registerMinimapAction("switch-right", (mw, space) => space.switchRight());
-    registerMinimapAction("switch-left", (mw, space) => space.switchLeft());
-    registerMinimapAction("switch-up", (mw, space) => space.switchUp());
-    registerMinimapAction("switch-down", (mw, space) => space.switchDown());
 
     registerMinimapAction("switch-global-right", (mw, space) => space.switchGlobalRight());
     registerMinimapAction("switch-global-left", (mw, space) => space.switchGlobalLeft());

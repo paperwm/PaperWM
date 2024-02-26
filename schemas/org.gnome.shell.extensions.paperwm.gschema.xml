@@ -18,6 +18,15 @@
       <summary>Switch to previously active window, backward order</summary>
     </key>
 
+    <key type="as" name="live-alt-tab-scratch">
+        <default><![CDATA[['<Alt><Ctrl>Tab']]]></default>
+      <summary>Switch to previously active scratch window</summary>
+    </key>
+    <key type="as" name="live-alt-tab-scratch-backward">
+        <default><![CDATA[['<Shift><Alt><Ctrl>Tab']]]></default>
+      <summary>Switch to previously active scratch window, backward order</summary>
+    </key>
+
     <key type="as" name="previous-workspace">
       <default><![CDATA[['<Super>Above_Tab']]]></default>
       <summary>Switch to previously active workspace</summary>
@@ -149,7 +158,6 @@
       <default><![CDATA[['<Super>comma']]]></default>
       <summary>Switch to the previous window</summary>
     </key>
-
     <key type="as" name="switch-right">
         <default><![CDATA[['<Super>Right']]]></default>
         <summary>Switch to the right window</summary>
@@ -160,11 +168,36 @@
     </key>
     <key type="as" name="switch-up">
         <default><![CDATA[['<Super>Up']]]></default>
-        <summary>Switch to the above window</summary>
+        <summary>Switch to the window above</summary>
     </key>
     <key type="as" name="switch-down">
         <default><![CDATA[['<Super>Down']]]></default>
-        <summary>Switch to the below window</summary>
+        <summary>Switch to the window below</summary>
+    </key>
+
+    <key type="as" name="switch-next-loop">
+      <default><![CDATA[['']]]></default>
+      <summary>Switch to the next window (with wrap-around)</summary>
+    </key>
+    <key type="as" name="switch-previous-loop">
+      <default><![CDATA[['']]]></default>
+      <summary>Switch to the previous window (with wrap-around)</summary>
+    </key>
+    <key type="as" name="switch-right-loop">
+        <default><![CDATA[['']]]></default>
+        <summary>Switch to the right window (with wrap-around)</summary>
+    </key>
+    <key type="as" name="switch-left-loop">
+        <default><![CDATA[['']]]></default>
+        <summary>Switch to the left window (with wrap-around)</summary>
+    </key>
+    <key type="as" name="switch-up-loop">
+        <default><![CDATA[['']]]></default>
+        <summary>Switch to the window above (with wrap-around)</summary>
+    </key>
+    <key type="as" name="switch-down-loop">
+        <default><![CDATA[['']]]></default>
+        <summary>Switch to the window below (with wrap-around)</summary>
     </key>
 
     <key type="as" name="switch-global-right">

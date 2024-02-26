@@ -1004,7 +1004,7 @@ export class Space extends Array {
         ensureViewport(this.selectedWindow, this, { force: true });
     }
 
-    switchLinear(dir) {
+    switchLinear(dir, loop) {
         let index = this.selectedIndex();
         let column = this[index];
         if (!column)
@@ -1012,6 +1012,13 @@ export class Space extends Array {
         let row = column.indexOf(this.selectedWindow);
         if (Lib.in_bounds(column, row + dir) === false) {
             index += dir;
+            if (loop) {
+                if (index >= this.length) {
+                    index = 0;
+                } else if (index < 0) {
+                    index = this.length - 1;
+                }
+            }
             if (dir === 1) {
                 if (index < this.length)
                     row = 0;
@@ -1026,11 +1033,11 @@ export class Space extends Array {
         return true;
     }
 
-    switchLeft() { this.switch(Meta.MotionDirection.LEFT); }
-    switchRight() { this.switch(Meta.MotionDirection.RIGHT); }
-    switchUp() { this.switch(Meta.MotionDirection.UP); }
-    switchDown() { this.switch(Meta.MotionDirection.DOWN); }
-    switch(direction) {
+    switchLeft(loop) { this.switch(Meta.MotionDirection.LEFT, loop); }
+    switchRight(loop) { this.switch(Meta.MotionDirection.RIGHT, loop); }
+    switchUp(loop) { this.switch(Meta.MotionDirection.UP, loop); }
+    switchDown(loop) { this.switch(Meta.MotionDirection.DOWN, loop); }
+    switch(direction, loop) {
         let space = this;
         let index = space.selectedIndex();
         if (index === -1) {
@@ -1046,8 +1053,15 @@ export class Space extends Array {
             index--;
             row = -1;
         }
-        if (index < 0 || index >= space.length)
+        if (loop) {
+            if (index < 0) {
+                index = space.length - 1;
+            } else if (index >= space.length) {
+                index = 0;
+            }
+        } else if (index < 0 || index >= space.length) {
             return;
+        }
 
         let column = space[index];
 
@@ -1064,8 +1078,15 @@ export class Space extends Array {
         case Meta.MotionDirection.DOWN:
             row++;
         }
-        if (row < 0 || row >= column.length)
+        if (loop) {
+            if (row < 0) {
+                row = column.length - 1;
+            } else if (row >= column.length) {
+                row = 0;
+            }
+        } else if (row < 0 || row >= column.length) {
             return;
+        }
 
         let metaWindow = space.getWindow(index, row);
         ensureViewport(metaWindow, space);
@@ -1766,11 +1787,11 @@ border-radius: ${borderWidth}px;
                 switch (dir) {
                 case Clutter.ScrollDirection.LEFT:
                 case Clutter.ScrollDirection.UP:
-                    this.switchLeft();
+                    this.switchLeft(false);
                     break;
                 case Clutter.ScrollDirection.RIGHT:
                 case Clutter.ScrollDirection.DOWN:
-                    this.switchRight();
+                    this.switchRight(false);
                     break;
                 }
             });
