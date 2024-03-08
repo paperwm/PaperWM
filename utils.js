@@ -35,7 +35,11 @@ export function enable() {
         case Clutter.EventType.TOUCH_CANCEL:
             inTouch = false;
             break;
+        default:
+            return Clutter.EVENT_PROPAGATE;
         }
+
+        // was one of our touch events
         touchCoords = event.get_coords();
         return Clutter.EVENT_PROPAGATE;
     });
