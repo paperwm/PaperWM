@@ -17,15 +17,15 @@ export let version = Config.PACKAGE_VERSION.split('.').map(Number);
 
 let warpRipple;
 
-let touchSignal = null;
+let signals, touchCoords;
 let inTouch = false;
-let touchCoords = null;
 
 export function enable() {
     warpRipple = new Ripples.Ripples(0.5, 0.5, 'ripple-pointer-location');
     warpRipple.addTo(Main.uiGroup);
 
-    touchSignal = global.stage.connect("captured-event", (actor, event) => {
+    signals = new Signals();
+    signals.connect(global.stage, "captured-event", (actor, event) => {
         switch (event.type()) {
         case Clutter.EventType.TOUCH_BEGIN:
         case Clutter.EventType.TOUCH_UPDATE:
@@ -50,7 +50,8 @@ export function disable() {
     warpRipple = null;
     markNewClonesSignalId = null;
 
-    global.stage.disconnect(touchSignal);
+    signals.destroy();
+    signals = null;
 }
 
 export function assert(condition, message, ...dump) {
@@ -189,6 +190,7 @@ export function isInRect(x, y, r) {
 
 /**
  * Retrieves global pointer coordinates taking into account touch screen events.
+ * May not work for continuous tracking, see #766.
  */
 export function getPointerCoords() {
     if (inTouch) {
