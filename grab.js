@@ -63,7 +63,7 @@ export class MoveGrab {
 
         this.initialY = clone.targetY;
         Easer.removeEase(clone);
-        let [gx, gy, $] = global.get_pointer();
+        let [gx, gy, $] = Utils.getPointerCoords();
 
         let px = (gx - actor.x) / actor.width;
         let py = (gy - actor.y) / actor.height;

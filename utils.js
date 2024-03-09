@@ -16,15 +16,42 @@ const Display = global.display;
 export let version = Config.PACKAGE_VERSION.split('.').map(Number);
 
 let warpRipple;
+
+let signals, touchCoords;
+let inTouch = false;
+
 export function enable() {
     warpRipple = new Ripples.Ripples(0.5, 0.5, 'ripple-pointer-location');
     warpRipple.addTo(Main.uiGroup);
+
+    signals = new Signals();
+    signals.connect(global.stage, "captured-event", (actor, event) => {
+        switch (event.type()) {
+        case Clutter.EventType.TOUCH_BEGIN:
+        case Clutter.EventType.TOUCH_UPDATE:
+            inTouch = true;
+            break;
+        case Clutter.EventType.TOUCH_END:
+        case Clutter.EventType.TOUCH_CANCEL:
+            inTouch = false;
+            break;
+        default:
+            return Clutter.EVENT_PROPAGATE;
+        }
+
+        // was one of our touch events
+        touchCoords = event.get_coords();
+        return Clutter.EVENT_PROPAGATE;
+    });
 }
 
 export function disable() {
     warpRipple?.destroy();
     warpRipple = null;
     markNewClonesSignalId = null;
+
+    signals.destroy();
+    signals = null;
 }
 
 export function assert(condition, message, ...dump) {
@@ -162,6 +189,18 @@ export function isInRect(x, y, r) {
 }
 
 /**
+ * Retrieves global pointer coordinates taking into account touch screen events.
+ * May not work for continuous tracking, see #766.
+ */
+export function getPointerCoords() {
+    if (inTouch) {
+        return touchCoords;
+    } else {
+        return global.get_pointer();
+    }
+}
+
+/**
  * Returns monitor a pointer co-ordinates.
  */
 export function monitorAtPoint(gx, gy) {
@@ -176,7 +215,7 @@ export function monitorAtPoint(gx, gy) {
  * Returns the monitor current pointer coordinates.
  */
 export function monitorAtCurrentPoint() {
-    let [gx, gy, $] = global.get_pointer();
+    let [gx, gy, $] = getPointerCoords();
     return monitorAtPoint(gx, gy);
 }
 
