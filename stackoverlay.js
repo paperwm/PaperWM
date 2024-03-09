@@ -181,7 +181,9 @@ export class StackOverlay {
 
         this.triggerPreviewTimeout = null;
         this.signals.connect(overlay, 'button-press-event', () => {
-            Main.activateWindow(this.target);
+            if (Settings.prefs.edge_preview_scale > 0) {
+                Main.activateWindow(this.target);
+            }
             // remove/cleanup the previous preview
             this.removePreview();
             this.triggerPreviewTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
