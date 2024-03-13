@@ -2808,7 +2808,11 @@ export const Spaces = class Spaces extends Map {
 
         Topbar.updateWorkspaceIndicator(to.index);
         if (to.hasTopBar) {
-            Topbar.setNoBackgroundStyle();
+            if (Settings.prefs.show_window_position_bar) {
+                Topbar.setNoBackgroundStyle();
+            } else {
+                Topbar.setTransparentStyle();
+            }
         }
 
         this.selectedSpace = to;
