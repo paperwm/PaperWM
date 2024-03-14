@@ -178,7 +178,7 @@ export function mkCommandLineSpawner(commandlineTemplate, spawnInWorkspaceDir = 
             success = GLib.spawn_async(workingDir, cmdArgs, GLib.get_environ(), GLib.SpawnFlags.SEARCH_PATH, null);
         }
         if (!success) {
-            Main.notify(
+            Main.notifyError(
                 `Failed to run custom spawn handler for ${app.id}`,
                 `Attempted to run '${commandline}'`);
         }

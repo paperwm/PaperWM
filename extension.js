@@ -153,14 +153,9 @@ export default class PaperWM extends Extension {
                 this.installConfig();
 
                 const configDir = this.getConfigDir().get_path();
-                const notification = this.notify("PaperWM", `Created user configuration folder: ${configDir}`);
-                notification.connect('activated', () => {
-                    Util.spawn(["nautilus", configDir]);
-                    notification.destroy();
-                });
+                Main.notify("PaperWM", `Created user configuration folder: ${configDir}`);
             } catch (e) {
-                this.errorNotification("PaperWM", `Failed create user configuration folder: ${e.message}`, e.stack);
-                console.error("PaperWM", "User config install failed", e.message);
+                Main.notifyError("PaperWM", `Failed create user configuration folder: ${e.message}`);
             }
         }
 
@@ -204,35 +199,8 @@ export default class PaperWM extends Extension {
         this.#userStylesheet = null;
     }
 
-    /**
-     * Our own version of imports.ui.main.notify allowing more control over the
-     * notification
-     */
-    notify(msg, details, params) {
-        let source = new MessageTray.SystemNotificationSource();
-        // note-to-self: the source is automatically destroyed when all its
-        // notifications are removed.
-        Main.messageTray.add(source);
-        let notification = new MessageTray.Notification(source, msg, details, params);
-        notification.setResident(true); // Usually more annoying that the notification disappear than not
-        source.showNotification(notification);
-        return notification;
-    }
-
     spawnPager(content) {
         const quoted = GLib.shell_quote(content);
         Util.spawn(["sh", "-c", `echo -En ${quoted} | gedit --new-window -`]);
-    }
-
-    /**
-     * Show an notification opening a the full message in dedicated window upon
-     * activation
-     */
-    errorNotification(title, message, fullMessage) {
-        const notification = this.notify(title, message);
-        notification.connect('activated', () => {
-            this.spawnPager([title, message, "", fullMessage].join("\n"));
-            notification.destroy();
-        });
     }
 }
