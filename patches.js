@@ -14,7 +14,7 @@ import * as WindowManager from 'resource:///org/gnome/shell/ui/windowManager.js'
 import * as WindowPreview from 'resource:///org/gnome/shell/ui/windowPreview.js';
 import * as Params from 'resource:///org/gnome/shell/misc/params.js';
 
-import { Utils, Tiling, Scratch, Settings } from './imports.js';
+import { Utils, Tiling, Scratch, Settings, Topbar } from './imports.js';
 
 /**
   Some of Gnome Shell's default behavior is really sub-optimal when using
@@ -36,9 +36,11 @@ export function enable(extension) {
     enableOverrides();
     setupRuntimeDisables();
     setupActions();
+    setupFullscreenAvoiderSupport();
 }
 
 export function disable() {
+    undoFullscreenAvoiderSupport();
     disableOverrides();
     restoreRuntimeDisables();
     actions.forEach(a => global.stage.add_action(a));
@@ -697,4 +699,78 @@ export function addWindow(window, metaWindow) {
 
     this._layout = null;
     this.layout_changed();
+}
+
+function setupFullscreenAvoiderSupport() {
+    // Patch monitor objects prototype to check our space for the inFullscreen
+    // property.
+    const monitor1 = Main.layoutManager.monitors[0];
+    Object.defineProperties(
+        Object.getPrototypeOf(monitor1),
+        {
+            inFullscreen: {
+                // NOTE: Needs to be non-arrow function so `this` is bound
+                // correctly on call. This is necessary because we modify the
+                // prototype of multiple objects here.
+                get: function() {
+                    // NOTE: This is wrapped in try-catch because an error here
+                    // makes windows unclickable.
+                    try {
+                        // Find active space for monitor (this)
+                        // NOTE: Indexing spaces.monitors[this] does not work
+                        if (Tiling.spaces?.monitors) {
+                            for (const [monitor, space] of Tiling.spaces.monitors) {
+                                if (monitor.index == this.index) {
+                                    return space.hasFullScreenWindow();
+                                }
+                            }
+                        }
+                        // Check for scratch windows separately since they don't
+                        // belong to a workspace
+                        if (Scratch.getScratchWindows().some(w => w.get_monitor() == this.index && w.fullscreen)) {
+                            return true;
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    // should not be reached, just here in case there is an
+                    // error above
+                    console.error(new Error(`Failed to find space for monitor`));
+                    return false;
+                },
+                enumerable: true,
+            }
+        });
+
+    signals.connect(Main.layoutManager.panelBox, "notify::position", () => {
+        try {
+            if (Tiling.spaces.monitors) {
+                for (const [_monitor, space] of Tiling.spaces.monitors) {
+                    // console.debug(`Updating space ${space.name}`);
+                    space.setSpaceTopbarElementsVisible();
+                    Topbar.updateWorkspaceIndicator(space.index);
+                    Topbar.fixTopBar();
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    });
+}
+
+function undoFullscreenAvoiderSupport() {
+    const monitor1 = Main.layoutManager.monitors[0];
+    // Reset value to false. This might be incorrect, but will be updated by
+    // gnome again after some time.
+    Object.defineProperties(
+        Object.getPrototypeOf(monitor1),
+        {
+            inFullscreen: {
+                value: false,
+                writable: true,
+                enumerable: true,
+            }
+        }
+    );
+    signals.disconnect(Main.layoutManager.panelBox);
 }

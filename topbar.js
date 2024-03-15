@@ -65,8 +65,6 @@ export function enable (extension) {
 
     signals.connect(Main.overview, 'showing', fixTopBar);
     signals.connect(Main.overview, 'hidden', () => {
-        if (Tiling.spaces.selectedSpace.showTopBar)
-            return;
         fixTopBar();
     });
 
@@ -720,7 +718,7 @@ export function fixStyle() {
 }
 
 export function fixTopBar() {
-    let space = Tiling?.spaces?.monitors?.get(panelMonitor()) ?? false;
+    let space = Tiling?.spaces?.spaceWithTopBar() ?? false;
     if (!space)
         return;
 
@@ -732,17 +730,23 @@ export function fixTopBar() {
     // check if is currently fullscreened (check focused-floating, focused-scratch, and selected/tiled window)
     let fullscreen = focusIsFloatOrScratch ? focused.fullscreen : selected && selected.fullscreen;
 
-    if (normal && !space.showTopBar) {
-        panelBox.scale_y = 0; // Update the workarea to support hide top bar
-        panelBox.hide();
+    if (normal && space.hasTopBar) {
+        if (!space.showTopBar) {
+            panelBox.scale_y = 0; // Update the workarea to support hide top bar
+            panelBox.hide();
+        } else {
+            panelBox.scale_y = 1;
+            panelBox.show();
+        }
     }
-    else if (normal && fullscreen) {
-        panelBox.hide();
-    }
-    else {
-        panelBox.scale_y = 1;
-        panelBox.show();
-    }
+
+    // if (normal && !fullscreen && !space.showTopBar) {
+    //     panelBox.scale_y = 0; // Update the workarea to support hide top bar
+    //     panelBox.hide();
+    // } else {
+    //     panelBox.scale_y = 1;
+    //     panelBox.show();
+    // }
 }
 
 export function fixWorkspaceIndicator() {
@@ -769,7 +773,7 @@ export function fixFocusModeIcon() {
 export function updateWorkspaceIndicator(index) {
     let spaces = Tiling.spaces;
     let space = spaces?.spaceOf(workspaceManager.get_workspace_by_index(index));
-    if (space && space.monitor === panelMonitor()) {
+    if (space && isOnMonitor(space.monitor)) {
         setWorkspaceName(space.name);
 
         // also update focus mode
@@ -787,4 +791,12 @@ export function refreshWorkspaceIndicator() {
 
 export function setWorkspaceName (name) {
     menu && menu.setName(name);
+}
+
+export function isOnMonitor(monitor) {
+    // Check if panel position is the same as the monitor position (because
+    // it is always at position 0,0 relative to the monitor). This is useful
+    // when an extension moves the panel to another monitor.
+    const [panelBoxX, panelBoxY] = Main.layoutManager.panelBox.get_transformed_position();
+    return monitor && monitor.x == panelBoxX && monitor.y == panelBoxY;
 }

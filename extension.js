@@ -52,6 +52,7 @@ export default class PaperWM extends Extension {
         Gestures, Keybindings, LiveAltTab, Navigator, Stackoverlay, Scratch,
         Workspace, Tiling, Topbar, App,
     ];
+    Tiling = Tiling;
 
     #userStylesheet = null;
 
@@ -67,6 +68,8 @@ export default class PaperWM extends Extension {
                 m.enable(this);
             }
         });
+
+        global.paperwm = this;
     }
 
     disable() {
@@ -79,6 +82,8 @@ export default class PaperWM extends Extension {
         });
 
         this.disableUserStylesheet();
+
+        global.paperwm = undefined;
     }
 
     /**
