@@ -1,0 +1,46 @@
+<!DOCTYPE node PUBLIC
+    '-//freedesktop//DTD D-BUS Object Introspection 1.0//EN'
+    'http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd'>
+<node>
+    <interface name="org.github.PaperWM">
+        <method name="Eval">
+            <arg type="s" direction="in" name="code"/>
+            <arg type="i" direction="out" name="undoId"/>
+            <arg type="s" direction="out" name="output"/>
+        </method>
+        <method name="UndoEval">
+            <arg type="i" direction="in" name="undoId"/>
+        </method>
+
+        <!-- Spaces -->
+        <!-- Spaces are represented as strings of json objects. -->
+        <method name="ListSpaces">
+            <arg type="as" direction="out" name="spaces" />
+        </method>
+        <method name="GetSpace">
+            <arg type="i" direction="in" name="index" />
+            <arg type="s" direction="out" name="space" />
+        </method>
+
+        <method name="ActivateSpace">
+            <arg type="i" direction="in" name="index" />
+        </method>
+
+        <!-- Actions -->
+        <method name="ListActions">
+            <arg type="as" direction="out" name="names"/>
+        </method>
+
+        <method name="TriggerAction">
+            <arg type="s" direction="in" name="name"/>
+        </method>
+
+        <!-- Signals -->
+        <signal name="WindowAdded">
+            <arg name="data" type="s" />
+        </signal>
+
+        <!-- Properties -->
+        <property name="DebugTrace" type="b" access="readwrite"/>
+    </interface>
+</node>

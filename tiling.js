@@ -1203,6 +1203,9 @@ export class Space extends Array {
 
     rowOf(metaWindow) {
         let column = this[this.indexOf(metaWindow)];
+        if (column === undefined) {
+            return -1;
+        }
         return column.indexOf(metaWindow);
     }
 
@@ -3022,6 +3025,7 @@ export const Spaces = class Spaces extends Map {
         signals.connectOneShot(actor, 'first-frame', () =>  {
             allocateClone(metaWindow);
             insertWindow(metaWindow, { existing: false });
+            this.emit("window-first-frame", metaWindow);
         });
     }
 
