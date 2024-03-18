@@ -5,7 +5,7 @@
   "url": "https://github.com/paperwm/PaperWM",
   "settings-schema": "org.gnome.shell.extensions.paperwm",
   "shell-version": [ "45", "46" ],
-  "version-name": "46.0.0",
+  "version-name": "46.0.1",
   "donations": {
     "buymeacoffee": "jaytaala"
   }

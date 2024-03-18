@@ -14,7 +14,7 @@ import * as WindowManager from 'resource:///org/gnome/shell/ui/windowManager.js'
 import * as WindowPreview from 'resource:///org/gnome/shell/ui/windowPreview.js';
 import * as Params from 'resource:///org/gnome/shell/misc/params.js';
 
-import { Utils, Tiling, Scratch, Settings } from './imports.js';
+import { Utils, Tiling, Scratch, Settings, OverviewLayout } from './imports.js';
 
 /**
   Some of Gnome Shell's default behavior is really sub-optimal when using
@@ -210,8 +210,56 @@ export function setupOverrides() {
         registerOverrideProp(t, "enabled", false, false);
     });
 
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, '_sortRow', row => row);
-    registerOverridePrototype(Workspace.UnalignedLayoutStrategy, 'computeLayout', computeLayout40);
+    /**
+     * Used on overview layout.  UnalignedLayoutStrategy is not exported in Gnome 45, and hence
+     * we need to override this function and call PaperWM customised UnalignedLayoutStrategy found
+     * in overlayout.js.
+     */
+    registerOverridePrototype(Workspace.WorkspaceLayout, '_createBestLayout', function(area) {
+        const [rowSpacing, columnSpacing] =
+        this._adjustSpacingAndPadding(this._spacing, this._spacing, null);
+
+        // We look for the largest scale that allows us to fit the
+        // largest row/tallest column on the workspace.
+        this._layoutStrategy = new OverviewLayout.UnalignedLayoutStrategy({
+            monitor: Main.layoutManager.monitors[this._monitorIndex],
+            rowSpacing,
+            columnSpacing,
+        });
+
+        let lastLayout = null;
+        let lastNumColumns = -1;
+        let lastScale = 0;
+        let lastSpace = 0;
+
+        for (let numRows = 1; ; numRows++) {
+            const numColumns = Math.ceil(this._sortedWindows.length / numRows);
+
+            // If adding a new row does not change column count just stop
+            // (for instance: 9 windows, with 3 rows -> 3 columns, 4 rows ->
+            // 3 columns as well => just use 3 rows then)
+            if (numColumns === lastNumColumns)
+                break;
+
+            const layout = this._layoutStrategy.computeLayout(this._sortedWindows, {
+                numRows,
+            });
+
+            const [scale, space] = this._layoutStrategy.computeScaleAndSpace(layout, area);
+
+            if (lastLayout && !this._isBetterScaleAndSpace(lastScale, lastSpace, scale, space))
+                break;
+
+            lastLayout = layout;
+            lastNumColumns = numColumns;
+            lastScale = scale;
+            lastSpace = space;
+        }
+
+        return lastLayout;
+    });
+
+
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
         win = win.meta_window ?? win; // should be metawindow, but get if not
         // upstream (gnome value result - whta it would have done)
@@ -493,91 +541,6 @@ export function setupActions() {
     actions.forEach(a => global.stage.remove_action(a));
 }
 
-export function sortWindows(a, b) {
-    let aw = a.metaWindow;
-    let bw = b.metaWindow;
-    let spaceA = Tiling.spaces.spaceOfWindow(aw);
-    let spaceB = Tiling.spaces.spaceOfWindow(bw);
-    let ia = spaceA.indexOf(aw);
-    let ib = spaceB.indexOf(bw);
-    if (ia === -1 && ib === -1) {
-        return a.metaWindow.get_stable_sequence() - b.metaWindow.get_stable_sequence();
-    }
-    if (ia === -1) {
-        return -1;
-    }
-    if (ib === -1) {
-        return 1;
-    }
-    return ia - ib;
-}
-
-export function computeLayout40(windows, layoutParams) {
-    layoutParams = Params.parse(layoutParams, {
-        numRows: 0,
-    });
-
-    if (layoutParams.numRows === 0)
-        throw new Error(`${this.constructor.name}: No numRows given in layout params`);
-
-    let numRows = layoutParams.numRows;
-
-    let rows = [];
-    let totalWidth = 0;
-    for (let i = 0; i < windows.length; i++) {
-        let window = windows[i];
-        let s = this._computeWindowScale(window);
-        totalWidth += window.boundingBox.width * s;
-    }
-
-    let idealRowWidth = totalWidth / numRows;
-
-    let sortedWindows = windows.slice();
-    // sorting needs to be done here to address moved windows
-    sortedWindows.sort(sortWindows);
-
-    let windowIdx = 0;
-    for (let i = 0; i < numRows; i++) {
-        let row = this._newRow();
-        rows.push(row);
-
-        for (; windowIdx < sortedWindows.length; windowIdx++) {
-            let window = sortedWindows[windowIdx];
-            let s = this._computeWindowScale(window);
-            let width = window.boundingBox.width * s;
-            let height = window.boundingBox.height * s;
-            row.fullHeight = Math.max(row.fullHeight, height);
-
-            // either new width is < idealWidth or new width is nearer from idealWidth then oldWidth
-            if (this._keepSameRow(row, window, width, idealRowWidth) || (i === numRows - 1)) {
-                row.windows.push(window);
-                row.fullWidth += width;
-            } else {
-                break;
-            }
-        }
-    }
-
-    let gridHeight = 0;
-    let maxRow;
-    for (let i = 0; i < numRows; i++) {
-        let row = rows[i];
-        this._sortRow(row);
-
-        if (!maxRow || row.fullWidth > maxRow.fullWidth)
-            maxRow = row;
-        gridHeight += row.fullHeight;
-    }
-
-    return {
-        numRows,
-        rows,
-        maxColumns: maxRow.windows.length,
-        gridWidth: maxRow.fullWidth,
-        gridHeight,
-    };
-}
-
 export function _checkWorkspaces() {
     let workspaceManager = global.workspace_manager;
     let i;
@@ -672,29 +635,4 @@ export function _checkWorkspaces() {
 
     this._checkWorkspacesId = 0;
     return false;
-}
-
-export function addWindow(window, metaWindow) {
-    if (this._windows.has(window))
-        return;
-
-    this._windows.set(window, {
-        metaWindow,
-        sizeChangedId: metaWindow.connect('size-changed', () => {
-            this._layout = null;
-            this.layout_changed();
-        }),
-        destroyId: window.connect('destroy', () =>
-            this.removeWindow(window)),
-        currentTransition: null,
-    });
-
-    this._sortedWindows.push(window);
-    this._sortedWindows.sort(sortWindows);
-
-    this._syncOverlay(window);
-    this._container.add_child(window);
-
-    this._layout = null;
-    this.layout_changed();
 }

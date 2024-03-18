@@ -16,3 +16,4 @@ export * as Tiling from './tiling.js';
 export * as Topbar from './topbar.js';
 export * as Utils from './utils.js';
 export * as Workspace from './workspace.js';
+export * as OverviewLayout from './overviewlayout.js';
