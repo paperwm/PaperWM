@@ -1169,6 +1169,7 @@
                         <child>
                           <object class="GtkGrid">
                             <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">Sets the minimum number of windows for each row in Gnome overview</property>
                             <property name="margin_start">12</property>
                             <property name="margin_end">12</property>
                             <property name="margin_top">6</property>
@@ -1178,7 +1179,8 @@
                               <object class="GtkLabel">
                                 <property name="focusable">False</property>
                                 <property name="hexpand">1</property>
-                                <property name="label" translatable="yes">Minimum number of windows per GNOME overview row</property>
+                                <property name="label" translatable="yes">&lt;i&gt;Minimum&lt;/i&gt; number of windows per GNOME overview row</property>
+                                <property name="use_markup">1</property>
                                 <property name="xalign">0</property>
                                 <layout>
                                   <property name="column">0</property>
