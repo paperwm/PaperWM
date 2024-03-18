@@ -77,8 +77,9 @@
   </object>
   <object class="GtkAdjustment" id="overview_min_windows_per_row">
     <property name="upper">20</property>
+    <property name="lower">1</property>
     <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
+    <property name="page_increment">5</property>
   </object>
   <object class="AdwPreferencesPage" id="general_page">
     <property name="title" translatable="yes">General</property>
