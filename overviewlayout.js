@@ -2,7 +2,7 @@ import * as Workspace from 'resource:///org/gnome/shell/ui/workspace.js';
 import * as Util from 'resource:///org/gnome/shell/misc/util.js';
 import * as Params from 'resource:///org/gnome/shell/misc/params.js';
 
-import { Tiling } from './imports.js';
+import { Settings, Tiling } from './imports.js';
 
 const WINDOW_PREVIEW_MAXIMUM_SCALE = 0.95;
 
@@ -61,6 +61,11 @@ export class UnalignedLayoutStrategy extends Workspace.LayoutStrategy {
     }
 
     _keepSameRow(row, window, width, idealRowWidth) {
+        // enforce a minimum number of windows per overview row
+        if (row.windows.length < Settings.prefs.overview_min_windows_per_row) {
+            return true;
+        }
+
         if (row.fullWidth + width <= idealRowWidth)
             return true;
 

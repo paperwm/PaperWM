@@ -431,6 +431,7 @@ class SettingsWidget {
             'translate',
             1);
 
+        intValueChanged('overview_min_windows_per_row_spin', 'overview-min-windows-per-row');
         booleanStateChanged('show-focus-mode-icon');
         booleanStateChanged('disable-topbar-styling', true);
         // disabled since opposite of gnome-pill
