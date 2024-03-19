@@ -1169,7 +1169,7 @@
                         <child>
                           <object class="GtkGrid">
                             <property name="focusable">False</property>
-                            <property name="tooltip_text" translatable="yes">Sets the minimum number of windows for each row in Gnome overview</property>
+                            <property name="tooltip_text" translatable="yes">Sets the minimum number of windows for each row in Gnome overview. Increasing this can make Gnome overview appear more like the current tiling layout.</property>
                             <property name="margin_start">12</property>
                             <property name="margin_end">12</property>
                             <property name="margin_top">6</property>
