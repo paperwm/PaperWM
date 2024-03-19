@@ -505,7 +505,7 @@
     </key>
 
     <key type="i" name="overview-min-windows-per-row">
-        <default>1</default>
+        <default>5</default>
         <summary>Sets the minimum number or windows per row before adding a new window row</summary>
     </key>
 
