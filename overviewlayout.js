@@ -4,8 +4,6 @@ import * as Params from 'resource:///org/gnome/shell/misc/params.js';
 
 import { Settings, Tiling } from './imports.js';
 
-const WINDOW_PREVIEW_MAXIMUM_SCALE = 0.95;
-
 /**
  * Gnome 45's UnalignedLayoutStrategy is not exported.  Hence, we recreate this class
  * with modifications to ensure window ordering reflects tiling window order in overview.
@@ -155,7 +153,7 @@ export class UnalignedLayoutStrategy extends Workspace.LayoutStrategy {
 
         // Thumbnails should be less than 70% of the original size
         let scale = Math.min(
-            horizontalScale, verticalScale, WINDOW_PREVIEW_MAXIMUM_SCALE);
+            horizontalScale, verticalScale, Settings.prefs.overview_max_window_scale);
 
         let scaledLayoutWidth = layout.gridWidth * scale + hspacing;
         let scaledLayoutHeight = layout.gridHeight * scale + vspacing;
@@ -227,7 +225,7 @@ export class UnalignedLayoutStrategy extends Workspace.LayoutStrategy {
                 let cellWidth = window.boundingBox.width * s;
                 let cellHeight = window.boundingBox.height * s;
 
-                s = Math.min(s, WINDOW_PREVIEW_MAXIMUM_SCALE);
+                s = Math.min(s, Settings.prefs.overview_max_window_scale);
                 let cloneWidth = window.boundingBox.width * s;
                 const cloneHeight = window.boundingBox.height * s;
 

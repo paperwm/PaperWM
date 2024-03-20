@@ -41,6 +41,7 @@ export function enable(extension) {
         'default-focus-mode', 'gesture-enabled', 'gesture-horizontal-fingers',
         'gesture-workspace-fingers', 'open-window-position',
         'overview-ensure-viewport-animation', 'overview-min-windows-per-row',
+        'overview-max-window-scale',
     ]
         .forEach(k => setState(null, k));
     prefs.__defineGetter__("minimum_margin", () => {
