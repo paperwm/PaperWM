@@ -2,9 +2,7 @@ import * as Workspace from 'resource:///org/gnome/shell/ui/workspace.js';
 import * as Util from 'resource:///org/gnome/shell/misc/util.js';
 import * as Params from 'resource:///org/gnome/shell/misc/params.js';
 
-import { Tiling } from './imports.js';
-
-const WINDOW_PREVIEW_MAXIMUM_SCALE = 0.95;
+import { Settings, Tiling } from './imports.js';
 
 /**
  * Gnome 45's UnalignedLayoutStrategy is not exported.  Hence, we recreate this class
@@ -61,6 +59,11 @@ export class UnalignedLayoutStrategy extends Workspace.LayoutStrategy {
     }
 
     _keepSameRow(row, window, width, idealRowWidth) {
+        // enforce a minimum number of windows per overview row
+        if (row.windows.length < Settings.prefs.overview_min_windows_per_row) {
+            return true;
+        }
+
         if (row.fullWidth + width <= idealRowWidth)
             return true;
 
@@ -150,7 +153,7 @@ export class UnalignedLayoutStrategy extends Workspace.LayoutStrategy {
 
         // Thumbnails should be less than 70% of the original size
         let scale = Math.min(
-            horizontalScale, verticalScale, WINDOW_PREVIEW_MAXIMUM_SCALE);
+            horizontalScale, verticalScale, Settings.prefs.overview_max_window_scale);
 
         let scaledLayoutWidth = layout.gridWidth * scale + hspacing;
         let scaledLayoutHeight = layout.gridHeight * scale + vspacing;
@@ -222,7 +225,7 @@ export class UnalignedLayoutStrategy extends Workspace.LayoutStrategy {
                 let cellWidth = window.boundingBox.width * s;
                 let cellHeight = window.boundingBox.height * s;
 
-                s = Math.min(s, WINDOW_PREVIEW_MAXIMUM_SCALE);
+                s = Math.min(s, Settings.prefs.overview_max_window_scale);
                 let cloneWidth = window.boundingBox.width * s;
                 const cloneHeight = window.boundingBox.height * s;
 

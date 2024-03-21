@@ -75,6 +75,18 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="overview_max_window_scale">
+    <property name="upper">95</property>
+    <property name="lower">10</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="overview_min_windows_per_row">
+    <property name="upper">20</property>
+    <property name="lower">1</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">5</property>
+  </object>
   <object class="AdwPreferencesPage" id="general_page">
     <property name="title" translatable="yes">General</property>
     <property name="icon-name">text-x-generic-symbolic</property>
@@ -1156,6 +1168,50 @@
                         </child>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">Sets the minimum number of windows for each row in Gnome overview. Increasing this can make Gnome overview appear more like the current tiling layout.</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">&lt;i&gt;Minimum&lt;/i&gt; number of windows per GNOME overview row</property>
+                                <property name="use_markup">1</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton"  id="overview_min_windows_per_row_spin">
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="adjustment">overview_min_windows_per_row</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                   </object>
                 </child>
                 <child>
@@ -1295,6 +1351,50 @@
                                 <property name="width_chars">2</property>
                                 <property name="max_width_chars">2</property>
                                 <property name="adjustment">window_switcher_preview_scale</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">if-valid</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">Controls the maximum window "size" of GNOME overview windows, as compared to their actual window size (e.g. "95" corresponds to an edge preview size being approximately 95% of the actual window size)</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">&lt;i&gt;Maximum&lt;/i&gt; window scale (%) of GNOME overview windows</property>
+                                <property name="use_markup">1</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton"  id="overview_max_window_scale_spin">
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="adjustment">overview_max_window_scale</property>
                                 <property name="snap_to_ticks">1</property>
                                 <property name="numeric">1</property>
                                 <property name="update_policy">if-valid</property>
