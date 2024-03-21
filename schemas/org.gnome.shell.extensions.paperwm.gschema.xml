@@ -504,6 +504,11 @@
         <summary>Duration of animations in seconds</summary>
     </key>
 
+    <key type="d" name="overview-max-window-scale">
+        <default>0.95</default>
+        <summary>Sets the maximum window scale (compared to actual window size) of Gnome overview windows</summary>
+    </key>
+
     <key type="i" name="overview-min-windows-per-row">
         <default>5</default>
         <summary>Sets the minimum number or windows per row before adding a new window row</summary>
