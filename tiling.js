@@ -358,7 +358,7 @@ export class Space extends Array {
             animateWindow(w);
         });
 
-        this.layout(false);
+        this.layout(true);
 
         this.signals.connect(workspace, "window-added", (ws, metawindow) => add_handler(ws, metawindow));
         this.signals.connect(workspace, "window-removed", (ws, metawindow) => remove_handler(ws, metawindow));
