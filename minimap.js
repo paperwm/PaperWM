@@ -7,8 +7,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { Settings, Utils, Lib } from './imports.js';
 import { Easer } from './utils.js';
 
-const WINDOW_FADE_TIME = 0.25;
-const WINDOW_FADE_OPACITY = 240;
+const WINDOW_FADE_OPACITY = 160;
 
 export function calcOffset(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
@@ -27,7 +26,7 @@ export class Minimap extends Array {
             .filter(w => w !== space.selectedWindow)
             .forEach(w => {
                 Easer.addEase(w.clone, {
-                    time: WINDOW_FADE_TIME,
+                    time: Settings.prefs.animation_time,
                     opacity: WINDOW_FADE_OPACITY,
                 });
             });
@@ -217,7 +216,6 @@ export class Minimap extends Array {
         if (!selected)
             return;
 
-        const time = WINDOW_FADE_TIME;
         this.space.getWindows().forEach(w => {
             const clone = w.clone;
             // if selected
@@ -228,7 +226,7 @@ export class Minimap extends Array {
 
             // others
             Easer.addEase(clone, {
-                time,
+                time: Settings.prefs.animation_time,
                 opacity: WINDOW_FADE_OPACITY,
             });
         });
@@ -276,7 +274,7 @@ export class Minimap extends Array {
         this.space.getWindows()
             .forEach(w => {
                 Easer.addEase(w.clone, {
-                    time: WINDOW_FADE_TIME,
+                    time: Settings.prefs.animation_time,
                     opacity: 255,
                 });
             });
