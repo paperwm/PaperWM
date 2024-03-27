@@ -3144,16 +3144,24 @@ export function registerWindow(metaWindow) {
         return false;
     }
 
-    let actor = metaWindow.get_compositor_private();
-    let cloneActor = new Clutter.Clone({ source: actor });
-    let clone = new Clutter.Actor();
-
+    const actor = metaWindow.get_compositor_private();
+    const cloneActor = new Clutter.Clone({ source: actor });
+    const clone = new Clutter.Actor();
     clone.add_child(cloneActor);
-    clone.targetX = 0;
-    clone.meta_window = metaWindow;
+
+    // create shade
+    const shade = new St.Widget({ style_class: 'paperwm-clone-shade' });
+    // default opacity
+    shade.opacity = 0;
+    clone.add_child(shade);
+    Utils.actor_raise(shade);
 
     metaWindow.clone = clone;
     metaWindow.clone.cloneActor = cloneActor;
+    metaWindow.clone.shade = shade;
+
+    clone.targetX = 0;
+    clone.meta_window = metaWindow;
 
     signals.connect(metaWindow, "focus", (metaWindow, user_data) => {
         focus_handler(metaWindow, user_data);
@@ -3189,10 +3197,16 @@ export function allocateClone(metaWindow) {
     // with the frame.
     let clone = metaWindow.clone;
     let cloneActor = clone.cloneActor;
-    cloneActor.set_position(buffer.x - frame.x,
+    cloneActor.set_position(
+        buffer.x - frame.x,
         buffer.y - frame.y);
     cloneActor.set_size(buffer.width, buffer.height);
     clone.set_size(frame.width, frame.height);
+
+    // update shade sizing too, we want it a little bigger
+    const [width, height] = clone.get_size();
+    metaWindow.clone.shade.set_position(-1, -1);
+    metaWindow.clone.shade.set_size(width + 2, height + 2);
 
     if (metaWindow.clone.first_child.name === 'selection') {
         let selection = metaWindow.clone.first_child;

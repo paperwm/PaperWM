@@ -25,7 +25,7 @@ export class Minimap extends Array {
         space.getWindows()
             .filter(w => w !== space.selectedWindow)
             .forEach(w => {
-                Easer.addEase(w.clone, {
+                Easer.addEase(w.clone?.shade, {
                     time: Settings.prefs.animation_time,
                     opacity: WINDOW_FADE_OPACITY,
                 });
@@ -217,15 +217,15 @@ export class Minimap extends Array {
             return;
 
         this.space.getWindows().forEach(w => {
-            const clone = w.clone;
+            const shade = w.clone.shade;
             // if selected
             if (w === selected.meta_window) {
-                clone.opacity = 255;
+                shade.opacity = 0;
                 return;
             }
 
             // others
-            Easer.addEase(clone, {
+            Easer.addEase(shade, {
                 time: Settings.prefs.animation_time,
                 opacity: WINDOW_FADE_OPACITY,
             });
@@ -273,9 +273,9 @@ export class Minimap extends Array {
             return;
         this.space.getWindows()
             .forEach(w => {
-                Easer.addEase(w.clone, {
+                Easer.addEase(w.clone?.shade, {
                     time: Settings.prefs.animation_time,
-                    opacity: 255,
+                    opacity: 0,
                 });
             });
         this.destroyed = true;
