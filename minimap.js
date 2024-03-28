@@ -7,6 +7,8 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { Settings, Utils, Lib } from './imports.js';
 import { Easer } from './utils.js';
 
+const WINDOW_FADE_OPACITY = 160;
+
 export function calcOffset(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
     let frame = metaWindow.get_frame_rect();
@@ -19,6 +21,20 @@ export class Minimap extends Array {
     constructor(space, monitor) {
         super();
         this.space = space;
+        // initial fade
+        space.getWindows()
+            .forEach(w => {
+                w.clone?.shade?.show();
+                if (w === space.selectedWindow) {
+                    return;
+                }
+
+                Easer.addEase(w.clone?.shade, {
+                    time: Settings.prefs.animation_time,
+                    opacity: WINDOW_FADE_OPACITY,
+                });
+            });
+
         this.monitor = monitor;
         let actor = new St.Widget({
             name: 'minimap',
@@ -204,6 +220,21 @@ export class Minimap extends Array {
         if (!selected)
             return;
 
+        this.space.getWindows().forEach(w => {
+            const shade = w.clone.shade;
+            // if selected
+            if (w === selected.meta_window) {
+                shade.opacity = 0;
+                return;
+            }
+
+            // others
+            Easer.addEase(shade, {
+                time: Settings.prefs.animation_time,
+                opacity: WINDOW_FADE_OPACITY,
+            });
+        });
+
         label.text = selected.meta_window.title;
 
         if (selected.x + selected.width + container.x > clip.width) {
@@ -244,6 +275,14 @@ export class Minimap extends Array {
     destroy() {
         if (this.destroyed)
             return;
+        this.space.getWindows()
+            .forEach(w => {
+                Easer.addEase(w.clone?.shade, {
+                    time: Settings.prefs.animation_time,
+                    opacity: 0,
+                    onComplete: () => w.clone?.shade.hide(),
+                });
+            });
         this.destroyed = true;
         this.signals.destroy();
         this.signals = null;
@@ -251,4 +290,4 @@ export class Minimap extends Array {
         this.actor.destroy();
         this.actor = null;
     }
-};
+}
