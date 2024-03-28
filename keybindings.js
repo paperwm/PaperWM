@@ -32,7 +32,7 @@ export function enable(extension) {
         signals.connect(schema, 'changed', (settings, key) => {
             const numConflicts = Settings.conflictKeyChanged(settings, key);
             if (numConflicts > 0) {
-                Main.notify(
+                Main.notifyError(
                     `PaperWM: overriding '${key}' keybind`,
                     `this Gnome Keybind will be restored when PaperWM is disabled`);
             }
@@ -406,7 +406,7 @@ export function bindkey(keystr, actionName = null, handler = null, options = {})
             message = "Usually caused by the binding already being taken, but could not identify which action";
         }
 
-        Main.notify(
+        Main.notifyError(
             "PaperWM (user.js): Could not enable keybinding",
             `Tried to bind ${keystr} to ${actionName}\n${message}`);
     }
