@@ -23,8 +23,12 @@ export class Minimap extends Array {
         this.space = space;
         // initial fade
         space.getWindows()
-            .filter(w => w !== space.selectedWindow)
             .forEach(w => {
+                w.clone?.shade?.show();
+                if (w === space.selectedWindow) {
+                    return;
+                }
+
                 Easer.addEase(w.clone?.shade, {
                     time: Settings.prefs.animation_time,
                     opacity: WINDOW_FADE_OPACITY,
@@ -276,6 +280,7 @@ export class Minimap extends Array {
                 Easer.addEase(w.clone?.shade, {
                     time: Settings.prefs.animation_time,
                     opacity: 0,
+                    onComplete: () => w.clone?.shade.hide(),
                 });
             });
         this.destroyed = true;

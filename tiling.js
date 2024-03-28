@@ -3152,9 +3152,10 @@ export function registerWindow(metaWindow) {
     // create shade
     const shade = new St.Widget({ style_class: 'paperwm-clone-shade' });
     // default opacity
-    shade.opacity = 0;
     clone.add_child(shade);
     Utils.actor_raise(shade);
+    shade.opacity = 0;
+    shade.hide();
 
     metaWindow.clone = clone;
     metaWindow.clone.cloneActor = cloneActor;
