@@ -238,6 +238,7 @@ class SettingsWidget {
         percentValueChanged('edge_scale_spin', 'edge-preview-scale');
         percentValueChanged('window_switcher_preview_scale_spin', 'window-switcher-preview-scale');
         percentValueChanged('overview_max_window_scale_spin', 'overview-max-window-scale');
+        intValueChanged('minimap_shade_opacity_spin', 'minimap-shade-opacity');
 
         const openWindowPosition = this.builder.get_object('open-window-position');
         const owpos = this._settings.get_int('open-window-position');

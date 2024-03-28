@@ -7,8 +7,6 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { Settings, Utils, Lib } from './imports.js';
 import { Easer } from './utils.js';
 
-const WINDOW_FADE_OPACITY = 160;
-
 export function calcOffset(metaWindow) {
     let buffer = metaWindow.get_buffer_rect();
     let frame = metaWindow.get_frame_rect();
@@ -31,7 +29,7 @@ export class Minimap extends Array {
 
                 Easer.addEase(w.clone?.shade, {
                     time: Settings.prefs.animation_time,
-                    opacity: WINDOW_FADE_OPACITY,
+                    opacity: Settings.prefs.minimap_shade_opacity,
                 });
             });
 
@@ -231,7 +229,7 @@ export class Minimap extends Array {
             // others
             Easer.addEase(shade, {
                 time: Settings.prefs.animation_time,
-                opacity: WINDOW_FADE_OPACITY,
+                opacity: Settings.prefs.minimap_shade_opacity,
             });
         });
 
