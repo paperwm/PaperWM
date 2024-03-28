@@ -401,6 +401,11 @@
       <summary>Scale of mini mini-map tiles compared to their actual window size.</summary>
     </key>
 
+    <key type="i" name="minimap-shade-opacity">
+      <default>160</default>
+      <summary>Sets the opacity of the non-selected windows during minimap navigation.</summary>
+    </key>
+
     <key type="d" name="edge-preview-scale">
       <default>0.15</default>
       <summary>Scale of window previews at tiling edge. Scale is percent of actual window size.</summary>
