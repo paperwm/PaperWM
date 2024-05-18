@@ -175,6 +175,10 @@ export function enable(extension) {
         });
     };
 
+    signals.connect(global.display, 'workareas-changed', () => {
+        spaces.layout(false, {ensure: false});
+    });
+
     if (Main.layoutManager._startingUp) {
         // Defer workspace initialization until existing windows are accessible.
         // Otherwise we're unable to restore the tiling-order. (when restarting
@@ -652,10 +656,9 @@ export class Space extends Array {
             this.setSpaceTopbarElementsVisible(false);
         }
         // compensate to keep window position bar on all monitors
-        else if (Settings.prefs.show_window_position_bar) {
+        else if (Settings.prefs.show_window_position_bar && this.showTopBar) {
             const panelBoxHeight = Topbar.panelBox.height;
-            const monitor = Main.layoutManager.primaryMonitor;
-            if (monitor !== this.monitor) {
+            if (!this.hasTopBar) {
                 workArea.y += panelBoxHeight;
                 workArea.height -= panelBoxHeight;
             }
@@ -765,6 +768,8 @@ export class Space extends Array {
         if (this._layoutQueued)
             return;
 
+        console.log(new Error(this.name));
+
         this._layoutQueued = true;
         Utils.later_add(Meta.LaterType.RESIZE, () => {
             this._layoutQueued = false;
@@ -855,6 +860,8 @@ export class Space extends Array {
     }
 
     addWindow(metaWindow, index, row) {
+        const previousHasFullScreenWindow = this.hasFullScreenWindow();
+
         if (!this.selectedWindow)
             this.selectedWindow = metaWindow;
         if (this.indexOf(metaWindow) !== -1)
@@ -922,6 +929,16 @@ export class Space extends Array {
             this.targetX = workArea.x + Math.round((workArea.width - this.cloneContainer.width) / 2);
         }
         this.emit('window-added', metaWindow, index, row);
+        if (previousHasFullScreenWindow !== this.hasFullScreenWindow()) {
+            // This means a window started in fullscreen.
+            //
+            // We (re-)emit this signal because the in-fullscreen-changed event
+            // was most likely already triggered before the window was
+            // registered with PaperWM. This mean space.hasFullScreenWindow()
+            // returned a (possibly) wrong value because the space did not know
+            // about the window.
+            global.display.emit("in-fullscreen-changed");
+        }
         return true;
     }
 
@@ -993,11 +1010,15 @@ export class Space extends Array {
         return true;
     }
 
+    getFloatingWindows() {
+        return this._floating;
+    }
+
     /**
      * Returns true iff this space has a currently fullscreened window.
      */
     hasFullScreenWindow() {
-        return this.getWindows().some(w => w.fullscreen);
+        return this.getWindows().some(w => w.fullscreen) || this.getFloatingWindows().some(w => w.fullscreen);
     }
 
     swap(direction, metaWindow) {
@@ -1520,7 +1541,12 @@ export class Space extends Array {
      * Returns true if this space has the topbar.
      */
     get hasTopBar() {
-        return this.monitor && this.monitor === Topbar.panelMonitor();
+        if (inPreview) {
+            // always show topbar in overview
+            return true;
+        }
+
+        return Topbar.isOnMonitor(this.monitor);
     }
 
     updateColor() {
@@ -1588,7 +1614,8 @@ border-radius: ${borderWidth}px;
     enableWindowPositionBar(enable = true) {
         const add =
             enable &&
-            Settings.prefs.show_window_position_bar;
+            Settings.prefs.show_window_position_bar &&
+            this.showTopBar;
         if (add) {
             [this.windowPositionBarBackdrop, this.windowPositionBar]
                 .forEach(i => {
@@ -1671,7 +1698,7 @@ border-radius: ${borderWidth}px;
         }
 
         // if windowPositionBar is disabled ==> don't show elements
-        if (!Settings.prefs.show_window_position_bar) {
+        if (!Settings.prefs.show_window_position_bar || !this.showTopBar) {
             setVisible(false);
             return;
         }
@@ -2113,6 +2140,10 @@ export const Spaces = class Spaces extends Map {
         this.stack = this.mru();
     }
 
+    layout(animate = true, options = {}) {
+        this.forEach(space => space.layout(animate, options));
+    }
+
     /**
        The monitors-changed signal can trigger _many_ times when
        connection/disconnecting monitors.
@@ -2526,7 +2557,17 @@ export const Spaces = class Spaces extends Map {
         // });
 
         // ensure after swapping that the space elements are shown correctly
+        // layout needed to properly fix topbar
+        let oldSpace = this.monitors.get(monitor);
+        let newMonitor = Main.layoutManager.monitors[i];
+        let newSpace = this.monitors.get(newMonitor);
+        oldSpace.layout();
+        newSpace.layout();
+        Topbar.fixTopBar();
         this.setSpaceTopbarElementsVisible(true, { force: true });
+        if (oldSpace.hasFullScreenWindow() || newSpace.hasFullScreenWindow()) {
+            global.display.emit("in-fullscreen-changed");
+        }
     }
 
     switchWorkspace(wm, fromIndex, toIndex, animate = false) {
@@ -2579,7 +2620,11 @@ export const Spaces = class Spaces extends Map {
         this.animateToSpace(
             toSpace,
             fromSpace,
-            doAnimate);
+            doAnimate,
+            // do a layout after the animation is complete
+            // (i.e. when everything is at the final position)
+            () => toSpace.layout(),
+        );
 
         // Update panel to handle target workspace
         signals.disconnect(Main.panel, this.touchSignal);
@@ -2592,7 +2637,7 @@ export const Spaces = class Spaces extends Map {
      * See Space.setSpaceTopbarElementsVisible function for what this does.
      * @param {boolean} visible
      */
-    setSpaceTopbarElementsVisible(visible = false, options = {}) {
+    setSpaceTopbarElementsVisible(visible = true, options = {}) {
         this.forEach(s => {
             s.setSpaceTopbarElementsVisible(visible, options);
         });
@@ -2752,8 +2797,7 @@ export const Spaces = class Spaces extends Map {
         newSpace = monitorSpaces[to];
         this.selectedSpace = newSpace;
 
-        // if active (source space) is panelMonitor update indicator
-        if (currentSpace.monitor === Topbar.panelMonitor()) {
+        if (Topbar.isOnMonitor(currentSpace.monitor)) {
             Topbar.updateWorkspaceIndicator(newSpace.index);
         }
 
@@ -3093,6 +3137,15 @@ export const Spaces = class Spaces extends Map {
      */
     spaceOfUuid(uuid) {
         return [...this.values()].find(s => uuid === s.uuid);
+    }
+
+    spaceWithTopBar() {
+        for (const monitor in this.monitors) {
+            if (this.monitors[monitor].hasTopBar) {
+                return this.monitors[monitor];
+            }
+        }
+        return null;
     }
 
     get selectedSpace() {
