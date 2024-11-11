@@ -114,6 +114,11 @@
       <summary>Switch between Window Focus Modes (e.g. default, center)</summary>
     </key>
 
+    <key type="as" name="switch-columns-layout">
+      <default><![CDATA[['<Super><Shift>o']]]></default>
+      <summary>Switch columns layout</summary>
+    </key>
+
     <key type="as" name="switch-next">
       <default><![CDATA[['<Super>period']]]></default>
       <summary>Switch to the next window</summary>

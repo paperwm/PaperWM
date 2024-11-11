@@ -46,6 +46,9 @@ var Me = Extension.imports.tiling;
 
 var prefs = Settings.prefs;
 
+var columns = 1;
+var autoWidth = true;
+
 var backgroundSettings = new Gio.Settings({
     schema_id: 'org.gnome.desktop.background'
 })
@@ -147,6 +150,7 @@ var Space = class Space extends Array {
 
         // default focusMode (can be overriden by saved user pref in Space.init method)
         this.focusMode = FocusModes.DEFAULT;
+
         this.focusModeIcon = new TopBar.FocusIcon({
             name: 'panel',
             style_class: 'space-focus-mode-icon',
@@ -157,6 +161,9 @@ var Space = class Space extends Array {
             .setVisible(false); // hide by default
         this.showFocusModeIcon();
         this.unfocusXPosition = null; // init
+
+        this.columns = columns;
+        this.autoWidth = autoWidth;
 
         let clip = new Clutter.Actor({name: "clip"});
         this.clip = clip;
@@ -265,6 +272,7 @@ var Space = class Space extends Array {
 
         this.getWindows().forEach(w => {
             animateWindow(w);
+            if (this.autoWidth) setAutoWidth(w)
         });
 
         let selected = this.selectedWindow;
@@ -705,6 +713,7 @@ var Space = class Space extends Array {
             this.targetX = workArea.x + Math.round((workArea.width - this.cloneContainer.width)/2);
         }
         this.emit('window-added', metaWindow, index, row);
+        if (autoWidth) setAutoWidth(metaWindow)
         return true;
     }
 
@@ -882,6 +891,7 @@ var Space = class Space extends Array {
 
         let metaWindow = space.getWindow(index, row);
         ensureViewport(metaWindow, space);
+        if (autoWidth) setAutoWidth(metaWindow)
     }
 
     /**
@@ -3365,6 +3375,25 @@ function toggleMaximizeHorizontally(metaWindow) {
     }
 }
 
+function setAutoWidth(metaWindow) {
+    metaWindow = metaWindow || display.focus_window;
+
+    if (metaWindow.get_maximized() === Meta.MaximizeFlags.BOTH) {
+        metaWindow.unmaximize(Meta.MaximizeFlags.BOTH);
+        metaWindow.unmaximizedRect = null;
+        return;
+    }
+
+    let space = spaces.spaceOfWindow(metaWindow);
+    let workArea = space.workArea();
+    let frame = metaWindow.get_frame_rect();
+    let reqWidth = (workArea.width - prefs.minimum_margin) / space.columns - prefs.minimum_margin;
+
+    let x = workArea.x + space.monitor.x + prefs.minimum_margin;
+    metaWindow.unmaximizedRect = frame;
+    metaWindow.move_resize_frame(true, x, frame.y, reqWidth, frame.height);
+}
+
 function resizeHInc(metaWindow) {
     let frame = metaWindow.get_frame_rect();
     let monitor = Main.layoutManager.monitors[metaWindow.get_monitor()];
@@ -3652,6 +3681,15 @@ function switchToNextFocusMode(space) {
     const currMode = Object.values(FocusModes).indexOf(space.focusMode) + 1;
     const nextMode = (currMode % numModes);
     setFocusMode(nextMode, space);
+}
+
+function switchColumnsLayout(space) {
+    space = space ?? spaces.getActiveSpace();
+    space.columns = space.columns == 1 ? 2 : 1
+
+    space.getWindows().forEach(w => {
+        setAutoWidth(w)
+    });
 }
 
 /**

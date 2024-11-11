@@ -164,6 +164,10 @@ function init() {
                         dynamic_function_ref("switchToNextFocusMode",
                                              Tiling));
 
+    registerPaperAction("switch-columns-layout",
+                        dynamic_function_ref("switchColumnsLayout",
+                                             Tiling));
+
     registerPaperAction("develop-set-globals",
                         dynamic_function_ref("setDevGlobals",
                                              Utils));

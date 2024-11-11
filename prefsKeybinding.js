@@ -38,6 +38,7 @@ const actions = {
         'live-alt-tab',
         'live-alt-tab-backward',
         'switch-focus-mode',
+        'switch-columns-layout',
         'move-left',
         'move-right',
         'move-up',
