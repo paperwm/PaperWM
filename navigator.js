@@ -87,21 +87,21 @@ class ActionDispatcher {
 
         // grab = stage.grab(this.actor)
         grab = Main.pushModal(this.actor);
-		// Assume that grab succeeds and store that state in the object
-		this.success = true;
+        // Assume that grab succeeds and store that state in the object
+        this.success = true;
         // We expect at least a keyboard grab here
         if ((grab.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
             console.error("Failed to grab modal");
-			// Release current grab and let the user try again
-			try {
-				this.success = false;
-				if (grab) {
-					Main.popModal(grab);
-					grab = null;
-				}
-			} catch (e) {
-				console.error("Failed to release grab");
-			}
+            // Release current grab and let the user try again
+            try {
+                this.success = false;
+                if (grab) {
+                    Main.popModal(grab);
+                    grab = null;
+                }
+            } catch (e) {
+                console.error("Failed to release grab");
+            }
         }
 
         this.signals.connect(this.actor, 'key-press-event', this._keyPressEvent.bind(this));
@@ -112,8 +112,9 @@ class ActionDispatcher {
     }
 
     show(backward, binding, mask) {
-		// If required grab was not successful, then do not show anything
-		if (!this.success) return;
+        // If required grab was not successful, then do not show anything
+        if (!this.success)
+            return;
 
         this._modifierMask = getModLock(mask);
         this.navigator = getNavigator();
@@ -460,7 +461,7 @@ function getActionDispatcher(mode) {
         return dispatcher;
     }
     dispatcher = new ActionDispatcher();
-	return getActionDispatcher(mode);
+    return getActionDispatcher(mode);
 }
 
 /**
@@ -488,13 +489,13 @@ function dismissDispatcher(mode) {
 function preview_navigate(meta_window, space, { display, screen, binding }) {
     let tabPopup = getActionDispatcher(Clutter.GrabState.KEYBOARD);
 
-	// Getting a dispatcher does not always succeed. Sometimes, it can fail because we are unable to
-	// grab the keyboard.
-	// In the case of a failure, fail gracefully by destroying the pop-up.
-	if (!tabPopup.success) {
-		tabPopup.destroy();
-		return;
-	}
+    // Getting a dispatcher does not always succeed. Sometimes, it can fail because we are unable to
+    // grab the keyboard.
+    // In the case of a failure, fail gracefully by destroying the pop-up.
+    if (!tabPopup.success) {
+        tabPopup.destroy();
+        return;
+    }
 
-	tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
+    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
