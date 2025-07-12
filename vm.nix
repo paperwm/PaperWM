@@ -5,6 +5,7 @@
   environment.systemPackages = with pkgs;
   [ paperwm
     (lib.getBin libinput)
+    chromium
   ];
 
   ### Set graphical session to auto-login GNOME
@@ -32,6 +33,15 @@
       }
     ];
   };
+
+  #imports = [ <nixpkgs/nixos/modules/virtualisation/qemu-vm.nix> ];
+  #virtualisation.qemu.options = [
+  #  "-device qxl"
+  #];
+  services.xserver.videoDrivers = [ "qxl" ];
+  virtualisation.qemu.options = [ "-vga qxl" ];
+  virtualisation.memorySize = 8192;
+  virtualisation.cores = 8;
 
   ### Remove unnecessary dependencies
   #NOTE: This drops many GTK4 apps, re-enable if needed for testing.
