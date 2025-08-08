@@ -4513,8 +4513,9 @@ export function ensureViewport(meta_window, space, options = {}) {
     let ensureAnimation = options.ensureAnimation ?? Settings.EnsureViewportAnimation.TRANSLATE;
     let callback = options.callback ?? function () { };
 
-    let index = space.indexOf(meta_window);
-    if (index === -1 || space.length === 0)
+    let index = findColumnIndexOfWindow(space, meta_window);
+
+    if ((typeof index === "undefined") || space.length === 0)
         return undefined;
 
     if (space.selectedWindow.fullscreen &&
