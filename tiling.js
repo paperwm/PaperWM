@@ -898,7 +898,7 @@ export class Space extends Array {
     }
 
     getWindows() {
-        return this.reduce((ws, column) => ws.concat(column), []);
+        return this.flat(3);
     }
 
     getWindow(index, row) {
@@ -931,7 +931,7 @@ export class Space extends Array {
     addWindow(metaWindow, index, row) {
         if (!this.selectedWindow)
             this.selectedWindow = metaWindow;
-        if (this.indexOf(metaWindow) !== -1)
+        if (typeof Utils.findColumnIndexOfWindow(this, metaWindow) !== "undefined")
             return false;
 
         if (row !== undefined && this[index]) {
@@ -1000,7 +1000,10 @@ export class Space extends Array {
     }
 
     removeWindow(metaWindow) {
-        const index = this.indexOf(metaWindow);
+        const index = Utils.findColumnIndexOfWindow(this, metaWindow);
+        if (typeof index === "undefined")
+            return;
+
         if (index === -1)
             return this.removeFloating(metaWindow);
 
@@ -1016,7 +1019,7 @@ export class Space extends Array {
         }
 
         const column = this[index];
-        const row = column.indexOf(metaWindow);
+        const row = Utils.findRowIndexOfWindow(column, metaWindow);
         column.splice(row, 1);
         if (column.length === 0) {
             this.splice(index, 1);
@@ -1119,7 +1122,7 @@ export class Space extends Array {
         let column = this[index];
         if (!column)
             return false;
-        let row = column.indexOf(this.selectedWindow);
+        let row = findRowIndexOfWindow(column, this.selectedWindow);
         if (Lib.in_bounds(column, row + dir) === false) {
             index += dir;
             if (loop) {
@@ -1153,7 +1156,7 @@ export class Space extends Array {
         if (index === -1) {
             return false;
         }
-        let row = space[index].indexOf(space.selectedWindow);
+        let row = findRowIndexOfWindow(space[index], space.selectedWindow);
         switch (direction) {
         case Meta.MotionDirection.RIGHT:
             index++;
@@ -1178,7 +1181,7 @@ export class Space extends Array {
         if (row === -1) {
             let selected =
                 sortWindows(this, column)[column.length - 1];
-            row = column.indexOf(selected);
+            row = Utils.findRowIndexOfWindow(column, selected);
         }
 
         switch (direction) {
@@ -1214,7 +1217,7 @@ export class Space extends Array {
         if (index === -1) {
             return;
         }
-        let row = space[index].indexOf(space.selectedWindow);
+        let row = findRowIndexOfWindow(space[index], space.selectedWindow);
 
         switch (direction) {
         case Meta.MotionDirection.RIGHT:
@@ -1450,9 +1453,9 @@ export class Space extends Array {
         this._isAnimating = false;
 
         if (this.selectedWindow && this.selectedWindow === display.focus_window) {
-            let index = this.indexOf(this.selectedWindow);
+            let index = Utils.findColumnIndexOfWindow(this, this.selectedWindow);
             // eslint-disable-next-line no-return-assign
-            this[index].forEach(w => w.lastFrame = w.get_frame_rect());
+            this[index].flat(1).forEach(w => w.lastFrame = w.get_frame_rect());
 
             // callback on display.focusWindow window
             focusedWindowCallback(display.focus_window);
@@ -1515,7 +1518,7 @@ export class Space extends Array {
 
     fixOverlays(metaWindow) {
         metaWindow = metaWindow || this.selectedWindow;
-        let index = this.indexOf(metaWindow);
+        let index = Utils.findColumnIndexOfWindow(this, metaWindow);
         let target = this.targetX;
         this.monitor.clickOverlay.reset();
         for (let overlay = this.monitor.clickOverlay.right,
@@ -5614,7 +5617,7 @@ export function takeWindow(metaWindow, space, options = {}) {
 export function sortWindows(space, windows) {
     if (windows.length === 1)
         return windows;
-    let clones = windows.map(w => w.clone);
+    let clones = windows.flat(1).map(w => w.clone);
     return space.cloneContainer.get_children()
         .filter(c => clones.includes(c))
         .map(c => c.meta_window);
