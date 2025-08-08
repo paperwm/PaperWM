@@ -144,7 +144,7 @@ export class Minimap extends Array {
 
     createClones() {
         for (let column of this.space) {
-            this.push(column.map(this.createClone.bind(this)));
+            this.push(column.flat(1).map(this.createClone.bind(this)));
         }
     }
 
