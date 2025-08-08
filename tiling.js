@@ -1307,8 +1307,10 @@ export class Space extends Array {
         let column = space[index];
 
         if (row === -1) {
-            let selected =
-                sortWindows(this, column)[column.length - 1];
+            const sortedWindows =
+                sortWindows(this, column);
+            const selected = sortedWindows[sortedWindows.length - 1];
+            
             row = Utils.findRowIndexOfWindow(column, selected);
         }
 
@@ -2310,7 +2312,7 @@ border-radius: ${borderWidth}px;
 
     selectedIndex() {
         if (this.selectedWindow) {
-            return this.indexOf(this.selectedWindow);
+            return findColumnIndexOfWindow(this, this.selectedWindow);
         } else {
             return -1;
         }
