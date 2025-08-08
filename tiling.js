@@ -5361,7 +5361,7 @@ export function barf(metaWindow, expelWindow) {
         return;
 
     const space = spaces.spaceOfWindow(metaWindow);
-    const index = space.indexOf(metaWindow);
+    const index = Utils.findColumnIndexOfWindow(space, metaWindow);
     if (index === -1)
         return;
 
@@ -5383,16 +5383,26 @@ export function barf(metaWindow, expelWindow) {
         break;
     }
 
-    // // remove metawindow from column
-    if (expelWindow) {
+    if ((typeof expelWindow === "undefined") || (!expelWindow)) {
+        expelWindow = column[column.length - 1];
+        if (Array.isArray(expelWindow)) {
+            return;
+        }
+    }
+
+    const expelRow = findRowIndexOfWindow(column, expelWindow);
+    if (Array.isArray(column[expelRow])) {
+        const indexOfWindow = column[expelRow].indexOf(expelWindow);
+        column[expelRow].splice(indexOfWindow, 1);
+        if (column[expelRow].length === 1) {
+            column[expelRow] = column[expelRow][0];
+        }
+    } else {
         // remove expelWindow from current column
         const indexOfWindow = column.indexOf(expelWindow);
         column.splice(indexOfWindow, 1);
     }
-    else {
-        // remove from bottom
-        expelWindow = column.splice(-1, 1)[0];
-    }
+
     space.splice(to, 0, [expelWindow]);
 
     space.layout(true, {
