@@ -38,7 +38,7 @@ export const FocusModes = { DEFAULT: 0, CENTER: 1, EDGE: 2 }; // export
 
 export const CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1 };
 
-export const SlurpInsertPosition = { BOTTOM: 0, TOP: 1, ABOVE: 2, BELOW: 3 };
+export const SlurpInsertPosition = { BOTTOM: 0, TOP: 1, ABOVE: 2, BELOW: 3, NEST: 4 };
 
 /**
    Scrolled and tiled per monitor workspace.

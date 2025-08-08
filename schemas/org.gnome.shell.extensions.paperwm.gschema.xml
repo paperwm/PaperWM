@@ -366,6 +366,10 @@
         <default><![CDATA[['<Super>i']]]></default>
         <summary>Consume window into the active column</summary>
     </key>
+    <key type="as" name="nest-slurp-in">
+        <default><![CDATA[['<Super><Ctrl>i']]]></default>
+        <summary>Consume window into the active window</summary>
+    </key>
     <key type="as" name="barf-out">
         <default><![CDATA[['<Super>o']]]></default>
         <summary>Expel the bottom window into its own column</summary>

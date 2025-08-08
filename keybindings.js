@@ -323,6 +323,10 @@ export function setupActions(settings) {
         (mw, _space) => Tiling.slurp(mw),
         Meta.KeyBindingFlags.PER_WINDOW);
 
+    registerPaperAction('nest-slurp-in',
+        (mw, _space) => Tiling.slurp(mw, Tiling.SlurpInsertPosition.NEST),
+        Meta.KeyBindingFlags.PER_WINDOW);
+
     registerPaperAction('barf-out',
         (mw, _space) => Tiling.barf(mw),
         Meta.KeyBindingFlags.PER_WINDOW);
