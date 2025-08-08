@@ -5235,30 +5235,66 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
         return;
     }
 
-    const index = space.indexOf(metaWindow);
+    // space.indexOf(metaWindow);
+    const index = Utils.findColumnIndexOfWindow(space, metaWindow);
     let to, from, metaWindowToSlurp;
+    let metaWindowToSlurpIndex = 0;
 
-    if (space.length < 2) {
+    // cancel slurp if there are only one column in space
+    // but if it was a nested-slurp action then it's OK for it is possible
+    // to nest-slurp next row in same column
+    if (space.length < 2 && insertAt !== SlurpInsertPosition.NEST) {
         return;
     }
+
+    // factor out to and spaceTo out of case block
+    to = index;
+    const spaceTo = space[to];
+    const rowIndex = Utils.findRowIndexOfWindow(spaceTo, metaWindow);
 
     // get current direction mode
     const direction = Settings.prefs.open_window_position;
     switch (direction) {
     case Settings.OpenWindowPositions.LEFT:
     case Settings.OpenWindowPositions.START:
-        to = index;
-        from = index - 1;
+        if (insertAt === SlurpInsertPosition.NEST) {
+            // it was nested-slurp
+            if (rowIndex == 0) {
+                from = index - 1;
+                metaWindowToSlurpIndex = space[from].length - 1;
+            } else {
+                from = index;
+                metaWindowToSlurpIndex = rowIndex - 1;
+            }
+        } else {
+            // normal-slurp
+            from = index - 1;
+        }
         break;
     case Settings.OpenWindowPositions.RIGHT:
     case Settings.OpenWindowPositions.END:
     default:
-        to = index;
-        from = index + 1;
+        if (insertAt === SlurpInsertPosition.NEST) {
+            if (rowIndex === space[index].length - 1) {
+                from = index + 1;
+                metaWindowToSlurpIndex = 0;
+            } else {
+                from = index;
+                metaWindowToSlurpIndex = rowIndex + 1;
+            }
+        } else {
+            from = index + 1;
+        }
         break;
     }
 
-    metaWindowToSlurp = space[from]?.[0];
+    // cancel slurp if nest-slurp but row in current column only 2 if slurpedWindow is in same column
+    // but if it was from different column then the limit is 1
+    if (insertAt === SlurpInsertPosition.NEST && space[from].length <= (from == to ? 2 : 1)) {
+        return;
+    }
+
+    metaWindowToSlurp = space[from]?.[metaWindowToSlurpIndex];
     if (!metaWindowToSlurp) {
         return;
     }
@@ -5268,9 +5304,16 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
         metaWindowToSlurp.unmake_fullscreen();
     }
 
-    const spaceTo = space[to];
-    const rowIndex = spaceTo.indexOf(metaWindow);
     switch (insertAt) {
+    case SlurpInsertPosition.NEST:    
+        if (Array.isArray(spaceTo[rowIndex])) {
+            // if current row is already an array, then just push it
+            spaceTo[rowIndex].push(metaWindowToSlurp);
+        } else {
+            // otherwise it must been first time nest-slurped, convert row into array
+            spaceTo[rowIndex] = [metaWindow, metaWindowToSlurp];
+        }
+        break;
     case SlurpInsertPosition.ABOVE:
         spaceTo.splice(rowIndex, 0, metaWindowToSlurp);
         break;
@@ -5288,8 +5331,7 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
 
     { // Remove the slurped window
         const column = space[from];
-        const row = column.indexOf(metaWindowToSlurp);
-        column.splice(row, 1);
+        column.splice(metaWindowToSlurpIndex, 1);
 
         // if from column is now empty, remove column from space
         if (column.length === 0) {
@@ -5297,7 +5339,7 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
         }
 
         // with column removed, `to` column may have changed
-        to = space.indexOf(metaWindow);
+        to = Utils.findColumnIndexOfWindow(space, metaWindow);
     }
 
     // after columns have slurped, "to" index may have changed
