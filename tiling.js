@@ -568,49 +568,144 @@ export class Space extends Array {
         for (let i = 0; i < windows.length; i++) {
             let mw = windows[i];
             let targetHeight = targetHeights[i];
+            if (Array.isArray(mw)) { 
+                let xcol = x;
+                let targetWidthCol = Math.floor(targetWidth / mw.length - Settings.prefs.window_gap);
+                for (let j = 0; j < mw.length; j++) {
+                    let mwj = mw[j];
+                    let f = mwj.get_frame_rect();
+                    let resizable = !mwj.fullscreen &&
+                        mwj.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
-            // Apply the window positioning and resizing logic
-            const [windowWidthChanged, windowHeightChanged] = this._positionAndResizeWindow(mwj, xcol, y, targetWidthCol, targetHeight, time, resizable);
-            widthChanged = widthChanged || windowWidthChanged;
-            heightChanged = heightChanged || windowHeightChanged;
+                    // Apply the window positioning and resizing logic
+                    const [windowWidthChanged, windowHeightChanged] = this._positionAndResizeWindow(mwj, xcol, y, targetWidthCol, targetHeight, time, resizable);
+                    widthChanged = widthChanged || windowWidthChanged;
+                    heightChanged = heightChanged || windowHeightChanged;
 
-            let f = mw.get_frame_rect();
+                    if (resizable) {
+                        const hasNewTarget = mwj._targetWidth !== targetWidth || mwj._targetHeight !== targetHeight;
+                        const targetReached = f.width === targetWidth && f.height === targetHeight;
 
-            let resizable = !mw.fullscreen &&
-                mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
+                        // Update targets (NB: must happen before resize request)
+                        mwj._targetWidth = targetWidthCol;
+                        mwj._targetHeight = targetHeight;
 
-            if (mw.preferredWidth) {
-                let prop = mw.preferredWidth;
-                if (prop.value <= 0) {
-                    console.warn("invalid preferredWidth value");
+                        if (!targetReached && hasNewTarget) {
+                            // Explanation for `hasNewTarget` check in commit message
+                            mwj.move_resize_frame(true, f.x, f.y, targetWidthCol, targetHeight);
+                        }
+                    } else {
+                        mwj.move_frame(true, space.monitor.x, space.monitor.y);
+                        targetWidth = f.width;
+                        targetHeight = f.height;
+                    }
+
+                    // When resize is synchronous, ie. for X11 windows
+                    let nf = mwj.get_frame_rect();
+                    if (nf.width !== targetWidth && nf.width !== f.width) {
+                        widthChanged = true;
+                    }
+                    if (nf.height !== targetHeight && nf.height !== f.height) {
+                        heightChanged = true;
+                        targetHeight = nf.height; // Use actually height for layout
+                    }
+
+                    let c = mwj.clone;
+                    if (c.x !== xcol || c.targetX !== xcol ||
+                        c.y !== y || c.targetY !== y) {
+                        c.targetX = xcol;
+                        c.targetY = y;
+                        if (time === 0) {
+                            c.x = xcol;
+                            c.y = y;
+                        } else {
+                            Easer.addEase(c, {
+                                x:xcol, y,
+                                time,
+                                onComplete: this.moveDone.bind(this),
+                            });
+                        }
+                    }
+
+                    xcol += targetWidthCol + Settings.prefs.window_gap;
                 }
-                else if (prop.unit === 'px') {
-                    targetWidth = prop.value;
-                }
-                else if (prop.unit === '%') {
-                    let availableWidth = space.workArea().width - Settings.prefs.horizontal_margin * 2 - Settings.prefs.window_gap;
-                    targetWidth = Math.floor(availableWidth * Math.min(prop.value / 100.0, 1.0));
-                }
-                else {
-                    console.warn("invalid preferredWidth unit:", `'${prop.unit}'`, "(should be 'px' or '%')");
-                }
-            }
+            } else {
+                let f = mw.get_frame_rect();
 
-            let c = mw.clone;
-            if (c.x !== x || c.targetX !== x ||
-                c.y !== y || c.targetY !== y) {
-                // console.debug("  Position window", mw.title, `y: ${c.targetY} -> ${y} x: ${c.targetX} -> ${x}`);
-                c.targetX = x;
-                c.targetY = y;
-                if (time === 0) {
-                    c.x = x;
-                    c.y = y;
+                let resizable = !mw.fullscreen &&
+                    mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
+
+                if (mw.preferredWidth) {
+                    let prop = mw.preferredWidth;
+                    if (prop.value <= 0) {
+                        console.warn("invalid preferredWidth value");
+                    }
+                    else if (prop.unit === 'px') {
+                        targetWidth = prop.value;
+                    }
+                    else if (prop.unit === '%') {
+                        let availableWidth = space.workArea().width - Settings.prefs.horizontal_margin * 2 - Settings.prefs.window_gap;
+                        targetWidth = Math.floor(availableWidth * Math.min(prop.value / 100.0, 1.0));
+                    }
+                    else {
+                        console.warn("invalid preferredWidth unit:", `'${prop.unit}'`, "(should be 'px' or '%')");
+                    }
+                }
+
+                // Apply the window positioning and resizing logic
+                const [windowWidthChanged, windowHeightChanged] = this._positionAndResizeWindow(mw, x, y, targetWidth, targetHeight, time, resizable);
+                widthChanged = widthChanged || windowWidthChanged;
+                heightChanged = heightChanged || windowHeightChanged;
+
+                if (resizable) {
+                    const hasNewTarget = mw._targetWidth !== targetWidth || mw._targetHeight !== targetHeight;
+                    const targetReached = f.width === targetWidth && f.height === targetHeight;
+
+                    // Update targets (NB: must happen before resize request)
+                    mw._targetWidth = targetWidth;
+                    mw._targetHeight = targetHeight;
+
+                    if (!targetReached && hasNewTarget) {
+                        // Explanation for `hasNewTarget` check in commit message
+                        mw.move_resize_frame(true, f.x, f.y, targetWidth, targetHeight);
+                    }
                 } else {
-                    Easer.addEase(c, {
-                        x, y,
-                        time,
-                        onComplete: this.moveDone.bind(this),
-                    });
+                    mw.move_frame(true, space.monitor.x, space.monitor.y);
+                    targetWidth = f.width;
+                    targetHeight = f.height;
+                }
+                if (mw.maximized_vertically) {
+                    // NOTE: This should really be f.y - monitor.y, but eg. firefox
+                    // on wayland reports the wrong y coordinates at this point.
+                    y -= Settings.prefs.vertical_margin;
+                }
+
+                // When resize is synchronous, ie. for X11 windows
+                let nf = mw.get_frame_rect();
+                if (nf.width !== targetWidth && nf.width !== f.width) {
+                    widthChanged = true;
+                }
+                if (nf.height !== targetHeight && nf.height !== f.height) {
+                    heightChanged = true;
+                    targetHeight = nf.height; // Use actually height for layout
+                }
+
+                let c = mw.clone;
+                if (c.x !== x || c.targetX !== x ||
+                    c.y !== y || c.targetY !== y) {
+                    // console.debug("  Position window", mw.title, `y: ${c.targetY} -> ${y} x: ${c.targetX} -> ${x}`);
+                    c.targetX = x;
+                    c.targetY = y;
+                    if (time === 0) {
+                        c.x = x;
+                        c.y = y;
+                    } else {
+                        Easer.addEase(c, {
+                            x, y,
+                            time,
+                            onComplete: this.moveDone.bind(this),
+                        });
+                    }
                 }
             }
 
