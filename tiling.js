@@ -569,6 +569,11 @@ export class Space extends Array {
             let mw = windows[i];
             let targetHeight = targetHeights[i];
 
+            // Apply the window positioning and resizing logic
+            const [windowWidthChanged, windowHeightChanged] = this._positionAndResizeWindow(mwj, xcol, y, targetWidthCol, targetHeight, time, resizable);
+            widthChanged = widthChanged || windowWidthChanged;
+            heightChanged = heightChanged || windowHeightChanged;
+
             let f = mw.get_frame_rect();
 
             let resizable = !mw.fullscreen &&
@@ -589,39 +594,6 @@ export class Space extends Array {
                 else {
                     console.warn("invalid preferredWidth unit:", `'${prop.unit}'`, "(should be 'px' or '%')");
                 }
-            }
-
-            if (resizable) {
-                const hasNewTarget = mw._targetWidth !== targetWidth || mw._targetHeight !== targetHeight;
-                const targetReached = f.width === targetWidth && f.height === targetHeight;
-
-                // Update targets (NB: must happen before resize request)
-                mw._targetWidth = targetWidth;
-                mw._targetHeight = targetHeight;
-
-                if (!targetReached && hasNewTarget) {
-                    // Explanation for `hasNewTarget` check in commit message
-                    mw.move_resize_frame(true, f.x, f.y, targetWidth, targetHeight);
-                }
-            } else {
-                mw.move_frame(true, space.monitor.x, space.monitor.y);
-                targetWidth = f.width;
-                targetHeight = f.height;
-            }
-            if (mw.maximized_vertically) {
-                // NOTE: This should really be f.y - monitor.y, but eg. firefox
-                // on wayland reports the wrong y coordinates at this point.
-                y -= Settings.prefs.vertical_margin;
-            }
-
-            // When resize is synchronous, ie. for X11 windows
-            let nf = mw.get_frame_rect();
-            if (nf.width !== targetWidth && nf.width !== f.width) {
-                widthChanged = true;
-            }
-            if (nf.height !== targetHeight && nf.height !== f.height) {
-                heightChanged = true;
-                targetHeight = nf.height; // Use actually height for layout
             }
 
             let c = mw.clone;
@@ -645,6 +617,54 @@ export class Space extends Array {
             y += targetHeight + Settings.prefs.window_gap;
         }
         return [targetWidth, widthChanged || heightChanged, y];
+    }
+
+        /**
+     * Positions and resizes a window based on the provided parameters.
+     * @private
+     * @param {Meta.Window} mw - The MetaWindow to position and resize.
+     * @param {number} x - The x-coordinate for the window.
+     * @param {number} y - The y-coordinate for the window.
+     * @param {number} targetWidth - The target width of the window.
+     * @param {number} targetHeight - The target height of the window.
+     * @param {number} time - The animation time.
+     * @param {boolean} resizable - Whether the window is resizable.
+     * @returns {[boolean, boolean]} - A tuple indicating if the width and height changed.
+     */
+    _positionAndResizeWindow(mw, x, y, targetWidth, targetHeight, time, resizable) {
+        let widthChanged = false;
+        let heightChanged = false;
+        let f = mw.get_frame_rect();
+
+        if (resizable) {
+            const hasNewTarget = mw._targetWidth !== targetWidth || mw._targetHeight !== targetHeight;
+            const targetReached = f.width === targetWidth && f.height === targetHeight;
+
+            // Update targets (NB: must happen before resize request)
+            mw._targetWidth = targetWidth;
+            mw._targetHeight = targetHeight;
+
+            if (!targetReached && hasNewTarget) {
+                // Explanation for `hasNewTarget` check in commit message
+                mw.move_resize_frame(true, f.x, f.y, targetWidth, targetHeight);
+            }
+        } else {
+            mw.move_frame(true, space.monitor.x, space.monitor.y);
+            targetWidth = f.width;
+            targetHeight = f.height;
+        }
+
+        // When resize is synchronous, ie. for X11 windows
+        let nf = mw.get_frame_rect();
+        if (nf.width !== targetWidth && nf.width !== f.width) {
+            widthChanged = true;
+        }
+        if (nf.height !== targetHeight && nf.height !== f.height) {
+            heightChanged = true;
+            targetHeight = nf.height; // Use actually height for layout
+        }
+
+        return [widthChanged, heightChanged];
     }
 
     layout(animate = true, options = {}) {
