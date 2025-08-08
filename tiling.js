@@ -735,7 +735,7 @@ export class Space extends Array {
         for (let i = 0; i < this.length; i++) {
             let column = this[i];
             // Actorless windows are trouble. Layout could conceivable run while a window is dying or being born.
-            column = column.filter(mw => mw.get_compositor_private());
+            column = column.filter(mw => Array.isArray(mw) || mw.get_compositor_private());
             if (column.length === 0)
                 continue;
 
@@ -752,7 +752,10 @@ export class Space extends Array {
             else {
                 // otherwise get max of tiledWith or frame.with (fallback)
                 targetWidth = Math.max(...column.map(w => {
-                    return w?._fullscreen_frame?.tiledWidth ?? w.get_frame_rect().width;
+                    return w?._fullscreen_frame?.tiledWidth ?? 
+                        (
+                            Array.isArray(w) ? 0 : w.get_frame_rect().width
+                        );
                 }));
             }
 
@@ -901,14 +904,19 @@ export class Space extends Array {
         return this.flat(3);
     }
 
-    getWindow(index, row) {
+    getWindow(index, row, indexInsideRow = 0) {
         if (row < 0 || index < 0 || index >= this.length)
             return false;
 
         let column = this[index];
         if (row >= column.length)
             return false;
-        return column[row];
+
+        if (Array.isArray(column[row])) {
+            return column[row][indexInsideRow];
+        } else {
+            return column[row];
+        }
     }
 
     isWindowAtPoint(metaWindow, x, y) {
@@ -928,7 +936,7 @@ export class Space extends Array {
         return null;
     }
 
-    addWindow(metaWindow, index, row) {
+    addWindow(metaWindow, index, row, nest = false) {
         if (!this.selectedWindow)
             this.selectedWindow = metaWindow;
         if (typeof Utils.findColumnIndexOfWindow(this, metaWindow) !== "undefined")
@@ -936,7 +944,15 @@ export class Space extends Array {
 
         if (row !== undefined && this[index]) {
             let column = this[index];
-            column.splice(row, 0, metaWindow);
+            if (!nest || (typeof column[row] === "undefined")) {
+                column.splice(row, 0, metaWindow);
+            } else {
+                if (Array.isArray(column[row])) {
+                    column[row].push(metaWindow);
+                } else {
+                    column[row] = [column[row], metaWindow];
+                }
+            }
         } else {
             this.splice(index, 0, [metaWindow]);
         }
@@ -1020,9 +1036,17 @@ export class Space extends Array {
 
         const column = this[index];
         const row = Utils.findRowIndexOfWindow(column, metaWindow);
-        column.splice(row, 1);
-        if (column.length === 0) {
-            this.splice(index, 1);
+
+        if (Array.isArray(column[row])) {
+            column[row].splice(column[row].indexOf(metaWindow), 1);
+            if (column[row].length === 1) {
+                column[row] = column[row][0];
+            }
+        } else {
+            column.splice(row, 1);
+            if (column.length === 0) {
+                this.splice(index, 1);
+            }
         }
 
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
@@ -1157,14 +1181,23 @@ export class Space extends Array {
             return false;
         }
         let row = findRowIndexOfWindow(space[index], space.selectedWindow);
+        let indexInsideRow = 0;
         switch (direction) {
         case Meta.MotionDirection.RIGHT:
-            index++;
-            row = -1;
+            if (Array.isArray(space[index][row]) && space[index][row].indexOf(space.selectedWindow) < space[index][row].length - 1) {
+                indexInsideRow = space[index][row].indexOf(space.selectedWindow) + 1;
+            } else {
+                index++;
+                row = -1;
+            }
             break;
         case Meta.MotionDirection.LEFT:
-            index--;
-            row = -1;
+            if (Array.isArray(space[index][row]) && space[index][row].indexOf(space.selectedWindow) > 0) {
+                indexInsideRow = space[index][row].indexOf(space.selectedWindow) - 1;
+            } else {
+                index--;
+                row = -1;
+            }
         }
         if (loop) {
             if (index < 0) {
@@ -1201,7 +1234,10 @@ export class Space extends Array {
             return false;
         }
 
-        let metaWindow = space.getWindow(index, row);
+        let metaWindow = space.getWindow(index, row, indexInsideRow);
+        if (Array.isArray(metaWindow)) {
+            metaWindow = metaWindow[0];
+        }
         ensureViewport(metaWindow, space);
 
         return true;
@@ -1524,6 +1560,9 @@ export class Space extends Array {
         for (let overlay = this.monitor.clickOverlay.right,
             n = index + 1; n < this.length; n++) {
             let metaWindow = this[n][0];
+            if (Array.isArray(metaWindow)) {
+                metaWindow = metaWindow[0];
+            }
             let clone = metaWindow.clone;
             let x = clone.targetX + target;
             if (!overlay.target && x + clone.width > this.width) {
@@ -1535,6 +1574,9 @@ export class Space extends Array {
         for (let overlay = this.monitor.clickOverlay.left,
             n = index - 1; n >= 0; n--) {
             let metaWindow = this[n][0];
+            if (Array.isArray(metaWindow)) {
+                metaWindow = metaWindow[0];
+            }
             let clone = metaWindow.clone;
             let x = clone.targetX + target;
             if (!overlay.target && x < 0) {
@@ -2121,11 +2163,22 @@ border-radius: ${borderWidth}px;
                 for (let j = 0; j < column.length; j++) {
                     let metaWindow = column[j];
                     // Prune removed windows
-                    if (metaWindow.get_compositor_private()) {
-                        this.addWindow(metaWindow, i, j);
+                    if (Array.isArray(metaWindow)) {
+                        metaWindow.forEach((w) => {
+                            if (w.get_compositor_private()) {
+                                this.addWindow(w, i, j, true);
+                            } else {
+                                // eslint-disable-next-line max-statements-per-line
+                                column.splice(j, 1); j--;
+                            }
+                        })
                     } else {
-                        // eslint-disable-next-line max-statements-per-line
-                        column.splice(j, 1); j--;
+                        if (metaWindow.get_compositor_private()) {
+                            this.addWindow(metaWindow, i, j);
+                        } else {
+                            // eslint-disable-next-line max-statements-per-line
+                            column.splice(j, 1); j--;
+                        }
                     }
                 }
                 if (column.length === 0) {
@@ -5183,10 +5236,15 @@ export function allocateDefault(column, availableHeight, selectedWindow) {
         const minHeight = 50;
 
         const heightOf = mw => {
-            return mw._targetHeight || mw.get_frame_rect().height;
+            return mw._targetHeight || 
+                (
+                    Array.isArray(mw) ? 
+                        mw[0].get_frame_rect().height : 
+                        mw.get_frame_rect().height
+                );
         };
 
-        const k = selectedWindow && column.indexOf(selectedWindow);
+        const k = selectedWindow && Utils.findRowIndexOfWindow(column, selectedWindow);
         const selectedHeight = selectedWindow && heightOf(selectedWindow);
 
         let nonSelected = column.slice();
