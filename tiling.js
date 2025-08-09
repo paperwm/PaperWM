@@ -11,7 +11,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {
     Settings, Utils, Lib, Gestures, Navigator, Grab, Topbar, Scratch, Stackoverlay, Background
 } from './imports.js';
-import { Easer, findColumnIndexOfWindow, findRowIndexOfWindow } from './utils.js';
+import { Easer, findColumnIndexOfWindow, findRowIndexOfWindow, safeStringify } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
 import { WorkspaceSettings } from './workspace.js';
 
@@ -1165,6 +1165,13 @@ export class Space extends Array {
             }
         } else {
             column.splice(row, 1);
+            if (column.length === 1 && Array.isArray(column[0])) {
+                const barfedNestedColumns = this.splice(index, 1)[0][0];
+                for (const [idx, w] of barfedNestedColumns.entries()) {
+                    w._nested_width = null;
+                    this.splice(index + idx, 0, [w]);
+                }
+            }
             if (column.length === 0) {
                 this.splice(index, 1);
             }
