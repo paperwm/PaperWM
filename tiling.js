@@ -14,6 +14,7 @@ import {
 import { Easer, findColumnIndexOfWindow, findRowIndexOfWindow, safeStringify } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
 import { WorkspaceSettings } from './workspace.js';
+import { prefs } from './settings.js';
 
 const { signals: Signals } = imports;
 const workspaceManager = global.workspace_manager;
@@ -866,7 +867,7 @@ export class Space extends Array {
                         if (Array.isArray(row)) {
                             let totalNestWidth = row.reduce((ac, cv) => ac + cv._nested_width, 0);
                             for (const w of row) {
-                                w._nested_width = Math.floor(w._nested_width / totalNestWidth * targetWidth);
+                                w._nested_width = Math.floor(w._nested_width / totalNestWidth * targetWidth) - Settings.prefs.window_gap;
                             }
                         }
                     }
@@ -5520,7 +5521,7 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
                     leastNestedWidth = f.width;
             }
             for (let w of spaceTo[rowIndex]) {
-                w._nested_width = Math.floor(w._nested_width / (availableNestWidth + leastNestedWidth) * availableNestWidth);
+                w._nested_width = Math.floor(w._nested_width / (availableNestWidth + leastNestedWidth) * availableNestWidth) - Settings.prefs.window_gap;
             }
             metaWindowToSlurp._nested_width = leastNestedWidth;
 
