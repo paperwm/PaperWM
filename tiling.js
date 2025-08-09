@@ -862,6 +862,14 @@ export class Space extends Array {
                     targetWidth =
                         selectedInColumn?._fullscreen_frame?.tiledWidth ??
                         selectedInColumn.get_frame_rect().width;
+                    for (const row of column) {
+                        if (Array.isArray(row)) {
+                            let totalNestWidth = row.reduce((ac, cv) => ac + cv._nested_width, 0);
+                            for (const w of row) {
+                                w._nested_width = Math.floor(w._nested_width / totalNestWidth * targetWidth);
+                            }
+                        }
+                    }
                 }
             }
             else {
