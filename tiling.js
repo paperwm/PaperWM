@@ -495,8 +495,15 @@ export class Space extends Array {
         this.clip.show();
         for (let col of this) {
             for (let w of col) {
-                let actor = w.get_compositor_private();
-                w.clone.cloneActor.source = actor;
+                if (Array.isArray(w)) {
+                    for (let nw of w) {
+                        let actor = nw.get_compositor_private();
+                        nw.clone.cloneActor.source = actor;
+                    }
+                } else {
+                    let actor = w.get_compositor_private();
+                    w.clone.cloneActor.source = actor;
+                }
             }
         }
     }
@@ -508,7 +515,11 @@ export class Space extends Array {
         this.clip.hide();
         for (let col of this)
             for (let w of col)
-                w.clone.cloneActor.source = null;
+                if (Array.isArray(w)) {
+                    for (let nw of w)
+                        nw.clone.cloneActor.source = null;
+                } else
+                    w.clone.cloneActor.source = null;
     }
 
     /**
