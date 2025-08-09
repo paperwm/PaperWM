@@ -1249,6 +1249,10 @@ export class Space extends Array {
         metaWindow = metaWindow || this.selectedWindow;
 
         let [index, row] = this.positionOf(metaWindow);
+
+        if (Array.isArray(row))
+            return;
+
         let targetIndex = index;
         let targetRow = row;
         switch (direction) {
@@ -1505,24 +1509,60 @@ export class Space extends Array {
 
     positionOf(metaWindow) {
         metaWindow = metaWindow || this.selectedWindow;
-        for (let i = 0; i < this.length; i++) {
-            if (this[i].includes(metaWindow))
-                return [i, this[i].indexOf(metaWindow)];
+        for (const [colidx, column] of this.entries()) {
+            for (const [rowidx, row] of column.entries()) {
+                if (Array.isArray(row)) {
+                    for (const [widx, w] of row.entries()) {
+                        if (w === metaWindow) {
+                            return [colidx, [rowidx, widx]];
+                        }
+                    }
+                } else {
+                    if (row === metaWindow) {
+                        return [colidx, rowidx];
+                    }
+                }
+            }
         }
         return false;
     }
 
     indexOf(metaWindow) {
-        for (let i = 0; i < this.length; i++) {
-            if (this[i].includes(metaWindow))
-                return i;
+        for (const [colidx, column] of this.entries()) {
+            for (const [rowidx, row] of column.entries()) {
+                if (Array.isArray(row)) {
+                    for (const [widx, w] of row.entries()) {
+                        if (w === metaWindow) {
+                            return colidx;
+                        }
+                    }
+                } else {
+                    if (row === metaWindow) {
+                        return colidx;
+                    }
+                }
+            }
         }
         return -1;
     }
 
     rowOf(metaWindow) {
-        let column = this[this.indexOf(metaWindow)];
-        return column.indexOf(metaWindow);
+        for (const [colidx, column] of this.entries()) {
+            for (const [rowidx, row] of column.entries()) {
+                if (Array.isArray(row)) {
+                    for (const [widx, w] of row.entries()) {
+                        if (w === metaWindow) {
+                            return rowidx;
+                        }
+                    }
+                } else {
+                    if (row === metaWindow) {
+                        return rowidx;
+                    }
+                }
+            }
+        }
+        return -1;
     }
 
     globalToViewport(gx, gy) {
