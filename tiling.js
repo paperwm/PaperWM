@@ -581,15 +581,15 @@ export class Space extends Array {
             let targetHeight = targetHeights[i];
             if (Array.isArray(mw)) { 
                 let xcol = x;
-                let targetWidthCol = Math.floor(targetWidth / mw.length - Settings.prefs.window_gap);
                 for (let j = 0; j < mw.length; j++) {
                     let mwj = mw[j];
+                    mwj._targetWidth = mwj._nested_width;
                     let f = mwj.get_frame_rect();
                     let resizable = !mwj.fullscreen &&
                         mwj.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
                     // Apply the window positioning and resizing logic
-                    const [windowWidthChanged, windowHeightChanged] = this._positionAndResizeWindow(mwj, xcol, y, targetWidthCol, targetHeight, time, resizable);
+                    const [windowWidthChanged, windowHeightChanged] = this._positionAndResizeWindow(mwj, xcol, y, mwj._nested_width, targetHeight, time, resizable, space);
                     widthChanged = widthChanged || windowWidthChanged;
                     heightChanged = heightChanged || windowHeightChanged;
 
@@ -598,12 +598,12 @@ export class Space extends Array {
                         const targetReached = f.width === targetWidth && f.height === targetHeight;
 
                         // Update targets (NB: must happen before resize request)
-                        mwj._targetWidth = targetWidthCol;
+                        mwj._targetWidth = mwj._nested_width;
                         mwj._targetHeight = targetHeight;
 
                         if (!targetReached && hasNewTarget) {
                             // Explanation for `hasNewTarget` check in commit message
-                            mwj.move_resize_frame(true, f.x, f.y, targetWidthCol, targetHeight);
+                            mwj.move_resize_frame(true, f.x, f.y, mwj._nested_width, targetHeight);
                         }
                     } else {
                         mwj.move_frame(true, space.monitor.x, space.monitor.y);
@@ -638,7 +638,7 @@ export class Space extends Array {
                         }
                     }
 
-                    xcol += targetWidthCol + Settings.prefs.window_gap;
+                    xcol += mwj._nested_width + Settings.prefs.window_gap;
                 }
             } else {
                 let f = mw.get_frame_rect();
@@ -737,7 +737,7 @@ export class Space extends Array {
      * @param {boolean} resizable - Whether the window is resizable.
      * @returns {[boolean, boolean]} - A tuple indicating if the width and height changed.
      */
-    _positionAndResizeWindow(mw, x, y, targetWidth, targetHeight, time, resizable) {
+    _positionAndResizeWindow(mw, x, y, targetWidth, targetHeight, time, resizable, space) {
         let widthChanged = false;
         let heightChanged = false;
         let f = mw.get_frame_rect();
@@ -850,18 +850,33 @@ export class Space extends Array {
 
             let targetWidth;
             if (selectedInColumn) {
-                // if selected window - use tiledWidth or frame.width (fallback)
-                targetWidth =
-                    selectedInColumn?._fullscreen_frame?.tiledWidth ??
-                    selectedInColumn.get_frame_rect().width;
+                const selectedRow = column[Utils.findRowIndexOfWindow(column, selectedInColumn)];
+                if (Array.isArray(selectedRow)) {
+                    targetWidth = 0;
+                    for (let w of selectedRow)
+                        targetWidth += 
+                            w?._fullscreen_frame?.tiledWidth ??
+                            w.get_frame_rect().width;
+                } else {
+                    // if selected window - use tiledWidth or frame.width (fallback)
+                    targetWidth =
+                        selectedInColumn?._fullscreen_frame?.tiledWidth ??
+                        selectedInColumn.get_frame_rect().width;
+                }
             }
             else {
                 // otherwise get max of tiledWith or frame.with (fallback)
                 targetWidth = Math.max(...column.map(w => {
-                    return w?._fullscreen_frame?.tiledWidth ?? 
-                        (
-                            Array.isArray(w) ? 0 : w.get_frame_rect().width
-                        );
+                    if (Array.isArray(w)) {
+                        let calcNestColWidth = 0;
+                        for (let nw of w)
+                            calcNestColWidth += 
+                                nw?._fullscreen_frame?.tiledWidth ??
+                                nw.get_frame_rect().width;
+                        return calcNestColWidth;
+                    } else {
+                        return w?._fullscreen_frame?.tiledWidth ?? w.get_frame_rect().width;
+                    }
                 }));
             }
 
@@ -3865,8 +3880,11 @@ export function resizeHandler(metaWindow) {
     const f = metaWindow.get_frame_rect();
     metaWindow._targetWidth = null;
     metaWindow._targetHeight = null;
+    if (metaWindow._nested_width !== null) {
+        metaWindow._nested_width = f.width;
+    }
 
-    if (space.indexOf(metaWindow) === -1) {
+    if (typeof Utils.findColumnIndexOfWindow(space, metaWindow) === "undefined") {
         nonTiledSizeHandler(metaWindow);
         return;
     }
@@ -5478,9 +5496,25 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
     case SlurpInsertPosition.NEST:    
         if (Array.isArray(spaceTo[rowIndex])) {
             // if current row is already an array, then just push it
+            let availableNestWidth = 0;
+            let leastNestedWidth = 3000000;
+            for (let w of spaceTo[rowIndex]) {
+                const f = w.get_frame_rect();
+                availableNestWidth += f.width;
+                if (leastNestedWidth > f.width)
+                    leastNestedWidth = f.width;
+            }
+            for (let w of spaceTo[rowIndex]) {
+                w._nested_width = Math.floor(w._nested_width / (availableNestWidth + leastNestedWidth) * availableNestWidth);
+            }
+            metaWindowToSlurp._nested_width = leastNestedWidth;
+
             spaceTo[rowIndex].push(metaWindowToSlurp);
         } else {
             // otherwise it must been first time nest-slurped, convert row into array
+            const f = metaWindow.get_frame_rect();
+            metaWindow._nested_width = Math.floor(f.width / 2);
+            metaWindowToSlurp._nested_width = Math.floor(f.width / 2);
             spaceTo[rowIndex] = [metaWindow, metaWindowToSlurp];
         }
         break;
@@ -5559,6 +5593,7 @@ export function barf(metaWindow, expelWindow) {
             return;
         }
     }
+    expelWindow._nested_width = null;
 
     const expelRow = findRowIndexOfWindow(column, expelWindow);
     if (Array.isArray(column[expelRow])) {
