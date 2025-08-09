@@ -143,8 +143,21 @@ export class Minimap extends Array {
     }
 
     createClones() {
-        for (let column of this.space) {
-            this.push(column.flat(1).map(this.createClone.bind(this)));
+        const boundCreateClone = this.createClone.bind(this);
+        for (const column of this.space) {
+            let rows = [];
+            for (const row of column) {
+                if (Array.isArray(row)) {
+                    let nestedcol = [];
+                    for (const mw of row) {
+                        nestedcol.push(boundCreateClone(mw));
+                    }
+                    rows.push(nestedcol);
+                } else {
+                    rows.push(boundCreateClone(row));
+                }
+            }
+            this.push(rows);
         }
     }
 
@@ -182,10 +195,19 @@ export class Minimap extends Array {
         for (let column of this) {
             let y = 0, w = 0;
             for (let c of column) {
-                c.set_position(x, y);
-                this._allocateClone(c);
-                w = Math.max(w, c.width);
-                y += c.height;
+                if (Array.isArray(c)) {
+                    for (const wm of c) {
+                        wm.set_position(x, y);
+                        this._allocateClone(wm);
+                        w = Math.max(w, wm.width);
+                        y += wm.height;
+                    }
+                } else {
+                    c.set_position(x, y);
+                    this._allocateClone(c);
+                    w = Math.max(w, c.width);
+                    y += c.height;
+                }
             }
             x += w + gap;
         }
@@ -209,13 +231,16 @@ export class Minimap extends Array {
             return;
         }
         let [index, row] = position;
-        if (!(index in this && row in this[index]))
-            return;
         highlight.show();
         let clip = this.clip;
         let container = this.container;
         let label = this.label;
-        let selected = this[index][row];
+        let selected;
+        if (Array.isArray(row)) {
+            selected = this[index][row[0]][row[1]];
+        } else {
+            selected = this[index][row];
+        }
         if (!selected)
             return;
 
