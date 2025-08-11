@@ -1072,6 +1072,11 @@ export class Space extends Array {
         if (typeof Utils.findColumnIndexOfWindow(this, metaWindow) !== "undefined")
             return false;
 
+        let f = metaWindow.get_frame_rect();
+        if (f?.width <= 1 || f?.height <= 1) {
+            return false;
+        }
+
         if (row !== undefined && this[index]) {
             let column = this[index];
             if (!nest || (typeof column[row] === "undefined")) {
