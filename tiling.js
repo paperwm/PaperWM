@@ -665,7 +665,7 @@ export class Space extends Array {
                 }
 
                 // Apply the window positioning and resizing logic
-                const [windowWidthChanged, windowHeightChanged] = this._positionAndResizeWindow(mw, x, y, targetWidth, targetHeight, time, resizable);
+                const [windowWidthChanged, windowHeightChanged] = this._positionAndResizeWindow(mw, x, y, targetWidth, targetHeight, time, resizable, space);
                 widthChanged = widthChanged || windowWidthChanged;
                 heightChanged = heightChanged || windowHeightChanged;
 
