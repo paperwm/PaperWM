@@ -8,17 +8,11 @@ stdenv.mkDerivation {
   version = "unstable";
   src = ./.;
 
+  makeFlags = [ "SOURCE=$(src)" "EXT_DIR=$(out)/share/gnome-shell/extensions" ];
+
   nativeBuildInputs = with pkgs;
     [ glib
     ];
-  buildPhase = ''
-    make -C schemas gschemas.compiled
-  '';
-
-  installPhase = ''
-    mkdir -p $out/share/gnome-shell/extensions
-    cp -r -T . $out/share/gnome-shell/extensions/${uuid}
-  '';
 
   passthru = {
     extensionPortalSlug = "paperwm";

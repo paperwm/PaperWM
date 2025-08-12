@@ -1920,10 +1920,10 @@ border-radius: ${borderWidth}px;
         let path = this.settings.get_string('background') || Settings.prefs.default_background;
         let useDefault = gsettings.get_boolean('use-default-background');
         if (!path && useDefault) {
-            if (interfaceSettings.get_string("color-scheme") === "default") {
-                path = backgroundSettings.get_string("picture-uri");
-            } else {
+            if (interfaceSettings.get_string("color-scheme") === "prefer-dark") {
                 path = backgroundSettings.get_string("picture-uri-dark");
+            } else {
+                path = backgroundSettings.get_string("picture-uri");
             }
         }
 

@@ -2,11 +2,11 @@
 
 [![project chat](https://img.shields.io/badge/PaperWM_Discussions-join_chat-brightgreen)](https://github.com/paperwm/PaperWM/discussions)
 
-PaperWM is a [Gnome Shell](https://www.gnome.org/) extension which provides scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
+PaperWM is a [GNOME Shell](https://www.gnome.org/) extension which provides scrollable tiling of windows and per monitor workspaces. It's inspired by paper notebooks and tiling window managers.
 
 While technically an [extension](https://extensions.gnome.org/about/) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
-PaperWM aims to continually support [current stable](https://release.gnome.org/calendar/#branches) Gnome shell versions (currently Gnome 45 & Gnome 46).  Older versions of PaperWM can generally be installed on older Gnome Shell versions (see [Install via Source](#install-via-source) for more information on targeting an older/EOL Gnome version).
+PaperWM aims to continually support [current stable](https://release.gnome.org/calendar/#branches) GNOME Shell versions (currently GNOME 47 & Gnome 48).  Older versions of PaperWM can generally be installed on older Gnome Shell versions (see [Install via Source](#install-via-source) for more information on targeting an older/EOL Gnome version).
 
 New features and fixes aren't generally backported to older Gnome shell versions.  [Pull requests](https://github.com/paperwm/PaperWM/pulls) for fixes to older PaperWM versions (that run on previous Gnome versions) will be accepted if the submitter can help test and update related documentation.
 
@@ -20,20 +20,23 @@ Have questions or comments?  Please ask on our [Github Discussions](https://gith
 
 ### Install via Source
 
-Clone the repo and check out the branch for the Gnome Shell version you're running:
+Clone the repo and check out the branch for the GNOME Shell version you're running:
 
-- 45-47 (currently developed/supported): https://github.com/paperwm/PaperWM/tree/release
+- 45-48 (currently developed/supported): https://github.com/paperwm/PaperWM/tree/release
 - 42-44 ([EOL](https://release.gnome.org/calendar/#releases)): https://github.com/paperwm/PaperWM/tree/gnome-44
 - 40-41 ([EOL](https://release.gnome.org/calendar/#releases)): https://github.com/paperwm/PaperWM/tree/gnome-40
 - 3.28-3.38 ([EOL](https://release.gnome.org/calendar/#releases)): https://github.com/paperwm/PaperWM/tree/gnome-3.38
 
-then run the [`install.sh`](https://github.com/paperwm/PaperWM/blob/release/install.sh) script
+then run the [`make install`](https://github.com/paperwm/PaperWM/blob/release/install.sh) 
 from the repository. The installer will create a link to the repo in
 `~/.local/share/gnome-shell/extensions`. It will then ask if you want to enable PaperWM.
 ```bash
-./install.sh # install, load and enable paperwm
+make install # install, load and enable paperwm
 ```
-> #### ➡️ You'll need to restart Gnome shell after installing PaperWM, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only).
+
+Running the extension will automatically install a user config file as described in [User configuration & development](#user-configuration--development).
+
+> #### ➡️ You'll need to restart GNOME Shell after installing PaperWM, e.g. logout then login, or restart in place with an `alt-F2` and entering `r` (X11 only).
 >
 > After logging back in, you can then enable PaperWM via the `Extensions` application, or by running the following command from the command-line:
 >
@@ -44,10 +47,7 @@ from the repository. The installer will create a link to the repo in
 
 #### Uninstall PaperWM (if installed via source)
 
-To uninstall simply run `./uninstall.sh`.
-
-Running the extension will automatically install a user config file as described in [User configuration & development](#user-configuration--development).
-
+To uninstall simply run `make uninstall`.
 
 ### Try without installing
 

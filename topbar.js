@@ -790,7 +790,7 @@ export const WorkspaceMenu = GObject.registerClass(
 
             let type = event.type();
 
-            if (type === Clutter.EventType.TOUCH_END ||
+            if (type === Clutter.EventType.TOUCH_BEGIN ||
                 type === Clutter.EventType.BUTTON_RELEASE) {
                 if (Navigator.navigating) {
                     Navigator.getNavigator().finish();
