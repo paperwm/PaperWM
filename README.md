@@ -387,6 +387,7 @@ These extensions are good complements to PaperWM:
 
 - [Switcher](https://github.com/daniellandau/switcher) - combined window switcher and launcher
 - [Dash to Dock](https://micheleg.github.io/dash-to-dock/) - a great dock
+- [Focus Follows Workspace](https://github.com/christopher-l/focus-follows-workspace) - This complements the experience with multiple monitors and GNOME's global hotkeys for switching workspaces or moving windows to workspaces (see #704)
 
 ## Incompatible extensions
 
