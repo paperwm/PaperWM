@@ -11,7 +11,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {
     Settings, Utils, Lib, Gestures, Navigator, Grab, Topbar, Scratch, Stackoverlay, Background
 } from './imports.js';
-import { Easer, findColumnIndexOfWindow, findRowIndexOfWindow, safeStringify } from './utils.js';
+import { Easer, safeStringify } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
 import { WorkspaceSettings } from './workspace.js';
 import { prefs } from './settings.js';
@@ -851,7 +851,7 @@ export class Space extends Array {
 
             let targetWidth;
             if (selectedInColumn) {
-                const selectedRow = column[Utils.findRowIndexOfWindow(column, selectedInColumn)];
+                const selectedRow = column[this.rowOf(selectedInColumn)];
                 if (Array.isArray(selectedRow)) {
                     targetWidth = 0;
                     for (let w of selectedRow)
@@ -1069,7 +1069,7 @@ export class Space extends Array {
     addWindow(metaWindow, index, row, nest = false) {
         if (!this.selectedWindow)
             this.selectedWindow = metaWindow;
-        if (typeof Utils.findColumnIndexOfWindow(this, metaWindow) !== "undefined")
+        if (this.indexOf(metaWindow) !== -1)
             return false;
 
         let f = metaWindow.get_frame_rect();
@@ -1151,7 +1151,7 @@ export class Space extends Array {
     }
 
     removeWindow(metaWindow) {
-        const index = Utils.findColumnIndexOfWindow(this, metaWindow);
+        const index = this.indexOf(metaWindow);
         if (typeof index === "undefined")
             return;
 
@@ -1170,7 +1170,7 @@ export class Space extends Array {
         }
 
         const column = this[index];
-        const row = Utils.findRowIndexOfWindow(column, metaWindow);
+        const row = this.rowOf(metaWindow);
 
         if (Array.isArray(column[row])) {
             column[row].splice(column[row].indexOf(metaWindow), 1);
@@ -1292,7 +1292,7 @@ export class Space extends Array {
         let column = this[index];
         if (!column)
             return false;
-        let row = findRowIndexOfWindow(column, this.selectedWindow);
+        let row = this.rowOf(this.selectedWindow);
         if (Lib.in_bounds(column, row + dir) === false) {
             index += dir;
             if (loop) {
@@ -1326,7 +1326,7 @@ export class Space extends Array {
         if (index === -1) {
             return false;
         }
-        let row = findRowIndexOfWindow(space[index], space.selectedWindow);
+        let row = this.rowOf(space.selectedWindow);
         let indexInsideRow = 0;
         switch (direction) {
         case Meta.MotionDirection.RIGHT:
@@ -1362,7 +1362,7 @@ export class Space extends Array {
                 sortWindows(this, column);
             const selected = sortedWindows[sortedWindows.length - 1];
             
-            row = Utils.findRowIndexOfWindow(column, selected);
+            row = this.rowOf(selected);
         }
 
         switch (direction) {
@@ -1401,7 +1401,7 @@ export class Space extends Array {
         if (index === -1) {
             return;
         }
-        let row = findRowIndexOfWindow(space[index], space.selectedWindow);
+        let row = this.rowOf(space.selectedWindow);
 
         switch (direction) {
         case Meta.MotionDirection.RIGHT:
@@ -1673,7 +1673,7 @@ export class Space extends Array {
         this._isAnimating = false;
 
         if (this.selectedWindow && this.selectedWindow === display.focus_window) {
-            let index = Utils.findColumnIndexOfWindow(this, this.selectedWindow);
+            let index = this.indexOf(this.selectedWindow);
             // eslint-disable-next-line no-return-assign
             this[index].flat(1).forEach(w => w.lastFrame = w.get_frame_rect());
 
@@ -1738,7 +1738,7 @@ export class Space extends Array {
 
     fixOverlays(metaWindow) {
         metaWindow = metaWindow || this.selectedWindow;
-        let index = Utils.findColumnIndexOfWindow(this, metaWindow);
+        let index = this.indexOf(metaWindow);
         let target = this.targetX;
         this.monitor.clickOverlay.reset();
         for (let overlay = this.monitor.clickOverlay.right,
@@ -2399,7 +2399,7 @@ border-radius: ${borderWidth}px;
 
     selectedIndex() {
         if (this.selectedWindow) {
-            return findColumnIndexOfWindow(this, this.selectedWindow);
+            return this.indexOf(this.selectedWindow);
         } else {
             return -1;
         }
@@ -3945,7 +3945,7 @@ export function resizeHandler(metaWindow) {
         metaWindow._nested_width = f.width;
     }
 
-    if (typeof Utils.findColumnIndexOfWindow(space, metaWindow) === "undefined") {
+    if (space.indexOf(metaWindow) === -1) {
         nonTiledSizeHandler(metaWindow);
         return;
     }
@@ -4603,9 +4603,8 @@ export function ensureViewport(meta_window, space, options = {}) {
     let ensureAnimation = options.ensureAnimation ?? Settings.EnsureViewportAnimation.TRANSLATE;
     let callback = options.callback ?? function () { };
 
-    let index = findColumnIndexOfWindow(space, meta_window);
-
-    if ((typeof index === "undefined") || space.length === 0)
+    let index = space.indexOf(meta_window);
+    if (index === -1 || space.length === 0)
         return undefined;
 
     if (space.selectedWindow.fullscreen &&
@@ -5432,7 +5431,7 @@ export function allocateDefault(column, availableHeight, selectedWindow) {
                 );
         };
 
-        const k = selectedWindow && Utils.findRowIndexOfWindow(column, selectedWindow);
+        const k = selectedWindow && spaces.spaceOfWindow(selectedWindow).rowOf(selectedWindow);
         const selectedHeight = selectedWindow && heightOf(selectedWindow);
 
         let nonSelected = column.slice();
@@ -5485,7 +5484,7 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
     }
 
     // space.indexOf(metaWindow);
-    const index = Utils.findColumnIndexOfWindow(space, metaWindow);
+    const index = space.indexOf(metaWindow);
     let to, from, metaWindowToSlurp;
     let metaWindowToSlurpIndex = 0;
 
@@ -5499,7 +5498,7 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
     // factor out to and spaceTo out of case block
     to = index;
     const spaceTo = space[to];
-    const rowIndex = Utils.findRowIndexOfWindow(spaceTo, metaWindow);
+    const rowIndex = space.rowOf(metaWindow);
 
     // get current direction mode
     const direction = Settings.prefs.open_window_position;
@@ -5604,7 +5603,7 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
         }
 
         // with column removed, `to` column may have changed
-        to = Utils.findColumnIndexOfWindow(space, metaWindow);
+        to = space.indexOf(metaWindow);
     }
 
     // after columns have slurped, "to" index may have changed
@@ -5626,7 +5625,7 @@ export function barf(metaWindow, expelWindow) {
         return;
 
     const space = spaces.spaceOfWindow(metaWindow);
-    const index = Utils.findColumnIndexOfWindow(space, metaWindow);
+    const index = space.indexOf(metaWindow);
     if (index === -1)
         return;
 
@@ -5656,7 +5655,7 @@ export function barf(metaWindow, expelWindow) {
     }
     expelWindow._nested_width = null;
 
-    const expelRow = findRowIndexOfWindow(column, expelWindow);
+    const expelRow = space.rowOf(expelWindow);
     if (Array.isArray(column[expelRow])) {
         const indexOfWindow = column[expelRow].indexOf(expelWindow);
         column[expelRow].splice(indexOfWindow, 1);

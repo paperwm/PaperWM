@@ -390,46 +390,6 @@ export function isMetaWindow(obj) {
     return obj && obj.window_type && obj.get_compositor_private;
 }
 
-export function findRowIndexOfWindow(column, metaWindow) {
-    let rowFound = undefined;
-    column.every((el, elidx) => {
-        if (Array.isArray(el)) {
-            let foundInRow = false;
-            el.every((nestedEl) => {
-                if (nestedEl === metaWindow) {
-                    rowFound = elidx;
-                    foundInRow = true;
-                    return false;
-                }
-                return true;
-            });
-            if (foundInRow) {
-                return false;
-            }
-        } else {
-            if (el === metaWindow) {
-                rowFound = elidx;
-                return false;
-            }
-        }
-        return true;
-    });
-    return rowFound;
-}
-
-export function findColumnIndexOfWindow(space, metaWindow) {
-    let index = undefined;
-    space.every((el, elidx) => {
-        const rowInCol = findRowIndexOfWindow(el, metaWindow);
-        if (typeof rowInCol !== "undefined") {
-            index = elidx;
-            return false
-        }
-        return true;
-    })
-    return index;
-}
-
 export function actor_raise(actor, above) {
     const parent = actor.get_parent();
     if (!parent) {

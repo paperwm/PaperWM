@@ -457,8 +457,7 @@ export class StackOverlay {
             overlay.width = Math.max(width, 1);
             Utils.actor_raise(overlay, neighbour.get_compositor_private());
         } else {
-            let index = Utils.findColumnIndexOfWindow(space, metaWindow);
-            let column = space[index];
+            let column = space[space.indexOf(metaWindow) - 1];
             column = column.flat(1);
             let neighbour = column &&
                 global.display.sort_windows_by_stacking(column).reverse()[0];
