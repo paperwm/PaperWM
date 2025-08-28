@@ -12,11 +12,23 @@ const WORKSPACE_KEY = 'org.gnome.shell.extensions.paperwm.workspace';
 export class WorkspaceSettings {
     constructor(extension) {
         this.workspaceSettingsCache = {};
-        this.schemaSource = Gio.SettingsSchemaSource.new_from_directory(
-            GLib.build_filenamev([extension.path, "schemas"]),
-            Gio.SettingsSchemaSource.get_default(),
-            false
-        );
+
+        const extLocation = extension.dir.get_parent();
+        console.debug("Extension location " + extLocation.get_path());
+        console.debug("XDG_DATA_DIR=" + GLib.get_user_data_dir());
+        if (extLocation.get_parent().get_parent().get_path() == GLib.get_user_data_dir()) {
+            console.debug("We are installed in $XDG_DATA_HOME");
+            this.schemaSource = Gio.SettingsSchemaSource.new_from_directory(
+                GLib.build_filenamev([extension.path, "schemas"]),
+                Gio.SettingsSchemaSource.get_default(),
+                false
+            );
+        } else {
+            // assume we are installed system-wide and our schema source is in
+            // the default schema.
+            console.debug("We are installed in system $PREFIX.");
+            this.schemaSource = Gio.SettingsSchemaSource.get_default();
+        }
 
         this.workspaceList = new Gio.Settings({
             settings_schema: this.getSchemaSource().lookup(WORKSPACE_LIST_KEY, true),
