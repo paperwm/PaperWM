@@ -6,7 +6,7 @@ endif
 
 SOURCE      := $$PWD
 EXT_ID      := paperwm@paperwm.github.com
-EXT_DIR     := $(XDG_DATA_HOME)/gnome-shell/extensions
+EXT_DIR     := $(if $(DESTDIR),$(DESTDIR)/usr/share,$(XDG_DATA_HOME))/gnome-shell/extensions
 TARGET      := $(EXT_DIR)/$(EXT_ID)
 
 CONFIG_FILES   = config/user.js config/user.css
@@ -15,11 +15,12 @@ JS_FILES       = $(wildcard *.js)
 UI_FILES       = $(wildcard *.ui)
 RESOURCE_FILES = $(wildcard resources/*)
 
-RELEASE_FILES = $(JS_FILES) $(UI_FILES) $(RESOURCE_FILES) \
-				$(CONFIG_FILES) $(GSCHEMA_FILES) \
-				schemas/gschemas.compiled \
-				metadata.json \
-				stylesheet.css \
+EXT_FILES = $(JS_FILES) $(UI_FILES) $(RESOURCE_FILES) \
+			$(CONFIG_FILES) \
+			metadata.json \
+			stylesheet.css
+RELEASE_FILES = $(EXT_FILES) \
+				$(GSCHEMA_FILES) schemas/gschemas.compiled \
 				LICENSE
 
 ZIP         := zip
@@ -35,7 +36,7 @@ SHELL=/bin/bash
 ## Update compiled files
 all: $(RELEASE_FILES)
 
-## Install PaperWM on this system
+## Install PaperWM for this user
 install: schemas/gschemas.compiled
 	@if [[ ! -L "$(TARGET)" && -d "$(TARGET)" ]]; \
 	then                                    \
@@ -63,7 +64,7 @@ install: schemas/gschemas.compiled
 	@echo "gnome-extensions enable $(EXT_ID)"
 	@echo
 
-## Uninstall PaperWM from this system
+## Uninstall PaperWM for this user
 uninstall:
 	@$(call rich_echo,"GNOME_EXT_DISABLE", "$(EXT_ID)")
 	@$(GNOME_EXT_DISABLE) $(EXT_ID)
@@ -82,6 +83,13 @@ uninstall:
 		[[ $$REPLY =~ ^[Yy]$ ]] && rm -rf $(TARGET);       \
 	fi
 
+## Install in system-wide location
+install-system:
+	for f in $(EXT_FILES); do \
+		install -D -p -m 0644 $$f "$(TARGET)/$$f"; \
+	done
+	install -d "$(DESTDIR)/usr/share/glib-2.0/schemas"
+	install -p -m 0644 $(GSCHEMA_FILES) "$(DESTDIR)/usr/share/glib-2.0/schemas/"
 
 ## Generate a release zip for review on GNOME Extensions
 release: $(EXT_ID).zip
@@ -95,6 +103,6 @@ schemas/gschemas.compiled: $(GSCHEMA_FILES)
 	@$(call rich_echo,"MAKE","$@")
 	@$(MAKE) -C schemas gschemas.compiled
 
-.PHONY: install uninstall release
+.PHONY: install install-system uninstall release
 
 include lib.mk
