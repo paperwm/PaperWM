@@ -70,6 +70,7 @@ const actions = {
         'move-up',
         'move-down',
         'slurp-in',
+        'nest-slurp-in',
         'barf-out',
         'barf-out-active',
         'center-horizontally',

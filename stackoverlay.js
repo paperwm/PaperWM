@@ -429,6 +429,7 @@ export class StackOverlay {
         let mru = global.display.get_tab_list(Meta.TabList.NORMAL_ALL,
             space.workspace);
         let column = space[index];
+        column = column.flat(1);
         this.target = mru.filter(w => column.includes(w))[0];
         let metaWindow = this.target;
         if (!metaWindow)
@@ -442,6 +443,7 @@ export class StackOverlay {
 
         if (this._direction === Meta.MotionDirection.LEFT) {
             let column = space[space.indexOf(metaWindow) + 1];
+            column = column.flat(1);
             let neighbour = column &&
                 global.display.sort_windows_by_stacking(column).reverse()[0];
 
@@ -456,6 +458,7 @@ export class StackOverlay {
             Utils.actor_raise(overlay, neighbour.get_compositor_private());
         } else {
             let column = space[space.indexOf(metaWindow) - 1];
+            column = column.flat(1);
             let neighbour = column &&
                 global.display.sort_windows_by_stacking(column).reverse()[0];
             if (!neighbour)

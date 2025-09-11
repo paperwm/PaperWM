@@ -11,9 +11,10 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {
     Settings, Utils, Lib, Gestures, Navigator, Grab, Topbar, Scratch, Stackoverlay, Background
 } from './imports.js';
-import { Easer } from './utils.js';
+import { Easer, safeStringify } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
 import { WorkspaceSettings } from './workspace.js';
+import { prefs } from './settings.js';
 
 const { signals: Signals } = imports;
 const workspaceManager = global.workspace_manager;
@@ -38,7 +39,7 @@ export const FocusModes = { DEFAULT: 0, CENTER: 1, EDGE: 2 }; // export
 
 export const CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1 };
 
-export const SlurpInsertPosition = { BOTTOM: 0, TOP: 1, ABOVE: 2, BELOW: 3 };
+export const SlurpInsertPosition = { BOTTOM: 0, TOP: 1, ABOVE: 2, BELOW: 3, NEST: 4 };
 
 /**
    Scrolled and tiled per monitor workspace.
@@ -495,8 +496,15 @@ export class Space extends Array {
         this.clip.show();
         for (let col of this) {
             for (let w of col) {
-                let actor = w.get_compositor_private();
-                w.clone.cloneActor.source = actor;
+                if (Array.isArray(w)) {
+                    for (let nw of w) {
+                        let actor = nw.get_compositor_private();
+                        nw.clone.cloneActor.source = actor;
+                    }
+                } else {
+                    let actor = w.get_compositor_private();
+                    w.clone.cloneActor.source = actor;
+                }
             }
         }
     }
@@ -508,7 +516,11 @@ export class Space extends Array {
         this.clip.hide();
         for (let col of this)
             for (let w of col)
-                w.clone.cloneActor.source = null;
+                if (Array.isArray(w)) {
+                    for (let nw of w)
+                        nw.clone.cloneActor.source = null;
+                } else
+                    w.clone.cloneActor.source = null;
     }
 
     /**
@@ -568,83 +580,198 @@ export class Space extends Array {
         for (let i = 0; i < windows.length; i++) {
             let mw = windows[i];
             let targetHeight = targetHeights[i];
+            if (Array.isArray(mw)) { 
+                let xcol = x;
+                for (let j = 0; j < mw.length; j++) {
+                    let mwj = mw[j];
+                    mwj._targetWidth = mwj._nested_width;
+                    let f = mwj.get_frame_rect();
+                    let resizable = !mwj.fullscreen &&
+                        mwj.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
-            let f = mw.get_frame_rect();
+                    // Apply the window positioning and resizing logic
+                    const [windowWidthChanged, windowHeightChanged] = this._positionAndResizeWindow(mwj, xcol, y, mwj._nested_width, targetHeight, time, resizable, space);
+                    widthChanged = widthChanged || windowWidthChanged;
+                    heightChanged = heightChanged || windowHeightChanged;
 
-            let resizable = !mw.fullscreen &&
-                mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
+                    if (resizable) {
+                        const hasNewTarget = mwj._targetWidth !== targetWidth || mwj._targetHeight !== targetHeight;
+                        const targetReached = f.width === targetWidth && f.height === targetHeight;
 
-            if (mw.preferredWidth) {
-                let prop = mw.preferredWidth;
-                if (prop.value <= 0) {
-                    console.warn("invalid preferredWidth value");
-                }
-                else if (prop.unit === 'px') {
-                    targetWidth = prop.value;
-                }
-                else if (prop.unit === '%') {
-                    let availableWidth = space.workArea().width - Settings.prefs.horizontal_margin * 2 - Settings.prefs.window_gap;
-                    targetWidth = Math.floor(availableWidth * Math.min(prop.value / 100.0, 1.0));
-                }
-                else {
-                    console.warn("invalid preferredWidth unit:", `'${prop.unit}'`, "(should be 'px' or '%')");
-                }
-            }
+                        // Update targets (NB: must happen before resize request)
+                        mwj._targetWidth = mwj._nested_width;
+                        mwj._targetHeight = targetHeight;
 
-            if (resizable) {
-                const hasNewTarget = mw._targetWidth !== targetWidth || mw._targetHeight !== targetHeight;
-                const targetReached = f.width === targetWidth && f.height === targetHeight;
+                        if (!targetReached && hasNewTarget) {
+                            // Explanation for `hasNewTarget` check in commit message
+                            mwj.move_resize_frame(true, f.x, f.y, mwj._nested_width, targetHeight);
+                        }
+                    } else {
+                        mwj.move_frame(true, space.monitor.x, space.monitor.y);
+                        targetWidth = f.width;
+                        targetHeight = f.height;
+                    }
 
-                // Update targets (NB: must happen before resize request)
-                mw._targetWidth = targetWidth;
-                mw._targetHeight = targetHeight;
+                    // When resize is synchronous, ie. for X11 windows
+                    let nf = mwj.get_frame_rect();
+                    if (nf.width !== targetWidth && nf.width !== f.width) {
+                        widthChanged = true;
+                    }
+                    if (nf.height !== targetHeight && nf.height !== f.height) {
+                        heightChanged = true;
+                        targetHeight = nf.height; // Use actually height for layout
+                    }
 
-                if (!targetReached && hasNewTarget) {
-                    // Explanation for `hasNewTarget` check in commit message
-                    mw.move_resize_frame(true, f.x, f.y, targetWidth, targetHeight);
+                    let c = mwj.clone;
+                    if (c.x !== xcol || c.targetX !== xcol ||
+                        c.y !== y || c.targetY !== y) {
+                        c.targetX = xcol;
+                        c.targetY = y;
+                        if (time === 0) {
+                            c.x = xcol;
+                            c.y = y;
+                        } else {
+                            Easer.addEase(c, {
+                                x:xcol, y,
+                                time,
+                                onComplete: this.moveDone.bind(this),
+                            });
+                        }
+                    }
+
+                    xcol += mwj._nested_width + Settings.prefs.window_gap;
                 }
             } else {
-                mw.move_frame(true, space.monitor.x, space.monitor.y);
-                targetWidth = f.width;
-                targetHeight = f.height;
-            }
-            if (mw.maximized_vertically) {
-                // NOTE: This should really be f.y - monitor.y, but eg. firefox
-                // on wayland reports the wrong y coordinates at this point.
-                y -= Settings.prefs.vertical_margin;
-            }
+                let f = mw.get_frame_rect();
 
-            // When resize is synchronous, ie. for X11 windows
-            let nf = mw.get_frame_rect();
-            if (nf.width !== targetWidth && nf.width !== f.width) {
-                widthChanged = true;
-            }
-            if (nf.height !== targetHeight && nf.height !== f.height) {
-                heightChanged = true;
-                targetHeight = nf.height; // Use actually height for layout
-            }
+                let resizable = !mw.fullscreen &&
+                    mw.get_maximized() !== Meta.MaximizeFlags.BOTH;
 
-            let c = mw.clone;
-            if (c.x !== x || c.targetX !== x ||
-                c.y !== y || c.targetY !== y) {
-                // console.debug("  Position window", mw.title, `y: ${c.targetY} -> ${y} x: ${c.targetX} -> ${x}`);
-                c.targetX = x;
-                c.targetY = y;
-                if (time === 0) {
-                    c.x = x;
-                    c.y = y;
+                if (mw.preferredWidth) {
+                    let prop = mw.preferredWidth;
+                    if (prop.value <= 0) {
+                        console.warn("invalid preferredWidth value");
+                    }
+                    else if (prop.unit === 'px') {
+                        targetWidth = prop.value;
+                    }
+                    else if (prop.unit === '%') {
+                        let availableWidth = space.workArea().width - Settings.prefs.horizontal_margin * 2 - Settings.prefs.window_gap;
+                        targetWidth = Math.floor(availableWidth * Math.min(prop.value / 100.0, 1.0));
+                    }
+                    else {
+                        console.warn("invalid preferredWidth unit:", `'${prop.unit}'`, "(should be 'px' or '%')");
+                    }
+                }
+
+                // Apply the window positioning and resizing logic
+                const [windowWidthChanged, windowHeightChanged] = this._positionAndResizeWindow(mw, x, y, targetWidth, targetHeight, time, resizable, space);
+                widthChanged = widthChanged || windowWidthChanged;
+                heightChanged = heightChanged || windowHeightChanged;
+
+                if (resizable) {
+                    const hasNewTarget = mw._targetWidth !== targetWidth || mw._targetHeight !== targetHeight;
+                    const targetReached = f.width === targetWidth && f.height === targetHeight;
+
+                    // Update targets (NB: must happen before resize request)
+                    mw._targetWidth = targetWidth;
+                    mw._targetHeight = targetHeight;
+
+                    if (!targetReached && hasNewTarget) {
+                        // Explanation for `hasNewTarget` check in commit message
+                        mw.move_resize_frame(true, f.x, f.y, targetWidth, targetHeight);
+                    }
                 } else {
-                    Easer.addEase(c, {
-                        x, y,
-                        time,
-                        onComplete: this.moveDone.bind(this),
-                    });
+                    mw.move_frame(true, space.monitor.x, space.monitor.y);
+                    targetWidth = f.width;
+                    targetHeight = f.height;
+                }
+                if (mw.maximized_vertically) {
+                    // NOTE: This should really be f.y - monitor.y, but eg. firefox
+                    // on wayland reports the wrong y coordinates at this point.
+                    y -= Settings.prefs.vertical_margin;
+                }
+
+                // When resize is synchronous, ie. for X11 windows
+                let nf = mw.get_frame_rect();
+                if (nf.width !== targetWidth && nf.width !== f.width) {
+                    widthChanged = true;
+                }
+                if (nf.height !== targetHeight && nf.height !== f.height) {
+                    heightChanged = true;
+                    targetHeight = nf.height; // Use actually height for layout
+                }
+
+                let c = mw.clone;
+                if (c.x !== x || c.targetX !== x ||
+                    c.y !== y || c.targetY !== y) {
+                    // console.debug("  Position window", mw.title, `y: ${c.targetY} -> ${y} x: ${c.targetX} -> ${x}`);
+                    c.targetX = x;
+                    c.targetY = y;
+                    if (time === 0) {
+                        c.x = x;
+                        c.y = y;
+                    } else {
+                        Easer.addEase(c, {
+                            x, y,
+                            time,
+                            onComplete: this.moveDone.bind(this),
+                        });
+                    }
                 }
             }
 
             y += targetHeight + Settings.prefs.window_gap;
         }
         return [targetWidth, widthChanged || heightChanged, y];
+    }
+
+        /**
+     * Positions and resizes a window based on the provided parameters.
+     * @private
+     * @param {Meta.Window} mw - The MetaWindow to position and resize.
+     * @param {number} x - The x-coordinate for the window.
+     * @param {number} y - The y-coordinate for the window.
+     * @param {number} targetWidth - The target width of the window.
+     * @param {number} targetHeight - The target height of the window.
+     * @param {number} time - The animation time.
+     * @param {boolean} resizable - Whether the window is resizable.
+     * @returns {[boolean, boolean]} - A tuple indicating if the width and height changed.
+     */
+    _positionAndResizeWindow(mw, x, y, targetWidth, targetHeight, time, resizable, space) {
+        let widthChanged = false;
+        let heightChanged = false;
+        let f = mw.get_frame_rect();
+
+        if (resizable) {
+            const hasNewTarget = mw._targetWidth !== targetWidth || mw._targetHeight !== targetHeight;
+            const targetReached = f.width === targetWidth && f.height === targetHeight;
+
+            // Update targets (NB: must happen before resize request)
+            mw._targetWidth = targetWidth;
+            mw._targetHeight = targetHeight;
+
+            if (!targetReached && hasNewTarget) {
+                // Explanation for `hasNewTarget` check in commit message
+                mw.move_resize_frame(true, f.x, f.y, targetWidth, targetHeight);
+            }
+        } else {
+            mw.move_frame(true, space.monitor.x, space.monitor.y);
+            targetWidth = f.width;
+            targetHeight = f.height;
+        }
+
+        // When resize is synchronous, ie. for X11 windows
+        let nf = mw.get_frame_rect();
+        if (nf.width !== targetWidth && nf.width !== f.width) {
+            widthChanged = true;
+        }
+        if (nf.height !== targetHeight && nf.height !== f.height) {
+            heightChanged = true;
+            targetHeight = nf.height; // Use actually height for layout
+        }
+
+        return [widthChanged, heightChanged];
     }
 
     layout(animate = true, options = {}) {
@@ -715,7 +842,7 @@ export class Space extends Array {
         for (let i = 0; i < this.length; i++) {
             let column = this[i];
             // Actorless windows are trouble. Layout could conceivable run while a window is dying or being born.
-            column = column.filter(mw => mw.get_compositor_private());
+            column = column.filter(mw => Array.isArray(mw) || mw.get_compositor_private());
             if (column.length === 0)
                 continue;
 
@@ -724,15 +851,41 @@ export class Space extends Array {
 
             let targetWidth;
             if (selectedInColumn) {
-                // if selected window - use tiledWidth or frame.width (fallback)
-                targetWidth =
-                    selectedInColumn?._fullscreen_frame?.tiledWidth ??
-                    selectedInColumn.get_frame_rect().width;
+                const selectedRow = column[this.rowOf(selectedInColumn)];
+                if (Array.isArray(selectedRow)) {
+                    targetWidth = 0;
+                    for (let w of selectedRow)
+                        targetWidth += 
+                            w?._fullscreen_frame?.tiledWidth ??
+                            w.get_frame_rect().width;
+                } else {
+                    // if selected window - use tiledWidth or frame.width (fallback)
+                    targetWidth =
+                        selectedInColumn?._fullscreen_frame?.tiledWidth ??
+                        selectedInColumn.get_frame_rect().width;
+                    for (const row of column) {
+                        if (Array.isArray(row)) {
+                            let totalNestWidth = row.reduce((ac, cv) => ac + cv._nested_width, 0);
+                            for (const w of row) {
+                                w._nested_width = Math.floor(w._nested_width / totalNestWidth * targetWidth) - Settings.prefs.window_gap;
+                            }
+                        }
+                    }
+                }
             }
             else {
                 // otherwise get max of tiledWith or frame.with (fallback)
                 targetWidth = Math.max(...column.map(w => {
-                    return w?._fullscreen_frame?.tiledWidth ?? w.get_frame_rect().width;
+                    if (Array.isArray(w)) {
+                        let calcNestColWidth = 0;
+                        for (let nw of w)
+                            calcNestColWidth += 
+                                nw?._fullscreen_frame?.tiledWidth ??
+                                nw.get_frame_rect().width;
+                        return calcNestColWidth;
+                    } else {
+                        return w?._fullscreen_frame?.tiledWidth ?? w.get_frame_rect().width;
+                    }
                 }));
             }
 
@@ -878,17 +1031,22 @@ export class Space extends Array {
     }
 
     getWindows() {
-        return this.reduce((ws, column) => ws.concat(column), []);
+        return this.flat(3);
     }
 
-    getWindow(index, row) {
+    getWindow(index, row, indexInsideRow = 0) {
         if (row < 0 || index < 0 || index >= this.length)
             return false;
 
         let column = this[index];
         if (row >= column.length)
             return false;
-        return column[row];
+
+        if (Array.isArray(column[row])) {
+            return column[row][indexInsideRow];
+        } else {
+            return column[row];
+        }
     }
 
     isWindowAtPoint(metaWindow, x, y) {
@@ -908,15 +1066,28 @@ export class Space extends Array {
         return null;
     }
 
-    addWindow(metaWindow, index, row) {
+    addWindow(metaWindow, index, row, nest = false) {
         if (!this.selectedWindow)
             this.selectedWindow = metaWindow;
         if (this.indexOf(metaWindow) !== -1)
             return false;
 
+        let f = metaWindow.get_frame_rect();
+        if (f?.width <= 1 || f?.height <= 1) {
+            return false;
+        }
+
         if (row !== undefined && this[index]) {
             let column = this[index];
-            column.splice(row, 0, metaWindow);
+            if (!nest || (typeof column[row] === "undefined")) {
+                column.splice(row, 0, metaWindow);
+            } else {
+                if (Array.isArray(column[row])) {
+                    column[row].push(metaWindow);
+                } else {
+                    column[row] = [column[row], metaWindow];
+                }
+            }
         } else {
             this.splice(index, 0, [metaWindow]);
         }
@@ -981,6 +1152,9 @@ export class Space extends Array {
 
     removeWindow(metaWindow) {
         const index = this.indexOf(metaWindow);
+        if (typeof index === "undefined")
+            return;
+
         if (index === -1)
             return this.removeFloating(metaWindow);
 
@@ -996,10 +1170,25 @@ export class Space extends Array {
         }
 
         const column = this[index];
-        const row = column.indexOf(metaWindow);
-        column.splice(row, 1);
-        if (column.length === 0) {
-            this.splice(index, 1);
+        const row = this.rowOf(metaWindow);
+
+        if (Array.isArray(column[row])) {
+            column[row].splice(column[row].indexOf(metaWindow), 1);
+            if (column[row].length === 1) {
+                column[row] = column[row][0];
+            }
+        } else {
+            column.splice(row, 1);
+            if (column.length === 1 && Array.isArray(column[0])) {
+                const barfedNestedColumns = this.splice(index, 1)[0][0];
+                for (const [idx, w] of barfedNestedColumns.entries()) {
+                    w._nested_width = null;
+                    this.splice(index + idx, 0, [w]);
+                }
+            }
+            if (column.length === 0) {
+                this.splice(index, 1);
+            }
         }
 
         this.visible.splice(this.visible.indexOf(metaWindow), 1);
@@ -1065,6 +1254,10 @@ export class Space extends Array {
         metaWindow = metaWindow || this.selectedWindow;
 
         let [index, row] = this.positionOf(metaWindow);
+
+        if (Array.isArray(row))
+            return;
+
         let targetIndex = index;
         let targetRow = row;
         switch (direction) {
@@ -1099,7 +1292,7 @@ export class Space extends Array {
         let column = this[index];
         if (!column)
             return false;
-        let row = column.indexOf(this.selectedWindow);
+        let row = this.rowOf(this.selectedWindow);
         if (Lib.in_bounds(column, row + dir) === false) {
             index += dir;
             if (loop) {
@@ -1133,15 +1326,24 @@ export class Space extends Array {
         if (index === -1) {
             return false;
         }
-        let row = space[index].indexOf(space.selectedWindow);
+        let row = this.rowOf(space.selectedWindow);
+        let indexInsideRow = 0;
         switch (direction) {
         case Meta.MotionDirection.RIGHT:
-            index++;
-            row = -1;
+            if (Array.isArray(space[index][row]) && space[index][row].indexOf(space.selectedWindow) < space[index][row].length - 1) {
+                indexInsideRow = space[index][row].indexOf(space.selectedWindow) + 1;
+            } else {
+                index++;
+                row = -1;
+            }
             break;
         case Meta.MotionDirection.LEFT:
-            index--;
-            row = -1;
+            if (Array.isArray(space[index][row]) && space[index][row].indexOf(space.selectedWindow) > 0) {
+                indexInsideRow = space[index][row].indexOf(space.selectedWindow) - 1;
+            } else {
+                index--;
+                row = -1;
+            }
         }
         if (loop) {
             if (index < 0) {
@@ -1156,9 +1358,11 @@ export class Space extends Array {
         let column = space[index];
 
         if (row === -1) {
-            let selected =
-                sortWindows(this, column)[column.length - 1];
-            row = column.indexOf(selected);
+            const sortedWindows =
+                sortWindows(this, column);
+            const selected = sortedWindows[sortedWindows.length - 1];
+            
+            row = this.rowOf(selected);
         }
 
         switch (direction) {
@@ -1178,7 +1382,10 @@ export class Space extends Array {
             return false;
         }
 
-        let metaWindow = space.getWindow(index, row);
+        let metaWindow = space.getWindow(index, row, indexInsideRow);
+        if (Array.isArray(metaWindow)) {
+            metaWindow = metaWindow[0];
+        }
         ensureViewport(metaWindow, space);
 
         return true;
@@ -1194,7 +1401,7 @@ export class Space extends Array {
         if (index === -1) {
             return;
         }
-        let row = space[index].indexOf(space.selectedWindow);
+        let row = this.rowOf(space.selectedWindow);
 
         switch (direction) {
         case Meta.MotionDirection.RIGHT:
@@ -1307,24 +1514,60 @@ export class Space extends Array {
 
     positionOf(metaWindow) {
         metaWindow = metaWindow || this.selectedWindow;
-        for (let i = 0; i < this.length; i++) {
-            if (this[i].includes(metaWindow))
-                return [i, this[i].indexOf(metaWindow)];
+        for (const [colidx, column] of this.entries()) {
+            for (const [rowidx, row] of column.entries()) {
+                if (Array.isArray(row)) {
+                    for (const [widx, w] of row.entries()) {
+                        if (w === metaWindow) {
+                            return [colidx, [rowidx, widx]];
+                        }
+                    }
+                } else {
+                    if (row === metaWindow) {
+                        return [colidx, rowidx];
+                    }
+                }
+            }
         }
         return false;
     }
 
     indexOf(metaWindow) {
-        for (let i = 0; i < this.length; i++) {
-            if (this[i].includes(metaWindow))
-                return i;
+        for (const [colidx, column] of this.entries()) {
+            for (const [rowidx, row] of column.entries()) {
+                if (Array.isArray(row)) {
+                    for (const [widx, w] of row.entries()) {
+                        if (w === metaWindow) {
+                            return colidx;
+                        }
+                    }
+                } else {
+                    if (row === metaWindow) {
+                        return colidx;
+                    }
+                }
+            }
         }
         return -1;
     }
 
     rowOf(metaWindow) {
-        let column = this[this.indexOf(metaWindow)];
-        return column.indexOf(metaWindow);
+        for (const [colidx, column] of this.entries()) {
+            for (const [rowidx, row] of column.entries()) {
+                if (Array.isArray(row)) {
+                    for (const [widx, w] of row.entries()) {
+                        if (w === metaWindow) {
+                            return rowidx;
+                        }
+                    }
+                } else {
+                    if (row === metaWindow) {
+                        return rowidx;
+                    }
+                }
+            }
+        }
+        return -1;
     }
 
     globalToViewport(gx, gy) {
@@ -1432,7 +1675,7 @@ export class Space extends Array {
         if (this.selectedWindow && this.selectedWindow === display.focus_window) {
             let index = this.indexOf(this.selectedWindow);
             // eslint-disable-next-line no-return-assign
-            this[index].forEach(w => w.lastFrame = w.get_frame_rect());
+            this[index].flat(1).forEach(w => w.lastFrame = w.get_frame_rect());
 
             // callback on display.focusWindow window
             focusedWindowCallback(display.focus_window);
@@ -1501,6 +1744,9 @@ export class Space extends Array {
         for (let overlay = this.monitor.clickOverlay.right,
             n = index + 1; n < this.length; n++) {
             let metaWindow = this[n][0];
+            if (Array.isArray(metaWindow)) {
+                metaWindow = metaWindow[0];
+            }
             let clone = metaWindow.clone;
             let x = clone.targetX + target;
             if (!overlay.target && x + clone.width > this.width) {
@@ -1512,6 +1758,9 @@ export class Space extends Array {
         for (let overlay = this.monitor.clickOverlay.left,
             n = index - 1; n >= 0; n--) {
             let metaWindow = this[n][0];
+            if (Array.isArray(metaWindow)) {
+                metaWindow = metaWindow[0];
+            }
             let clone = metaWindow.clone;
             let x = clone.targetX + target;
             if (!overlay.target && x < 0) {
@@ -2098,11 +2347,22 @@ border-radius: ${borderWidth}px;
                 for (let j = 0; j < column.length; j++) {
                     let metaWindow = column[j];
                     // Prune removed windows
-                    if (metaWindow.get_compositor_private()) {
-                        this.addWindow(metaWindow, i, j);
+                    if (Array.isArray(metaWindow)) {
+                        metaWindow.forEach((w) => {
+                            if (w.get_compositor_private()) {
+                                this.addWindow(w, i, j, true);
+                            } else {
+                                // eslint-disable-next-line max-statements-per-line
+                                column.splice(j, 1); j--;
+                            }
+                        })
                     } else {
-                        // eslint-disable-next-line max-statements-per-line
-                        column.splice(j, 1); j--;
+                        if (metaWindow.get_compositor_private()) {
+                            this.addWindow(metaWindow, i, j);
+                        } else {
+                            // eslint-disable-next-line max-statements-per-line
+                            column.splice(j, 1); j--;
+                        }
                     }
                 }
                 if (column.length === 0) {
@@ -3681,6 +3941,9 @@ export function resizeHandler(metaWindow) {
     const f = metaWindow.get_frame_rect();
     metaWindow._targetWidth = null;
     metaWindow._targetHeight = null;
+    if (metaWindow._nested_width !== null) {
+        metaWindow._nested_width = f.width;
+    }
 
     if (space.indexOf(metaWindow) === -1) {
         nonTiledSizeHandler(metaWindow);
@@ -5162,10 +5425,15 @@ export function allocateDefault(column, availableHeight, selectedWindow) {
         const minHeight = 50;
 
         const heightOf = mw => {
-            return mw._targetHeight || mw.get_frame_rect().height;
+            return mw._targetHeight || 
+                (
+                    Array.isArray(mw) ? 
+                        mw[0].get_frame_rect().height : 
+                        mw.get_frame_rect().height
+                );
         };
 
-        const k = selectedWindow && column.indexOf(selectedWindow);
+        const k = selectedWindow && spaces.spaceOfWindow(selectedWindow).rowOf(selectedWindow);
         const selectedHeight = selectedWindow && heightOf(selectedWindow);
 
         let nonSelected = column.slice();
@@ -5217,30 +5485,66 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
         return;
     }
 
+    // space.indexOf(metaWindow);
     const index = space.indexOf(metaWindow);
     let to, from, metaWindowToSlurp;
+    let metaWindowToSlurpIndex = 0;
 
-    if (space.length < 2) {
+    // cancel slurp if there are only one column in space
+    // but if it was a nested-slurp action then it's OK for it is possible
+    // to nest-slurp next row in same column
+    if (space.length < 2 && insertAt !== SlurpInsertPosition.NEST) {
         return;
     }
+
+    // factor out to and spaceTo out of case block
+    to = index;
+    const spaceTo = space[to];
+    const rowIndex = space.rowOf(metaWindow);
 
     // get current direction mode
     const direction = Settings.prefs.open_window_position;
     switch (direction) {
     case Settings.OpenWindowPositions.LEFT:
     case Settings.OpenWindowPositions.START:
-        to = index;
-        from = index - 1;
+        if (insertAt === SlurpInsertPosition.NEST) {
+            // it was nested-slurp
+            if (rowIndex == 0) {
+                from = index - 1;
+                metaWindowToSlurpIndex = space[from].length - 1;
+            } else {
+                from = index;
+                metaWindowToSlurpIndex = rowIndex - 1;
+            }
+        } else {
+            // normal-slurp
+            from = index - 1;
+        }
         break;
     case Settings.OpenWindowPositions.RIGHT:
     case Settings.OpenWindowPositions.END:
     default:
-        to = index;
-        from = index + 1;
+        if (insertAt === SlurpInsertPosition.NEST) {
+            if (rowIndex === space[index].length - 1) {
+                from = index + 1;
+                metaWindowToSlurpIndex = 0;
+            } else {
+                from = index;
+                metaWindowToSlurpIndex = rowIndex + 1;
+            }
+        } else {
+            from = index + 1;
+        }
         break;
     }
 
-    metaWindowToSlurp = space[from]?.[0];
+    // cancel slurp if nest-slurp but row in current column only 2 if slurpedWindow is in same column
+    // but if it was from different column then the limit is 1
+    if (insertAt === SlurpInsertPosition.NEST && space[from].length <= (from == to ? 2 : 1)) {
+        return;
+    }
+
+    metaWindowToSlurp = space[from]?.[metaWindowToSlurpIndex];
     if (!metaWindowToSlurp) {
         return;
     }
@@ -5250,9 +5554,32 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
         metaWindowToSlurp.unmake_fullscreen();
     }
 
-    const spaceTo = space[to];
-    const rowIndex = spaceTo.indexOf(metaWindow);
     switch (insertAt) {
+    case SlurpInsertPosition.NEST:    
+        if (Array.isArray(spaceTo[rowIndex])) {
+            // if current row is already an array, then just push it
+            let availableNestWidth = 0;
+            let leastNestedWidth = 3000000;
+            for (let w of spaceTo[rowIndex]) {
+                const f = w.get_frame_rect();
+                availableNestWidth += f.width;
+                if (leastNestedWidth > f.width)
+                    leastNestedWidth = f.width;
+            }
+            for (let w of spaceTo[rowIndex]) {
+                w._nested_width = Math.floor(w._nested_width / (availableNestWidth + leastNestedWidth) * availableNestWidth) - Settings.prefs.window_gap;
+            }
+            metaWindowToSlurp._nested_width = leastNestedWidth;
+
+            spaceTo[rowIndex].push(metaWindowToSlurp);
+        } else {
+            // otherwise it must been first time nest-slurped, convert row into array
+            const f = metaWindow.get_frame_rect();
+            metaWindow._nested_width = Math.floor(f.width / 2);
+            metaWindowToSlurp._nested_width = Math.floor(f.width / 2);
+            spaceTo[rowIndex] = [metaWindow, metaWindowToSlurp];
+        }
+        break;
     case SlurpInsertPosition.ABOVE:
         spaceTo.splice(rowIndex, 0, metaWindowToSlurp);
         break;
@@ -5270,8 +5597,7 @@ export function slurp(metaWindow, insertAt = SlurpInsertPosition.BOTTOM) {
 
     { // Remove the slurped window
         const column = space[from];
-        const row = column.indexOf(metaWindowToSlurp);
-        column.splice(row, 1);
+        column.splice(metaWindowToSlurpIndex, 1);
 
         // if from column is now empty, remove column from space
         if (column.length === 0) {
@@ -5323,16 +5649,27 @@ export function barf(metaWindow, expelWindow) {
         break;
     }
 
-    // // remove metawindow from column
-    if (expelWindow) {
+    if ((typeof expelWindow === "undefined") || (!expelWindow)) {
+        expelWindow = column[column.length - 1];
+        if (Array.isArray(expelWindow)) {
+            return;
+        }
+    }
+    expelWindow._nested_width = null;
+
+    const expelRow = space.rowOf(expelWindow);
+    if (Array.isArray(column[expelRow])) {
+        const indexOfWindow = column[expelRow].indexOf(expelWindow);
+        column[expelRow].splice(indexOfWindow, 1);
+        if (column[expelRow].length === 1) {
+            column[expelRow] = column[expelRow][0];
+        }
+    } else {
         // remove expelWindow from current column
         const indexOfWindow = column.indexOf(expelWindow);
         column.splice(indexOfWindow, 1);
     }
-    else {
-        // remove from bottom
-        expelWindow = column.splice(-1, 1)[0];
-    }
+
     space.splice(to, 0, [expelWindow]);
 
     space.layout(true, {
@@ -5544,7 +5881,7 @@ export function takeWindow(metaWindow, space, options = {}) {
 export function sortWindows(space, windows) {
     if (windows.length === 1)
         return windows;
-    let clones = windows.map(w => w.clone);
+    let clones = windows.flat(1).map(w => w.clone);
     return space.cloneContainer.get_children()
         .filter(c => clones.includes(c))
         .map(c => c.meta_window);
