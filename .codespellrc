@@ -1,0 +1,7 @@
+[codespell]
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+skip = .git*,*.svg,*.lock,*.css,.codespellrc
+check-hidden = true
+# ignore-regex =
+# initialY: variable name for initial Y coordinate
+ignore-words-list = easer,positionOf,initialY
