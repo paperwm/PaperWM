@@ -1208,8 +1208,9 @@ export class Space extends Array {
             let dir = index < 0
                 ? Meta.DisplayDirection.LEFT : Meta.DisplayDirection.RIGHT;
             let i = display.get_monitor_neighbor_index(monitor.index, dir);
-            if (i === -1)
+            if (i === -1) {
                 return;
+            }
 
             let newMonitor = Main.layoutManager.monitors[i];
             space = spaces.monitors.get(newMonitor);
@@ -1241,8 +1242,9 @@ export class Space extends Array {
             let dir = row < 0
                 ? Meta.DisplayDirection.UP : Meta.DisplayDirection.DOWN;
             let i = display.get_monitor_neighbor_index(monitor.index, dir);
-            if (i === -1)
+            if (i === -1) {
                 return;
+            }
 
             let newMonitor = Main.layoutManager.monitors[i];
             space = spaces.monitors.get(newMonitor);
