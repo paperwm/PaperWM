@@ -828,17 +828,18 @@ export class Space extends Array {
 
     // Space.prototype.isVisible = function
     isVisible(metaWindow, margin = 0) {
-        let clone = metaWindow.clone;
-        let x = clone.x + this.cloneContainer.x;
-        let workArea = this.workArea();
-        let min = workArea.x;
+        const clone = metaWindow.clone;
+        const left = clone.x + this.cloneContainer.x;
+        const right = left + clone.width;
 
-        if (x - margin + clone.width < min ||
-            x + margin > min + workArea.width) {
-            return false;
-        } else {
-            return true;
-        }
+        const workArea = this.workArea();
+        const areaLeft = workArea.x;
+        const areaRight = areaLeft + workArea.width;
+
+        const isOffscreenLeft = right < areaLeft + margin;
+        const isOffscreenRight = left > areaRight - margin;
+
+        return !isOffscreenLeft && !isOffscreenRight;
     }
 
     isFullyVisible(metaWindow) {
@@ -1219,16 +1220,14 @@ export class Space extends Array {
             } else {
                 index = 0;
             }
-            if (space[index].length <= row)
-                row = space[index].length - 1;
+            row = Math.min(row, space[index].length - 1)
             space.activate(false, false);
             Navigator.finishNavigation();
             Navigator.getNavigator().showMinimap(space);
         }
 
         let column = space[index];
-        if (column.length <= row)
-            row = column.length - 1;
+        row = Math.min(row, column.length - 1)
 
         switch (direction) {
         case Meta.MotionDirection.UP:
@@ -1248,8 +1247,7 @@ export class Space extends Array {
 
             let newMonitor = Main.layoutManager.monitors[i];
             space = spaces.monitors.get(newMonitor);
-            if (space.length <= index)
-                index = space.length - 1;
+            index = Math.min(index, space.length - 1)
             if (dir === Meta.DisplayDirection.UP) {
                 row = space[index].length - 1;
             } else {
