@@ -1213,8 +1213,8 @@ export class Space extends Array {
             index--;
         }
         if (index < 0 || index >= space.length) {
-            let monitor = focusMonitor();
-            let i = display.get_monitor_neighbor_index(monitor.index, dir);
+            const monitor = focusMonitor();
+            const i = display.get_monitor_neighbor_index(monitor.index, dir);
             if (i === -1) {
                 return;
             }
@@ -1223,17 +1223,24 @@ export class Space extends Array {
             // that the new workspace stays active on the starting monitor.
             space.activateWithFocus(space.selectedWindow, false, true);
 
-            let newMonitor = Main.layoutManager.monitors[i];
-            space = spaces.monitors.get(newMonitor);
-            if (dir === Meta.DisplayDirection.LEFT) {
-                index = space.length - 1;
-            } else {
-                index = 0;
+            const newMonitor = Main.layoutManager.monitors[i];
+            const newSpace = spaces.monitors.get(newMonitor);
+            const visibleColumns = newSpace.filter((column) => newSpace.isVisible(column[0]));
+            if (visibleColumns.length === 0) {
+                return;
             }
-            row = Math.min(row, space[index].length - 1)
-            space.activate(false, false);
+
+            const newColumn = dir === Meta.DisplayDirection.LEFT
+                ? visibleColumns[visibleColumns.length - 1]
+                : visibleColumns[0];
+            const newRow = Math.min(row, newColumn.length - 1);
+            const newWindow = newColumn[newRow];
+
+            newSpace.activate(false, false);
             Navigator.finishNavigation();
-            Navigator.getNavigator().showMinimap(space);
+            Navigator.getNavigator().showMinimap(newSpace);
+            ensureViewport(newWindow, newSpace);
+            return
         }
 
         let column = space[index];
@@ -1264,6 +1271,7 @@ export class Space extends Array {
             space.activate(false, false);
             Navigator.finishNavigation();
             Navigator.getNavigator().showMinimap(space);
+            return
         }
 
         let metaWindow = space.getWindow(index, row);
