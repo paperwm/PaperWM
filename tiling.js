@@ -1219,6 +1219,10 @@ export class Space extends Array {
                 return;
             }
 
+            // Ensure if we change workspaces and then monitors,
+            // that the new workspace stays active on the starting monitor.
+            space.activateWithFocus(space.selectedWindow, false, true);
+
             let newMonitor = Main.layoutManager.monitors[i];
             space = spaces.monitors.get(newMonitor);
             if (dir === Meta.DisplayDirection.LEFT) {
