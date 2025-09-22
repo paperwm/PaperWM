@@ -20,9 +20,9 @@ args=()
 
 DISPLAY=$NEW_DISPLAY
 eval $(dbus-launch --exit-with-session --sh-syntax)
-echo $DBUS_SESSION_BUS_ADDRESS
+echo "$DBUS_SESSION_BUS_ADDRESS"
 
-echo -n $DBUS_SESSION_BUS_ADDRESS \
+echo -n "$DBUS_SESSION_BUS_ADDRESS" \
     | DISPLAY=$old_display xclip -i -selection clipboard
 
 DISPLAY=$old_display
@@ -43,5 +43,5 @@ esac
 dconf reset -f /  # Reset settings
 dconf write /org/gnome/shell/enabled-extensions "['paperwm@paperwm.github.com']"
 
-gnome-shell $args
+gnome-shell "$args"
 

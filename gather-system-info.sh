@@ -11,7 +11,7 @@
 REPO="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 main() {
-    cd "${REPO}"
+    cd "${REPO}" || exit
 
     echo "Please include this information in your bug report on GitHub!"
 
