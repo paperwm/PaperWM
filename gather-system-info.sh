@@ -25,6 +25,7 @@ main() {
 show_distribution() {
     echo -n "Distribution: "
     if [ -f /etc/os-release ]; then
+        # shellcheck disable=SC1091
         source /etc/os-release && echo "${NAME}"
     fi
 }
