@@ -1225,20 +1225,27 @@ export class Space extends Array {
 
             const newMonitor = Main.layoutManager.monitors[i];
             const newSpace = spaces.monitors.get(newMonitor);
+
+            newSpace.activate(false, false);
+            Navigator.finishNavigation();
+
+            // New monitor is empty, just move the mouse there
+            if (newSpace.length === 0) {
+                Utils.warpPointerToMonitor(newMonitor);
+                return;
+            }
+
+            Navigator.getNavigator().showMinimap(newSpace);
+
             const visibleColumns = newSpace.filter((column) => newSpace.isVisible(column[0]));
             if (visibleColumns.length === 0) {
                 return;
             }
 
-            const newColumn = dir === Meta.DisplayDirection.LEFT
-                ? visibleColumns[visibleColumns.length - 1]
-                : visibleColumns[0];
-            const newRow = Math.min(row, newColumn.length - 1);
-            const newWindow = newColumn[newRow];
+            const newIndex = dir === Meta.DisplayDirection.LEFT ? visibleColumns.length - 1 : 0;
+            const newColumn = visibleColumns[newIndex];
+            const newWindow = sortWindows(newSpace, newColumn)[newColumn.length - 1];
 
-            newSpace.activate(false, false);
-            Navigator.finishNavigation();
-            Navigator.getNavigator().showMinimap(newSpace);
             ensureViewport(newWindow, newSpace);
             return
         }
