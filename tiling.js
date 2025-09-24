@@ -1190,6 +1190,14 @@ export class Space extends Array {
     switchGlobalUp() { this.switchGlobal(Meta.MotionDirection.UP); }
     switchGlobalDown() { this.switchGlobal(Meta.MotionDirection.DOWN); }
     switchGlobal(direction) {
+        const motionToDisplayDirection = {
+            [Meta.MotionDirection.LEFT]: Meta.DisplayDirection.LEFT,
+            [Meta.MotionDirection.RIGHT]: Meta.DisplayDirection.RIGHT,
+            [Meta.MotionDirection.UP]: Meta.DisplayDirection.UP,
+            [Meta.MotionDirection.DOWN]: Meta.DisplayDirection.DOWN,
+        };
+        const dir = motionToDisplayDirection[direction]
+
         let space = this;
         let index = space.selectedIndex();
         if (index === -1) {
@@ -1206,8 +1214,6 @@ export class Space extends Array {
         }
         if (index < 0 || index >= space.length) {
             let monitor = focusMonitor();
-            let dir = index < 0
-                ? Meta.DisplayDirection.LEFT : Meta.DisplayDirection.RIGHT;
             let i = display.get_monitor_neighbor_index(monitor.index, dir);
             if (i === -1) {
                 return;
@@ -1238,8 +1244,6 @@ export class Space extends Array {
         }
         if (row < 0 || row >= column.length) {
             let monitor = focusMonitor();
-            let dir = row < 0
-                ? Meta.DisplayDirection.UP : Meta.DisplayDirection.DOWN;
             let i = display.get_monitor_neighbor_index(monitor.index, dir);
             if (i === -1) {
                 return;
