@@ -2616,6 +2616,12 @@ export const Spaces = class Spaces extends Map {
         let space = this.monitors.get(newMonitor);
 
         if (move && focus) {
+            const customIndex = getMoveWindowPositionIndex(space, direction);
+            if (customIndex !== null) {
+                // namespaced prop to avoid possible future collisions
+                focus.paperwm_openAtIndex = customIndex;
+            }
+
             let metaWindow = focus.get_transient_for() || focus;
 
             if (currentSpace && currentSpace.indexOf(metaWindow) !== -1) {
@@ -4200,7 +4206,13 @@ Opening "${metaWindow?.title}" on current space.`);
     }
     ok && clone.set_position(x, y);
 
-    if (!space.addWindow(metaWindow, getOpenWindowPositionIndex(space)))
+    // When moving a window from another monitor, we may request a certain index
+    const openAtIndex = metaWindow.paperwm_openAtIndex ?? getOpenWindowPositionIndex(space);
+    if (metaWindow.paperwm_openAtIndex) {
+        delete metaWindow.paperwm_openAtIndex;
+    }
+
+    if (!space.addWindow(metaWindow, openAtIndex))
         return;
 
     metaWindow.unmake_above();
@@ -4300,6 +4312,43 @@ Opening "${metaWindow?.title}" on current space.`);
 
     if (dropping) {
         slurpCheck(false);
+    }
+}
+
+/**
+ * When we're moving a window from an existing monitor, we want to insert with
+ * minimal disruption. E.g. if we're moving window E to the left,
+ *
+ *     ([a b] c d) ([E f])
+ *     (a [b E] c d) ([f])
+ *
+ *  so that visually it looks like this:
+ *
+ *      [a b] [E f]
+ *      [b E] [f g]
+ *
+ *  regardless of the setting for inserting new windows.
+ */
+function getMoveWindowPositionIndex(space, direction) {
+    const visibleColumns = space.filter(([mw]) => space.isVisible(mw));
+
+    if (visibleColumns.length === 0) {
+        return null;
+    }
+
+    switch (direction) {
+        case Meta.DisplayDirection.LEFT: {
+            const windowAtTarget = visibleColumns[visibleColumns.length - 1][0];
+            return space.indexOf(windowAtTarget) + 1;
+            break;
+        }
+        case Meta.DisplayDirection.RIGHT: {
+            const windowAtTarget = visibleColumns[0][0];
+            return space.indexOf(windowAtTarget);
+        }
+        default:
+            // No special handling yet for moving up/down
+            return null;
     }
 }
 
