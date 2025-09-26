@@ -1761,15 +1761,21 @@ border-radius: ${borderWidth}px;
             this.windowPositionBar.show();
         }
 
-        let width = this.monitor.width;
-        this.windowPositionBarBackdrop.width = width;
-        let segments = width / cols;
-        this.windowPositionBar.width = segments;
+        const spaceWidth = totalWidth(this);
+        const windex = this.indexOf(this.selectedWindow);
+        const widthBeforeSelection = totalWidth(this.slice(0, windex));
+        const monitorWidth = this.monitor.width;
+
+        const translateToMonitor = (width) => {
+            const percent = width / spaceWidth;
+            return percent * monitorWidth;
+        }
+
+        this.windowPositionBarBackdrop.width = monitorWidth;
+        this.windowPositionBar.width = translateToMonitor(this.selectedWindow.clone.width);
         this.windowPositionBar.height = Topbar.panelBox.height;
 
-        // index of currently selected window
-        let windex = this.indexOf(this.selectedWindow);
-        this.windowPositionBar.x = windex * segments;
+        this.windowPositionBar.x = translateToMonitor(widthBeforeSelection);
     }
 
     /**
@@ -5548,6 +5554,10 @@ export function sortWindows(space, windows) {
     return space.cloneContainer.get_children()
         .filter(c => clones.includes(c))
         .map(c => c.meta_window);
+}
+
+function totalWidth(columns) {
+    return columns.reduce((acc, col) => acc + col[0].clone.width, 0);
 }
 
 export function rotated(list, dir = 1) {
