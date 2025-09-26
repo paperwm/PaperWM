@@ -1122,7 +1122,8 @@ export class Space extends Array {
         }
         let column = this[index];
         if (targetRow < 0 || targetRow >= column.length) {
-            // TODO: Move to workspace above/below
+            spaces.selectSequenceSpace(direction, true);
+            Navigator.finishNavigation();
             return;
         }
 
