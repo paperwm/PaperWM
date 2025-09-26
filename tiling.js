@@ -1772,10 +1772,13 @@ border-radius: ${borderWidth}px;
         }
 
         this.windowPositionBarBackdrop.width = monitorWidth;
-        this.windowPositionBar.width = translateToMonitor(this.selectedWindow.clone.width);
         this.windowPositionBar.height = Topbar.panelBox.height;
 
-        this.windowPositionBar.x = translateToMonitor(widthBeforeSelection);
+        Easer.addEase(this.windowPositionBar, {
+            x: translateToMonitor(widthBeforeSelection),
+            width: translateToMonitor(this.selectedWindow.clone.width),
+            time: Settings.prefs.animation_time,
+        });
     }
 
     /**
