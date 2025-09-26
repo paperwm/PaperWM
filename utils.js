@@ -105,6 +105,13 @@ export function setBackgroundImage(actor, resource_path) {
     actor.content_repeat = Clutter.ContentRepeat.BOTH;
 }
 
+export const motionToDisplayDirection = {
+    [Meta.MotionDirection.LEFT]: Meta.DisplayDirection.LEFT,
+    [Meta.MotionDirection.RIGHT]: Meta.DisplayDirection.RIGHT,
+    [Meta.MotionDirection.UP]: Meta.DisplayDirection.UP,
+    [Meta.MotionDirection.DOWN]: Meta.DisplayDirection.DOWN,
+};
+
 /**
  * Backwards compatible function.  Attempts to use Cogl.Color with a fallback
  * to Clutter.Color.

@@ -1095,6 +1095,46 @@ export class Space extends Array {
         ensureViewport(this.selectedWindow, this, { force: true });
     }
 
+    swapGlobal(direction, metaWindow) {
+        metaWindow = metaWindow || this.selectedWindow;
+
+        let [index, row] = this.positionOf(metaWindow);
+        let targetIndex = index;
+        let targetRow = row;
+        const dir = Utils.motionToDisplayDirection[direction];
+        switch (direction) {
+        case Meta.MotionDirection.LEFT:
+            targetIndex--;
+            break;
+        case Meta.MotionDirection.RIGHT:
+            targetIndex++;
+            break;
+        case Meta.MotionDirection.DOWN:
+            targetRow++;
+            break;
+        case Meta.MotionDirection.UP:
+            targetRow--;
+            break;
+        }
+        if (targetIndex < 0 || targetIndex >= this.length) {
+            spaces.switchMonitor(dir, true, true, metaWindow);
+            return;
+        }
+        let column = this[index];
+        if (targetRow < 0 || targetRow >= column.length) {
+            spaces.selectSequenceSpace(direction, true);
+            Navigator.finishNavigation();
+            return;
+        }
+
+        Lib.swap(this[index], row, targetRow);
+        Lib.swap(this, index, targetIndex);
+
+        this.layout();
+        this.emit('swapped', index, targetIndex, row, targetRow);
+        ensureViewport(this.selectedWindow, this, { force: true });
+    }
+
     switchLinear(dir, loop) {
         let index = this.selectedIndex();
         let column = this[index];
@@ -1190,13 +1230,8 @@ export class Space extends Array {
     switchGlobalUp() { this.switchGlobal(Meta.MotionDirection.UP); }
     switchGlobalDown() { this.switchGlobal(Meta.MotionDirection.DOWN); }
     switchGlobal(direction) {
-        const motionToDisplayDirection = {
-            [Meta.MotionDirection.LEFT]: Meta.DisplayDirection.LEFT,
-            [Meta.MotionDirection.RIGHT]: Meta.DisplayDirection.RIGHT,
-            [Meta.MotionDirection.UP]: Meta.DisplayDirection.UP,
-            [Meta.MotionDirection.DOWN]: Meta.DisplayDirection.DOWN,
-        };
-        const dir = motionToDisplayDirection[direction]
+        const dir = Utils.motionToDisplayDirection[direction];
+
         let space = this;
 
         const switchMonitor = () => {
@@ -2566,8 +2601,10 @@ export const Spaces = class Spaces extends Map {
         return nSpaces <= nMonitors;
     }
 
-    switchMonitor(direction, move, warp = true) {
-        let focus = display.focus_window;
+    switchMonitor(direction, move, warp = true, focus = null) {
+        // For unkown reasons, display.focus_window is null if you are in the
+        // middle of moving a winodw, aka if navigation is open.
+        focus = focus ?? display.focus_window;
         let monitor = focusMonitor();
         let currentSpace = this.monitors.get(monitor);
         let i = display.get_monitor_neighbor_index(monitor.index, direction);
@@ -2580,6 +2617,12 @@ export const Spaces = class Spaces extends Map {
         let space = this.monitors.get(newMonitor);
 
         if (move && focus) {
+            const customIndex = getMoveWindowPositionIndex(space, direction);
+            if (customIndex !== null) {
+                // namespaced prop to avoid possible future collisions
+                focus.paperwm_openAtIndex = customIndex;
+            }
+
             let metaWindow = focus.get_transient_for() || focus;
 
             if (currentSpace && currentSpace.indexOf(metaWindow) !== -1) {
@@ -4164,7 +4207,13 @@ Opening "${metaWindow?.title}" on current space.`);
     }
     ok && clone.set_position(x, y);
 
-    if (!space.addWindow(metaWindow, getOpenWindowPositionIndex(space)))
+    // When moving a window from another monitor, we may request a certain index
+    const openAtIndex = metaWindow.paperwm_openAtIndex ?? getOpenWindowPositionIndex(space);
+    if (metaWindow.paperwm_openAtIndex) {
+        delete metaWindow.paperwm_openAtIndex;
+    }
+
+    if (!space.addWindow(metaWindow, openAtIndex))
         return;
 
     metaWindow.unmake_above();
@@ -4264,6 +4313,43 @@ Opening "${metaWindow?.title}" on current space.`);
 
     if (dropping) {
         slurpCheck(false);
+    }
+}
+
+/**
+ * When we're moving a window from an existing monitor, we want to insert with
+ * minimal disruption. E.g. if we're moving window E to the left,
+ *
+ *     ([a b] c d) ([E f])
+ *     (a [b E] c d) ([f])
+ *
+ *  so that visually it looks like this:
+ *
+ *      [a b] [E f]
+ *      [b E] [f g]
+ *
+ *  regardless of the setting for inserting new windows.
+ */
+function getMoveWindowPositionIndex(space, direction) {
+    const visibleColumns = space.filter(([mw]) => space.isVisible(mw));
+
+    if (visibleColumns.length === 0) {
+        return null;
+    }
+
+    switch (direction) {
+        case Meta.DisplayDirection.LEFT: {
+            const windowAtTarget = visibleColumns[visibleColumns.length - 1][0];
+            return space.indexOf(windowAtTarget) + 1;
+            break;
+        }
+        case Meta.DisplayDirection.RIGHT: {
+            const windowAtTarget = visibleColumns[0][0];
+            return space.indexOf(windowAtTarget);
+        }
+        default:
+            // No special handling yet for moving up/down
+            return null;
     }
 }
 

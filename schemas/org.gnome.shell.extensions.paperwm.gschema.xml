@@ -347,11 +347,11 @@
 
     <key type="as" name="move-right">
       <default><![CDATA[['<Super><Ctrl>period', '<Super><Shift>period', '<Super><Ctrl>Right']]]></default>
-      <summary>Move the active window to the right</summary>
+      <summary>Move the active window to the right, staying on the same monitor</summary>
     </key>
     <key type="as" name="move-left">
       <default><![CDATA[['<Super><Ctrl>comma', '<Super><Shift>comma', '<Super><Ctrl>Left']]]></default>
-      <summary>Move the active window to the left</summary>
+      <summary>Move the active window to the left, staying on the same monitor</summary>
     </key>
     <key type="as" name="move-up">
         <default><![CDATA[['<Super><Ctrl>Up']]]></default>
@@ -360,6 +360,23 @@
     <key type="as" name="move-down">
         <default><![CDATA[['<Super><Ctrl>Down']]]></default>
         <summary>Move the active window down</summary>
+    </key>
+
+    <key type="as" name="move-global-right">
+        <default><![CDATA[[]]]></default>
+        <summary>Move the active window to the right</summary>
+    </key>
+    <key type="as" name="move-global-left">
+        <default><![CDATA[[]]]></default>
+        <summary>Move the active window to the left</summary>
+    </key>
+    <key type="as" name="move-global-up">
+        <default><![CDATA[[]]]></default>
+        <summary>Move the active window up or to the workspace above</summary>
+    </key>
+    <key type="as" name="move-global-down">
+        <default><![CDATA[[]]]></default>
+        <summary>Move the active window down or to the workspace below</summary>
     </key>
 
     <key type="as" name="slurp-in">

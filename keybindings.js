@@ -264,6 +264,15 @@ export function setupActions(settings) {
     registerMinimapAction("move-down",
         (_mw, space) => space.swap(Meta.MotionDirection.DOWN));
 
+    registerMinimapAction("move-global-left",
+        (_mw, space) => space.swapGlobal(Meta.MotionDirection.LEFT));
+    registerMinimapAction("move-global-right",
+        (_mw, space) => space.swapGlobal(Meta.MotionDirection.RIGHT));
+    registerMinimapAction("move-global-up",
+        (_mw, space) => space.swapGlobal(Meta.MotionDirection.UP));
+    registerMinimapAction("move-global-down",
+        (_mw, space) => space.swapGlobal(Meta.MotionDirection.DOWN));
+
     registerPaperAction("toggle-scratch-window",
         Scratch.toggleScratchWindow);
 
