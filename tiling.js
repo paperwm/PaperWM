@@ -1197,22 +1197,9 @@ export class Space extends Array {
             [Meta.MotionDirection.DOWN]: Meta.DisplayDirection.DOWN,
         };
         const dir = motionToDisplayDirection[direction]
-
         let space = this;
-        let index = space.selectedIndex();
-        if (index === -1) {
-            return;
-        }
-        let row = space[index].indexOf(space.selectedWindow);
 
-        switch (direction) {
-        case Meta.MotionDirection.RIGHT:
-            index++;
-            break;
-        case Meta.MotionDirection.LEFT:
-            index--;
-        }
-        if (index < 0 || index >= space.length) {
+        const switchMonitor = () => {
             const monitor = focusMonitor();
             const i = display.get_monitor_neighbor_index(monitor.index, dir);
             if (i === -1) {
@@ -1221,7 +1208,9 @@ export class Space extends Array {
 
             // Ensure if we change workspaces and then monitors,
             // that the new workspace stays active on the starting monitor.
-            space.activateWithFocus(space.selectedWindow, false, true);
+            if (space.selectedWindow) {
+                space.activateWithFocus(space.selectedWindow, false, true);
+            }
 
             const newMonitor = Main.layoutManager.monitors[i];
             const newSpace = spaces.monitors.get(newMonitor);
@@ -1247,7 +1236,25 @@ export class Space extends Array {
             const newWindow = sortWindows(newSpace, newColumn)[newColumn.length - 1];
 
             ensureViewport(newWindow, newSpace);
-            return
+        };
+
+        let index = space.selectedIndex();
+        if (index === -1) {
+            switchMonitor();
+            return;
+        }
+        let row = space[index].indexOf(space.selectedWindow);
+
+        switch (direction) {
+        case Meta.MotionDirection.RIGHT:
+            index++;
+            break;
+        case Meta.MotionDirection.LEFT:
+            index--;
+        }
+        if (index < 0 || index >= space.length) {
+            switchMonitor();
+            return;
         }
 
         let column = space[index];

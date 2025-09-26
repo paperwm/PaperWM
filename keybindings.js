@@ -222,10 +222,38 @@ export function setupActions(settings) {
     registerMinimapAction("switch-eleventh", (mw, space) => Tiling.activateNthWindow(10, space));
     registerMinimapAction("switch-last", Tiling.activateLastWindow);
 
-    registerMinimapAction("switch-global-right", (mw, space) => space.switchGlobalRight());
-    registerMinimapAction("switch-global-left", (mw, space) => space.switchGlobalLeft());
-    registerMinimapAction("switch-global-up", (mw, space) => space.switchGlobalUp());
-    registerMinimapAction("switch-global-down", (mw, space) => space.switchGlobalDown());
+    registerAction("switch-global-right", (_mw, space) => {
+        space.switchGlobalRight()
+    }, {
+        settings: keybindSettings,
+        opensNavigator: true,
+        opensMinimap: true,
+        mutterFlags: Meta.KeyBindingFlags.NONE,
+    });
+    registerAction("switch-global-left", (_mw, space) => {
+        space.switchGlobalLeft()
+    }, {
+        settings: keybindSettings,
+        opensNavigator: true,
+        opensMinimap: true,
+        mutterFlags: Meta.KeyBindingFlags.NONE,
+    });
+    registerAction("switch-global-up", (_mw, space) => {
+        space.switchGlobalUp()
+    }, {
+        settings: keybindSettings,
+        opensNavigator: true,
+        opensMinimap: true,
+        mutterFlags: Meta.KeyBindingFlags.NONE,
+    });
+    registerAction("switch-global-down", (_mw, space) => {
+        space.switchGlobalDown()
+    }, {
+        settings: keybindSettings,
+        opensNavigator: true,
+        opensMinimap: true,
+        mutterFlags: Meta.KeyBindingFlags.NONE,
+    });
 
     registerMinimapAction("move-left",
         (_mw, space) => space.swap(Meta.MotionDirection.LEFT));
