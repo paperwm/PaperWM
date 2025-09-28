@@ -419,3 +419,4 @@ More projects are embracing the scrollable tiling concept!  The following projec
 - papersway (for i3/sway): https://spwhitton.name/tech/code/papersway/
 
 A similar idea was apparently tried out a while back: [10/GUI](https://web.archive.org/web/20201123162403/http://10gui.com/).
+
