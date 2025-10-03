@@ -68,19 +68,20 @@ install: schemas/gschemas.compiled
 uninstall:
 	@$(call rich_echo,"GNOME_EXT_DISABLE", "$(EXT_ID)")
 	@$(GNOME_EXT_DISABLE) $(EXT_ID)
-	@if [[ `readlink -f $(TARGET)` != `readlink -f $$PWD` ]]; \
+	@if [ -z "$(DESTDIR)" ] && [ ! `readlink -f $(TARGET)` = `readlink -f $$PWD` ]; \
 	then                                                   \
-		echo "'$(TARGET)' does not link to '$$PWD', refusing to remove."; \
-		exit 1;                                             \
+		echo "'$(TARGET)' does not link to '$$PWD' and '$(DESTDIR)' undefined,"; \
+		echo "refusing to remove.";                        \
+		exit 1;                                            \
 	fi
 	@if [ -L $(TARGET) ];                                     \
 	then                                                   \
-		$(call rich_echo,"RM", "$(TARGET)")                   \
+		$(call rich_echo,"RM", "$(TARGET)");                  \
 		rm $(EXT);                                         \
 	else                                                   \
-		read -p "Remove $(TARGET)? (y/N): " -n 1 -r           \
-		echo                                               \
-		[[ $$REPLY =~ ^[Yy]$ ]] && rm -rf $(TARGET);       \
+		echo "Remove $(TARGET)? (y/N): ";                  \
+		read REPLY;                                        \
+		[ "$$REPLY" = "Y" ] || [ "$$REPLY" = "y" ] && rm -rf $(TARGET); \
 	fi
 
 ## Install in system-wide location
