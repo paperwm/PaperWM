@@ -6,7 +6,7 @@ PaperWM is a [GNOME Shell](https://www.gnome.org/) extension which provides scro
 
 While technically an [extension](https://extensions.gnome.org/about/) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
-PaperWM aims to continually support [current stable](https://release.gnome.org/calendar/#branches) GNOME Shell versions (currently GNOME 47 & Gnome 48).  Older versions of PaperWM can generally be installed on older Gnome Shell versions (see [Install via Source](#install-via-source) for more information on targeting an older/EOL Gnome version).
+PaperWM aims to continually support [current stable](https://release.gnome.org/calendar/#branches) GNOME Shell versions (currently GNOME 47-49).  Older versions of PaperWM can generally be installed on older GNOME Shell versions (see [Install via Source](#install-via-source) for more information on targeting an older/EOL Gnome version).
 
 New features and fixes aren't generally backported to older Gnome shell versions.  [Pull requests](https://github.com/paperwm/PaperWM/pulls) for fixes to older PaperWM versions (that run on previous Gnome versions) will be accepted if the submitter can help test and update related documentation.
 
@@ -93,7 +93,7 @@ Activating a window will ensure it's fully visible, scrolling the tiling if nece
 
 Pressing <kbd>Super</kbd><kbd>I</kbd> will move the window to the right below the active window, tiling them vertically in a column. <kbd>Super</kbd><kbd>O</kbd> will do the opposite, pushing the bottom window out of the current column.
 
-Swiping the trackpad horizontally with three fingers (only available in Wayland) or swiping the panel horizontally on a touch screen will scroll the tiling.
+You can scroll the tiling by swiping the trackpad horizontally with three fingers (Wayland only), swiping the panel on a touch screen, or using the mouse scroll wheel on the topbar.
 
 <kbd>Alt</kbd><kbd>Tab</kbd> is of course also available.
 

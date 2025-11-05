@@ -30,6 +30,8 @@ else
 GNOME_EXT_DISABLE := gnome-shell-extension-tool --disable
 endif
 
+SHELL=/bin/bash
+
 ## Update compiled files
 all: $(RELEASE_FILES)
 
@@ -68,7 +70,7 @@ uninstall:
 	@if [[ `readlink -f $(TARGET)` != `readlink -f $$PWD` ]]; \
 	then                                                   \
 		echo "'$(TARGET)' does not link to '$$PWD', refusing to remove."; \
-		exit 1                                             \
+		exit 1;                                             \
 	fi
 	@if [ -L $(TARGET) ];                                     \
 	then                                                   \
@@ -77,7 +79,7 @@ uninstall:
 	else                                                   \
 		read -p "Remove $(TARGET)? (y/N): " -n 1 -r           \
 		echo                                               \
-		[[ $$REPLY =~ ^[Yy]$ ]] && rm -rf $(TARGET)           \
+		[[ $$REPLY =~ ^[Yy]$ ]] && rm -rf $(TARGET);       \
 	fi
 
 
