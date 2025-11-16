@@ -30,6 +30,8 @@ else
 GNOME_EXT_DISABLE := gnome-shell-extension-tool --disable
 endif
 
+SHELL=bash
+
 ## Update compiled files
 all: $(RELEASE_FILES)
 
