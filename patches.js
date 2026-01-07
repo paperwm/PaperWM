@@ -224,11 +224,11 @@ export function setupOverrides() {
 
             if (direction === Clutter.ScrollDirection.UP) {
                 const tabPopup = Navigator.getActionDispatcher(Clutter.GrabState.KEYBOARD);
-                tabPopup.show(false, 'switch-global-left', Clutter.ModifierType.MOD4_MASK);
+                tabPopup.show(false, 'switch-global-right', Clutter.ModifierType.MOD4_MASK);
                 return Clutter.EVENT_STOP;
             } else if (direction === Clutter.ScrollDirection.DOWN) {
                 const tabPopup = Navigator.getActionDispatcher(Clutter.GrabState.KEYBOARD);
-                tabPopup.show(false, 'switch-global-right', Clutter.ModifierType.MOD4_MASK);
+                tabPopup.show(false, 'switch-global-left', Clutter.ModifierType.MOD4_MASK);
                 return Clutter.EVENT_STOP;
             }
                 
@@ -444,6 +444,14 @@ export function setupOverrides() {
 
         this._icon.set_size(size * scaleFactor, size * scaleFactor);
     });
+
+    registerOverridePrototype(AltTab.AppSwitcherPopup, '_scrollHandler', function(direction) {
+        if (direction === Clutter.ScrollDirection.UP) {
+            props['_scrollHandler'].saved(Clutter.ScrollDirection.DOWN);
+        } else if (direction === Clutter.ScrollDirection.DOWN) {
+            props['_scrollHandler'].saved(Clutter.ScrollDirection.UP);
+        }
+    })
 
     registerOverridePrototype(Screenshot.ScreenshotUI, 'open', async function(mode) {
         const saved = getSavedPrototype(Screenshot.ScreenshotUI, 'open');

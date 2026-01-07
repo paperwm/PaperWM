@@ -1971,11 +1971,11 @@ border-radius: ${borderWidth}px;
                 switch (dir) {
                 case Clutter.ScrollDirection.LEFT:
                 case Clutter.ScrollDirection.UP:
-                    this.switchLeft(false);
+                    this.switchRight(false);
                     break;
                 case Clutter.ScrollDirection.RIGHT:
                 case Clutter.ScrollDirection.DOWN:
-                    this.switchRight(false);
+                    this.switchLeft(false);
                     break;
                 }
             });
