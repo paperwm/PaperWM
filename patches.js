@@ -555,6 +555,7 @@ export function restoreRuntimeDisables() {
 export let swipeTrackers; // exported
 export function setupSwipeTrackers() {
     swipeTrackers = [
+        Main?.overview?._overview?._controls?._appDisplay?._swipeTracker, // gnome 49+
         Main?.overview?._swipeTracker, // gnome 40+
         Main?.overview?._overview?._controls?._workspacesDisplay?._swipeTracker, // gnome 40+
         Main?.wm?._workspaceAnimation?._swipeTracker, // gnome 40+
