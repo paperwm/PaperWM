@@ -178,7 +178,7 @@ class ActionDispatcher {
         }
 
         // Popping the modal on keypress doesn't work properly, as the release
-        // event will leak to the active window. To work around this we initate
+        // event will leak to the active window. To work around this we initiate
         // visual destruction on key-press and signal to the release handler
         // that we should destroy the dispactcher too
         // https://github.com/paperwm/PaperWM/issues/70

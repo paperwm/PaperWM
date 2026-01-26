@@ -3774,7 +3774,7 @@ export function resizeHandler(metaWindow) {
             };
         }
 
-        // Resizing from within a size-changed signal is troube (#73). Queue instead.
+        // Resizing from within a size-changed signal is trouble (#73). Queue instead.
         space.queueLayout(true, { callback, centerIfOne: false });
     }
 
