@@ -271,7 +271,7 @@ export function setupOverrides() {
 
     registerOverridePrototype(Workspace.Workspace, '_isOverviewWindow', win => {
         win = win.meta_window ?? win; // should be metawindow, but get if not
-        // upstream (gnome value result - whta it would have done)
+        // upstream (gnome value result - what it would have done)
         const saved = getSavedPrototype(Workspace.Workspace, '_isOverviewWindow');
         const upstreamValue = saved?.call(this, win) ?? !win.skip_taskbar;
 

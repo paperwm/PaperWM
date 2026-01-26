@@ -214,7 +214,7 @@ export function getPointerCoords() {
 }
 
 /**
- * Returns monitor a pointer co-ordinates.
+ * Returns monitor a pointer coordinates.
  */
 export function monitorAtPoint(gx, gy) {
     for (let monitor of Main.layoutManager.monitors) {

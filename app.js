@@ -145,7 +145,7 @@ export function spawnWindow(app, workspace) {
     try {
         return trySpawnWindow(app, workspace);
     } catch (e) {
-        // Let the overide take care any fallback
+        // Let the override take care any fallback
         return app.open_new_window(-1);
     }
 }

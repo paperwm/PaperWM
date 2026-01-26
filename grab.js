@@ -203,7 +203,7 @@ export class MoveGrab {
         this.selectDndZone(space, sx, sy);
     }
 
-    /** x,y in scroll cooridinates */
+    /** x,y in scroll coordinates */
     selectDndZone(space, x, y, initial = false) {
         const gap = Settings.prefs.window_gap;
         const halfGap = gap / 2;

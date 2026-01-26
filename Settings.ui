@@ -1312,7 +1312,7 @@
                         <child>
                           <object class="GtkGrid">
                             <property name="focusable">False</property>
-                            <property name="tooltip_text" translatable="yes">Sets the drift speed (px/ms) when mouse is at edge of montior when dragging windows.</property>
+                            <property name="tooltip_text" translatable="yes">Sets the drift speed (px/ms) when mouse is at edge of monitor when dragging windows.</property>
                             <property name="margin_start">12</property>
                             <property name="margin_end">12</property>
                             <property name="margin_top">6</property>
@@ -2198,7 +2198,7 @@
                                 <property name="margin_end">12</property>
                                 <property name="hexpand">1</property>
                                 <property name="wrap">True</property>
-                                <property name="label" translatable="yes">Availble options for the &lt;i&gt;open window position&lt;/i&gt; button. 
+                                <property name="label" translatable="yes">Available options for the &lt;i&gt;open window position&lt;/i&gt; button. 
 
 Selected options will be cycled through when clicking the
 button or using the &lt;i&gt;Switch between positions for creating windows (e.g. right, left)&lt;/i&gt; shortcut.
