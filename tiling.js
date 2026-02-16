@@ -1196,10 +1196,50 @@ export class Space extends Array {
             [Meta.MotionDirection.DOWN]: Meta.DisplayDirection.DOWN,
         };
         const dir = motionToDisplayDirection[direction]
-
         let space = this;
+
+        const switchMonitor = () => {
+            const monitor = focusMonitor();
+            const i = display.get_monitor_neighbor_index(monitor.index, dir);
+            if (i === -1) {
+                return;
+            }
+
+            // Ensure if we change workspaces and then monitors,
+            // that the new workspace stays active on the starting monitor.
+            if (space.selectedWindow) {
+                space.activateWithFocus(space.selectedWindow, false, true);
+            }
+
+            const newMonitor = Main.layoutManager.monitors[i];
+            const newSpace = spaces.monitors.get(newMonitor);
+
+            newSpace.activate(false, false);
+            Navigator.finishNavigation();
+
+            // New monitor is empty, just move the mouse there
+            if (newSpace.length === 0) {
+                Utils.warpPointerToMonitor(newMonitor);
+                return;
+            }
+
+            Navigator.getNavigator().showMinimap(newSpace);
+
+            const visibleColumns = newSpace.filter((column) => newSpace.isVisible(column[0]));
+            if (visibleColumns.length === 0) {
+                return;
+            }
+
+            const newIndex = dir === Meta.DisplayDirection.LEFT ? visibleColumns.length - 1 : 0;
+            const newColumn = visibleColumns[newIndex];
+            const newWindow = sortWindows(newSpace, newColumn)[newColumn.length - 1];
+
+            ensureViewport(newWindow, newSpace);
+        };
+
         let index = space.selectedIndex();
         if (index === -1) {
+            switchMonitor();
             return;
         }
         let row = space[index].indexOf(space.selectedWindow);
@@ -1212,34 +1252,8 @@ export class Space extends Array {
             index--;
         }
         if (index < 0 || index >= space.length) {
-            const monitor = focusMonitor();
-            const i = display.get_monitor_neighbor_index(monitor.index, dir);
-            if (i === -1) {
-                return;
-            }
-
-            // Ensure if we change workspaces and then monitors,
-            // that the new workspace stays active on the starting monitor.
-            space.activateWithFocus(space.selectedWindow, false, true);
-
-            const newMonitor = Main.layoutManager.monitors[i];
-            const newSpace = spaces.monitors.get(newMonitor);
-            const visibleColumns = newSpace.filter((column) => newSpace.isVisible(column[0]));
-            if (visibleColumns.length === 0) {
-                return;
-            }
-
-            const newColumn = dir === Meta.DisplayDirection.LEFT
-                ? visibleColumns[visibleColumns.length - 1]
-                : visibleColumns[0];
-            const newRow = Math.min(row, newColumn.length - 1);
-            const newWindow = newColumn[newRow];
-
-            newSpace.activate(false, false);
-            Navigator.finishNavigation();
-            Navigator.getNavigator().showMinimap(newSpace);
-            ensureViewport(newWindow, newSpace);
-            return
+            switchMonitor();
+            return;
         }
 
         let column = space[index];
