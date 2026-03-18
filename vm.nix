@@ -8,14 +8,22 @@
   ];
 
   ### Set graphical session to auto-login GNOME
-  services.xserver =
-  { enable = true;
-    displayManager.autoLogin =
+  services.displayManager = {
+    gdm.enable = true;
+    autoLogin =
     { enable = true;
       user = "user";
     };
-    displayManager.gdm.enable = true;
-    desktopManager.gnome.enable = true;
+  };
+  services.desktopManager.gnome = {
+    enable = true;
+    debug = true;
+  };
+
+  ### Enable unsafe mode by default
+  systemd.user.services."org.gnome.Shell@wayland" = {
+    overrideStrategy = "asDropin";
+    serviceConfig.ExecStart = ["" "${pkgs.gnome-shell}/bin/gnome-shell --unsafe-mode"];
   };
 
   ### Set dconf to enable PaperWM out of the box
