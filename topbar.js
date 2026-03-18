@@ -13,6 +13,8 @@ import * as popupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import { Settings, Utils, Tiling, Navigator, Scratch } from './imports.js';
 
+export const name = "topbar";
+
 // eslint-disable-next-line no-undef
 const workspaceManager = global.workspace_manager;
 // eslint-disable-next-line no-undef

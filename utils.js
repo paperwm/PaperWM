@@ -12,6 +12,8 @@ import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 
 import { Lib } from './imports.js';
 
+export const name = "utils";
+
 const Display = global.display;
 export let version = Config.PACKAGE_VERSION.split('.').map(Number);
 

@@ -10,7 +10,7 @@ stdenv.mkDerivation {
 
   makeFlags = [ "SOURCE=$(src)" "EXT_DIR=$(out)/share/gnome-shell/extensions" ];
 
-  nativeBuildInputs = with pkgs;
+  nativeBuildInputs =
     [ glib
     ];
 

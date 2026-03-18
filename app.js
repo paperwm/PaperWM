@@ -6,6 +6,8 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { Patches, Tiling } from './imports.js';
 
+export const name = "app";
+
 /*
   Application functionality, like global new window actions etc.
  */

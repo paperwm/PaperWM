@@ -3,6 +3,8 @@ import GLib from 'gi://GLib';
 
 import * as Lib from './lib.js';
 
+export const name = "workspace";
+
 /**
  * Workspace related utility functions used by other modules.
  */

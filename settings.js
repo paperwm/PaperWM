@@ -9,6 +9,8 @@ import { AcceleratorParse } from './acceleratorparse.js';
     at the top).
  */
 
+export const name = "settings";
+
 const KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';
 const RESTORE_KEYBINDS_KEY = 'restore-keybinds';
 

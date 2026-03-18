@@ -9,6 +9,8 @@ import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.j
 
 import { Settings, Utils, Tiling, Grab, Scratch } from './imports.js';
 
+export const name = "stackoverlay";
+
 /*
   The stack overlay decorates the top stacked window with its icon and
   captures mouse input such that a mouse click only _activates_ the

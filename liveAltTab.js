@@ -9,6 +9,8 @@ import * as AltTab from 'resource:///org/gnome/shell/ui/altTab.js';
 import { Settings, Keybindings, Tiling, Scratch, Utils } from './imports.js';
 import { Easer } from './utils.js';
 
+export const name = "liveAltTab";
+
 let switcherSettings;
 export function enable() {
     switcherSettings = new Gio.Settings({

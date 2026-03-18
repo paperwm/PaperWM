@@ -9,6 +9,8 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { Settings, Utils, Tiling, Navigator, Scratch, Gestures } from './imports.js';
 import { Easer } from './utils.js';
 
+export const name = "grab";
+
 export let grabbed = false;
 
 let dragDriftTimeout;

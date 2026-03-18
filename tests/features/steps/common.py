@@ -21,5 +21,9 @@ class NixOSNamespace(SimpleNamespace):
         SHELL_DBUS = "org.gnome.Shell"
         SHELL_OBJECT = "/org/gnome/Shell"
         EVAL_DBUS = "org.gnome.Shell.Eval"
-        esc_code = code.replace('"', '\\"')
-        self.machine.succeed(f"gdbus call --session {SHELL_DBUS} --object-path {SHELL_OBJECT} --method {EVAL_DBUS} \"{code}\"")
+        code_full = f'''
+        paperwm = Main.extensionManager.lookup("paperwm@paperwm.github.com").stateObj;
+        {code}
+        '''
+        esc_code = code_full.replace('"', '\\"').replace('`', '\\`')
+        return self.machine.succeed(f"gdbus call --session {SHELL_DBUS} --object-path {SHELL_OBJECT} --method {EVAL_DBUS} \"{esc_code}\"")
