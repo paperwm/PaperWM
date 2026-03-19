@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from pathlib import Path
+from behave import fixture, use_fixture
 
 class NixOSNamespace(SimpleNamespace):
     ''' Derived version of SimpleNamespace, helps unpack our NixOS test objects
@@ -34,9 +35,26 @@ class NixOSNamespace(SimpleNamespace):
         '''
         return self.machine.wait_until_succeeds(self._gjs_cmdline('paperwm.findModule("tiling").spaces._initDone'))
 
-def before_all(context):
-    ''' Wait until PaperWM is actually running
+@fixture
+def shell(context):
+    ''' Wait for PaperWM to start
+
+    ### Wait, why do we need to specify which tests need PaperWM?
+
+    If we want to be able to assume given settings when PaperWM starts, we need
+    to have already updated dconf with them by the time GNOME has finished
+    loading, meaning the steps altering dconf cannot wait for the Shell.
+
+    The first Scenario should then make configuration assumptions, which the
+    rest of the feature will be able to inherit.
     '''
-    print("Waiting for PaperWM...")
-    context.nixos = NixOSNamespace(context)
     context.nixos.wait_for_paperwm()
+
+def before_tag(context, tag):
+    if tag == "fixture.shell":
+        use_fixture(shell, context)
+
+def before_all(context):
+    ''' Populate the context with NixOS test objects
+    '''
+    context.nixos = NixOSNamespace(context)

@@ -7,5 +7,6 @@ Feature: The test machine starts
         When the machine starts
         Then the machine should reach graphics
 
+    @fixture.shell
     Scenario: Three finger swipe (stub)
         When the user performs three-finger-swipe
