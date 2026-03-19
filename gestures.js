@@ -15,6 +15,7 @@ const DIRECTIONS = {
 };
 
 let vy, time, vState, navigator, direction, signals;
+let handoffToOverview = false;
 // 1 is natural scrolling, -1 is unnatural
 let natural = 1;
 export let gliding = false; // exported
@@ -86,6 +87,7 @@ export function enable(extension) {
             time = event.get_time();
             natural = touchpadSettings.get_boolean("natural-scroll") ? 1 : -1;
             direction = undefined;
+            handoffToOverview = false;
             navigator = Navigator.getNavigator();
             navigator.connect('destroy', () => {
                 vState = -1;
@@ -110,6 +112,7 @@ export function enable(extension) {
             if (enabled && direction === DIRECTIONS.Vertical) {
                 // if in overview => propagate event to overview
                 if (Main.overview.visible) {
+                    handoffToOverview = true;
                     return Clutter.EVENT_PROPAGATE;
                 }
 
@@ -117,6 +120,7 @@ export function enable(extension) {
                 // (might be used for a vertical-workspaces addon)
                 if (gestureWorkspaceFingers() === 0) {
                     swipeTrackersEnable();
+                    handoffToOverview = fingers === 3;
                     return Clutter.EVENT_PROPAGATE;
                 }
 
@@ -125,14 +129,17 @@ export function enable(extension) {
                 if (!Tiling.inPreview && dir_y > 0) {
                     // enable swipe trackers which enables 3-finger up overview
                     swipeTrackersEnable();
+                    handoffToOverview = true;
                     return Clutter.EVENT_PROPAGATE;
                 }
 
                 if (gestureWorkspaceFingers() !== fingers) {
+                    handoffToOverview = fingers === 3;
                     return Clutter.EVENT_PROPAGATE;
                 }
 
                 // initiates workspace stack switching
+                handoffToOverview = false;
                 swipeTrackersEnable(false);
                 updateVertical(dir_y, event.get_time());
                 return Clutter.EVENT_STOP;
@@ -140,9 +147,26 @@ export function enable(extension) {
             return Clutter.EVENT_PROPAGATE;
         case Clutter.TouchpadGesturePhase.CANCEL:
         case Clutter.TouchpadGesturePhase.END:
+            // If this finger count should be handled by GNOME, never consume
+            // completion here (prevents overview from getting stuck in 4-finger mode).
+            if (shouldPropagate(fingers)) {
+                direction = undefined;
+                handoffToOverview = false;
+                return Clutter.EVENT_PROPAGATE;
+            }
+
             if (direction === DIRECTIONS.Vertical) {
+                // GNOME 49+ can receive UPDATE from us for overview handoff.
+                // Do not swallow END/CANCEL in that case or overview gets stuck.
+                if (handoffToOverview) {
+                    handoffToOverview = false;
+                    direction = undefined;
+                    return Clutter.EVENT_PROPAGATE;
+                }
+
                 vState = phase;
                 endVertical();
+                handoffToOverview = false;
                 return Clutter.EVENT_STOP;
             }
         }
@@ -227,6 +251,10 @@ export function horizontalScroll(space, _actor, event) {
     const [dx] = event.get_gesture_motion_delta();
     switch (phase) {
     case Clutter.TouchpadGesturePhase.UPDATE:
+        if (direction !== undefined && direction !== DIRECTIONS.Horizontal) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+
         if (direction === undefined) {
             space.vx = 0;
             dxs = [];
@@ -239,10 +267,14 @@ export function horizontalScroll(space, _actor, event) {
         return update(space, -dx * natural * Settings.prefs.swipe_sensitivity[0], event.get_time());
     case Clutter.TouchpadGesturePhase.CANCEL:
     case Clutter.TouchpadGesturePhase.END:
+        if (direction !== DIRECTIONS.Horizontal) {
+            return Clutter.EVENT_PROPAGATE;
+        }
         space.hState = phase;
         done(space, event);
         dxs = [];
         dts = [];
+        direction = undefined;
         return Clutter.EVENT_STOP;
     }
 }
@@ -336,7 +368,7 @@ export function update(space, dx, t) {
 
 export function done(space) {
     if (!Number.isFinite(space.vx) || space.length === 0) {
-        navigator.finish();
+        navigator?.finish();
         space.hState = -1;
         return Clutter.EVENT_STOP;
     }

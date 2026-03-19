@@ -1981,7 +1981,7 @@ border-radius: ${borderWidth}px;
             });
 
         this.signals.connect(this.background, 'captured-event', (actor, event) => {
-            Gestures.horizontalScroll(this, actor, event);
+            return Gestures.horizontalScroll(this, actor, event);
         });
     }
 
