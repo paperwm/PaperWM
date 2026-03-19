@@ -16,6 +16,8 @@
     from behave.__main__ import run_behave
 
     conf = Configuration("${testsDir}/features/${featureName}", userdata = driver.test_symbols())
+    conf.capture_stdout = False
+    conf.capture_stderr = False
     start_all()
     exit(run_behave(conf))
   '';
