@@ -7,7 +7,7 @@
   name = featureName;
   nodes = { machine = defaultConfig; };
 
-  extraPythonPackages = p: with p; [ behave ];
+  extraPythonPackages = p: with p; [ behave opencv-python ];
 
   skipTypeCheck = true;
 

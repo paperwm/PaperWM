@@ -1,0 +1,36 @@
+name: "Run end-to-end tests for PaperWM"
+
+on:
+  push:
+    paths:
+      - '*.nix'
+      - '*.js'
+      - 'tests/**'
+
+jobs:
+  run-tests:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Nix
+        uses: cachix/install-nix-action@v20
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo tee -a /etc/nix/nix.conf <<< "extra-system-features = kvm nixos-test"
+      - name: Build test VM
+        run: |
+          nix build .#vm
+      - name: Launch tests
+        run: |
+          for file in tests/features/*.feature
+          do
+            echo "::group::Test ${file##*/}"
+            feat="${file##*/}"
+            nix run .#checks.x86_64-linux.${feat%%.feature}.driver
+            echo "::endgroup::"
+          done

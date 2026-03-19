@@ -2,6 +2,8 @@ from types import SimpleNamespace
 from pathlib import Path
 from behave import fixture, use_fixture
 
+import cv2
+
 class NixOSNamespace(SimpleNamespace):
     ''' Derived version of SimpleNamespace, helps unpack our NixOS test objects
     and add utility functions for commonly used test steps.
@@ -10,6 +12,7 @@ class NixOSNamespace(SimpleNamespace):
     def __init__(self, context):
         self.__dict__.update(**context.config.userdata)
         self._base_dir = Path(context.config.base_dir).parent.resolve()
+        self._context = context
 
     def _gjs_cmdline(self, code):
         SHELL_DBUS = "org.gnome.Shell"
@@ -34,6 +37,13 @@ class NixOSNamespace(SimpleNamespace):
         ''' Wait until GNOME Shell is able to yield PaperWM internal state.
         '''
         return self.machine.wait_until_succeeds(self._gjs_cmdline('paperwm.findModule("tiling").spaces._initDone'))
+
+    def screenshot(self):
+        ''' Take a screenshot and load it as an OpenCV-compatible representation
+        '''
+        filename = f"scenario-{self._context.scenario.line}.png"
+        self.machine.screenshot(filename)
+        return cv2.imread(filename)
 
 @fixture
 def shell(context):
