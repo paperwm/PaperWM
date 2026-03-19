@@ -8,12 +8,13 @@ class NixOSNamespace(SimpleNamespace):
 
     def __init__(self, context):
         self.__dict__.update(**context.config.userdata)
+        self._base_dir = Path(context.config.base_dir).parent.resolve()
 
     def libinput_play(self, recording):
         ''' Play the specified libinput recording file.
         '''
-        recordFile = Path().resolve() / "recordings" / recording
-        self.machine.succeed("libinput replay --once --replay-after 0 %s" %recordFile)
+        recordFile = self._base_dir / "recordings" / recording
+        self.machine.succeed("sudo libinput replay --once --replay-after 0 %s" %recordFile)
 
     def gjs_eval(self, code):
         ''' Execute the specified GJS code from within the GNOME Shell process.
