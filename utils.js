@@ -107,6 +107,13 @@ export function setBackgroundImage(actor, resource_path) {
     actor.content_repeat = Clutter.ContentRepeat.BOTH;
 }
 
+export function is_wayland_compositor() {
+    if (typeof Meta.is_wayland_compositor === 'function')
+        return Meta.is_wayland_compositor()
+    else
+        return true // GNOME 50+ is always a Wayland compositor
+}
+
 /**
  * Backwards compatible function.  Attempts to use Cogl.Color with a fallback
  * to Clutter.Color.

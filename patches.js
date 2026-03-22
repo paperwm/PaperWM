@@ -37,7 +37,7 @@ export function enable(extension) {
     // save the last display server used
     gsettings.set_string(
         'last-used-display-server',
-        Meta.is_wayland_compositor() ? "Wayland" : "Xorg"
+        Utils.is_wayland_compositor() ? "Wayland" : "Xorg"
     );
 
     mutterSettings = new Gio.Settings({ schema_id: 'org.gnome.mutter' });

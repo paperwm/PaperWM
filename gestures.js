@@ -26,7 +26,7 @@ let touchpadSettings;
 export function enable(extension) {
     signals = new Utils.Signals();
     // Touchpad swipes only works in Wayland
-    if (!Meta.is_wayland_compositor())
+    if (!Utils.is_wayland_compositor())
         return;
 
     touchpadSettings = new Gio.Settings({
