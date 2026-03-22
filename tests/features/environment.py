@@ -13,6 +13,8 @@ class NixOSNamespace(SimpleNamespace):
         self.__dict__.update(**context.config.userdata)
         self._base_dir = Path(context.config.base_dir).parent.resolve()
         self._context = context
+        self._last_scr_line = -1
+        self._last_scr_id = 0
 
     def _gjs_cmdline(self, code):
         SHELL_DBUS = "org.gnome.Shell"
@@ -41,7 +43,14 @@ class NixOSNamespace(SimpleNamespace):
     def screenshot(self):
         ''' Take a screenshot and load it as an OpenCV-compatible representation
         '''
-        filename = f"scenario-{self._context.scenario.line}.png"
+        if self._last_scr_line == self._context.scenario.line:
+            self._last_scr_id += 1
+        else:
+            self._last_scr_line = self._context.scenario.line
+            self._last_scr_id = 0
+
+        featname = Path(self._context.config.paths[0]).name[:-len(".feature")]
+        filename = f"scr-{featname}-{self._context.scenario.line}_{self._last_scr_id}.png"
         self.machine.screenshot(filename)
         return cv2.imread(filename)
 

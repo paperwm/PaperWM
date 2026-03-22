@@ -23,7 +23,13 @@
   ### Enable unsafe mode by default
   systemd.user.services."org.gnome.Shell@wayland" = {
     overrideStrategy = "asDropin";
-    serviceConfig.ExecStart = ["" "${pkgs.gnome-shell}/bin/gnome-shell --unsafe-mode"];
+    serviceConfig = {
+      ExecStart = ["" "${pkgs.gnome-shell}/bin/gnome-shell --unsafe-mode"];
+      Environment = [
+        "GJS_COVERAGE_OUTPUT=/home/coverage"
+        #"GJS_COVERAGE_PREFIXES=${./.}"
+      ];
+    };
   };
 
   ### Set dconf to enable PaperWM out of the box

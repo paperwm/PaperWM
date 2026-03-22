@@ -10,3 +10,4 @@ Feature: The test machine starts
     @fixture.shell
     Scenario: Three finger swipe (stub)
         When the user performs three-finger-swipe
+        Then the screen should match basic
