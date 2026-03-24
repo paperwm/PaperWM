@@ -20,7 +20,7 @@ class NixOSNamespace(SimpleNamespace):
         SHELL_DBUS = "org.gnome.Shell"
         SHELL_OBJECT = "/org/gnome/Shell"
         EVAL_DBUS = "org.gnome.Shell.Eval"
-        code_full = f''' paperwm = Main.extensionManager.lookup("paperwm@paperwm.github.com").stateObj; {code} '''
+        code_full = f''' let paperwm = Main.extensionManager.lookup("paperwm@paperwm.github.com").stateObj; {code} '''
         esc_code = code_full.replace('"', '\\"').replace('`', '\\`')
         return f"sudo -u user gdbus call -a unix:path=/run/user/1000/bus -d {SHELL_DBUS} --object-path {SHELL_OBJECT} --method {EVAL_DBUS} \"{esc_code}\""
 
@@ -32,13 +32,18 @@ class NixOSNamespace(SimpleNamespace):
 
     def gjs_eval(self, code):
         ''' Execute the specified GJS code from within the GNOME Shell process.
+        Will raise Exception in the event of a GJS error.
         '''
-        return self.machine.succeed(self._gjs_cmdline(code))
+        result = eval(self.machine.succeed(self._gjs_cmdline(code)))
+        if result[0]:
+            return result[1]
+        else:
+            raise Exception(result[1])
 
     def wait_for_paperwm(self):
         ''' Wait until GNOME Shell is able to yield PaperWM internal state.
         '''
-        return self.machine.wait_until_succeeds(self._gjs_cmdline('paperwm.findModule("tiling").spaces._initDone'))
+        return self.machine.wait_until_succeeds(self._gjs_cmdline('paperwm.findModule("tiling").spaces._initDone') + "| grep \"(true, 'true')\"")
 
     def screenshot(self):
         ''' Take a screenshot and load it as an OpenCV-compatible representation

@@ -66,4 +66,9 @@
   { enable = true;
     extraConfig = "%wheel ALL=(ALL) NOPASSWD: ALL";
   };
+
+  ### Switch to VirtIO emulated GPU
+  virtualisation.qemu.options = [
+    "-vga virtio"
+  ];
 }
