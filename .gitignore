@@ -11,3 +11,7 @@ package-lock.json
 
 # generated disk image for test VM
 nixos.qcow2
+
+# generated test outputs
+allure_output/
+scr-*.png

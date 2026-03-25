@@ -47,6 +47,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     permissions:
+      statuses: write
       contents: write
       pages: write
     steps:
@@ -58,6 +59,7 @@ jobs:
           name: allure-output
           path: allure_output
       - name: Deploy report to GitHub Pages
+        id: report
         uses: PavanMudigonda/html-reporter-github-pages@v1.5.21
         with:
           test_results: allure_output
@@ -66,3 +68,11 @@ jobs:
           gh_pages: pages_reports
           workflow_name: ${{ github.workflow }}
           use_actions_summary: true
+      - name: Notify about generated report
+        uses: guibranco/github-status-action-v2@v1.1.14
+        with:
+          authToken: ${{ secrets.GITHUB_TOKEN }}
+          context: PaperWM test reports
+          state: success
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+          target_url: ${{env.GITHUB_PAGES_WEBSITE_URL}}/${{github.run_number}}/index.html

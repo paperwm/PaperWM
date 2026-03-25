@@ -2,8 +2,8 @@ from behave import given, when, then
 
 @when("the machine starts")
 def machine_boot(context):
-    pass
     # no-op: our test template starts the machine already
+    pass
 
 @then("the machine should reach graphics")
 def graphical_target(context):
