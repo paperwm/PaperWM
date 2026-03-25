@@ -2,6 +2,7 @@ from types import SimpleNamespace
 from pathlib import Path
 from behave import fixture, use_fixture
 
+import allure
 import cv2
 
 class NixOSNamespace(SimpleNamespace):
@@ -57,6 +58,9 @@ class NixOSNamespace(SimpleNamespace):
         featname = Path(self._context.config.paths[0]).name[:-len(".feature")]
         filename = f"scr-{featname}-{self._context.scenario.line}_{self._last_scr_id}.png"
         self.machine.screenshot(filename)
+
+        with open(filename, 'rb') as imfile:
+            allure.attach(imfile.read(), name=filename, attachment_type=allure.attachment_type.PNG)
         return cv2.imread(filename)
 
 @fixture

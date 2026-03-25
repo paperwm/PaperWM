@@ -7,7 +7,7 @@
   name = featureName;
   nodes = { machine = defaultConfig; };
 
-  extraPythonPackages = p: with p; [ behave opencv-python ];
+  extraPythonPackages = p: with p; [ behave opencv-python allure-behave ];
 
   skipTypeCheck = true;
 
@@ -16,8 +16,9 @@
     from behave.__main__ import run_behave
 
     conf = Configuration("${testsDir}/features/${featureName}", userdata = driver.test_symbols())
-    conf.capture_stdout = False
-    conf.capture_stderr = False
+    conf.format = [ "allure_behave.formatter:AllureFormatter", "pretty" ]
+    conf.outputs = []
+    conf.setup_outputs(['allure_output'])
     start_all()
     exit(run_behave(conf))
   '';

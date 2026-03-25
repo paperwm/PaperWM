@@ -1,5 +1,4 @@
 { pkgs ? import <nixpkgs> {}
-, system ? builtins.currentSystem
 , runTest ? pkgs.testers.nixosTest
 , defaultConfig ?
     { ... }: { imports = [ ../vm.nix ]; }
@@ -17,10 +16,17 @@
 let
   lib = pkgs.lib;
 
+  # Run a test and generate an HTML report
+  behaveReport = test:
+    (pkgs.callPackage ./report.nix { inherit test; });
+  
   # Run a single Behave feature file
-  behaveTest = featureName: as: runTest
-    (import ./template.nix ({ inherit defaultConfig pkgs featureName; } // as));
+  behaveTest = featureName: as: 
+    let testDrv = runTest
+          (import ./template.nix ({ inherit defaultConfig pkgs featureName; } // as));
+    in testDrv // { report = behaveReport testDrv; };
 
+  # Gather and generate tests for all feature files
   allBehaveTests =
     let allBehaveFiles =
           lib.filterAttrs (k: v: lib.hasSuffix ".feature" k && v == "regular")

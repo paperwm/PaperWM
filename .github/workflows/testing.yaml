@@ -34,3 +34,34 @@ jobs:
             nix run .#checks.x86_64-linux.${feat%%.feature}.driver
             echo "::endgroup::"
           done
+      - name: Save results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: allure-output
+          path: allure_output
+
+  push-reports:
+    name: Upload HTML reports to Pages
+    needs: run-tests
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Fetch report
+        uses: actions/download-artifact@v8
+        with:
+          name: allure-output
+          path: allure_output
+      - name: Deploy report to GitHub Pages
+        uses: PavanMudigonda/html-reporter-github-pages@v1.5.21
+        with:
+          test_results: allure_output
+          allure_report_generate_flag: true
+          keep_reports: 10
+          gh_pages: pages_reports
+          workflow_name: ${{ github.workflow }}
