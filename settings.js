@@ -175,7 +175,7 @@ export function keystrToKeycombo(keystr) {
     let [, key, mask] = accelerator_parse(keystr);
     if (aboveTab)
         key = META_KEY_ABOVE_TAB;
-    return `${key}|${mask}`; // Since js doesn't have a mapable tuple type
+    return `${key}|${mask}`; // Since js doesn't have a mappable tuple type
 }
 
 export function generateKeycomboMap(settings) {
@@ -268,7 +268,7 @@ export function overrideConflicts(checkKey = null) {
     _overriddingConflicts = true;
     let saveList = getSavedOverrides();
 
-    // restore orignal keybinds prior to conflict overriding
+    // restore original keybinds prior to conflict overriding
     restoreConflicts();
 
     let disableAll = [];
@@ -338,7 +338,7 @@ export function restoreConflicts() {
         }
     });
 
-    // now remove retored keybinds from list
+    // now remove restored keybinds from list
     toRemove.forEach(r => {
         r.remove();
         saveList.delete(r.key);

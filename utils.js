@@ -221,7 +221,7 @@ export function getPointerCoords() {
 }
 
 /**
- * Returns monitor a pointer co-ordinates.
+ * Returns monitor a pointer coordinates.
  */
 export function monitorAtPoint(gx, gy) {
     for (let monitor of Main.layoutManager.monitors) {
@@ -570,7 +570,7 @@ export class Signals extends Map {
  */
 export let Easer = {
     /**
-     * Safer time setting to essentiall disable easer animation.
+     * Safer time setting to essentially disable easer animation.
      * Setting to values lower than this can have some side-effects
      * like "jumpy" three-finger left/right swiping etc.
      */

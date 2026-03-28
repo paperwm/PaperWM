@@ -262,7 +262,7 @@ export class Space extends Array {
         this._floating = [];
         this._populated = false;
 
-        // default focusMode (can be overriden by saved user pref in Space.init method)
+        // default focusMode (can be overridden by saved user pref in Space.init method)
         this.focusMode = FocusModes.DEFAULT;
         this.focusModeIcon = new Topbar.FocusIcon({
             name: 'panel',
@@ -1331,7 +1331,7 @@ export class Space extends Array {
         return [Math.round(vx), Math.round(vy)];
     }
 
-    /** Transform global coordinates to scroll cooridinates (cloneContainer relative) */
+    /** Transform global coordinates to scroll coordinates (cloneContainer relative) */
     globalToScroll(gx, gy, { useTarget = false } = {}) {
         // Use the smart transform on the actor, as that's the one we scale etc.
         // We can then use straight translation on the scroll which makes it possible to use target instead if wanted.
@@ -2282,7 +2282,7 @@ export const Spaces = class Spaces extends Map {
 
         let primary = Main.layoutManager.primaryMonitor;
         if (!primary) {
-            // setup periodic timout to call layout on all spaces 5 times (1 second apart)
+            // setup periodic timeout to call layout on all spaces 5 times (1 second apart)
             monitorChangeTimeout = Utils.periodic_timeout({
                 count: 5,
                 init: () => {
@@ -3147,7 +3147,7 @@ export const Spaces = class Spaces extends Map {
         let time = animate ? Settings.prefs.animation_time : 0;
         let onComplete = () => {
             // Hide any spaces that aren't visible This
-            // avoids a nasty preformance degregration in some
+            // avoids a nasty performance degregration in some
             // cases
             for (const space of spaces.values()) {
                 if (!visible.get(space)) {
@@ -3395,7 +3395,7 @@ export function hasTransient(metaWindow) {
 }
 
 /**
- * Conveniece method for checking if a window is floating.
+ * Convenience method for checking if a window is floating.
  * Will determine what space this window is on.
  * @param metaWindow
  * @returns
@@ -3774,7 +3774,7 @@ export function resizeHandler(metaWindow) {
             };
         }
 
-        // Resizing from within a size-changed signal is troube (#73). Queue instead.
+        // Resizing from within a size-changed signal is trouble (#73). Queue instead.
         space.queueLayout(true, { callback, centerIfOne: false });
     }
 
@@ -3865,7 +3865,7 @@ class SaveState {
 
         /**
          * For monitors, since these are upgraded with "connector" field,
-         * which we delete on disable. Beefore we delete this field, we want
+         * which we delete on disable. Before we delete this field, we want
          * a copy on connector (and index) to restore space to monitor.
          */
         if (spaces?.monitors) {
@@ -4569,7 +4569,7 @@ export function grabEnd(_metaWindow, _type) {
 
 /**
  * Sets the selected window on other workspaces inactive.
- * Particularly noticable with multi-monitor setups.
+ * Particularly noticeable with multi-monitor setups.
  */
 export function setAllWorkspacesInactive() {
     spaces.forEach(s => s.setSelectionInactive());
@@ -4651,7 +4651,7 @@ export function focus_handler(metaWindow) {
 
         /**
          * if there then clone.y shouldn't be 0.  This can happen though if a window
-         * is fullscreened when `layout` is called.  In this case, when we focuse on a
+         * is fullscreened when `layout` is called.  In this case, when we focus on a
          * window that isn't fullscreen but has clone.y 0 ==> need a layout call.
          */
         if (
@@ -4921,7 +4921,7 @@ export function getCycleWindowWidths(metaWindow) {
     let workArea = space.workArea();
 
     if (steps[0] <= 1) {
-        // Steps are specifed as ratios -> convert to pixels
+        // Steps are specified as ratios -> convert to pixels
         // Make sure two windows of "compatible" width will have room:
         let availableWidth = workArea.width - Settings.prefs.horizontal_margin * 2 - Settings.prefs.window_gap;
         steps = steps.map(x => Math.floor(x * availableWidth));
@@ -5043,7 +5043,7 @@ export function activateLastWindow(_mw, space) {
 /**
  * Calls `activateWindow` only after an actor is visible and rendered on the stage.
  * The standard `Main.activateWindow(mw)` should be used in general, but this method
- * may be requried under certain use cases (such as activating a floating window
+ * may be required under certain use cases (such as activating a floating window
  * programmatically before it's rendered, see
  * https://github.com/paperwm/PaperWM/issues/448 for details).
  */
@@ -5530,7 +5530,7 @@ export function takeWindow(metaWindow, space, options = {}) {
             });
 
         signals.connectOneShot(navigator, 'destroy', () => {
-            // ensure keyboard grabstate is dimissed (in case moving stopped via pointer)
+            // ensure keyboard grabstate is dismissed (in case moving stopped via pointer)
             Navigator.dismissDispatcher(Clutter.GrabState.KEYBOARD);
             navigator.showTakeHint(false);
 

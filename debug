@@ -62,7 +62,7 @@ function gnome-shell-exe-path {
     fi
 }
 
-function procees {
+function process {
     jq --unbuffered --raw-output '
        {ts: .__REALTIME_TIMESTAMP, message: .MESSAGE}
        | @sh "TS=\(.ts); MESSAGE=\(.message)\u0000"
@@ -85,7 +85,7 @@ function procees {
 
 journalctl --follow --lines 400 -o json --output-fields MESSAGE \
            $@ $(gnome-shell-exe-path) \
-    | procees \
+    | process \
     | skip-crap \
     | decode-multiline-message
 

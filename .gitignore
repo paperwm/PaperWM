@@ -11,3 +11,4 @@ package-lock.json
 
 # generated disk image for test VM
 nixos.qcow2
+.claude/

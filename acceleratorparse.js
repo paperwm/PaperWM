@@ -60,7 +60,7 @@ export class AcceleratorParse {
      * @param {String} keystr
      */
     accelerator_mask(keystr) {
-        // need to extact all mods from keystr
+        // need to extract all mods from keystr
         const mods = this.accelerator_mods(keystr);
         let result = 0;
         for (let mod of mods) {

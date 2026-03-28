@@ -1,6 +1,6 @@
 /**
  * Library of simple functions for use in all other modules.
- * This libary should be clean and not depend on any other modules.
+ * This library should be clean and not depend on any other modules.
  */
 
 /**
