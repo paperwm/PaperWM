@@ -82,10 +82,21 @@ class ActionDispatcher {
 
         // grab = stage.grab(this.actor)
         grab = Main.pushModal(this.actor);
+		// Assume that grab succeeds and store that state in the object
+		this.success = true;
         // We expect at least a keyboard grab here
         if ((grab.get_seat_state() & Clutter.GrabState.KEYBOARD) === 0) {
             console.error("Failed to grab modal");
-            throw new Error('Could not grab modal');
+			// Release current grab and let the user try again
+			try {
+				this.success = false;
+				if (grab) {
+					Main.popModal(grab);
+					grab = null;
+				}
+			} catch (e) {
+				console.error("Failed to release grab");
+			}
         }
 
         this.signals.connect(this.actor, 'key-press-event', this._keyPressEvent.bind(this));
@@ -117,6 +128,9 @@ class ActionDispatcher {
     }
 
     show(_backward, binding, mask) {
+		// If required grab was not successful, then do not show anything
+		if (!this.success) return;
+
         this._modifierMask = primaryModifier(mask);
         this.navigator = getNavigator();
         Topbar.fixTopBar();
@@ -519,11 +533,11 @@ export function getActionDispatcher(mode) {
         return dispatcher;
     }
     dispatcher = new ActionDispatcher();
-    return getActionDispatcher(mode);
+	return getActionDispatcher(mode);
 }
 
 /**
- * Fishes current dispatcher (if any).
+ * Finishes current dispatcher (if any).
  */
 export function finishDispatching() {
     dispatcher?._finish(global.get_current_time());
@@ -546,5 +560,14 @@ export function dismissDispatcher(mode) {
 
 export function preview_navigate(meta_window, space, { _display, _screen, binding }) {
     let tabPopup = getActionDispatcher(Clutter.GrabState.KEYBOARD);
-    tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
+
+	// Getting a dispatcher does not always succeed. Sometimes, it can fail because we are unable to
+	// grab the keyboard.
+	// In the case of a failure, fail gracefully by destroying the pop-up.
+	if (!tabPopup.success) {
+		tabPopup.destroy();
+		return;
+	}
+
+	tabPopup.show(binding.is_reversed(), binding.get_name(), binding.get_mask());
 }
