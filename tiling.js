@@ -445,6 +445,7 @@ export class Space extends Array {
         this.signals.connect(gsettings, 'changed::use-default-background', this.updateBackground.bind(this));
         this.signals.connect(backgroundSettings, 'changed::picture-uri', this.updateBackground.bind(this));
         this.signals.connect(backgroundSettings, "changed::picture-uri-dark", this.updateBackground.bind(this));
+        this.signals.connect(backgroundSettings, "changed::picture-options", this.updateBackground.bind(this));
     }
 
     /**
@@ -1685,7 +1686,7 @@ border-radius: ${borderWidth}px;
             layoutManager: Main.layoutManager,
             settings: backgroundSettings,
             file: Gio.File.new_for_commandline_arg(path),
-            style: GDesktopEnums.BackgroundStyle.ZOOM,
+            style: backgroundSettings.get_enum('picture-options'),
         });
 
         this.background.content.set({
