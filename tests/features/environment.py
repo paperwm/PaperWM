@@ -2,6 +2,8 @@ from types import SimpleNamespace
 from pathlib import Path
 from behave import fixture, use_fixture
 
+from lib.application import GTKApplication, GTKWidgetBuilder
+
 import allure
 import cv2
 
@@ -16,6 +18,7 @@ class NixOSNamespace(SimpleNamespace):
         self._context = context
         self._last_scr_line = -1
         self._last_scr_id = 0
+        self._active_apps = {}
 
     def _gjs_cmdline(self, code):
         SHELL_DBUS = "org.gnome.Shell"
@@ -62,6 +65,28 @@ class NixOSNamespace(SimpleNamespace):
         with open(filename, 'rb') as imfile:
             allure.attach(imfile.read(), name=filename, attachment_type=allure.attachment_type.PNG)
         return cv2.imread(filename)
+
+    def create_app(self, id, use_x11 = False, scratch = False):
+        ''' Create a new remote-controllable Gtk application
+        '''
+        self._active_apps[id] = GTKApplication(self, id, use_x11, scratch)
+        return self._active_apps[id]
+
+    def get_app(self, id):
+        ''' Retrieve an application created using create_app
+        '''
+        return self._active_apps[id]
+
+    def close_app(self, id):
+        ''' Close an application created using create_app
+        '''
+        self._active_apps[id].exit()
+        del self._active_apps[id]
+
+    def create_widget(self, widget, id, children = None, **kwargs):
+        ''' Create a new composable widget object for a Gtk application
+        '''
+        return GTKWidgetBuilder(widget, id, children, **kwargs)
 
 @fixture
 def shell(context):

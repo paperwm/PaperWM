@@ -73,6 +73,7 @@ jobs:
         with:
           authToken: ${{ secrets.GITHUB_TOKEN }}
           context: PaperWM test reports
+          description: Click here to open test reports
           state: success
           sha: ${{github.event.pull_request.head.sha || github.sha}}
           target_url: ${{env.GITHUB_PAGES_WEBSITE_URL}}/${{github.run_number}}/index.html

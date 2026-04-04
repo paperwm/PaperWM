@@ -9,5 +9,6 @@ Feature: The test machine starts
 
     @fixture.shell
     Scenario: Three finger swipe (stub)
+        Given a Wayland window with ID "hello"
         When the user performs three-finger-swipe
         Then the screen should match basic

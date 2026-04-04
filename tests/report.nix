@@ -1,11 +1,11 @@
-{ pkgs, lib, stdenv, allure
+{ pkgs, lib, stdenv, allure, emptyDirectory
   # A NixOS Behave test (with a .driver output) to run
 , test
 , ...}:
 
 stdenv.mkDerivation {
   name = "${test.name}-report";
-  src = pkgs.emptyDirectory;
+  src = emptyDirectory;
 
   nativeBuildInputs = [
     allure

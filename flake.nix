@@ -1,9 +1,14 @@
 { description = "Tiled, scrollable window management for GNOME Shell";
 
-  inputs."nixpkgs".url = github:NixOS/nixpkgs;
-  inputs."nixpkgs-gnome".url = github:NixOS/nixpkgs/wip-gnome;
+  inputs =
+  { "nixpkgs".url = "github:NixOS/nixpkgs";
+    "nixpkgs-gnome".url = "github:NixOS/nixpkgs/wip-gnome";
 
-  outputs = { self, nixpkgs, nixpkgs-gnome, flake-utils, ... }:
+    "gtk-stream".url = "git+https://git.sr.ht/~marc-coiffier/gtk-stream";
+    "gtk-stream".flake = false;
+  };
+
+  outputs = { self, nixpkgs, nixpkgs-gnome, flake-utils, gtk-stream, ... }:
   let
     testSystem = "x86_64-linux";
     pkgs-gnome = import nixpkgs-gnome { system = testSystem; };
@@ -55,10 +60,13 @@
       checks = import ./tests {
         system = testSystem;
         pkgs = import nixpkgs { system = testSystem; };
-        defaultConfig = {
+        defaultConfig = { pkgs, ... }: {
           imports = [ ./vm.nix ];
           nixpkgs.overlays = [
-            (s: super: { paperwm = self.packages.${testSystem}.default; })
+            (s: super: {
+              paperwm = self.packages.${testSystem}.default;
+              gtk-stream = s.callPackage gtk-stream {};
+            })
 
             (if useGnomeStaging then gnomeOverlay else (s: super: {}))
           ];
@@ -72,7 +80,10 @@
             ./vm.nix
             { nixpkgs.overlays = [
                 # Introduce PaperWM into our extensions
-                (s: super: { paperwm = self.packages.${testSystem}.default; })
+                (s: super: {
+                  paperwm = self.packages.${testSystem}.default;
+                  gtk-stream = s.callPackage gtk-stream {};
+                })
 
                 # Pull GNOME-specific packages from GNOME staging
                 (if useGnomeStaging then gnomeOverlay else (s: super: {}))
