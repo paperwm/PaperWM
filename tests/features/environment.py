@@ -34,7 +34,7 @@ class NixOSNamespace(SimpleNamespace):
         recordFile = self._base_dir / "recordings" / recording
         self.machine.succeed("libinput replay --once --replay-after 0 %s" %recordFile)
 
-    def gjs_eval(self, code):
+    def gjs_eval(self, code) -> str:
         ''' Execute the specified GJS code from within the GNOME Shell process.
         Will raise Exception in the event of a GJS error.
         '''
@@ -66,13 +66,13 @@ class NixOSNamespace(SimpleNamespace):
             allure.attach(imfile.read(), name=filename, attachment_type=allure.attachment_type.PNG)
         return cv2.imread(filename)
 
-    def create_app(self, id, use_x11 = False, scratch = False):
+    def create_app(self, id, use_x11 = False, scratch = False) -> GTKApplication:
         ''' Create a new remote-controllable Gtk application
         '''
         self._active_apps[id] = GTKApplication(self, id, use_x11, scratch)
         return self._active_apps[id]
 
-    def get_app(self, id):
+    def get_app(self, id) -> GTKApplication:
         ''' Retrieve an application created using create_app
         '''
         return self._active_apps[id]
@@ -83,7 +83,7 @@ class NixOSNamespace(SimpleNamespace):
         self._active_apps[id].exit()
         del self._active_apps[id]
 
-    def create_widget(self, widget, id, children = None, **kwargs):
+    def create_widget(self, widget, id, children = None, **kwargs) -> GTKWidgetBuilder:
         ''' Create a new composable widget object for a Gtk application
         '''
         return GTKWidgetBuilder(widget, id, children, **kwargs)

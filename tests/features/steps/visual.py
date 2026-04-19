@@ -4,8 +4,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-@given("a {kind} window with ID \"{id}\"")
-def gtk_stream_spawn_wayland(context, kind, id):
+def gtk_stream_spawn(context, kind, id, child):
     use_x11 = False
     scratch = False
     if "Wayland" in kind:
@@ -19,13 +18,23 @@ def gtk_stream_spawn_wayland(context, kind, id):
         scratch = False
 
     app = context.nixos.create_app(id, use_x11, scratch)
+    app.add(child)
+
+@given("a {kind} window with ID \"{id}\"")
+@given("an {kind} window with ID \"{id}\"")
+def gtk_stream_spawn_default(context, kind, id):
     win = context.nixos.create_widget("window", "win1", [
         context.nixos.create_widget("button", "btn1", [
             context.nixos.create_widget("label", "lbl1", text="Hello!")
         ])
     ])
-    app.add(win)
+    gtk_stream_spawn(context, kind, id, win)
 
+@given("a {kind} window from {template} with ID \"{id}\"")
+@given("an {kind} window from {template} with ID \"{id}\"")
+def gtk_stream_spawn_file(context, kind, template, id):
+    with open(Path(context.config.base_dir).parent.resolve() / "windows" / f"{template}.xml") as wintemp:
+        gtk_stream_spawn(context, kind, id, "\n".join(wintemp.readlines()))
 
 @then("the screen should match {image}")
 def scrcompare_simple(context, image):

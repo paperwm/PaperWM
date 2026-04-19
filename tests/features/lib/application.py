@@ -13,9 +13,13 @@ class GTKWidgetBuilder:
 
 
     def add(self, child):
+        ''' Add a new widget as a child of this widget.
+        '''
         self._output += child.finish()
 
-    def finish(self):
+    def finish(self) -> str:
+        ''' Finish this widget and return its XML value.
+        '''
         self._output += f"</{self._kind}>\n"
         self._finished = True
         return self._output
@@ -37,13 +41,28 @@ class GTKApplication:
     def _send(self, data):
         self._nixos.machine.succeed(f"cat > /tmp/app_{self._id} <<EOF\n{data}\nEOF")
 
-    def add(self, child: GTKWidgetBuilder):
-        self._send(child.finish())
+    def read_event(self, timeout=90) -> str:
+        ''' Wait for and read a single event.
+        '''
+        return self._nixos.machine.succeed(f"head -n 1 /tmp/app_{self._id}", timeout=timeout)
+
+    def add(self, child: GTKWidgetBuilder or str):
+        ''' Add a new widget to the current application. The top-level widget
+        is usually a window.
+        '''
+        if type(child) is GTKWidgetBuilder:
+            self._send(child.finish())
+        else:
+            self._send(child)
 
     def close_window(self, winid):
+        ''' Close a window of the given ID.
+        '''
         self._send(f'<close-window id="{winid}"/>')
 
     def exit(self):
+        ''' Cleanly exit this application. The instance will be unusable afterwards.
+        '''
         self._send(f'</application>')
         self._nixos.machine.succeed(f"""
             sudo -u user DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus systemctl --user stop gtk-stream-{self._kind}@{self._id}.service
