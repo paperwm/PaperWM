@@ -1,0 +1,328 @@
+<!-- html-reporter-github-pages:navigation -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>docs &#8212; Test Reports</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else if(t==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
+  <style>
+    :root {
+      --bg:#f0f4f8; --surface:#fff; --ga:#4f46e5; --gb:#7c3aed;
+      --bdr:#e2e8f0; --tx:#1e293b; --mu:#64748b;
+      --lk:#4f46e5; --lkh:#7c3aed; --rh:#f5f3ff;
+      --bbg:#ede9fe; --bfg:#5b21b6; --ibg:#f8fafc;
+      --r:12px; --sh:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
+    }
+    @media(prefers-color-scheme:dark){
+      :root:not([data-theme="light"]){
+        --bg:#0f172a; --surface:#1e293b; --ga:#3730a3; --gb:#6d28d9;
+        --bdr:#334155; --tx:#e2e8f0; --mu:#94a3b8;
+        --lk:#818cf8; --lkh:#a78bfa; --rh:#1e1b4b;
+        --bbg:#1e1b4b; --bfg:#a5b4fc; --ibg:#0f172a;
+      }
+    }
+    [data-theme="dark"]{
+      --bg:#0f172a; --surface:#1e293b; --ga:#3730a3; --gb:#6d28d9;
+      --bdr:#334155; --tx:#e2e8f0; --mu:#94a3b8;
+      --lk:#818cf8; --lkh:#a78bfa; --rh:#1e1b4b;
+      --bbg:#1e1b4b; --bfg:#a5b4fc; --ibg:#0f172a;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
+      background:var(--bg);color:var(--tx);min-height:100vh;
+      text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;
+    }
+    .hdr{
+      background:linear-gradient(135deg,var(--ga),var(--gb));
+      padding:22px 5% 18px;
+    }
+    .hdr-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    .hdr h1{
+      font-size:clamp(1rem,2.5vw,1.35rem);font-weight:600;
+      letter-spacing:-.01em;color:rgba(255,255,255,.8);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      min-width:0;
+    }
+    .hdr h1 a{color:rgba(255,255,255,.65);text-decoration:none;transition:color .15s}
+    .hdr h1 a:hover{color:#fff;text-decoration:underline}
+    .hdr h1 .sep{margin:0 6px;opacity:.45}
+    .hdr h1 .cur{color:#fff;font-weight:700}
+    .hnav{display:flex;align-items:center;gap:6px;flex-shrink:0}
+    .nbtn{
+      display:inline-flex;align-items:center;gap:4px;
+      padding:5px 12px;border-radius:6px;font-size:.75rem;font-weight:600;
+      color:#fff;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);
+      text-decoration:none;transition:background .15s,opacity .15s;white-space:nowrap;
+      cursor:pointer;
+    }
+    .nbtn:hover{background:rgba(255,255,255,.28)}
+    .nbtn.disabled{opacity:.3;pointer-events:none;cursor:default}
+    .thmbtn{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:5px 10px;border-radius:6px;
+      background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);
+      cursor:pointer;transition:background .15s;flex-shrink:0;
+      color:#fff;font-size:.75rem;font-weight:600;
+    }
+    .thmbtn:hover{background:rgba(255,255,255,.28)}
+    .thmbtn .thi{font-size:1rem;line-height:1}
+    .thmbtn .thlbl{opacity:.8;letter-spacing:.01em}
+    .thmbtn .thkbd{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:1px 5px;border-radius:4px;font-size:.65rem;font-weight:700;
+      background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+      letter-spacing:.05em;
+    }
+    @media(max-width:600px){.thmbtn .thlbl,.thmbtn .thkbd{display:none}}
+    .bar{
+      display:flex;align-items:center;gap:12px;
+      padding:13px 5%;background:var(--surface);
+      border-bottom:1px solid var(--bdr);flex-wrap:wrap;
+    }
+    .sw{position:relative;flex:1;min-width:150px;max-width:320px}
+    .sw svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--mu);pointer-events:none}
+    #filter{
+      width:100%;padding:7px 10px 7px 32px;border:1px solid var(--bdr);
+      border-radius:8px;background:var(--ibg);color:var(--tx);
+      font-size:.875rem;outline:none;transition:border-color .2s,box-shadow .2s;
+    }
+    #filter:focus{border-color:var(--lk);box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+    #filter::placeholder{color:var(--mu)}
+    .bdg{
+      font-size:.71rem;padding:3px 10px;background:var(--bbg);
+      color:var(--bfg);border-radius:999px;font-weight:700;
+      white-space:nowrap;margin-left:auto;
+    }
+    .card{
+      margin:18px 5%;background:var(--surface);border-radius:var(--r);
+      box-shadow:var(--sh);overflow:hidden;border:1px solid var(--bdr);
+    }
+    table{width:100%;border-collapse:collapse}
+    thead tr{border-bottom:2px solid var(--bdr)}
+    th{
+      padding:10px 16px;font-size:.68rem;font-weight:700;
+      text-transform:uppercase;letter-spacing:.07em;color:var(--mu);
+      white-space:nowrap;cursor:pointer;user-select:none;background:var(--surface);
+      transition:color .15s;
+    }
+    th:hover{color:var(--tx)}
+    th .si{margin-left:3px;opacity:.3;font-style:normal}
+    th.asc .si::after{content:' ↑';opacity:1}
+    th.desc .si::after{content:' ↓';opacity:1}
+    th:not(.asc):not(.desc) .si::after{content:' ⇅'}
+    td{padding:10px 16px;font-size:.875rem}
+    tbody tr{border-bottom:1px solid var(--bdr);transition:background .1s;cursor:pointer}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:var(--rh)}
+    td.cn a{
+      display:flex;align-items:center;gap:9px;
+      color:var(--lk);text-decoration:none;font-weight:500;transition:color .15s;
+    }
+    td.cn a:hover{color:var(--lkh);text-decoration:underline}
+    .ei{font-size:1.05em;flex-shrink:0;line-height:1}
+    td.cs{color:var(--mu);font-size:.78rem;white-space:nowrap}
+    td.cd{color:var(--mu);font-size:.78rem;white-space:nowrap}
+    tr.goup td.cn a{color:var(--mu);font-weight:400}
+    tr.hidden{display:none}
+    .nores{
+      display:none;text-align:center;padding:36px 16px;
+      color:var(--mu);font-size:.875rem;
+    }
+    @media(max-width:600px){
+      .card{margin:10px 3%}.bar{padding:10px 3%}.hdr{padding:16px 3% 12px}
+      td.cs,th:nth-child(2),td.cd,th:nth-child(3){display:none}
+      .bdg{display:none}
+    }
+  </style>
+</head>
+<body>
+  <header class="hdr">
+    <div class="hdr-inner">
+      <h1>
+        <a href="..">&#8617;&nbsp;..</a>
+        <span class="sep">/</span>
+        <span class="cur">docs</span>
+      </h1>
+      <nav class="hnav" aria-label="Run navigation">
+        <a class="nbtn" id="btn-home" href="../" title="Parent directory">&#127968; Home</a>
+        <a class="nbtn" id="btn-prev" href="#" title="Previous run">&#8592; Prev</a>
+        <a class="nbtn" id="btn-next" href="#" title="Next run">Next &#8594;</a>
+        <a class="nbtn" id="btn-latest" href="#" title="Jump to latest run">Latest &#9654;</a>
+        <button class="thmbtn" id="btn-theme" title="Toggle dark/light mode (shortcut: T)" aria-label="Toggle color theme">
+          <span class="thi">🌙</span>
+          <span class="thlbl">Theme</span>
+          <span class="thkbd">T</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+  <div class="bar">
+    <div class="sw">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="filter" placeholder="Filter entries&#8230;" autocomplete="off">
+    </div>
+    <span class="bdg" id="cnt">&#8212;</span>
+  </div>
+  <div class="card">
+    <table aria-label="Directory listing">
+      <thead>
+        <tr>
+          <th data-col="name">Name<i class="si"></i></th>
+          <th data-col="size">Size<i class="si"></i></th>
+          <th data-col="date">Modified<i class="si"></i></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="goup">
+          <td class="cn"><a href=".."><span class="ei">&#8617;</span><span class="name">..</span></a></td>
+          <td class="cs">&mdash;</td>
+          <td class="cd">&mdash;</td>
+        </tr>
+        <tr>
+          <td class="cn"><a href="Run-end-to-end-tests-for-PaperWM/"><span class="ei">📁</span><span class="name">Run-end-to-end-tests-for-PaperWM</span></a></td>
+          <td class="cs" data-order="23160090">22 MB</td>
+          <td class="cd"><time datetime="2026-04-19T10:17:48+00:00">Sun Apr 19 10:17:48 2026</time></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="nores">No matching entries found.</p>
+  <script>
+  (function(){
+    // ── Theme toggle ─────────────────────────────────────────────────────
+    (function(){
+      var btn=document.getElementById('btn-theme');
+      var btnIco=btn?btn.querySelector('.thi'):null;
+      function applyTheme(dark){
+        document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+        if(btnIco)btnIco.textContent=dark?'☀️':'🌙';
+        if(btn)btn.title=(dark?'Switch to light mode':'Switch to dark mode')+' (shortcut: T)';
+      }
+      var sys=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;
+      var saved=localStorage.getItem('theme');
+      var isDark=saved==='dark'||(saved===null&&sys);
+      applyTheme(isDark);
+      function toggleTheme(){
+        var next=document.documentElement.getAttribute('data-theme')!=='dark';
+        applyTheme(next);
+        localStorage.setItem('theme',next?'dark':'light');
+      }
+      if(btn){btn.addEventListener('click',toggleTheme);}
+      document.addEventListener('keydown',function(e){
+        if(e.key==='t'||e.key==='T'){
+          var tag=(e.target||{}).tagName||'';
+          if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+          toggleTheme();
+        }
+      });
+    })();
+    function relTime(iso){
+      if(!iso)return '';
+      var d=new Date(iso),now=new Date();
+      if(isNaN(d.getTime()))return '';
+      // Same calendar day → relative; any earlier day → exact date
+      var sameDay=d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()&&d.getDate()===now.getDate();
+      if(!sameDay){
+        return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+      }
+      var diff=Date.now()-d,s=diff/1e3,m=s/60,h=m/60;
+      if(s<60) return 'just now';
+      if(m<60) return Math.round(m)+'m ago';
+      return Math.round(h)+'h ago';
+    }
+    // ── Home / Prev / Next / Latest navigation ──────────────────────────
+    (function(){
+      var segs=window.location.pathname.replace(/\/+$/,'').split('/');
+      var cur=segs[segs.length-1];
+      var n=parseInt(cur,10);
+      var prev=document.getElementById('btn-prev');
+      var next=document.getElementById('btn-next');
+      var latest=document.getElementById('btn-latest');
+      if(isNaN(n)){
+        if(prev)prev.classList.add('disabled');
+        if(next)next.classList.add('disabled');
+      } else {
+        if(prev){
+          if(n<=1){prev.classList.add('disabled');}
+          else{prev.href='../'+(n-1)+'/';}
+        }
+        if(next){next.href='../'+(n+1)+'/';}
+      }
+      if(latest){
+        latest.addEventListener('click',function(e){
+          e.preventDefault();
+          var rs=Array.from(document.querySelectorAll('tbody tr:not(.goup)'));
+          var best=null,bestN=-Infinity;
+          rs.forEach(function(r){
+            var nm=(r.querySelector('.name')||{textContent:''}).textContent;
+            var v=parseInt(nm,10);
+            if(!isNaN(v)&&v>bestN){bestN=v;best=r;}
+          });
+          if(best){var lk=best.querySelector('a');if(lk)window.location.href=lk.href;}
+          else{
+            var first=document.querySelector('tbody tr:not(.goup) a');
+            if(first)window.location.href=first.href;
+          }
+        });
+      }
+    })();
+    // ── Relative timestamps ──────────────────────────────────────────────
+    document.querySelectorAll('time[datetime]').forEach(function(el){
+      var r=relTime(el.getAttribute('datetime'));
+      if(r){el.title=el.textContent;el.textContent=r;}
+    });
+    var inp=document.getElementById('filter');
+    var cnt=document.getElementById('cnt');
+    var noR=document.querySelector('.nores');
+    var rows=Array.from(document.querySelectorAll('tbody tr:not(.goup)'));
+    function upd(){
+      var v=rows.filter(function(r){return!r.classList.contains('hidden');}).length;
+      if(cnt)cnt.textContent=v+' item'+(v===1?'':'s');
+      if(noR)noR.style.display=v===0?'block':'none';
+    }
+    if(inp){
+      inp.addEventListener('input',function(){
+        var q=this.value.toLowerCase();
+        rows.forEach(function(r){
+          var n=r.querySelector('.name');
+          r.classList.toggle('hidden',!(!q||(n&&n.textContent.toLowerCase().includes(q))));
+        });
+        upd();
+      });
+    }
+    upd();
+    var tbody=document.querySelector('tbody');
+    document.querySelectorAll('th[data-col]').forEach(function(th){
+      th.addEventListener('click',function(){
+        var col=this.dataset.col,asc=this.classList.contains('asc')?-1:1;
+        document.querySelectorAll('th[data-col]').forEach(function(t){t.classList.remove('asc','desc');});
+        this.classList.add(asc===1?'asc':'desc');
+        var r=Array.from(tbody.querySelectorAll('tr:not(.goup)'));
+        r.sort(function(a,b){
+          if(col==='name'){
+            var va=(a.querySelector('.name')||{textContent:''}).textContent.toLowerCase();
+            var vb=(b.querySelector('.name')||{textContent:''}).textContent.toLowerCase();
+            return asc*va.localeCompare(vb);
+          }
+          if(col==='size'){
+            var ta=a.querySelector('.cs'),tb=b.querySelector('.cs');
+            return asc*(parseInt((ta&&ta.dataset.order)||'-1')-parseInt((tb&&tb.dataset.order)||'-1'));
+          }
+          if(col==='date'){
+            var ta=a.querySelector('time'),tb=b.querySelector('time');
+            return asc*((ta?ta.getAttribute('datetime'):'')||'').localeCompare((tb?tb.getAttribute('datetime'):'')||'');
+          }
+          return 0;
+        });
+        var gu=tbody.querySelector('.goup');
+        if(gu)tbody.prepend(gu);
+        r.forEach(function(row){tbody.appendChild(row);});
+      });
+    });
+  })();
+  </script>
+</body>
+</html>

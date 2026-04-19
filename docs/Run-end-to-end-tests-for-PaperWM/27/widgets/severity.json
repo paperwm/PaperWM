@@ -1,0 +1,1 @@
+[{"uid":"b5da413119573269","name":"The test machine starts","time":{"start":1775287397934,"stop":1775287411345,"duration":13411},"status":"passed","severity":"normal"},{"uid":"a74f021984365454","name":"Three finger swipe (stub)","time":{"start":1775287411346,"stop":1775287453794,"duration":42448},"status":"failed","severity":"normal"}]
