@@ -586,7 +586,7 @@ export class MoveGrab {
         Utils.later_add(Meta.LaterType.IDLE, () => {
             if (!global.display.end_grab_op && this.wasTiled) {
                 let time = Clutter.get_current_event_time();
-                
+
                 // For Mouse users: Fakes a mouse click to break Mutter's pointer grab
                 let [x, y] = global.get_pointer();
                 getVirtualPointer().notify_absolute_motion(time, x, y);
