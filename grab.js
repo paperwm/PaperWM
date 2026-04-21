@@ -14,17 +14,15 @@ export const name = "grab";
 export let grabbed = false;
 
 /**
- * Sets the cursor type, using the GNOME 50+ actor-based API when available,
- * falling back to the legacy Meta.Cursor API for older versions.
+ * Sets the cursor type to Grabbing or Default, going through each enum type.
  */
-function setCursor(cursorType) {
+function setCursorGrabbing(cursorType) {
     if (Utils.version[0] >= 50) {
-        // GNOME 50+: Meta.Cursor and display.set_cursor() are removed
-        global.stage.set_cursor_type(cursorType);
+        global.stage.set_cursor_type(cursorType ? Clutter.CursorType.GRABBING : Clutter.CursorType.DEFAULT);
+    } else if (Utils.version[0] >= 48) {
+        global.display.set_cursor(cursorType ? Meta.Cursor.GRABBING : Meta.Cursor.DEFAULT)
     } else {
-        global.display.set_cursor(cursorType === Clutter.CursorType.GRABBING
-            ? (Utils.version[0] >= 48 ? Meta.Cursor.GRABBING : Meta.Cursor.MOVE_OR_RESIZE_WINDOW)
-            : Meta.Cursor.DEFAULT);
+        global.display.set_cursor(cursorType ? Meta.Cursor.MOVE_OR_RESIZE_WINDOW : Meta.Cursor.DEFAULT)
     }
 }
 
@@ -83,7 +81,7 @@ export class MoveGrab {
 
         grabbed = true;
         global.display.end_grab_op?.(global.get_current_time());
-        setCursor(Clutter.CursorType.GRABBING);
+        setCursorGrabbing(true);
         this.dispatcher = new Navigator.getActionDispatcher(DispatcherMode.POINTER);
         this.actor = this.dispatcher.actor;
 
@@ -148,7 +146,7 @@ export class MoveGrab {
         console.debug("#grab", "begin DnD");
         Navigator.getNavigator().minimaps.forEach(m => typeof m === 'number'
             ? Utils.timeout_remove(m) : m.hide());
-        setCursor(Clutter.CursorType.GRABBING);
+        setCursorGrabbing(true);
         let metaWindow = this.window;
         let clone = metaWindow.clone;
         let space = this.initialSpace;
@@ -566,7 +564,7 @@ export class MoveGrab {
             Navigator.dismissDispatcher(DispatcherMode.POINTER);
         }
 
-        setCursor(Clutter.CursorType.DEFAULT);
+        setCursorGrabbing(false);
 
         /**
          * Gnome 44 removed the ability to manually end_grab_op.
