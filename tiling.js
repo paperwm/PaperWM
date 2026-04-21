@@ -1,5 +1,4 @@
 import Clutter from 'gi://Clutter';
-var GrabState = GrabState || { NONE: 0, POINTER: 1, KEYBOARD: 2, ALL: 3 };
 import GDesktopEnums from 'gi://GDesktopEnums';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -12,7 +11,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {
     Settings, Utils, Lib, Gestures, Navigator, Grab, Topbar, Scratch, Stackoverlay, Background
 } from './imports.js';
-import { Easer } from './utils.js';
+import { Easer, DispatcherMode } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
 import { WorkspaceSettings } from './workspace.js';
 
@@ -1272,7 +1271,7 @@ export class Space extends Array {
         this.drifting = true;
 
         // stop drifting on key_release
-        Navigator.getActionDispatcher(GrabState.KEYBOARD)
+        Navigator.getActionDispatcher(DispatcherMode.KEYBOARD)
             .addKeyReleaseCallback(() => {
                 Utils.timeout_remove(driftTimeout);
                 this.drifting = null;
@@ -1421,10 +1420,8 @@ export class Space extends Array {
 
         this.fixOverlays();
 
-        if (!Utils.is_wayland_compositor()) {
-            // See startAnimate
-            Main.layoutManager.untrackChrome(this.background);
-        }
+        // See startAnimate
+        Main.layoutManager.untrackChrome(this.background);
 
         this._isAnimating = false;
 
@@ -1464,7 +1461,7 @@ export class Space extends Array {
     }
 
     startAnimate() {
-        if (!this._isAnimating && !Utils.is_wayland_compositor()) {
+        if (!this._isAnimating) {
             // Tracking the background fixes issue #80
             // It also let us activate window clones clicked during animation
             // Untracked in moveDone
@@ -3160,12 +3157,10 @@ export const Spaces = class Spaces extends Map {
             to.border.opacity = 255;
             Utils.actor_raise(to.clip);
 
-            // Fixes a weird bug where mouse input stops
-            // working after mousing to another monitor on
-            // X11.
-            if (!Utils.is_wayland_compositor()) {
-                to.startAnimate();
-            }
+            // Ensures window clones are clickable after switching monitors.
+            // Originally X11-only but also needed on Wayland for proper
+            // input handling after space switches.
+            to.startAnimate();
 
             to.moveDone();
             if (callback) {
@@ -5477,7 +5472,7 @@ export function takeWindow(metaWindow, space, options = {}) {
         };
 
         // get the action dispatcher signal to connect to
-        Navigator.getActionDispatcher(GrabState.KEYBOARD)
+        Navigator.getActionDispatcher(DispatcherMode.KEYBOARD)
             .addKeypressCallback((_modmask, keysym, _event) => {
                 switch (keysym) {
                 case Clutter.KEY_space: {
@@ -5532,7 +5527,7 @@ export function takeWindow(metaWindow, space, options = {}) {
 
         signals.connectOneShot(navigator, 'destroy', () => {
             // ensure keyboard grabstate is dimissed (in case moving stopped via pointer)
-            Navigator.dismissDispatcher(GrabState.KEYBOARD);
+            Navigator.dismissDispatcher(DispatcherMode.KEYBOARD);
             navigator.showTakeHint(false);
 
             let selectedSpace = spaces.selectedSpace;

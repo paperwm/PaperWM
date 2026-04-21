@@ -105,11 +105,18 @@ export function setBackgroundImage(actor, resource_path) {
     actor.content_repeat = Clutter.ContentRepeat.BOTH;
 }
 
+/**
+ * Internal mode tracking for ActionDispatcher.
+ * Tracks whether the dispatcher was requested for keyboard, pointer, or both.
+ * Replaces the removed Clutter.GrabState enum (GNOME 50+).
+ */
+export const DispatcherMode = { NONE: 0, POINTER: 1, KEYBOARD: 2 };
+
 export function is_wayland_compositor() {
     if (typeof Meta.is_wayland_compositor === 'function')
         return Meta.is_wayland_compositor()
-    else
-        return true // GNOME 50+ is always a Wayland compositor
+
+    return true // GNOME 50+ is always a Wayland compositor
 }
 
 /**
