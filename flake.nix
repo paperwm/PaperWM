@@ -2,7 +2,7 @@
 
   inputs =
   { "nixpkgs".url = "github:NixOS/nixpkgs";
-    "nixpkgs-gnome".url = "github:NixOS/nixpkgs/wip-gnome";
+    "nixpkgs-gnome".url = "github:vitorpavani/nixpkgs/gnome-50-bump";
 
     "gtk-stream".url = "git+https://git.sr.ht/~marc-coiffier/gtk-stream";
     "gtk-stream".flake = false;
@@ -36,7 +36,7 @@
     # NixOS usually takes its sweet time updating to latest GNOME.
     # Enable this to use the GNOME version from their dedicated dev branch.
     #WARN: build times may increase significantly!
-    useGnomeStaging = false;
+    useGnomeStaging = true;
   in
   flake-utils.lib.eachDefaultSystem
     (system:

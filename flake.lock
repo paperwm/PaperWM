@@ -50,16 +50,16 @@
     },
     "nixpkgs-gnome": {
       "locked": {
-        "lastModified": 1762163421,
-        "narHash": "sha256-qo7ZDi04s8EU7BQh1iKFrWV8eqclRDsJx47IY019sa4=",
-        "owner": "NixOS",
+        "lastModified": 1774023726,
+        "narHash": "sha256-PM7E9SMtCkt85kNsnFnfwf8mIQrXexNSWc4216u+tRE=",
+        "owner": "vitorpavani",
         "repo": "nixpkgs",
-        "rev": "46391794055c11ed20e22656127d4f728dc1b263",
+        "rev": "7c90eaeae3a68e40a45b994a37670b5dc9c122ad",
         "type": "github"
       },
       "original": {
-        "owner": "NixOS",
-        "ref": "wip-gnome",
+        "owner": "vitorpavani",
+        "ref": "gnome-50-bump",
         "repo": "nixpkgs",
         "type": "github"
       }
