@@ -22,7 +22,7 @@ Have questions or comments?  Please ask on our [Github Discussions](https://gith
 
 Clone the repo and check out the branch for the GNOME Shell version you're running:
 
-- 45-49 (currently developed/supported): https://github.com/paperwm/PaperWM/tree/release
+- 45-50 (currently developed/supported): https://github.com/paperwm/PaperWM/tree/release
 - 42-44 ([EOL](https://release.gnome.org/calendar/#releases)): https://github.com/paperwm/PaperWM/tree/gnome-44
 - 40-41 ([EOL](https://release.gnome.org/calendar/#releases)): https://github.com/paperwm/PaperWM/tree/gnome-40
 - 3.28-3.38 ([EOL](https://release.gnome.org/calendar/#releases)): https://github.com/paperwm/PaperWM/tree/gnome-3.38
