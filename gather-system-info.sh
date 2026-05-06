@@ -11,7 +11,7 @@
 REPO="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 main() {
-    cd "${REPO}"
+    cd "${REPO}" || exit
 
     echo "Please include this information in your bug report on GitHub!"
 
@@ -25,6 +25,7 @@ main() {
 show_distribution() {
     echo -n "Distribution: "
     if [ -f /etc/os-release ]; then
+        # shellcheck disable=SC1091
         source /etc/os-release && echo "${NAME}"
     fi
 }
