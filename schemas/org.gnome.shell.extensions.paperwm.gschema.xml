@@ -768,6 +768,21 @@
         <summary>Number of fingers for workspace switching. 0:DISABLED 3:THREE_FINGERS 4:FOUR_FINGERS</summary>
     </key>
 
+    <key type="b" name="touch-gesture-enabled">
+        <default>true</default>
+        <summary>Enables the PaperWM touchscreen swipe gesture</summary>
+    </key>
+
+    <key type="i" name="touch-gesture-fingers">
+        <default>4</default>
+        <summary>Number of fingers for the touchscreen tiling swipe. 4:FOUR_FINGERS 5:FIVE_FINGERS</summary>
+    </key>
+
+    <key type="d" name="touch-gesture-sensitivity">
+        <default>1.8</default>
+        <summary>Touchscreen swipe sensitivity: how far the tiling moves per unit of finger travel</summary>
+    </key>
+
     <child name="keybindings" schema="org.gnome.shell.extensions.paperwm.keybindings"/>
     <child name="workspaces" schema="org.gnome.shell.extensions.paperwm.workspacelist"/>
 

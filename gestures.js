@@ -15,6 +15,7 @@ const DIRECTIONS = {
 };
 
 let vy, time, vState, navigator, direction, signals;
+let touchPanGesture; // touchscreen 4-finger pan gesture (local addition)
 let handoffToOverview = false;
 // 1 is natural scrolling, -1 is unnatural
 let natural = 1;
@@ -172,6 +173,76 @@ export function enable(extension) {
         }
         return Clutter.EVENT_PROPAGATE;
     });
+
+    /**
+       Touchscreen pan -> scroll the window strip.
+
+       PaperWM natively only handles touchpad swipes (TOUCHPAD_SWIPE events)
+       and a single-finger top-bar touch scroll; a touchscreen never emits
+       TOUCHPAD_SWIPE. This adds a touchscreen equivalent via Clutter's gesture
+       framework. Unlike a raw captured-event handler, a gesture recognised by
+       the framework intercepts touch even over windows.
+
+       Defaults to 4 fingers: GNOME owns the 3-finger touchscreen swipe
+       (workspace switching) and wins gesture recognition. Finger count,
+       sensitivity and enabled state are configurable via the touch-gesture-*
+       settings.
+     */
+    touchPanGesture = new Clutter.PanGesture();
+    touchPanGesture.set_pan_axis(Clutter.PanAxis.X);
+    let panSpace = null;
+
+    // Push finger count and enabled state to the gesture; re-apply on change.
+    // Sensitivity is read live per pan-update (see below).
+    const applyTouchGestureSettings = () => {
+        const fingers = Settings.prefs.touch_gesture_fingers;
+        touchPanGesture.set_min_n_points(fingers);
+        touchPanGesture.set_max_n_points(fingers);
+        touchPanGesture.set_enabled(Settings.prefs.touch_gesture_enabled);
+    };
+    applyTouchGestureSettings();
+    signals.connect(gsettings, 'changed::touch-gesture-enabled', applyTouchGestureSettings);
+    signals.connect(gsettings, 'changed::touch-gesture-fingers', applyTouchGestureSettings);
+
+    signals.connect(touchPanGesture, 'recognize', () => {
+        const space = Tiling.spaces.activeSpace ?? Tiling.spaces.selectedSpace;
+        panSpace = space ?? null;
+        if (!panSpace)
+            return;
+        panSpace.vx = 0;
+        dxs = [];
+        dts = [];
+        start = panSpace.targetX;
+        panSpace.hState = Clutter.TouchpadGesturePhase.UPDATE;
+        direction = DIRECTIONS.Horizontal;
+        Easer.removeEase(panSpace.cloneContainer);
+        swipeTrackersEnable(false);
+        navigator = Navigator.getNavigator();
+        update(panSpace, 0, GLib.get_monotonic_time() / 1000);
+    });
+
+    signals.connect(touchPanGesture, 'pan-update', gesture => {
+        if (!panSpace)
+            return;
+        const delta = gesture.get_delta();
+        update(panSpace, -delta.get_x() * Settings.prefs.touch_gesture_sensitivity,
+            GLib.get_monotonic_time() / 1000);
+    });
+
+    const finishPan = () => {
+        if (!panSpace)
+            return;
+        panSpace.hState = Clutter.TouchpadGesturePhase.END;
+        done(panSpace);
+        direction = undefined;
+        dxs = [];
+        dts = [];
+        panSpace = null;
+    };
+    signals.connect(touchPanGesture, 'end', finishPan);
+    signals.connect(touchPanGesture, 'cancel', finishPan);
+
+    global.stage.add_action(touchPanGesture);
 }
 
 function shouldPropagate(fingers) {
@@ -206,6 +277,10 @@ export function disable() {
     signals = null;
     Utils.timeout_remove(endVerticalTimeout);
     endVerticalTimeout = null;
+    if (touchPanGesture) {
+        global.stage.remove_action(touchPanGesture);
+        touchPanGesture = null;
+    }
     touchpadSettings = null;
 }
 
