@@ -447,6 +447,15 @@ class SettingsWidget {
         const fingerNumberDefault = 0;
         enumOptionsChanged('gesture-horizontal-fingers', fingerOptions, fingerOptionDefault, fingerNumberDefault);
         enumOptionsChanged('gesture-workspace-fingers', fingerOptions, fingerOptionDefault, fingerNumberDefault);
+
+        // Touchscreen gesture settings
+        booleanStateChanged('touch-gesture-enabled');
+        enumOptionsChanged(
+            'touch-gesture-fingers',
+            { 'four-fingers': 4, 'five-fingers': 5 },
+            'four-fingers',
+            4);
+        doubleValueChanged('touch-gesture-sensitivity', 'touch-gesture-sensitivity');
         enumOptionsChanged(
             'default-focus-mode',
             {

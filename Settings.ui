@@ -30,6 +30,12 @@
     <property name="step_increment">0.1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="touch-gesture-sensitivity-adjustment">
+    <property name="lower">0.5</property>
+    <property name="upper">5</property>
+    <property name="step_increment">0.1</property>
+    <property name="page_increment">1</property>
+  </object>
   <object class="GtkAdjustment" id="vertical_margin">
     <property name="upper">100</property>
     <property name="step_increment">1</property>
@@ -502,6 +508,153 @@
                                   <item id="three-fingers" translatable="yes">3 Fingers</item>
                                   <item id="four-fingers" translatable="yes">4 Fingers</item>
                                 </items>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="halign">start</property>
+                    <property name="hexpand">True</property>
+                    <property name="label" translatable="yes">Touchscreen Gestures</property>
+                    <attributes>
+                      <attribute name="weight" value="bold" />
+                    </attributes>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkListBox">
+                    <property name="focusable">False</property>
+                    <property name="selection_mode">none</property>
+                    <property name="margin-bottom">16</property>
+                    <style>
+                      <class name="frame" />
+                    </style>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">Enables / disables the PaperWM touchscreen swipe gesture for moving the tiling left/right.</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Enable Touchscreen Gestures</property>
+                                <property name="use_markup">1</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSwitch" id="touch-gesture-enabled">
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">Number of fingers for the touchscreen tiling swipe. 3 fingers conflicts with GNOME's workspace gesture.</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Swipe tiling windows &lt;i&gt;(swipe left/right)&lt;/i&gt;</property>
+                                <property name="use_markup">1</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="touch-gesture-fingers">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">0</property>
+                                <property name="width-request">106</property>
+                                <items>
+                                  <item id="four-fingers" translatable="yes">4 Fingers</item>
+                                  <item id="five-fingers" translatable="yes">5 Fingers</item>
+                                </items>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">How far the tiling moves per unit of finger travel. Higher means a shorter swipe switches window.</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Swipe sensitivity</property>
+                                <property name="use_markup">1</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="touch-gesture-sensitivity">
+                                <property name="can_focus">True</property>
+                                <property name="editable">True</property>
+                                <property name="width_chars">2</property>
+                                <property name="max_width_chars">2</property>
+                                <property name="text" translatable="yes">0</property>
+                                <property name="adjustment">touch-gesture-sensitivity-adjustment</property>
+                                <property name="digits">1</property>
+                                <property name="snap_to_ticks">1</property>
+                                <property name="numeric">1</property>
+                                <property name="update_policy">always</property>
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
                               </object>
                             </child>
                           </object>
