@@ -1,5 +1,6 @@
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
+import GioUnix from 'gi://GioUnix';
 import Shell from 'gi://Shell';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -50,14 +51,14 @@ export function enable() {
     );
 
     overrideWithFallback(
-        Gio.DesktopAppInfo, "launch",
+        GioUnix.DesktopAppInfo, "launch",
         (fallback, appInfo) => {
             return spawnWithFallback(fallback, appInfo.get_id());
         }
     );
 
     overrideWithFallback(
-        Gio.DesktopAppInfo, "launch_action",
+        GioUnix.DesktopAppInfo, "launch_action",
         (fallback, appInfo, name, ...args) => {
             if (name === 'new-window')
                 return spawnWithFallback(fallback, appInfo.get_id());
@@ -75,7 +76,7 @@ export function disable() {
 
 export function launchFromWorkspaceDir(app, workspace = null) {
     if (typeof  app === 'string') {
-        app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
+        app = new Shell.App({ app_info: GioUnix.DesktopAppInfo.new(app) });
     }
     let dir = getWorkspaceDirectory(workspace);
     let cmd = app.app_info.get_commandline();
@@ -127,7 +128,7 @@ export function duplicateWindow(metaWindow) {
 
 export function trySpawnWindow(app, workspace) {
     if (typeof  app === 'string') {
-        app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
+        app = new Shell.App({ app_info: GioUnix.DesktopAppInfo.new(app) });
     }
     let handler = customSpawnHandlers[app.id];
     if (handler) {
@@ -140,7 +141,7 @@ export function trySpawnWindow(app, workspace) {
 
 export function spawnWindow(app, workspace) {
     if (typeof  app === 'string') {
-        app = new Shell.App({ app_info: Gio.DesktopAppInfo.new(app) });
+        app = new Shell.App({ app_info: GioUnix.DesktopAppInfo.new(app) });
     }
     try {
         return trySpawnWindow(app, workspace);
