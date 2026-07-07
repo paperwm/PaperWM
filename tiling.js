@@ -1,5 +1,4 @@
 import Clutter from 'gi://Clutter';
-import GDesktopEnums from 'gi://GDesktopEnums';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Graphene from 'gi://Graphene';
@@ -445,6 +444,7 @@ export class Space extends Array {
         this.signals.connect(gsettings, 'changed::use-default-background', this.updateBackground.bind(this));
         this.signals.connect(backgroundSettings, 'changed::picture-uri', this.updateBackground.bind(this));
         this.signals.connect(backgroundSettings, "changed::picture-uri-dark", this.updateBackground.bind(this));
+        this.signals.connect(backgroundSettings, "changed::picture-options", this.updateBackground.bind(this));
     }
 
     /**
@@ -1700,7 +1700,7 @@ border-radius: ${borderWidth}px;
             layoutManager: Main.layoutManager,
             settings: backgroundSettings,
             file: Gio.File.new_for_commandline_arg(path),
-            style: GDesktopEnums.BackgroundStyle.ZOOM,
+            style: backgroundSettings.get_enum('picture-options'),
         });
 
         if (!this.metaBackground) {
