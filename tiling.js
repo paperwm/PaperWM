@@ -4694,8 +4694,7 @@ export function getDefaultFocusMode() {
  * positions itself — transients and non-NORMAL dialogs/modals, but not sticky
  * or scratch windows (which have their own positioning). Derived from the
  * canonical `add_filter` (single source of truth for tiling eligibility) minus
- * sticky/scratch. The pure `classifyPopup` in popuputil.js stays as the
- * testable spec.
+ * sticky/scratch, so it follows automatically if `add_filter` widens.
  */
 export function isPopupClass(metaWindow) {
     if (metaWindow.is_on_all_workspaces() || Scratch.isScratchWindow(metaWindow))

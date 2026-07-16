@@ -48,19 +48,3 @@ export function computeClampedPosition(frame, bounds) {
     const y = Math.max(minY, Math.min(frame.y, maxY));
     return { x, y };
 }
-
-/**
- * Whether a window is "popup-class" for visibility purposes: a real, non-tiled
- * surface that mutter positions itself (transients plus non-NORMAL dialog /
- * modal / utility windows), excluding sticky and scratch windows which have
- * their own positioning. Takes plain booleans so it is testable without
- * MetaWindow / Scratch.
- *
- * @param {{isTransient:boolean,isNormalType:boolean,onAllWorkspaces:boolean,isScratch:boolean}} w
- * @returns {boolean}
- */
-export function classifyPopup({ isTransient, isNormalType, onAllWorkspaces, isScratch }) {
-    if (onAllWorkspaces || isScratch)
-        return false;
-    return isTransient || !isNormalType;
-}

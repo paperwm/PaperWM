@@ -5,14 +5,14 @@
  * Run:  gjs -m tests/test-popup-visibility.js
  *
  * These cover the shell-free pieces only — the coordinate reconciliation
- * (workArea is monitor-relative, frame/move_frame are screen-absolute), the
- * clamp arithmetic (incl. the oversize edge case), and the popup-class
- * predicate. The shell-facing wrappers in tiling.js (ensureVisibleInWorkArea,
- * the focus / demands-attention entry points) need a live gnome-shell session
- * and are exercised manually.
+ * (workArea is monitor-relative, frame/move_frame are screen-absolute) and the
+ * clamp arithmetic (incl. the oversize edge case). The shell-facing wrappers in
+ * tiling.js (ensureVisibleInWorkArea, the focus / demands-attention entry
+ * points, the isPopupClass predicate) need a live gnome-shell session and are
+ * exercised manually.
  */
 
-import { workAreaToBounds, computeClampedPosition, classifyPopup } from '../popuputil.js';
+import { workAreaToBounds, computeClampedPosition } from '../popuputil.js';
 import system from 'system';
 
 let _passed = 0, _failed = 0;
@@ -100,25 +100,6 @@ print('\n== computeClampedPosition (clamp math) ==');
     check('multi-monitor: not relocated to primary', r.x >= 1920,
         `got ${r.x} (< 1920 would be the primary-monitor bug)`);
 }
-
-// ─── classifyPopup (the predicate — incl. the non-transient-dialog gap) ────────
-
-print('\n== classifyPopup (predicate) ==');
-
-check('transient (normal-type) -> true',
-    classifyPopup({ isTransient: true, isNormalType: true, onAllWorkspaces: false, isScratch: false }) === true);
-check('transient MODAL_DIALOG -> true',
-    classifyPopup({ isTransient: true, isNormalType: false, onAllWorkspaces: false, isScratch: false }) === true);
-check('any non-NORMAL type (dialog/modal/utility) -> true  (the gap isTransient alone misses)',
-    classifyPopup({ isTransient: false, isNormalType: false, onAllWorkspaces: false, isScratch: false }) === true);
-check('normal tiled window -> false',
-    classifyPopup({ isTransient: false, isNormalType: true, onAllWorkspaces: false, isScratch: false }) === false);
-check('sticky window (on_all_workspaces) -> false',
-    classifyPopup({ isTransient: true, isNormalType: false, onAllWorkspaces: true, isScratch: false }) === false);
-check('scratch window -> false',
-    classifyPopup({ isTransient: true, isNormalType: false, onAllWorkspaces: false, isScratch: true }) === false);
-check('normal sticky -> false',
-    classifyPopup({ isTransient: false, isNormalType: true, onAllWorkspaces: true, isScratch: false }) === false);
 
 // ─── end-to-end (workArea + frame + clamp, multi-monitor) ──────────────────────
 
