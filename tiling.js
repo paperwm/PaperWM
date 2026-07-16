@@ -13,7 +13,7 @@ import {
 import { Easer, DispatcherMode } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
 import { WorkspaceSettings } from './workspace.js';
-import { workAreaToBounds, computeClampedPosition, classifyPopup } from './popuputil.js';
+import { workAreaToBounds, computeClampedPosition } from './popuputil.js';
 
 const { signals: Signals } = imports;
 const workspaceManager = global.workspace_manager;
@@ -4704,16 +4704,15 @@ export function getDefaultFocusMode() {
 /**
  * Whether `metaWindow` is popup-class: a real (non-tiled) surface mutter
  * positions itself — transients and non-NORMAL dialogs/modals, but not sticky
- * or scratch windows (which have their own positioning). Thin adapter over the
- * shell-free `classifyPopup` (popuputil.js).
+ * or scratch windows (which have their own positioning). Derived from the
+ * canonical `add_filter` (single source of truth for tiling eligibility) minus
+ * sticky/scratch. The pure `classifyPopup` in popuputil.js stays as the
+ * testable spec.
  */
 export function isPopupClass(metaWindow) {
-    return classifyPopup({
-        isTransient: !!metaWindow.get_transient_for(),
-        isNormalType: metaWindow.window_type === Meta.WindowType.NORMAL,
-        onAllWorkspaces: metaWindow.is_on_all_workspaces(),
-        isScratch: Scratch.isScratchWindow(metaWindow),
-    });
+    if (metaWindow.is_on_all_workspaces() || Scratch.isScratchWindow(metaWindow))
+        return false;
+    return !add_filter(metaWindow);
 }
 
 /**
@@ -4722,6 +4721,9 @@ export function isPopupClass(metaWindow) {
  * Unlike tiled windows, popups are real MetaWindows positioned by mutter (not
  * in the clone container), so they can't be scrolled via `ensureViewport`. We
  * move them directly with `move_frame`. No-op if already fully on-screen.
+ *
+ * Precondition: `metaWindow`'s space agrees with its physical monitor —
+ * cross-workspace popups are redirected by `insertWindow` before this runs.
  */
 export function ensureVisibleInWorkArea(metaWindow) {
     const space = spaces.spaceOfWindow(metaWindow);
