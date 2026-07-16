@@ -4715,6 +4715,11 @@ export function isPopupClass(metaWindow) {
  */
 export function ensureVisibleInWorkArea(metaWindow) {
     const space = spaces.spaceOfWindow(metaWindow);
+    // Bail if the window's physical monitor doesn't match its workspace's space
+    // (can desync on cross-workspace moves) — repositioning from the wrong
+    // monitor's workArea would yank the popup across heads.
+    if (metaWindow.get_monitor() !== space.monitor.index)
+        return;
     const bounds = workAreaToBounds(space.monitor, space.workArea());
     const frame = metaWindow.get_frame_rect();
     const { x, y } = computeClampedPosition(frame, bounds);
@@ -4729,6 +4734,10 @@ export function ensureVisibleInWorkArea(metaWindow) {
  * (a tiled window wanting attention) is left to gnome-shell's default handler.
  */
 export function positionPopupOnDemand(metaWindow) {
+    // Demands-attention / urgent can fire mid-teardown on a window whose actor
+    // is gone or frame not yet computed — bail before touching it.
+    if (!metaWindow || metaWindow.unmapped || !metaWindow.get_compositor_private())
+        return;
     if (isPopupClass(metaWindow))
         ensureVisibleInWorkArea(metaWindow);
 }
