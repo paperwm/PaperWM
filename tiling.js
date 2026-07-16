@@ -13,6 +13,7 @@ import {
 import { Easer, DispatcherMode } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
 import { WorkspaceSettings } from './workspace.js';
+import { workAreaToBounds, computeClampedPosition, classifyPopup } from './popuputil.js';
 
 const { signals: Signals } = imports;
 const workspaceManager = global.workspace_manager;
@@ -2304,6 +2305,11 @@ export const Spaces = class Spaces extends Map {
         this.signals.connect(display, 'window-created',
             (display, metaWindow, _user_data) => this.window_created(metaWindow));
 
+        this.signals.connect(display, 'window-demands-attention',
+            (_display, metaWindow) => this.positionTransientOnDemand(metaWindow));
+        this.signals.connect(display, 'window-marked-urgent',
+            (_display, metaWindow) => this.positionTransientOnDemand(metaWindow));
+
         this.signals.connect(display, 'grab-op-begin', (display, mw, type) => grabBegin(mw, type));
         this.signals.connect(display, 'grab-op-end', (display, mw, type) => grabEnd(mw, type));
 
@@ -3394,6 +3400,18 @@ export const Spaces = class Spaces extends Map {
         }
 
         return out;
+    }
+
+    /**
+     * Handle a popup that demanded attention without getting focus (focus was
+     * denied by mutter's focus-stealing prevention). Make it fully visible
+     * without stealing focus — by design, the user's current window keeps focus.
+     * Non-popup demands-attention (a tiled window wanting attention) is left to
+     * gnome-shell's default handler.
+     */
+    positionTransientOnDemand(metaWindow) {
+        if (isPopupClass(metaWindow))
+            ensureVisibleInWorkArea(metaWindow);
     }
 
     /**
@@ -4683,6 +4701,37 @@ export function getDefaultFocusMode() {
 }
 
 // `MetaWindow::focus` handling
+/**
+ * Whether `metaWindow` is popup-class: a real (non-tiled) surface mutter
+ * positions itself — transients and non-NORMAL dialogs/modals, but not sticky
+ * or scratch windows (which have their own positioning). Thin adapter over the
+ * shell-free `classifyPopup` (popuputil.js).
+ */
+export function isPopupClass(metaWindow) {
+    return classifyPopup({
+        isTransient: !!metaWindow.get_transient_for(),
+        isNormalType: metaWindow.window_type === Meta.WindowType.NORMAL,
+        onAllWorkspaces: metaWindow.is_on_all_workspaces(),
+        isScratch: Scratch.isScratchWindow(metaWindow),
+    });
+}
+
+/**
+ * Reposition a popup-class window fully inside its space's workArea.
+ *
+ * Unlike tiled windows, popups are real MetaWindows positioned by mutter (not
+ * in the clone container), so they can't be scrolled via `ensureViewport`. We
+ * move them directly with `move_frame`. No-op if already fully on-screen.
+ */
+export function ensureVisibleInWorkArea(metaWindow) {
+    const space = spaces.spaceOfWindow(metaWindow);
+    const bounds = workAreaToBounds(space.monitor, space.workArea());
+    const frame = metaWindow.get_frame_rect();
+    const { x, y } = computeClampedPosition(frame, bounds);
+    if (x !== frame.x || y !== frame.y)
+        metaWindow.move_frame(true, x, y);
+}
+
 export function focus_handler(metaWindow) {
     console.debug("focus:", metaWindow?.title);
     if (Scratch.isScratchWindow(metaWindow)) {
@@ -4692,9 +4741,13 @@ export function focus_handler(metaWindow) {
         return;
     }
 
-    // If metaWindow is a transient window, return (after deselecting tiled focus indicators)
-    if (isTransient(metaWindow)) {
+    // Popup-class window (transient / dialog): it's a real MetaWindow mutter
+    // positions itself, not in the clone container, so ensureViewport can't
+    // scroll it. Move it fully on-screen instead, then bail out of the tiled
+    // focus logic (after deselecting tiled focus indicators).
+    if (isPopupClass(metaWindow)) {
         setAllWorkspacesInactive();
+        ensureVisibleInWorkArea(metaWindow);
         return;
     }
 
