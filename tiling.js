@@ -2306,9 +2306,9 @@ export const Spaces = class Spaces extends Map {
             (display, metaWindow, _user_data) => this.window_created(metaWindow));
 
         this.signals.connect(display, 'window-demands-attention',
-            (_display, metaWindow) => this.positionTransientOnDemand(metaWindow));
+            (_display, metaWindow) => positionPopupOnDemand(metaWindow));
         this.signals.connect(display, 'window-marked-urgent',
-            (_display, metaWindow) => this.positionTransientOnDemand(metaWindow));
+            (_display, metaWindow) => positionPopupOnDemand(metaWindow));
 
         this.signals.connect(display, 'grab-op-begin', (display, mw, type) => grabBegin(mw, type));
         this.signals.connect(display, 'grab-op-end', (display, mw, type) => grabEnd(mw, type));
@@ -3400,18 +3400,6 @@ export const Spaces = class Spaces extends Map {
         }
 
         return out;
-    }
-
-    /**
-     * Handle a popup that demanded attention without getting focus (focus was
-     * denied by mutter's focus-stealing prevention). Make it fully visible
-     * without stealing focus — by design, the user's current window keeps focus.
-     * Non-popup demands-attention (a tiled window wanting attention) is left to
-     * gnome-shell's default handler.
-     */
-    positionTransientOnDemand(metaWindow) {
-        if (isPopupClass(metaWindow))
-            ensureVisibleInWorkArea(metaWindow);
     }
 
     /**
@@ -4732,6 +4720,17 @@ export function ensureVisibleInWorkArea(metaWindow) {
     const { x, y } = computeClampedPosition(frame, bounds);
     if (x !== frame.x || y !== frame.y)
         metaWindow.move_frame(true, x, y);
+}
+
+/**
+ * Make a popup that demanded attention fully visible WITHOUT stealing focus
+ * (focus was denied by mutter's focus-stealing prevention, or never requested).
+ * By design the user's current window keeps focus. Non-popup demands-attention
+ * (a tiled window wanting attention) is left to gnome-shell's default handler.
+ */
+export function positionPopupOnDemand(metaWindow) {
+    if (isPopupClass(metaWindow))
+        ensureVisibleInWorkArea(metaWindow);
 }
 
 export function focus_handler(metaWindow) {
