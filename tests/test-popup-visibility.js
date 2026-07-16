@@ -109,9 +109,7 @@ check('transient (normal-type) -> true',
     classifyPopup({ isTransient: true, isNormalType: true, onAllWorkspaces: false, isScratch: false }) === true);
 check('transient MODAL_DIALOG -> true',
     classifyPopup({ isTransient: true, isNormalType: false, onAllWorkspaces: false, isScratch: false }) === true);
-check('non-transient MODAL_DIALOG -> true  (the gap isTransient alone misses)',
-    classifyPopup({ isTransient: false, isNormalType: false, onAllWorkspaces: false, isScratch: false }) === true);
-check('non-transient UTILITY -> true',
+check('any non-NORMAL type (dialog/modal/utility) -> true  (the gap isTransient alone misses)',
     classifyPopup({ isTransient: false, isNormalType: false, onAllWorkspaces: false, isScratch: false }) === true);
 check('normal tiled window -> false',
     classifyPopup({ isTransient: false, isNormalType: true, onAllWorkspaces: false, isScratch: false }) === false);
