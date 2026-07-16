@@ -4742,11 +4742,11 @@ export function focus_handler(metaWindow) {
         return;
     }
 
-    // Popup-class window (transient / dialog): it's a real MetaWindow mutter
-    // positions itself, not in the clone container, so ensureViewport can't
-    // scroll it. Move it fully on-screen instead, then bail out of the tiled
-    // focus logic (after deselecting tiled focus indicators).
-    if (isPopupClass(metaWindow)) {
+    // Transient window: it's a real MetaWindow mutter positions itself, not in
+    // the clone container, so ensureViewport can't scroll it. Move it fully
+    // on-screen instead, then bail out of the tiled focus logic (after
+    // deselecting tiled focus indicators).
+    if (isTransient(metaWindow)) {
         setAllWorkspacesInactive();
         ensureVisibleInWorkArea(metaWindow);
         return;
