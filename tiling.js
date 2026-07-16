@@ -5081,8 +5081,7 @@ export function cycleWindowWidthBackwards(metawindow) {
 export function cycleWindowWidthDirection(metaWindow, direction) {
     let frame = metaWindow.get_frame_rect();
     let space = spaces.spaceOfWindow(metaWindow);
-    let workArea = space.workArea();
-    workArea.x += space.monitor.x;
+    let workArea = workAreaToBounds(space.monitor, space.workArea());
 
     let findFn = direction === CycleWindowSizesDirection.FORWARD ? Lib.findNext : Lib.findPrev;
 
