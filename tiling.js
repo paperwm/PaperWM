@@ -1,5 +1,4 @@
 import Clutter from 'gi://Clutter';
-import GDesktopEnums from 'gi://GDesktopEnums';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Graphene from 'gi://Graphene';
@@ -445,6 +444,7 @@ export class Space extends Array {
         this.signals.connect(gsettings, 'changed::use-default-background', this.updateBackground.bind(this));
         this.signals.connect(backgroundSettings, 'changed::picture-uri', this.updateBackground.bind(this));
         this.signals.connect(backgroundSettings, "changed::picture-uri-dark", this.updateBackground.bind(this));
+        this.signals.connect(backgroundSettings, "changed::picture-options", this.updateBackground.bind(this));
     }
 
     /**
@@ -1664,6 +1664,27 @@ border-radius: ${borderWidth}px;
             return;
         }
 
+        // Cancel any in-progress crossfade overlay
+        if (this._bgTransitionActor) {
+            this._bgTransitionActor.remove_all_transitions();
+            if (this._bgTransitionActor.get_parent()) {
+                this.actor.remove_child(this._bgTransitionActor);
+            }
+            this._bgTransitionActor.destroy();
+            this._bgTransitionActor = null;
+            // Explicitly destroy the old background held by the cancelled transition
+            // so its signal connections and timers are cleaned up now rather than
+            // waiting for JS GC to drop the onComplete closure.
+            this._bgTransitionOldBackground?.destroy();
+            this._bgTransitionOldBackground = null;
+        }
+
+        // Cancel any pending (still-loading) background
+        if (this._pendingBackground) {
+            this._pendingBackground.destroy();
+            this._pendingBackground = null;
+        }
+
         let path = this.settings.get_string('background') || Settings.prefs.default_background;
         let useDefault = gsettings.get_boolean('use-default-background');
         if (!path && useDefault) {
@@ -1674,25 +1695,87 @@ border-radius: ${borderWidth}px;
             }
         }
 
-        // destroy old background
-        this.metaBackground?.destroy();
-        this.metaBackground = null;
-
-        this.metaBackground = new Background.Background({
+        const newMetaBackground = new Background.Background({
             monitorIndex: this.monitor.index,
             layoutManager: Main.layoutManager,
             settings: backgroundSettings,
             file: Gio.File.new_for_commandline_arg(path),
-            style: GDesktopEnums.BackgroundStyle.ZOOM,
+            style: backgroundSettings.get_enum('picture-options'),
         });
 
-        this.background.content.set({
-            background: this.metaBackground,
-        });
+        if (!this.metaBackground) {
+            // First load: switch instantly, nothing to crossfade from
+            this.metaBackground = newMetaBackground;
+            this.background.content.set({ background: this.metaBackground });
+            if (this.color) {
+                this.metaBackground.set_color(Utils.color_from_string(this.color)[1]);
+            }
+            return;
+        }
 
-        // after creating new background apply this space's color
-        if (this.color) {
-            this.metaBackground.set_color(Utils.color_from_string(this.color)[1]);
+        // Crossfade: wait for the new image to finish loading, then fade.
+        // Duration and easing match GNOME Shell's own BackgroundManager transition.
+        this._pendingBackground = newMetaBackground;
+
+        const applyTransition = () => {
+            if (this._pendingBackground !== newMetaBackground) return;
+            this._pendingBackground = null;
+
+            if (!this.background) return; // space was destroyed while loading
+
+            const oldMetaBackground = this.metaBackground;
+
+            // Overlay the old background on top so it stays visible during the swap
+            const oldOverlay = new Meta.BackgroundActor(
+                Object.assign({
+                    name: 'old-background-overlay',
+                    monitor: this.monitor.index,
+                }, { meta_display: display })
+            );
+            oldOverlay.set_size(this.width, this.height);
+            oldOverlay.content.set({ background: oldMetaBackground });
+            this.actor.insert_child_above(oldOverlay, this.background);
+
+            // Swap the main background to the new image (hidden under the overlay)
+            this.metaBackground = newMetaBackground;
+            this.background.content.set({ background: this.metaBackground });
+            if (this.color) {
+                this.metaBackground.set_color(Utils.color_from_string(this.color)[1]);
+            }
+
+            // Fade out the old overlay to reveal the new background beneath
+            this._bgTransitionActor = oldOverlay;
+            this._bgTransitionOldBackground = oldMetaBackground;
+            Easer.addEase(oldOverlay, {
+                opacity: 0,
+                duration: 1000,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                onComplete: () => {
+                    if (this._bgTransitionActor === oldOverlay) {
+                        this._bgTransitionActor = null;
+                        this._bgTransitionOldBackground = null;
+                    }
+                    if (oldOverlay.get_parent()) {
+                        this.actor.remove_child(oldOverlay);
+                    }
+                    oldOverlay.destroy();
+                    oldMetaBackground.destroy();
+                },
+            });
+        };
+
+        let loadedId = newMetaBackground.connect('loaded', () => {
+            newMetaBackground.disconnect(loadedId);
+            loadedId = 0;
+            applyTransition();
+        });
+        // Image may already be loaded from cache (isLoaded set synchronously)
+        if (newMetaBackground.isLoaded) {
+            if (loadedId) {
+                newMetaBackground.disconnect(loadedId);
+                loadedId = 0;
+            }
+            applyTransition();
         }
     }
 
@@ -2147,6 +2230,10 @@ border-radius: ${borderWidth}px;
         });
         this.signals.destroy();
         this.signals = null;
+        this._pendingBackground?.destroy();
+        this._pendingBackground = null;
+        this._bgTransitionOldBackground?.destroy();
+        this._bgTransitionOldBackground = null;
         this.background.destroy();
         this.background = null;
         this.cloneContainer.destroy();
