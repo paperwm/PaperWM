@@ -2218,6 +2218,11 @@ export const Spaces = class Spaces extends Map {
         this.signals.connect(display, 'grab-op-begin', (display, mw, type) => grabBegin(mw, type));
         this.signals.connect(display, 'grab-op-end', (display, mw, type) => grabEnd(mw, type));
 
+        this.signals.connect(display, 'window-demands-attention',
+            (display, metaWindow) => {
+                if (isTransient(metaWindow))
+                    repositionTransient(metaWindow);
+            });
 
         this.signals.connect(global.window_manager, 'switch-workspace',
             (wm, from, to, _direction) => this.switchWorkspace(wm, from, to));
@@ -3371,6 +3376,29 @@ export function isTransient(metaWindow) {
     else {
         return false;
     }
+}
+
+// Reposition a transient/popup window into its monitor's work area so it's visible.
+// Transients are real MetaWindows rejected by add_filter so the scroll machinery
+// can't reach them — we clamp their frame rect directly via move_frame.
+function repositionTransient(metaWindow) {
+    if (!metaWindow || !metaWindow.get_compositor_private())
+        return;
+
+    let frame = metaWindow.get_frame_rect();
+    let monitorIndex = metaWindow.get_monitor();
+    let workArea = Main.layoutManager.getWorkAreaForMonitor(monitorIndex);
+
+    if (!workArea)
+        return;
+
+    let x = Math.max(workArea.x,
+        Math.min(frame.x, workArea.x + workArea.width - frame.width));
+    let y = Math.max(workArea.y,
+        Math.min(frame.y, workArea.y + workArea.height - frame.height));
+
+    if (x !== frame.x || y !== frame.y)
+        metaWindow.move_frame(true, x, y);
 }
 
 /**
@@ -4603,8 +4631,9 @@ export function focus_handler(metaWindow) {
         return;
     }
 
-    // If metaWindow is a transient window, return (after deselecting tiled focus indicators)
+    // If metaWindow is a transient window, reposition into view and return
     if (isTransient(metaWindow)) {
+        repositionTransient(metaWindow);
         setAllWorkspacesInactive();
         return;
     }
