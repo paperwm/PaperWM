@@ -2234,6 +2234,8 @@ border-radius: ${borderWidth}px;
         this._pendingBackground = null;
         this._bgTransitionOldBackground?.destroy();
         this._bgTransitionOldBackground = null;
+        this.metaBackground?.destroy();
+        this.metaBackground = null;
         this.background.destroy();
         this.background = null;
         this.cloneContainer.destroy();
