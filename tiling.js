@@ -4877,7 +4877,7 @@ export function animateWindow(metaWindow) {
 
 export function isWindowAnimating(metaWindow) {
     let clone = metaWindow.clone;
-    return clone.get_parent() && clone.cloneActor.visible;
+    return clone?.get_parent() && clone?.cloneActor.visible;
 }
 
 export function toggleMaximizeHorizontally(metaWindow) {
