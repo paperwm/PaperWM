@@ -16,7 +16,7 @@ import * as WindowManager from 'resource:///org/gnome/shell/ui/windowManager.js'
 import * as WindowPreview from 'resource:///org/gnome/shell/ui/windowPreview.js';
 import * as Screenshot from 'resource:///org/gnome/shell/ui/screenshot.js';
 
-import { Utils, Tiling, Scratch, Settings, OverviewLayout } from './imports.js';
+import { Utils, Tiling, Scratch, Settings, OverviewLayout, Navigator } from './imports.js';
 
 /**
   Some of Gnome Shell's default behavior is really sub-optimal when using
@@ -213,6 +213,27 @@ export function setupOverrides() {
 
     if (WindowManager.TouchpadWorkspaceSwitchAction) // disable 4-finger swipe
         registerOverridePrototype(WindowManager.TouchpadWorkspaceSwitchAction, '_checkActivated', () => false);
+
+
+    registerOverridePrototype(WindowManager.WindowManager, 'handleWorkspaceScroll',
+        function (event) {
+            if (event.type() !== Clutter.EventType.SCROLL)
+                return Clutter.EVENT_PROPAGATE;
+
+            const direction = event.get_scroll_direction();
+
+            if (direction === Clutter.ScrollDirection.UP) {
+                const tabPopup = Navigator.getActionDispatcher(Clutter.GrabState.KEYBOARD);
+                tabPopup.show(false, 'switch-global-right', Clutter.ModifierType.MOD4_MASK);
+                return Clutter.EVENT_STOP;
+            } else if (direction === Clutter.ScrollDirection.DOWN) {
+                const tabPopup = Navigator.getActionDispatcher(Clutter.GrabState.KEYBOARD);
+                tabPopup.show(false, 'switch-global-left', Clutter.ModifierType.MOD4_MASK);
+                return Clutter.EVENT_STOP;
+            }
+                
+            return Clutter.EVENT_PROPAGATE;
+        });
 
     // disable swipe gesture trackers
     swipeTrackers.forEach(t => {
@@ -423,6 +444,14 @@ export function setupOverrides() {
 
         this._icon.set_size(size * scaleFactor, size * scaleFactor);
     });
+
+    registerOverridePrototype(AltTab.AppSwitcherPopup, '_scrollHandler', function(direction) {
+        if (direction === Clutter.ScrollDirection.UP) {
+            props['_scrollHandler'].saved(Clutter.ScrollDirection.DOWN);
+        } else if (direction === Clutter.ScrollDirection.DOWN) {
+            props['_scrollHandler'].saved(Clutter.ScrollDirection.UP);
+        }
+    })
 
     registerOverridePrototype(Screenshot.ScreenshotUI, 'open', async function(mode) {
         const saved = getSavedPrototype(Screenshot.ScreenshotUI, 'open');
