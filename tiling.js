@@ -1093,6 +1093,33 @@ export class Space extends Array {
         ensureViewport(this.selectedWindow, this, { force: true });
     }
 
+    moveToStart(metaWindow) {
+        metaWindow = metaWindow || this.selectedWindow;
+
+        let [index, row] = this.positionOf(metaWindow);
+        if (index == 0) return;
+
+        let [it] = this.splice(index, 1);
+        this.unshift(it);
+        this.layout();
+        this.emit("swapped", index, 0, row, row);
+        ensureViewport(this.selectedWindow, this, { force: true });
+    }
+
+    moveToEnd(metaWindow) {
+        metaWindow = metaWindow || this.selectedWindow;
+
+        let [index, row] = this.positionOf(metaWindow);
+        let targetIndex = this.length-1;
+        if (index == targetIndex) return;
+
+        let [it] = this.splice(index, 1);
+        this.push(it);
+        this.layout();
+        this.emit("swapped", index, 0, row, row);
+        ensureViewport(this.selectedWindow, this, { force: true });
+    }
+
     switchLinear(dir, loop) {
         let index = this.selectedIndex();
         let column = this[index];
@@ -1259,6 +1286,65 @@ export class Space extends Array {
 
         let metaWindow = space.getWindow(index, row);
         ensureViewport(metaWindow, space);
+    }
+
+    moveGlobal(metaWindow, direction) {
+        let space = this;
+        let index = space.selectedIndex();
+        if (index === -1) {
+            return;
+        }
+
+        let column = space[index];
+        let row = column.indexOf(metaWindow);
+        if (row === -1) {
+            let selected = sortWindows(this, column)[column.length - 1];
+            row = column.indexOf(selected);
+        }
+
+        switch (direction) {
+            case Meta.MotionDirection.LEFT:
+                if (index > 0) {
+                    space.swap(direction, metaWindow);
+                    return;
+                } else {
+                    let new_space = spaces.switchMonitor(Meta.DisplayDirection.LEFT, true);
+                    if (new_space != null) {
+                        new_space.moveToEnd(metaWindow);
+                    }
+                    return;
+                }
+
+            case Meta.MotionDirection.RIGHT:
+                if (index < space.length-1) {
+                    space.swap(direction);
+                    return;
+                } else {
+                    let new_space = spaces.switchMonitor(Meta.DisplayDirection.RIGHT, true);
+                    if (new_space != null) {
+                        new_space.moveToStart(metaWindow);
+                    }
+                    return;
+                }
+
+            case Meta.MotionDirection.UP:
+                if (row > 0) {
+                    space.swap(direction);
+                    return;
+                } else {
+                    spaces.switchMonitor(Meta.DisplayDirection.UP, true);
+                    return;
+                }
+
+            case Meta.MotionDirection.DOWN:
+                if (row < column.length-1) {
+                    space.swap(direction);
+                    return;
+                } else {
+                    spaces.switchMonitor(Meta.DisplayDirection.DOWN, true);
+                    return;
+                }
+        }
     }
 
     _drift(dx) {
@@ -2627,7 +2713,7 @@ export const Spaces = class Spaces extends Map {
         let currentSpace = this.monitors.get(monitor);
         let i = display.get_monitor_neighbor_index(monitor.index, direction);
         if (i === -1)
-            return;
+            return null;
         let newMonitor = Main.layoutManager.monitors[i];
         if (warp) {
             Utils.warpPointerToMonitor(newMonitor);
@@ -2660,6 +2746,7 @@ export const Spaces = class Spaces extends Map {
         } else {
             space.activate(false, false);
         }
+        return space;
     }
 
     moveToMonitor(direction, backDirection) {

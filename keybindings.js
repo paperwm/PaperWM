@@ -227,6 +227,23 @@ export function setupActions(settings) {
     registerMinimapAction("switch-global-up", (mw, space) => space.switchGlobalUp());
     registerMinimapAction("switch-global-down", (mw, space) => space.switchGlobalDown());
 
+    registerAction("move-global-right",
+        (mw, space) => space.moveGlobal(mw, Meta.MotionDirection.RIGHT),
+        { settings, mutterFlags: Meta.KeyBindingFlags.PER_WINDOW }
+    );
+    registerAction("move-global-left",
+        (mw, space) => space.moveGlobal(mw, Meta.MotionDirection.LEFT),
+        { settings, mutterFlags: Meta.KeyBindingFlags.PER_WINDOW }
+    );
+    registerAction("move-global-up",
+        (mw, space) => space.moveGlobal(mw, Meta.MotionDirection.UP),
+        { settings, mutterFlags: Meta.KeyBindingFlags.PER_WINDOW }
+    );
+    registerAction("move-global-down",
+        (mw, space) => space.moveGlobal(mw, Meta.MotionDirection.DO),
+        { settings, mutterFlags: Meta.KeyBindingFlags.PER_WINDOW }
+    );
+
     registerMinimapAction("move-left",
         (_mw, space) => space.swap(Meta.MotionDirection.LEFT));
     registerMinimapAction("move-right",
