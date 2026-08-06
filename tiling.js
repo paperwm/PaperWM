@@ -13,6 +13,7 @@ import {
 import { Easer, DispatcherMode } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
 import { WorkspaceSettings } from './workspace.js';
+import { workAreaToBounds, computeClampedPosition } from './popuputil.js';
 
 const { signals: Signals } = imports;
 const workspaceManager = global.workspace_manager;
@@ -2303,6 +2304,11 @@ export const Spaces = class Spaces extends Map {
 
         this.signals.connect(display, 'window-created',
             (display, metaWindow, _user_data) => this.window_created(metaWindow));
+
+        this.signals.connect(display, 'window-demands-attention',
+            (_display, metaWindow) => positionPopupOnDemand(metaWindow));
+        this.signals.connect(display, 'window-marked-urgent',
+            (_display, metaWindow) => positionPopupOnDemand(metaWindow));
 
         this.signals.connect(display, 'grab-op-begin', (display, mw, type) => grabBegin(mw, type));
         this.signals.connect(display, 'grab-op-end', (display, mw, type) => grabEnd(mw, type));
@@ -4683,6 +4689,58 @@ export function getDefaultFocusMode() {
 }
 
 // `MetaWindow::focus` handling
+/**
+ * Whether `metaWindow` is popup-class: a real (non-tiled) surface mutter
+ * positions itself — transients and non-NORMAL dialogs/modals, but not sticky
+ * or scratch windows (which have their own positioning). Derived from the
+ * canonical `add_filter` (single source of truth for tiling eligibility) minus
+ * sticky/scratch, so it follows automatically if `add_filter` widens.
+ */
+export function isPopupClass(metaWindow) {
+    if (metaWindow.is_on_all_workspaces() || Scratch.isScratchWindow(metaWindow))
+        return false;
+    return !add_filter(metaWindow);
+}
+
+/**
+ * Reposition a popup-class window fully inside its space's workArea.
+ *
+ * Unlike tiled windows, popups are real MetaWindows positioned by mutter (not
+ * in the clone container), so they can't be scrolled via `ensureViewport`. We
+ * move them directly with `move_frame`. No-op if already fully on-screen.
+ *
+ * Precondition: `metaWindow`'s space agrees with its physical monitor —
+ * cross-workspace popups are redirected by `insertWindow` before this runs.
+ */
+export function ensureVisibleInWorkArea(metaWindow) {
+    const space = spaces.spaceOfWindow(metaWindow);
+    // Bail if the window's physical monitor doesn't match its workspace's space
+    // (can desync on cross-workspace moves) — repositioning from the wrong
+    // monitor's workArea would yank the popup across heads.
+    if (metaWindow.get_monitor() !== space.monitor.index)
+        return;
+    const bounds = workAreaToBounds(space.monitor, space.workArea());
+    const frame = metaWindow.get_frame_rect();
+    const { x, y } = computeClampedPosition(frame, bounds);
+    if (x !== frame.x || y !== frame.y)
+        metaWindow.move_frame(true, x, y);
+}
+
+/**
+ * Make a popup that demanded attention fully visible WITHOUT stealing focus
+ * (focus was denied by mutter's focus-stealing prevention, or never requested).
+ * By design the user's current window keeps focus. Non-popup demands-attention
+ * (a tiled window wanting attention) is left to gnome-shell's default handler.
+ */
+export function positionPopupOnDemand(metaWindow) {
+    // Demands-attention / urgent can fire mid-teardown on a window whose actor
+    // is gone or frame not yet computed — bail before touching it.
+    if (!metaWindow || metaWindow.unmapped || !metaWindow.get_compositor_private())
+        return;
+    if (isPopupClass(metaWindow))
+        ensureVisibleInWorkArea(metaWindow);
+}
+
 export function focus_handler(metaWindow) {
     console.debug("focus:", metaWindow?.title);
     if (Scratch.isScratchWindow(metaWindow)) {
@@ -4692,9 +4750,13 @@ export function focus_handler(metaWindow) {
         return;
     }
 
-    // If metaWindow is a transient window, return (after deselecting tiled focus indicators)
+    // Transient window: it's a real MetaWindow mutter positions itself, not in
+    // the clone container, so ensureViewport can't scroll it. Move it fully
+    // on-screen instead, then bail out of the tiled focus logic (after
+    // deselecting tiled focus indicators).
     if (isTransient(metaWindow)) {
         setAllWorkspacesInactive();
+        ensureVisibleInWorkArea(metaWindow);
         return;
     }
 
@@ -5026,8 +5088,7 @@ export function cycleWindowWidthBackwards(metawindow) {
 export function cycleWindowWidthDirection(metaWindow, direction) {
     let frame = metaWindow.get_frame_rect();
     let space = spaces.spaceOfWindow(metaWindow);
-    let workArea = space.workArea();
-    workArea.x += space.monitor.x;
+    let workArea = workAreaToBounds(space.monitor, space.workArea());
 
     let findFn = direction === CycleWindowSizesDirection.FORWARD ? Lib.findNext : Lib.findPrev;
 
