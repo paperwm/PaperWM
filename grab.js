@@ -113,12 +113,12 @@ export class MoveGrab {
 
         this.signals.connect(this.actor, "button-release-event", this.end.bind(this));
         this.signals.connect(this.actor, "touch-event", (act, evt) => {
-            if (evt.type() === Clutter.EventType.TOUCH_END) {
+            if (evt.type() === Clutter.EventType.TOUCH_BEGIN || evt.type() === Clutter.EventType.TOUCH_UPDATE) {
+                this.motion(act, evt);
+            } else {
                 this.end();
             }
-            else {
-                this.motion(act, evt);
-            }
+            return Clutter.EVENT_PROPAGATE;
         });
         this.signals.connect(this.actor, "motion-event", this.motion.bind(this));
         this.signals.connect(global.display, "window-entered-monitor",
