@@ -12,6 +12,8 @@ import {
     Scratch, Minimap, Settings
 } from './imports.js';
 
+export const name = "navigator";
+
 /**
   Navigation and previewing functionality.
 

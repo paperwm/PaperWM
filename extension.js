@@ -52,6 +52,11 @@ export default class PaperWM extends Extension {
         Workspace, Tiling, Topbar, App, Grab,
     ];
 
+    // Name-based introspection for unit tests
+    findModule(name) {
+        return this.modules.find((m) => m.name == name);
+    }
+
     #userStylesheet = null;
 
     enable() {

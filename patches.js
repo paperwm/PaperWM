@@ -18,6 +18,8 @@ import * as Screenshot from 'resource:///org/gnome/shell/ui/screenshot.js';
 
 import { Utils, Tiling, Scratch, Settings, OverviewLayout } from './imports.js';
 
+export const name = "patches";
+
 /**
   Some of Gnome Shell's default behavior is really sub-optimal when using
   paperWM. Other features are simply not possible to implement without monkey

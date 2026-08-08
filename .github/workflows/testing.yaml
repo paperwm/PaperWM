@@ -1,0 +1,79 @@
+name: "Run end-to-end tests for PaperWM"
+
+on:
+  push:
+    paths:
+      - '*.nix'
+      - '*.js'
+      - 'tests/**'
+
+jobs:
+  run-tests:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Nix
+        uses: cachix/install-nix-action@v20
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo tee -a /etc/nix/nix.conf <<< "extra-system-features = kvm nixos-test"
+      - name: Build test VM
+        run: |
+          nix build .#vm
+      - name: Launch tests
+        run: |
+          for file in tests/features/*.feature
+          do
+            echo "::group::Test ${file##*/}"
+            feat="${file##*/}"
+            nix run .#checks.x86_64-linux.${feat%%.feature}.driver
+            echo "::endgroup::"
+          done
+      - name: Save results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: allure-output
+          path: allure_output
+
+  push-reports:
+    name: Upload HTML reports to Pages
+    needs: run-tests
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write
+      contents: write
+      pages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Fetch report
+        uses: actions/download-artifact@v8
+        with:
+          name: allure-output
+          path: allure_output
+      - name: Deploy report to GitHub Pages
+        id: report
+        uses: PavanMudigonda/html-reporter-github-pages@v1.5.21
+        with:
+          test_results: allure_output
+          allure_report_generate_flag: true
+          keep_reports: 10
+          gh_pages: pages_reports
+          workflow_name: ${{ github.workflow }}
+          use_actions_summary: true
+      - name: Notify about generated report
+        uses: guibranco/github-status-action-v2@v1.1.14
+        with:
+          authToken: ${{ secrets.GITHUB_TOKEN }}
+          context: PaperWM test reports
+          description: Click here to open test reports
+          state: success
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+          target_url: ${{env.GITHUB_PAGES_WEBSITE_URL}}/${{github.run_number}}/index.html

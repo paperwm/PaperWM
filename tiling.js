@@ -14,6 +14,8 @@ import { Easer, DispatcherMode } from './utils.js';
 import { ClickOverlay } from './stackoverlay.js';
 import { WorkspaceSettings } from './workspace.js';
 
+export const name = "tiling";
+
 const { signals: Signals } = imports;
 const workspaceManager = global.workspace_manager;
 const display = global.display;

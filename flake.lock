@@ -17,13 +17,29 @@
         "type": "indirect"
       }
     },
+    "gtk-stream": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1741788805,
+        "narHash": "sha256-HWi2qDjCsmCbFFUhYiHgZ6a7ptsVn6sUMHK4A9gBdTw=",
+        "ref": "refs/heads/master",
+        "rev": "18ed0d3fdbbf67a1323e8e5b7848bb564569fc6c",
+        "revCount": 134,
+        "type": "git",
+        "url": "https://git.sr.ht/~marc-coiffier/gtk-stream"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://git.sr.ht/~marc-coiffier/gtk-stream"
+      }
+    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1768571051,
-        "narHash": "sha256-BKah+ebcZu6GNPan/wwXmPoE93ctPMW4BHIiqjlem9U=",
+        "lastModified": 1773371044,
+        "narHash": "sha256-UioNXlVNmX+3QQ0ZjdZkZFq7ctHyObpcvdHm9aZV0/c=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "8e13ad6266acf92aa1c61d006f51a30c53d43851",
+        "rev": "65feaa4cdcddbc1659abb8796810f29c4531aad8",
         "type": "github"
       },
       "original": {
@@ -51,6 +67,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "gtk-stream": "gtk-stream",
         "nixpkgs": "nixpkgs",
         "nixpkgs-gnome": "nixpkgs-gnome"
       }

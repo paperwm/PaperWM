@@ -9,6 +9,8 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { Patches, Settings, Tiling, Utils, Lib, Navigator } from './imports.js';
 import { Easer } from './utils.js';
 
+export const name = "gestures";
+
 const DIRECTIONS = {
     Horizontal: true,
     Vertical: false,
