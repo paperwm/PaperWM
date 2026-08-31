@@ -100,8 +100,9 @@ export function enableMultimonitorSupport() {
                 return;
             }
 
-            const selected = space?.selectedWindow;
-            space?.activateWithFocus(selected, false, false);
+            // Let Mutter establish focus when switching from a pointer poll.
+            // Forcing PaperWM's selected window here can leave input focus stale.
+            space?.activate(false, false);
         });
     console.debug('paperwm multimonitor support is ENABLED');
 }
