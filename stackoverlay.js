@@ -326,6 +326,7 @@ export class StackOverlay {
                         if (this._pointerIsAtEdge()) {
                             this._activateTarget();
                         }
+                        this.activatePreviewTimeout = null;
                     });
             }
 
