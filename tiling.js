@@ -2178,7 +2178,9 @@ border-radius: ${borderWidth}px;
                     let metaWindow = column[j];
                     // Prune removed windows
                     if (metaWindow.get_compositor_private()) {
-                        this.addWindow(metaWindow, i, j);
+                        // It may have been minimized while PaperWM was disabled.
+                        if (!metaWindow.minimized)
+                            this.addWindow(metaWindow, i, j);
                     } else {
                         // eslint-disable-next-line max-statements-per-line
                         column.splice(j, 1); j--;
@@ -2196,9 +2198,28 @@ border-radius: ${borderWidth}px;
             .sort(xz_comparator(workspace.list_windows()));
 
         windows.forEach((meta_window, _i) => {
-            if (meta_window.above || meta_window.minimized) {
-                // Rough heuristic to figure out if a window should float
-                Scratch.makeScratch(meta_window);
+            if (!meta_window.get_compositor_private())
+                return;
+
+            const previous = saveState.prevWindowStates.get(meta_window);
+            saveState.prevWindowStates.delete(meta_window);
+            if (previous?.tiled) {
+                // A temporarily scratched tile may have been restored while
+                // disabled. Remove its old above/sticky state before adding it.
+                if (previous.scratch && !meta_window.minimized)
+                    Scratch.unmakeScratch(meta_window);
+            } else if (previous?.scratch || Scratch.isScratchWindow(meta_window) || meta_window.above) {
+                // Preserve explicit scratch intent even if "above" was cleared.
+                // Keep the above heuristic for windows with no saved tiling intent.
+                Scratch.makeScratch(meta_window, { preserveTiling: true });
+                return;
+            }
+            if (meta_window.minimized) {
+                // Minimization alone is temporary scratch, not a user decision
+                // to float. Keep the normal restore handler's tiling intent.
+                if (previous?.tiled || add_filter(meta_window))
+                    meta_window._tiled_on_minimize = true;
+                Scratch.makeScratch(meta_window, { preserveTiling: true });
                 return;
             }
             if (this.indexOf(meta_window) < 0 && add_filter(meta_window)) {
@@ -3737,6 +3758,7 @@ export function removePaperWMFlags(w) {
     delete w._positionHandlerAdded;
     delete w._pos_mismatch_count;
     delete w._tiled_on_minimize;
+    delete w._pendingScratchRestore;
     delete w._fullscreen_frame;
     delete w._fullscreen_lock;
     delete w._fullscreen_above;
@@ -3922,6 +3944,7 @@ class SaveState {
         this.prevMonitors = new Map();
         this.prevSpaces = new Map();
         this.prevTargetX = new Map();
+        this.prevWindowStates = new WeakMap();
     }
 
     hasPrevMonitors() {
@@ -3976,6 +3999,17 @@ class SaveState {
      */
     prepare() {
         this.update();
+
+        // Snapshot before cleanup clears _tiled_on_minimize and Scratch.disable
+        // discards its membership symbol. Weak keys do not retain closed windows.
+        this.prevWindowStates = new WeakMap();
+        display.get_tab_list(Meta.TabList.NORMAL_ALL, null).forEach(w => {
+            this.prevWindowStates.set(w, {
+                scratch: Boolean(Scratch.isScratchWindow(w)),
+                tiled: Boolean(w._tiled_on_minimize) || isTiled(w),
+            });
+        });
+
         this.prevSpaces.forEach(space => {
             let windows = space.getWindows();
             let selected = windows.indexOf(space.selectedWindow);
@@ -4687,7 +4721,7 @@ export function focus_handler(metaWindow) {
     console.debug("focus:", metaWindow?.title);
     if (Scratch.isScratchWindow(metaWindow)) {
         setAllWorkspacesInactive();
-        Scratch.makeScratch(metaWindow);
+        Scratch.makeScratch(metaWindow, { preserveTiling: true });
         Topbar.fixTopBar();
         return;
     }
@@ -4809,18 +4843,28 @@ export function focus_handler(metaWindow) {
 export function minimizeHandler(metaWindow) {
     if (metaWindow.minimized) {
         console.debug('minimized', metaWindow?.title);
+        delete metaWindow._pendingScratchRestore;
         // check if was tiled
         if (isTiled(metaWindow)) {
             metaWindow._tiled_on_minimize = true;
         }
-        Scratch.makeScratch(metaWindow);
+        Scratch.makeScratch(metaWindow, { preserveTiling: true });
     }
     else {
         console.debug('unminimized', metaWindow?.title);
         if (metaWindow._tiled_on_minimize) {
-            delete metaWindow._tiled_on_minimize;
+            // Keep tiling intent until restoration completes, so disable can
+            // snapshot it even if it runs before this compositor idle callback.
+            const restore = {};
+            metaWindow._pendingScratchRestore = restore;
             Utils.later_add(Meta.LaterType.IDLE, () => {
-                Scratch.unmakeScratch(metaWindow);
+                // Cleanup, re-minimization, or an explicit scratch choice may
+                // supersede this callback before it runs.
+                if (metaWindow._pendingScratchRestore !== restore)
+                    return;
+                delete metaWindow._pendingScratchRestore;
+                if (metaWindow.get_compositor_private() && !metaWindow.minimized)
+                    Scratch.unmakeScratch(metaWindow);
             });
         }
     }
