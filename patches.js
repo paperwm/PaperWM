@@ -307,6 +307,8 @@ export function setupOverrides() {
         }
 
         const space = Tiling.spaces.spaceOf(this.metaWorkspace);
+        if (!space)
+            return false;
         const onSpace = space.indexOf(window) >= 0;
         const onMonitor = this._monitor === space.monitor;
         return onSpace && onMonitor;
@@ -318,8 +320,10 @@ export function setupOverrides() {
         }
 
         const space = Tiling.spaces.spaceOf(this.metaWorkspace);
+        if (!space)
+            return false;
         const onSpace = space.indexOf(window) >= 0;
-        const onMonitor = this.monitorIndex === space.monitor.index;
+        const onMonitor = this.monitorIndex === space.monitor?.index;
         return onSpace && onMonitor;
     });
 
