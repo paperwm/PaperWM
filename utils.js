@@ -548,10 +548,10 @@ export class Signals extends Map {
         let ids = this.get(object);
         if (ids) {
             if (id === null) {
-                ids.forEach(id => object.disconnect(id));
+                ids.forEach(id => this._disconnect(object, id));
                 ids = [];
             } else {
-                object.disconnect(id);
+                this._disconnect(object, id);
                 let i = ids.indexOf(id);
                 if (i > -1) {
                     ids.splice(i, 1);
@@ -562,9 +562,20 @@ export class Signals extends Map {
         }
     }
 
+    // Objects can be disposed from the C side (GJS logs "has been already
+    // disposed" and "../gobject/gsignal.c: no handler with id"); disconnecting
+    // from such an object must not throw.
+    _disconnect(object, id) {
+        try {
+            object.disconnect(id);
+        } catch (e) {
+            console.warn(`Signals: failed to disconnect ${id} from ${object}: ${e}`);
+        }
+    }
+
     destroy() {
         for (let [object, signals] of this) {
-            signals.forEach(id => object.disconnect(id));
+            signals.forEach(id => this._disconnect(object, id));
             this.delete(object);
         }
     }
