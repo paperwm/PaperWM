@@ -284,7 +284,7 @@ export function warpPointerToMonitor(monitor, params = { center: false, ripple: 
  * Optionally shows a ripple effect after warp.
  */
 export function warpPointer(x, y, ripple = true) {
-    const seat = Clutter.get_default_backend().get_default_seat();
+    const seat = (Clutter.get_default_backend?.() ?? global.stage.context.get_backend()).get_default_seat();
     seat.warp_pointer(x, y);
     if (ripple) {
         warpRipple.playAnimation(x, y);

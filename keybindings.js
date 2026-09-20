@@ -9,7 +9,7 @@ import {
     App, Scratch, LiveAltTab, Topbar
 } from './imports.js';
 
-const Seat = Clutter.get_default_backend().get_default_seat();
+const Seat = (Clutter.get_default_backend?.() ?? global.stage.context.get_backend()).get_default_seat();
 const display = global.display;
 
 const KEYBINDINGS_KEY = 'org.gnome.shell.extensions.paperwm.keybindings';

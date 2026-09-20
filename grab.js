@@ -44,7 +44,7 @@ export function disable() {
 let virtualKeyboard;
 export function getVirtualKeyboard() {
     if (!virtualKeyboard) {
-        virtualKeyboard = Clutter.get_default_backend()
+        virtualKeyboard = (Clutter.get_default_backend?.() ?? global.stage.context.get_backend())
             .get_default_seat()
             .create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
     }
