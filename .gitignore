@@ -12,6 +12,7 @@ package-lock.json
 # generated disk image for test VM
 nixos.qcow2
 
-# per-developer devshell hook + direnv cache
-/.dev.local.sh
+# direnv: .envrc & direnv cache
 /.direnv/
+
+
