@@ -5,8 +5,6 @@ import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
-
 import { Settings, Utils, Tiling, Grab, Scratch } from './imports.js';
 
 /*
@@ -44,14 +42,55 @@ import { Settings, Utils, Tiling, Grab, Scratch } from './imports.js';
 */
 
 let pointerWatch, previewPointerWatcher;
+
+/**
+ * Proxy class that watches pointer movements using either a cursor tracker
+ * (Gnome 51+) or a PointerWatcher (Gnome < 51). Roughly follows the
+ * PointerWatcher API.
+ */
+class PointerWatcherProxy {
+
+    #tracker;
+    #watcher;
+    
+    constructor() {
+        this.#tracker = global.backend?.get_cursor_tracker?.();
+        if (!this.#tracker) {
+            this.#watcher = import('resource:///org/gnome/shell/ui/pointerWatcher.js').then(pw => pw.getPointerWatcher());
+        }
+    }
+
+    addWatch(interval, cb) {
+        const that = this;
+        if (this.#tracker) {
+            const connected = this.#tracker.connect('position-invalidated', cb);
+            
+            return {
+                async remove() {
+                    that.#tracker.disconnect(connected);
+                }
+            };
+        } else {
+            return {
+                watch: this.#watcher.then(pw => pw.addWatch(interval, cb)),
+                async remove() {
+                    (await this.watch)?.remove();
+                }
+            };
+        }
+    }
+}
+
+const PointerWatcher = new PointerWatcherProxy();
+
 export function enable(_extension) {
 
 }
 
-export function disable() {
-    previewPointerWatcher?.remove();
+export async function disable() {
+    await previewPointerWatcher?.remove();
     previewPointerWatcher = null;
-    disableMultimonitorSupport();
+    await disableMultimonitorSupport();
 }
 
 /**
@@ -69,7 +108,7 @@ export function multimonitorSupport() {
 }
 
 export function enableMultimonitorSupport() {
-    pointerWatch = PointerWatcher.getPointerWatcher().addWatch(100,
+    pointerWatch = PointerWatcher.addWatch(100,
         () => {
             // if overview return
             if (Main.overview.visible) {
@@ -106,8 +145,8 @@ export function enableMultimonitorSupport() {
     console.debug('paperwm multimonitor support is ENABLED');
 }
 
-export function disableMultimonitorSupport() {
-    pointerWatch?.remove();
+export async function disableMultimonitorSupport() {
+    await pointerWatch?.remove();
     pointerWatch = null;
     console.debug('paperwm multimonitor support is DISABLED');
 }
@@ -267,7 +306,7 @@ export class StackOverlay {
      * @param {Boolean} postActivatePreview: true if an auto preview after previous activation
      * @returns
      */
-    triggerPreview(postActivatePreview = false) {
+    async triggerPreview(postActivatePreview = false) {
         if (!Settings.prefs.edge_preview_enable) {
             return;
         }
@@ -281,11 +320,11 @@ export class StackOverlay {
         }
 
         // create pointerwatcher to ensure preview is removed
-        previewPointerWatcher?.remove();
-        previewPointerWatcher = PointerWatcher.getPointerWatcher().addWatch(200, () => {
+        await previewPointerWatcher?.remove();
+        previewPointerWatcher = PointerWatcher.addWatch(200, async () => {
             if (!this._pointerIsAtEdge()) {
                 this.removePreview();
-                previewPointerWatcher?.remove();
+                await previewPointerWatcher?.remove();
                 previewPointerWatcher = null;
             }
         });
