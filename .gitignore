@@ -13,6 +13,7 @@ package-lock.json
 nixos.qcow2
 
 # direnv: .envrc & direnv cache
+.envrc
 /.direnv/
 
 
