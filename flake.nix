@@ -10,6 +10,30 @@
     in
     { packages.default = hostPkgs.callPackage ./default.nix {};
 
+      devShells.default = hostPkgs.mkShell {
+        # Editor-facing tooling
+        #   * vtsls - JS/TS language server
+        #   * eslint - the project lints via .eslintrc.yml with no plugins,
+        #     so the standalone nixpkgs eslint works without any npm setup.
+        #   * glib - glib-compile-schemas for `make install`.
+        #   * zip - the Makefile's release target.
+        packages = with hostPkgs; [
+          vtsls
+          eslint
+          nodejs
+          glib
+          zip
+        ];
+
+        shellHook = ''
+          # ── Personal hook. Gitignored
+          if [ -f ./.dev.local.sh ]; then
+            # shellcheck source=/dev/null
+            . ./.dev.local.sh
+          fi
+        '';
+      };
+
       # This allows us to build Qemu for the host system thus avoiding
       # double emulation.
       packages.vm = let hostConfig = self.nixosConfigurations.testbox;
