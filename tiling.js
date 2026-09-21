@@ -2008,6 +2008,13 @@ border-radius: ${borderWidth}px;
             }, { meta_display: display })
         );
 
+        // GNOME 51 assumes a BackgroundActor always has background content
+        // when it is painted. Give it a placeholder before adding it to the
+        // scene; updateBackground() replaces this with the workspace image.
+        const placeholder = new Meta.Background({ meta_display: display });
+        placeholder.set_color(Utils.color_from_string(this.color ?? '#000000')[1]);
+        this.background.content.set({ background: placeholder });
+
         this.actor.insert_child_below(this.background, null);
 
         this.signals.connect(this.background, 'button-press-event',

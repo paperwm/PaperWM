@@ -5,7 +5,7 @@ import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
+import * as PointerWatcher from './pointerwatcher.js';
 
 import { Settings, Utils, Tiling, Grab, Scratch } from './imports.js';
 
