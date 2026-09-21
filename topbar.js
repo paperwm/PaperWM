@@ -346,6 +346,8 @@ const BaseIcon = GObject.registerClass(
         ) {
             super._init(props);
 
+            this.signals = new Utils.Signals();
+
             // allow custom x position for tooltip
             this.tooltip_parent = tooltipProps?.parent ?? this;
             this.tooltip_x_point = tooltipProps?.x_point ?? 0;
@@ -366,6 +368,7 @@ const BaseIcon = GObject.registerClass(
                     this.updateTooltipText();
                 }
             });
+            this.connect('destroy', this._onDestroy.bind(this));
         }
 
         initToolTip() {
@@ -373,7 +376,7 @@ const BaseIcon = GObject.registerClass(
             tt.hide();
             // global.stage.add_child(tt);
             Utils.actor_add_child(global.stage, tt);
-            this.tooltip_parent.connect('enter-event', _icon => {
+            this.signals.connect(this.tooltip_parent, 'enter-event', _icon => {
                 this._updateTooltipPosition(this.tooltip_x_point);
                 this.updateTooltipText();
                 tt.show();
@@ -381,7 +384,7 @@ const BaseIcon = GObject.registerClass(
                 // alignment needs to be set after actor is shown
                 tt.clutter_text.set_line_alignment(Pango.Alignment.CENTER);
             });
-            this.tooltip_parent.connect('leave-event', (_icon, _event) => {
+            this.signals.connect(this.tooltip_parent, 'leave-event', (_icon, _event) => {
                 if (!this.has_pointer) {
                     tt.hide();
                 }
@@ -437,6 +440,14 @@ const BaseIcon = GObject.registerClass(
             } catch (error) {
                 return '';
             }
+        }
+
+        _onDestroy() {
+            this.signals.destroy();
+            this.signals = null;
+            this.tooltip.destroy();
+            this.tooltip = null;
+            this.tooltip_parent = null;
         }
     }
 );
