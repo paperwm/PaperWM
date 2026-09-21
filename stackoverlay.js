@@ -153,16 +153,10 @@ export class ClickOverlay {
     }
 
     destroy() {
-        for (let overlay of [this.left, this.right]) {
-            let actor = overlay.overlay;
-            overlay.signals.destroy();
-            overlay.signals = null;
-            if (overlay.clone) {
-                overlay.clone.destroy();
-                overlay.clone = null;
-            }
-            actor.destroy();
-        }
+        this.left.destroy();
+        this.left = null;
+        this.right.destroy();
+        this.right = null;
     }
 }
 
@@ -333,6 +327,7 @@ export class StackOverlay {
                         if (this._pointerIsAtEdge()) {
                             this._activateTarget();
                         }
+                        this.activatePreviewTimeout = null;
                     });
             }
 
