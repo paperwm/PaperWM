@@ -285,6 +285,22 @@
         <default><![CDATA[[]]]></default>
         <summary>Switch to window or monitor below</summary>
     </key>
+    <key type="as" name="move-global-right">
+        <default><![CDATA[[]]]></default>
+        <summary>Move active window to the next spot or monitor to the right</summary>
+    </key>
+    <key type="as" name="move-global-left">
+        <default><![CDATA[[]]]></default>
+        <summary>Move active window to the next spot or monitor to the left</summary>
+    </key>
+    <key type="as" name="move-global-up">
+        <default><![CDATA[[]]]></default>
+        <summary>Move active window to the next spot or monitor above</summary>
+    </key>
+    <key type="as" name="move-global-down">
+        <default><![CDATA[[]]]></default>
+        <summary>Move active window to the next spot or monitor below</summary>
+    </key>
     <key type="as" name="switch-up-or-else-workspace">
         <default><![CDATA[[]]]></default>
         <summary>Switch to window or workspace above</summary>
