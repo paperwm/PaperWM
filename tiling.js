@@ -1384,6 +1384,11 @@ export class Space extends Array {
             if (!actor)
                 return;
 
+            // Guard against races with window teardown: an unmanaging window
+            // can crash mutter in meta_window_update_monitor().
+            if (w._paperwmUnmanaging)
+                return;
+
             let placeable = this.isPlaceable(w);
             if (placeable)
                 this.visible.push(w);
@@ -2007,6 +2012,13 @@ border-radius: ${borderWidth}px;
                 reactive: true, // Disable the background menu
             }, { meta_display: display })
         );
+
+        // GNOME 51 assumes a BackgroundActor always has background content
+        // when it is painted. Give it a placeholder before adding it to the
+        // scene; updateBackground() replaces this with the workspace image.
+        const placeholder = new Meta.Background({ meta_display: display });
+        placeholder.set_color(Utils.color_from_string(this.color ?? '#000000')[1]);
+        this.background.content.set({ background: placeholder });
 
         this.actor.insert_child_below(this.background, null);
 
@@ -3652,6 +3664,14 @@ export function registerWindow(metaWindow) {
                 period_ms: 100,
                 count: 10,
                 callback: () => {
+                    // The window may be unmanaging by the time this timeout
+                    // fires (e.g. closed during a workspace switch); calling
+                    // into mutter on it can segfault.
+                    if (metaWindow._paperwmUnmanaging || metaWindow.get_compositor_private() === null) {
+                        done(timeout);
+                        return false; // stop the timeout
+                    }
+
                     const f = metaWindow.get_frame_rect();
                     if (metaWindow._targetHeight !== f.height) {
                         if (!isNaN(metaWindow._targetHeight)) {
@@ -3673,6 +3693,12 @@ export function registerWindow(metaWindow) {
         workspaceChangeTimeouts.push(timeout);
     });
 
+    // 'unmanaging' is a signal (not a property) in mutter; mark the window
+    // so async callbacks can skip it instead of crashing in mutter
+    // (meta_window_update_monitor() dereferences torn-down state).
+    signals.connect(metaWindow, 'unmanaging', mw => {
+        mw._paperwmUnmanaging = true;
+    });
     signals.connect(actor, 'destroy', destroyHandler);
     return true;
 }
@@ -3780,6 +3806,12 @@ export function resizeHandler(metaWindow) {
 
     if (inGrab && inGrab.window === metaWindow)
         return;
+
+    // Reached asynchronously (Meta.LaterType.RESIZE); the window may have
+    // started unmanaging in the meantime.
+    if (metaWindow._paperwmUnmanaging || metaWindow.get_compositor_private() === null) {
+        return;
+    }
 
     const space = spaces.spaceOfWindow(metaWindow);
     if (!space) {

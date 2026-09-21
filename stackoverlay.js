@@ -5,7 +5,7 @@ import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PointerWatcher from 'resource:///org/gnome/shell/ui/pointerWatcher.js';
+import * as PointerWatcher from './pointerwatcher.js';
 
 import { Settings, Utils, Tiling, Grab, Scratch } from './imports.js';
 
@@ -100,8 +100,9 @@ export function enableMultimonitorSupport() {
                 return;
             }
 
-            const selected = space?.selectedWindow;
-            space?.activateWithFocus(selected, false, false);
+            // Let Mutter establish focus when switching from a pointer poll.
+            // Forcing PaperWM's selected window here can leave input focus stale.
+            space?.activate(false, false);
         });
     console.debug('paperwm multimonitor support is ENABLED');
 }
@@ -152,16 +153,10 @@ export class ClickOverlay {
     }
 
     destroy() {
-        for (let overlay of [this.left, this.right]) {
-            let actor = overlay.overlay;
-            overlay.signals.destroy();
-            overlay.signals = null;
-            if (overlay.clone) {
-                overlay.clone.destroy();
-                overlay.clone = null;
-            }
-            actor.destroy();
-        }
+        this.left.destroy();
+        this.left = null;
+        this.right.destroy();
+        this.right = null;
     }
 }
 
@@ -332,6 +327,7 @@ export class StackOverlay {
                         if (this._pointerIsAtEdge()) {
                             this._activateTarget();
                         }
+                        this.activatePreviewTimeout = null;
                     });
             }
 
