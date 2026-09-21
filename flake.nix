@@ -8,7 +8,10 @@
     (system:
     let hostPkgs = import nixpkgs { inherit system; };
     in
-    { packages.default = hostPkgs.callPackage ./default.nix {};
+    {
+      packages.default = hostPkgs.callPackage ./default.nix {};
+
+      devShells.default = hostPkgs.callPackage ./shell.nix {};
 
       # This allows us to build Qemu for the host system thus avoiding
       # double emulation.

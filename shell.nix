@@ -1,6 +1,12 @@
-with import <nixpkgs> {};
+{ pkgs ? import <nixpkgs> {} }:
 
-runCommand "shell" {
-buildInputs = [ glib ];
-} ""
+pkgs.mkShell {
+  packages = with pkgs; [
+    vtsls
+    eslint
+    nodejs
+    glib
+    zip
+  ];
 
+}
