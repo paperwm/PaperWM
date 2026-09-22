@@ -16,7 +16,7 @@ import * as WindowManager from 'resource:///org/gnome/shell/ui/windowManager.js'
 import * as WindowPreview from 'resource:///org/gnome/shell/ui/windowPreview.js';
 import * as Screenshot from 'resource:///org/gnome/shell/ui/screenshot.js';
 
-import { Utils, Tiling, Scratch, Settings, OverviewLayout } from './imports.js';
+import { Utils, Tiling, Scratch, Settings, OverviewLayout, Gestures } from './imports.js';
 
 /**
   Some of Gnome Shell's default behavior is really sub-optimal when using
@@ -153,6 +153,13 @@ export function setupOverrides() {
             const reset = () => {
                 // gnome windows switch animation time = 250, do that plus a little more
                 pillSwipeTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 300, () => {
+                    // Don't disable mid-gesture: on GNOME 50 disabling a
+                    // SCROLLING tracker fires _interrupt() -> synthetic 'end'
+                    // -> illegal overview transition -> hang.
+                    if (Gestures.isInGesture?.()) {
+                        pillSwipeTimer = null;
+                        return false;
+                    }
                     swipeTrackers.forEach(t => {
                         t.enabled = false;
                     });
