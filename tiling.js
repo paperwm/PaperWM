@@ -716,7 +716,11 @@ export class Space extends Array {
         for (let i = 0; i < this.length; i++) {
             let column = this[i];
             // Actorless windows are trouble. Layout could conceivable run while a window is dying or being born.
-            column = column.filter(mw => mw.get_compositor_private());
+            // A window still waiting for its first frame reports a zero sized one, and
+            // since the column takes its width from the frames, laying it out now would
+            // cache a target width of zero and the window could never be sized again.
+            column = column.filter(mw => mw.get_compositor_private() &&
+                mw.get_frame_rect().width > 0);
             if (column.length === 0)
                 continue;
 
@@ -4261,6 +4265,9 @@ Opening "${metaWindow?.title}" on current space.`);
     }
 
     if (space.indexOf(metaWindow) !== -1) {
+        // Space.addAll can claim the window before we get here; it still needs its
+        // handlers, like every other early return in this function.
+        connectSizeChanged();
         return;
     }
 
