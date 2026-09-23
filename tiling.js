@@ -5184,7 +5184,11 @@ export function centerWindow(metaWindow, horizontal = true, vertical = false) {
     targetY = Math.max(targetY, workArea.y);
     if (space.indexOf(metaWindow) === -1) {
         Scratch.easeScratch(metaWindow, targetX + monitor.x, targetY + monitor.y);
-    } else {
+    } else if (horizontal) {
+        // Centring a tiled window is a scroll of the strip, so only the horizontal
+        // half of it means anything. Without the guard targetX is the frame's stage
+        // x, which move_to reads as a strip coordinate and scrolls somewhere
+        // arbitrary - which is what center-vertically did.
         move_to(space, metaWindow, {
             x: targetX,
         });
