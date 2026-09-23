@@ -94,6 +94,8 @@ let startupTimeoutId, timerId, fullscreenStartTimeout, stackSlurpTimeout, worksp
 let monitorChangeTimeout, driftTimeout;
 let workspaceSettings;
 export let inGrab;
+// Set while we're moving a window frame ourselves, see Space.addWindow
+let movingFrame = false;
 export function enable(extension) {
     inGrab = false;
 
@@ -929,6 +931,21 @@ export class Space extends Array {
             if (inGrab)
                 return;
 
+            // The overview owns window positions while it's up, as moveDone() assumes too
+            if (Main.overview.visible)
+                return;
+
+            // Only the space holding the window may correct it: two spaces correcting
+            // towards different monitors move it back and forth without end
+            if (this.indexOf(w) === -1)
+                return;
+
+            // move_frame below emits position-changed synchronously, so bound re-entry
+            // here. The handlers are per space, so a per window counter can't:
+            // see https://github.com/paperwm/PaperWM/issues/916
+            if (movingFrame)
+                return;
+
             let f = w.get_frame_rect();
             let clone = w.clone;
             let x = this.visibleX(w);
@@ -936,34 +953,20 @@ export class Space extends Array {
             x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
             x += this.monitor.x;
 
-            // check if mismatch tracking needed, otherwise leave
-            if (f.x === x && f.y === y) {
-                // delete any mismatch counter (e.g. from previous attempt)
-                delete w._pos_mismatch_count;
+            if (f.x === x && f.y === y)
                 return;
-            }
-
-            // guard against recursively calling this method
-            // see https://github.com/paperwm/PaperWM/issues/769
-            if (w._pos_mismatch_count &&
-                w._pos_mismatch_count > 1) {
-                console.warn(`clone/window position-changed recursive call: ${w.title}`);
-                return;
-            }
 
             // mismatch detected
             // move frame to ensure window position matches clone
+            movingFrame = true;
             try {
-                if (!w._pos_mismatch_count) {
-                    w._pos_mismatch_count = 0;
-                }
-                else {
-                    w._pos_mismatch_count += 1;
-                }
                 w.move_frame(true, x, y);
             }
             catch (ex) {
 
+            }
+            finally {
+                movingFrame = false;
             }
         });
 
@@ -3761,7 +3764,6 @@ export function removePaperWMFlags(w) {
     delete w._targetHeight;
     delete w._resizeHandlerAdded;
     delete w._positionHandlerAdded;
-    delete w._pos_mismatch_count;
     delete w._tiled_on_minimize;
     delete w._fullscreen_frame;
     delete w._fullscreen_lock;
