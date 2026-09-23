@@ -992,7 +992,8 @@ export class Space extends Array {
             // Select a new window using the stack ordering;
             let windows = this.getWindows();
             let i = windows.indexOf(metaWindow);
-            let neighbours = [windows[i - 1], windows[i + 1]].filter(w => w);
+            let neighbours = [windows[i - 1], windows[i + 1]]
+                .filter(w => w && !w._paperwmUnmanaging);
             let stack = sortWindows(this, neighbours);
             this.selectedWindow = stack[stack.length - 1];
         }
@@ -4330,20 +4331,28 @@ Opening "${metaWindow?.title}" on current space.`);
         clone.y = clone.targetY;
         space.layout();
 
-        // run focus and resize to ensure new window is correctly shown
-        focus_handler(metaWindow);
-        resizeHandler(metaWindow);
         connectSizeChanged(true);
 
         // // remove winprop props after window shown
         callbackOnActorShow(actor, () => {
             delete metaWindow.preferredWidth;
 
-            Main.activateWindow(metaWindow);
-            ensureViewport(space.selectedWindow, space);
-            space.setSpaceTopbarElementsVisible(true);
+            // Focusing, raising and resizing invalidate stacking and layout, which
+            // mutter aborts on (invalidate_top_window_actor_for_views) while it is
+            // still painting the frame that got us here. Wait for it to go idle.
+            Utils.later_add(Meta.LaterType.IDLE, () => {
+                if (metaWindow._paperwmUnmanaging || metaWindow.get_compositor_private() === null) {
+                    return;
+                }
 
-            slurpCheck(true);
+                focus_handler(metaWindow);
+                resizeHandler(metaWindow);
+                Main.activateWindow(metaWindow);
+                ensureViewport(space.selectedWindow, space);
+                space.setSpaceTopbarElementsVisible(true);
+
+                slurpCheck(true);
+            });
         });
 
         return;
