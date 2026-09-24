@@ -168,7 +168,8 @@ export function setupOverrides() {
             }
 
             // if using PaperWM workspace switch animation, just do complete here
-            if (!Tiling.spaces.space_defaultAnimation) {
+            if (!Tiling.spaces.space_defaultAnimation ||
+                Settings.prefs.use_paperwm_workspace_animation) {
                 onComplete();
                 reset();
                 return;
