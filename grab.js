@@ -184,7 +184,7 @@ export class MoveGrab {
         this.signals.connect(global.stage, "button-press-event", this.end.bind(this));
 
         let monitor = Utils.monitorAtPoint(gx, gy);
-        let onSame = monitor === space.monitor;
+        let onSame = Utils.sameMonitor(monitor, space.monitor);
 
         let [x] = space.globalToViewport(gx, gy);
         if (!this.center && onSame && single && space[i]) {
@@ -404,7 +404,7 @@ export class MoveGrab {
             return;
         }
 
-        if (monitor !== this.initialSpace.monitor) {
+        if (!Utils.sameMonitor(monitor, this.initialSpace.monitor)) {
             this.beginDnD();
             return;
         }
