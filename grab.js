@@ -652,9 +652,17 @@ export class MoveGrab {
 
 /**
  * Resize grab class currently used to identify window grab type.
+ * NB: deliberately not using `window` property - that would make `resizeHandler`,
+ * `moveDone` etc. treat the window as being carried (MoveGrab) and skip layout.
  */
 export class ResizeGrab {
-    end() {
+    constructor(metaWindow) {
+        this.metaWindow = metaWindow;
+    }
 
+    end() {
+        // Layouts during the resize are not animated, so settle with an
+        // animated layout (ensures viewport, centering etc.)
+        Tiling.spaces.spaceOfWindow(this.metaWindow)?.queueLayout();
     }
 }
