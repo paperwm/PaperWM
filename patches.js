@@ -170,6 +170,8 @@ export function setupOverrides() {
             // if using PaperWM workspace switch animation, just do complete here
             if (!Tiling.spaces.space_defaultAnimation ||
                 Settings.prefs.use_paperwm_workspace_animation) {
+                // only gnome's animation clears this; don't leave it stale
+                this.movingWindow = null;
                 onComplete();
                 reset();
                 return;
