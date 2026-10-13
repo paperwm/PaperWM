@@ -8,6 +8,7 @@
  *
  * See https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/449a7a13034d507cd8b6776c8e1a021264c8bf41/js/ui/background.js
  */
+import Clutter from 'gi://Clutter';
 import Cogl from 'gi://Cogl';
 import GDesktopEnums from 'gi://GDesktopEnums';
 import Gio from 'gi://Gio';
@@ -24,6 +25,11 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Params from 'resource:///org/gnome/shell/misc/params.js';
 
 import { Utils } from './imports.js';
+
+const LegacyBackgroundImageCache = Meta.BackgroundImageCache;
+const Glycin = LegacyBackgroundImageCache
+    ? null
+    : (await import('gi://Gly')).default;
 
 const PRIMARY_COLOR_KEY = 'primary-color';
 const SECONDARY_COLOR_KEY = 'secondary-color';
@@ -43,6 +49,7 @@ const ANIMATION_OPACITY_STEP_INCREMENT = 4.0;
 const ANIMATION_MIN_WAKEUP_INTERVAL = 1.0;
 
 let _backgroundCache = null;
+let _backgroundTextureCache = null;
 
 function _fileEqual0(file1, file2) {
     if (file1 === file2)
@@ -148,6 +155,147 @@ function getBackgroundCache() {
     if (!_backgroundCache)
         _backgroundCache = new BackgroundCache();
     return _backgroundCache;
+}
+
+class BackgroundTextureCache {
+    constructor() {
+        this._textures = new Map();
+    }
+
+    async load(file, cancellable) {
+        const uri = file.get_uri();
+        if (this._textures.has(uri))
+            return this._textures.get(uri);
+
+        const [frameData, colorState] =
+            await this._loadGlycinFrame(file, cancellable);
+        const texture = this._createTexture(frameData);
+        const entry = { texture, colorState };
+        this._textures.set(uri, entry);
+        return entry;
+    }
+
+    async _loadGlycinFrame(file, cancellable) {
+        const stream = await file.read_async(GLib.PRIORITY_DEFAULT, cancellable);
+        const loader = Glycin.Loader.new_for_stream(stream);
+
+        loader.set_accepted_memory_formats(
+            Glycin.MemoryFormatSelection.B8G8R8A8_PREMULTIPLIED |
+            Glycin.MemoryFormatSelection.A8R8G8B8_PREMULTIPLIED |
+            Glycin.MemoryFormatSelection.R8G8B8A8_PREMULTIPLIED |
+            Glycin.MemoryFormatSelection.B8G8R8A8 |
+            Glycin.MemoryFormatSelection.A8R8G8B8 |
+            Glycin.MemoryFormatSelection.R8G8B8A8 |
+            Glycin.MemoryFormatSelection.A8B8G8R8 |
+            Glycin.MemoryFormatSelection.R8G8B8 |
+            Glycin.MemoryFormatSelection.B8G8R8 |
+            Glycin.MemoryFormatSelection.R16G16B16A16_PREMULTIPLIED |
+            Glycin.MemoryFormatSelection.R16G16B16A16 |
+            Glycin.MemoryFormatSelection.R16G16B16A16_FLOAT |
+            Glycin.MemoryFormatSelection.R32G32B32A32_FLOAT_PREMULTIPLIED |
+            Glycin.MemoryFormatSelection.R32G32B32A32_FLOAT
+        );
+
+        const image = loader.load();
+        const frame = image.next_frame();
+        const frameData = {
+            width: frame.get_width(),
+            height: frame.get_height(),
+            stride: frame.get_stride(),
+            bytes: frame.get_buf_bytes(),
+            format: frame.get_memory_format(),
+        };
+
+        let colorState = null;
+        const cicp = frame.get_color_cicp();
+        if (cicp) {
+            const clutterCicp = new Clutter.Cicp({
+                primaries: cicp.color_primaries,
+                transfer: cicp.transfer_characteristics,
+                matrix_coefficients: cicp.matrix_coefficients,
+                video_full_range_flag: cicp.video_full_range_flag,
+            });
+
+            try {
+                colorState = Clutter.ColorStateParams.new_from_cicp(
+                    global.stage.context, clutterCicp);
+            } catch (e) {
+                logError(e, 'Failed to create color state from CICP');
+            }
+        }
+
+        return [frameData, colorState];
+    }
+
+    _glyMemoryFormatToCogl(format) {
+        switch (format) {
+        case Glycin.MemoryFormat.B8G8R8A8_PREMULTIPLIED:
+            return Cogl.PixelFormat.BGRA_8888_PRE;
+        case Glycin.MemoryFormat.A8R8G8B8_PREMULTIPLIED:
+            return Cogl.PixelFormat.ARGB_8888_PRE;
+        case Glycin.MemoryFormat.R8G8B8A8_PREMULTIPLIED:
+            return Cogl.PixelFormat.RGBA_8888_PRE;
+        case Glycin.MemoryFormat.B8G8R8A8:
+            return Cogl.PixelFormat.BGRA_8888;
+        case Glycin.MemoryFormat.A8R8G8B8:
+            return Cogl.PixelFormat.ARGB_8888;
+        case Glycin.MemoryFormat.R8G8B8A8:
+            return Cogl.PixelFormat.RGBA_8888;
+        case Glycin.MemoryFormat.A8B8G8R8:
+            return Cogl.PixelFormat.ABGR_8888;
+        case Glycin.MemoryFormat.R8G8B8:
+            return Cogl.PixelFormat.RGB_888;
+        case Glycin.MemoryFormat.B8G8R8:
+            return Cogl.PixelFormat.BGR_888;
+        case Glycin.MemoryFormat.R16G16B16A16_PREMULTIPLIED:
+            return Cogl.PixelFormat.RGBA_16161616_PRE;
+        case Glycin.MemoryFormat.R16G16B16A16:
+            return Cogl.PixelFormat.RGBA_16161616;
+        case Glycin.MemoryFormat.R16G16B16A16_FLOAT:
+            return Cogl.PixelFormat.RGBA_FP_16161616;
+        case Glycin.MemoryFormat.R32G32B32A32_FLOAT_PREMULTIPLIED:
+            return Cogl.PixelFormat.RGBA_FP_32323232_PRE;
+        case Glycin.MemoryFormat.R32G32B32A32_FLOAT:
+            return Cogl.PixelFormat.RGBA_FP_32323232;
+        default:
+            throw new Error(`Unsupported glycin memory format: ${format}`);
+        }
+    }
+
+    _createTexture(frameData) {
+        const { width, height, stride, bytes, format } = frameData;
+        const coglFormat = this._glyMemoryFormatToCogl(format);
+        const data = bytes.get_data();
+        const ctx = global.stage.context.get_backend().get_cogl_context();
+        const components = Glycin.memory_format_has_alpha(format)
+            ? Cogl.TextureComponents.RGBA
+            : Cogl.TextureComponents.RGB;
+
+        let texture = Cogl.Texture2D.new_with_size(ctx, width, height);
+        texture.set_components(components);
+        try {
+            texture.allocate();
+        } catch {
+            texture = Cogl.Texture2DSliced.new_with_size(
+                ctx, width, height, Cogl.TEXTURE_MAX_WASTE);
+            texture.set_components(components);
+        }
+
+        if (!texture.set_data(coglFormat, stride, data, 0))
+            throw new Error('Failed to set texture data');
+
+        return texture;
+    }
+
+    purge(file) {
+        this._textures.delete(file.get_uri());
+    }
+}
+
+function getBackgroundTextureCache() {
+    if (!_backgroundTextureCache)
+        _backgroundTextureCache = new BackgroundTextureCache();
+    return _backgroundTextureCache;
 }
 
 export const Background = GObject.registerClass({
@@ -289,7 +437,9 @@ export const Background = GObject.registerClass({
         let signalId = this._cache.connect('file-changed',
             (cache, changedFile) => {
                 if (changedFile.equal(file)) {
-                    let imageCache = Meta.BackgroundImageCache.get_default();
+                    let imageCache = LegacyBackgroundImageCache
+                        ? LegacyBackgroundImageCache.get_default()
+                        : getBackgroundTextureCache();
                     imageCache.purge(changedFile);
                     this._emitChangedSignal();
                 }
@@ -305,6 +455,11 @@ export const Background = GObject.registerClass({
     }
 
     _updateAnimation() {
+        if (!LegacyBackgroundImageCache) {
+            this._updateAnimationWithTextures();
+            return;
+        }
+
         this._updateAnimationTimeoutId = 0;
 
         this._animation.update(this._layoutManager.monitors[this._monitorIndex]);
@@ -324,7 +479,7 @@ export const Background = GObject.registerClass({
             this._queueUpdateAnimation();
         };
 
-        let cache = Meta.BackgroundImageCache.get_default();
+        let cache = LegacyBackgroundImageCache.get_default();
         let numPendingImages = files.length;
         for (let i = 0; i < files.length; i++) {
             this._watchFile(files[i]);
@@ -342,6 +497,44 @@ export const Background = GObject.registerClass({
                         finish();
                 });
             }
+        }
+    }
+
+    async _updateAnimationWithTextures() {
+        this._updateAnimationTimeoutId = 0;
+        this._animation.update(this._layoutManager.monitors[this._monitorIndex]);
+        const files = this._animation.keyFrameFiles;
+
+        if (files.length === 0) {
+            this.set_texture(null, this._style, null);
+            this._setLoaded();
+            this._queueUpdateAnimation();
+            return;
+        }
+
+        try {
+            const entries = await Promise.all(files.map(file => {
+                this._watchFile(file);
+                return getBackgroundTextureCache().load(file, this._cancellable);
+            }));
+            const textures = entries.map(entry => entry.texture);
+            const colorState = entries[0]?.colorState ?? null;
+
+            if (textures.length > 1) {
+                this.set_blend_textures(
+                    textures[0], textures[1],
+                    this._animation.transitionProgress,
+                    this._style, colorState);
+            } else {
+                this.set_texture(textures[0], this._style, colorState);
+            }
+
+            this._setLoaded();
+            this._queueUpdateAnimation();
+        } catch (e) {
+            if (!e.matches?.(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                logError(e, 'Failed to load animation');
+            this._setLoaded();
         }
     }
 
@@ -394,10 +587,15 @@ export const Background = GObject.registerClass({
     }
 
     _loadImage(file) {
+        if (!LegacyBackgroundImageCache) {
+            this._loadImageTexture(file);
+            return;
+        }
+
         this.set_file(file, this._style);
         this._watchFile(file);
 
-        let cache = Meta.BackgroundImageCache.get_default();
+        let cache = LegacyBackgroundImageCache.get_default();
         let image = cache.load(file);
         if (image.is_loaded()) {
             this._setLoaded();
@@ -406,6 +604,21 @@ export const Background = GObject.registerClass({
                 this._setLoaded();
                 image.disconnect(id);
             });
+        }
+    }
+
+    async _loadImageTexture(file) {
+        this._watchFile(file);
+
+        try {
+            const { texture, colorState } =
+                await getBackgroundTextureCache().load(file, this._cancellable);
+            this.set_texture(texture, this._style, colorState);
+            this._setLoaded();
+        } catch (e) {
+            if (!e.matches?.(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                logError(e, 'Failed to load background');
+            this._setLoaded();
         }
     }
 

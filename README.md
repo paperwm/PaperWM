@@ -6,7 +6,7 @@ PaperWM is a [GNOME Shell](https://www.gnome.org/) extension which provides scro
 
 While technically an [extension](https://extensions.gnome.org/about/) it's to a large extent built on top of the Gnome desktop rather than merely extending it.
 
-PaperWM aims to continually support [current stable](https://release.gnome.org/calendar/#branches) GNOME Shell versions (currently GNOME 47-49).  Older versions of PaperWM can generally be installed on older GNOME Shell versions (see [Install via Source](#install-via-source) for more information on targeting an older/EOL Gnome version).
+PaperWM aims to continually support [current stable](https://release.gnome.org/calendar/#branches) GNOME Shell versions (currently GNOME 47-51).  Older versions of PaperWM can generally be installed on older GNOME Shell versions (see [Install via Source](#install-via-source) for more information on targeting an older/EOL Gnome version).
 
 New features and fixes aren't generally backported to older Gnome shell versions.  [Pull requests](https://github.com/paperwm/PaperWM/pulls) for fixes to older PaperWM versions (that run on previous Gnome versions) will be accepted if the submitter can help test and update related documentation.
 
@@ -22,7 +22,7 @@ Have questions or comments?  Please ask on our [Github Discussions](https://gith
 
 Clone the repo and check out the branch for the GNOME Shell version you're running:
 
-- 45-50 (currently developed/supported): https://github.com/paperwm/PaperWM/tree/release
+- 45-51 (currently developed/supported): https://github.com/paperwm/PaperWM/tree/release
 - 42-44 ([EOL](https://release.gnome.org/calendar/#releases)): https://github.com/paperwm/PaperWM/tree/gnome-44
 - 40-41 ([EOL](https://release.gnome.org/calendar/#releases)): https://github.com/paperwm/PaperWM/tree/gnome-40
 - 3.28-3.38 ([EOL](https://release.gnome.org/calendar/#releases)): https://github.com/paperwm/PaperWM/tree/gnome-3.38
