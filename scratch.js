@@ -59,7 +59,13 @@ export function easeScratch(metaWindow, targetX, targetY, params = {}) {
     });
 }
 
-export function makeScratch(metaWindow) {
+export function makeScratch(metaWindow, { preserveTiling = false } = {}) {
+    // Internal refreshes keep temporary scratch intent; an explicit choice
+    // supersedes any deferred return to tiling.
+    if (!preserveTiling) {
+        delete metaWindow._tiled_on_minimize;
+        delete metaWindow._pendingScratchRestore;
+    }
     let fromNonScratch = !metaWindow[float];
     let fromTiling = false;
     // Relevant when called while navigating. Use the position the user actually sees.
@@ -135,6 +141,8 @@ export function makeScratch(metaWindow) {
 }
 
 export function unmakeScratch(metaWindow) {
+    delete metaWindow._tiled_on_minimize;
+    delete metaWindow._pendingScratchRestore;
     if (!metaWindow[scratchFrame])
         metaWindow[scratchFrame] = metaWindow.get_frame_rect();
     metaWindow[float] = false;

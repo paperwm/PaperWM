@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd -- "$(dirname -- "$0")/.."
+node --experimental-vm-modules --test tests/unit/scratch-lifecycle.test.mjs
