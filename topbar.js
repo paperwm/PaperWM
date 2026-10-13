@@ -516,7 +516,7 @@ ${this.getKeybindString('switch-focus-mode')}`);
 export const FocusButton = GObject.registerClass(
     class FocusButton extends panelMenu.Button {
         _init() {
-            super._init(0.0, 'FocusMode');
+            super._init(0.0, 'FocusMode', true);
 
             this._icon = new FocusIcon({
                 style_class: 'system-status-icon focus-mode-button',
@@ -680,7 +680,7 @@ export function setOpenPositionMode(mode) {
 export const OpenPositionButton = GObject.registerClass(
     class OpenPositionButton extends panelMenu.Button {
         _init() {
-            super._init(0.0, 'OpenPosition');
+            super._init(0.0, 'OpenPosition', true);
 
             this._icon = new OpenPositionIcon({
                 style_class: 'system-status-icon open-position-icon',
