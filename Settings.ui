@@ -1268,6 +1268,44 @@
                         <child>
                           <object class="GtkGrid">
                             <property name="focusable">False</property>
+                            <property name="tooltip_text" translatable="yes">Replaces GNOME's horizontal workspace switch animation with PaperWM's vertical animation, e.g. for switch-to-workspace-N keybindings.</property>
+                            <property name="margin_start">12</property>
+                            <property name="margin_end">12</property>
+                            <property name="margin_top">6</property>
+                            <property name="margin_bottom">6</property>
+                            <property name="column_spacing">32</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="focusable">False</property>
+                                <property name="hexpand">1</property>
+                                <property name="label" translatable="yes">Use PaperWM animation for all workspace switches</property>
+                                <property name="use_markup">1</property>
+                                <property name="xalign">0</property>
+                                <layout>
+                                  <property name="column">0</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSwitch" id="use-paperwm-workspace-animation">
+                                <layout>
+                                  <property name="column">1</property>
+                                  <property name="row">0</property>
+                                </layout>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">False</property>
+                        <property name="focusable">False</property>
+                        <child>
+                          <object class="GtkGrid">
+                            <property name="focusable">False</property>
                             <property name="tooltip_text" translatable="yes">Sets the drift speed (px/ms) when using "drifting view to the left/right" keybinds.</property>
                             <property name="margin_start">12</property>
                             <property name="margin_end">12</property>

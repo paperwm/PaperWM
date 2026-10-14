@@ -723,6 +723,12 @@
         <summary>Duration of animations in seconds</summary>
     </key>
 
+    <key type="b" name="use-paperwm-workspace-animation">
+        <default>false</default>
+        <summary>Use PaperWM's vertical animation for all workspace switches</summary>
+        <description>Replaces GNOME's horizontal workspace switch animation, e.g. for switch-to-workspace-N keybindings</description>
+    </key>
+
     <key type="i" name="drift-speed">
         <default>2</default>
         <summary>Drift speed (px/ms) when using "drifting view to the left/right" keybinds</summary>

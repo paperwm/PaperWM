@@ -2846,7 +2846,9 @@ export const Spaces = class Spaces extends Map {
         this.setMonitors(monitor, toSpace, true);
 
         this.forEach(s => s.setSpaceTopbarElementsVisible());
-        let doAnimate = animate || this.space_paperwmAnimation;
+        let doAnimate = animate || this.space_paperwmAnimation ||
+            (Settings.prefs.use_paperwm_workspace_animation && this.space_defaultAnimation &&
+             !Main.overview.visible && !Main.wm._workspaceAnimation.gestureActive);
         this.animateToSpace(
             toSpace,
             fromSpace,
