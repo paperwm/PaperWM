@@ -827,17 +827,18 @@ export class Space extends Array {
 
     // Space.prototype.isVisible = function
     isVisible(metaWindow, margin = 0) {
-        let clone = metaWindow.clone;
-        let x = clone.x + this.cloneContainer.x;
-        let workArea = this.workArea();
-        let min = workArea.x;
+        const clone = metaWindow.clone;
+        const left = clone.x + this.cloneContainer.x;
+        const right = left + clone.width;
 
-        if (x - margin + clone.width < min ||
-            x + margin > min + workArea.width) {
-            return false;
-        } else {
-            return true;
-        }
+        const workArea = this.workArea();
+        const areaLeft = workArea.x;
+        const areaRight = areaLeft + workArea.width;
+
+        const isOffscreenLeft = right < areaLeft + margin;
+        const isOffscreenRight = left > areaRight - margin;
+
+        return !isOffscreenLeft && !isOffscreenRight;
     }
 
     isFullyVisible(metaWindow) {
@@ -1188,6 +1189,14 @@ export class Space extends Array {
     switchGlobalUp() { this.switchGlobal(Meta.MotionDirection.UP); }
     switchGlobalDown() { this.switchGlobal(Meta.MotionDirection.DOWN); }
     switchGlobal(direction) {
+        const motionToDisplayDirection = {
+            [Meta.MotionDirection.LEFT]: Meta.DisplayDirection.LEFT,
+            [Meta.MotionDirection.RIGHT]: Meta.DisplayDirection.RIGHT,
+            [Meta.MotionDirection.UP]: Meta.DisplayDirection.UP,
+            [Meta.MotionDirection.DOWN]: Meta.DisplayDirection.DOWN,
+        };
+        const dir = motionToDisplayDirection[direction]
+
         let space = this;
         let index = space.selectedIndex();
         if (index === -1) {
@@ -1203,30 +1212,38 @@ export class Space extends Array {
             index--;
         }
         if (index < 0 || index >= space.length) {
-            let monitor = focusMonitor();
-            let dir = index < 0
-                ? Meta.DisplayDirection.LEFT : Meta.DisplayDirection.RIGHT;
-            let i = display.get_monitor_neighbor_index(monitor.index, dir);
-            if (i === -1)
+            const monitor = focusMonitor();
+            const i = display.get_monitor_neighbor_index(monitor.index, dir);
+            if (i === -1) {
                 return;
-
-            let newMonitor = Main.layoutManager.monitors[i];
-            space = spaces.monitors.get(newMonitor);
-            if (dir === Meta.DisplayDirection.LEFT) {
-                index = space.length - 1;
-            } else {
-                index = 0;
             }
-            if (space[index].length <= row)
-                row = space[index].length - 1;
-            space.activate(false, false);
+
+            // Ensure if we change workspaces and then monitors,
+            // that the new workspace stays active on the starting monitor.
+            space.activateWithFocus(space.selectedWindow, false, true);
+
+            const newMonitor = Main.layoutManager.monitors[i];
+            const newSpace = spaces.monitors.get(newMonitor);
+            const visibleColumns = newSpace.filter((column) => newSpace.isVisible(column[0]));
+            if (visibleColumns.length === 0) {
+                return;
+            }
+
+            const newColumn = dir === Meta.DisplayDirection.LEFT
+                ? visibleColumns[visibleColumns.length - 1]
+                : visibleColumns[0];
+            const newRow = Math.min(row, newColumn.length - 1);
+            const newWindow = newColumn[newRow];
+
+            newSpace.activate(false, false);
             Navigator.finishNavigation();
-            Navigator.getNavigator().showMinimap(space);
+            Navigator.getNavigator().showMinimap(newSpace);
+            ensureViewport(newWindow, newSpace);
+            return
         }
 
         let column = space[index];
-        if (column.length <= row)
-            row = column.length - 1;
+        row = Math.min(row, column.length - 1)
 
         switch (direction) {
         case Meta.MotionDirection.UP:
@@ -1237,16 +1254,14 @@ export class Space extends Array {
         }
         if (row < 0 || row >= column.length) {
             let monitor = focusMonitor();
-            let dir = row < 0
-                ? Meta.DisplayDirection.UP : Meta.DisplayDirection.DOWN;
             let i = display.get_monitor_neighbor_index(monitor.index, dir);
-            if (i === -1)
+            if (i === -1) {
                 return;
+            }
 
             let newMonitor = Main.layoutManager.monitors[i];
             space = spaces.monitors.get(newMonitor);
-            if (space.length <= index)
-                index = space.length - 1;
+            index = Math.min(index, space.length - 1)
             if (dir === Meta.DisplayDirection.UP) {
                 row = space[index].length - 1;
             } else {
@@ -1255,6 +1270,7 @@ export class Space extends Array {
             space.activate(false, false);
             Navigator.finishNavigation();
             Navigator.getNavigator().showMinimap(space);
+            return
         }
 
         let metaWindow = space.getWindow(index, row);
