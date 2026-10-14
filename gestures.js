@@ -16,8 +16,15 @@ const DIRECTIONS = {
 
 let vy, time, vState, navigator, direction, signals;
 let handoffToOverview = false;
+// true between BEGIN and END/CANCEL of a PaperWM-managed swipe. Used to defer
+// any tracker disabling that would otherwise interrupt a live overview gesture.
+let inGesture = false;
 // 1 is natural scrolling, -1 is unnatural
 let natural = 1;
+
+export function isInGesture() {
+    return inGesture;
+}
 export let gliding = false; // exported
 
 let touchpadSettings;
@@ -42,9 +49,19 @@ export function enable(extension) {
      * ensure swipe trackers are reset.
      */
     signals.connect(Main.overview, 'hidden', () => {
-        if (gestureEnabled()) {
-            swipeTrackersEnable(false);
+        if (!gestureEnabled()) {
+            return;
         }
+        // Defer to idle so any in-flight overview swipe animation settles
+        // (tracker -> State.NONE) before we disable. On GNOME 50 disabling a
+        // SCROLLING tracker calls _interrupt() -> synthetic 'end' -> illegal
+        // overview state transition -> stuck/hang.
+        GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+            if (!inGesture && gestureEnabled()) {
+                swipeTrackersEnable(false);
+            }
+            return GLib.SOURCE_REMOVE;
+        });
     });
 
     /**
@@ -88,6 +105,7 @@ export function enable(extension) {
             natural = touchpadSettings.get_boolean("natural-scroll") ? 1 : -1;
             direction = undefined;
             handoffToOverview = false;
+            inGesture = true;
             navigator = Navigator.getNavigator();
             navigator.connect('destroy', () => {
                 vState = -1;
@@ -147,6 +165,7 @@ export function enable(extension) {
             return Clutter.EVENT_PROPAGATE;
         case Clutter.TouchpadGesturePhase.CANCEL:
         case Clutter.TouchpadGesturePhase.END:
+            inGesture = false;
             // If this finger count should be handled by GNOME, never consume
             // completion here (prevents overview from getting stuck in 4-finger mode).
             if (shouldPropagate(fingers)) {
