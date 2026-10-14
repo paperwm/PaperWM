@@ -293,16 +293,18 @@ export function setupOverrides() {
         return upstreamValue;
     });
 
-    const checkScratch = (metaWindow, metaWorkspace) => {
-        if (Scratch.isScratchWindow(metaWindow)) {
-            // check workspace match
-            return metaWorkspace === metaWindow?.get_workspace();
+    const checkScratch = (metaWindow, metaWorkspace, monitorIndex) => {
+        if (!Scratch.isScratchWindow(metaWindow)) {
+            return false;
         }
 
-        return false;
+        // A scratch window sits on one workspace and one monitor, like a tiled one.
+        // Without the monitor check every monitor's cell claims it.
+        return metaWorkspace === metaWindow?.get_workspace() &&
+            monitorIndex === metaWindow?.get_monitor();
     };
     registerOverridePrototype(Workspace.Workspace, '_isMyWindow', function(window) {
-        if (checkScratch(window, this.metaWorkspace)) {
+        if (checkScratch(window, this.metaWorkspace, this.monitorIndex)) {
             return true;
         }
 
@@ -315,7 +317,7 @@ export function setupOverrides() {
     });
     registerOverridePrototype(WorkspaceThumbnail.WorkspaceThumbnail, '_isMyWindow', function(actor) {
         const window = actor.meta_window;
-        if (checkScratch(window, this.metaWorkspace)) {
+        if (checkScratch(window, this.metaWorkspace, this.monitorIndex)) {
             return true;
         }
 

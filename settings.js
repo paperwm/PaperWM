@@ -244,11 +244,6 @@ export function conflictKeyChanged(settings, key) {
         return;
     }
 
-    const newKeybind = settings.get_value(key).deep_unpack();
-    if (Array.isArray(newKeybind) && newKeybind.length === 0) {
-        return;
-    }
-
     const saveList = getSavedOverrides();
     saveList.delete(key);
     saveOverrides(saveList);
