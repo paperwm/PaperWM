@@ -27,7 +27,7 @@ Clone the repo and check out the branch for the GNOME Shell version you're runni
 - 40-41 ([EOL](https://release.gnome.org/calendar/#releases)): https://github.com/paperwm/PaperWM/tree/gnome-40
 - 3.28-3.38 ([EOL](https://release.gnome.org/calendar/#releases)): https://github.com/paperwm/PaperWM/tree/gnome-3.38
 
-then run the [`make install`](https://github.com/paperwm/PaperWM/blob/release/install.sh) 
+then run the [`make install`](Makefile) 
 from the repository. The installer will create a link to the repo in
 `~/.local/share/gnome-shell/extensions`. It will then ask if you want to enable PaperWM.
 ```bash
@@ -43,7 +43,7 @@ Running the extension will automatically install a user config file as described
 > `/usr/bin/gnome-extensions enable paperwm@paperwm.github.com`
 >
 
-> if you have run into issues, delete any older `paperwm@...` symlinks from `~/.local/share/gnome-shell/extensions` and re-run the `install.sh` script.
+> if you have run into issues, delete any older `paperwm@...` symlinks from `~/.local/share/gnome-shell/extensions` and re-run `make install`.
 
 #### Uninstall PaperWM (if installed via source)
 
