@@ -37,6 +37,23 @@ export const FocusModes = { DEFAULT: 0, CENTER: 1, EDGE: 2 }; // export
 
 export const CycleWindowSizesDirection = { FORWARD: 0, BACKWARDS: 1 };
 
+// Some clients (eg. chromium/electron on wayland) settle a few px off the
+// requested size. Re-requesting the exact size makes the window bounce
+// between the two sizes (flicker), so accept sizes within this tolerance.
+const targetSizeTolerance = 2;
+
+function nearTargetSize(frame, targetWidth, targetHeight) {
+    return Math.abs(frame.width - targetWidth) <= targetSizeTolerance &&
+        Math.abs(frame.height - targetHeight) <= targetSizeTolerance;
+}
+
+/**
+ * Returns true if metaWindow is currently being resized by the user (mouse/keyboard grab).
+ */
+function isResizeGrabbed(metaWindow) {
+    return inGrab instanceof Grab.ResizeGrab && inGrab.metaWindow === metaWindow;
+}
+
 export const SlurpInsertPosition = { BOTTOM: 0, TOP: 1, ABOVE: 2, BELOW: 3 };
 
 /**
@@ -590,9 +607,15 @@ export class Space extends Array {
                 }
             }
 
-            if (resizable) {
+            if (isResizeGrabbed(mw)) {
+                // Don't fight the user (and the client) while resizing - lay out
+                // the column around the window's current size. ResizeGrab.end
+                // does a final layout which settles the window.
+                targetWidth = f.width;
+                targetHeight = f.height;
+            } else if (resizable) {
                 const hasNewTarget = mw._targetWidth !== targetWidth || mw._targetHeight !== targetHeight;
-                const targetReached = f.width === targetWidth && f.height === targetHeight;
+                const targetReached = nearTargetSize(f, targetWidth, targetHeight);
 
                 // Update targets (NB: must happen before resize request)
                 mw._targetWidth = targetWidth;
@@ -1398,7 +1421,8 @@ export class Space extends Array {
             if (Easer.isEasing(w.clone))
                 return;
 
-            let unMovable = w.fullscreen || isMaximized(w);
+            // Moving a window while the user resizes it makes it jump around
+            let unMovable = w.fullscreen || isMaximized(w) || isResizeGrabbed(w);
             if (unMovable)
                 return;
 
@@ -3636,7 +3660,7 @@ export function registerWindow(metaWindow) {
      */
     signals.connect(actor, 'stage-views-changed', _actor => {
         const f = metaWindow.get_frame_rect();
-        if (metaWindow._targetHeight !== f.height) {
+        if (!(Math.abs(metaWindow._targetHeight - f.height) <= targetSizeTolerance)) {
             resizeHandler(metaWindow);
         }
     });
@@ -3673,7 +3697,7 @@ export function registerWindow(metaWindow) {
                     }
 
                     const f = metaWindow.get_frame_rect();
-                    if (metaWindow._targetHeight !== f.height) {
+                    if (Math.abs(metaWindow._targetHeight - f.height) > targetSizeTolerance) {
                         if (!isNaN(metaWindow._targetHeight)) {
                             metaWindow.move_resize_frame(
                                 true,
@@ -3829,6 +3853,7 @@ export function resizeHandler(metaWindow) {
 
     const fsf = metaWindow?._fullscreen_frame;
     const selected = metaWindow === space.selectedWindow;
+    const resizing = isResizeGrabbed(metaWindow);
     let addCallback = false;
     let x;
 
@@ -3891,11 +3916,24 @@ export function resizeHandler(metaWindow) {
             };
         }
 
+        // An animated layout shows the (scaled) clone instead of the live window,
+        // which flickers for slow-to-repaint clients (e.g. chromium on wayland)
+        // as they resize asynchronously. Avoid it when the window doesn't need
+        // to be scrolled into view: while the user is resizing the window
+        // (ResizeGrab.end will do an animated layout), or when the window is
+        // still fully visible after eg. a keybinding resize.
+        const inPlace = resizing ||
+            (!addCallback && space.length > 1 && space.isFullyVisible(metaWindow));
+
         // Resizing from within a size-changed signal is troube (#73). Queue instead.
-        space.queueLayout(true, { callback, centerIfOne: false });
+        if (inPlace) {
+            space.queueLayout(false, { ensure: false, centerIfOne: false });
+        } else {
+            space.queueLayout(true, { callback, centerIfOne: false });
+        }
     }
 
-    if (space.length === 1) {
+    if (space.length === 1 && !resizing) {
         centerWindow(metaWindow);
     }
 }
@@ -4671,7 +4709,7 @@ export function grabBegin(metaWindow, type) {
     case Meta.GrabOp.KEYBOARD_RESIZING_S:
     case Meta.GrabOp.KEYBOARD_RESIZING_SE:
     case Meta.GrabOp.KEYBOARD_RESIZING_W:
-        inGrab = new Grab.ResizeGrab();
+        inGrab = new Grab.ResizeGrab(metaWindow);
         break;
     }
 }
