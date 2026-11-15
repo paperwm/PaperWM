@@ -4747,7 +4747,8 @@ export function focus_handler(metaWindow) {
         }
     }
     else {
-        space.getWindows().filter(w => w.fullscreen).forEach(w => {
+        // Replacement focus can arrive after a closing window loses its actor.
+        space.getWindows().filter(w => w.fullscreen && w.get_compositor_private()).forEach(w => {
             if (
                 w._fullscreen_above !== null &&
                 !w._fullscreen_above
