@@ -239,6 +239,17 @@ export function monitorAtPoint(gx, gy) {
 }
 
 /**
+ * Whether two monitor objects are the same physical monitor. Mutter hands out
+ * fresh objects on monitors-changed, so a reference taken before one no longer
+ * compares equal; the connector added by upgradeGnomeMonitors() does.
+ */
+export function sameMonitor(a, b) {
+    if (!a || !b)
+        return false;
+    return a === b || (!!a.connector && a.connector === b.connector);
+}
+
+/**
  * Returns the monitor current pointer coordinates.
  */
 export function monitorAtCurrentPoint() {

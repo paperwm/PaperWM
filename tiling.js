@@ -4433,6 +4433,14 @@ export function ensuredX(meta_window, space) {
         x = workArea.x + Math.round(workArea.width / 2 - frame.width / 2);
     } else if (meta_window.fullscreen) {
         x = 0;
+    } else if (isMaximized(meta_window)) {
+        // isPlaceable() shows a maximized window's real actor only at the
+        // work area's origin. The edge alignment below puts the last window
+        // a margin short of the monitor's right edge, which for a window as
+        // wide as the monitor is a margin off its left one - so it was
+        // never placeable and stayed drawn as its clone, which looks right
+        // but takes no pointer input.
+        x = min;
     } else if (space.focusMode === FocusModes.EDGE) {
         // Align to the closest edge, with special cases for
         // only (center), first (left), and last (right) windows
@@ -5184,7 +5192,11 @@ export function centerWindow(metaWindow, horizontal = true, vertical = false) {
     targetY = Math.max(targetY, workArea.y);
     if (space.indexOf(metaWindow) === -1) {
         Scratch.easeScratch(metaWindow, targetX + monitor.x, targetY + monitor.y);
-    } else {
+    } else if (horizontal) {
+        // Centring a tiled window is a scroll of the strip, so only the horizontal
+        // half of it means anything. Without the guard targetX is the frame's stage
+        // x, which move_to reads as a strip coordinate and scrolls somewhere
+        // arbitrary - which is what center-vertically did.
         move_to(space, metaWindow, {
             x: targetX,
         });
