@@ -3271,31 +3271,34 @@ export const Spaces = class Spaces extends Map {
 
         if (currentPreviewMode === PreviewMode.SEQUENTIAL) {
             this._animateToSpaceOrdered(to, animate);
-            let t = to.actor.get_transition('y');
-            if (t) {
-                t.connect('stopped', (timeline, finished) => {
-                    if (finished) {
-                        onComplete();
-                    }
+        } else {
+            this._updateMonitor();
+            Easer.addEase(to.actor,
+                {
+                    x: 0,
+                    y: 0,
+                    scale_x: 1,
+                    scale_y: 1,
+                    time,
                 });
-            } else {
-                // When switching between monitors there's no animation we can
-                // connect to
-                onComplete();
-            }
-            return;
         }
 
-        this._updateMonitor();
-        Easer.addEase(to.actor,
-            {
-                x: 0,
-                y: 0,
-                scale_x: 1,
-                scale_y: 1,
-                time,
-                onComplete,
+        // Another property can finish while y is still nonzero, blocking moveDone().
+        let t = to.actor.get_transition('y');
+        if (t) {
+            t.connect('stopped', (timeline, finished) => {
+                if (finished) {
+                    onComplete();
+                }
             });
+        } else {
+            // No vertical animation (e.g. switching between monitors).
+            onComplete();
+        }
+
+        if (currentPreviewMode === PreviewMode.SEQUENTIAL) {
+            return;
+        }
 
         // Animate all the spaces above `to` down below the monitor. We get
         // these spaces by looking at siblings of upper most actor, ie. the
