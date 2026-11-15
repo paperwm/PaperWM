@@ -93,6 +93,8 @@ let saveState;
 let startupTimeoutId, timerId, fullscreenStartTimeout, stackSlurpTimeout, workspaceChangeTimeouts;
 let monitorChangeTimeout, driftTimeout;
 let workspaceSettings;
+let pendingGrabInsert;
+let compositorGrab;
 export let inGrab;
 export function enable(extension) {
     inGrab = false;
@@ -204,6 +206,11 @@ export function enable(extension) {
 }
 
 export function disable() {
+    if (compositorGrab) {
+        delete compositorGrab.window._paperwmDeferredInsert;
+    }
+    compositorGrab = null;
+
     Utils.timeout_remove(startupTimeoutId);
     startupTimeoutId = null;
     Utils.timeout_remove(timerId);
@@ -229,6 +236,7 @@ export function disable() {
     displayConfig = null;
     spaces.destroy();
     inGrab = null;
+    pendingGrabInsert = null;
     gsettings = null;
     backgroundGroup = null;
     backgroundSettings = null;
@@ -242,6 +250,14 @@ export function disable() {
  */
 export function setInGrab(value) {
     inGrab = value;
+    if (!inGrab && pendingGrabInsert) {
+        const metaWindow = pendingGrabInsert;
+        pendingGrabInsert = null;
+        if (!metaWindow._paperwmUnmanaging && metaWindow.get_compositor_private() &&
+            spaces.spaceOfWindow(metaWindow)?.indexOf(metaWindow) === -1) {
+            insertWindow(metaWindow, { existing: true });
+        }
+    }
 }
 
 export class Space extends Array {
@@ -3767,6 +3783,9 @@ export function removePaperWMFlags(w) {
     delete w._fullscreen_lock;
     delete w._fullscreen_above;
     delete w._last_layout_frame;
+    delete w._paperwmAutoFloat;
+    delete w._paperwmDeferredInsert;
+    delete w._paperwmToplevelDrag;
 }
 
 export function addPositionHandler(metaWindow) {
@@ -3905,6 +3924,11 @@ export function resizeHandler(metaWindow) {
  * @param {*} metaWindow
  */
 export function nonTiledSizeHandler(metaWindow) {
+    // App-managed floating windows retain their own geometry, including on fullscreen exit.
+    if (metaWindow._paperwmAutoFloat) {
+        return;
+    }
+
     // if window is fullscreen ==> set lock
     if (metaWindow.fullscreen) {
         metaWindow._fullscreen_lock = true;
@@ -4061,8 +4085,44 @@ export function add_filter(meta_window) {
     if (Scratch.isScratchWindow(meta_window)) {
         return false;
     }
+    if (meta_window._paperwmAutoFloat) {
+        return false;
+    }
 
     return true;
+}
+
+export function tileWindow(metaWindow) {
+    if (isTransient(metaWindow) || is_override_redirect(metaWindow) ||
+        !metaWindow.get_compositor_private()) {
+        return;
+    }
+
+    // Unsticking can synchronously insert the window, so register it first.
+    if (!metaWindow.clone) {
+        registerWindow(metaWindow);
+        allocateClone(metaWindow);
+    }
+    addResizeHandler(metaWindow);
+    addPositionHandler(metaWindow);
+    delete metaWindow.unmapped;
+    delete metaWindow._paperwmAutoFloat;
+
+    if (Scratch.isScratchWindow(metaWindow)) {
+        Scratch.unmakeScratch(metaWindow);
+    }
+    if (metaWindow.is_above()) {
+        metaWindow.unmake_above();
+    }
+    if (metaWindow.is_on_all_workspaces()) {
+        metaWindow.unstick();
+    }
+
+    const space = spaces.spaceOfWindow(metaWindow);
+    space.removeFloating(metaWindow);
+    if (space.indexOf(metaWindow) === -1) {
+        insertWindow(metaWindow, { existing: true, force: true });
+    }
 }
 
 /**
@@ -4091,9 +4151,16 @@ export function remove_handler(workspace, meta_window) {
    Handle windows entering workspaces.
 */
 export function add_handler(_ws, metaWindow) {
-    // Do not handle grabbed windows
-    if (inGrab && inGrab.window === metaWindow)
+    // First-frame insertion owns new windows during a compositor move.
+    if (compositorGrab?.window === metaWindow && metaWindow.unmapped) {
         return;
+    }
+
+    // Retry once PaperWM releases the grabbed window.
+    if (inGrab && inGrab.window === metaWindow) {
+        pendingGrabInsert = metaWindow;
+        return;
+    }
 
     let actor = metaWindow.get_compositor_private();
     if (actor) {
@@ -4114,15 +4181,14 @@ export function add_handler(_ws, metaWindow) {
 */
 export function insertWindow(metaWindow, options = {}) {
     const existing = options?.existing ?? false;
+    const force = options?.force ?? false;
     const dropping = options?.dropping ?? false;
     const dropCallback = options?.dropCallback ?? function() {};
 
-    // Add newly created windows to the space being previewed
-    if (!existing &&
-        !metaWindow.is_on_all_workspaces() &&
-        metaWindow.get_workspace() !== spaces.selectedSpace.workspace) {
-        metaWindow.redirected = true;
-        metaWindow.change_workspace(spaces.selectedSpace.workspace);
+    if (!existing && compositorGrab?.window === metaWindow) {
+        metaWindow._paperwmDeferredInsert = true;
+        // window_created hid the actor; the browser needs it visible while dragging.
+        showWindow(metaWindow);
         return;
     }
 
@@ -4137,9 +4203,31 @@ export function insertWindow(metaWindow, options = {}) {
     };
 
     const actor = metaWindow.get_compositor_private();
+    const space = spaces.spaceOfWindow(metaWindow);
 
     let overwriteSpace;
     if (!existing) {
+        let winprop = Settings.find_winprop(metaWindow);
+        if (winprop?.float || metaWindow.is_above()) {
+            if (winprop?.oneshot) {
+                Settings.winprops.splice(Settings.winprops.indexOf(winprop), 1);
+            }
+            metaWindow._paperwmAutoFloat = true;
+            connectSizeChanged();
+            space.addFloating(metaWindow);
+            showWindow(metaWindow);
+            metaWindow.make_above();
+            return;
+        }
+
+        // Add newly created tiled windows to the space being previewed.
+        if (!metaWindow.is_on_all_workspaces() &&
+            metaWindow.get_workspace() !== spaces.selectedSpace.workspace) {
+            metaWindow.redirected = true;
+            metaWindow.change_workspace(spaces.selectedSpace.workspace);
+            return;
+        }
+
         /**
          * Note: Can't trust global.display.focus_window to determine currently focused window.
          * The mru is more flexible. (global.display.focus_window does not always agree with mru[0]).
@@ -4153,7 +4241,6 @@ export function insertWindow(metaWindow, options = {}) {
 
         let addToScratch = false;
 
-        let winprop = Settings.find_winprop(metaWindow);
         if (winprop) {
             if (winprop.oneshot) {
                 Settings.winprops.splice(Settings.winprops.indexOf(winprop), 1);
@@ -4220,8 +4307,6 @@ export function insertWindow(metaWindow, options = {}) {
         return;
     }
 
-    const space = spaces.spaceOfWindow(metaWindow);
-
     if (overwriteSpace !== undefined) {
         const newspace = spaces.spaceOfIndex(overwriteSpace);
         if (!newspace) {
@@ -4246,7 +4331,7 @@ Opening "${metaWindow?.title}" on current space.`);
     }
     const active = space.selectedWindow;
 
-    if (!add_filter(metaWindow)) {
+    if (!add_filter(metaWindow) && (!force || isTransient(metaWindow))) {
         connectSizeChanged();
         space.addFloating(metaWindow);
         // Make sure the window is on the correct monitor
@@ -4619,16 +4704,21 @@ export function move_to(space, metaWindow, options = {}) {
 }
 
 export function grabBegin(metaWindow, type) {
+    if (type === Meta.GrabOp.MOVING || type === Meta.GrabOp.MOVING_UNCONSTRAINED ||
+        type === Meta.GrabOp.KEYBOARD_MOVING) {
+        compositorGrab = { window: metaWindow, type };
+    }
+
     switch (type) {
     case Meta.GrabOp.COMPOSITOR:
     case Meta.GrabOp.FRAME_BUTTON:
         // Don't handle pushModal grabs and SCD button (close/minimize/etc.) grabs
         break;
     case Meta.GrabOp.KEYBOARD_MOVING:
-        inGrab = new Grab.MoveGrab(metaWindow, type);
-        if (!isTiled(metaWindow)) {
+        if (!isTiled(metaWindow) || spaces.spaceOfWindow(metaWindow).indexOf(metaWindow) === -1) {
             return;
         }
+        inGrab = new Grab.MoveGrab(metaWindow, type);
 
         // NOTE: Keyboard grab moves the cursor, but it happens after grab
         // signals have run. Simply delay the dnd so it will get the correct
@@ -4638,9 +4728,16 @@ export function grabBegin(metaWindow, type) {
             inGrab.beginDnD();
         });
         break;
-    case Meta.GrabOp.MOVING:
     case Meta.GrabOp.MOVING_UNCONSTRAINED: // introduced in Gnome 44
-        if (!isTiled(metaWindow)) {
+        // Client-driven drag (e.g. xdg_toplevel_drag_v1 browser tab drags): the
+        // compositor moves the window itself, so don't end the grab op or
+        // create a MoveGrab. Leave the layout untouched until the drop.
+        if (spaces.spaceOfWindow(metaWindow)?.indexOf(metaWindow) !== -1) {
+            metaWindow._paperwmToplevelDrag = true;
+        }
+        break;
+    case Meta.GrabOp.MOVING:
+        if (!isTiled(metaWindow) || spaces.spaceOfWindow(metaWindow).indexOf(metaWindow) === -1) {
             return;
         }
 
@@ -4676,12 +4773,32 @@ export function grabBegin(metaWindow, type) {
     }
 }
 
-export function grabEnd(_metaWindow, _type) {
-    if (!inGrab || inGrab.dnd || inGrab.grabbed)
-        return;
+export function grabEnd(metaWindow, _type) {
+    compositorGrab = null;
 
-    inGrab.end();
-    inGrab = false;
+    if (inGrab && !inGrab.dnd && !inGrab.grabbed) {
+        inGrab.end();
+        setInGrab(false);
+    }
+
+    if (metaWindow?._paperwmDeferredInsert) {
+        delete metaWindow._paperwmDeferredInsert;
+        if (!metaWindow._paperwmUnmanaging && metaWindow.get_compositor_private() &&
+            spaces.spaceOfWindow(metaWindow)?.indexOf(metaWindow) === -1) {
+            insertWindow(metaWindow, { existing: false });
+        }
+    }
+
+    if (metaWindow?._paperwmToplevelDrag) {
+        delete metaWindow._paperwmToplevelDrag;
+        if (!metaWindow._paperwmUnmanaging && metaWindow.get_compositor_private()) {
+            const space = spaces.spaceOfWindow(metaWindow);
+            if (space) {
+                space.removeWindow(metaWindow);
+                insertWindow(metaWindow, { existing: true });
+            }
+        }
+    }
 }
 
 /**

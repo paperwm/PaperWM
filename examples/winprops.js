@@ -1,6 +1,8 @@
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const defwinprop = Extension.imports.tiling.defwinprop;
 
+// Set float: true to keep matching new windows above the tiling without changing their geometry or focus.
+
 defwinprop({
     wm_class: "copyq",
     scratch_layer: true,

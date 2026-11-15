@@ -20,7 +20,8 @@ export function enable() {
             item = this.addAction(_('Scratch'), () => {
                 toggle(window);
             });
-            if (isScratchWindow(window))
+            if (isScratchWindow(window) ||
+                !Tiling.isTransient(window) && Tiling.spaces.spaceOfWindow(window).indexOf(window) === -1)
                 item.setOrnament(PopupMenu.Ornament.CHECK);
 
             originalBuildMenu.call(this, window);
@@ -145,6 +146,9 @@ export function unmakeScratch(metaWindow) {
 export function toggle(metaWindow) {
     if (isScratchWindow(metaWindow)) {
         unmakeScratch(metaWindow);
+    } else if (!Tiling.isTransient(metaWindow) &&
+        Tiling.spaces.spaceOfWindow(metaWindow).indexOf(metaWindow) === -1) {
+        Tiling.tileWindow(metaWindow);
     } else {
         makeScratch(metaWindow);
 

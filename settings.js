@@ -103,6 +103,13 @@ export function enable(extension) {
         scratch_layer: true,
         focus: true,
     });
+    // Browser Picture-in-Picture windows (Chrome: "Picture in picture",
+    // Firefox: "Picture-in-Picture"). Matched on title only: on Wayland the
+    // wm_class of Chrome's PiP window is still empty at first-frame.
+    defwinprop({
+        title: /^Picture[- ]in[- ]picture$/i,
+        float: true,
+    });
 
     addWinpropsFromGSettings();
 }
