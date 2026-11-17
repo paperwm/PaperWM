@@ -17,12 +17,13 @@ try {
   Application functionality, like global new window actions etc.
  */
 
-let Tracker = Shell.WindowTracker.get_default();
+let Tracker;
 let CouldNotLaunch = Symbol();
 
 // Lookup table for custom handlers, keys being the app id
 export let customHandlers, customSpawnHandlers;
 export function enable() {
+    Tracker = Shell.WindowTracker.get_default();
     customHandlers = { 'org.gnome.Terminal.desktop': newGnomeTerminal };
     customSpawnHandlers = {
         'com.gexperts.Tilix.desktop': mkCommandLineSpawner('tilix --working-directory %d'),
@@ -76,6 +77,7 @@ export function enable() {
 }
 
 export function disable() {
+    Tracker = null;
     customHandlers = null;
     customSpawnHandlers = null;
 }

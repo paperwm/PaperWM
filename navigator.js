@@ -264,7 +264,11 @@ class ActionDispatcher {
         }
     }
 
-    destroy() {
+    /**
+     * Releases the modal grab, key signals and timeouts held by this
+     * dispatcher.  Safe to call more than once.
+     */
+    release() {
         Utils.timeout_remove(this._noModsTimeoutId);
         this._noModsTimeoutId = null;
         Utils.timeout_remove(this._doActionTimeout);
@@ -280,8 +284,12 @@ class ActionDispatcher {
         }
 
         this.actor.reactive = false;
-        this.signals.destroy();
+        this.signals?.destroy();
         this.signals = null;
+    }
+
+    destroy() {
+        this.release();
         // We have already destroyed the navigator
         getNavigator().destroy();
         dispatcher = null;
@@ -296,14 +304,9 @@ class NavigatorClass {
 
         /**
          * Hint for using take window mode (used in `takeWindow`).
+         * Created on demand in `showTakeHint`.
          */
-        this.takeHint = new St.Label({ style_class: 'take-window-hint' });
-        this.takeHint.clutter_text.set_markup(
-            `<i>• press <span foreground="#6be67b">spacebar</span> to return the last taken window</i>
-<i>• press <span foreground="#6be67b">tab</span> to cycle forward through taken windows</i>
-<i>• press <span foreground="#6be67b">shift+tab</span> to cycle backward through taken windows</i>
-<i>• press <span foreground="#6be67b">q</span> to close all taken windows</i>`
-        );
+        this.takeHint = null;
 
         navigating = true;
 
@@ -349,6 +352,16 @@ class NavigatorClass {
      */
     showTakeHint(show = true) {
         if (show) {
+            if (!this.takeHint) {
+                this.takeHint = new St.Label({ style_class: 'take-window-hint' });
+                this.takeHint.clutter_text.set_markup(
+                    `<i>• press <span foreground="#6be67b">spacebar</span> to return the last taken window</i>
+<i>• press <span foreground="#6be67b">tab</span> to cycle forward through taken windows</i>
+<i>• press <span foreground="#6be67b">shift+tab</span> to cycle backward through taken windows</i>
+<i>• press <span foreground="#6be67b">q</span> to close all taken windows</i>`
+                );
+            }
+
             // set position on stage, take into account monitor
             const monitor = this.space.monitor;
             const x = monitor.x + monitor.width - 402;
@@ -364,15 +377,22 @@ class NavigatorClass {
                 opacity: 255,
             });
         } else {
-            this.takeHint.opacity = 255;
-            // global.stage.add_child(this.takeHint);
-            Utils.actor_add_child(global.stage, this.takeHint);
-            Utils.Easer.addEase(this.takeHint, {
+            if (!this.takeHint) {
+                return;
+            }
+            const takeHint = this.takeHint;
+            takeHint.opacity = 255;
+            // global.stage.add_child(takeHint);
+            Utils.actor_add_child(global.stage, takeHint);
+            Utils.Easer.addEase(takeHint, {
                 time: Settings.prefs.animation_time,
                 opacity: 0,
-                onComplete: () => {
-                    // global.stage.remove_child(this.takeHint);
-                    Utils.actor_remove_child(global.stage, this.takeHint);
+                onStopped: () => {
+                    // hint is only hidden when navigation ends, so destroy it
+                    takeHint.destroy();
+                    if (this.takeHint === takeHint) {
+                        this.takeHint = null;
+                    }
                 },
             });
         }
@@ -506,6 +526,16 @@ export function finishNavigation(force = true) {
     if (navigator) {
         navigator.finish(force);
     }
+}
+
+/**
+ * Releases the current dispatcher's modal grab, key signals and timeouts (if
+ * any), without running its navigation teardown.
+ * Useful to call before disabling other modules.
+ */
+export function releaseDispatcher() {
+    dispatcher?.release();
+    dispatcher = null;
 }
 
 /**

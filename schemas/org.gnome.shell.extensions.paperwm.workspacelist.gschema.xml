@@ -1,0 +1,10 @@
+<schemalist>
+
+  <schema id="org.gnome.shell.extensions.paperwm.workspacelist"
+          path="/org/gnome/shell/extensions/paperwm/workspaces/">
+      <key name="list" type="as">
+          <default>[]</default>
+      </key>
+  </schema>
+
+</schemalist>

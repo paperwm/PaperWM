@@ -1,0 +1,454 @@
+<schemalist>
+
+  <!-- Keybindings -->
+  <schema id="org.gnome.shell.extensions.paperwm.keybindings"
+          path="/org/gnome/shell/extensions/paperwm/keybindings/">
+
+    <key type="as" name="new-window">
+      <default><![CDATA[['<Super>Return', '<Super>n']]]></default>
+      <summary>Open new window</summary>
+    </key>
+
+    <key type="as" name="live-alt-tab">
+      <default><![CDATA[['<Super>Tab', '<Alt>Tab']]]></default>
+      <summary>Switch to previously active window</summary>
+    </key>
+    <key type="as" name="live-alt-tab-backward">
+      <default><![CDATA[['<Super><Shift>Tab', '<Alt><Shift>Tab']]]></default>
+      <summary>Switch to previously active window, backward order</summary>
+    </key>
+
+    <key type="as" name="live-alt-tab-scratch">
+        <default><![CDATA[['<Alt><Ctrl>Tab']]]></default>
+      <summary>Switch to previously active scratch window</summary>
+    </key>
+    <key type="as" name="live-alt-tab-scratch-backward">
+        <default><![CDATA[['<Shift><Alt><Ctrl>Tab']]]></default>
+      <summary>Switch to previously active scratch window, backward order</summary>
+    </key>
+
+    <key type="as" name="previous-workspace">
+      <default><![CDATA[['<Super>Above_Tab']]]></default>
+      <summary>Switch to previously active workspace</summary>
+    </key>
+    <key type="as" name="previous-workspace-backward">
+      <default><![CDATA[['<Super><Shift>Above_Tab']]]></default>
+      <summary>Switch to the previously active workspace, backward order</summary>
+    </key>
+
+    <key type="as" name="move-previous-workspace">
+      <default><![CDATA[['<Super><Ctrl>Above_Tab']]]></default>
+      <summary>Move the active window to the previously active workspace</summary>
+    </key>
+    <key type="as" name="move-previous-workspace-backward">
+      <default><![CDATA[['<Super><Shift><Ctrl>Above_Tab']]]></default>
+      <summary>Move the active window to the previously active workspace, backward order</summary>
+    </key>
+
+    <key type="as" name="switch-down-workspace">
+      <default><![CDATA[['<Super>Page_Down']]]></default>
+      <summary>Switch to workspace below (ws only from current monitor)</summary>
+    </key>
+
+    <key type="as" name="switch-up-workspace">
+      <default><![CDATA[['<Super>Page_Up']]]></default>
+      <summary>Switch to workspace above (ws only from current monitor)</summary>
+    </key>
+
+    <key type="as" name="switch-down-workspace-from-all-monitors">
+      <default><![CDATA[[]]]></default>
+      <summary>Switch to workspace below (ws from all monitors)</summary>
+    </key>
+
+    <key type="as" name="switch-up-workspace-from-all-monitors">
+      <default><![CDATA[[]]]></default>
+      <summary>Switch to workspace above (ws from all monitors)</summary>
+    </key>
+
+    <key type="as" name="move-down-workspace">
+      <default><![CDATA[['<Super><Ctrl>Page_Down']]]></default>
+      <summary>Move window one workspace down</summary>
+    </key>
+    <key type="as" name="move-up-workspace">
+      <default><![CDATA[['<Super><Ctrl>Page_Up']]]></default>
+      <summary>Move window one workspace up</summary>
+    </key>
+
+    <key type="as" name="toggle-top-and-position-bar">
+      <default><![CDATA[['<Super><Ctrl>b']]]></default>
+      <summary>Toggle the Top Bar and Window Position Bar on current workspace</summary>
+    </key>
+    <key type="as" name="toggle-top-bar">
+      <default><![CDATA[[]]]></default>
+      <summary>Toggle the Top Bar on current workspace</summary>
+    </key>
+    <key type="as" name="toggle-position-bar">
+      <default><![CDATA[[]]]></default>
+      <summary>Toggle the Window Position Bar on current workspace</summary>
+    </key>
+
+    <key type="as" name="move-monitor-right">
+        <default><![CDATA[['<Super><Shift><Ctrl>Right']]]></default>
+        <summary>Move the active window to the right monitor</summary>
+    </key>
+    <key type="as" name="move-monitor-left">
+        <default><![CDATA[['<Super><Shift><Ctrl>Left']]]></default>
+        <summary>Move the active window to the left monitor</summary>
+    </key>
+    <key type="as" name="move-monitor-above">
+        <default><![CDATA[['<Super><Shift><Ctrl>Up']]]></default>
+        <summary>Move the active window to the above monitor</summary>
+    </key>
+    <key type="as" name="move-monitor-below">
+        <default><![CDATA[['<Super><Shift><Ctrl>Down']]]></default>
+        <summary>Move the active window to the below monitor</summary>
+    </key>
+
+    <key type="as" name="switch-monitor-right">
+        <default><![CDATA[['<Super><Shift>Right']]]></default>
+        <summary>Switch to the right monitor</summary>
+    </key>
+    <key type="as" name="switch-monitor-left">
+        <default><![CDATA[['<Super><Shift>Left']]]></default>
+        <summary>Switch to the left monitor</summary>
+    </key>
+    <key type="as" name="switch-monitor-above">
+        <default><![CDATA[['<Super><Shift>Up']]]></default>
+        <summary>Switch to the above monitor</summary>
+    </key>
+    <key type="as" name="switch-monitor-below">
+        <default><![CDATA[['<Super><Shift>Down']]]></default>
+        <summary>Switch to the below monitor</summary>
+    </key>
+
+    <key type="as" name="move-space-monitor-right">
+        <default><![CDATA[['<Ctrl><Alt><Shift>Right']]]></default>
+        <summary>Move workspace to monitor on the right</summary>
+    </key>
+    <key type="as" name="move-space-monitor-left">
+        <default><![CDATA[['<Ctrl><Alt><Shift>Left']]]></default>
+        <summary>Move workspace to monitor on the left</summary>
+    </key>
+    <key type="as" name="move-space-monitor-above">
+        <default><![CDATA[['<Ctrl><Alt><Shift>Up']]]></default>
+        <summary>Move workspace to monitor above</summary>
+    </key>
+    <key type="as" name="move-space-monitor-below">
+        <default><![CDATA[['<Ctrl><Alt><Shift>Down']]]></default>
+        <summary>Move workspace to monitor below</summary>
+    </key>
+
+    <key type="as" name="swap-monitor-right">
+        <default><![CDATA[['<Super><Alt>Right']]]></default>
+        <summary>Swap workspace with monitor to the right</summary>
+    </key>
+    <key type="as" name="swap-monitor-left">
+        <default><![CDATA[['<Super><Alt>Left']]]></default>
+        <summary>Swap workspace with monitor to the left</summary>
+    </key>
+    <key type="as" name="swap-monitor-above">
+        <default><![CDATA[['<Super><Alt>Up']]]></default>
+        <summary>Swap workspace with monitor above</summary>
+    </key>
+    <key type="as" name="swap-monitor-below">
+        <default><![CDATA[['<Super><Alt>Down']]]></default>
+        <summary>Swap workspace with monitor below</summary>
+    </key>
+
+    <key type="as" name="toggle-scratch-window">
+      <default><![CDATA[['<Super>Escape']]]></default>
+      <summary>Toggle the most recent scratch window</summary>
+    </key>
+
+    <key type="as" name="toggle-scratch-layer">
+        <default><![CDATA[['<Super><Shift>Escape']]]></default>
+        <summary>Toggles the floating scratch layer</summary>
+    </key>
+
+    <key type="as" name="toggle-scratch">
+        <default><![CDATA[['<Super><Ctrl>Escape']]]></default>
+        <summary>Attach/detach the active window into the scratch layer</summary>
+    </key>
+
+    <key type="as" name="take-window">
+        <default><![CDATA[['<Super>t']]]></default>
+        <summary>Take the window, dropping it when finished navigating</summary>
+    </key>
+
+    <key type="as" name="switch-focus-mode">
+      <default><![CDATA[['<Super><Shift>c']]]></default>
+      <summary>Switch between Window Focus Modes (e.g. default, center)</summary>
+    </key>
+
+    <key type="as" name="switch-open-window-position">
+      <default><![CDATA[['<Super><Shift>w']]]></default>
+      <summary>Switch between positions for creating/dropping windows</summary>
+    </key>
+    <key type="as" name="open-window-position-right">
+      <default><![CDATA[[]]]></default>
+      <summary>Create/drop windows to the right</summary>
+    </key>
+    <key type="as" name="open-window-position-left">
+      <default><![CDATA[[]]]></default>
+      <summary>Create/drop windows to the left</summary>
+    </key>
+    <key type="as" name="open-window-position-down">
+      <default><![CDATA[[]]]></default>
+      <summary>Create/drop windows in vertical stack (down)</summary>
+    </key>
+    <key type="as" name="open-window-position-up">
+      <default><![CDATA[[]]]></default>
+      <summary>Create/drop windows in vertical stack (up)</summary>
+    </key>
+    <key type="as" name="open-window-position-start">
+      <default><![CDATA[[]]]></default>
+      <summary>Create/drop windows at start position</summary>
+    </key>
+    <key type="as" name="open-window-position-end">
+      <default><![CDATA[[]]]></default>
+      <summary>Create/drop windows at end position</summary>
+    </key>
+
+    <key type="as" name="switch-next">
+      <default><![CDATA[['<Super>period']]]></default>
+      <summary>Switch to the next window</summary>
+    </key>
+    <key type="as" name="switch-previous">
+      <default><![CDATA[['<Super>comma']]]></default>
+      <summary>Switch to the previous window</summary>
+    </key>
+    <key type="as" name="switch-right">
+        <default><![CDATA[['<Super>Right']]]></default>
+        <summary>Switch to the right window</summary>
+    </key>
+    <key type="as" name="switch-left">
+        <default><![CDATA[['<Super>Left']]]></default>
+        <summary>Switch to the left window</summary>
+    </key>
+
+    <key type="as" name="drift-left">
+        <default><![CDATA[['<Super>bracketleft']]]></default>
+        <summary>Drift tiling viewport to the left</summary>
+    </key>
+      <key type="as" name="drift-right">
+        <default><![CDATA[['<Super>bracketright']]]></default>
+        <summary>Drift tiling viewport to the right</summary>
+    </key>
+
+    <key type="as" name="switch-up">
+        <default><![CDATA[['<Super>Up']]]></default>
+        <summary>Switch to the window above</summary>
+    </key>
+    <key type="as" name="switch-down">
+        <default><![CDATA[['<Super>Down']]]></default>
+        <summary>Switch to the window below</summary>
+    </key>
+
+    <key type="as" name="switch-next-loop">
+      <default><![CDATA[[]]]></default>
+      <summary>Switch to the next window (with wrap-around)</summary>
+    </key>
+    <key type="as" name="switch-previous-loop">
+      <default><![CDATA[[]]]></default>
+      <summary>Switch to the previous window (with wrap-around)</summary>
+    </key>
+    <key type="as" name="switch-right-loop">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the right window (with wrap-around)</summary>
+    </key>
+    <key type="as" name="switch-left-loop">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the left window (with wrap-around)</summary>
+    </key>
+    <key type="as" name="switch-up-loop">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the window above (with wrap-around)</summary>
+    </key>
+    <key type="as" name="switch-down-loop">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the window below (with wrap-around)</summary>
+    </key>
+
+    <key type="as" name="switch-global-right">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to window or monitor to the right</summary>
+    </key>
+    <key type="as" name="switch-global-left">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to window or monitor to the left</summary>
+    </key>
+    <key type="as" name="switch-global-up">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to window or monitor above</summary>
+    </key>
+    <key type="as" name="switch-global-down">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to window or monitor below</summary>
+    </key>
+    <key type="as" name="switch-up-or-else-workspace">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to window or workspace above</summary>
+    </key>
+    <key type="as" name="switch-down-or-else-workspace">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to window or workspace below</summary>
+    </key>
+
+    <key type="as" name="switch-first">
+        <default><![CDATA[['<Super>Home']]]></default>
+        <summary>Switch to the first window</summary>
+    </key>
+
+    <key type="as" name="switch-second">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the second window</summary>
+    </key>
+    <key type="as" name="switch-third">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the third window</summary>
+    </key>
+    <key type="as" name="switch-fourth">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the fourth window</summary>
+    </key>
+    <key type="as" name="switch-fifth">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the fifth window</summary>
+    </key>
+    <key type="as" name="switch-sixth">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the sixth window</summary>
+    </key>
+    <key type="as" name="switch-seventh">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the seventh window</summary>
+    </key>
+    <key type="as" name="switch-eighth">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the eighth window</summary>
+    </key>
+    <key type="as" name="switch-ninth">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the ninth window</summary>
+    </key>
+    <key type="as" name="switch-tenth">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the tenth window</summary>
+    </key>
+    <key type="as" name="switch-eleventh">
+        <default><![CDATA[[]]]></default>
+        <summary>Switch to the eleventh window</summary>
+    </key>
+    
+    <key type="as" name="switch-last">
+        <default><![CDATA[['<Super>End']]]></default>
+        <summary>Switch to the last window</summary>
+    </key>
+
+    <key type="as" name="move-right">
+      <default><![CDATA[['<Super><Ctrl>period', '<Super><Shift>period', '<Super><Ctrl>Right']]]></default>
+      <summary>Move the active window to the right</summary>
+    </key>
+    <key type="as" name="move-left">
+      <default><![CDATA[['<Super><Ctrl>comma', '<Super><Shift>comma', '<Super><Ctrl>Left']]]></default>
+      <summary>Move the active window to the left</summary>
+    </key>
+    <key type="as" name="move-up">
+        <default><![CDATA[['<Super><Ctrl>Up']]]></default>
+        <summary>Move the active window up</summary>
+    </key>
+    <key type="as" name="move-down">
+        <default><![CDATA[['<Super><Ctrl>Down']]]></default>
+        <summary>Move the active window down</summary>
+    </key>
+
+    <key type="as" name="slurp-in">
+        <default><![CDATA[['<Super>i']]]></default>
+        <summary>Consume window into the active column</summary>
+    </key>
+    <key type="as" name="barf-out">
+        <default><![CDATA[['<Super>o']]]></default>
+        <summary>Expel the bottom window into its own column</summary>
+    </key>
+    <key type="as" name="barf-out-active">
+        <default><![CDATA[['<Super><Shift>o']]]></default>
+        <summary>Expel the active window into its own column</summary>
+    </key>
+
+    <key type="as" name="resize-h-inc">
+      <default><![CDATA[['<Super><Shift>plus']]]></default>
+      <summary>Increment window height</summary>
+    </key>
+
+    <key type="as" name="resize-h-dec">
+      <default><![CDATA[['<Super><Shift>minus']]]></default>
+      <summary>Decrement window height</summary>
+    </key>
+
+    <key type="as" name="resize-w-inc">
+      <default><![CDATA[['<Super>plus']]]></default>
+      <summary>Increment window width</summary>
+    </key>
+
+    <key type="as" name="resize-w-dec">
+      <default><![CDATA[['<Super>minus']]]></default>
+      <summary>Decrement window width</summary>
+    </key>
+
+    <key type="as" name="cycle-width">
+      <default><![CDATA[['<Super>r']]]></default>
+      <summary>Cycle through useful window widths</summary>
+    </key>
+
+    <key type="as" name="cycle-width-backwards">
+      <default><![CDATA[['<Super><Alt>r']]]></default>
+      <summary>Cycle through useful window widths backwards</summary>
+    </key>
+
+    <key type="as" name="cycle-height">
+        <default><![CDATA[['<Super><Shift>r']]]></default>
+        <summary>Cycle through useful window heights</summary>
+    </key>
+
+    <key type="as" name="cycle-height-backwards">
+        <default><![CDATA[['<Super><Alt><Shift>r']]]></default>
+        <summary>Cycle through useful window heights backwards</summary>
+    </key>
+
+    <key type="as" name="center-horizontally">
+      <default><![CDATA[['<Super>c']]]></default>
+      <summary>Center window horizontally</summary>
+    </key>
+
+    <key type="as" name="center-vertically">
+      <default><![CDATA[['<Super>v']]]></default>
+      <summary>Center window vertically (non-tiled window)</summary>
+    </key>
+
+    <key type="as" name="center">
+      <default><![CDATA[[]]]></default>
+      <summary>Center window</summary>
+    </key>
+
+    <key type="as" name="toggle-maximize-width">
+      <default><![CDATA[['<Super>f']]]></default>
+      <summary>Maximize the width of the active window</summary>
+    </key>
+
+    <key type="as" name="paper-toggle-fullscreen">
+      <default><![CDATA[['<Super><shift>f']]]></default>
+      <summary>Toggle fullscreen</summary>
+    </key>
+
+    <key type="as" name="activate-window-under-cursor">
+        <default><![CDATA[[]]]></default>
+        <summary>Activate the window under mouse cursor</summary>
+    </key>
+
+    <key type="as" name="close-window">
+      <default><![CDATA[['<Super>BackSpace']]]></default>
+      <summary>Close the active window</summary>
+    </key>
+  </schema>
+
+</schemalist>
