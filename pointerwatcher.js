@@ -43,8 +43,10 @@ class PointerWatcher {
         this._watches = [];
         // Mutter emits position-invalidated for every pointer motion only
         // under Wayland. On X11 (GNOME 45-48) it fires only while mutter
-        // itself tracks the position, so poll there instead.
-        this._useSignal = Meta.is_wayland_compositor();
+        // itself tracks the position, so poll there instead. Mutter 51
+        // (checked on 51.1) no longer exports Meta.is_wayland_compositor(),
+        // and is Wayland-only, so a missing function means Wayland.
+        this._useSignal = Meta.is_wayland_compositor?.() ?? true;
         this._cursorTracker = this._useSignal
             ? global.backend.get_cursor_tracker() : null;
         this._positionInvalidatedId = 0;
