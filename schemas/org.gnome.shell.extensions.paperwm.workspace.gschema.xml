@@ -1,0 +1,34 @@
+<schemalist>
+
+  <schema id="org.gnome.shell.extensions.paperwm.workspace">
+      <key type="i" name="index">
+          <default>-1</default>
+          <summary>The workspace index</summary>
+      </key>
+      <key type="s" name="name">
+          <default>''</default>
+          <summary>The name of the workspace</summary>
+      </key>
+      <key type="s" name="background">
+          <default>''</default>
+          <summary>The background image</summary>
+      </key>
+      <key type="b" name="show-top-bar">
+          <default>true</default>
+          <summary>Show the GNOME Top Bar</summary>
+      </key>
+      <key type="b" name="show-position-bar">
+          <default>true</default>
+          <summary>Show the PaperWM Window Position Bar</summary>
+      </key>
+      <key type="s" name="color">
+          <default>''</default>
+          <summary>The background color</summary>
+      </key>
+      <key type="s" name="directory">
+          <default>''</default>
+          <summary>Affect various integrations. An empty string means use PWD. (usually ~)</summary>
+      </key>
+  </schema>
+
+</schemalist>

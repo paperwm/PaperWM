@@ -9,15 +9,15 @@ EXT_ID      := paperwm@paperwm.github.com
 EXT_DIR     := $(XDG_DATA_HOME)/gnome-shell/extensions
 TARGET      := $(EXT_DIR)/$(EXT_ID)
 
-CONFIG_FILES   = config/user.js config/user.css
-GSCHEMA_FILES  = schemas/org.gnome.shell.extensions.paperwm.gschema.xml
-JS_FILES       = $(wildcard *.js)
+CONFIG_FILES   = config/user.css
+GSCHEMA_FILES  = $(wildcard schemas/*.gschema.xml)
+# virtTiling.js is a development aid and isn't imported by the extension
+JS_FILES       = $(filter-out virtTiling.js,$(wildcard *.js))
 UI_FILES       = $(wildcard *.ui)
 RESOURCE_FILES = $(wildcard resources/*)
 
 RELEASE_FILES = $(JS_FILES) $(UI_FILES) $(RESOURCE_FILES) \
 				$(CONFIG_FILES) $(GSCHEMA_FILES) \
-				schemas/gschemas.compiled \
 				metadata.json \
 				stylesheet.css \
 				LICENSE
@@ -33,7 +33,7 @@ endif
 SHELL=/bin/bash
 
 ## Update compiled files
-all: $(RELEASE_FILES)
+all: $(RELEASE_FILES) schemas/gschemas.compiled
 
 ## Install PaperWM on this system
 install: schemas/gschemas.compiled

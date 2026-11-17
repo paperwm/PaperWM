@@ -89,6 +89,7 @@ export default class PaperWM extends Extension {
          * while navigating.
          */
         Navigator.finishNavigation();
+        Navigator.releaseDispatcher();
     }
 
     getConfigDir() {

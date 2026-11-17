@@ -749,6 +749,8 @@ class BackgroundSource {
         }
 
         this._backgrounds = null;
+        this._settings = null;
+        this._interfaceSettings = null;
     }
 }
 
