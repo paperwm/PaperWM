@@ -3633,12 +3633,23 @@ export function registerWindow(metaWindow) {
 
     /**
      * Check when moving window that it's targetHeight is correct.
+     *
+     * Deferred: mutter emits `stage-views-changed` synchronously while it
+     * rebuilds monitors (e.g. screen rotation), before workspaces have
+     * dropped their per-monitor work areas. Moving a window from inside the
+     * signal then makes mutter look up a monitor the workspace doesn't know
+     * yet and segfault in meta_workspace_get_onmonitor_region().
      */
     signals.connect(actor, 'stage-views-changed', _actor => {
-        const f = metaWindow.get_frame_rect();
-        if (metaWindow._targetHeight !== f.height) {
-            resizeHandler(metaWindow);
-        }
+        Utils.later_add(Meta.LaterType.RESIZE, () => {
+            if (metaWindow._paperwmUnmanaging || metaWindow.get_compositor_private() === null) {
+                return;
+            }
+            const f = metaWindow.get_frame_rect();
+            if (metaWindow._targetHeight !== f.height) {
+                resizeHandler(metaWindow);
+            }
+        });
     });
 
     /**
