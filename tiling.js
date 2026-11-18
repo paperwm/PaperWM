@@ -94,6 +94,8 @@ let startupTimeoutId, timerId, fullscreenStartTimeout, stackSlurpTimeout, worksp
 let monitorChangeTimeout, driftTimeout;
 let workspaceSettings;
 export let inGrab;
+// Set while we're moving a window frame ourselves, see Space.addWindow
+let movingFrame = false;
 export function enable(extension) {
     inGrab = false;
 
@@ -714,7 +716,11 @@ export class Space extends Array {
         for (let i = 0; i < this.length; i++) {
             let column = this[i];
             // Actorless windows are trouble. Layout could conceivable run while a window is dying or being born.
-            column = column.filter(mw => mw.get_compositor_private());
+            // A window still waiting for its first frame reports a zero sized one, and
+            // since the column takes its width from the frames, laying it out now would
+            // cache a target width of zero and the window could never be sized again.
+            column = column.filter(mw => mw.get_compositor_private() &&
+                mw.get_frame_rect().width > 0);
             if (column.length === 0)
                 continue;
 
@@ -929,6 +935,21 @@ export class Space extends Array {
             if (inGrab)
                 return;
 
+            // The overview owns window positions while it's up, as moveDone() assumes too
+            if (Main.overview.visible)
+                return;
+
+            // Only the space holding the window may correct it: two spaces correcting
+            // towards different monitors move it back and forth without end
+            if (this.indexOf(w) === -1)
+                return;
+
+            // move_frame below emits position-changed synchronously, so bound re-entry
+            // here. The handlers are per space, so a per window counter can't:
+            // see https://github.com/paperwm/PaperWM/issues/916
+            if (movingFrame)
+                return;
+
             let f = w.get_frame_rect();
             let clone = w.clone;
             let x = this.visibleX(w);
@@ -936,34 +957,20 @@ export class Space extends Array {
             x = Math.min(this.width - stack_margin, Math.max(stack_margin - f.width, x));
             x += this.monitor.x;
 
-            // check if mismatch tracking needed, otherwise leave
-            if (f.x === x && f.y === y) {
-                // delete any mismatch counter (e.g. from previous attempt)
-                delete w._pos_mismatch_count;
+            if (f.x === x && f.y === y)
                 return;
-            }
-
-            // guard against recursively calling this method
-            // see https://github.com/paperwm/PaperWM/issues/769
-            if (w._pos_mismatch_count &&
-                w._pos_mismatch_count > 1) {
-                console.warn(`clone/window position-changed recursive call: ${w.title}`);
-                return;
-            }
 
             // mismatch detected
             // move frame to ensure window position matches clone
+            movingFrame = true;
             try {
-                if (!w._pos_mismatch_count) {
-                    w._pos_mismatch_count = 0;
-                }
-                else {
-                    w._pos_mismatch_count += 1;
-                }
                 w.move_frame(true, x, y);
             }
             catch (ex) {
 
+            }
+            finally {
+                movingFrame = false;
             }
         });
 
@@ -989,7 +996,8 @@ export class Space extends Array {
             // Select a new window using the stack ordering;
             let windows = this.getWindows();
             let i = windows.indexOf(metaWindow);
-            let neighbours = [windows[i - 1], windows[i + 1]].filter(w => w);
+            let neighbours = [windows[i - 1], windows[i + 1]]
+                .filter(w => w && !w._paperwmUnmanaging);
             let stack = sortWindows(this, neighbours);
             this.selectedWindow = stack[stack.length - 1];
         }
@@ -3761,7 +3769,6 @@ export function removePaperWMFlags(w) {
     delete w._targetHeight;
     delete w._resizeHandlerAdded;
     delete w._positionHandlerAdded;
-    delete w._pos_mismatch_count;
     delete w._tiled_on_minimize;
     delete w._fullscreen_frame;
     delete w._fullscreen_lock;
@@ -4258,6 +4265,9 @@ Opening "${metaWindow?.title}" on current space.`);
     }
 
     if (space.indexOf(metaWindow) !== -1) {
+        // Space.addAll can claim the window before we get here; it still needs its
+        // handlers, like every other early return in this function.
+        connectSizeChanged();
         return;
     }
 
@@ -4328,20 +4338,28 @@ Opening "${metaWindow?.title}" on current space.`);
         clone.y = clone.targetY;
         space.layout();
 
-        // run focus and resize to ensure new window is correctly shown
-        focus_handler(metaWindow);
-        resizeHandler(metaWindow);
         connectSizeChanged(true);
 
         // // remove winprop props after window shown
         callbackOnActorShow(actor, () => {
             delete metaWindow.preferredWidth;
 
-            Main.activateWindow(metaWindow);
-            ensureViewport(space.selectedWindow, space);
-            space.setSpaceTopbarElementsVisible(true);
+            // Focusing, raising and resizing invalidate stacking and layout, which
+            // mutter aborts on (invalidate_top_window_actor_for_views) while it is
+            // still painting the frame that got us here. Wait for it to go idle.
+            Utils.later_add(Meta.LaterType.IDLE, () => {
+                if (metaWindow._paperwmUnmanaging || metaWindow.get_compositor_private() === null) {
+                    return;
+                }
 
-            slurpCheck(true);
+                focus_handler(metaWindow);
+                resizeHandler(metaWindow);
+                Main.activateWindow(metaWindow);
+                ensureViewport(space.selectedWindow, space);
+                space.setSpaceTopbarElementsVisible(true);
+
+                slurpCheck(true);
+            });
         });
 
         return;
