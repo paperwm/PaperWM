@@ -16,8 +16,13 @@ const DIRECTIONS = {
 
 let vy, time, vState, navigator, direction, signals;
 let handoffToOverview = false;
+// true between BEGIN and END/CANCEL of a PaperWM-managed swipe. Used to defer
+// any tracker disabling that would otherwise interrupt a live overview gesture.
+export let inGesture = false; // exported
+let hiddenTimeout;
 // 1 is natural scrolling, -1 is unnatural
 let natural = 1;
+
 export let gliding = false; // exported
 
 let touchpadSettings;
@@ -42,9 +47,24 @@ export function enable(extension) {
      * ensure swipe trackers are reset.
      */
     signals.connect(Main.overview, 'hidden', () => {
-        if (gestureEnabled()) {
-            swipeTrackersEnable(false);
+        if (!gestureEnabled()) {
+            return;
         }
+        // Defer so any in-flight overview swipe animation settles
+        // (tracker -> State.NONE) before we disable. On GNOME 49+ disabling a
+        // SCROLLING tracker calls _interrupt() -> synthetic 'end' -> illegal
+        // overview state transition -> stuck/hang. Retry until the gesture ends.
+        Utils.timeout_remove(hiddenTimeout);
+        hiddenTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 16, () => {
+            if (inGesture) {
+                return GLib.SOURCE_CONTINUE;
+            }
+            hiddenTimeout = null;
+            if (gestureEnabled()) {
+                swipeTrackersEnable(false);
+            }
+            return GLib.SOURCE_REMOVE;
+        });
     });
 
     /**
@@ -88,6 +108,7 @@ export function enable(extension) {
             natural = touchpadSettings.get_boolean("natural-scroll") ? 1 : -1;
             direction = undefined;
             handoffToOverview = false;
+            inGesture = true;
             navigator = Navigator.getNavigator();
             navigator.connect('destroy', () => {
                 vState = -1;
@@ -147,6 +168,7 @@ export function enable(extension) {
             return Clutter.EVENT_PROPAGATE;
         case Clutter.TouchpadGesturePhase.CANCEL:
         case Clutter.TouchpadGesturePhase.END:
+            inGesture = false;
             // If this finger count should be handled by GNOME, never consume
             // completion here (prevents overview from getting stuck in 4-finger mode).
             if (shouldPropagate(fingers)) {
@@ -204,8 +226,10 @@ function shouldPropagate(fingers) {
 export function disable() {
     signals.destroy();
     signals = null;
-    Utils.timeout_remove(endVerticalTimeout);
+    Utils.timeout_remove(endVerticalTimeout, hiddenTimeout);
     endVerticalTimeout = null;
+    hiddenTimeout = null;
+    inGesture = false;
     touchpadSettings = null;
 }
 
