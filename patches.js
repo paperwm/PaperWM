@@ -160,17 +160,23 @@ export function setupOverrides() {
                     return false; // on return false destroys timeout
                 });
             };
-
-            if (Tiling.inPreview) {
+            // skipping gnome's animation also skips its _finishWorkspaceSwitch,
+            // the only place that clears movingWindow
+            const skip = () => {
+                this.movingWindow = null;
                 onComplete();
                 reset();
+            };
+
+            if (Tiling.inPreview) {
+                skip();
                 return;
             }
 
             // if using PaperWM workspace switch animation, just do complete here
-            if (!Tiling.spaces.space_defaultAnimation) {
-                onComplete();
-                reset();
+            if (!Tiling.spaces.space_defaultAnimation ||
+                Settings.prefs.use_paperwm_workspace_animation) {
+                skip();
                 return;
             }
 
@@ -181,8 +187,7 @@ export function setupOverrides() {
             const spaces = Array.from(Tiling.spaces.monitors.values());
             const toOnMonitor = spaces.some(space => space === toSpace);
             if (toOnMonitor) {
-                onComplete();
-                reset();
+                skip();
                 return;
             }
 

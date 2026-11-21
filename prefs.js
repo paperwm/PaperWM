@@ -237,6 +237,7 @@ class SettingsWidget {
         hFric.connect('value-changed', fricChanged);
 
         doubleValueChanged('animation_time_spin', 'animation-time');
+        booleanStateChanged('use-paperwm-workspace-animation');
         intValueChanged('drift_speed_spin', 'drift-speed');
         intValueChanged('drag_drift_speed_spin', 'drag-drift-speed');
         percentValueChanged('minimap_scale_spin', 'minimap-scale');
