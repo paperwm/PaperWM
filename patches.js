@@ -156,9 +156,8 @@ export function setupOverrides() {
                     // Don't disable mid-gesture: on GNOME 50 disabling a
                     // SCROLLING tracker fires _interrupt() -> synthetic 'end'
                     // -> illegal overview transition -> hang.
-                    if (Gestures.isInGesture?.()) {
-                        pillSwipeTimer = null;
-                        return false;
+                    if (Gestures.inGesture) {
+                        return GLib.SOURCE_CONTINUE; // retry once the gesture ends
                     }
                     swipeTrackers.forEach(t => {
                         t.enabled = false;

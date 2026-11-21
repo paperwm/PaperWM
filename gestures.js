@@ -18,13 +18,11 @@ let vy, time, vState, navigator, direction, signals;
 let handoffToOverview = false;
 // true between BEGIN and END/CANCEL of a PaperWM-managed swipe. Used to defer
 // any tracker disabling that would otherwise interrupt a live overview gesture.
-let inGesture = false;
+export let inGesture = false; // exported
+let hiddenTimeout;
 // 1 is natural scrolling, -1 is unnatural
 let natural = 1;
 
-export function isInGesture() {
-    return inGesture;
-}
 export let gliding = false; // exported
 
 let touchpadSettings;
@@ -52,12 +50,17 @@ export function enable(extension) {
         if (!gestureEnabled()) {
             return;
         }
-        // Defer to idle so any in-flight overview swipe animation settles
-        // (tracker -> State.NONE) before we disable. On GNOME 50 disabling a
+        // Defer so any in-flight overview swipe animation settles
+        // (tracker -> State.NONE) before we disable. On GNOME 49+ disabling a
         // SCROLLING tracker calls _interrupt() -> synthetic 'end' -> illegal
-        // overview state transition -> stuck/hang.
-        GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
-            if (!inGesture && gestureEnabled()) {
+        // overview state transition -> stuck/hang. Retry until the gesture ends.
+        Utils.timeout_remove(hiddenTimeout);
+        hiddenTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 16, () => {
+            if (inGesture) {
+                return GLib.SOURCE_CONTINUE;
+            }
+            hiddenTimeout = null;
+            if (gestureEnabled()) {
                 swipeTrackersEnable(false);
             }
             return GLib.SOURCE_REMOVE;
@@ -223,8 +226,10 @@ function shouldPropagate(fingers) {
 export function disable() {
     signals.destroy();
     signals = null;
-    Utils.timeout_remove(endVerticalTimeout);
+    Utils.timeout_remove(endVerticalTimeout, hiddenTimeout);
     endVerticalTimeout = null;
+    hiddenTimeout = null;
+    inGesture = false;
     touchpadSettings = null;
 }
 
