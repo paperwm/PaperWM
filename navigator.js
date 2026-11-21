@@ -467,7 +467,9 @@ class NavigatorClass {
             });
             if (hasFocus) {
                 Tiling.focus_handler(selected);
-            } else {
+            } else if (!Main.overview.visible) {
+                // activateWindow() hides the overview; when called from the
+                // overview 'showing' handler this re-enters the overview state machine (#1165)
                 Main.activateWindow(selected);
             }
         }
